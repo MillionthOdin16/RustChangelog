@@ -1,0 +1,55 @@
+using System.Collections.Generic;
+using Facepunch;
+using UnityEngine;
+
+public static class BoundsCheckEx
+{
+	public static bool ApplyBoundsChecks(this BaseEntity entity, BoundsCheck[] bounds, Vector3 pos, Quaternion rot, Vector3 scale, LayerMask rejectOnLayer)
+	{
+		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009e: Unknown result type (might be due to invalid IL or missing references)
+		if (bounds.Length == 0 && LayerMask.op_Implicit(rejectOnLayer) == 0)
+		{
+			return true;
+		}
+		OBB obb = default(OBB);
+		((OBB)(ref obb))._002Ector(pos + rot * Vector3.Scale(((Bounds)(ref entity.bounds)).center, scale), Vector3.Scale(((Bounds)(ref entity.bounds)).extents, scale), rot);
+		List<Collider> list = Pool.GetList<Collider>();
+		GamePhysics.OverlapOBB(obb, list, 0x40000 | LayerMask.op_Implicit(rejectOnLayer), (QueryTriggerInteraction)2);
+		SpawnableBoundsBlocker spawnableBoundsBlocker = default(SpawnableBoundsBlocker);
+		foreach (Collider item in list)
+		{
+			if (!item.isTrigger && (((Component)item).gameObject.layer & LayerMask.op_Implicit(rejectOnLayer)) != 0)
+			{
+				return false;
+			}
+			if (!((Component)item).TryGetComponent<SpawnableBoundsBlocker>(ref spawnableBoundsBlocker))
+			{
+				continue;
+			}
+			foreach (BoundsCheck boundsCheck in bounds)
+			{
+				if (spawnableBoundsBlocker.BlockType == boundsCheck.IsType)
+				{
+					Pool.FreeList<Collider>(ref list);
+					return false;
+				}
+			}
+		}
+		Pool.FreeList<Collider>(ref list);
+		return true;
+	}
+}

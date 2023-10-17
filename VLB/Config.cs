@@ -1,0 +1,104 @@
+using UnityEngine;
+using UnityEngine.Serialization;
+
+namespace VLB;
+
+[HelpURL("http://saladgamer.com/vlb-doc/config/")]
+public class Config : ScriptableObject
+{
+	public int geometryLayerID = 1;
+
+	public string geometryTag = "Untagged";
+
+	public int geometryRenderQueue = 3000;
+
+	public bool forceSinglePass = false;
+
+	[SerializeField]
+	[HighlightNull]
+	private Shader beamShader1Pass = null;
+
+	[FormerlySerializedAs("BeamShader")]
+	[FormerlySerializedAs("beamShader")]
+	[SerializeField]
+	[HighlightNull]
+	private Shader beamShader2Pass = null;
+
+	public int sharedMeshSides = 24;
+
+	public int sharedMeshSegments = 5;
+
+	[Range(0.01f, 2f)]
+	public float globalNoiseScale = 0.5f;
+
+	public Vector3 globalNoiseVelocity = Consts.NoiseVelocityDefault;
+
+	[HighlightNull]
+	public TextAsset noise3DData = null;
+
+	public int noise3DSize = 64;
+
+	[HighlightNull]
+	public ParticleSystem dustParticlesPrefab = null;
+
+	private static Config m_Instance = null;
+
+	public Shader beamShader => forceSinglePass ? beamShader1Pass : beamShader2Pass;
+
+	public Vector4 globalNoiseParam => new Vector4(globalNoiseVelocity.x, globalNoiseVelocity.y, globalNoiseVelocity.z, globalNoiseScale);
+
+	public static Config Instance
+	{
+		get
+		{
+			if ((Object)(object)m_Instance == (Object)null)
+			{
+				Config[] array = Resources.LoadAll<Config>("Config");
+				Debug.Assert(array.Length != 0, $"Can't find any resource of type '{typeof(Config)}'. Make sure you have a ScriptableObject of this type in a 'Resources' folder.");
+				m_Instance = array[0];
+			}
+			return m_Instance;
+		}
+	}
+
+	public void Reset()
+	{
+		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
+		geometryLayerID = 1;
+		geometryTag = "Untagged";
+		geometryRenderQueue = 3000;
+		beamShader1Pass = Shader.Find("Hidden/VolumetricLightBeam1Pass");
+		beamShader2Pass = Shader.Find("Hidden/VolumetricLightBeam2Pass");
+		sharedMeshSides = 24;
+		sharedMeshSegments = 5;
+		globalNoiseScale = 0.5f;
+		globalNoiseVelocity = Consts.NoiseVelocityDefault;
+		ref TextAsset reference = ref noise3DData;
+		Object obj = Resources.Load("Noise3D_64x64x64");
+		reference = (TextAsset)(object)((obj is TextAsset) ? obj : null);
+		noise3DSize = 64;
+		ref ParticleSystem reference2 = ref dustParticlesPrefab;
+		Object obj2 = Resources.Load("DustParticles", typeof(ParticleSystem));
+		reference2 = (ParticleSystem)(object)((obj2 is ParticleSystem) ? obj2 : null);
+	}
+
+	public ParticleSystem NewVolumetricDustParticles()
+	{
+		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
+		if (!Object.op_Implicit((Object)(object)dustParticlesPrefab))
+		{
+			if (Application.isPlaying)
+			{
+				Debug.LogError((object)"Failed to instantiate VolumetricDustParticles prefab.");
+			}
+			return null;
+		}
+		ParticleSystem val = Object.Instantiate<ParticleSystem>(dustParticlesPrefab);
+		val.useAutoRandomSeed = false;
+		((Object)val).name = "Dust Particles";
+		((Object)((Component)val).gameObject).hideFlags = Consts.ProceduralObjectsHideFlags;
+		((Component)val).gameObject.SetActive(true);
+		return val;
+	}
+}

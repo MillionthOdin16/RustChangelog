@@ -1,0 +1,43 @@
+using System.Collections.Generic;
+using UnityEngine;
+
+public class LightEx : UpdateBehaviour, IClientComponent
+{
+	public bool alterColor = false;
+
+	public float colorTimeScale = 1f;
+
+	public Color colorA = Color.red;
+
+	public Color colorB = Color.yellow;
+
+	public AnimationCurve blendCurve = new AnimationCurve();
+
+	public bool loopColor = true;
+
+	public bool alterIntensity = false;
+
+	public float intensityTimeScale = 1f;
+
+	public AnimationCurve intenseCurve = new AnimationCurve();
+
+	public float intensityCurveScale = 3f;
+
+	public bool loopIntensity = true;
+
+	public bool randomOffset = false;
+
+	public float randomIntensityStartScale = -1f;
+
+	public List<Light> syncLights = new List<Light>(0);
+
+	protected void OnValidate()
+	{
+		CheckConflict(((Component)this).gameObject);
+	}
+
+	public static bool CheckConflict(GameObject go)
+	{
+		return false;
+	}
+}

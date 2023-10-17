@@ -1,0 +1,88 @@
+using System.Collections.Generic;
+using Facepunch;
+using UnityEngine;
+
+[CreateAssetMenu(menuName = "Rust/Missions/OBJECTIVES/Kill")]
+public class MissionObjective_KillEntity : MissionObjective
+{
+	public string[] targetPrefabIDs;
+
+	public int numToKill;
+
+	public bool shouldUpdateMissionLocation;
+
+	private float nextLocationUpdateTime = 0f;
+
+	public override void ObjectiveStarted(BasePlayer playerFor, int index, BaseMission.MissionInstance instance)
+	{
+		base.ObjectiveStarted(playerFor, index, instance);
+	}
+
+	public override void ProcessMissionEvent(BasePlayer playerFor, BaseMission.MissionInstance instance, int index, BaseMission.MissionEventType type, string identifier, float amount)
+	{
+		base.ProcessMissionEvent(playerFor, instance, index, type, identifier, amount);
+		if (IsCompleted(index, instance) || !CanProgress(index, instance) || type != BaseMission.MissionEventType.KILL_ENTITY)
+		{
+			return;
+		}
+		string[] array = targetPrefabIDs;
+		foreach (string text in array)
+		{
+			if (text == identifier)
+			{
+				instance.objectiveStatuses[index].genericInt1 += (int)amount;
+				if (instance.objectiveStatuses[index].genericInt1 >= numToKill)
+				{
+					CompleteObjective(index, instance, playerFor);
+					playerFor.MissionDirty();
+				}
+				break;
+			}
+		}
+	}
+
+	public override void Think(int index, BaseMission.MissionInstance instance, BasePlayer assignee, float delta)
+	{
+		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0133: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0138: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00da: Unknown result type (might be due to invalid IL or missing references)
+		if (shouldUpdateMissionLocation && IsStarted(index, instance) && Time.realtimeSinceStartup > nextLocationUpdateTime)
+		{
+			nextLocationUpdateTime = Time.realtimeSinceStartup + 1f;
+			string[] array = targetPrefabIDs;
+			foreach (string s in array)
+			{
+				uint result = 0u;
+				uint.TryParse(s, out result);
+				List<BaseCombatEntity> list = Pool.GetList<BaseCombatEntity>();
+				Vis.Entities(((Component)assignee).transform.position, 20f, list, 133120, (QueryTriggerInteraction)2);
+				int num = -1;
+				float num2 = float.PositiveInfinity;
+				for (int j = 0; j < list.Count; j++)
+				{
+					BaseCombatEntity baseCombatEntity = list[j];
+					if (baseCombatEntity.IsAlive() && baseCombatEntity.prefabID == result)
+					{
+						float num3 = Vector3.Distance(((Component)baseCombatEntity).transform.position, ((Component)assignee).transform.position);
+						if (num3 < num2)
+						{
+							num = j;
+							num2 = num3;
+						}
+					}
+				}
+				if (num != -1)
+				{
+					instance.missionLocation = ((Component)list[num]).transform.position;
+					assignee.MissionDirty();
+					Pool.FreeList<BaseCombatEntity>(ref list);
+					break;
+				}
+				Pool.FreeList<BaseCombatEntity>(ref list);
+			}
+		}
+		base.Think(index, instance, assignee, delta);
+	}
+}

@@ -1,0 +1,501 @@
+using System;
+using System.Collections;
+using UnityEngine;
+using UnityEngine.Serialization;
+
+namespace VLB;
+
+[ExecuteInEditMode]
+[DisallowMultipleComponent]
+[SelectionBase]
+[HelpURL("http://saladgamer.com/vlb-doc/comp-lightbeam/")]
+public class VolumetricLightBeam : MonoBehaviour
+{
+	public bool colorFromLight = true;
+
+	public ColorMode colorMode = ColorMode.Flat;
+
+	[ColorUsage(true, true)]
+	[FormerlySerializedAs("colorValue")]
+	public Color color = Consts.FlatColor;
+
+	public Gradient colorGradient;
+
+	[Range(0f, 1f)]
+	public float alphaInside = 1f;
+
+	[FormerlySerializedAs("alpha")]
+	[Range(0f, 1f)]
+	public float alphaOutside = 1f;
+
+	public BlendingMode blendingMode = BlendingMode.Additive;
+
+	[FormerlySerializedAs("angleFromLight")]
+	public bool spotAngleFromLight = true;
+
+	[Range(0.1f, 179.9f)]
+	public float spotAngle = 35f;
+
+	[FormerlySerializedAs("radiusStart")]
+	public float coneRadiusStart = 0.1f;
+
+	public MeshType geomMeshType = MeshType.Shared;
+
+	[FormerlySerializedAs("geomSides")]
+	public int geomCustomSides = 18;
+
+	public int geomCustomSegments = 5;
+
+	public bool geomCap = false;
+
+	public bool fadeEndFromLight = true;
+
+	public AttenuationEquation attenuationEquation = AttenuationEquation.Quadratic;
+
+	[Range(0f, 1f)]
+	public float attenuationCustomBlending = 0.5f;
+
+	public float fadeStart = 0f;
+
+	public float fadeEnd = 3f;
+
+	public float depthBlendDistance = 2f;
+
+	public float cameraClippingDistance = 0.5f;
+
+	[Range(0f, 1f)]
+	public float glareFrontal = 0.5f;
+
+	[Range(0f, 1f)]
+	public float glareBehind = 0.5f;
+
+	[Obsolete("Use 'glareFrontal' instead")]
+	public float boostDistanceInside = 0.5f;
+
+	[Obsolete("This property has been merged with 'fresnelPow'")]
+	public float fresnelPowInside = 6f;
+
+	[FormerlySerializedAs("fresnelPowOutside")]
+	public float fresnelPow = 8f;
+
+	public bool noiseEnabled = false;
+
+	[Range(0f, 1f)]
+	public float noiseIntensity = 0.5f;
+
+	public bool noiseScaleUseGlobal = true;
+
+	[Range(0.01f, 2f)]
+	public float noiseScaleLocal = 0.5f;
+
+	public bool noiseVelocityUseGlobal = true;
+
+	public Vector3 noiseVelocityLocal = Consts.NoiseVelocityDefault;
+
+	private Plane m_PlaneWS;
+
+	[SerializeField]
+	private int pluginVersion = -1;
+
+	[FormerlySerializedAs("trackChangesDuringPlaytime")]
+	[SerializeField]
+	private bool _TrackChangesDuringPlaytime = false;
+
+	[SerializeField]
+	private int _SortingLayerID = 0;
+
+	[SerializeField]
+	private int _SortingOrder = 0;
+
+	private BeamGeometry m_BeamGeom = null;
+
+	private Coroutine m_CoPlaytimeUpdate = null;
+
+	private Light _CachedLight = null;
+
+	public float coneAngle => Mathf.Atan2(coneRadiusEnd - coneRadiusStart, fadeEnd) * 57.29578f * 2f;
+
+	public float coneRadiusEnd => fadeEnd * Mathf.Tan(spotAngle * ((float)Math.PI / 180f) * 0.5f);
+
+	public float coneVolume
+	{
+		get
+		{
+			float num = coneRadiusStart;
+			float num2 = coneRadiusEnd;
+			return (float)Math.PI / 3f * (num * num + num * num2 + num2 * num2) * fadeEnd;
+		}
+	}
+
+	public float coneApexOffsetZ
+	{
+		get
+		{
+			float num = coneRadiusStart / coneRadiusEnd;
+			return (num == 1f) ? float.MaxValue : (fadeEnd * num / (1f - num));
+		}
+	}
+
+	public int geomSides
+	{
+		get
+		{
+			return (geomMeshType == MeshType.Custom) ? geomCustomSides : Config.Instance.sharedMeshSides;
+		}
+		set
+		{
+			geomCustomSides = value;
+			Debug.LogWarning((object)"The setter VLB.VolumetricLightBeam.geomSides is OBSOLETE and has been renamed to geomCustomSides.");
+		}
+	}
+
+	public int geomSegments
+	{
+		get
+		{
+			return (geomMeshType == MeshType.Custom) ? geomCustomSegments : Config.Instance.sharedMeshSegments;
+		}
+		set
+		{
+			geomCustomSegments = value;
+			Debug.LogWarning((object)"The setter VLB.VolumetricLightBeam.geomSegments is OBSOLETE and has been renamed to geomCustomSegments.");
+		}
+	}
+
+	public float attenuationLerpLinearQuad
+	{
+		get
+		{
+			if (attenuationEquation == AttenuationEquation.Linear)
+			{
+				return 0f;
+			}
+			if (attenuationEquation == AttenuationEquation.Quadratic)
+			{
+				return 1f;
+			}
+			return attenuationCustomBlending;
+		}
+	}
+
+	public int sortingLayerID
+	{
+		get
+		{
+			return _SortingLayerID;
+		}
+		set
+		{
+			_SortingLayerID = value;
+			if (Object.op_Implicit((Object)(object)m_BeamGeom))
+			{
+				m_BeamGeom.sortingLayerID = value;
+			}
+		}
+	}
+
+	public string sortingLayerName
+	{
+		get
+		{
+			return SortingLayer.IDToName(sortingLayerID);
+		}
+		set
+		{
+			sortingLayerID = SortingLayer.NameToID(value);
+		}
+	}
+
+	public int sortingOrder
+	{
+		get
+		{
+			return _SortingOrder;
+		}
+		set
+		{
+			_SortingOrder = value;
+			if (Object.op_Implicit((Object)(object)m_BeamGeom))
+			{
+				m_BeamGeom.sortingOrder = value;
+			}
+		}
+	}
+
+	public bool trackChangesDuringPlaytime
+	{
+		get
+		{
+			return _TrackChangesDuringPlaytime;
+		}
+		set
+		{
+			_TrackChangesDuringPlaytime = value;
+			StartPlaytimeUpdateIfNeeded();
+		}
+	}
+
+	public bool isCurrentlyTrackingChanges => m_CoPlaytimeUpdate != null;
+
+	public bool hasGeometry => (Object)(object)m_BeamGeom != (Object)null;
+
+	public Bounds bounds => (Bounds)(((Object)(object)m_BeamGeom != (Object)null) ? ((Renderer)m_BeamGeom.meshRenderer).bounds : new Bounds(Vector3.zero, Vector3.zero));
+
+	public int blendingModeAsInt => Mathf.Clamp((int)blendingMode, 0, Enum.GetValues(typeof(BlendingMode)).Length);
+
+	public MeshRenderer Renderer => ((Object)(object)m_BeamGeom != (Object)null) ? m_BeamGeom.meshRenderer : null;
+
+	public string meshStats
+	{
+		get
+		{
+			Mesh val = (Object.op_Implicit((Object)(object)m_BeamGeom) ? m_BeamGeom.coneMesh : null);
+			if (Object.op_Implicit((Object)(object)val))
+			{
+				return $"Cone angle: {coneAngle:0.0} degrees\nMesh: {val.vertexCount} vertices, {val.triangles.Length / 3} triangles";
+			}
+			return "no mesh available";
+		}
+	}
+
+	public int meshVerticesCount => (Object.op_Implicit((Object)(object)m_BeamGeom) && Object.op_Implicit((Object)(object)m_BeamGeom.coneMesh)) ? m_BeamGeom.coneMesh.vertexCount : 0;
+
+	public int meshTrianglesCount => (Object.op_Implicit((Object)(object)m_BeamGeom) && Object.op_Implicit((Object)(object)m_BeamGeom.coneMesh)) ? (m_BeamGeom.coneMesh.triangles.Length / 3) : 0;
+
+	private Light lightSpotAttached
+	{
+		get
+		{
+			//IL_0030: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0036: Invalid comparison between Unknown and I4
+			if ((Object)(object)_CachedLight == (Object)null)
+			{
+				_CachedLight = ((Component)this).GetComponent<Light>();
+			}
+			if (Object.op_Implicit((Object)(object)_CachedLight) && (int)_CachedLight.type == 0)
+			{
+				return _CachedLight;
+			}
+			return null;
+		}
+	}
+
+	public void SetClippingPlane(Plane planeWS)
+	{
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		if (Object.op_Implicit((Object)(object)m_BeamGeom))
+		{
+			m_BeamGeom.SetClippingPlane(planeWS);
+		}
+		m_PlaneWS = planeWS;
+	}
+
+	public void SetClippingPlaneOff()
+	{
+		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
+		if (Object.op_Implicit((Object)(object)m_BeamGeom))
+		{
+			m_BeamGeom.SetClippingPlaneOff();
+		}
+		m_PlaneWS = default(Plane);
+	}
+
+	public bool IsColliderHiddenByDynamicOccluder(Collider collider)
+	{
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+		Debug.Assert(Object.op_Implicit((Object)(object)collider), "You should pass a valid Collider to VLB.VolumetricLightBeam.IsColliderHiddenByDynamicOccluder");
+		if (!m_PlaneWS.IsValid())
+		{
+			return false;
+		}
+		bool flag = GeometryUtility.TestPlanesAABB((Plane[])(object)new Plane[1] { m_PlaneWS }, collider.bounds);
+		return !flag;
+	}
+
+	public float GetInsideBeamFactor(Vector3 posWS)
+	{
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		return GetInsideBeamFactorFromObjectSpacePos(((Component)this).transform.InverseTransformPoint(posWS));
+	}
+
+	public float GetInsideBeamFactorFromObjectSpacePos(Vector3 posOS)
+	{
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
+		if (posOS.z < 0f)
+		{
+			return -1f;
+		}
+		Vector2 val = posOS.xy();
+		val = new Vector2(((Vector2)(ref val)).magnitude, posOS.z + coneApexOffsetZ);
+		Vector2 normalized = ((Vector2)(ref val)).normalized;
+		float num = coneAngle * ((float)Math.PI / 180f) / 2f;
+		return Mathf.Clamp((Mathf.Abs(Mathf.Sin(num)) - Mathf.Abs(normalized.x)) / 0.1f, -1f, 1f);
+	}
+
+	[Obsolete("Use 'GenerateGeometry()' instead")]
+	public void Generate()
+	{
+		GenerateGeometry();
+	}
+
+	public virtual void GenerateGeometry()
+	{
+		HandleBackwardCompatibility(pluginVersion, 1510);
+		pluginVersion = 1510;
+		ValidateProperties();
+		if ((Object)(object)m_BeamGeom == (Object)null)
+		{
+			Shader beamShader = Config.Instance.beamShader;
+			if (!Object.op_Implicit((Object)(object)beamShader))
+			{
+				Debug.LogError((object)"Invalid BeamShader set in VLB Config");
+				return;
+			}
+			m_BeamGeom = Utils.NewWithComponent<BeamGeometry>("Beam Geometry");
+			m_BeamGeom.Initialize(this, beamShader);
+		}
+		m_BeamGeom.RegenerateMesh();
+		m_BeamGeom.visible = ((Behaviour)this).enabled;
+	}
+
+	public virtual void UpdateAfterManualPropertyChange()
+	{
+		ValidateProperties();
+		if (Object.op_Implicit((Object)(object)m_BeamGeom))
+		{
+			m_BeamGeom.UpdateMaterialAndBounds();
+		}
+	}
+
+	private void Start()
+	{
+		GenerateGeometry();
+	}
+
+	private void OnEnable()
+	{
+		if (Object.op_Implicit((Object)(object)m_BeamGeom))
+		{
+			m_BeamGeom.visible = true;
+		}
+		StartPlaytimeUpdateIfNeeded();
+	}
+
+	private void OnDisable()
+	{
+		if (Object.op_Implicit((Object)(object)m_BeamGeom))
+		{
+			m_BeamGeom.visible = false;
+		}
+		m_CoPlaytimeUpdate = null;
+	}
+
+	private void StartPlaytimeUpdateIfNeeded()
+	{
+	}
+
+	private IEnumerator CoPlaytimeUpdate()
+	{
+		while (trackChangesDuringPlaytime && ((Behaviour)this).enabled)
+		{
+			UpdateAfterManualPropertyChange();
+			yield return null;
+		}
+		m_CoPlaytimeUpdate = null;
+	}
+
+	private void OnDestroy()
+	{
+		DestroyBeam();
+	}
+
+	private void DestroyBeam()
+	{
+		if (Object.op_Implicit((Object)(object)m_BeamGeom))
+		{
+			Object.DestroyImmediate((Object)(object)((Component)m_BeamGeom).gameObject);
+		}
+		m_BeamGeom = null;
+	}
+
+	private void AssignPropertiesFromSpotLight(Light lightSpot)
+	{
+		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0010: Invalid comparison between Unknown and I4
+		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
+		if (Object.op_Implicit((Object)(object)lightSpot) && (int)lightSpot.type == 0)
+		{
+			if (fadeEndFromLight)
+			{
+				fadeEnd = lightSpot.range;
+			}
+			if (spotAngleFromLight)
+			{
+				spotAngle = lightSpot.spotAngle;
+			}
+			if (colorFromLight)
+			{
+				colorMode = ColorMode.Flat;
+				color = lightSpot.color;
+			}
+		}
+	}
+
+	private void ClampProperties()
+	{
+		alphaInside = Mathf.Clamp01(alphaInside);
+		alphaOutside = Mathf.Clamp01(alphaOutside);
+		attenuationCustomBlending = Mathf.Clamp01(attenuationCustomBlending);
+		fadeEnd = Mathf.Max(0.01f, fadeEnd);
+		fadeStart = Mathf.Clamp(fadeStart, 0f, fadeEnd - 0.01f);
+		spotAngle = Mathf.Clamp(spotAngle, 0.1f, 179.9f);
+		coneRadiusStart = Mathf.Max(coneRadiusStart, 0f);
+		depthBlendDistance = Mathf.Max(depthBlendDistance, 0f);
+		cameraClippingDistance = Mathf.Max(cameraClippingDistance, 0f);
+		geomCustomSides = Mathf.Clamp(geomCustomSides, 3, 256);
+		geomCustomSegments = Mathf.Clamp(geomCustomSegments, 0, 64);
+		fresnelPow = Mathf.Max(0f, fresnelPow);
+		glareBehind = Mathf.Clamp01(glareBehind);
+		glareFrontal = Mathf.Clamp01(glareFrontal);
+		noiseIntensity = Mathf.Clamp(noiseIntensity, 0f, 1f);
+	}
+
+	private void ValidateProperties()
+	{
+		AssignPropertiesFromSpotLight(lightSpotAttached);
+		ClampProperties();
+	}
+
+	private void HandleBackwardCompatibility(int serializedVersion, int newVersion)
+	{
+		if (serializedVersion != -1 && serializedVersion != newVersion)
+		{
+			if (serializedVersion < 1301)
+			{
+				attenuationEquation = AttenuationEquation.Linear;
+			}
+			if (serializedVersion < 1501)
+			{
+				geomMeshType = MeshType.Custom;
+				geomCustomSegments = 5;
+			}
+			Utils.MarkCurrentSceneDirty();
+		}
+	}
+}

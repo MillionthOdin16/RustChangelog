@@ -1,0 +1,314 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using ConVar;
+using Facepunch;
+using Rust;
+using UnityEngine;
+using UnityEngine.Profiling;
+
+public class TriggerBase : BaseMonoBehaviour
+{
+	public LayerMask interestLayers;
+
+	[NonSerialized]
+	public HashSet<GameObject> contents;
+
+	[NonSerialized]
+	public HashSet<BaseEntity> entityContents;
+
+	public bool HasAnyContents => !contents.IsNullOrEmpty();
+
+	public bool HasAnyEntityContents => !entityContents.IsNullOrEmpty();
+
+	internal virtual GameObject InterestedInObject(GameObject obj)
+	{
+		int num = 1 << obj.layer;
+		if ((((LayerMask)(ref interestLayers)).value & num) != num)
+		{
+			return null;
+		}
+		return obj;
+	}
+
+	protected virtual void OnDisable()
+	{
+		if (!Application.isQuitting && contents != null)
+		{
+			GameObject[] array = contents.ToArray();
+			foreach (GameObject targetObj in array)
+			{
+				OnTriggerExit(targetObj);
+			}
+			contents = null;
+		}
+	}
+
+	internal virtual void OnEntityEnter(BaseEntity ent)
+	{
+		if (!((Object)(object)ent == (Object)null))
+		{
+			if (entityContents == null)
+			{
+				entityContents = new HashSet<BaseEntity>();
+			}
+			entityContents.Add(ent);
+		}
+	}
+
+	internal virtual void OnEntityLeave(BaseEntity ent)
+	{
+		if (entityContents != null)
+		{
+			entityContents.Remove(ent);
+		}
+	}
+
+	internal virtual void OnObjectAdded(GameObject obj, Collider col)
+	{
+		if (!((Object)(object)obj == (Object)null))
+		{
+			BaseEntity baseEntity = obj.ToBaseEntity();
+			if (Object.op_Implicit((Object)(object)baseEntity))
+			{
+				baseEntity.EnterTrigger(this);
+				OnEntityEnter(baseEntity);
+			}
+		}
+	}
+
+	internal virtual void OnObjectRemoved(GameObject obj)
+	{
+		if ((Object)(object)obj == (Object)null)
+		{
+			return;
+		}
+		BaseEntity baseEntity = obj.ToBaseEntity();
+		if (!Object.op_Implicit((Object)(object)baseEntity))
+		{
+			return;
+		}
+		bool flag = false;
+		foreach (GameObject content in contents)
+		{
+			if ((Object)(object)content == (Object)null)
+			{
+				Debug.LogWarning((object)("Trigger " + ((object)this).ToString() + " contains null object."));
+			}
+			else if ((Object)(object)content.ToBaseEntity() == (Object)(object)baseEntity)
+			{
+				flag = true;
+				break;
+			}
+		}
+		if (!flag)
+		{
+			baseEntity.LeaveTrigger(this);
+			OnEntityLeave(baseEntity);
+		}
+	}
+
+	internal void RemoveInvalidEntities()
+	{
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
+		if (entityContents.IsNullOrEmpty())
+		{
+			return;
+		}
+		Collider component = ((Component)this).GetComponent<Collider>();
+		if ((Object)(object)component == (Object)null)
+		{
+			return;
+		}
+		Bounds bounds = component.bounds;
+		((Bounds)(ref bounds)).Expand(1f);
+		List<BaseEntity> list = null;
+		foreach (BaseEntity entityContent in entityContents)
+		{
+			if ((Object)(object)entityContent == (Object)null)
+			{
+				if (Debugging.checktriggers)
+				{
+					Debug.LogWarning((object)("Trigger " + ((object)this).ToString() + " contains destroyed entity."));
+				}
+				if (list == null)
+				{
+					list = Pool.GetList<BaseEntity>();
+				}
+				list.Add(entityContent);
+			}
+			else if (!((Bounds)(ref bounds)).Contains(entityContent.ClosestPoint(((Component)this).transform.position)))
+			{
+				if (Debugging.checktriggers)
+				{
+					Debug.LogWarning((object)("Trigger " + ((object)this).ToString() + " contains entity that is too far away: " + ((object)entityContent).ToString()));
+				}
+				if (list == null)
+				{
+					list = Pool.GetList<BaseEntity>();
+				}
+				list.Add(entityContent);
+			}
+		}
+		if (list == null)
+		{
+			return;
+		}
+		foreach (BaseEntity item in list)
+		{
+			RemoveEntity(item);
+		}
+		Pool.FreeList<BaseEntity>(ref list);
+	}
+
+	internal bool CheckEntity(BaseEntity ent)
+	{
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
+		if ((Object)(object)ent == (Object)null)
+		{
+			return true;
+		}
+		Collider component = ((Component)this).GetComponent<Collider>();
+		if ((Object)(object)component == (Object)null)
+		{
+			return true;
+		}
+		Bounds bounds = component.bounds;
+		((Bounds)(ref bounds)).Expand(1f);
+		return ((Bounds)(ref bounds)).Contains(ent.ClosestPoint(((Component)this).transform.position));
+	}
+
+	internal virtual void OnObjects()
+	{
+	}
+
+	internal virtual void OnEmpty()
+	{
+		contents = null;
+		entityContents = null;
+	}
+
+	public void RemoveObject(GameObject obj)
+	{
+		if (!((Object)(object)obj == (Object)null))
+		{
+			Collider component = obj.GetComponent<Collider>();
+			if (!((Object)(object)component == (Object)null))
+			{
+				OnTriggerExit(component);
+			}
+		}
+	}
+
+	public void RemoveEntity(BaseEntity ent)
+	{
+		if ((Object)(object)this == (Object)null || contents == null || (Object)(object)ent == (Object)null)
+		{
+			return;
+		}
+		List<GameObject> list = Pool.GetList<GameObject>();
+		foreach (GameObject content in contents)
+		{
+			if ((Object)(object)content != (Object)null && (Object)(object)content.GetComponentInParent<BaseEntity>() == (Object)(object)ent)
+			{
+				list.Add(content);
+			}
+		}
+		foreach (GameObject item in list)
+		{
+			OnTriggerExit(item);
+		}
+		Pool.FreeList<GameObject>(ref list);
+	}
+
+	public void OnTriggerEnter(Collider collider)
+	{
+		if ((Object)(object)this == (Object)null || !((Behaviour)this).enabled)
+		{
+			return;
+		}
+		TimeWarning val = TimeWarning.New("TriggerBase.OnTriggerEnter", 0);
+		try
+		{
+			GameObject val2 = InterestedInObject(((Component)collider).gameObject);
+			if ((Object)(object)val2 == (Object)null)
+			{
+				return;
+			}
+			if (contents == null)
+			{
+				contents = new HashSet<GameObject>();
+			}
+			if (contents.Contains(val2))
+			{
+				return;
+			}
+			int count = contents.Count;
+			contents.Add(val2);
+			OnObjectAdded(val2, collider);
+			if (count == 0 && contents.Count == 1)
+			{
+				OnObjects();
+			}
+		}
+		finally
+		{
+			((IDisposable)val)?.Dispose();
+		}
+		if (Debugging.checktriggers)
+		{
+			RemoveInvalidEntities();
+		}
+	}
+
+	internal virtual bool SkipOnTriggerExit(Collider collider)
+	{
+		return false;
+	}
+
+	public void OnTriggerExit(Collider collider)
+	{
+		if ((Object)(object)this == (Object)null || (Object)(object)collider == (Object)null || SkipOnTriggerExit(collider))
+		{
+			return;
+		}
+		GameObject val = InterestedInObject(((Component)collider).gameObject);
+		if (!((Object)(object)val == (Object)null))
+		{
+			Profiler.BeginSample("TriggerBase.OnTriggerExit");
+			OnTriggerExit(val);
+			Profiler.EndSample();
+			if (Debugging.checktriggers)
+			{
+				RemoveInvalidEntities();
+			}
+		}
+	}
+
+	private void OnTriggerExit(GameObject targetObj)
+	{
+		if (contents == null)
+		{
+			return;
+		}
+		Profiler.BeginSample("TriggerBase.OnTriggerExit");
+		if (!contents.Contains(targetObj))
+		{
+			Profiler.EndSample();
+			return;
+		}
+		contents.Remove(targetObj);
+		OnObjectRemoved(targetObj);
+		if (contents == null || contents.Count == 0)
+		{
+			OnEmpty();
+		}
+		Profiler.EndSample();
+	}
+}

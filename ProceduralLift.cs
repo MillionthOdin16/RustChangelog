@@ -1,0 +1,227 @@
+using System;
+using ConVar;
+using Facepunch;
+using Network;
+using ProtoBuf;
+using Rust;
+using UnityEngine;
+using UnityEngine.Assertions;
+using UnityEngine.Profiling;
+
+public class ProceduralLift : BaseEntity
+{
+	public float movementSpeed = 1f;
+
+	public float resetDelay = 5f;
+
+	public ProceduralLiftCabin cabin = null;
+
+	public ProceduralLiftStop[] stops = null;
+
+	public GameObjectRef triggerPrefab;
+
+	public string triggerBone;
+
+	private int floorIndex = -1;
+
+	public SoundDefinition startSoundDef;
+
+	public SoundDefinition stopSoundDef;
+
+	public SoundDefinition movementLoopSoundDef;
+
+	private Sound movementLoopSound;
+
+	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
+	{
+		TimeWarning val = TimeWarning.New("ProceduralLift.OnRpcMessage", 0);
+		try
+		{
+			if (rpc == 2657791441u && (Object)(object)player != (Object)null)
+			{
+				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
+				if (Global.developer > 2)
+				{
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_UseLift "));
+				}
+				TimeWarning val2 = TimeWarning.New("RPC_UseLift", 0);
+				try
+				{
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					try
+					{
+						if (!RPC_Server.MaxDistance.Test(2657791441u, "RPC_UseLift", this, player, 3f))
+						{
+							return true;
+						}
+					}
+					finally
+					{
+						((IDisposable)val3)?.Dispose();
+					}
+					try
+					{
+						TimeWarning val4 = TimeWarning.New("Call", 0);
+						try
+						{
+							RPCMessage rPCMessage = default(RPCMessage);
+							rPCMessage.connection = msg.connection;
+							rPCMessage.player = player;
+							rPCMessage.read = msg.read;
+							RPCMessage rpc2 = rPCMessage;
+							RPC_UseLift(rpc2);
+						}
+						finally
+						{
+							((IDisposable)val4)?.Dispose();
+						}
+					}
+					catch (Exception ex)
+					{
+						Debug.LogException(ex);
+						player.Kick("RPC Error in RPC_UseLift");
+					}
+				}
+				finally
+				{
+					((IDisposable)val2)?.Dispose();
+				}
+				return true;
+			}
+		}
+		finally
+		{
+			((IDisposable)val)?.Dispose();
+		}
+		return base.OnRpcMessage(player, rpc, msg);
+	}
+
+	public override void Spawn()
+	{
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		base.Spawn();
+		if (!Application.isLoadingSave)
+		{
+			BaseEntity baseEntity = GameManager.server.CreateEntity(triggerPrefab.resourcePath, Vector3.zero, Quaternion.identity);
+			baseEntity.Spawn();
+			baseEntity.SetParent(this, triggerBone);
+		}
+	}
+
+	[RPC_Server]
+	[RPC_Server.MaxDistance(3f)]
+	private void RPC_UseLift(RPCMessage rpc)
+	{
+		if (rpc.player.CanInteract() && !IsBusy())
+		{
+			MoveToFloor((floorIndex + 1) % stops.Length);
+		}
+	}
+
+	public override void ServerInit()
+	{
+		base.ServerInit();
+		SnapToFloor(0);
+	}
+
+	public override void Save(SaveInfo info)
+	{
+		base.Save(info);
+		Profiler.BeginSample("ProceduralLift.Save");
+		info.msg.lift = Pool.Get<Lift>();
+		info.msg.lift.floor = floorIndex;
+		Profiler.EndSample();
+	}
+
+	public override void Load(LoadInfo info)
+	{
+		if (info.msg.lift != null)
+		{
+			if (floorIndex == -1)
+			{
+				SnapToFloor(info.msg.lift.floor);
+			}
+			else
+			{
+				MoveToFloor(info.msg.lift.floor);
+			}
+		}
+		base.Load(info);
+	}
+
+	private void ResetLift()
+	{
+		MoveToFloor(0);
+	}
+
+	private void MoveToFloor(int floor)
+	{
+		floorIndex = Mathf.Clamp(floor, 0, stops.Length - 1);
+		if (base.isServer)
+		{
+			SetFlag(Flags.Busy, b: true);
+			SendNetworkUpdateImmediate();
+			((FacepunchBehaviour)this).CancelInvoke((Action)ResetLift);
+		}
+	}
+
+	private void SnapToFloor(int floor)
+	{
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		floorIndex = Mathf.Clamp(floor, 0, stops.Length - 1);
+		ProceduralLiftStop proceduralLiftStop = stops[floorIndex];
+		((Component)cabin).transform.position = ((Component)proceduralLiftStop).transform.position;
+		if (base.isServer)
+		{
+			SetFlag(Flags.Busy, b: false);
+			SendNetworkUpdateImmediate();
+			((FacepunchBehaviour)this).CancelInvoke((Action)ResetLift);
+		}
+	}
+
+	private void OnFinishedMoving()
+	{
+		if (base.isServer)
+		{
+			SetFlag(Flags.Busy, b: false);
+			SendNetworkUpdateImmediate();
+			if (floorIndex != 0)
+			{
+				((FacepunchBehaviour)this).Invoke((Action)ResetLift, resetDelay);
+			}
+		}
+	}
+
+	protected void Update()
+	{
+		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00af: Unknown result type (might be due to invalid IL or missing references)
+		if (floorIndex < 0 || floorIndex > stops.Length - 1)
+		{
+			return;
+		}
+		ProceduralLiftStop proceduralLiftStop = stops[floorIndex];
+		if (!(((Component)cabin).transform.position == ((Component)proceduralLiftStop).transform.position))
+		{
+			((Component)cabin).transform.position = Vector3.MoveTowards(((Component)cabin).transform.position, ((Component)proceduralLiftStop).transform.position, movementSpeed * Time.deltaTime);
+			if (((Component)cabin).transform.position == ((Component)proceduralLiftStop).transform.position)
+			{
+				OnFinishedMoving();
+			}
+		}
+	}
+
+	public void StartMovementSounds()
+	{
+	}
+
+	public void StopMovementSounds()
+	{
+	}
+}
