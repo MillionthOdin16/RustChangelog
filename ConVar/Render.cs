@@ -40,7 +40,7 @@ public class Render : ConsoleSystem
 	[ClientVar(ClientAdmin = true, Help = "Set the amount of instanced renderers to show for debugging")]
 	public static int max_renderers = 0;
 
-	[ClientVar(Help = "Max distance for instanced rendering, can be higher than normal render distance")]
+	[ClientVar(Saved = true, Help = "Max distance for instanced rendering, can be higher than normal render distance")]
 	public static float instancing_render_distance = 1000f;
 
 	public static bool IsInstancingDisabled => use_normal_rendering;
@@ -108,6 +108,12 @@ public class Render : ConsoleSystem
 
 	[ClientVar(Name = "print_instanced_cell", ClientAdmin = true, Help = "Print number of meshes inside a single grid")]
 	public static void print_instanced_grid(Arg arg)
+	{
+		_ = IsInstancingDisabled;
+	}
+
+	[ClientVar(Name = "expand_instancing", ClientAdmin = true)]
+	public static void expand_instancing(Arg arg)
 	{
 		_ = IsInstancingDisabled;
 	}

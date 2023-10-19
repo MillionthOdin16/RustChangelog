@@ -397,7 +397,7 @@ public class BaseArcadeMachine : BaseVehicle
 			return;
 		}
 		uint arg = msg.read.UInt32();
-		string arg2 = msg.read.String(256);
+		string arg2 = msg.read.String(256, false);
 		foreach (BaseEntity entityContent in networkTrigger.entityContents)
 		{
 			BasePlayer component = ((Component)entityContent).GetComponent<BasePlayer>();

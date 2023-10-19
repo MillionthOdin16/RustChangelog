@@ -1035,10 +1035,10 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 		{
 			return;
 		}
-		string text = msg.read.String(256);
+		string text = msg.read.String(256, false);
 		if (string.IsNullOrEmpty(text) || ComputerStation.IsValidIdentifier(text))
 		{
-			string text2 = msg.read.String(256);
+			string text2 = msg.read.String(256, false);
 			if (ComputerStation.IsValidIdentifier(text2) && text == GetIdentifier())
 			{
 				Debug.Log((object)"SetID success!");
@@ -1321,8 +1321,8 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 	[RPC_Server.IsVisible(3f)]
 	public void AssignToFriend(RPCMessage msg)
 	{
-		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006b: Expected O, but got Unknown
+		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006c: Expected O, but got Unknown
 		if (AtMaxAuthCapacity() || (Object)(object)msg.player == (Object)null || !msg.player.CanInteract() || !CanChangeSettings(msg.player))
 		{
 			return;
@@ -1330,7 +1330,7 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 		ulong num = msg.read.UInt64();
 		if (num != 0L && !IsAuthed(num))
 		{
-			string username = BasePlayer.SanitizePlayerNameString(msg.read.String(256), num);
+			string username = BasePlayer.SanitizePlayerNameString(msg.read.String(256, false), num);
 			PlayerNameID val = new PlayerNameID();
 			val.userid = num;
 			val.username = username;

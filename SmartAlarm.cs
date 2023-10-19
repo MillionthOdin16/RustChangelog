@@ -257,8 +257,8 @@ public class SmartAlarm : AppIOEntity, ISubscribable
 		BuildingPrivlidge buildingPrivilege = GetBuildingPrivilege();
 		if (!((Object)(object)buildingPrivilege != (Object)null) || buildingPrivilege.CanAdministrate(rpc.player))
 		{
-			string text = rpc.read.String(128);
-			string text2 = rpc.read.String(512);
+			string text = rpc.read.String(128, false);
+			string text2 = rpc.read.String(512, false);
 			if (!string.IsNullOrWhiteSpace(text))
 			{
 				_notificationTitle = text;

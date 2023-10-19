@@ -1216,7 +1216,7 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 
 	public static void SendReplicatedVars(string filter)
 	{
-		//IL_00ff: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0101: Unknown result type (might be due to invalid IL or missing references)
 		NetWrite val = ((BaseNetwork)Net.sv).StartWrite();
 		List<Connection> list = Pool.GetList<Connection>();
 		foreach (Connection connection in Net.sv.connections)
@@ -1238,8 +1238,8 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 		val.Int32(list2.Count);
 		foreach (Command item2 in list2)
 		{
-			val.String(item2.FullName);
-			val.String(item2.String);
+			val.String(item2.FullName, false);
+			val.String(item2.String, false);
 		}
 		val.Send(new SendInfo(list));
 		Pool.FreeList<Command>(ref list2);
@@ -1248,22 +1248,22 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 
 	public static void SendReplicatedVars(Connection connection)
 	{
-		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
 		NetWrite val = ((BaseNetwork)Net.sv).StartWrite();
 		List<Command> replicated = Server.Replicated;
 		val.PacketID((Type)25);
 		val.Int32(replicated.Count);
 		foreach (Command item in replicated)
 		{
-			val.String(item.FullName);
-			val.String(item.String);
+			val.String(item.FullName, false);
+			val.String(item.String, false);
 		}
 		val.Send(new SendInfo(connection));
 	}
 
 	private static void OnReplicatedVarChanged(string fullName, string value)
 	{
-		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
 		NetWrite val = ((BaseNetwork)Net.sv).StartWrite();
 		List<Connection> list = Pool.GetList<Connection>();
 		foreach (Connection connection in Net.sv.connections)
@@ -1275,8 +1275,8 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 		}
 		val.PacketID((Type)25);
 		val.Int32(1);
-		val.String(fullName);
-		val.String(value);
+		val.String(fullName, false);
+		val.String(value, false);
 		val.Send(new SendInfo(list));
 		Pool.FreeList<Connection>(ref list);
 	}
@@ -1590,7 +1590,7 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 
 	public void ReadDisconnectReason(Message packet)
 	{
-		string text = packet.read.String(4096);
+		string text = packet.read.String(4096, false);
 		string text2 = ((object)packet.connection).ToString();
 		if (!string.IsNullOrEmpty(text) && !string.IsNullOrEmpty(text2))
 		{
@@ -1750,7 +1750,7 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 		BasePlayer basePlayer = packet.Player();
 		if (!((Object)(object)basePlayer == (Object)null))
 		{
-			basePlayer.OnReceivedVoice(packet.read.BytesWithSize(10485760u));
+			basePlayer.OnReceivedVoice(packet.read.BytesWithSize(10485760u, false));
 		}
 	}
 
@@ -1771,8 +1771,8 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 		}
 		packet.connection.userid = packet.read.UInt64();
 		packet.connection.protocol = packet.read.UInt32();
-		packet.connection.os = packet.read.String(128);
-		packet.connection.username = packet.read.String(256);
+		packet.connection.os = packet.read.String(128, false);
+		packet.connection.username = packet.read.String(256, false);
 		if (string.IsNullOrEmpty(packet.connection.os))
 		{
 			throw new Exception("Invalid OS");
@@ -1793,7 +1793,7 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 		string branch = ConVar.Server.branch;
 		if (packet.read.Unread >= 4)
 		{
-			text = packet.read.String(128);
+			text = packet.read.String(128, false);
 		}
 		if (branch != string.Empty && branch != text)
 		{
@@ -1812,14 +1812,14 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 		}
 		else
 		{
-			packet.connection.token = packet.read.BytesWithSize(512u);
+			packet.connection.token = packet.read.BytesWithSize(512u, false);
 			if (packet.connection.token == null || packet.connection.token.Length < 1)
 			{
 				Net.sv.Kick(packet.connection, "Invalid Token", false);
 				return;
 			}
-			packet.connection.anticheatId = packet.read.StringRaw(128u);
-			packet.connection.anticheatToken = packet.read.StringRaw(2048u);
+			packet.connection.anticheatId = packet.read.StringRaw(128, false);
+			packet.connection.anticheatToken = packet.read.StringRaw(2048, false);
 			auth.OnNewConnection(packet.connection);
 		}
 	}

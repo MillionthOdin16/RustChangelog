@@ -14,6 +14,8 @@ public class TriggerSafeZone : TriggerBase
 	protected void Awake()
 	{
 		triggerCollider = ((Component)this).GetComponent<Collider>();
+		ref LayerMask reference = ref interestLayers;
+		((LayerMask)(ref reference)).value = ((LayerMask)(ref reference)).value | 0x200;
 	}
 
 	protected void OnEnable()

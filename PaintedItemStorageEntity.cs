@@ -135,9 +135,9 @@ public class PaintedItemStorageEntity : BaseEntity, IServerFileReceiver, IUGCBro
 		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
 		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0145: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0146: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012d: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)msg.player == (Object)null || msg.player.userID != base.OwnerID)
 		{
 			return;
@@ -154,7 +154,7 @@ public class PaintedItemStorageEntity : BaseEntity, IServerFileReceiver, IUGCBro
 		{
 			return;
 		}
-		byte[] array = msg.read.BytesWithSize(10485760u);
+		byte[] array = msg.read.BytesWithSize(10485760u, false);
 		if (array == null)
 		{
 			if (_currentImageCrc != 0)

@@ -99,7 +99,7 @@ public class SteamInventory : EntityComponent<BasePlayer>
 	[BaseEntity.RPC_Server.FromOwner]
 	private async Task UpdateSteamInventory(BaseEntity.RPCMessage msg)
 	{
-		byte[] array = msg.read.BytesWithSize(10485760u);
+		byte[] array = msg.read.BytesWithSize(10485760u, false);
 		if (array == null)
 		{
 			Debug.LogWarning((object)"UpdateSteamInventory: Data is null");

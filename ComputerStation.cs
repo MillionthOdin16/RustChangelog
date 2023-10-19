@@ -309,7 +309,7 @@ public class ComputerStation : BaseMountable
 		{
 			return;
 		}
-		string text = msg.read.String(256);
+		string text = msg.read.String(256, false);
 		if (IsValidIdentifier(text) && controlBookmarks.Contains(text))
 		{
 			controlBookmarks.Remove(text);
@@ -336,15 +336,15 @@ public class ComputerStation : BaseMountable
 	[RPC_Server]
 	public void BeginControllingBookmark(RPCMessage msg)
 	{
-		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fa: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer player = msg.player;
 		if (!IsPlayerAdmin(player))
 		{
 			return;
 		}
-		string text = msg.read.String(256);
+		string text = msg.read.String(256, false);
 		if (!IsValidIdentifier(text) || !controlBookmarks.Contains(text))
 		{
 			return;
@@ -485,7 +485,7 @@ public class ComputerStation : BaseMountable
 				return;
 			}
 			nextAddTime = Time.realtimeSinceStartup + 1f;
-			string identifier = msg.read.String(256);
+			string identifier = msg.read.String(256, false);
 			ForceAddBookmark(identifier);
 			SendControlBookmarks(player);
 		}

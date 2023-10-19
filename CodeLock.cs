@@ -360,7 +360,7 @@ public class CodeLock : BaseLock
 		{
 			return;
 		}
-		string text = rpc.read.String(256);
+		string text = rpc.read.String(256, false);
 		bool flag = rpc.read.Bit();
 		if (!IsLocked() && text.Length == 4 && StringEx.IsNumeric(text) && !(!hasCode && flag))
 		{
@@ -426,7 +426,7 @@ public class CodeLock : BaseLock
 		{
 			return;
 		}
-		string text = rpc.read.String(256);
+		string text = rpc.read.String(256, false);
 		bool flag = text == guestCode;
 		bool flag2 = text == code;
 		if (!(text == code) && (!hasGuestCode || !(text == guestCode)))

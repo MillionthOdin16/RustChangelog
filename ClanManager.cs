@@ -1020,7 +1020,7 @@ public class ClanManager : BaseEntity
 	{
 		int requestId = msg.read.Int32();
 		string text = default(string);
-		if (!ClanValidator.ValidateClanName(msg.read.String(256), ref text))
+		if (!ClanValidator.ValidateClanName(msg.read.String(256, false), ref text))
 		{
 			ClientRPCPlayer<ClanActionResult>(null, msg.player, "Client_ReceiveActionResult", BuildActionResult(requestId, (ClanResult)6, null, hasClanInfo: false));
 			return;
@@ -1079,7 +1079,7 @@ public class ClanManager : BaseEntity
 	public async void Server_SetLogo(RPCMessage msg)
 	{
 		int requestId = msg.read.Int32();
-		byte[] newLogo = msg.read.BytesWithSize(10485760u);
+		byte[] newLogo = msg.read.BytesWithSize(10485760u, false);
 		if (!msg.player.CanModifyClan())
 		{
 			ClientRPCPlayer<ClanActionResult>(null, msg.player, "Client_ReceiveActionResult", BuildActionResult(requestId, (ClanResult)16, null, hasClanInfo: false));
@@ -1127,7 +1127,7 @@ public class ClanManager : BaseEntity
 	public async void Server_SetMotd(RPCMessage msg)
 	{
 		int requestId = msg.read.Int32();
-		string text = msg.read.StringMultiLine(2048);
+		string text = msg.read.StringMultiLine(2048, false);
 		if (!msg.player.CanModifyClan())
 		{
 			ClientRPCPlayer<ClanActionResult>(null, msg.player, "Client_ReceiveActionResult", BuildActionResult(requestId, (ClanResult)16, null, hasClanInfo: false));
@@ -1273,7 +1273,7 @@ public class ClanManager : BaseEntity
 	{
 		int requestId = msg.read.Int32();
 		ulong steamId = msg.read.UInt64();
-		string text = msg.read.StringMultiLine(1024);
+		string text = msg.read.StringMultiLine(1024, false);
 		if (!msg.player.CanModifyClan())
 		{
 			ClientRPCPlayer<ClanActionResult>(null, msg.player, "Client_ReceiveActionResult", BuildActionResult(requestId, (ClanResult)16, null, hasClanInfo: false));
@@ -1298,7 +1298,7 @@ public class ClanManager : BaseEntity
 	public async void Server_CreateRole(RPCMessage msg)
 	{
 		int requestId = msg.read.Int32();
-		string text = msg.read.String(128);
+		string text = msg.read.String(128, false);
 		if (!msg.player.CanModifyClan())
 		{
 			ClientRPCPlayer<ClanActionResult>(null, msg.player, "Client_ReceiveActionResult", BuildActionResult(requestId, (ClanResult)16, null, hasClanInfo: false));

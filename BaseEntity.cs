@@ -2571,6 +2571,11 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 
 	public virtual BuildingPrivlidge GetBuildingPrivilege()
 	{
+		return GetNearestBuildingPrivledge();
+	}
+
+	public BuildingPrivlidge GetNearestBuildingPrivledge()
+	{
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
 		return GetBuildingPrivilege(WorldSpaceBounds());
 	}
@@ -3653,7 +3658,7 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 			if (!((Object)(object)player == (Object)null) && player.rpcHistory.TryIncrement(num, (ulong)ConVar.Server.maxpacketspersecond_rpc_signal))
 			{
 				Signal signal = (Signal)msg.read.Int32();
-				string arg = msg.read.String(256);
+				string arg = msg.read.String(256, false);
 				SignalBroadcast(signal, arg, msg.connection);
 			}
 		}

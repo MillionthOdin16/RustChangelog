@@ -169,7 +169,7 @@ public class DrawCallManager
 		_needsDrawCallRebuild = true;
 		EnsureDrawCallCapcity();
 		DrawCallArray[count] = drawCall.JobData;
-		if (cellAllocator.PositionBuffer.BufferVersion != _positionBufferVersion || cellAllocator.OverrideBuffer.BufferVersion != _overrideBufferVersion)
+		if (!NeedsToRebuildMaterialBlocks())
 		{
 			RebuildAllMaterialBlocks();
 		}
@@ -177,6 +177,15 @@ public class DrawCallManager
 		{
 			UpdateMaterialBlock(drawCall);
 		}
+	}
+
+	private bool NeedsToRebuildMaterialBlocks()
+	{
+		if (cellAllocator.PositionBuffer.BufferVersion == _positionBufferVersion)
+		{
+			return cellAllocator.OverrideBuffer.BufferVersion != _overrideBufferVersion;
+		}
+		return true;
 	}
 
 	private void RebuildAllMaterialBlocks()
@@ -208,6 +217,10 @@ public class DrawCallManager
 		{
 			int newCapacity = Mathf.ClosestPowerOfTwo(totalMeshCount) * 2;
 			RenderBuffer.Expand(newCapacity);
+			flag = true;
+		}
+		if (NeedsToRebuildMaterialBlocks())
+		{
 			flag = true;
 		}
 		if (GeometryBuffers.IsDirty)
