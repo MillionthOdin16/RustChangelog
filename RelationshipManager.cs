@@ -19,7 +19,7 @@ public class RelationshipManager : BaseEntity
 		Enemy
 	}
 
-	public class PlayerRelationshipInfo : IPooled, IServerFileReceiver
+	public class PlayerRelationshipInfo : IPooled, IServerFileReceiver, IPlayerInfo
 	{
 		public string displayName;
 
@@ -36,6 +36,20 @@ public class RelationshipManager : BaseEntity
 		public float lastSeenTime;
 
 		public float lastMugshotTime;
+
+		public ulong UserId => player;
+
+		public string UserName => displayName;
+
+		public bool IsOnline => false;
+
+		public bool IsMe => false;
+
+		public bool IsFriend => false;
+
+		public bool IsPlayingThisGame => true;
+
+		public string ServerEndpoint => string.Empty;
 
 		public void EnterPool()
 		{

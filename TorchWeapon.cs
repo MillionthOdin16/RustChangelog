@@ -8,7 +8,7 @@ using UnityEngine.Assertions;
 public class TorchWeapon : BaseMelee
 {
 	[NonSerialized]
-	public float fuelTickAmount = 1f / 12f;
+	public const float FuelTickAmount = 1f / 12f;
 
 	[Header("TorchWeapon")]
 	public AnimatorOverrideController LitHoldAnimationOverride;
@@ -184,7 +184,7 @@ public class TorchWeapon : BaseMelee
 
 	public void UseFuel()
 	{
-		GetOwnerItem()?.LoseCondition(fuelTickAmount);
+		GetOwnerItem()?.LoseCondition(1f / 12f);
 	}
 
 	public override void OnHeldChanged()

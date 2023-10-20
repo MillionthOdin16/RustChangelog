@@ -253,12 +253,20 @@ public class PlayerMetabolism : BaseMetabolism<BasePlayer>
 		{
 			radiation_poison.Subtract(radiation_poison.value * 0.2f * wetness.Fraction() * delta * 0.2f);
 		}
-		if (ConVar.Server.radiation && !owner.IsGod())
+		if (ConVar.Server.radiation)
 		{
-			radiation_level.value = owner.radiationLevel;
-			if (radiation_level.value > 0f)
+			if (!owner.IsGod())
 			{
-				radiation_poison.Add(radiation_level.value * delta);
+				radiation_level.value = owner.radiationLevel;
+				if (radiation_level.value > 0f)
+				{
+					radiation_poison.Add(radiation_level.value * delta);
+				}
+			}
+			else if (radiation_level.value > 0f)
+			{
+				radiation_level.value = 0f;
+				radiation_poison.value = 0f;
 			}
 		}
 		if (pending_health.value > 0f)
@@ -321,6 +329,11 @@ public class PlayerMetabolism : BaseMetabolism<BasePlayer>
 		}
 	}
 
+	public override void ApplyChange(MetabolismAttribute.Type type, float amount, float time)
+	{
+		FindAttribute(type)?.Add(amount);
+	}
+
 	public bool CanConsume()
 	{
 		if (Object.op_Implicit((Object)(object)owner) && owner.IsHeadUnderwater())
@@ -374,6 +387,16 @@ public class PlayerMetabolism : BaseMetabolism<BasePlayer>
 		if (Object.op_Implicit((Object)(object)owner))
 		{
 			owner.health = s.health;
+		}
+	}
+
+	public void SetAttribute(MetabolismAttribute.Type type, float amount)
+	{
+		MetabolismAttribute metabolismAttribute = FindAttribute(type);
+		if (metabolismAttribute != null)
+		{
+			float num = metabolismAttribute.value - amount;
+			metabolismAttribute.Add(0f - num);
 		}
 	}
 

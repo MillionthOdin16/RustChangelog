@@ -442,6 +442,10 @@ public class BaseMountable : BaseCombatEntity
 	{
 	}
 
+	public virtual void OnWeaponFired(BaseProjectile weapon)
+	{
+	}
+
 	public virtual bool CanSwapToThis(BasePlayer player)
 	{
 		return true;

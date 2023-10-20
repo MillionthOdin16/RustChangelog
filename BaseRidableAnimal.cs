@@ -1777,7 +1777,7 @@ public class BaseRidableAnimal : BaseVehicle
 		LootableCorpse component = ((Component)corpse).GetComponent<LootableCorpse>();
 		if (Object.op_Implicit((Object)(object)component))
 		{
-			component.TakeFrom(inventory);
+			component.TakeFrom(this, inventory);
 		}
 	}
 

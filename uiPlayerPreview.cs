@@ -6,5 +6,7 @@ public class uiPlayerPreview : SingletonComponent<uiPlayerPreview>
 
 	public PlayerModel playermodel;
 
+	public GameObject wantedSnapshotEffectRoot;
+
 	public SegmentMaskPositioning segmentMask;
 }
