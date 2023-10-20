@@ -71,7 +71,7 @@ public class GenerateDungeonGrid : ProceduralComponent
 
 		public Vector3 worldPosition;
 
-		public float distance;
+		public int distance;
 
 		public Prefab<DungeonGridCell> prefab;
 	}
@@ -276,14 +276,14 @@ public class GenerateDungeonGrid : ProceduralComponent
 		//IL_1fa3: Unknown result type (might be due to invalid IL or missing references)
 		//IL_1faa: Unknown result type (might be due to invalid IL or missing references)
 		//IL_1fb1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_22fb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_22fd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_2302: Unknown result type (might be due to invalid IL or missing references)
+		//IL_2309: Unknown result type (might be due to invalid IL or missing references)
 		//IL_230b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_230d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_230f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_2314: Unknown result type (might be due to invalid IL or missing references)
+		//IL_2310: Unknown result type (might be due to invalid IL or missing references)
 		//IL_2319: Unknown result type (might be due to invalid IL or missing references)
+		//IL_231b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_231d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_2322: Unknown result type (might be due to invalid IL or missing references)
+		//IL_2327: Unknown result type (might be due to invalid IL or missing references)
 		//IL_185f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_1861: Unknown result type (might be due to invalid IL or missing references)
 		//IL_1868: Unknown result type (might be due to invalid IL or missing references)
@@ -430,16 +430,16 @@ public class GenerateDungeonGrid : ProceduralComponent
 		//IL_1a57: Unknown result type (might be due to invalid IL or missing references)
 		//IL_1a5c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_1a61: Unknown result type (might be due to invalid IL or missing references)
-		//IL_2442: Unknown result type (might be due to invalid IL or missing references)
-		//IL_2444: Unknown result type (might be due to invalid IL or missing references)
-		//IL_245a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_245f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_2464: Unknown result type (might be due to invalid IL or missing references)
+		//IL_2450: Unknown result type (might be due to invalid IL or missing references)
+		//IL_2452: Unknown result type (might be due to invalid IL or missing references)
+		//IL_2468: Unknown result type (might be due to invalid IL or missing references)
 		//IL_246d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_246f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_2471: Unknown result type (might be due to invalid IL or missing references)
-		//IL_2476: Unknown result type (might be due to invalid IL or missing references)
+		//IL_2472: Unknown result type (might be due to invalid IL or missing references)
 		//IL_247b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_247d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_247f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_2484: Unknown result type (might be due to invalid IL or missing references)
+		//IL_2489: Unknown result type (might be due to invalid IL or missing references)
 		//IL_2144: Unknown result type (might be due to invalid IL or missing references)
 		//IL_2146: Unknown result type (might be due to invalid IL or missing references)
 		//IL_214b: Unknown result type (might be due to invalid IL or missing references)
@@ -476,16 +476,16 @@ public class GenerateDungeonGrid : ProceduralComponent
 		//IL_1b3d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_1a6d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_1a6f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_255a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_255c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_2572: Unknown result type (might be due to invalid IL or missing references)
-		//IL_2577: Unknown result type (might be due to invalid IL or missing references)
-		//IL_257c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_2568: Unknown result type (might be due to invalid IL or missing references)
+		//IL_256a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_2580: Unknown result type (might be due to invalid IL or missing references)
 		//IL_2585: Unknown result type (might be due to invalid IL or missing references)
-		//IL_2587: Unknown result type (might be due to invalid IL or missing references)
-		//IL_2589: Unknown result type (might be due to invalid IL or missing references)
-		//IL_258e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_258a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_2593: Unknown result type (might be due to invalid IL or missing references)
+		//IL_2595: Unknown result type (might be due to invalid IL or missing references)
+		//IL_2597: Unknown result type (might be due to invalid IL or missing references)
+		//IL_259c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_25a1: Unknown result type (might be due to invalid IL or missing references)
 		//IL_215d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_215f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_2164: Unknown result type (might be due to invalid IL or missing references)
@@ -1254,7 +1254,7 @@ public class GenerateDungeonGrid : ProceduralComponent
 									PrefabReplacement item = default(PrefabReplacement);
 									item.gridPosition = val38;
 									item.worldPosition = val40;
-									item.distance = distanceToAboveGroundRail;
+									item.distance = Mathf.RoundToInt(distanceToAboveGroundRail);
 									item.prefab = prefab18;
 									list8.Add(item);
 								}
@@ -1262,6 +1262,7 @@ public class GenerateDungeonGrid : ProceduralComponent
 						}
 					}
 				}
+				ListEx.Shuffle<PrefabReplacement>(list8, ref seed);
 				list8.Sort((PrefabReplacement a, PrefabReplacement b) => a.distance.CompareTo(b.distance));
 				int num18 = 2;
 				while (num18 > 0 && list8.Count > 0)

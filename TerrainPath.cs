@@ -184,11 +184,11 @@ public class TerrainPath : TerrainExtension
 				int num2 = 196996;
 				int num3 = 2098176;
 				int num4 = 49666;
-				if (slope > 20f || (topology & num2) != 0 || (topology2 & num3) != 0)
+				if (slope > 30f || (topology & num2) != 0 || (topology2 & num3) != 0)
 				{
 					array[j, i] = int.MaxValue;
 				}
-				else if ((topology & num4) != 0 || placementMap.GetBlocked(normX, normZ, radius))
+				else if (slope > 20f || (topology & num4) != 0 || placementMap.GetBlocked(normX, normZ, radius))
 				{
 					array[j, i] = 5000;
 				}

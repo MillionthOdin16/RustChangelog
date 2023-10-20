@@ -57,8 +57,8 @@ public abstract class TerrainPlacement : PrefabAttribute
 		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
@@ -68,10 +68,6 @@ public abstract class TerrainPlacement : PrefabAttribute
 		if (ShouldHeight())
 		{
 			ApplyHeight(localToWorld, worldToLocal);
-		}
-		if (ShouldTopology())
-		{
-			ApplyTopology(localToWorld, worldToLocal);
 		}
 		if (ShouldSplat())
 		{
@@ -84,6 +80,10 @@ public abstract class TerrainPlacement : PrefabAttribute
 		if (ShouldBiome())
 		{
 			ApplyBiome(localToWorld, worldToLocal);
+		}
+		if (ShouldTopology())
+		{
+			ApplyTopology(localToWorld, worldToLocal);
 		}
 		if (ShouldWater())
 		{
