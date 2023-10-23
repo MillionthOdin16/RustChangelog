@@ -304,7 +304,7 @@ public class PerformanceLogging
 		obj3["changeset"] = ((current2 != null) ? current2.Scm.ChangeId : null) ?? "editor";
 		BuildInfo current3 = BuildInfo.Current;
 		obj3["branch"] = ((current3 != null) ? current3.Scm.Branch : null) ?? "editor";
-		obj3["network_version"] = 2508.ToString();
+		obj3["network_version"] = 2509.ToString();
 		Dictionary<string, string> dictionary = obj3;
 		dictionary["eos_sdk"] = ((object)VersionInterface.GetVersion())?.ToString() ?? "disabled";
 		record.AddObject("hardware", data).AddObject("application", dictionary);
