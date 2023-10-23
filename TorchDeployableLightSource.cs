@@ -170,7 +170,10 @@ public class TorchDeployableLightSource : StorageContainer, ISplashable, IIgnite
 			if (child is TorchWeapon torchWeapon)
 			{
 				spawnedTorch.Set(torchWeapon);
-				torchWeapon.SetFlag(Flags.On, IsOn());
+				if (!HasFlag(Flags.Reserved2))
+				{
+					torchWeapon.SetFlag(Flags.On, IsOn());
+				}
 				break;
 			}
 		}
