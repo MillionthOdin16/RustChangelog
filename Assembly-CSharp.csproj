@@ -42,7 +42,6 @@
     <Reference Include="EZhex1991.EZSoftBone" />
     <Reference Include="Unity.TextMeshPro" />
     <Reference Include="CurvedTextMeshPro" />
-    <Reference Include="UnityEngine.VideoModule" />
     <Reference Include="Unity.Mathematics" />
     <Reference Include="Facepunch.Skeleton" />
     <Reference Include="Facepunch.Input" />
@@ -60,6 +59,7 @@
     <Reference Include="Rust.Workshop" />
     <Reference Include="UnityEngine.DirectorModule" />
     <Reference Include="Unity.Timeline" />
+    <Reference Include="UnityEngine.VideoModule" />
     <Reference Include="UnityEngine.UnityWebRequestWWWModule" />
     <Reference Include="UnityEngine.TextRenderingModule" />
     <Reference Include="EasyRoads3Dv3" />

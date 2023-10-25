@@ -11,7 +11,7 @@ public class UnderwaterPathFinder : BasePathFinder
 		this.npc = npc;
 	}
 
-	public override Vector3 GetBestRoamPosition(BaseNavigator navigator, Vector3 anchorPos, Vector3 fallbackPos, float minRange, float maxRange)
+	public override Vector3 GetBestRoamPosition(BaseNavigator navigator, Vector3 fallbackPos, float minRange, float maxRange)
 	{
 		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0027: Unknown result type (might be due to invalid IL or missing references)

@@ -25,6 +25,8 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 
 	public bool isSecurityDoor;
 
+	public bool canReverseOpen;
+
 	public TriggerNotify[] vehiclePhysBoxes;
 
 	public bool checkPhysBoxesOnOpen;
@@ -40,6 +42,8 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 	[SerializeField]
 	[ReadOnly]
 	private float closeAnimLength = 4f;
+
+	public const Flags ReverseOpen = Flags.Reserved1;
 
 	private float decayResetTimeLast = float.NegativeInfinity;
 
@@ -66,6 +70,8 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 	private static int openHash = Animator.StringToHash("open");
 
 	private static int closeHash = Animator.StringToHash("close");
+
+	private static int reverseOpenHash = Animator.StringToHash("reverseOpen");
 
 	private bool HasVehiclePushBoxes
 	{
@@ -595,11 +601,15 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 
 	[RPC_Server]
 	[RPC_Server.MaxDistance(3f)]
-	private void RPC_OpenDoor(RPCMessage rpc)
+	protected void RPC_OpenDoor(RPCMessage rpc)
 	{
-		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e2: Unknown result type (might be due to invalid IL or missing references)
-		if (!rpc.player.CanInteract(usableWhileCrawling: true) || !canHandOpen || IsOpen() || IsBusy() || IsLocked())
+		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0134: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0139: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0140: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f7: Unknown result type (might be due to invalid IL or missing references)
+		if (!rpc.player.CanInteract(usableWhileCrawling: true) || !canHandOpen || IsOpen() || IsBusy() || IsLocked() || ((FacepunchBehaviour)this).IsInvoking((Action)DelayedDoorOpening))
 		{
 			return;
 		}
@@ -632,8 +642,20 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 				decayResetTimeLast = Time.realtimeSinceStartup;
 			}
 		}
-		SetFlag(Flags.Open, b: true);
-		SendNetworkUpdateImmediate();
+		if (canReverseOpen)
+		{
+			Vector3 val = ((Component)this).transform.InverseTransformPoint(((Component)rpc.player).transform.position);
+			SetFlag(Flags.Reserved1, val.x > 0f, recursive: false, networkupdate: false);
+		}
+		if (ShouldDelayOpen(rpc.player, out var delay))
+		{
+			((FacepunchBehaviour)this).Invoke((Action)DelayedDoorOpening, delay);
+		}
+		else
+		{
+			SetFlag(Flags.Open, b: true);
+			SendNetworkUpdateImmediate();
+		}
 		if (isSecurityDoor && (Object)(object)NavMeshLink != (Object)null)
 		{
 			SetNavMeshLinkEnabled(wantsOn: true);
@@ -642,6 +664,23 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 		{
 			StartCheckingForBlockages(isOpening: true);
 		}
+		OnPlayerOpenedDoor(rpc.player);
+	}
+
+	private void DelayedDoorOpening()
+	{
+		SetFlag(Flags.Open, b: true);
+		SendNetworkUpdateImmediate();
+	}
+
+	protected virtual void OnPlayerOpenedDoor(BasePlayer p)
+	{
+	}
+
+	protected virtual bool ShouldDelayOpen(BasePlayer forPlayer, out float delay)
+	{
+		delay = 0f;
+		return false;
 	}
 
 	private void StartCheckingForBlockages(bool isOpening)
@@ -881,6 +920,10 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 	public override void OnFlagsChanged(Flags old, Flags next)
 	{
 		base.OnFlagsChanged(old, next);
+		if ((Object)(object)model.animator != (Object)null && canReverseOpen)
+		{
+			model.animator.SetBool(reverseOpenHash, next.HasFlag(Flags.Reserved1));
+		}
 		if (base.isServer)
 		{
 			BaseEntity slot = GetSlot(Slot.UpperModifier);

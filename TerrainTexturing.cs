@@ -33,10 +33,6 @@ public class TerrainTexturing : TerrainExtension
 
 	public Vector3[] ShoreMap => shoreVectors;
 
-	private void InitializeBasePyramid()
-	{
-	}
-
 	private void ReleaseBasePyramid()
 	{
 	}

@@ -153,9 +153,9 @@ public class DynamicDungeon : BaseEntity, IMissionEntityListener
 
 	public void MissionStarted(BasePlayer assignee, BaseMission.MissionInstance instance)
 	{
-		foreach (MissionEntity value in instance.missionEntities.Values)
+		foreach (MissionEntity createdEntity in instance.createdEntities)
 		{
-			BunkerEntrance component = ((Component)value).GetComponent<BunkerEntrance>();
+			BunkerEntrance component = ((Component)createdEntity).GetComponent<BunkerEntrance>();
 			if ((Object)(object)component != (Object)null)
 			{
 				BasePortal portalInstance = component.portalInstance;

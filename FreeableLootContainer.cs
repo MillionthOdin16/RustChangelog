@@ -131,7 +131,6 @@ public class FreeableLootContainer : LootContainer
 	{
 		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
 		GetRB().isKinematic = false;
 		((Behaviour)buoyancy).enabled = true;
 		buoyancy.buoyancyScale = 1f;
@@ -140,9 +139,9 @@ public class FreeableLootContainer : LootContainer
 		{
 			Effect.server.Run(freedEffect.resourcePath, ((Component)this).transform.position, Vector3.up);
 		}
-		if ((Object)(object)ply != (Object)null && !ply.IsNpc && ply.IsConnected && net != null)
+		if ((Object)(object)ply != (Object)null && !ply.IsNpc && ply.IsConnected)
 		{
-			ply.ProcessMissionEvent(BaseMission.MissionEventType.FREE_CRATE, net.ID, 1f);
+			ply.ProcessMissionEvent(BaseMission.MissionEventType.FREE_CRATE, "", 1f);
 			Analytics.Server.FreeUnderwaterCrate();
 			Analytics.Azure.OnFreeUnderwaterCrate(ply, this);
 		}

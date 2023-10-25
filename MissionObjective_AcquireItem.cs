@@ -3,41 +3,29 @@ using UnityEngine;
 [CreateAssetMenu(menuName = "Rust/Missions/OBJECTIVES/AcquireItem")]
 public class MissionObjective_AcquireItem : MissionObjective
 {
-	[ItemSelector(ItemCategory.All)]
-	public ItemDefinition targetItem;
+	public string itemShortname;
 
 	public int targetItemAmount;
 
-	public bool allowStackEvents;
-
-	public bool showResourcePings;
-
-	public override void MissionStarted(int index, BaseMission.MissionInstance instance, BasePlayer forPlayer)
+	public override void ObjectiveStarted(BasePlayer playerFor, int index, BaseMission.MissionInstance instance)
 	{
-		base.MissionStarted(index, instance, forPlayer);
-		instance.objectiveStatuses[index].progressCurrent = 0f;
-		instance.objectiveStatuses[index].progressTarget = targetItemAmount;
-		if (showResourcePings)
-		{
-			forPlayer.EnableResourcePings(targetItem, BasePlayer.PingType.GoTo);
-		}
+		base.ObjectiveStarted(playerFor, index, instance);
 	}
 
-	public override void ProcessMissionEvent(BasePlayer playerFor, BaseMission.MissionInstance instance, int index, BaseMission.MissionEventType type, BaseMission.MissionEventPayload payload, float amount)
+	public override void ProcessMissionEvent(BasePlayer playerFor, BaseMission.MissionInstance instance, int index, BaseMission.MissionEventType type, string identifier, float amount)
 	{
-		base.ProcessMissionEvent(playerFor, instance, index, type, payload, amount);
-		if (((type == BaseMission.MissionEventType.ACQUITE_ITEM_STACK && allowStackEvents) || type == BaseMission.MissionEventType.ACQUIRE_ITEM) && !IsCompleted(index, instance) && CanProgress(index, instance) && targetItem.itemid == payload.IntIdentifier)
+		base.ProcessMissionEvent(playerFor, instance, index, type, identifier, amount);
+		if (!IsCompleted(index, instance) && CanProgress(index, instance) && type == BaseMission.MissionEventType.ACQUIRE_ITEM)
 		{
-			instance.objectiveStatuses[index].progressCurrent += (int)amount;
-			if (instance.objectiveStatuses[index].progressCurrent >= (float)targetItemAmount)
+			if (itemShortname == identifier)
+			{
+				instance.objectiveStatuses[index].genericInt1 += (int)amount;
+			}
+			if (instance.objectiveStatuses[index].genericInt1 >= targetItemAmount)
 			{
 				CompleteObjective(index, instance, playerFor);
+				playerFor.MissionDirty();
 			}
-			if (showResourcePings)
-			{
-				playerFor.DisableResourcePings(targetItem, BasePlayer.PingType.GoTo);
-			}
-			playerFor.MissionDirty();
 		}
 	}
 

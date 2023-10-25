@@ -56,11 +56,6 @@ public class VehicleVendor : NPCTalking
 		info.msg.vehicleVendor.spawnerRef = spawnerRef.uid;
 	}
 
-	public override ConversationData GetConversationFor(BasePlayer player)
-	{
-		return conversations[0];
-	}
-
 	public override void Load(LoadInfo info)
 	{
 		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
@@ -70,5 +65,10 @@ public class VehicleVendor : NPCTalking
 		{
 			spawnerRef.id_cached = info.msg.vehicleVendor.spawnerRef;
 		}
+	}
+
+	public override ConversationData GetConversationFor(BasePlayer player)
+	{
+		return conversations[0];
 	}
 }

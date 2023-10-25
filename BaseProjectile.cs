@@ -1679,6 +1679,11 @@ public class BaseProjectile : AttackEntity
 			sensation.InitiatorPlayer = player;
 			sensation.Initiator = player;
 			Sense.Stimulate(sensation);
+			BaseMountable mounted = player.GetMounted();
+			if ((Object)(object)mounted != (Object)null)
+			{
+				mounted.OnWeaponFired(this);
+			}
 			EACServer.LogPlayerUseWeapon(player, this);
 		}
 	}

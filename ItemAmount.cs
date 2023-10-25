@@ -15,8 +15,6 @@ public class ItemAmount : ISerializationCallbackReceiver
 	[NonSerialized]
 	public float startAmount;
 
-	public bool ignoreInTutorial;
-
 	public int itemid
 	{
 		get

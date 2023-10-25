@@ -155,7 +155,6 @@ public class CH47HelicopterAIController : CH47Helicopter
 		HumanNPC component = ((Component)GameManager.server.CreateEntity(prefabPath, spawnPos, identity)).GetComponent<HumanNPC>();
 		component.Spawn();
 		AttemptMount(component);
-		OnSpawnedHuman(component);
 	}
 
 	public void SpawnPassenger(Vector3 spawnPos)
@@ -168,7 +167,6 @@ public class CH47HelicopterAIController : CH47Helicopter
 		HumanNPC component = ((Component)GameManager.server.CreateEntity(dismountablePrefab.resourcePath, spawnPos, identity)).GetComponent<HumanNPC>();
 		component.Spawn();
 		AttemptMount(component);
-		OnSpawnedHuman(component);
 	}
 
 	public void SpawnScientist(Vector3 spawnPos)
@@ -182,15 +180,6 @@ public class CH47HelicopterAIController : CH47Helicopter
 		component.Spawn();
 		AttemptMount(component);
 		component.Brain.SetEnabled(flag: false);
-		OnSpawnedHuman(component);
-	}
-
-	private void OnSpawnedHuman(HumanNPC human)
-	{
-		if (!((Object)(object)human == (Object)null) && (Object)(object)human.Brain != (Object)null && human.Brain.Senses != null)
-		{
-			human.Brain.Senses.ignoreTutorialPlayers = true;
-		}
 	}
 
 	public void SpawnScientists()
@@ -474,7 +463,7 @@ public class CH47HelicopterAIController : CH47Helicopter
 			Vector3 normalized = ((Vector3)(ref val)).normalized;
 			RaycastHit val4 = default(RaycastHit);
 			RaycastHit val5 = default(RaycastHit);
-			if (Physics.SphereCast(((Component)this).transform.position - normalized * 20f, 20f, normalized, ref val4, 75f, 1084293377) && Physics.SphereCast(((RaycastHit)(ref val4)).point + Vector3.up * 200f, 20f, Vector3.down, ref val5, 200f, 1084293377))
+			if (Physics.SphereCast(((Component)this).transform.position - normalized * 20f, 20f, normalized, ref val4, 75f, 1218511105) && Physics.SphereCast(((RaycastHit)(ref val4)).point + Vector3.up * 200f, 20f, Vector3.down, ref val5, 200f, 1218511105))
 			{
 				num2 = ((RaycastHit)(ref val5)).point.y + hoverHeight;
 			}

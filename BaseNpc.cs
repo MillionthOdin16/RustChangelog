@@ -263,8 +263,6 @@ public class BaseNpc : BaseCombatEntity
 	[NonSerialized]
 	public bool swimming;
 
-	public bool canSwim = true;
-
 	[NonSerialized]
 	public bool wasSwimming;
 
@@ -303,8 +301,6 @@ public class BaseNpc : BaseCombatEntity
 	public float AttackDamage = 20f;
 
 	public DamageType AttackDamageType = DamageType.Bite;
-
-	public float MinimumTargetHealthFraction;
 
 	[Tooltip("Stamina to use per attack")]
 	public float AttackCost = 0.1f;
@@ -633,23 +629,16 @@ public class BaseNpc : BaseCombatEntity
 
 	public void TickAi()
 	{
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
 		if (!AI.think)
 		{
 			return;
 		}
 		if ((Object)(object)TerrainMeta.WaterMap != (Object)null)
 		{
+			waterDepth = TerrainMeta.WaterMap.GetDepth(ServerPosition);
 			wasSwimming = swimming;
-			if (canSwim)
-			{
-				waterDepth = TerrainMeta.WaterMap.GetDepth(ServerPosition);
-				swimming = waterDepth > Stats.WaterLevelNeck * 0.25f;
-			}
-			else
-			{
-				swimming = false;
-			}
+			swimming = waterDepth > Stats.WaterLevelNeck * 0.25f;
 		}
 		else
 		{
@@ -1333,14 +1322,14 @@ public class BaseNpc : BaseCombatEntity
 
 	public void Attack(BaseCombatEntity target)
 	{
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
 		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
-		if (!((Object)(object)target == (Object)null) && (!(MinimumTargetHealthFraction > 0f) || !(target.healthFraction < MinimumTargetHealthFraction)))
+		if (!((Object)(object)target == (Object)null))
 		{
 			Vector3 val = target.ServerPosition - ServerPosition;
 			if (((Vector3)(ref val)).magnitude > 0.001f)

@@ -650,12 +650,11 @@ public class BaseCombatEntity : BaseEntity
 	{
 		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02d6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02e1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02e6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02eb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02ef: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0268: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02b4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02bf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02c4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02c9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02cd: Unknown result type (might be due to invalid IL or missing references)
 		Assert.IsTrue(base.isServer, "This should be called serverside only");
 		if (IsDead() || IsTransferProtected())
 		{
@@ -687,12 +686,11 @@ public class BaseCombatEntity : BaseEntity
 				info.damageTypes.Scale(DamageType.Fun_Water, 0f);
 			}
 			DebugHurt(info);
-			float num2 = info.damageTypes.Total();
-			health = num - num2;
+			health = num - info.damageTypes.Total();
 			SendNetworkUpdate();
 			if (Global.developer > 1)
 			{
-				Debug.Log((object)("[Combat]".PadRight(10) + ((Object)((Component)this).gameObject).name + " hurt " + info.damageTypes.GetMajorityDamageType().ToString() + "/" + num2 + " - " + health.ToString("0") + " health left"));
+				Debug.Log((object)("[Combat]".PadRight(10) + ((Object)((Component)this).gameObject).name + " hurt " + info.damageTypes.GetMajorityDamageType().ToString() + "/" + info.damageTypes.Total() + " - " + health.ToString("0") + " health left"));
 			}
 			lastDamage = info.damageTypes.GetMajorityDamageType();
 			lastAttacker = info.Initiator;
@@ -703,10 +701,6 @@ public class BaseCombatEntity : BaseEntity
 				{
 					baseCombatEntity.lastDealtDamageTime = Time.time;
 					baseCombatEntity.lastDealtDamageTo = this;
-				}
-				if (this.IsValid() && lastAttacker is BasePlayer basePlayer)
-				{
-					basePlayer.ProcessMissionEvent(BaseMission.MissionEventType.HURT_ENTITY, net.ID, num2);
 				}
 			}
 			BaseCombatEntity baseCombatEntity2 = lastAttacker as BaseCombatEntity;
@@ -838,7 +832,7 @@ public class BaseCombatEntity : BaseEntity
 			BasePlayer initiatorPlayer = info.InitiatorPlayer;
 			if ((Object)(object)initiatorPlayer != (Object)null && initiatorPlayer.GetActiveMission() != -1 && !initiatorPlayer.IsNpc)
 			{
-				initiatorPlayer.ProcessMissionEvent(BaseMission.MissionEventType.KILL_ENTITY, prefabID, 1f);
+				initiatorPlayer.ProcessMissionEvent(BaseMission.MissionEventType.KILL_ENTITY, prefabID.ToString(), 1f);
 			}
 		}
 		TimeWarning val = TimeWarning.New("OnKilled", 0);

@@ -1,5 +1,6 @@
 using Rust.UI;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class MissionsHUD : SingletonComponent<MissionsHUD>
 {
@@ -11,15 +12,9 @@ public class MissionsHUD : SingletonComponent<MissionsHUD>
 
 	public Canvas Canvas;
 
-	public RustText titleText;
+	public Text titleText;
 
 	public GameObject timerObject;
 
 	public RustText timerText;
-
-	public GameObject tutorialObject;
-
-	public RustText tutorialText;
-
-	public TokenisedPhrase tutorialTextPhrase;
 }

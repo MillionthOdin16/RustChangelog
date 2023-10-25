@@ -660,10 +660,10 @@ public class Item
 
 	public bool MoveToContainer(ItemContainer newcontainer, int iTargetPos = -1, bool allowStack = true, bool ignoreStackLimit = false, BasePlayer sourcePlayer = null, bool allowSwap = true)
 	{
-		//IL_045c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0462: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0469: Unknown result type (might be due to invalid IL or missing references)
-		//IL_046f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0447: Unknown result type (might be due to invalid IL or missing references)
+		//IL_044d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0454: Unknown result type (might be due to invalid IL or missing references)
+		//IL_045a: Unknown result type (might be due to invalid IL or missing references)
 		TimeWarning val = TimeWarning.New("MoveToContainer", 0);
 		try
 		{
@@ -758,7 +758,6 @@ public class Item
 						}
 						int num2 = Mathf.Min(num - slot2.amount, amount);
 						slot2.amount += num2;
-						newcontainer.onItemAddedToStack?.Invoke(slot2, num2);
 						amount -= num2;
 						slot2.MarkDirty();
 						MarkDirty();

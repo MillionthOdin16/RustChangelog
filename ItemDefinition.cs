@@ -100,8 +100,6 @@ public class ItemDefinition : MonoBehaviour
 
 	public bool quickDespawn;
 
-	public BasePlayer.TutorialItemAllowance tutorialAllowance;
-
 	[Header("Spawn Tables")]
 	[Tooltip("How rare this item is and how much it costs to research")]
 	public Rarity rarity;

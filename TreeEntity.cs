@@ -86,11 +86,6 @@ public class TreeEntity : ResourceEntity, IPrefabPreProcess
 	{
 		base.ServerInit();
 		lastDirection = ((Random.Range(0, 2) != 0) ? 1 : (-1));
-	}
-
-	public override void ServerInitPostNetworkGroupAssign()
-	{
-		base.ServerInitPostNetworkGroupAssign();
 		TreeManager.OnTreeSpawned(this);
 	}
 

@@ -750,9 +750,9 @@ public class PatrolHelicopterAI : BaseMonoBehaviour
 		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
 		//IL_01ca: Unknown result type (might be due to invalid IL or missing references)
 		//IL_01cf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f1: Unknown result type (might be due to invalid IL or missing references)
 		//IL_01fd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0209: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02b5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02a9: Unknown result type (might be due to invalid IL or missing references)
 		//IL_01a6: Unknown result type (might be due to invalid IL or missing references)
 		//IL_01ab: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 strafePos = Vector3.zero;
@@ -800,7 +800,7 @@ public class PatrolHelicopterAI : BaseMonoBehaviour
 			while (enumerator.MoveNext())
 			{
 				BasePlayer current = enumerator.Current;
-				if (current.InSafeZone() || current.IsInTutorial || Vector3Ex.Distance2D(((Component)this).transform.position, ((Component)current).transform.position) > 150f)
+				if (current.InSafeZone() || Vector3Ex.Distance2D(((Component)this).transform.position, ((Component)current).transform.position) > 150f)
 				{
 					continue;
 				}

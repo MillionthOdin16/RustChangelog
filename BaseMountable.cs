@@ -442,6 +442,10 @@ public class BaseMountable : BaseCombatEntity
 	{
 	}
 
+	public virtual void OnWeaponFired(BaseProjectile weapon)
+	{
+	}
+
 	public virtual bool CanSwapToThis(BasePlayer player)
 	{
 		return true;
@@ -552,7 +556,6 @@ public class BaseMountable : BaseCombatEntity
 		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00a0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d5: Unknown result type (might be due to invalid IL or missing references)
 		if (!((Object)(object)_mounted != (Object)null) && !((Object)(object)mountAnchor == (Object)null))
 		{
 			player.EnsureDismounted();
@@ -568,10 +571,6 @@ public class BaseMountable : BaseCombatEntity
 			player.ClientRPCPlayer<Vector3>(null, player, "ForcePositionTo", ((Component)player).transform.position);
 			Analytics.Azure.OnMountEntity(player, this, VehicleParent());
 			OnPlayerMounted();
-			if (this.IsValid() && player.IsValid())
-			{
-				player.ProcessMissionEvent(BaseMission.MissionEventType.MOUNT_ENTITY, net.ID, 1f);
-			}
 		}
 	}
 

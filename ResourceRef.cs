@@ -6,7 +6,7 @@ public class ResourceRef<T> where T : Object
 {
 	public string guid;
 
-	protected T _cachedObject;
+	private T _cachedObject;
 
 	public bool isValid => !string.IsNullOrEmpty(guid);
 
@@ -14,7 +14,7 @@ public class ResourceRef<T> where T : Object
 
 	public uint resourceID => StringPool.Get(resourcePath);
 
-	public virtual T Get()
+	public T Get()
 	{
 		if ((Object)(object)_cachedObject == (Object)null)
 		{

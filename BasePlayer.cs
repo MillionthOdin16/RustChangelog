@@ -136,13 +136,18 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		VoiceRangeBoost = 0x800000,
 		ModifyClan = 0x1000000,
 		LoadingAfterTransfer = 0x2000000,
-		NoRespawnZone = 0x4000000,
-		IsInTutorial = 0x8000000
+		NoRespawnZone = 0x4000000
 	}
 
 	public static class GestureIds
 	{
 		public const uint FlashBlindId = 235662700u;
+	}
+
+	public enum GestureStartSource
+	{
+		ServerAction,
+		Player
 	}
 
 	public enum MapNoteType
@@ -159,11 +164,10 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		Loot = 3,
 		Node = 4,
 		Gun = 5,
-		Build = 6,
-		LAST = 6
+		LAST = 5
 	}
 
-	public struct PingStyle
+	private struct PingStyle
 	{
 		public int IconIndex;
 
@@ -328,20 +332,6 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		}
 	}
 
-	public enum TutorialItemAllowance
-	{
-		AlwaysAllowed = -1,
-		None = 0,
-		Level1_HatchetPickaxe = 1,
-		Level2_Planner = 2,
-		Level3_Bag_TC_Door = 4,
-		Level4_Spear_Fire = 5,
-		Level5_PrepareForCombat = 6,
-		Level6_Furnace = 7,
-		Level7_WorkBench = 8,
-		Level8_Kayak = 9
-	}
-
 	[Serializable]
 	public struct CapsuleColliderInfo
 	{
@@ -465,10 +455,6 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 
 	private float timeSinceMissionThink;
 
-	private BaseMission followupMission;
-
-	private IMissionProvider followupMissionProvider;
-
 	private int _activeMission = -1;
 
 	[NonSerialized]
@@ -527,15 +513,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 
 	private static readonly PingStyle GunMarker = new PingStyle(9, 5, GunTitle, GunDesc, PingType.Gun);
 
-	private static readonly PingStyle BuildMarker = new PingStyle(12, 5, new Phrase("", ""), new Phrase("", ""), PingType.Build);
-
 	private TimeSince lastTick;
-
-	private List<(ItemDefinition item, PingType pingType)> tutorialDesiredResource = new List<(ItemDefinition, PingType)>();
-
-	private List<(NetworkableId id, PingType pingType)> pingedEntities = new List<(NetworkableId, PingType)>();
-
-	private TimeSince lastResourcePingUpdate;
 
 	private bool _playerStateDirty;
 
@@ -848,8 +826,6 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		}
 	}
 
-	public bool IsInTutorial => HasPlayerFlag(PlayerFlags.IsInTutorial);
-
 	public bool InGesture
 	{
 		get
@@ -928,8 +904,6 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			State.deathMarker = value;
 		}
 	}
-
-	public bool HasPendingFollowupMission => ((FacepunchBehaviour)this).IsInvoking((Action)AssignFollowUpMission);
 
 	public ModelState modelStateTick { get; private set; }
 
@@ -1200,8 +1174,6 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			return ((Component)this).transform.parent.localToWorldMatrix;
 		}
 	}
-
-	private TutorialItemAllowance CurrentTutorialAllowance { get; set; }
 
 	public float TimeSinceWoundedStarted => Time.realtimeSinceStartup - lastWoundedStartTime;
 
@@ -2750,42 +2722,6 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				}
 				return true;
 			}
-			if (rpc == 3222472445u && (Object)(object)player != (Object)null)
-			{
-				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
-				if (Global.developer > 2)
-				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - StartTutorial "));
-				}
-				TimeWarning val2 = TimeWarning.New("StartTutorial", 0);
-				try
-				{
-					TimeWarning val3 = TimeWarning.New("Call", 0);
-					try
-					{
-						RPCMessage rPCMessage = default(RPCMessage);
-						rPCMessage.connection = msg.connection;
-						rPCMessage.player = player;
-						rPCMessage.read = msg.read;
-						RPCMessage msg30 = rPCMessage;
-						StartTutorial(msg30);
-					}
-					finally
-					{
-						((IDisposable)val3)?.Dispose();
-					}
-				}
-				catch (Exception ex31)
-				{
-					Debug.LogException(ex31);
-					player.Kick("RPC Error in StartTutorial");
-				}
-				finally
-				{
-					((IDisposable)val2)?.Dispose();
-				}
-				return true;
-			}
 			if (rpc == 970114602 && (Object)(object)player != (Object)null)
 			{
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
@@ -2803,17 +2739,17 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 						rPCMessage.connection = msg.connection;
 						rPCMessage.player = player;
 						rPCMessage.read = msg.read;
-						RPCMessage msg31 = rPCMessage;
-						SV_Drink(msg31);
+						RPCMessage msg30 = rPCMessage;
+						SV_Drink(msg30);
 					}
 					finally
 					{
 						((IDisposable)val3)?.Dispose();
 					}
 				}
-				catch (Exception ex32)
+				catch (Exception ex31)
 				{
-					Debug.LogException(ex32);
+					Debug.LogException(ex31);
 					player.Kick("RPC Error in SV_Drink");
 				}
 				finally
@@ -3385,13 +3321,13 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		}
 	}
 
-	public void Server_StartGesture(GestureConfig toPlay)
+	public void Server_StartGesture(GestureConfig toPlay, GestureStartSource startSource = GestureStartSource.Player)
 	{
-		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0089: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e2: Unknown result type (might be due to invalid IL or missing references)
-		if (!((Object)(object)toPlay != (Object)null) || !toPlay.IsOwnedBy(this) || !toPlay.CanBeUsedBy(this))
+		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fe: Unknown result type (might be due to invalid IL or missing references)
+		if (((Object)(object)toPlay != (Object)null && toPlay.hideInWheel && startSource == GestureStartSource.Player && !ConVar.Server.cinematic) || !((Object)(object)toPlay != (Object)null) || !toPlay.IsOwnedBy(this) || !toPlay.CanBeUsedBy(this))
 		{
 			return;
 		}
@@ -3419,10 +3355,6 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			int val = CountWaveTargets(((Component)this).transform.position, 4f, 0.6f, eyes.HeadForward(), recentWaveTargets, 5);
 			stats.Add("waved_at_players", val);
 			stats.Save(forceSteamSave: true);
-		}
-		if (toPlay.animationType == GestureConfig.AnimationType.Loop)
-		{
-			SendNetworkUpdate();
 		}
 	}
 
@@ -3991,11 +3923,11 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		{
 			bool num = HasCompletedMission(missionID);
 			bool flag2 = HasFailedMission(missionID);
-			if (num && fromID.repeatDelaySecondsSuccess <= -1)
+			if (num && fromID.repeatDelaySecondsSuccess == -1)
 			{
 				return false;
 			}
-			if (flag2 && fromID.repeatDelaySecondsFailed <= -1)
+			if (flag2 && fromID.repeatDelaySecondsFailed == -1)
 			{
 				return false;
 			}
@@ -4099,6 +4031,12 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		}
 	}
 
+	public void AddMission(BaseMission.MissionInstance instance)
+	{
+		missions.Add(instance);
+		MissionDirty();
+	}
+
 	public void ThinkMissions(float delta)
 	{
 		if (!BaseMission.missionsenabled)
@@ -4117,6 +4055,13 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		timeSinceMissionThink = 0f;
 	}
 
+	public void ClearMissions()
+	{
+		missions.Clear();
+		State.missions = SaveMissions();
+		DirtyPlayerState();
+	}
+
 	public void MissionDirty(bool shouldSendNetworkUpdate = true)
 	{
 		if (BaseMission.missionsenabled)
@@ -4130,44 +4075,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		}
 	}
 
-	public void ProcessMissionEvent(BaseMission.MissionEventType type, uint identifier, float amount)
-	{
-		ProcessMissionEvent(type, new BaseMission.MissionEventPayload
-		{
-			UintIdentifier = identifier
-		}, amount);
-	}
-
-	public void ProcessMissionEvent(BaseMission.MissionEventType type, uint identifier, float amount, Vector3 worldPos)
-	{
-		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
-		ProcessMissionEvent(type, new BaseMission.MissionEventPayload
-		{
-			UintIdentifier = identifier,
-			WorldPosition = worldPos
-		}, amount);
-	}
-
-	public void ProcessMissionEvent(BaseMission.MissionEventType type, int identifier, float amount)
-	{
-		ProcessMissionEvent(type, new BaseMission.MissionEventPayload
-		{
-			IntIdentifier = identifier
-		}, amount);
-	}
-
-	public void ProcessMissionEvent(BaseMission.MissionEventType type, NetworkableId identifier, float amount)
-	{
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		ProcessMissionEvent(type, new BaseMission.MissionEventPayload
-		{
-			NetworkIdentifier = identifier
-		}, amount);
-	}
-
-	public void ProcessMissionEvent(BaseMission.MissionEventType type, BaseMission.MissionEventPayload payload, float amount)
+	public void ProcessMissionEvent(BaseMission.MissionEventType type, string identifier, float amount)
 	{
 		if (!BaseMission.missionsenabled)
 		{
@@ -4175,40 +4083,19 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		}
 		foreach (BaseMission.MissionInstance mission in missions)
 		{
-			mission.ProcessMissionEvent(this, type, payload, amount);
-		}
-	}
-
-	private void AssignFollowUpMission()
-	{
-		if (followupMission != null && followupMissionProvider != null)
-		{
-			BaseMission.AssignMission(this, followupMissionProvider, followupMission);
-		}
-		followupMission = null;
-		followupMissionProvider = null;
-	}
-
-	public void RegisterFollowupMission(BaseMission targetMission, IMissionProvider provider)
-	{
-		followupMission = targetMission;
-		followupMissionProvider = provider;
-		if (followupMission != null && followupMissionProvider != null)
-		{
-			((FacepunchBehaviour)this).Invoke((Action)AssignFollowUpMission, 3f);
+			mission.ProcessMissionEvent(this, type, identifier, amount);
 		}
 	}
 
 	private Missions SaveMissions()
 	{
-		//IL_00ad: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00da: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00df: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0121: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0126: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0246: Unknown result type (might be due to invalid IL or missing references)
-		//IL_024b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0203: Unknown result type (might be due to invalid IL or missing references)
 		Missions val = Pool.Get<Missions>();
 		val.missions = Pool.GetList<MissionInstance>();
 		val.activeMission = GetActiveMission();
@@ -4218,66 +4105,68 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		foreach (BaseMission.MissionInstance mission in missions)
 		{
 			MissionInstance val2 = Pool.Get<MissionInstance>();
+			val2.providerID = mission.providerID;
 			val2.missionID = mission.missionID;
 			val2.missionStatus = (uint)mission.status;
-			val.missions.Add(val2);
-			if (mission.status != BaseMission.MissionStatus.Active && mission.status != BaseMission.MissionStatus.Accomplished)
-			{
-				continue;
-			}
-			MissionInstanceData val3 = (val2.instanceData = Pool.Get<MissionInstanceData>());
-			val3.providerID = mission.providerID;
-			val3.startTime = Time.time - mission.startTime;
-			val3.endTime = mission.endTime;
-			val3.missionLocation = mission.missionLocation;
-			val3.missionPoints = Pool.GetList<MissionPoint>();
+			val2.completionScale = mission.completionScale;
+			val2.startTime = Time.realtimeSinceStartup - mission.startTime;
+			val2.endTime = mission.endTime;
+			val2.missionLocation = mission.missionLocation;
+			val2.missionPoints = Pool.GetList<MissionPoint>();
 			foreach (KeyValuePair<string, Vector3> missionPoint in mission.missionPoints)
 			{
-				MissionPoint val4 = Pool.Get<MissionPoint>();
-				val4.identifier = missionPoint.Key;
-				val4.location = missionPoint.Value;
-				val3.missionPoints.Add(val4);
+				MissionPoint val3 = Pool.Get<MissionPoint>();
+				val3.identifier = missionPoint.Key;
+				val3.location = missionPoint.Value;
+				val2.missionPoints.Add(val3);
 			}
-			val3.objectiveStatuses = Pool.GetList<ObjectiveStatus>();
+			val2.objectiveStatuses = Pool.GetList<ObjectiveStatus>();
 			BaseMission.MissionInstance.ObjectiveStatus[] objectiveStatuses = mission.objectiveStatuses;
 			foreach (BaseMission.MissionInstance.ObjectiveStatus objectiveStatus in objectiveStatuses)
 			{
-				ObjectiveStatus val5 = Pool.Get<ObjectiveStatus>();
-				val5.completed = objectiveStatus.completed;
-				val5.failed = objectiveStatus.failed;
-				val5.started = objectiveStatus.started;
-				val5.progressCurrent = objectiveStatus.progressCurrent;
-				val5.progressTarget = objectiveStatus.progressTarget;
-				val3.objectiveStatuses.Add(val5);
+				ObjectiveStatus val4 = Pool.Get<ObjectiveStatus>();
+				val4.completed = objectiveStatus.completed;
+				val4.failed = objectiveStatus.failed;
+				val4.started = objectiveStatus.started;
+				val4.genericFloat1 = objectiveStatus.genericFloat1;
+				val4.genericInt1 = objectiveStatus.genericInt1;
+				val2.objectiveStatuses.Add(val4);
 			}
-			val3.missionEntities = Pool.GetList<MissionEntity>();
-			foreach (KeyValuePair<string, MissionEntity> missionEntity in mission.missionEntities)
+			val2.createdEntities = Pool.GetList<NetworkableId>();
+			if (mission.createdEntities != null)
 			{
-				BaseEntity baseEntity = (((Object)(object)missionEntity.Value != (Object)null) ? missionEntity.Value.GetEntity() : null);
-				if (baseEntity.IsValid())
+				foreach (MissionEntity createdEntity in mission.createdEntities)
 				{
-					MissionEntity val6 = Pool.Get<MissionEntity>();
-					val6.identifier = missionEntity.Key;
-					val6.entityID = baseEntity.net.ID;
-					val3.missionEntities.Add(val6);
+					if (!((Object)(object)createdEntity == (Object)null))
+					{
+						BaseEntity entity = createdEntity.GetEntity();
+						if (Object.op_Implicit((Object)(object)entity))
+						{
+							val2.createdEntities.Add(entity.net.ID);
+						}
+					}
 				}
 			}
+			if (mission.rewards != null && mission.rewards.Length != 0)
+			{
+				val2.rewards = Pool.GetList<MissionReward>();
+				ItemAmount[] rewards = mission.rewards;
+				foreach (ItemAmount itemAmount in rewards)
+				{
+					MissionReward val5 = Pool.Get<MissionReward>();
+					val5.itemID = itemAmount.itemid;
+					val5.itemAmount = Mathf.FloorToInt(itemAmount.amount);
+					val2.rewards.Add(val5);
+				}
+			}
+			val.missions.Add(val2);
 		}
 		return val;
 	}
 
 	public void SetActiveMission(int index)
 	{
-		int activeMission = _activeMission;
 		_activeMission = index;
-		if (IsInTutorial && (Object)(object)GetCurrentTutorialIsland() != (Object)null)
-		{
-			BaseMission.MissionInstance missionInstance = ((index >= 0 && index < missions.Count) ? missions[_activeMission] : null);
-			GetCurrentTutorialIsland().OnPlayerStartedMission(this);
-			if (activeMission == _activeMission)
-			{
-			}
-		}
 	}
 
 	public int GetActiveMission()
@@ -4290,28 +4179,16 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		return GetActiveMission() != -1;
 	}
 
-	public BaseMission.MissionInstance GetActiveMissionInstance()
-	{
-		int activeMission = GetActiveMission();
-		if (activeMission >= 0 && activeMission < missions.Count)
-		{
-			return missions[activeMission];
-		}
-		return null;
-	}
-
 	private void LoadMissions(Missions loadedMissions)
 	{
-		//IL_0135: Unknown result type (might be due to invalid IL or missing references)
-		//IL_013a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0165: Unknown result type (might be due to invalid IL or missing references)
-		//IL_016a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02c1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02c8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02ce: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02e1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0151: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0188: Unknown result type (might be due to invalid IL or missing references)
+		//IL_027a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_027f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0291: Unknown result type (might be due to invalid IL or missing references)
 		if (missions.Count > 0)
 		{
 			for (int num = missions.Count - 1; num >= 0; num--)
@@ -4341,59 +4218,73 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		}
 		if (loadedMissions != null && loadedMissions.missions.Count > 0)
 		{
-			MissionEntity missionEntity2 = default(MissionEntity);
-			foreach (MissionInstance mission2 in loadedMissions.missions)
+			foreach (MissionInstance mission in loadedMissions.missions)
 			{
-				if (MissionManifest.GetFromID(mission2.missionID) == null)
-				{
-					continue;
-				}
 				BaseMission.MissionInstance missionInstance2 = Pool.Get<BaseMission.MissionInstance>();
-				missionInstance2.missionID = mission2.missionID;
-				missionInstance2.status = (BaseMission.MissionStatus)mission2.missionStatus;
-				MissionInstanceData instanceData = mission2.instanceData;
-				if (instanceData != null)
+				missionInstance2.providerID = mission.providerID;
+				missionInstance2.missionID = mission.missionID;
+				missionInstance2.status = (BaseMission.MissionStatus)mission.missionStatus;
+				missionInstance2.completionScale = mission.completionScale;
+				missionInstance2.startTime = Time.realtimeSinceStartup - mission.startTime;
+				missionInstance2.endTime = mission.endTime;
+				missionInstance2.missionLocation = mission.missionLocation;
+				if (mission.missionPoints != null)
 				{
-					missionInstance2.providerID = instanceData.providerID;
-					missionInstance2.startTime = Time.time - instanceData.startTime;
-					missionInstance2.endTime = instanceData.endTime;
-					missionInstance2.missionLocation = instanceData.missionLocation;
-					if (base.isServer && instanceData.missionPoints != null)
+					foreach (MissionPoint missionPoint in mission.missionPoints)
 					{
-						foreach (MissionPoint missionPoint in instanceData.missionPoints)
+						missionInstance2.missionPoints.Add(missionPoint.identifier, missionPoint.location);
+					}
+				}
+				missionInstance2.objectiveStatuses = new BaseMission.MissionInstance.ObjectiveStatus[mission.objectiveStatuses.Count];
+				for (int i = 0; i < mission.objectiveStatuses.Count; i++)
+				{
+					ObjectiveStatus val = mission.objectiveStatuses[i];
+					BaseMission.MissionInstance.ObjectiveStatus objectiveStatus = new BaseMission.MissionInstance.ObjectiveStatus();
+					objectiveStatus.completed = val.completed;
+					objectiveStatus.failed = val.failed;
+					objectiveStatus.started = val.started;
+					objectiveStatus.genericInt1 = val.genericInt1;
+					objectiveStatus.genericFloat1 = val.genericFloat1;
+					missionInstance2.objectiveStatuses[i] = objectiveStatus;
+				}
+				if (mission.createdEntities != null)
+				{
+					if (missionInstance2.createdEntities == null)
+					{
+						missionInstance2.createdEntities = Pool.GetList<MissionEntity>();
+					}
+					foreach (NetworkableId createdEntity in mission.createdEntities)
+					{
+						BaseNetworkable baseNetworkable = null;
+						if (base.isServer)
 						{
-							missionInstance2.missionPoints.Add(missionPoint.identifier, missionPoint.location);
-							BaseMission.AddBlocker(missionPoint.location);
+							baseNetworkable = BaseNetworkable.serverEntities.Find(createdEntity);
 						}
-					}
-					missionInstance2.objectiveStatuses = new BaseMission.MissionInstance.ObjectiveStatus[instanceData.objectiveStatuses.Count];
-					for (int i = 0; i < instanceData.objectiveStatuses.Count; i++)
-					{
-						ObjectiveStatus val = instanceData.objectiveStatuses[i];
-						BaseMission.MissionInstance.ObjectiveStatus objectiveStatus = new BaseMission.MissionInstance.ObjectiveStatus();
-						objectiveStatus.completed = val.completed;
-						objectiveStatus.failed = val.failed;
-						objectiveStatus.started = val.started;
-						objectiveStatus.progressCurrent = val.progressCurrent;
-						objectiveStatus.progressTarget = val.progressTarget;
-						missionInstance2.objectiveStatuses[i] = objectiveStatus;
-					}
-					if (base.isServer && instanceData.missionEntities != null)
-					{
-						missionInstance2.missionEntities.Clear();
-						BaseMission mission = missionInstance2.GetMission();
-						foreach (MissionEntity missionEntity3 in instanceData.missionEntities)
+						if ((Object)(object)baseNetworkable != (Object)null)
 						{
-							MissionEntity missionEntity = null;
-							BaseNetworkable baseNetworkable = ((missionEntity3.entityID != default(NetworkableId)) ? BaseNetworkable.serverEntities.Find(missionEntity3.entityID) : null);
-							if ((Object)(object)baseNetworkable != (Object)null)
+							MissionEntity component = ((Component)baseNetworkable).GetComponent<MissionEntity>();
+							if (Object.op_Implicit((Object)(object)component))
 							{
-								missionEntity = (((Component)baseNetworkable).gameObject.TryGetComponent<MissionEntity>(ref missionEntity2) ? missionEntity2 : ((Component)baseNetworkable).gameObject.AddComponent<MissionEntity>());
-								BaseMission.MissionEntityEntry missionEntityEntry = ((mission != null) ? List.FindWith<BaseMission.MissionEntityEntry, string>((IReadOnlyCollection<BaseMission.MissionEntityEntry>)(object)mission.missionEntities, (Func<BaseMission.MissionEntityEntry, string>)((BaseMission.MissionEntityEntry ed) => ed.identifier), missionEntity3.identifier, (IEqualityComparer<string>)null) : null);
-								missionEntity.Setup(this, missionInstance2, missionEntity3.identifier, missionEntityEntry?.cleanupOnMissionSuccess ?? true, missionEntityEntry?.cleanupOnMissionFailed ?? true);
+								missionInstance2.createdEntities.Add(component);
 							}
-							missionInstance2.missionEntities.Add(missionEntity3.identifier, missionEntity);
 						}
+					}
+				}
+				if (mission.rewards != null && mission.rewards.Count > 0)
+				{
+					missionInstance2.rewards = new ItemAmount[mission.rewards.Count];
+					for (int j = 0; j < mission.rewards.Count; j++)
+					{
+						MissionReward val2 = mission.rewards[j];
+						ItemAmount itemAmount = new ItemAmount();
+						ItemDefinition itemDefinition = ItemManager.FindItemDefinition(val2.itemID);
+						if ((Object)(object)itemDefinition == (Object)null)
+						{
+							Debug.LogError((object)"MISSION LOAD UNABLE TO FIND REWARD ITEM, HUGE ERROR!");
+						}
+						itemAmount.itemDef = itemDefinition;
+						itemAmount.amount = val2.itemAmount;
+						missionInstance2.rewards[j] = itemAmount;
 					}
 				}
 				missions.Add(missionInstance2);
@@ -4403,10 +4294,6 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		else
 		{
 			SetActiveMission(-1);
-		}
-		if (base.isServer)
-		{
-			GetActiveMissionInstance()?.PostServerLoad(this);
 		}
 	}
 
@@ -4826,7 +4713,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		return false;
 	}
 
-	public static PingStyle GetPingStyle(PingType t)
+	private PingStyle GetPingStyle(PingType t)
 	{
 		PingStyle pingStyle = default(PingStyle);
 		return t switch
@@ -4837,7 +4724,6 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			PingType.Loot => LootMarker, 
 			PingType.Node => NodeMarker, 
 			PingType.Gun => GunMarker, 
-			PingType.Build => BuildMarker, 
 			_ => pingStyle, 
 		};
 	}
@@ -4856,12 +4742,12 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 	{
 		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0093: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0095: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00f9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fa: Unknown result type (might be due to invalid IL or missing references)
 		if (State.pings == null)
 		{
 			State.pings = new List<MapNote>();
@@ -4871,7 +4757,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			return;
 		}
 		Vector3 val = msg.read.Vector3();
-		PingType pingType = (PingType)Mathf.Clamp(msg.read.Int32(), 0, 6);
+		PingType pingType = (PingType)Mathf.Clamp(msg.read.Int32(), 0, 5);
 		bool wasViaWheel = msg.read.Bit();
 		PingStyle pingStyle = GetPingStyle(pingType);
 		foreach (MapNote ping in State.pings)
@@ -4899,59 +4785,6 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		SendPingsToClient();
 		TeamUpdate(fullTeamUpdate: true);
 		Analytics.Azure.OnPlayerPinged(this, pingType, wasViaWheel);
-	}
-
-	public void AddPingAtLocation(PingType type, Vector3 location, float time, NetworkableId associatedId)
-	{
-		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0092: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
-		if (State.pings != null)
-		{
-			PingStyle pingStyle = GetPingStyle(type);
-			foreach (MapNote ping in State.pings)
-			{
-				if (ping.icon == pingStyle.IconIndex && Vector3.Distance(location, ping.worldPosition) < 0.25f)
-				{
-					return;
-				}
-			}
-		}
-		MapNote val = Pool.Get<MapNote>();
-		val.worldPosition = location;
-		val.isPing = true;
-		val.timeRemaining = (val.totalDuration = time);
-		val.associatedId = associatedId;
-		ApplyPingStyle(val, type);
-		State.pings.Add(val);
-		DirtyPlayerState();
-		SendPingsToClient();
-		TeamUpdate(fullTeamUpdate: false);
-	}
-
-	public void RemovePingAtLocation(PingType type, Vector3 location, float tolerance, NetworkableId associatedId)
-	{
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-		if (State.pings == null)
-		{
-			return;
-		}
-		PingStyle pingStyle = GetPingStyle(type);
-		for (int i = 0; i < State.pings.Count; i++)
-		{
-			MapNote val = State.pings[i];
-			if (val.icon == pingStyle.IconIndex && Vector3.Distance(location, val.worldPosition) < tolerance)
-			{
-				State.pings.RemoveAt(i);
-				DirtyPlayerState();
-				SendPingsToClient();
-				TeamUpdate(fullTeamUpdate: false);
-			}
-		}
 	}
 
 	[RPC_Server]
@@ -4996,14 +4829,13 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
 		if (TimeSince.op_Implicit(lastTick) < 0.5f)
 		{
 			return;
 		}
 		TimeSince val = lastTick;
 		lastTick = TimeSince.op_Implicit(0f);
-		UpdateResourcePings();
 		if (State.pings == null)
 		{
 			return;
@@ -5032,252 +4864,6 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			SendPingsToClient();
 			TeamUpdate(fullTeamUpdate: true);
 		}
-	}
-
-	public void RegisterPingedEntity(BaseEntity entity, PingType type)
-	{
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-		if (!pingedEntities.Contains((entity.net.ID, type)))
-		{
-			pingedEntities.Add((entity.net.ID, type));
-		}
-	}
-
-	public void DeregisterPingedEntity(NetworkableId id, PingType type)
-	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
-		if (!pingedEntities.Contains((id, type)))
-		{
-			return;
-		}
-		pingedEntities.Remove((id, type));
-		for (int i = 0; i < State.pings.Count; i++)
-		{
-			if (State.pings[i].associatedId == id)
-			{
-				State.pings.RemoveAt(i);
-				break;
-			}
-		}
-		DirtyPlayerState();
-		SendPingsToClient();
-	}
-
-	public void EnableResourcePings(ItemDefinition forItem, PingType pingType)
-	{
-		if (!tutorialDesiredResource.Contains((forItem, pingType)))
-		{
-			tutorialDesiredResource.Add((forItem, pingType));
-		}
-	}
-
-	private void UpdateResourcePings()
-	{
-		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
-		//IL_020f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_030b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_031c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0351: Unknown result type (might be due to invalid IL or missing references)
-		//IL_045d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_046e: Unknown result type (might be due to invalid IL or missing references)
-		if (State == null || TimeSince.op_Implicit(lastResourcePingUpdate) < 1f)
-		{
-			return;
-		}
-		lastResourcePingUpdate = TimeSince.op_Implicit(0f);
-		if (State.pings == null)
-		{
-			State.pings = new List<MapNote>();
-		}
-		List<BaseEntity> list = Pool.GetList<BaseEntity>();
-		List<BaseEntity> list2 = Pool.GetList<BaseEntity>();
-		List<(BaseEntity, PingType)> list3 = Pool.GetList<(BaseEntity, PingType)>();
-		List<BaseEntity> list4 = Pool.GetList<BaseEntity>();
-		Vis.Entities(((Component)this).transform.position, 32f, list2, 1219177217, (QueryTriggerInteraction)2);
-		ResourceDispenser resourceDispenser = default(ResourceDispenser);
-		foreach (var item2 in tutorialDesiredResource)
-		{
-			list4.Clear();
-			foreach (BaseEntity item3 in list2)
-			{
-				if (item3.isServer)
-				{
-					if (((Component)item3).TryGetComponent<ResourceDispenser>(ref resourceDispenser) && resourceDispenser.HasItemToDispense(item2.item))
-					{
-						list4.Add(item3);
-					}
-					else if (item3 is CollectibleEntity collectibleEntity && collectibleEntity.HasItem(item2.item))
-					{
-						list4.Add(item3);
-					}
-					else if (item3 is StorageContainer storageContainer && storageContainer.inventory != null && storageContainer.inventory.HasItem(item2.item))
-					{
-						list4.Add(item3);
-					}
-				}
-			}
-			if (list4.Count <= 0)
-			{
-				continue;
-			}
-			float num = float.MaxValue;
-			BaseEntity baseEntity = null;
-			foreach (BaseEntity item4 in list4)
-			{
-				float num2 = Distance(item4);
-				if (num2 < num)
-				{
-					num = num2;
-					baseEntity = item4;
-				}
-			}
-			if ((Object)(object)baseEntity != (Object)null)
-			{
-				list3.Add((baseEntity, item2.pingType));
-			}
-		}
-		List<(NetworkableId, PingType)> list5 = Pool.GetList<(NetworkableId, PingType)>();
-		foreach (var pingedEntity in pingedEntities)
-		{
-			BaseNetworkable baseNetworkable = BaseNetworkable.serverEntities.Find(pingedEntity.id);
-			if ((Object)(object)baseNetworkable != (Object)null && !baseNetworkable.IsDestroyed)
-			{
-				list3.Add((baseNetworkable as BaseEntity, pingedEntity.pingType));
-			}
-			else
-			{
-				list5.Add(pingedEntity);
-			}
-		}
-		foreach (var item5 in list5)
-		{
-			pingedEntities.Remove(item5);
-		}
-		Pool.FreeList<(NetworkableId, PingType)>(ref list5);
-		Pool.FreeList<BaseEntity>(ref list2);
-		Pool.FreeList<BaseEntity>(ref list4);
-		List<MapNote> list6 = Pool.GetList<MapNote>();
-		foreach (MapNote ping in State.pings)
-		{
-			if (ping.associatedId.Value == 0L)
-			{
-				continue;
-			}
-			bool flag = false;
-			foreach (var item6 in list3)
-			{
-				if (ping.associatedId == item6.Item1.net.ID)
-				{
-					flag = true;
-					break;
-				}
-			}
-			if (!flag)
-			{
-				BaseNetworkable baseNetworkable2 = BaseNetworkable.serverEntities.Find(ping.associatedId);
-				if ((Object)(object)baseNetworkable2 != (Object)null && baseNetworkable2 is IEntityPingSource entityPingSource && entityPingSource.IsPingValid(ping))
-				{
-					flag = true;
-				}
-			}
-			if (!flag)
-			{
-				list6.Add(ping);
-			}
-		}
-		bool flag2 = list6.Count > 0;
-		foreach (MapNote item7 in list6)
-		{
-			if (State.pings.Contains(item7))
-			{
-				State.pings.Remove(item7);
-			}
-		}
-		Pool.FreeList<MapNote>(ref list6);
-		foreach (var item8 in list3)
-		{
-			if (HasPingForEntity(item8.Item1))
-			{
-				continue;
-			}
-			PingType item = item8.Item2;
-			foreach (var pingedEntity2 in pingedEntities)
-			{
-				if (pingedEntity2.id == item8.Item1.net.ID)
-				{
-					item = pingedEntity2.pingType;
-				}
-			}
-			State.pings.Add(CreatePingForEntity(item8.Item1, item));
-			flag2 = true;
-		}
-		if (flag2)
-		{
-			DirtyPlayerState();
-			SendPingsToClient();
-		}
-		Pool.FreeList<BaseEntity>(ref list);
-	}
-
-	private MapNote CreatePingForEntity(BaseEntity baseEntity, PingType type)
-	{
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
-		MapNote val = Pool.Get<MapNote>();
-		val.worldPosition = ((Component)baseEntity).transform.position;
-		val.isPing = true;
-		val.timeRemaining = (val.totalDuration = 30f);
-		val.associatedId = baseEntity.net.ID;
-		ApplyPingStyle(val, type);
-		return val;
-	}
-
-	private bool HasPingForEntity(BaseEntity ent)
-	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		return HasPingForEntity(ent.net.ID);
-	}
-
-	private bool HasPingForEntity(NetworkableId id)
-	{
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
-		foreach (MapNote ping in State.pings)
-		{
-			if (ping.associatedId == id)
-			{
-				return true;
-			}
-		}
-		return false;
-	}
-
-	public void DisableResourcePings(ItemDefinition forItem, PingType type)
-	{
-		if (tutorialDesiredResource.Contains((forItem, type)))
-		{
-			tutorialDesiredResource.Remove((forItem, type));
-		}
-		if (tutorialDesiredResource.Count == 0)
-		{
-			UpdateResourcePings();
-		}
-	}
-
-	private void ClearAllPings()
-	{
-		State.pings.Clear();
-		tutorialDesiredResource.Clear();
-		pingedEntities.Clear();
 	}
 
 	public void DirtyPlayerState()
@@ -7027,8 +6613,8 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			{
 				info.msg.basePlayer.missions = State.missions.Copy();
 			}
+			info.msg.basePlayer.bagCount = SleepingBag.GetSleepingBagCount(userID);
 		}
-		info.msg.basePlayer.bagCount = SleepingBag.GetSleepingBagCount(userID);
 		if (info.forDisk)
 		{
 			info.msg.basePlayer.loadingTimeout = RealTimeUntil.op_Implicit(timeUntilLoadingExpires);
@@ -7047,7 +6633,6 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		{
 			SavePlayerState();
 		}
-		info.msg.basePlayer.tutorialAllowance = (int)CurrentTutorialAllowance;
 	}
 
 	public override void Load(LoadInfo info)
@@ -7135,7 +6720,6 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		{
 			clanId = info.msg.basePlayer.clanId;
 		}
-		CurrentTutorialAllowance = (TutorialItemAllowance)info.msg.basePlayer.tutorialAllowance;
 	}
 
 	internal override void OnParentRemoved()
@@ -7498,19 +7082,6 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			StartDemoRecording();
 		}
 		SendClientPetLink();
-		HandleTutorialOnGameEnter();
-	}
-
-	private void HandleTutorialOnGameEnter()
-	{
-		if (TutorialIsland.ShouldPlayerResumeTutorial(this))
-		{
-			TutorialIsland.RestoreOrCreateIslandForPlayer(this);
-		}
-		else if (TutorialIsland.ShouldPlayerBeAskedToStartTutorial(this))
-		{
-			ClientRPCPlayer(null, this, "PromptToStartTutorial");
-		}
 	}
 
 	[RPC_Server]
@@ -8123,7 +7694,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				playerCorpse.SetFlag(Flags.Reserved5, HasPlayerFlag(PlayerFlags.DisplaySash));
 				if (!flag)
 				{
-					playerCorpse.TakeFrom(inventory.containerMain, inventory.containerWear, inventory.containerBelt);
+					playerCorpse.TakeFrom(this, inventory.containerMain, inventory.containerWear, inventory.containerBelt);
 				}
 				playerCorpse.playerName = displayName;
 				playerCorpse.streamerName = RandomUsernames.Get(userID);
@@ -8648,7 +8219,6 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		{
 			base.Heal(amount);
 		}
-		ProcessMissionEvent(BaseMission.MissionEventType.HEAL, 0, amount);
 	}
 
 	public static BasePlayer FindBot(ulong userId)
@@ -8908,7 +8478,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		}
 		if (reason == GiveItemReason.ResourceHarvested || reason == GiveItemReason.Crafted)
 		{
-			ProcessMissionEvent(BaseMission.MissionEventType.HARVEST, item.info.itemid, item.amount);
+			ProcessMissionEvent(BaseMission.MissionEventType.HARVEST, item.info.shortname, item.amount);
 		}
 		int amount = item.amount;
 		if (inventory.GiveItem(item))
@@ -9132,7 +8702,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 
 	internal void GiveAchievement(string name)
 	{
-		if (GameInfo.HasAchievements && !IsInTutorial)
+		if (GameInfo.HasAchievements)
 		{
 			ClientRPCPlayer(null, this, "RecieveAchievement", name);
 		}
@@ -10085,7 +9655,6 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		//IL_00e3: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00d4: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00da: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0165: Unknown result type (might be due to invalid IL or missing references)
 		if (msg.inputState != null)
 		{
 			serverInput.Flip(msg.inputState);
@@ -10127,24 +9696,14 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		}
 		UpdateActiveItem(msg.activeItem);
 		UpdateModelStateFromTick(msg);
-		if (IsIncapacitated())
+		if (!IsIncapacitated())
 		{
-			return;
-		}
-		if (isMounted)
-		{
-			GetMounted().PlayerServerInput(serverInput, this);
-		}
-		UpdatePositionFromTick(msg, wasPlayerStalled);
-		UpdateRotationFromTick(msg);
-		int activeMission = GetActiveMission();
-		if (activeMission >= 0 && activeMission < missions.Count)
-		{
-			BaseMission.MissionInstance missionInstance = missions[activeMission];
-			if (missionInstance.status == BaseMission.MissionStatus.Active && missionInstance.NeedsPlayerInput())
+			if (isMounted)
 			{
-				ProcessMissionEvent(BaseMission.MissionEventType.PLAYER_TICK, net.ID, 0f);
+				GetMounted().PlayerServerInput(serverInput, this);
 			}
+			UpdatePositionFromTick(msg, wasPlayerStalled);
+			UpdateRotationFromTick(msg);
 		}
 	}
 
@@ -10432,93 +9991,6 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			((IDisposable)val)?.Dispose();
 		}
 		tickDeltaTime = 0f;
-	}
-
-	public bool IsCraftingTutorialBlocked(ItemDefinition def, out bool forceUnlock)
-	{
-		forceUnlock = false;
-		if (!IsInTutorial)
-		{
-			return false;
-		}
-		if (def.tutorialAllowance == TutorialItemAllowance.None)
-		{
-			return true;
-		}
-		bool num = CurrentTutorialAllowance >= def.tutorialAllowance;
-		if (num && (Object)(object)def.Blueprint != (Object)null && !def.Blueprint.defaultBlueprint)
-		{
-			forceUnlock = true;
-		}
-		return !num;
-	}
-
-	public TutorialIsland GetCurrentTutorialIsland()
-	{
-		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-		if (!IsInTutorial)
-		{
-			return null;
-		}
-		Enumerator<TutorialIsland> enumerator = TutorialIsland.GetTutorialList(base.isServer).GetEnumerator();
-		try
-		{
-			while (enumerator.MoveNext())
-			{
-				TutorialIsland current = enumerator.Current;
-				if ((Object)(object)current.ForPlayer.Get(base.isServer) == (Object)(object)this)
-				{
-					return current;
-				}
-			}
-		}
-		finally
-		{
-			((IDisposable)enumerator).Dispose();
-		}
-		return null;
-	}
-
-	public void ClearTutorial()
-	{
-		SetPlayerFlag(PlayerFlags.IsInTutorial, b: false);
-		List<SleepingBag> list = Pool.GetList<SleepingBag>();
-		SleepingBag.FindForPlayer(userID, ignoreTimers: true, list);
-		foreach (SleepingBag item in list)
-		{
-			SleepingBag.RemoveBagForPlayer(item, userID);
-		}
-		Pool.FreeList<SleepingBag>(ref list);
-		ClearAllPings();
-		WipeMissions();
-	}
-
-	public void SetTutorialAllowance(TutorialItemAllowance newAllowance)
-	{
-		if (newAllowance < CurrentTutorialAllowance)
-		{
-			Debug.LogWarning((object)"Don't allow tutorial allowance to go down");
-			return;
-		}
-		CurrentTutorialAllowance = newAllowance;
-		SendNetworkUpdate();
-	}
-
-	[RPC_Server]
-	private void StartTutorial(RPCMessage msg)
-	{
-		if (!((Object)(object)msg.player != (Object)(object)this))
-		{
-			StartTutorial();
-		}
-	}
-
-	public void StartTutorial()
-	{
-		Hurt(99999f);
-		Respawn();
-		TutorialIsland.RestoreOrCreateIslandForPlayer(this);
 	}
 
 	public uint GetUnderwearSkin()

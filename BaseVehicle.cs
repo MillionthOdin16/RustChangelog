@@ -590,7 +590,7 @@ public class BaseVehicle : BaseMountable, VehicleSpawner.IVehicleSpawnUser
 
 	private int GetClipCheckMask()
 	{
-		int num = (IsFlipped() ? 1084293377 : 1075904769);
+		int num = (IsFlipped() ? 1218511105 : 1210122497);
 		if (checkVehicleClipping)
 		{
 			num |= 0x2000;
@@ -641,7 +641,7 @@ public class BaseVehicle : BaseMountable, VehicleSpawner.IVehicleSpawnUser
 		return 0;
 	}
 
-	public virtual bool IsSeatVisible(BaseMountable mountable, Vector3 eyePos, int mask = 1084293377)
+	public virtual bool IsSeatVisible(BaseMountable mountable, Vector3 eyePos, int mask = 1218511105)
 	{
 		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0026: Unknown result type (might be due to invalid IL or missing references)

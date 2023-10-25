@@ -390,17 +390,16 @@ public class AnimalBrain : BaseAIBrain
 
 		public override void StateEnter(BaseAIBrain brain, BaseEntity entity)
 		{
-			//IL_0079: Unknown result type (might be due to invalid IL or missing references)
-			//IL_008f: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00a0: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0089: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0098: Unknown result type (might be due to invalid IL or missing references)
+			//IL_009d: Unknown result type (might be due to invalid IL or missing references)
 			//IL_003f: Unknown result type (might be due to invalid IL or missing references)
 			//IL_0044: Unknown result type (might be due to invalid IL or missing references)
 			//IL_0045: Unknown result type (might be due to invalid IL or missing references)
 			//IL_0064: Unknown result type (might be due to invalid IL or missing references)
 			//IL_0069: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00ac: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00d0: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00c8: Unknown result type (might be due to invalid IL or missing references)
 			base.StateEnter(brain, entity);
 			status = StateStatus.Error;
 			if (brain.PathFinder == null)
@@ -415,7 +414,7 @@ public class AnimalBrain : BaseAIBrain
 			}
 			else
 			{
-				center = brain.PathFinder.GetBestRoamPosition(brain.Navigator, GetRoamAnchorPosition(), brain.Events.Memory.Position.Get(4), GetRoamPointMinDistance(), GetRoamPointMaxDistance());
+				center = brain.PathFinder.GetBestRoamPosition(brain.Navigator, brain.Events.Memory.Position.Get(4), 20f, 100f);
 			}
 			if (brain.Navigator.SetDestination(center, BaseNavigator.NavigationSpeed.Slow))
 			{
@@ -429,35 +428,6 @@ public class AnimalBrain : BaseAIBrain
 			{
 				status = StateStatus.Error;
 			}
-		}
-
-		public virtual Vector3 GetRoamAnchorPosition()
-		{
-			//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-			//IL_002d: Unknown result type (might be due to invalid IL or missing references)
-			if (brain.Navigator.MaxRoamDistanceFromHome > -1f)
-			{
-				return brain.Events.Memory.Position.Get(4);
-			}
-			return ((Component)brain.Navigator).transform.position;
-		}
-
-		public virtual float GetRoamPointMinDistance()
-		{
-			if (brain.Navigator.MaxRoamDistanceFromHome > -1f)
-			{
-				return 5f;
-			}
-			return 20f;
-		}
-
-		public virtual float GetRoamPointMaxDistance()
-		{
-			if (brain.Navigator.MaxRoamDistanceFromHome > -1f)
-			{
-				return brain.Navigator.MaxRoamDistanceFromHome;
-			}
-			return brain.Navigator.BestRoamPointMaxDistance;
 		}
 
 		private void Stop()

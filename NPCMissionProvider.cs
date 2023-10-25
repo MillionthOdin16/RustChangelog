@@ -24,14 +24,16 @@ public class NPCMissionProvider : NPCTalking, IMissionProvider
 	public override void OnConversationEnded(BasePlayer player)
 	{
 		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
-		player.ProcessMissionEvent(BaseMission.MissionEventType.CONVERSATION, ProviderID(), 0f);
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		player.ProcessMissionEvent(BaseMission.MissionEventType.CONVERSATION, ProviderID().Value.ToString(), 0f);
 		base.OnConversationEnded(player);
 	}
 
 	public override void OnConversationStarted(BasePlayer speakingTo)
 	{
 		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
-		speakingTo.ProcessMissionEvent(BaseMission.MissionEventType.CONVERSATION, ProviderID(), 1f);
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		speakingTo.ProcessMissionEvent(BaseMission.MissionEventType.CONVERSATION, ProviderID().Value.ToString(), 1f);
 		base.OnConversationStarted(speakingTo);
 	}
 
@@ -86,7 +88,7 @@ public class NPCMissionProvider : NPCTalking, IMissionProvider
 
 	public override void OnConversationAction(BasePlayer player, string action)
 	{
-		if (action.StartsWith("assignmission "))
+		if (action.Contains("assignmission"))
 		{
 			int num = action.IndexOf(" ");
 			BaseMission fromShortName = MissionManifest.GetFromShortName(action.Substring(num + 1));

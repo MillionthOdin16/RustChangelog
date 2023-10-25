@@ -35,6 +35,8 @@ public class ResourceDispenser : EntityComponent<BaseEntity>, IServerComponent
 
 		public GatherPropertyEntry Flesh;
 
+		public bool ProduceHeadItem;
+
 		public float GetProficiency()
 		{
 			float num = 0f;
@@ -88,8 +90,6 @@ public class ResourceDispenser : EntityComponent<BaseEntity>, IServerComponent
 
 	public List<ItemAmount> finishBonus;
 
-	public bool forceFullFinishBonus;
-
 	public float fractionRemaining = 1f;
 
 	private float categoriesRemaining;
@@ -128,16 +128,16 @@ public class ResourceDispenser : EntityComponent<BaseEntity>, IServerComponent
 		}
 	}
 
-	public void DoGather(HitInfo info)
+	public void DoGather(HitInfo info, BaseCorpse corpse = null)
 	{
 		//IL_00cf: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00d9: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00eb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01cc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01e7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ec: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01f4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01f9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01e4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ff: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0204: Unknown result type (might be due to invalid IL or missing references)
+		//IL_020c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0211: Unknown result type (might be due to invalid IL or missing references)
 		if (!base.baseEntity.isServer || !info.CanGather || info.DidGather)
 		{
 			return;
@@ -183,6 +183,11 @@ public class ResourceDispenser : EntityComponent<BaseEntity>, IServerComponent
 			{
 				AssignFinishBonus(info.InitiatorPlayer, 1f - num2, info.Weapon);
 			}
+			HeadDispenser headDispenser = default(HeadDispenser);
+			if (((Component)this).gameObject.TryGetComponent<HeadDispenser>(ref headDispenser))
+			{
+				headDispenser.DispenseHead(info, corpse);
+			}
 		}
 		else
 		{
@@ -199,10 +204,6 @@ public class ResourceDispenser : EntityComponent<BaseEntity>, IServerComponent
 
 	public void AssignFinishBonus(BasePlayer player, float fraction, AttackEntity weapon)
 	{
-		if (forceFullFinishBonus)
-		{
-			fraction = 1f;
-		}
 		((Component)this).SendMessage("FinishBonusAssigned", (SendMessageOptions)1);
 		if (fraction <= 0f || finishBonus == null)
 		{
@@ -430,21 +431,5 @@ public class ResourceDispenser : EntityComponent<BaseEntity>, IServerComponent
 		{
 			fractionRemaining = num2 / num;
 		}
-	}
-
-	public bool HasItemToDispense(ItemDefinition def)
-	{
-		if ((Object)(object)def == (Object)null)
-		{
-			return false;
-		}
-		foreach (ItemAmount containedItem in containedItems)
-		{
-			if ((Object)(object)containedItem.itemDef == (Object)(object)def && containedItem.amount > 0f)
-			{
-				return true;
-			}
-		}
-		return false;
 	}
 }

@@ -87,7 +87,7 @@ public class CH47PathFinder : BasePathFinder
 		float num3 = Mathf.Max(TerrainMeta.WaterMap.GetHeight(val), TerrainMeta.HeightMap.GetHeight(val));
 		float num4 = num3;
 		RaycastHit val2 = default(RaycastHit);
-		if (Physics.SphereCast(val + new Vector3(0f, 200f, 0f), 20f, Vector3.down, ref val2, 300f, 1084293377))
+		if (Physics.SphereCast(val + new Vector3(0f, 200f, 0f), 20f, Vector3.down, ref val2, 300f, 1218511105))
 		{
 			num4 = Mathf.Max(((RaycastHit)(ref val2)).point.y, num3);
 		}

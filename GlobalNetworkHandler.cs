@@ -40,10 +40,6 @@ public class GlobalNetworkHandler : PointEntity
 		{
 			return false;
 		}
-		if (entity.net != null && entity.net.group != null && entity.net.group.restricted)
-		{
-			return false;
-		}
 		if (entity.globalBuildingBlock)
 		{
 			return true;

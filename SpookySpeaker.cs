@@ -4,7 +4,7 @@ using Network;
 using UnityEngine;
 using UnityEngine.Assertions;
 
-public class SpookySpeaker : BaseCombatEntity
+public class SpookySpeaker : IOEntity
 {
 	public SoundPlayer soundPlayer;
 
@@ -82,13 +82,31 @@ public class SpookySpeaker : BaseCombatEntity
 		UpdateInvokes();
 	}
 
+	public override void UpdateHasPower(int inputAmount, int inputSlot)
+	{
+		base.UpdateHasPower(inputAmount, inputSlot);
+		if (inputSlot == 1)
+		{
+			SetTargetState(state: false);
+		}
+		if (inputSlot == 0)
+		{
+			SetTargetState(state: true);
+		}
+	}
+
+	private void SetTargetState(bool state)
+	{
+		SetFlag(Flags.On, state);
+		UpdateInvokes();
+	}
+
 	[RPC_Server]
 	[RPC_Server.IsVisible(3f)]
 	public void SetWantsOn(RPCMessage msg)
 	{
-		bool b = msg.read.Bit();
-		SetFlag(Flags.On, b);
-		UpdateInvokes();
+		bool targetState = msg.read.Bit();
+		SetTargetState(targetState);
 	}
 
 	public void UpdateInvokes()

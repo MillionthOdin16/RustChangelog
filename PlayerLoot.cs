@@ -217,10 +217,6 @@ public class PlayerLoot : EntityComponent<BasePlayer>
 		{
 			containers.Add(container);
 			container.onDirty += MarkDirty;
-			if ((Object)(object)container.entityOwner != (Object)null)
-			{
-				base.baseEntity.ProcessMissionEvent(BaseMission.MissionEventType.OPEN_STORAGE, container.entityOwner.prefabID, 0f);
-			}
 		}
 	}
 

@@ -133,10 +133,6 @@ public class TreeManager : BaseEntity
 
 	public static void OnTreeSpawned(BaseEntity billboardEntity)
 	{
-		if (billboardEntity.net.group != null && billboardEntity.net.group.restricted)
-		{
-			return;
-		}
 		entities.Add(billboardEntity);
 		if (Application.isLoading || Application.isQuitting)
 		{

@@ -47,7 +47,7 @@ public class Chat : ConsoleSystem
 
 	[StructLayout(LayoutKind.Auto)]
 	[CompilerGenerated]
-	private struct _003CsayAs_003Ed__19 : IAsyncStateMachine
+	private struct _003CsayAs_003Ed__18 : IAsyncStateMachine
 	{
 		public int _003C_003E1__state;
 
@@ -210,7 +210,7 @@ public class Chat : ConsoleSystem
 							{
 								num = (_003C_003E1__state = 0);
 								_003C_003Eu__1 = awaiter2;
-								_003C_003Et__builder.AwaitUnsafeOnCompleted<ValueTaskAwaiter<ClanValueResult<IClan>>, _003CsayAs_003Ed__19>(ref awaiter2, ref this);
+								_003C_003Et__builder.AwaitUnsafeOnCompleted<ValueTaskAwaiter<ClanValueResult<IClan>>, _003CsayAs_003Ed__18>(ref awaiter2, ref this);
 								return;
 							}
 							goto IL_0741;
@@ -220,7 +220,7 @@ public class Chat : ConsoleSystem
 						{
 							num = (_003C_003E1__state = 1);
 							_003C_003Eu__1 = awaiter2;
-							_003C_003Et__builder.AwaitUnsafeOnCompleted<ValueTaskAwaiter<ClanValueResult<IClan>>, _003CsayAs_003Ed__19>(ref awaiter2, ref this);
+							_003C_003Et__builder.AwaitUnsafeOnCompleted<ValueTaskAwaiter<ClanValueResult<IClan>>, _003CsayAs_003Ed__18>(ref awaiter2, ref this);
 							return;
 						}
 						goto IL_07b3;
@@ -253,7 +253,7 @@ public class Chat : ConsoleSystem
 							{
 								num = (_003C_003E1__state = 2);
 								_003C_003Eu__2 = awaiter;
-								_003C_003Et__builder.AwaitUnsafeOnCompleted<ValueTaskAwaiter<ClanResult>, _003CsayAs_003Ed__19>(ref awaiter, ref this);
+								_003C_003Et__builder.AwaitUnsafeOnCompleted<ValueTaskAwaiter<ClanResult>, _003CsayAs_003Ed__18>(ref awaiter, ref this);
 								return;
 							}
 							break;
@@ -456,9 +456,6 @@ public class Chat : ConsoleSystem
 
 	private const float textVolumeBoost = 0.2f;
 
-	[ReplicatedVar]
-	public static bool hideChatInTutorial = true;
-
 	[ServerVar]
 	[ClientVar]
 	public static bool enabled = true;
@@ -523,15 +520,15 @@ public class Chat : ConsoleSystem
 
 	private static void sayImpl(ChatChannel targetChannel, Arg arg)
 	{
-		//IL_017e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0183: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0169: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016e: Unknown result type (might be due to invalid IL or missing references)
 		if (!enabled)
 		{
 			arg.ReplyWith("Chat is disabled.");
 			return;
 		}
 		BasePlayer player = arg.Player();
-		if (!Object.op_Implicit((Object)(object)player) || (hideChatInTutorial && player.IsInTutorial) || player.HasPlayerFlag(BasePlayer.PlayerFlags.ChatMute))
+		if (!Object.op_Implicit((Object)(object)player) || player.HasPlayerFlag(BasePlayer.PlayerFlags.ChatMute))
 		{
 			return;
 		}
@@ -599,13 +596,13 @@ public class Chat : ConsoleSystem
 		return result;
 	}
 
-	[AsyncStateMachine(typeof(_003CsayAs_003Ed__19))]
+	[AsyncStateMachine(typeof(_003CsayAs_003Ed__18))]
 	internal static ValueTask<bool> sayAs(ChatChannel targetChannel, ulong userId, string username, string message, BasePlayer player = null)
 	{
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
-		_003CsayAs_003Ed__19 _003CsayAs_003Ed__ = default(_003CsayAs_003Ed__19);
+		_003CsayAs_003Ed__18 _003CsayAs_003Ed__ = default(_003CsayAs_003Ed__18);
 		_003CsayAs_003Ed__._003C_003Et__builder = AsyncValueTaskMethodBuilder<bool>.Create();
 		_003CsayAs_003Ed__.targetChannel = targetChannel;
 		_003CsayAs_003Ed__.userId = userId;
@@ -613,7 +610,7 @@ public class Chat : ConsoleSystem
 		_003CsayAs_003Ed__.message = message;
 		_003CsayAs_003Ed__.player = player;
 		_003CsayAs_003Ed__._003C_003E1__state = -1;
-		_003CsayAs_003Ed__._003C_003Et__builder.Start<_003CsayAs_003Ed__19>(ref _003CsayAs_003Ed__);
+		_003CsayAs_003Ed__._003C_003Et__builder.Start<_003CsayAs_003Ed__18>(ref _003CsayAs_003Ed__);
 		return _003CsayAs_003Ed__._003C_003Et__builder.Task;
 	}
 

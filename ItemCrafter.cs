@@ -151,10 +151,10 @@ public class ItemCrafter : EntityComponent<BasePlayer>
 
 	private void FinishCrafting(ItemCraftTask task)
 	{
-		//IL_0331: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0338: Unknown result type (might be due to invalid IL or missing references)
-		//IL_033f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0345: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0317: Unknown result type (might be due to invalid IL or missing references)
+		//IL_031e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0325: Unknown result type (might be due to invalid IL or missing references)
+		//IL_032b: Unknown result type (might be due to invalid IL or missing references)
 		task.amount--;
 		task.numCrafted++;
 		ulong skin = ItemDefinition.FindSkin(task.blueprint.targetItem.itemid, task.skinID);
@@ -199,7 +199,6 @@ public class ItemCrafter : EntityComponent<BasePlayer>
 		{
 			owner.GiveAchievement(task.blueprint.UnlockAchievment);
 		}
-		owner.ProcessMissionEvent(BaseMission.MissionEventType.CRAFT_ITEM, item.info.itemid, amount);
 		if (owner.inventory.GiveItem(item))
 		{
 			owner.Command("note.inv", item.info.itemid, amount);

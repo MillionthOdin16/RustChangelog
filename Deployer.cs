@@ -194,9 +194,8 @@ public class Deployer : HeldEntity
 		//IL_00c6: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00ca: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00d0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0154: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0159: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ab: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0151: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0156: Unknown result type (might be due to invalid IL or missing references)
 		if (!HasItemAmount())
 		{
 			return;
@@ -240,18 +239,6 @@ public class Deployer : HeldEntity
 			if (deployable.placeEffect.isValid)
 			{
 				Effect.server.Run(deployable.placeEffect.resourcePath, ((Component)baseEntity).transform.position, Vector3.up);
-			}
-			if (ownerPlayer.IsInTutorial)
-			{
-				TutorialIsland currentTutorialIsland = ownerPlayer.GetCurrentTutorialIsland();
-				if ((Object)(object)currentTutorialIsland != (Object)null)
-				{
-					currentTutorialIsland.OnPlayerBuiltConstruction(ownerPlayer);
-				}
-			}
-			if ((Object)(object)GetOwnerItemDefinition() != (Object)null)
-			{
-				ownerPlayer.ProcessMissionEvent(BaseMission.MissionEventType.DEPLOY, baseEntity2.prefabID, 1f, ((Component)baseEntity2).transform.position);
 			}
 		}
 		modDeployable.OnDeployed(baseEntity2, ownerPlayer);

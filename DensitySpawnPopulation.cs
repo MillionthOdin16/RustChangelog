@@ -40,8 +40,6 @@ public class DensitySpawnPopulation : SpawnPopulationBase
 
 	public float FilterRadius;
 
-	public bool FilterOutTutorialIslands;
-
 	internal Prefab<Spawnable>[] Prefabs;
 
 	protected int[] numToSpawn;
@@ -88,28 +86,25 @@ public class DensitySpawnPopulation : SpawnPopulationBase
 	public override void SubFill(SpawnHandler spawnHandler, SpawnDistribution distribution, int numToFill, bool initialSpawn)
 	{
 		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ba: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fe: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0103: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0120: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0130: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0148: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0155: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0172: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0174: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0184: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ce: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ee: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0100: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0188: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0118: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0125: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0197: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0199: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0142: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0144: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0154: Unknown result type (might be due to invalid IL or missing references)
 		float num = Mathf.Max((float)ClusterSizeMax, distribution.GetGridCellArea() * GetMaximumSpawnDensity());
 		UpdateWeights(distribution, GetTargetCount(distribution));
 		int num2 = (initialSpawn ? (numToFill * SpawnAttemptsInitial) : (numToFill * SpawnAttemptsRepeating));
@@ -123,10 +118,6 @@ public class DensitySpawnPopulation : SpawnPopulationBase
 				Vector3 spawnPos;
 				Quaternion spawnRot;
 				bool flag = distribution.Sample(out spawnPos, out spawnRot, node, AlignToNormal, ClusterDithering) && Filter.GetFactor(spawnPos) > 0f;
-				if (flag && FilterOutTutorialIslands && ((Bounds)(ref TutorialIsland.WorldBoundsMinusTutorialIslands)).size != Vector3.zero)
-				{
-					flag = ((Bounds)(ref TutorialIsland.WorldBoundsMinusTutorialIslands)).Contains(spawnPos);
-				}
 				if (flag && FilterRadius > 0f)
 				{
 					flag = Filter.GetFactor(spawnPos + Vector3.forward * FilterRadius) > 0f && Filter.GetFactor(spawnPos - Vector3.forward * FilterRadius) > 0f && Filter.GetFactor(spawnPos + Vector3.right * FilterRadius) > 0f && Filter.GetFactor(spawnPos - Vector3.right * FilterRadius) > 0f;

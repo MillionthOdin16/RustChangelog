@@ -12,8 +12,6 @@ public class RandomItemDispenser : PrefabAttribute, IServerComponent
 
 		[Range(0f, 1f)]
 		public float Chance;
-
-		public bool IgnoreInTutorial;
 	}
 
 	public RandomItemChance[] Chances;
@@ -27,18 +25,14 @@ public class RandomItemDispenser : PrefabAttribute, IServerComponent
 
 	public void DistributeItems(BasePlayer forPlayer, Vector3 distributorPosition)
 	{
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
 		RandomItemChance[] chances = Chances;
-		for (int i = 0; i < chances.Length; i++)
+		foreach (RandomItemChance itemChance in chances)
 		{
-			RandomItemChance itemChance = chances[i];
-			if (!((Object)(object)forPlayer != (Object)null) || !forPlayer.IsInTutorial || !itemChance.IgnoreInTutorial)
+			bool flag = TryAward(itemChance, forPlayer, distributorPosition);
+			if (OnlyAwardOne && flag)
 			{
-				bool flag = TryAward(itemChance, forPlayer, distributorPosition);
-				if (OnlyAwardOne && flag)
-				{
-					break;
-				}
+				break;
 			}
 		}
 	}

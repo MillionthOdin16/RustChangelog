@@ -415,6 +415,8 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		{
 			private float maximumDistance;
 
+			public bool CheckParent { get; set; }
+
 			public MaxDistance(float maxDist)
 			{
 				maximumDistance = maxDist;
@@ -422,17 +424,24 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 
 			public override string GetArgs()
 			{
-				return maximumDistance.ToString("0.00f");
+				return maximumDistance.ToString("0.00f") + (CheckParent ? ", true" : "");
 			}
 
-			public static bool Test(uint id, string debugName, BaseEntity ent, BasePlayer player, float maximumDistance)
+			public static bool Test(uint id, string debugName, BaseEntity ent, BasePlayer player, float maximumDistance, bool checkParent = false)
 			{
 				//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+				//IL_004b: Unknown result type (might be due to invalid IL or missing references)
 				if ((Object)(object)ent == (Object)null || (Object)(object)player == (Object)null)
 				{
 					return false;
 				}
-				return ent.Distance(player.eyes.position) <= maximumDistance;
+				bool flag = ent.Distance(player.eyes.position) <= maximumDistance;
+				if (checkParent && !flag)
+				{
+					BaseEntity parentEntity = ent.GetParentEntity();
+					flag = (Object)(object)parentEntity != (Object)null && parentEntity.Distance(player.eyes.position) <= maximumDistance;
+				}
+				return flag;
 			}
 		}
 

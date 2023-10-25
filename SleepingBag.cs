@@ -452,17 +452,6 @@ public class SleepingBag : DecayEntity
 		return sleepingBags.Where((SleepingBag x) => x.ValidForPlayer(playerID, ignoreTimers)).ToArray();
 	}
 
-	public static void FindForPlayer(ulong playerID, bool ignoreTimers, List<SleepingBag> result)
-	{
-		foreach (SleepingBag sleepingBag in sleepingBags)
-		{
-			if (sleepingBag.ValidForPlayer(playerID, ignoreTimers))
-			{
-				result.Add(sleepingBag);
-			}
-		}
-	}
-
 	public static bool SpawnPlayer(BasePlayer player, NetworkableId sleepingBag)
 	{
 		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
@@ -488,7 +477,7 @@ public class SleepingBag : DecayEntity
 		SleepingBag[] array2 = array;
 		for (int i = 0; i < array2.Length; i++)
 		{
-			SetBagTimer(array2[i], pos, SleepingBagResetReason.Respawned, player);
+			SetBagTimer(array2[i], pos, SleepingBagResetReason.Respawned);
 		}
 		return true;
 	}
@@ -636,7 +625,7 @@ public class SleepingBag : DecayEntity
 		if (!((Object)(object)player == (Object)null))
 		{
 			deployerUserID = player.userID;
-			SetBagTimer(this, ((Component)this).transform.position, SleepingBagResetReason.Placed, player);
+			SetBagTimer(this, ((Component)this).transform.position, SleepingBagResetReason.Placed);
 			SendNetworkUpdate();
 			notifyPlayerOnServerInit = true;
 		}
@@ -648,11 +637,11 @@ public class SleepingBag : DecayEntity
 		SleepingBag[] array = FindForPlayer(player.userID, ignoreTimers: true);
 		for (int i = 0; i < array.Length; i++)
 		{
-			SetBagTimer(array[i], ((Component)player).transform.position, SleepingBagResetReason.Death, player);
+			SetBagTimer(array[i], ((Component)player).transform.position, SleepingBagResetReason.Death);
 		}
 	}
 
-	public static void SetBagTimer(SleepingBag bag, Vector3 position, SleepingBagResetReason reason, BasePlayer forPlayer)
+	public static void SetBagTimer(SleepingBag bag, Vector3 position, SleepingBagResetReason reason)
 	{
 		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
@@ -688,12 +677,7 @@ public class SleepingBag : DecayEntity
 				realtimeSinceStartup = bag.unlockTime;
 			}
 		}
-		float num2 = Mathf.Max(realtimeSinceStartup, Time.realtimeSinceStartup + bag.secondsBetweenReuses);
-		if ((Object)(object)forPlayer != (Object)null && forPlayer.IsInTutorial)
-		{
-			num2 = 0f;
-		}
-		bag.SetUnlockTime(num2);
+		bag.SetUnlockTime(Mathf.Max(realtimeSinceStartup, Time.realtimeSinceStartup + bag.secondsBetweenReuses));
 		bag.SendNetworkUpdate();
 	}
 

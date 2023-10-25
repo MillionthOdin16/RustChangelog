@@ -224,7 +224,7 @@ public class BaseCorpse : BaseCombatEntity
 			ResetRemovalTime();
 			if (Object.op_Implicit((Object)(object)resourceDispenser))
 			{
-				resourceDispenser.OnAttacked(info);
+				resourceDispenser.DoGather(info, this);
 			}
 			if (!info.DidGather)
 			{

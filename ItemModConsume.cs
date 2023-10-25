@@ -86,7 +86,6 @@ public class ItemModConsume : ItemMod
 				player.metabolism.ApplyChange(effect.type, effect.amount * num3 * num4, effect.time * num3 * num4);
 			}
 		}
-		player.ProcessMissionEvent(BaseMission.MissionEventType.CONSUME, item.info.itemid, 1f);
 		if ((Object)(object)player.modifiers != (Object)null)
 		{
 			player.modifiers.Add(consumable.modifiers);

@@ -62,23 +62,6 @@ public class ValidBounds : SingletonComponent<ValidBounds>
 		return true;
 	}
 
-	public static float GetMaximumPoint()
-	{
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
-		if ((Object)(object)SingletonComponent<ValidBounds>.Instance == (Object)null)
-		{
-			return 0f;
-		}
-		float num = ((Bounds)(ref SingletonComponent<ValidBounds>.Instance.worldBounds)).max.x;
-		if ((Object)(object)TerrainMeta.Terrain != (Object)null)
-		{
-			num = Mathf.Min(TerrainMeta.Position.x + TerrainMeta.Size.x, num);
-		}
-		return num;
-	}
-
 	internal float DistToWorldEdge2D(Vector3 vPos)
 	{
 		//IL_0001: Unknown result type (might be due to invalid IL or missing references)

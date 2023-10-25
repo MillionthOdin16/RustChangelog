@@ -144,16 +144,16 @@ public class CollectibleEntity : BaseEntity, IPrefabPreProcess
 
 	public void DoPickup(BasePlayer reciever, bool eat = false)
 	{
-		//IL_0129: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0134: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0162: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ce: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00dd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ef: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0118: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0146: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ad: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d3: Unknown result type (might be due to invalid IL or missing references)
 		if (itemList == null)
 		{
 			return;
@@ -161,10 +161,6 @@ public class CollectibleEntity : BaseEntity, IPrefabPreProcess
 		ItemAmount[] array = itemList;
 		foreach (ItemAmount itemAmount in array)
 		{
-			if ((Object)(object)reciever != (Object)null && reciever.IsInTutorial && itemAmount.ignoreInTutorial)
-			{
-				continue;
-			}
 			Item item = ItemManager.Create(itemAmount.itemDef, (int)itemAmount.amount, 0uL);
 			if (item == null)
 			{
@@ -220,19 +216,6 @@ public class CollectibleEntity : BaseEntity, IPrefabPreProcess
 		{
 			DoPickup(msg.player, eat: true);
 		}
-	}
-
-	public bool HasItem(ItemDefinition def)
-	{
-		ItemAmount[] array = itemList;
-		for (int i = 0; i < array.Length; i++)
-		{
-			if ((Object)(object)array[i].itemDef == (Object)(object)def)
-			{
-				return true;
-			}
-		}
-		return false;
 	}
 
 	public override void PreProcess(IPrefabProcessor preProcess, GameObject rootObj, string name, bool serverside, bool clientside, bool bundling)

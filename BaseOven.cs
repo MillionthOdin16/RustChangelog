@@ -401,21 +401,16 @@ public class BaseOven : StorageContainer, ISplashable, IIndustrialStorage
 	protected virtual void SVSwitch(RPCMessage msg)
 	{
 		bool flag = msg.read.Bit();
-		if (flag == IsOn() || (needsBuildingPrivilegeToUse && !msg.player.CanBuild()))
+		if (flag != IsOn() && (!needsBuildingPrivilegeToUse || msg.player.CanBuild()))
 		{
-			return;
-		}
-		if (flag)
-		{
-			StartCooking();
-			if ((Object)(object)msg.player != (Object)null)
+			if (flag)
 			{
-				msg.player.ProcessMissionEvent(BaseMission.MissionEventType.STARTOVEN, prefabID, 1f);
+				StartCooking();
 			}
-		}
-		else
-		{
-			StopCooking();
+			else
+			{
+				StopCooking();
+			}
 		}
 	}
 

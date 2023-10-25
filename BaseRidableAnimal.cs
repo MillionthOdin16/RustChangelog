@@ -40,15 +40,21 @@ public class BaseRidableAnimal : BaseVehicle
 
 	public int maxStackSize = 1;
 
-	public int numSlots;
+	public int numStorageSlots;
+
+	public int equipmentSlots = 4;
 
 	public string lootPanelName = "generic";
+
+	public string storagePanelName = "generic";
 
 	public bool needsBuildingPrivilegeToUse;
 
 	public bool isLootable = true;
 
-	public ItemContainer inventory;
+	public ItemContainer storageInventory;
+
+	public ItemContainer equipmentInventory;
 
 	public const Flags Flag_ForSale = Flags.Reserved2;
 
@@ -420,42 +426,65 @@ public class BaseRidableAnimal : BaseVehicle
 
 	public void ContainerServerInit()
 	{
-		if (inventory == null)
+		if (storageInventory == null)
 		{
-			CreateInventory(giveUID: true);
-			OnInventoryFirstCreated(inventory);
+			CreateStorageInventory(giveUID: true);
+			OnInventoryFirstCreated(storageInventory);
+		}
+		if (equipmentInventory == null)
+		{
+			CreateEquipmentInventory(giveUID: true);
+			OnInventoryFirstCreated(equipmentInventory);
 		}
 	}
 
-	public void CreateInventory(bool giveUID)
+	private void CreateInventories(bool giveUID)
 	{
-		inventory = new ItemContainer();
-		inventory.entityOwner = this;
-		inventory.allowedContents = ((allowedContents == (ItemContainer.ContentsType)0) ? ItemContainer.ContentsType.Generic : allowedContents);
-		inventory.SetOnlyAllowedItem(onlyAllowedItem);
-		inventory.maxStackSize = maxStackSize;
-		inventory.ServerInitialize(null, numSlots);
-		inventory.canAcceptItem = ItemFilter;
+		CreateStorageInventory(giveUID);
+		CreateEquipmentInventory(giveUID);
+	}
+
+	private void CreateEquipmentInventory(bool giveUID)
+	{
+		equipmentInventory = CreateInventory(giveUID, equipmentSlots);
+		equipmentInventory.canAcceptItem = CanAnimalAcceptItem;
+	}
+
+	private void CreateStorageInventory(bool giveUID)
+	{
+		storageInventory = CreateInventory(giveUID, 48);
+		storageInventory.canAcceptItem = ItemFilter;
+	}
+
+	public ItemContainer CreateInventory(bool giveUID, int slots)
+	{
+		ItemContainer itemContainer = new ItemContainer();
+		itemContainer.entityOwner = this;
+		itemContainer.allowedContents = ((allowedContents == (ItemContainer.ContentsType)0) ? ItemContainer.ContentsType.Generic : allowedContents);
+		itemContainer.SetOnlyAllowedItem(onlyAllowedItem);
+		itemContainer.maxStackSize = maxStackSize;
+		itemContainer.ServerInitialize(null, slots);
 		if (giveUID)
 		{
-			inventory.GiveUID();
+			itemContainer.GiveUID();
 		}
-		inventory.onItemAddedRemoved = OnItemAddedOrRemoved;
-		inventory.onDirty += OnInventoryDirty;
+		itemContainer.onItemAddedRemoved = OnItemAddedOrRemoved;
+		itemContainer.onDirty += OnInventoryDirty;
+		return itemContainer;
 	}
 
 	public void SaveContainer(SaveInfo info)
 	{
 		if (info.forDisk)
 		{
-			if (inventory != null)
+			info.msg.ridableAnimal = Pool.Get<RidableAnimal>();
+			if (storageInventory != null)
 			{
-				info.msg.storageBox = Pool.Get<StorageBox>();
-				info.msg.storageBox.contents = inventory.Save();
+				info.msg.ridableAnimal.storageContainer = storageInventory.Save();
 			}
-			else
+			if (equipmentInventory != null)
 			{
-				Debug.LogWarning((object)("Storage container without inventory: " + ((object)this).ToString()));
+				info.msg.ridableAnimal.equipmentContainer = equipmentInventory.Save();
 			}
 		}
 	}
@@ -474,7 +503,7 @@ public class BaseRidableAnimal : BaseVehicle
 
 	public bool ItemFilter(Item item, int targetSlot)
 	{
-		return CanAnimalAcceptItem(item, targetSlot);
+		return true;
 	}
 
 	public virtual bool CanAnimalAcceptItem(Item item, int targetSlot)
@@ -486,16 +515,25 @@ public class BaseRidableAnimal : BaseVehicle
 	[RPC_Server.IsVisible(3f)]
 	private void RPC_OpenLoot(RPCMessage rpc)
 	{
-		if (inventory != null)
+		if (storageInventory == null)
 		{
-			BasePlayer player = rpc.player;
-			if (Object.op_Implicit((Object)(object)player) && player.CanInteract() && CanOpenStorage(player) && (!needsBuildingPrivilegeToUse || player.CanBuild()) && player.inventory.loot.StartLootingEntity(this))
+			return;
+		}
+		BasePlayer player = rpc.player;
+		string text = rpc.read.String(256, false);
+		if (Object.op_Implicit((Object)(object)player) && player.CanInteract() && CanOpenStorage(player) && (!needsBuildingPrivilegeToUse || player.CanBuild()) && player.inventory.loot.StartLootingEntity(this))
+		{
+			ItemContainer container = equipmentInventory;
+			string arg = lootPanelName;
+			if (text == "storage")
 			{
-				player.inventory.loot.AddContainer(inventory);
-				player.inventory.loot.SendImmediate();
-				player.ClientRPCPlayer(null, player, "RPC_OpenLootPanel", lootPanelName);
-				SendNetworkUpdate();
+				arg = storagePanelName;
+				container = storageInventory;
 			}
+			player.inventory.loot.AddContainer(container);
+			player.inventory.loot.SendImmediate();
+			player.ClientRPCPlayer(null, player, "RPC_OpenLootPanel", arg);
+			SendNetworkUpdate();
 		}
 	}
 
@@ -518,16 +556,25 @@ public class BaseRidableAnimal : BaseVehicle
 
 	public void LoadContainer(LoadInfo info)
 	{
-		if (info.fromDisk && info.msg.storageBox != null)
+		if (info.fromDisk && info.msg.ridableAnimal != null)
 		{
-			if (inventory != null)
+			if (equipmentInventory != null && info.msg.ridableAnimal.equipmentContainer != null)
 			{
-				inventory.Load(info.msg.storageBox.contents);
-				inventory.capacity = numSlots;
+				equipmentInventory.Load(info.msg.ridableAnimal.equipmentContainer);
+				equipmentInventory.capacity = equipmentSlots;
 			}
 			else
 			{
-				Debug.LogWarning((object)("Storage container without inventory: " + ((object)this).ToString()));
+				Debug.LogWarning((object)("Horse didn't have saved equipment inventory: " + ((object)this).ToString()));
+			}
+			if (storageInventory != null && info.msg.ridableAnimal.storageContainer != null)
+			{
+				storageInventory.Load(info.msg.ridableAnimal.storageContainer);
+				storageInventory.capacity = numStorageSlots;
+			}
+			else
+			{
+				Debug.LogWarning((object)("Horse didn't have savevd storage inventorry: " + ((object)this).ToString()));
 			}
 		}
 	}
@@ -957,7 +1004,7 @@ public class BaseRidableAnimal : BaseVehicle
 			return;
 		}
 		List<BaseEntity> list = Pool.GetList<BaseEntity>();
-		Vis.Entities(((Component)this).transform.position + ((Component)this).transform.forward * 1.5f, 2f, list, 67109377, (QueryTriggerInteraction)2);
+		Vis.Entities(((Component)this).transform.position + ((Component)this).transform.forward * 1.5f, 2f, list, -2147483135, (QueryTriggerInteraction)2);
 		list.Sort((BaseEntity a, BaseEntity b) => (b is DroppedItem).CompareTo(a is DroppedItem));
 		foreach (BaseEntity item in list)
 		{
@@ -1742,7 +1789,7 @@ public class BaseRidableAnimal : BaseVehicle
 	public override void PreServerLoad()
 	{
 		base.PreServerLoad();
-		CreateInventory(giveUID: false);
+		CreateInventories(giveUID: false);
 	}
 
 	public override void ServerInit()
@@ -1777,7 +1824,7 @@ public class BaseRidableAnimal : BaseVehicle
 		LootableCorpse component = ((Component)corpse).GetComponent<LootableCorpse>();
 		if (Object.op_Implicit((Object)(object)component))
 		{
-			component.TakeFrom(inventory);
+			component.TakeFrom(this, storageInventory);
 		}
 	}
 
