@@ -49,7 +49,7 @@ public class HuntingTrophy : StorageContainer
 				return false;
 			}
 			BaseEntity entity = SourceEntity.GetEntity();
-			bool flag = (Object)(object)entity != (Object)null && data != null && entity.prefabID == data.entitySource;
+			bool flag = (Object)(object)entity != (Object)null && entity.prefabID == data.entitySource;
 			if (!flag)
 			{
 				GameObject val = null;
@@ -308,6 +308,18 @@ public class HuntingTrophy : StorageContainer
 			{
 				trophyRoot.Root.SetActive(false);
 			}
+		}
+		if ((Object)(object)NameRoot != (Object)null)
+		{
+			NameRoot.SetActive(false);
+		}
+		if ((Object)(object)MaleRope != (Object)null)
+		{
+			MaleRope.SetActive(false);
+		}
+		if ((Object)(object)FemaleRope != (Object)null)
+		{
+			FemaleRope.SetActive(false);
 		}
 	}
 }

@@ -67,7 +67,7 @@ public class CodeLock : BaseLock
 					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
-						if (!RPC_Server.MaxDistance.Test(4013784361u, "RPC_ChangeCode", this, player, 3f))
+						if (!RPC_Server.MaxDistance.Test(4013784361u, "RPC_ChangeCode", this, player, 3f, checkParent: true))
 						{
 							return true;
 						}
@@ -118,7 +118,7 @@ public class CodeLock : BaseLock
 					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
-						if (!RPC_Server.MaxDistance.Test(2626067433u, "TryLock", this, player, 3f))
+						if (!RPC_Server.MaxDistance.Test(2626067433u, "TryLock", this, player, 3f, checkParent: true))
 						{
 							return true;
 						}
@@ -169,7 +169,7 @@ public class CodeLock : BaseLock
 					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
-						if (!RPC_Server.MaxDistance.Test(1718262u, "TryUnlock", this, player, 3f))
+						if (!RPC_Server.MaxDistance.Test(1718262u, "TryUnlock", this, player, 3f, checkParent: true))
 						{
 							return true;
 						}
@@ -220,7 +220,7 @@ public class CodeLock : BaseLock
 					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
-						if (!RPC_Server.MaxDistance.Test(418605506u, "UnlockWithCode", this, player, 3f))
+						if (!RPC_Server.MaxDistance.Test(418605506u, "UnlockWithCode", this, player, 3f, checkParent: true))
 						{
 							return true;
 						}
@@ -353,7 +353,7 @@ public class CodeLock : BaseLock
 	}
 
 	[RPC_Server]
-	[RPC_Server.MaxDistance(3f)]
+	[RPC_Server.MaxDistance(3f, CheckParent = true)]
 	private void RPC_ChangeCode(RPCMessage rpc)
 	{
 		if (!rpc.player.CanInteract())
@@ -389,7 +389,7 @@ public class CodeLock : BaseLock
 	}
 
 	[RPC_Server]
-	[RPC_Server.MaxDistance(3f)]
+	[RPC_Server.MaxDistance(3f, CheckParent = true)]
 	private void TryUnlock(RPCMessage rpc)
 	{
 		if (rpc.player.CanInteract() && IsLocked() && !IsCodeEntryBlocked() && whitelistPlayers.Contains(rpc.player.userID))
@@ -401,7 +401,7 @@ public class CodeLock : BaseLock
 	}
 
 	[RPC_Server]
-	[RPC_Server.MaxDistance(3f)]
+	[RPC_Server.MaxDistance(3f, CheckParent = true)]
 	private void TryLock(RPCMessage rpc)
 	{
 		if (rpc.player.CanInteract() && !IsLocked() && code.Length == 4 && whitelistPlayers.Contains(rpc.player.userID))
@@ -419,7 +419,7 @@ public class CodeLock : BaseLock
 	}
 
 	[RPC_Server]
-	[RPC_Server.MaxDistance(3f)]
+	[RPC_Server.MaxDistance(3f, CheckParent = true)]
 	private void UnlockWithCode(RPCMessage rpc)
 	{
 		if (!rpc.player.CanInteract() || !IsLocked() || IsCodeEntryBlocked())

@@ -144,6 +144,12 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		public const uint FlashBlindId = 235662700u;
 	}
 
+	public enum GestureStartSource
+	{
+		ServerAction,
+		Player
+	}
+
 	public enum MapNoteType
 	{
 		Death,
@@ -3315,13 +3321,13 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		}
 	}
 
-	public void Server_StartGesture(GestureConfig toPlay)
+	public void Server_StartGesture(GestureConfig toPlay, GestureStartSource startSource = GestureStartSource.Player)
 	{
-		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0089: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e1: Unknown result type (might be due to invalid IL or missing references)
-		if (!((Object)(object)toPlay != (Object)null) || !toPlay.IsOwnedBy(this) || !toPlay.CanBeUsedBy(this))
+		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fe: Unknown result type (might be due to invalid IL or missing references)
+		if (((Object)(object)toPlay != (Object)null && toPlay.hideInWheel && startSource == GestureStartSource.Player && !ConVar.Server.cinematic) || !((Object)(object)toPlay != (Object)null) || !toPlay.IsOwnedBy(this) || !toPlay.CanBeUsedBy(this))
 		{
 			return;
 		}

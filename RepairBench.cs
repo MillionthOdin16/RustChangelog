@@ -200,25 +200,27 @@ public class RepairBench : StorageContainer
 	[RPC_Server.IsVisible(3f)]
 	public void ChangeSkin(RPCMessage msg)
 	{
-		//IL_04af: Unknown result type (might be due to invalid IL or missing references)
-		//IL_04b4: Unknown result type (might be due to invalid IL or missing references)
-		if (Time.realtimeSinceStartup < nextSkinChangeTime)
-		{
-			return;
-		}
+		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04fe: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0503: Unknown result type (might be due to invalid IL or missing references)
+		bool flag = Time.realtimeSinceStartup < nextSkinChangeTime;
 		BasePlayer player = msg.player;
 		int num = msg.read.Int32();
+		ItemId val = default(ItemId);
+		((ItemId)(ref val))._002Ector(msg.read.UInt64());
+		bool isValid = ((ItemId)(ref val)).IsValid;
 		Item slot = base.inventory.GetSlot(0);
-		if (slot == null)
+		if (slot == null || (isValid && slot.uid != val))
 		{
 			return;
 		}
-		bool flag = false;
+		bool flag2 = false;
 		if (msg.player.UnlockAllSkins)
 		{
-			flag = true;
+			flag2 = true;
 		}
-		if (num != 0 && !flag && !player.blueprints.CheckSkinOwnership(num, player.userID))
+		if (num != 0 && !flag2 && !player.blueprints.CheckSkinOwnership(num, player.userID))
 		{
 			debugprint("RepairBench.ChangeSkin player does not have item :" + num + ":");
 			return;
@@ -240,11 +242,11 @@ public class RepairBench : StorageContainer
 		if ((Object.op_Implicit((Object)(object)itemSkin) && ((Object)(object)itemSkin.Redirect != (Object)null || (Object)(object)slot.info.isRedirectOf != (Object)null)) || (!Object.op_Implicit((Object)(object)itemSkin) && (Object)(object)slot.info.isRedirectOf != (Object)null))
 		{
 			ItemDefinition template = (((Object)(object)itemSkin != (Object)null) ? itemSkin.Redirect : slot.info.isRedirectOf);
-			bool flag2 = false;
+			bool flag3 = false;
 			if ((Object)(object)itemSkin != (Object)null && (Object)(object)itemSkin.Redirect == (Object)null && (Object)(object)slot.info.isRedirectOf != (Object)null)
 			{
 				template = slot.info.isRedirectOf;
-				flag2 = num != 0;
+				flag3 = num != 0;
 			}
 			float condition = slot.condition;
 			float maxCondition = slot.maxCondition;
@@ -292,7 +294,7 @@ public class RepairBench : StorageContainer
 				}
 			}
 			Pool.FreeList<Item>(ref list);
-			if (flag2)
+			if (flag3)
 			{
 				ApplySkinToItem(item, Skin);
 			}
@@ -305,7 +307,7 @@ public class RepairBench : StorageContainer
 			Analytics.Server.SkinUsed(slot.info.shortname, num);
 			Analytics.Azure.OnSkinChanged(player, this, slot, Skin);
 		}
-		if (skinchangeEffect.isValid)
+		if (flag && skinchangeEffect.isValid)
 		{
 			Effect.server.Run(skinchangeEffect.resourcePath, this, 0u, new Vector3(0f, 1.5f, 0f), Vector3.zero);
 		}

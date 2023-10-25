@@ -25,6 +25,8 @@ public class WantedPoster : DecayEntity, ISignage, IUGCBrowserEntity, ILOD, ISer
 
 	public const Flags HasTarget = Flags.Reserved1;
 
+	public uiPlayerPreview.EffectMode EffectMode = uiPlayerPreview.EffectMode.Polaroid;
+
 	public uint[] GetContentCRCs
 	{
 		get

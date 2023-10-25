@@ -601,7 +601,7 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 
 	[RPC_Server]
 	[RPC_Server.MaxDistance(3f)]
-	private void RPC_OpenDoor(RPCMessage rpc)
+	protected void RPC_OpenDoor(RPCMessage rpc)
 	{
 		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
 		//IL_012f: Unknown result type (might be due to invalid IL or missing references)

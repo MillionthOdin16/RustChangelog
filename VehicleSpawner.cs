@@ -135,7 +135,7 @@ public class VehicleSpawner : BaseEntity
 			}
 		}
 		List<ServerGib> list2 = Pool.GetList<ServerGib>();
-		Vis.Entities(((Component)spawnOffset).transform.position, radius, list2, 67108865, (QueryTriggerInteraction)2);
+		Vis.Entities(((Component)spawnOffset).transform.position, radius, list2, -2147483647, (QueryTriggerInteraction)2);
 		foreach (ServerGib item2 in list2)
 		{
 			if (!item2.isClient)

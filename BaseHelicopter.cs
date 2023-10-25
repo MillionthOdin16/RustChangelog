@@ -392,7 +392,7 @@ public class BaseHelicopter : BaseVehicle, SeekerTarget.ISeekerTargetOwner
 		}
 		Vector3 relativeVelocity = collision.relativeVelocity;
 		float magnitude = ((Vector3)(ref relativeVelocity)).magnitude;
-		if (Object.op_Implicit((Object)(object)collision.gameObject) && ((1 << ((Component)collision.collider).gameObject.layer) & 0x40A18101) <= 0)
+		if (Object.op_Implicit((Object)(object)collision.gameObject) && ((1 << ((Component)collision.collider).gameObject.layer) & 0x48A18101) <= 0)
 		{
 			return;
 		}

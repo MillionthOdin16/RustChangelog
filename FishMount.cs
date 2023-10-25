@@ -8,7 +8,7 @@ using UnityEngine.Assertions;
 
 public class FishMount : StorageContainer
 {
-	public GameObject[] FishRoots = (GameObject[])(object)new GameObject[0];
+	public Animator[] FishRoots = (Animator[])(object)new Animator[0];
 
 	public GameObjectRef[] FishInteractSounds = new GameObjectRef[0];
 
@@ -140,6 +140,7 @@ public class FishMount : StorageContainer
 			Effect.client.Run(FishInteractSounds[GetCurrentFishItemIndex].resourcePath, ((Component)this).transform.position);
 			SetFlag(Flags.Busy, b: true);
 			((FacepunchBehaviour)this).Invoke((Action)ClearBusy, UseCooldown);
+			ClientRPC(null, "PlayAnimation");
 		}
 	}
 

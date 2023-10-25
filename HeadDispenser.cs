@@ -12,6 +12,7 @@ public class HeadDispenser : EntityComponent<BaseEntity>
 
 	public void DispenseHead(HitInfo info, BaseCorpse corpse)
 	{
+		//IL_012e: Unknown result type (might be due to invalid IL or missing references)
 		if (hasDispensed || !(info.Weapon is BaseMelee baseMelee) || !baseMelee.gathering.ProduceHeadItem)
 		{
 			return;
@@ -35,8 +36,14 @@ public class HeadDispenser : EntityComponent<BaseEntity>
 					associatedEntity.AssignHorseBreed(horseCorpse.breedIndex);
 				}
 			}
-			info.InitiatorPlayer.inventory.GiveItem(item);
-			info.InitiatorPlayer.Command("note.inv", HeadDef.itemid, 1);
+			if (info.InitiatorPlayer.inventory.GiveItem(item))
+			{
+				info.InitiatorPlayer.Command("note.inv", HeadDef.itemid, 1);
+			}
+			else
+			{
+				item.DropAndTossUpwards(info.HitPositionWorld);
+			}
 		}
 		hasDispensed = true;
 	}

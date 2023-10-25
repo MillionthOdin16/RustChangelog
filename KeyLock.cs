@@ -33,7 +33,7 @@ public class KeyLock : BaseLock
 					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
-						if (!RPC_Server.MaxDistance.Test(4135414453u, "RPC_CreateKey", this, player, 3f))
+						if (!RPC_Server.MaxDistance.Test(4135414453u, "RPC_CreateKey", this, player, 3f, checkParent: true))
 						{
 							return true;
 						}
@@ -84,7 +84,7 @@ public class KeyLock : BaseLock
 					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
-						if (!RPC_Server.MaxDistance.Test(954115386u, "RPC_Lock", this, player, 3f))
+						if (!RPC_Server.MaxDistance.Test(954115386u, "RPC_Lock", this, player, 3f, checkParent: true))
 						{
 							return true;
 						}
@@ -135,7 +135,7 @@ public class KeyLock : BaseLock
 					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
-						if (!RPC_Server.MaxDistance.Test(1663222372u, "RPC_Unlock", this, player, 3f))
+						if (!RPC_Server.MaxDistance.Test(1663222372u, "RPC_Unlock", this, player, 3f, checkParent: true))
 						{
 							return true;
 						}
@@ -273,7 +273,7 @@ public class KeyLock : BaseLock
 	}
 
 	[RPC_Server]
-	[RPC_Server.MaxDistance(3f)]
+	[RPC_Server.MaxDistance(3f, CheckParent = true)]
 	private void RPC_Unlock(RPCMessage rpc)
 	{
 		if (rpc.player.CanInteract() && IsLocked() && HasLockPermission(rpc.player))
@@ -284,7 +284,7 @@ public class KeyLock : BaseLock
 	}
 
 	[RPC_Server]
-	[RPC_Server.MaxDistance(3f)]
+	[RPC_Server.MaxDistance(3f, CheckParent = true)]
 	private void RPC_Lock(RPCMessage rpc)
 	{
 		Lock(rpc.player);
@@ -300,7 +300,7 @@ public class KeyLock : BaseLock
 	}
 
 	[RPC_Server]
-	[RPC_Server.MaxDistance(3f)]
+	[RPC_Server.MaxDistance(3f, CheckParent = true)]
 	private void RPC_CreateKey(RPCMessage rpc)
 	{
 		if (!rpc.player.CanInteract() || (IsLocked() && !HasLockPermission(rpc.player)))

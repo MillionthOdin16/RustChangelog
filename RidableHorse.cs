@@ -52,8 +52,6 @@ public class RidableHorse : BaseRidableAnimal
 
 	private float equipmentSpeedMod;
 
-	private int numStorageSlots;
-
 	private int prevBreed;
 
 	private int prevSlots;
@@ -69,8 +67,6 @@ public class RidableHorse : BaseRidableAnimal
 	private float kmDistance;
 
 	private float tempDistanceTravelled;
-
-	private int numEquipmentSlots = 4;
 
 	public override float RealisticMass => 550f;
 
@@ -490,11 +486,11 @@ public class RidableHorse : BaseRidableAnimal
 	public override bool CanAnimalAcceptItem(Item item, int targetSlot)
 	{
 		ItemModAnimalEquipment component = ((Component)item.info).GetComponent<ItemModAnimalEquipment>();
-		if (IsForSale() && ItemIsSaddle(item) && targetSlot >= 0 && targetSlot < numEquipmentSlots)
+		if (IsForSale() && ItemIsSaddle(item))
 		{
 			return false;
 		}
-		if (targetSlot >= 0 && targetSlot < numEquipmentSlots && !Object.op_Implicit((Object)(object)component))
+		if (!Object.op_Implicit((Object)(object)component))
 		{
 			return false;
 		}
@@ -502,48 +498,40 @@ public class RidableHorse : BaseRidableAnimal
 		{
 			return false;
 		}
-		if (targetSlot < numEquipmentSlots)
+		if (component.slot == ItemModAnimalEquipment.SlotType.Basic)
 		{
-			if (component.slot == ItemModAnimalEquipment.SlotType.Basic)
+			return true;
+		}
+		for (int i = 0; i < equipmentInventory.capacity; i++)
+		{
+			Item slot = equipmentInventory.GetSlot(i);
+			if (slot != null)
 			{
-				return true;
-			}
-			for (int i = 0; i < numEquipmentSlots; i++)
-			{
-				Item slot = inventory.GetSlot(i);
-				if (slot != null)
+				ItemModAnimalEquipment component2 = ((Component)slot.info).GetComponent<ItemModAnimalEquipment>();
+				if (!((Object)(object)component2 == (Object)null) && component2.slot == component.slot)
 				{
-					ItemModAnimalEquipment component2 = ((Component)slot.info).GetComponent<ItemModAnimalEquipment>();
-					if (!((Object)(object)component2 == (Object)null) && component2.slot == component.slot)
-					{
-						int slot2 = (int)component2.slot;
-						string text = slot2.ToString();
-						slot2 = (int)component.slot;
-						Debug.Log((object)("rejecting because slot same, found : " + text + " new : " + slot2));
-						return false;
-					}
+					int slot2 = (int)component2.slot;
+					string text = slot2.ToString();
+					slot2 = (int)component.slot;
+					Debug.Log((object)("rejecting because slot same, found : " + text + " new : " + slot2));
+					return false;
 				}
 			}
 		}
 		return true;
 	}
 
-	public int GetStorageStartIndex()
-	{
-		return numEquipmentSlots;
-	}
-
 	public void EquipmentUpdate()
 	{
-		//IL_015e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0163: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0168: Unknown result type (might be due to invalid IL or missing references)
-		//IL_016d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0177: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0157: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0161: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0166: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0170: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0175: Unknown result type (might be due to invalid IL or missing references)
+		//IL_017a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0181: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0188: Unknown result type (might be due to invalid IL or missing references)
-		//IL_018e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0187: Unknown result type (might be due to invalid IL or missing references)
 		SetFlag(Flags.Reserved4, b: false, recursive: false, networkupdate: false);
 		SetFlag(Flags.Reserved5, b: false, recursive: false, networkupdate: false);
 		SetFlag(Flags.Reserved6, b: false, recursive: false, networkupdate: false);
@@ -551,9 +539,9 @@ public class RidableHorse : BaseRidableAnimal
 		baseProtection.Clear();
 		equipmentSpeedMod = 0f;
 		numStorageSlots = 0;
-		for (int i = 0; i < numEquipmentSlots; i++)
+		for (int i = 0; i < equipmentInventory.capacity; i++)
 		{
-			Item slot = inventory.GetSlot(i);
+			Item slot = equipmentInventory.GetSlot(i);
 			if (slot == null)
 			{
 				continue;
@@ -578,11 +566,11 @@ public class RidableHorse : BaseRidableAnimal
 				numStorageSlots += component.additionalInventorySlots;
 			}
 		}
-		for (int j = GetStorageStartIndex(); j < inventory.capacity; j++)
+		for (int j = 0; j < storageInventory.capacity; j++)
 		{
-			if (j >= GetStorageStartIndex() + numStorageSlots)
+			if (j >= numStorageSlots)
 			{
-				Item slot2 = inventory.GetSlot(j);
+				Item slot2 = storageInventory.GetSlot(j);
 				if (slot2 != null)
 				{
 					slot2.RemoveFromContainer();
@@ -590,7 +578,7 @@ public class RidableHorse : BaseRidableAnimal
 				}
 			}
 		}
-		inventory.capacity = GetStorageStartIndex() + numStorageSlots;
+		storageInventory.capacity = numStorageSlots;
 		SendNetworkUpdate();
 	}
 
@@ -687,7 +675,6 @@ public class RidableHorse : BaseRidableAnimal
 		{
 			staminaSeconds = info.msg.horse.staminaSeconds;
 			currentMaxStaminaSeconds = info.msg.horse.currentMaxStaminaSeconds;
-			numStorageSlots = info.msg.horse.numStorageSlots;
 			ApplyBreed(info.msg.horse.breedIndex);
 		}
 	}
