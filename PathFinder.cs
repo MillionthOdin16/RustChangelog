@@ -99,6 +99,8 @@ public class PathFinder
 
 	private Point[] neighbors;
 
+	private bool diagonals;
+
 	private bool directional;
 
 	public Point PushPoint;
@@ -108,6 +110,10 @@ public class PathFinder
 	public int PushDistance;
 
 	public int PushMultiplier;
+
+	public List<Point> PushPointsAdditional = new List<Point>();
+
+	public HashSet<Point> BlockedPointsAdditional = new HashSet<Point>();
 
 	private static Point[] mooreNeighbors = new Point[8]
 	{
@@ -133,6 +139,7 @@ public class PathFinder
 	{
 		this.costmap = costmap;
 		neighbors = (diagonals ? mooreNeighbors : neumannNeighbors);
+		this.diagonals = diagonals;
 		this.directional = directional;
 	}
 
@@ -163,8 +170,11 @@ public class PathFinder
 		int num4 = costmap.GetLength(1) - 1;
 		IntrusiveMinHeap<Node> val = default(IntrusiveMinHeap<Node>);
 		int num5 = Cost(start);
-		int heuristic = Heuristic(start, end);
-		val.Add(new Node(start, num5, heuristic));
+		if (num5 != int.MaxValue)
+		{
+			int heuristic = Heuristic(start, end);
+			val.Add(new Node(start, num5, heuristic));
+		}
 		visited[start.x, start.y] = num5;
 		while (!val.Empty && depth-- > 0)
 		{
@@ -242,8 +252,11 @@ public class PathFinder
 		foreach (Point start in startList)
 		{
 			int num5 = Cost(start);
-			int heuristic = Heuristic(start, endList);
-			val.Add(new Node(start, num5, heuristic));
+			if (num5 != int.MaxValue)
+			{
+				int heuristic = Heuristic(start, endList);
+				val.Add(new Node(start, num5, heuristic));
+			}
 			visited[start.x, start.y] = num5;
 		}
 		while (!val.Empty && depth-- > 0)
@@ -401,20 +414,28 @@ public class PathFinder
 	{
 		int num = costmap[a.x, a.y];
 		int num2 = 0;
+		if (BlockedPointsAdditional.Contains(a))
+		{
+			num = int.MaxValue;
+		}
 		if (num != int.MaxValue && PushMultiplier > 0)
 		{
-			int num3 = Mathf.Max(0, Heuristic(a, PushPoint) - PushRadius * PushRadius);
-			int num4 = Mathf.Max(0, PushDistance * PushDistance - num3);
-			num2 = PushMultiplier * num4;
+			int num3 = Mathf.Max(0, Heuristic(a, PushPoint) - PushRadius);
+			for (int i = 0; i < PushPointsAdditional.Count; i++)
+			{
+				num3 = Mathf.Min(num3, Heuristic(a, PushPointsAdditional[i]));
+			}
+			float num4 = Mathf.Max(0f, (float)(PushDistance - num3)) / (float)PushDistance;
+			num2 = Mathf.CeilToInt((float)PushMultiplier * num4);
 		}
 		return num + num2;
 	}
 
-	public int Cost(Point a, Node neighbour)
+	public int Cost(Point a, Node prev)
 	{
 		int num = Cost(a);
 		int num2 = 0;
-		if (num != int.MaxValue && directional && neighbour != null && neighbour.next != null && Heuristic(a, neighbour.next.point) <= 2)
+		if (num != int.MaxValue && directional && prev != null && prev.next != null && Heuristic(a, prev.next.point) <= 1)
 		{
 			num2 = 10000;
 		}
@@ -432,9 +453,13 @@ public class PathFinder
 
 	public int Heuristic(Point a, Point b)
 	{
-		int num = a.x - b.x;
-		int num2 = a.y - b.y;
-		return num * num + num2 * num2;
+		int num = Mathf.Abs(a.x - b.x);
+		int num2 = Mathf.Abs(a.y - b.y);
+		if (diagonals)
+		{
+			return Mathf.Max(num, num2);
+		}
+		return num + num2;
 	}
 
 	public int Heuristic(Point a, List<Point> b)
@@ -452,5 +477,17 @@ public class PathFinder
 		int num = a.x - b.x;
 		int num2 = a.y - b.y;
 		return Mathf.Sqrt((float)(num * num + num2 * num2));
+	}
+
+	public static Point GetPoint(Vector3 worldPos, int res)
+	{
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		float num = TerrainMeta.NormalizeX(worldPos.x);
+		float num2 = TerrainMeta.NormalizeZ(worldPos.z);
+		Point result = default(Point);
+		result.x = Mathf.Clamp((int)(num * (float)res), 0, res - 1);
+		result.y = Mathf.Clamp((int)(num2 * (float)res), 0, res - 1);
+		return result;
 	}
 }

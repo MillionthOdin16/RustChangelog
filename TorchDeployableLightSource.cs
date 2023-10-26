@@ -142,6 +142,7 @@ public class TorchDeployableLightSource : StorageContainer, ISplashable, IIgnite
 			{
 				TorchWeapon component = ((Component)GameManager.server.CreateEntity(((Component)itemDefinition).GetComponent<ItemModEntity>().entityPrefab.resourcePath, TorchRoot.position, TorchRoot.rotation)).GetComponent<TorchWeapon>();
 				component.SetParent(this, worldPositionStays: true);
+				component.SetFlag(Flags.Reserved1, b: true);
 				component.Spawn();
 				spawnedTorch.Set(component);
 			}
@@ -170,10 +171,7 @@ public class TorchDeployableLightSource : StorageContainer, ISplashable, IIgnite
 			if (child is TorchWeapon torchWeapon)
 			{
 				spawnedTorch.Set(torchWeapon);
-				if (!HasFlag(Flags.Reserved2))
-				{
-					torchWeapon.SetFlag(Flags.On, IsOn());
-				}
+				torchWeapon.SetFlag(Flags.On, IsOn());
 				break;
 			}
 		}
@@ -206,10 +204,7 @@ public class TorchDeployableLightSource : StorageContainer, ISplashable, IIgnite
 		TorchWeapon torchWeapon = spawnedTorch.Get(serverside: true);
 		if (!((Object)(object)torchWeapon == (Object)null))
 		{
-			if (!HasFlag(Flags.Reserved2))
-			{
-				torchWeapon.SetFlag(Flags.On, wantsOn);
-			}
+			torchWeapon.SetFlag(Flags.On, wantsOn);
 			SetFlag(Flags.On, wantsOn);
 			if (HasFlag(Flags.Reserved1))
 			{

@@ -145,6 +145,12 @@ public class RepairBench : StorageContainer
 
 	public static void GetRepairCostList(ItemBlueprint bp, List<ItemAmount> allIngredients)
 	{
+		ItemDefinition targetItem = bp.targetItem;
+		ItemModRepair itemModRepair = ((targetItem != null) ? ((Component)targetItem).GetComponent<ItemModRepair>() : null);
+		if ((Object)(object)itemModRepair != (Object)null && itemModRepair.canUseRepairBench)
+		{
+			return;
+		}
 		foreach (ItemAmount ingredient in bp.ingredients)
 		{
 			allIngredients.Add(new ItemAmount(ingredient.itemDef, ingredient.amount));
@@ -331,7 +337,13 @@ public class RepairBench : StorageContainer
 	{
 		Item slot = base.inventory.GetSlot(0);
 		BasePlayer player = msg.player;
-		RepairAnItem(slot, player, this, maxConditionLostOnRepair, mustKnowBlueprint: true);
+		float conditionLost = maxConditionLostOnRepair;
+		ItemModRepair component = ((Component)slot.info).GetComponent<ItemModRepair>();
+		if ((Object)(object)component != (Object)null)
+		{
+			conditionLost = component.conditionLost;
+		}
+		RepairAnItem(slot, player, this, conditionLost, mustKnowBlueprint: true);
 	}
 
 	public override int GetIdealSlot(BasePlayer player, Item item)
@@ -341,15 +353,20 @@ public class RepairBench : StorageContainer
 
 	public static void RepairAnItem(Item itemToRepair, BasePlayer player, BaseEntity repairBenchEntity, float maxConditionLostOnRepair, bool mustKnowBlueprint)
 	{
-		//IL_020a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_020f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_024d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0252: Unknown result type (might be due to invalid IL or missing references)
 		if (itemToRepair == null)
 		{
 			return;
 		}
 		ItemDefinition info = itemToRepair.info;
 		ItemBlueprint component = ((Component)info).GetComponent<ItemBlueprint>();
-		if (!Object.op_Implicit((Object)(object)component) || !info.condition.repairable || itemToRepair.condition == itemToRepair.maxCondition)
+		if (!Object.op_Implicit((Object)(object)component))
+		{
+			return;
+		}
+		ItemModRepair component2 = ((Component)itemToRepair.info).GetComponent<ItemModRepair>();
+		if (!info.condition.repairable || itemToRepair.condition == itemToRepair.maxCondition)
 		{
 			return;
 		}
@@ -400,6 +417,11 @@ public class RepairBench : StorageContainer
 		{
 			Debug.Log((object)("Item repaired! condition : " + itemToRepair.condition + "/" + itemToRepair.maxCondition));
 		}
-		Effect.server.Run("assets/bundled/prefabs/fx/repairbench/itemrepair.prefab", repairBenchEntity, 0u, Vector3.zero, Vector3.zero);
+		string strName = "assets/bundled/prefabs/fx/repairbench/itemrepair.prefab";
+		if ((Object)(object)component2 != (Object)null && (Object)(object)component2.successEffect?.Get() != (Object)null)
+		{
+			strName = component2.successEffect.resourcePath;
+		}
+		Effect.server.Run(strName, repairBenchEntity, 0u, Vector3.zero, Vector3.zero);
 	}
 }

@@ -10,9 +10,11 @@ public class GestureDoor : Door
 
 	public GestureConfig KickGesture;
 
-	public float SprintAnimationStartDelay = 1f;
+	public float KickAnimationDelay = 1f;
 
-	public float NonSprintAnimationStartDelay = 1f;
+	public float PushAnimationDelay = 0.25f;
+
+	public float WeaponAdditiveDelay = 0.1f;
 
 	private bool wasKick;
 
@@ -96,10 +98,14 @@ public class GestureDoor : Door
 
 	protected override bool ShouldDelayOpen(BasePlayer player, out float delay)
 	{
-		delay = NonSprintAnimationStartDelay;
-		if (player.serverInput.IsDown(BUTTON.SPRINT))
+		delay = PushAnimationDelay;
+		if (wasKick)
 		{
-			delay = SprintAnimationStartDelay;
+			delay = KickAnimationDelay;
+		}
+		if ((Object)(object)player.GetHeldEntity() != (Object)null)
+		{
+			delay += WeaponAdditiveDelay;
 		}
 		return delay > 0f;
 	}

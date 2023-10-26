@@ -84,9 +84,9 @@ public class PlaceMonuments : ProceduralComponent
 		//IL_0108: Unknown result type (might be due to invalid IL or missing references)
 		//IL_010e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_011d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_069c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_06a3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_06aa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_069a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_06a1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_06a8: Unknown result type (might be due to invalid IL or missing references)
 		//IL_024f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0254: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0262: Unknown result type (might be due to invalid IL or missing references)
@@ -134,21 +134,21 @@ public class PlaceMonuments : ProceduralComponent
 		//IL_0455: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0457: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0459: Unknown result type (might be due to invalid IL or missing references)
+		//IL_05b9: Unknown result type (might be due to invalid IL or missing references)
 		//IL_05bb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_05bd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_05c2: Unknown result type (might be due to invalid IL or missing references)
 		//IL_05c4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_05c6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_05cb: Unknown result type (might be due to invalid IL or missing references)
 		//IL_05cd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_05cf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_054b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_054d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0542: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0544: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0546: Unknown result type (might be due to invalid IL or missing references)
 		//IL_054f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0558: Unknown result type (might be due to invalid IL or missing references)
-		//IL_055d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0562: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0567: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0554: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0559: Unknown result type (might be due to invalid IL or missing references)
+		//IL_055e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_05e5: Unknown result type (might be due to invalid IL or missing references)
 		//IL_05e7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_05e9: Unknown result type (might be due to invalid IL or missing references)
 		if (NexusOnly && !World.Nexus)
 		{
 			return;
@@ -302,8 +302,8 @@ public class PlaceMonuments : ProceduralComponent
 										new PathFinder.Point(length - 1, length - 1)
 									};
 								}
-								PathFinder.Point pathFinderPoint = terrainPathConnect.GetPathFinderPoint(pathFinder.GetResolution(0), pos + rot * Vector3.Scale(scale, ((Component)terrainPathConnect).transform.localPosition));
-								if (pathFinder.FindPathUndirected(new List<PathFinder.Point> { pathFinderPoint }, endList, 100000) == null)
+								PathFinder.Point point = PathFinder.GetPoint(pos + rot * Vector3.Scale(scale, ((Component)terrainPathConnect).transform.localPosition), pathFinder.GetResolution(0));
+								if (pathFinder.FindPathUndirected(new List<PathFinder.Point> { point }, endList, 100000) == null)
 								{
 									flag = true;
 									break;

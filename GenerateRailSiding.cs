@@ -237,16 +237,4 @@ public class GenerateRailSiding : ProceduralComponent
 		}
 		TerrainMeta.Path.Rails.AddRange(list);
 	}
-
-	public PathFinder.Point GetPathFinderPoint(Vector3 worldPos, int res)
-	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		float num = TerrainMeta.NormalizeX(worldPos.x);
-		float num2 = TerrainMeta.NormalizeZ(worldPos.z);
-		PathFinder.Point result = default(PathFinder.Point);
-		result.x = Mathf.Clamp((int)(num * (float)res), 0, res - 1);
-		result.y = Mathf.Clamp((int)(num2 * (float)res), 0, res - 1);
-		return result;
-	}
 }

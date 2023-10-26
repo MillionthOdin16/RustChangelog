@@ -85,13 +85,13 @@ public class GenerateRoadLayout : ProceduralComponent
 
 	public override void Process(uint seed)
 	{
-		//IL_074b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0690: Unknown result type (might be due to invalid IL or missing references)
-		//IL_06ad: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0821: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0843: Unknown result type (might be due to invalid IL or missing references)
-		//IL_06e9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0706: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0752: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0697: Unknown result type (might be due to invalid IL or missing references)
+		//IL_06b4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0828: Unknown result type (might be due to invalid IL or missing references)
+		//IL_084a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_06f0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_070d: Unknown result type (might be due to invalid IL or missing references)
 		if (World.Networked)
 		{
 			TerrainMeta.Path.Roads.Clear();
@@ -162,9 +162,8 @@ public class GenerateRoadLayout : ProceduralComponent
 					list4.AddRange(list5.Where((PathNode x) => (Object)(object)x.monument == (Object)(object)node3.monument));
 					list5.RemoveAll((PathNode x) => (Object)(object)x.monument == (Object)(object)node3.monument);
 					pathFinder.PushPoint = node3.monument.GetPathFinderPoint(length);
-					pathFinder.PushRadius = node3.monument.GetPathFinderRadius(length);
-					pathFinder.PushDistance = 40;
-					pathFinder.PushMultiplier = 1;
+					pathFinder.PushRadius = (pathFinder.PushDistance = node3.monument.GetPathFinderRadius(length));
+					pathFinder.PushMultiplier = 50000;
 				}
 				list8.Clear();
 				list8.AddRange(list4.Select((PathNode x) => x.node.point));

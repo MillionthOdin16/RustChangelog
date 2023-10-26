@@ -2558,20 +2558,29 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 
 	public virtual void OnParentChanging(BaseEntity oldParent, BaseEntity newParent)
 	{
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
 		Rigidbody component = ((Component)this).GetComponent<Rigidbody>();
-		if (Object.op_Implicit((Object)(object)component))
+		if (!Object.op_Implicit((Object)(object)component))
 		{
-			if ((Object)(object)oldParent != (Object)null && (Object)(object)((Component)oldParent).GetComponent<Rigidbody>() == (Object)null)
+			return;
+		}
+		if ((Object)(object)oldParent != (Object)null)
+		{
+			Rigidbody component2 = ((Component)oldParent).GetComponent<Rigidbody>();
+			if ((Object)(object)component2 == (Object)null || component2.isKinematic)
 			{
 				component.velocity += oldParent.GetWorldVelocity();
 			}
-			if ((Object)(object)newParent != (Object)null && (Object)(object)((Component)newParent).GetComponent<Rigidbody>() == (Object)null)
+		}
+		if ((Object)(object)newParent != (Object)null)
+		{
+			Rigidbody component3 = ((Component)newParent).GetComponent<Rigidbody>();
+			if ((Object)(object)component3 == (Object)null || component3.isKinematic)
 			{
 				component.velocity -= newParent.GetWorldVelocity();
 			}

@@ -10,6 +10,8 @@ public class WorldSetup : SingletonComponent<WorldSetup>
 {
 	public bool AutomaticallySetup;
 
+	public bool BypassProceduralSpawn;
+
 	public GameObject terrain;
 
 	public GameObject decorPrefab;
