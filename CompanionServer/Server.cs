@@ -65,6 +65,7 @@ public static class Server
 		BaseGameMode activeGameMode = BaseGameMode.GetActiveGameMode(serverside: true);
 		if (!((Object)(object)activeGameMode != (Object)null) || activeGameMode.rustPlus)
 		{
+			Shutdown();
 			Map.PopulateCache();
 			if (App.port == 0)
 			{
@@ -132,21 +133,23 @@ public static class Server
 
 	private static async Task SetupServerRegistration()
 	{
-		_ = 2;
+		_ = 3;
 		try
 		{
 			if (TryLoadServerRegistration(out var _, out var serverToken))
 			{
-				StringContent val = new StringContent(serverToken, Encoding.UTF8, "text/plain");
-				HttpResponseMessage val2 = await Http.PostAsync("https://companion-rust.facepunch.com/api/server/refresh", (HttpContent)(object)val);
-				if (val2.IsSuccessStatusCode)
+				StringContent refreshContent = new StringContent(serverToken, Encoding.UTF8, "text/plain");
+				HttpResponseMessage val = await AutoRetry(() => Http.PostAsync("https://companion-rust.facepunch.com/api/server/refresh", (HttpContent)(object)refreshContent));
+				if (val.IsSuccessStatusCode)
 				{
-					SetServerRegistration(await val2.Content.ReadAsStringAsync());
+					SetServerRegistration(await val.Content.ReadAsStringAsync());
 					return;
 				}
 				Debug.LogWarning((object)"Failed to refresh server ID - registering a new one");
 			}
-			SetServerRegistration(await Http.GetStringAsync("https://companion-rust.facepunch.com/api/server/register"));
+			HttpResponseMessage obj = await AutoRetry(() => Http.GetAsync("https://companion-rust.facepunch.com/api/server/register"));
+			obj.EnsureSuccessStatusCode();
+			SetServerRegistration(await obj.Content.ReadAsStringAsync());
 		}
 		catch (Exception arg)
 		{
@@ -208,23 +211,23 @@ public static class Server
 	{
 		if (!IsEnabled)
 		{
-			SetServerId(null);
+			Shutdown();
 			return;
 		}
 		try
 		{
-			string arg = await App.GetPublicIPAsync();
-			StringContent val = new StringContent("", Encoding.UTF8, "text/plain");
-			HttpResponseMessage testResponse = await Http.PostAsync("https://companion-rust.facepunch.com/api/server" + $"/test_connection?address={arg}&port={App.port}", (HttpContent)(object)val);
+			string publicIp = await App.GetPublicIPAsync();
+			StringContent testContent = new StringContent("", Encoding.UTF8, "text/plain");
+			HttpResponseMessage testResponse = await AutoRetry(() => Http.PostAsync("https://companion-rust.facepunch.com/api/server" + $"/test_connection?address={publicIp}&port={App.port}", (HttpContent)(object)testContent));
 			string text = await testResponse.Content.ReadAsStringAsync();
 			TestConnectionResponse testConnectionResponse = null;
 			try
 			{
 				testConnectionResponse = JsonConvert.DeserializeObject<TestConnectionResponse>(text);
 			}
-			catch (Exception arg2)
+			catch (Exception arg)
 			{
-				Debug.LogError((object)$"Failed to parse connectivity test response JSON: {text}\n\n{arg2}");
+				Debug.LogError((object)$"Failed to parse connectivity test response JSON: {text}\n\n{arg}");
 			}
 			if (testConnectionResponse == null)
 			{
@@ -244,10 +247,34 @@ public static class Server
 				Debug.LogWarning((object)("Rust+ companion server connectivity test has warnings:\n" + text2));
 			}
 		}
-		catch (Exception arg3)
+		catch (Exception arg2)
 		{
-			Debug.LogError((object)$"Failed to check connectivity to the companion server: {arg3}");
+			Debug.LogError((object)$"Failed to check connectivity to the companion server: {arg2}");
 		}
+	}
+
+	private static async Task<HttpResponseMessage> AutoRetry(Func<Task<HttpResponseMessage>> action)
+	{
+		Exception lastException = null;
+		for (int i = 0; i < 5; i++)
+		{
+			try
+			{
+				HttpResponseMessage val = await action();
+				int statusCode = (int)val.StatusCode;
+				if (statusCode != 555 && statusCode >= 500 && statusCode <= 599 && i < 4)
+				{
+					val.EnsureSuccessStatusCode();
+				}
+				return val;
+			}
+			catch (Exception ex)
+			{
+				lastException = ex;
+			}
+			await Task.Delay(30000);
+		}
+		throw lastException ?? new Exception("Exceeded maximum number of retries");
 	}
 
 	private static void SetServerId(string serverId)

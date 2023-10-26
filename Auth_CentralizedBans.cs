@@ -27,7 +27,7 @@ public static class Auth_CentralizedBans
 			yield break;
 		}
 		connection.authStatus = "";
-		if (!Server.bansServerEndpoint.EndsWith("/"))
+		if (!Server.bansServerEndpoint.EndsWith("/") && !Server.bansServerEndpoint.EndsWith("="))
 		{
 			Server.bansServerEndpoint += "/";
 		}
