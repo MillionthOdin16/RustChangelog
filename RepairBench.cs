@@ -208,8 +208,8 @@ public class RepairBench : StorageContainer
 	{
 		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04f9: Unknown result type (might be due to invalid IL or missing references)
 		//IL_04fe: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0503: Unknown result type (might be due to invalid IL or missing references)
 		bool flag = Time.realtimeSinceStartup < nextSkinChangeTime;
 		BasePlayer player = msg.player;
 		int num = msg.read.Int32();
@@ -257,11 +257,11 @@ public class RepairBench : StorageContainer
 			float condition = slot.condition;
 			float maxCondition = slot.maxCondition;
 			int amount = slot.amount;
-			int contents = 0;
+			int ammoCount = 0;
 			ItemDefinition ammoType = null;
 			if ((Object)(object)slot.GetHeldEntity() != (Object)null && slot.GetHeldEntity() is BaseProjectile baseProjectile && baseProjectile.primaryMagazine != null)
 			{
-				contents = baseProjectile.primaryMagazine.contents;
+				ammoCount = baseProjectile.primaryMagazine.contents;
 				ammoType = baseProjectile.primaryMagazine.ammoType;
 			}
 			List<Item> list = Pool.GetList<Item>();
@@ -287,7 +287,7 @@ public class RepairBench : StorageContainer
 			{
 				if (baseProjectile2.primaryMagazine != null)
 				{
-					baseProjectile2.primaryMagazine.contents = contents;
+					baseProjectile2.SetAmmoCount(ammoCount);
 					baseProjectile2.primaryMagazine.ammoType = ammoType;
 				}
 				baseProjectile2.ForceModsChanged();

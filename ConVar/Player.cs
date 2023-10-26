@@ -409,7 +409,7 @@ public class Player : ConsoleSystem
 			{
 				if (baseProjectile.primaryMagazine != null)
 				{
-					baseProjectile.primaryMagazine.contents = baseProjectile.primaryMagazine.capacity;
+					baseProjectile.SetAmmoCount(baseProjectile.primaryMagazine.capacity);
 					baseProjectile.SendNetworkUpdateImmediate();
 				}
 			}

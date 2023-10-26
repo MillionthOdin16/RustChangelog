@@ -1728,9 +1728,9 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 	{
 		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
 		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0143: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0166: Unknown result type (might be due to invalid IL or missing references)
 		//IL_016b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0170: Unknown result type (might be due to invalid IL or missing references)
 		BaseProjectile attachedWeapon = GetAttachedWeapon();
 		if ((Object)(object)attachedWeapon == (Object)null)
 		{
@@ -1762,7 +1762,7 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 				return;
 			}
 			base.inventory.AddItem(attachedWeapon.primaryMagazine.ammoType, attachedWeapon.primaryMagazine.contents, 0uL);
-			attachedWeapon.primaryMagazine.contents = 0;
+			attachedWeapon.SetAmmoCount(0);
 		}
 		List<Item> list = Pool.GetList<Item>();
 		base.inventory.FindAmmo(list, ammoTypes);
@@ -1779,7 +1779,7 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 					int num3 = attachedWeapon.primaryMagazine.capacity - attachedWeapon.primaryMagazine.contents;
 					num3 = Mathf.Min(list[num2].amount, num3);
 					list[num2].UseItem(num3);
-					attachedWeapon.primaryMagazine.contents += num3;
+					attachedWeapon.ModifyAmmoCount(num3);
 				}
 				num2++;
 			}
