@@ -21,6 +21,19 @@ public class RockingChair : BaseChair
 	[Range(0f, 2f)]
 	public float WeaponFireImpact = 3f;
 
+	[Header("Audio")]
+	public SoundDefinition creakForwardSoundDef;
+
+	public SoundDefinition creakBackwardSoundDef;
+
+	public float creakForwardAngle = 0.1f;
+
+	public float creakBackwardAngle = -0.1f;
+
+	public float creakVelocityThreshold = 0.02f;
+
+	public AnimationCurve creakGainCurve;
+
 	private Vector3 initEuler = Vector3.zero;
 
 	private float initY;
@@ -33,7 +46,7 @@ public class RockingChair : BaseChair
 
 	private float sineTime;
 
-	private float timeUntilStartSine = 0.7f;
+	private float timeUntilStartSine = 0.4f;
 
 	private float t;
 
@@ -131,9 +144,9 @@ public class RockingChair : BaseChair
 
 	public override void OnWeaponFired(BaseProjectile weapon)
 	{
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
-		if ((Object)(object)weapon != (Object)null)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		if (!((Object)(object)weapon == (Object)null))
 		{
 			velocity += weapon.recoil.recoilPitchMax * WeaponFireImpact;
 			timeSinceInput = TimeSince.op_Implicit(0f);
@@ -161,7 +174,7 @@ public class RockingChair : BaseChair
 		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
 		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
-		float num = initY + 0.065f;
+		float num = initY + 0.06f;
 		float num2 = Mathx.RemapValClamped(Mathf.Abs(angle), 0f, MaxRockingAngle, 0f, 1f);
 		if (num2 > 0.7f)
 		{
@@ -190,30 +203,31 @@ public class RockingChair : BaseChair
 
 	private void ApplyVelocity(float delta, bool hasInput)
 	{
-		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00af: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ba: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c6: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00cb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ed: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ef: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0101: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ec: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0104: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0106: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0118: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0125: Unknown result type (might be due to invalid IL or missing references)
 		t = Mathf.Sin(sineTime * ((float)Math.PI / 180f));
 		t = Mathx.RemapValClamped(t, -1f, 1f, 0f, 1f);
+		t = EaseOutCubicOvershoot(t, 0.2f);
 		t = Mathf.Lerp(t, 0.5f, Mathf.Clamp01(TimeSince.op_Implicit(timeSinceInput) / 10f));
 		angle += velocity;
 		angle = Mathf.Clamp(angle, 0f - MaxRockingAngle, MaxRockingAngle);
 		Quaternion val = Quaternion.Euler(initEuler) * Quaternion.AngleAxis(angle, Vector3.right);
-		Quaternion val2 = Quaternion.Lerp(min, max, t);
+		Quaternion val2 = Quaternion.Slerp(min, max, t);
 		float num = ((!hasInput && TimeSince.op_Implicit(timeSinceInput) > timeUntilStartSine) ? 1 : 0);
 		Quaternion val3 = Quaternion.Slerp(val, val2, num);
 		((Component)this).transform.rotation = Quaternion.Slerp(((Component)this).transform.rotation, val3, delta * 3f);
@@ -271,5 +285,15 @@ public class RockingChair : BaseChair
 			zero.x = -1f;
 		}
 		return zero;
+	}
+
+	private float EaseOutCubic(float value)
+	{
+		return 1f - Mathf.Pow(1f - Mathf.Clamp01(value), 3f);
+	}
+
+	private float EaseOutCubicOvershoot(float value, float overshoot)
+	{
+		return 1f - Mathf.Pow(1f - Mathf.Clamp01(value), 3f) * (1f + overshoot * (Mathf.Clamp01(value) - 1f));
 	}
 }
