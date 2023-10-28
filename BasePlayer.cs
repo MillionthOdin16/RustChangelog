@@ -10574,9 +10574,28 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		Pool.FreeList<BasePlayer>(ref list);
 	}
 
+	private bool ManuallyCheckSafezone()
+	{
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		if (!base.isServer)
+		{
+			return false;
+		}
+		List<Collider> list = Pool.GetList<Collider>();
+		Vis.Colliders<Collider>(((Component)this).transform.position, 0f, list, -1, (QueryTriggerInteraction)2);
+		foreach (Collider item in list)
+		{
+			if ((Object)(object)((Component)item).GetComponent<TriggerSafeZone>() != (Object)null)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public override bool OnStartBeingLooted(BasePlayer baseEntity)
 	{
-		if ((baseEntity.InSafeZone() || InSafeZone()) && baseEntity.userID != userID)
+		if ((baseEntity.InSafeZone() || InSafeZone() || ManuallyCheckSafezone()) && baseEntity.userID != userID)
 		{
 			return false;
 		}
