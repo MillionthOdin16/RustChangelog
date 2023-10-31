@@ -879,7 +879,7 @@ public class TrainCar : BaseVehicle, ITrainCollidable, IPrefabPreProcess, Trigge
 		{
 			num -= 360f;
 		}
-		return 0f + num / 90f * (0f - Physics.gravity.y) * RealisticMass * 0.5f + GetThrottleForce();
+		return 0f + num / 90f * (0f - Physics.gravity.y) * RealisticMass * 0.33f + GetThrottleForce();
 	}
 
 	protected virtual float GetThrottleForce()

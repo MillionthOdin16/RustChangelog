@@ -144,6 +144,8 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 
 	private RealTimeSinceEx timeSinceLastServerTick;
 
+	private HashSet<AutoTurret> nearbyTurrets = new HashSet<AutoTurret>();
+
 	private float nextForcedAimTime;
 
 	private Vector3 lastSentAimDir = Vector3.zero;
@@ -1378,12 +1380,14 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 		((FacepunchBehaviour)this).InvokeRandomized((Action)SendAimDir, Random.Range(0f, 1f), 0.2f, 0.05f);
 		((PersistentObjectWorkQueue<AutoTurret>)updateAutoTurretScanQueue).Add(this);
 		((Component)targetTrigger).GetComponent<SphereCollider>().radius = sightRange;
+		UpdateNearbyTurrets(created: true);
 	}
 
 	internal override void DoServerDestroy()
 	{
 		base.DoServerDestroy();
 		((PersistentObjectWorkQueue<AutoTurret>)updateAutoTurretScanQueue).Remove(this);
+		UpdateNearbyTurrets(created: false);
 	}
 
 	private void OnEntityEnterTrigger(BaseNetworkable entity)
@@ -1816,6 +1820,7 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 		base.PostServerLoad();
 		totalAmmoDirty = true;
 		Reload();
+		UpdateNearbyTurrets(created: true);
 	}
 
 	public void UpdateTotalAmmo()
@@ -2123,40 +2128,51 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 
 	private void UpdateInterference()
 	{
-		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
 		if (!IsOn())
 		{
 			return;
 		}
 		float num = 0f;
-		List<AutoTurret> list = Pool.GetList<AutoTurret>();
-		GetTurretsInInterferenceRange(list);
-		foreach (AutoTurret item in list.Distinct())
+		foreach (AutoTurret nearbyTurret in nearbyTurrets)
 		{
-			if (!item.isClient && item.IsValid() && ((Component)item).gameObject.activeSelf && !item.EqualNetID(net.ID) && item.IsOn() && !item.HasInterference())
+			if (!nearbyTurret.isClient && nearbyTurret.IsValid() && ((Component)nearbyTurret).gameObject.activeSelf && !nearbyTurret.EqualNetID(net.ID) && nearbyTurret.IsOn() && !nearbyTurret.HasInterference())
 			{
 				num += 1f;
 			}
 		}
 		SetFlag(Flags.OnFire, num >= Sentry.maxinterference);
-		Pool.FreeList<AutoTurret>(ref list);
 	}
 
 	private void UpdateInterferenceOnOthers()
 	{
-		List<AutoTurret> list = Pool.GetList<AutoTurret>();
-		GetTurretsInInterferenceRange(list);
-		foreach (AutoTurret item in list)
+		foreach (AutoTurret nearbyTurret in nearbyTurrets)
 		{
-			item.UpdateInterference();
+			nearbyTurret.UpdateInterference();
 		}
-		Pool.FreeList<AutoTurret>(ref list);
 	}
 
-	private void GetTurretsInInterferenceRange(List<AutoTurret> list)
+	private void UpdateNearbyTurrets(bool created)
 	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		List<AutoTurret> list = Pool.GetList<AutoTurret>();
 		Vis.Entities(((Component)this).transform.position, Sentry.interferenceradius, list, 256, (QueryTriggerInteraction)1);
+		foreach (AutoTurret item in list)
+		{
+			if (created)
+			{
+				nearbyTurrets.Add(item);
+				item.nearbyTurrets.Add(this);
+			}
+			else
+			{
+				item.nearbyTurrets.Remove(this);
+			}
+		}
+		if (!created)
+		{
+			nearbyTurrets.Clear();
+		}
 	}
 
 	public void TargetScan()

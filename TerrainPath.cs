@@ -130,6 +130,7 @@ public class TerrainPath : TerrainExtension
 	public static int[,] CreateRoadCostmap(ref uint seed)
 	{
 		float radius = 5f;
+		float radius2 = 15f;
 		int num = (int)((float)World.Size / 7.5f);
 		TerrainPlacementMap placementMap = TerrainMeta.PlacementMap;
 		TerrainHeightMap heightMap = TerrainMeta.HeightMap;
@@ -144,13 +145,15 @@ public class TerrainPath : TerrainExtension
 				int num2 = SeedRandom.Range(ref seed, 100, 200);
 				float slope = heightMap.GetSlope(normX, normZ);
 				int topology = topologyMap.GetTopology(normX, normZ, radius);
-				int num3 = 2295172;
-				int num4 = 49666;
-				if (slope > 20f || (topology & num3) != 0)
+				int topology2 = topologyMap.GetTopology(normX, normZ, radius2);
+				int num3 = 196996;
+				int num4 = 2098176;
+				int num5 = 49666;
+				if (slope > 20f || (topology & num3) != 0 || (topology2 & num4) != 0)
 				{
 					array[j, i] = int.MaxValue;
 				}
-				else if ((topology & num4) != 0 || placementMap.GetBlocked(normX, normZ, radius))
+				else if ((topology & num5) != 0 || placementMap.GetBlocked(normX, normZ, radius))
 				{
 					array[j, i] = 5000;
 				}
@@ -166,7 +169,7 @@ public class TerrainPath : TerrainExtension
 	public static int[,] CreateRailCostmap(ref uint seed)
 	{
 		float radius = 5f;
-		float radius2 = 15f;
+		float radius2 = 25f;
 		int num = (int)((float)World.Size / 7.5f);
 		TerrainPlacementMap placementMap = TerrainMeta.PlacementMap;
 		TerrainHeightMap heightMap = TerrainMeta.HeightMap;

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class GenerateRailRing : ProceduralComponent
@@ -47,11 +48,12 @@ public class GenerateRailRing : ProceduralComponent
 
 	public override void Process(uint seed)
 	{
-		//IL_0361: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0366: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0798: Unknown result type (might be due to invalid IL or missing references)
-		//IL_08a6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_08c9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0212: Unknown result type (might be due to invalid IL or missing references)
+		//IL_041d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0422: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0854: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0962: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0985: Unknown result type (might be due to invalid IL or missing references)
 		if (World.Networked)
 		{
 			TerrainMeta.Path.Rails.Clear();
@@ -96,11 +98,26 @@ public class GenerateRailRing : ProceduralComponent
 				new RingNode(pos_x, pos_y, dir_x2, dir_y2, stepcount),
 				new RingNode(pos_x, pos_y2, dir_x2, dir_y, stepcount)
 			});
-			for (int i = 0; i < list.Count; i++)
+			foreach (MonumentInfo monument in TerrainMeta.Path.Monuments)
 			{
-				RingNode ringNode = list[i];
-				RingNode next = list[(i + 1) % list.Count];
-				RingNode prev = list[(i - 1 + list.Count) % list.Count];
+				TerrainPathConnect[] array2 = (from target in ((Component)monument).GetComponentsInChildren<TerrainPathConnect>(true)
+					where target.Type == InfrastructureType.Rail
+					select target).ToArray();
+				foreach (TerrainPathConnect terrainPathConnect in array2)
+				{
+					pathFinder.PushPointsAdditional.Add(PathFinder.GetPoint(((Component)terrainPathConnect).transform.position, length));
+				}
+			}
+			if (pathFinder.PushPointsAdditional.Count > 0)
+			{
+				pathFinder.PushDistance = 10;
+				pathFinder.PushMultiplier = int.MaxValue;
+			}
+			for (int j = 0; j < list.Count; j++)
+			{
+				RingNode ringNode = list[j];
+				RingNode next = list[(j + 1) % list.Count];
+				RingNode prev = list[(j - 1 + list.Count) % list.Count];
 				ringNode.next = next;
 				ringNode.prev = prev;
 				while (!pathFinder.IsWalkableWithNeighbours(ringNode.position))
@@ -168,10 +185,10 @@ public class GenerateRailRing : ProceduralComponent
 			{
 				return;
 			}
-			for (int j = 0; j < list.Count; j++)
+			for (int k = 0; k < list.Count; k++)
 			{
-				RingNode ringNode3 = list[j];
-				RingNode ringNode4 = list[(j + 1) % list.Count];
+				RingNode ringNode3 = list[k];
+				RingNode ringNode4 = list[(k + 1) % list.Count];
 				PathFinder.Node node = null;
 				PathFinder.Node node2 = null;
 				for (PathFinder.Node node3 = ringNode3.path; node3 != null; node3 = node3.next)
@@ -203,10 +220,10 @@ public class GenerateRailRing : ProceduralComponent
 					}
 				}
 			}
-			for (int k = 0; k < list.Count; k++)
+			for (int l = 0; l < list.Count; l++)
 			{
-				RingNode ringNode5 = list[k];
-				RingNode ringNode6 = list[(k + 1) % list.Count];
+				RingNode ringNode5 = list[l];
+				RingNode ringNode6 = list[(l + 1) % list.Count];
 				PathFinder.Node node6 = null;
 				PathFinder.Node node7 = null;
 				for (PathFinder.Node node8 = ringNode5.path; node8 != null; node8 = node8.next)

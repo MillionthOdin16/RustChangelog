@@ -825,6 +825,8 @@ public class OcclusionCulling : MonoBehaviour
 
 	private static OcclusionCulling instance;
 
+	public static bool Passthrough = false;
+
 	private static GraphicsDeviceType[] supportedDeviceTypes = (GraphicsDeviceType[])(object)new GraphicsDeviceType[1] { (GraphicsDeviceType)2 };
 
 	private static bool _enabled = false;
@@ -1470,197 +1472,6 @@ public class OcclusionCulling : MonoBehaviour
 		}
 	}
 
-	private static bool FrustumCull(Vector4[] planes, Vector4 testSphere)
-	{
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
-		for (int i = 0; i < 6; i++)
-		{
-			if (planes[i].x * testSphere.x + planes[i].y * testSphere.y + planes[i].z * testSphere.z + planes[i].w < 0f - testSphere.w)
-			{
-				return false;
-			}
-		}
-		return true;
-	}
-
-	private static int ProcessOccludees_Safe(SimpleList<OccludeeState.State> states, SmartList bucket, Color32[] results, SimpleList<int> changed, Vector4[] frustumPlanes, float time, uint frame)
-	{
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-		int num = 0;
-		for (int i = 0; i < bucket.Size; i++)
-		{
-			OccludeeState occludeeState = bucket[i];
-			if (occludeeState == null || occludeeState.slot >= results.Length)
-			{
-				continue;
-			}
-			int slot = occludeeState.slot;
-			OccludeeState.State value = states[slot];
-			bool flag = FrustumCull(frustumPlanes, value.sphereBounds);
-			bool flag2 = results[slot].r > 0 && flag;
-			if (flag2 || frame < value.waitFrame)
-			{
-				value.waitTime = time + value.minTimeVisible;
-			}
-			if (!flag2)
-			{
-				flag2 = time < value.waitTime;
-			}
-			if (flag2 != (value.isVisible != 0))
-			{
-				if (value.callback != 0)
-				{
-					changed.Add(slot);
-				}
-				else
-				{
-					value.isVisible = (byte)(flag2 ? 1 : 0);
-				}
-			}
-			states[slot] = value;
-			num += value.isVisible;
-		}
-		return num;
-	}
-
-	private static int ProcessOccludees_Fast(OccludeeState.State[] states, int[] bucket, int bucketCount, Color32[] results, int resultCount, int[] changed, ref int changedCount, Vector4[] frustumPlanes, float time, uint frame)
-	{
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
-		int num = 0;
-		for (int i = 0; i < bucketCount; i++)
-		{
-			int num2 = bucket[i];
-			if (num2 < 0 || num2 >= resultCount || states[num2].active == 0)
-			{
-				continue;
-			}
-			OccludeeState.State state = states[num2];
-			bool flag = FrustumCull(frustumPlanes, state.sphereBounds);
-			bool flag2 = results[num2].r > 0 && flag;
-			if (flag2 || frame < state.waitFrame)
-			{
-				state.waitTime = time + state.minTimeVisible;
-			}
-			if (!flag2)
-			{
-				flag2 = time < state.waitTime;
-			}
-			if (flag2 != (state.isVisible != 0))
-			{
-				if (state.callback != 0)
-				{
-					changed[changedCount++] = num2;
-				}
-				else
-				{
-					state.isVisible = (byte)(flag2 ? 1 : 0);
-				}
-			}
-			states[num2] = state;
-			num += ((!flag2) ? 1 : 0);
-		}
-		return num;
-	}
-
-	[DllImport("Renderer", EntryPoint = "CULL_ProcessOccludees")]
-	private static extern int ProcessOccludees_Native(ref OccludeeState.State states, ref int bucket, int bucketCount, ref Color32 results, int resultCount, ref int changed, ref int changedCount, ref Vector4 frustumPlanes, float time, uint frame);
-
-	private void ApplyVisibility_Safe(float time, uint frame)
-	{
-		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
-		bool ready = staticSet.Ready;
-		bool ready2 = dynamicSet.Ready;
-		for (int i = 0; i < grid.Size; i++)
-		{
-			Cell cell = grid[i];
-			if (cell == null || gridSet.resultData.Length == 0)
-			{
-				continue;
-			}
-			bool flag = FrustumCull(frustumPlanes, cell.sphereBounds);
-			bool flag2 = gridSet.resultData[i].r > 0 && flag;
-			if (cell.isVisible || flag2)
-			{
-				int num = 0;
-				int num2 = 0;
-				if (ready && cell.staticBucket.Count > 0)
-				{
-					num = ProcessOccludees_Safe(staticStates, cell.staticBucket, staticSet.resultData, staticVisibilityChanged, frustumPlanes, time, frame);
-				}
-				if (ready2 && cell.dynamicBucket.Count > 0)
-				{
-					num2 = ProcessOccludees_Safe(dynamicStates, cell.dynamicBucket, dynamicSet.resultData, dynamicVisibilityChanged, frustumPlanes, time, frame);
-				}
-				cell.isVisible = flag2 || num < cell.staticBucket.Count || num2 < cell.dynamicBucket.Count;
-			}
-		}
-	}
-
-	private void ApplyVisibility_Fast(float time, uint frame)
-	{
-		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
-		bool ready = staticSet.Ready;
-		bool ready2 = dynamicSet.Ready;
-		for (int i = 0; i < grid.Size; i++)
-		{
-			Cell cell = grid[i];
-			if (cell == null || gridSet.resultData.Length == 0)
-			{
-				continue;
-			}
-			bool flag = FrustumCull(frustumPlanes, cell.sphereBounds);
-			bool flag2 = gridSet.resultData[i].r > 0 && flag;
-			if (cell.isVisible || flag2)
-			{
-				int num = 0;
-				int num2 = 0;
-				if (ready && cell.staticBucket.Count > 0)
-				{
-					num = ProcessOccludees_Fast(staticStates.array, cell.staticBucket.Slots, cell.staticBucket.Size, staticSet.resultData, staticSet.resultData.Length, staticVisibilityChanged.array, ref staticVisibilityChanged.count, frustumPlanes, time, frame);
-				}
-				if (ready2 && cell.dynamicBucket.Count > 0)
-				{
-					num2 = ProcessOccludees_Fast(dynamicStates.array, cell.dynamicBucket.Slots, cell.dynamicBucket.Size, dynamicSet.resultData, dynamicSet.resultData.Length, dynamicVisibilityChanged.array, ref dynamicVisibilityChanged.count, frustumPlanes, time, frame);
-				}
-				cell.isVisible = flag2 || num < cell.staticBucket.Count || num2 < cell.dynamicBucket.Count;
-			}
-		}
-	}
-
-	private void ApplyVisibility_Native(float time, uint frame)
-	{
-		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
-		bool ready = staticSet.Ready;
-		bool ready2 = dynamicSet.Ready;
-		for (int i = 0; i < grid.Size; i++)
-		{
-			Cell cell = grid[i];
-			if (cell == null || gridSet.resultData.Length == 0)
-			{
-				continue;
-			}
-			bool flag = FrustumCull(frustumPlanes, cell.sphereBounds);
-			bool flag2 = gridSet.resultData[i].r > 0 && flag;
-			if (cell.isVisible || flag2)
-			{
-				int num = 0;
-				int num2 = 0;
-				if (ready && cell.staticBucket.Count > 0)
-				{
-					num = ProcessOccludees_Native(ref staticStates.array[0], ref cell.staticBucket.Slots[0], cell.staticBucket.Size, ref staticSet.resultData[0], staticSet.resultData.Length, ref staticVisibilityChanged.array[0], ref staticVisibilityChanged.count, ref frustumPlanes[0], time, frame);
-				}
-				if (ready2 && cell.dynamicBucket.Count > 0)
-				{
-					num2 = ProcessOccludees_Native(ref dynamicStates.array[0], ref cell.dynamicBucket.Slots[0], cell.dynamicBucket.Size, ref dynamicSet.resultData[0], dynamicSet.resultData.Length, ref dynamicVisibilityChanged.array[0], ref dynamicVisibilityChanged.count, ref frustumPlanes[0], time, frame);
-				}
-				cell.isVisible = flag2 || num < cell.staticBucket.Count || num2 < cell.dynamicBucket.Count;
-			}
-		}
-	}
-
 	private void ProcessCallbacks(SimpleList<OccludeeState> occludees, SimpleList<OccludeeState.State> states, SimpleList<int> changed)
 	{
 		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
@@ -1719,13 +1530,20 @@ public class OcclusionCulling : MonoBehaviour
 		dynamicVisibilityChanged.EnsureCapacity(dynamicOccludees.Count);
 		float time = Time.time;
 		uint frameCount = (uint)Time.frameCount;
-		if (useNativePath)
+		if (!Passthrough)
 		{
-			ApplyVisibility_Native(time, frameCount);
+			if (useNativePath)
+			{
+				ApplyVisibility_Native(time, frameCount);
+			}
+			else
+			{
+				ApplyVisibility_Fast(time, frameCount);
+			}
 		}
 		else
 		{
-			ApplyVisibility_Fast(time, frameCount);
+			ApplyVisibility_Passthrough(time, frameCount);
 		}
 		ProcessCallbacks(staticOccludees, staticStates, staticVisibilityChanged);
 		ProcessCallbacks(dynamicOccludees, dynamicStates, dynamicVisibilityChanged);
@@ -2198,6 +2016,263 @@ public class OcclusionCulling : MonoBehaviour
 		if (flag)
 		{
 			gridSet.UploadData();
+		}
+	}
+
+	private static bool FrustumCull(Vector4[] planes, Vector4 testSphere)
+	{
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		for (int i = 0; i < 6; i++)
+		{
+			if (planes[i].x * testSphere.x + planes[i].y * testSphere.y + planes[i].z * testSphere.z + planes[i].w < 0f - testSphere.w)
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private static int ProcessOccludees_Safe(SimpleList<OccludeeState.State> states, SmartList bucket, Color32[] results, SimpleList<int> changed, Vector4[] frustumPlanes, float time, uint frame)
+	{
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		int num = 0;
+		for (int i = 0; i < bucket.Size; i++)
+		{
+			OccludeeState occludeeState = bucket[i];
+			if (occludeeState == null || occludeeState.slot >= results.Length)
+			{
+				continue;
+			}
+			int slot = occludeeState.slot;
+			OccludeeState.State value = states[slot];
+			bool flag = FrustumCull(frustumPlanes, value.sphereBounds);
+			bool flag2 = results[slot].r > 0 && flag;
+			if (flag2 || frame < value.waitFrame)
+			{
+				value.waitTime = time + value.minTimeVisible;
+			}
+			if (!flag2)
+			{
+				flag2 = time < value.waitTime;
+			}
+			if (flag2 != (value.isVisible != 0))
+			{
+				if (value.callback != 0)
+				{
+					changed.Add(slot);
+				}
+				else
+				{
+					value.isVisible = (byte)(flag2 ? 1 : 0);
+				}
+			}
+			states[slot] = value;
+			num += value.isVisible;
+		}
+		return num;
+	}
+
+	private static int ProcessOccludees_Fast(OccludeeState.State[] states, int[] bucket, int bucketCount, Color32[] results, int resultCount, int[] changed, ref int changedCount, Vector4[] frustumPlanes, float time, uint frame)
+	{
+		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		int num = 0;
+		for (int i = 0; i < bucketCount; i++)
+		{
+			int num2 = bucket[i];
+			if (num2 < 0 || num2 >= resultCount || states[num2].active == 0)
+			{
+				continue;
+			}
+			OccludeeState.State state = states[num2];
+			bool flag = FrustumCull(frustumPlanes, state.sphereBounds);
+			bool flag2 = results[num2].r > 0 && flag;
+			if (flag2 || frame < state.waitFrame)
+			{
+				state.waitTime = time + state.minTimeVisible;
+			}
+			if (!flag2)
+			{
+				flag2 = time < state.waitTime;
+			}
+			if (flag2 != (state.isVisible != 0))
+			{
+				if (state.callback != 0)
+				{
+					changed[changedCount++] = num2;
+				}
+				else
+				{
+					state.isVisible = (byte)(flag2 ? 1 : 0);
+				}
+			}
+			states[num2] = state;
+			num += ((!flag2) ? 1 : 0);
+		}
+		return num;
+	}
+
+	[DllImport("Renderer", EntryPoint = "CULL_ProcessOccludees")]
+	private static extern int ProcessOccludees_Native(ref OccludeeState.State states, ref int bucket, int bucketCount, ref Color32 results, int resultCount, ref int changed, ref int changedCount, ref Vector4 frustumPlanes, float time, uint frame);
+
+	private void ApplyVisibility_Safe(float time, uint frame)
+	{
+		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		bool ready = staticSet.Ready;
+		bool ready2 = dynamicSet.Ready;
+		for (int i = 0; i < grid.Size; i++)
+		{
+			Cell cell = grid[i];
+			if (cell == null || gridSet.resultData.Length == 0)
+			{
+				continue;
+			}
+			bool flag = FrustumCull(frustumPlanes, cell.sphereBounds);
+			bool flag2 = gridSet.resultData[i].r > 0 && flag;
+			if (cell.isVisible || flag2)
+			{
+				int num = 0;
+				int num2 = 0;
+				if (ready && cell.staticBucket.Count > 0)
+				{
+					num = ProcessOccludees_Safe(staticStates, cell.staticBucket, staticSet.resultData, staticVisibilityChanged, frustumPlanes, time, frame);
+				}
+				if (ready2 && cell.dynamicBucket.Count > 0)
+				{
+					num2 = ProcessOccludees_Safe(dynamicStates, cell.dynamicBucket, dynamicSet.resultData, dynamicVisibilityChanged, frustumPlanes, time, frame);
+				}
+				cell.isVisible = flag2 || num < cell.staticBucket.Count || num2 < cell.dynamicBucket.Count;
+			}
+		}
+	}
+
+	private static int ProcessOccludees_Passthrough(OccludeeState.State[] states, int[] bucket, int bucketCount, Color32[] results, int resultCount, int[] changed, ref int changedCount, Vector4[] frustumPlanes, float time, uint frame)
+	{
+		int num = 0;
+		for (int i = 0; i < bucketCount; i++)
+		{
+			int num2 = bucket[i];
+			if (num2 < 0 || num2 >= resultCount || states[num2].active == 0)
+			{
+				continue;
+			}
+			OccludeeState.State state = states[num2];
+			bool flag = true;
+			if (flag || frame < state.waitFrame)
+			{
+				state.waitTime = time + state.minTimeVisible;
+			}
+			if (!flag)
+			{
+				flag = time < state.waitTime;
+			}
+			if (flag != (state.isVisible != 0))
+			{
+				if (state.callback != 0)
+				{
+					changed[changedCount++] = num2;
+				}
+				else
+				{
+					state.isVisible = (byte)(flag ? 1 : 0);
+				}
+			}
+			states[num2] = state;
+			num += ((!flag) ? 1 : 0);
+		}
+		return num;
+	}
+
+	private void ApplyVisibility_Fast(float time, uint frame)
+	{
+		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		bool ready = staticSet.Ready;
+		bool ready2 = dynamicSet.Ready;
+		for (int i = 0; i < grid.Size; i++)
+		{
+			Cell cell = grid[i];
+			if (cell == null || gridSet.resultData.Length == 0)
+			{
+				continue;
+			}
+			bool flag = FrustumCull(frustumPlanes, cell.sphereBounds);
+			bool flag2 = gridSet.resultData[i].r > 0 && flag;
+			if (cell.isVisible || flag2)
+			{
+				int num = 0;
+				int num2 = 0;
+				if (ready && cell.staticBucket.Count > 0)
+				{
+					num = ProcessOccludees_Fast(staticStates.array, cell.staticBucket.Slots, cell.staticBucket.Size, staticSet.resultData, staticSet.resultData.Length, staticVisibilityChanged.array, ref staticVisibilityChanged.count, frustumPlanes, time, frame);
+				}
+				if (ready2 && cell.dynamicBucket.Count > 0)
+				{
+					num2 = ProcessOccludees_Fast(dynamicStates.array, cell.dynamicBucket.Slots, cell.dynamicBucket.Size, dynamicSet.resultData, dynamicSet.resultData.Length, dynamicVisibilityChanged.array, ref dynamicVisibilityChanged.count, frustumPlanes, time, frame);
+				}
+				cell.isVisible = flag2 || num < cell.staticBucket.Count || num2 < cell.dynamicBucket.Count;
+			}
+		}
+	}
+
+	private void ApplyVisibility_Native(float time, uint frame)
+	{
+		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		bool ready = staticSet.Ready;
+		bool ready2 = dynamicSet.Ready;
+		for (int i = 0; i < grid.Size; i++)
+		{
+			Cell cell = grid[i];
+			if (cell == null || gridSet.resultData.Length == 0)
+			{
+				continue;
+			}
+			bool flag = FrustumCull(frustumPlanes, cell.sphereBounds);
+			bool flag2 = gridSet.resultData[i].r > 0 && flag;
+			if (cell.isVisible || flag2)
+			{
+				int num = 0;
+				int num2 = 0;
+				if (ready && cell.staticBucket.Count > 0)
+				{
+					num = ProcessOccludees_Native(ref staticStates.array[0], ref cell.staticBucket.Slots[0], cell.staticBucket.Size, ref staticSet.resultData[0], staticSet.resultData.Length, ref staticVisibilityChanged.array[0], ref staticVisibilityChanged.count, ref frustumPlanes[0], time, frame);
+				}
+				if (ready2 && cell.dynamicBucket.Count > 0)
+				{
+					num2 = ProcessOccludees_Native(ref dynamicStates.array[0], ref cell.dynamicBucket.Slots[0], cell.dynamicBucket.Size, ref dynamicSet.resultData[0], dynamicSet.resultData.Length, ref dynamicVisibilityChanged.array[0], ref dynamicVisibilityChanged.count, ref frustumPlanes[0], time, frame);
+				}
+				cell.isVisible = flag2 || num < cell.staticBucket.Count || num2 < cell.dynamicBucket.Count;
+			}
+		}
+	}
+
+	private void ApplyVisibility_Passthrough(float time, uint frame)
+	{
+		bool ready = staticSet.Ready;
+		bool ready2 = dynamicSet.Ready;
+		for (int i = 0; i < grid.Size; i++)
+		{
+			Cell cell = grid[i];
+			if (cell == null || gridSet.resultData.Length == 0)
+			{
+				continue;
+			}
+			bool flag = true;
+			if (cell.isVisible || flag)
+			{
+				int num = 0;
+				int num2 = 0;
+				if (ready && cell.staticBucket.Count > 0)
+				{
+					num = ProcessOccludees_Passthrough(staticStates.array, cell.staticBucket.Slots, cell.staticBucket.Size, staticSet.resultData, staticSet.resultData.Length, staticVisibilityChanged.array, ref staticVisibilityChanged.count, frustumPlanes, time, frame);
+				}
+				if (ready2 && cell.dynamicBucket.Count > 0)
+				{
+					num2 = ProcessOccludees_Passthrough(dynamicStates.array, cell.dynamicBucket.Slots, cell.dynamicBucket.Size, dynamicSet.resultData, dynamicSet.resultData.Length, dynamicVisibilityChanged.array, ref dynamicVisibilityChanged.count, frustumPlanes, time, frame);
+				}
+				cell.isVisible = flag || num < cell.staticBucket.Count || num2 < cell.dynamicBucket.Count;
+			}
 		}
 	}
 }

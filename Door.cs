@@ -920,7 +920,7 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 	public override void OnFlagsChanged(Flags old, Flags next)
 	{
 		base.OnFlagsChanged(old, next);
-		if ((Object)(object)model.animator != (Object)null && canReverseOpen)
+		if ((Object)(object)model.animator != (Object)null && ((Component)model.animator).gameObject.activeInHierarchy && canReverseOpen)
 		{
 			model.animator.SetBool(reverseOpenHash, next.HasFlag(Flags.Reserved1));
 		}

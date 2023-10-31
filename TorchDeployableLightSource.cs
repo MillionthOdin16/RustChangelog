@@ -14,8 +14,6 @@ public class TorchDeployableLightSource : StorageContainer, ISplashable, IIgnite
 
 	public const Flags UseBuiltInFx = Flags.Reserved2;
 
-	public GameObject FullFlameFx;
-
 	public ItemDefinition[] BuiltInFxItems = new ItemDefinition[0];
 
 	private EntityRef<TorchWeapon> spawnedTorch;
@@ -206,7 +204,7 @@ public class TorchDeployableLightSource : StorageContainer, ISplashable, IIgnite
 		{
 			torchWeapon.SetFlag(Flags.On, wantsOn);
 			SetFlag(Flags.On, wantsOn);
-			if (HasFlag(Flags.Reserved1))
+			if (HasFlag(Flags.Reserved1) && wantsOn)
 			{
 				((FacepunchBehaviour)this).InvokeRepeating((Action)TickTorchDurability, 1f, 1f);
 			}
