@@ -43,7 +43,7 @@ public class UserPersistance : IDisposable
 		string text = strFolder + "/player.blueprints.";
 		if ((Object)(object)activeGameMode != (Object)null && activeGameMode.wipeBpsOnProtocol)
 		{
-			text = text + 242 + ".";
+			text = text + 243 + ".";
 		}
 		blueprints.Open(text + 5 + ".db", false);
 		if (!blueprints.TableExists("data"))
@@ -75,7 +75,7 @@ public class UserPersistance : IDisposable
 			tokens.Execute("ALTER TABLE data ADD COLUMN locked BOOLEAN DEFAULT 0");
 		}
 		playerState = new Database();
-		playerState.Open(strFolder + "/player.states." + 242 + ".db", false);
+		playerState.Open(strFolder + "/player.states." + 243 + ".db", false);
 		if (!playerState.TableExists("data"))
 		{
 			playerState.Execute("CREATE TABLE data ( userid INT PRIMARY KEY, state BLOB )");

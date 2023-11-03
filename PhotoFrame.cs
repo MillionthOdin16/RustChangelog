@@ -389,11 +389,11 @@ public class PhotoFrame : StorageContainer, ILOD, IImageReceiver, ISignage, IUGC
 	[RPC_Server.CallsPerSecond(3uL)]
 	public void UpdateSign(RPCMessage msg)
 	{
-		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
 		if (!((Object)(object)msg.player == (Object)null) && CanUpdateSign(msg.player))
 		{
-			byte[] array = msg.read.BytesWithSize(10485760u);
+			byte[] array = msg.read.BytesWithSize(10485760u, false);
 			if (array != null && ImageProcessing.IsValidPNG(array, 1024, 1024))
 			{
 				FileStorage.server.RemoveAllByEntity(net.ID);

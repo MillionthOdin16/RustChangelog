@@ -65,13 +65,13 @@ public class ConnectionQueue
 
 	private void SendMessage(Connection c, int position)
 	{
-		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
 		string empty = string.Empty;
 		empty = ((position <= 0) ? string.Format("YOU'RE NEXT - {1:N0} PLAYERS BEHIND YOU", position, queue.Count - position - 1) : $"{position:N0} PLAYERS AHEAD OF YOU, {queue.Count - position - 1:N0} PLAYERS BEHIND");
 		NetWrite obj = ((BaseNetwork)Net.sv).StartWrite();
 		obj.PacketID((Type)16);
-		obj.String("QUEUE");
-		obj.String(empty);
+		obj.String("QUEUE", false);
+		obj.String(empty, false);
 		obj.Send(new SendInfo(c));
 	}
 

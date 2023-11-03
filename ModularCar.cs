@@ -1194,7 +1194,7 @@ public class ModularCar : BaseModularVehicle, IVehicleLockUser, VehicleChassisVi
 		{
 			return;
 		}
-		string codeEntered = msg.read.String(256);
+		string codeEntered = msg.read.String(256, false);
 		if (CarLock.TryOpenWithCode(player, codeEntered))
 		{
 			if (CanBeLooted(player))
@@ -1214,7 +1214,7 @@ public class ModularCar : BaseModularVehicle, IVehicleLockUser, VehicleChassisVi
 		BasePlayer player = msg.player;
 		if (!((Object)(object)player == (Object)null))
 		{
-			string codeEntered = msg.read.String(256);
+			string codeEntered = msg.read.String(256, false);
 			if (CarLock.TryOpenWithCode(player, codeEntered))
 			{
 				WantsMount(player);

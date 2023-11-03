@@ -946,7 +946,7 @@ public class VendingMachine : StorageContainer
 	public void RPC_UpdateShopName(RPCMessage msg)
 	{
 		BasePlayer player = msg.player;
-		string text = msg.read.String(32);
+		string text = msg.read.String(32, false);
 		if (CanPlayerAdmin(player))
 		{
 			shopName = text;

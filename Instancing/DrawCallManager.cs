@@ -169,7 +169,7 @@ public class DrawCallManager
 		_needsDrawCallRebuild = true;
 		EnsureDrawCallCapcity();
 		DrawCallArray[count] = drawCall.JobData;
-		if (cellAllocator.PositionBuffer.BufferVersion != _positionBufferVersion || cellAllocator.OverrideBuffer.BufferVersion != _overrideBufferVersion)
+		if (!NeedsToRebuildMaterialBlocks())
 		{
 			RebuildAllMaterialBlocks();
 		}
@@ -177,6 +177,15 @@ public class DrawCallManager
 		{
 			UpdateMaterialBlock(drawCall);
 		}
+	}
+
+	private bool NeedsToRebuildMaterialBlocks()
+	{
+		if (cellAllocator.PositionBuffer.BufferVersion == _positionBufferVersion)
+		{
+			return cellAllocator.OverrideBuffer.BufferVersion != _overrideBufferVersion;
+		}
+		return true;
 	}
 
 	private void RebuildAllMaterialBlocks()
@@ -208,6 +217,10 @@ public class DrawCallManager
 		{
 			int newCapacity = Mathf.ClosestPowerOfTwo(totalMeshCount) * 2;
 			RenderBuffer.Expand(newCapacity);
+			flag = true;
+		}
+		if (NeedsToRebuildMaterialBlocks())
+		{
 			flag = true;
 		}
 		if (GeometryBuffers.IsDirty)
@@ -282,20 +295,23 @@ public class DrawCallManager
 
 	private void SubmitDrawCallsInternal(Camera camera)
 	{
-		//IL_0167: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0180: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0192: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ed: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ef: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f9: Invalid comparison between Unknown and I4
-		//IL_00fd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0103: Invalid comparison between Unknown and I4
-		DrawCallsLastFrame = 0;
+		//IL_016a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0183: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0195: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fc: Invalid comparison between Unknown and I4
+		//IL_0100: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0106: Invalid comparison between Unknown and I4
+		if ((Object)(object)camera == (Object)null)
+		{
+			return;
+		}
 		if (Render.IsMultidrawEnabled)
 		{
 			Shader.EnableKeyword(ref InstancingUtil.Keyword_Rust_Procedural_Rendering);

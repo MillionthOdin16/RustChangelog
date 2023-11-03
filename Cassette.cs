@@ -256,8 +256,8 @@ public class Cassette : BaseEntity, IUGCBrowserEntity, IServerFileReceiver
 	[RPC_Server.CallsPerSecond(1uL)]
 	public void Server_MakeNewFile(RPCMessage msg)
 	{
-		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0093: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)msg.player == (Object)null)
 		{
 			return;
@@ -267,7 +267,7 @@ public class Cassette : BaseEntity, IUGCBrowserEntity, IServerFileReceiver
 			Debug.Log((object)"Player mismatch!");
 			return;
 		}
-		byte[] data = msg.read.BytesWithSize(10485760u);
+		byte[] data = msg.read.BytesWithSize(10485760u, false);
 		ulong userId = msg.read.UInt64();
 		if (IsOggValid(data, this))
 		{

@@ -146,6 +146,8 @@ public class Item
 		}
 	}
 
+	public int? ammoCount { get; set; }
+
 	public int despawnMultiplier
 	{
 		get
@@ -1371,6 +1373,8 @@ public class Item
 		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00dd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e2: Unknown result type (might be due to invalid IL or missing references)
 		dirty = false;
 		Item val = Pool.Get<Item>();
 		val.UID = uid;
@@ -1388,6 +1392,16 @@ public class Item
 		val.streamerName = streamerName;
 		val.text = text;
 		val.cooktime = cookTimeLeft;
+		val.ammoCount = 0;
+		NetworkableId val2 = heldEntity.uid;
+		if (((NetworkableId)(ref val2)).IsValid)
+		{
+			BaseProjectile baseProjectile = GetHeldEntity() as BaseProjectile;
+			if ((Object)(object)baseProjectile != (Object)null)
+			{
+				val.ammoCount = baseProjectile.primaryMagazine.contents + 1;
+			}
+		}
 		if (hasCondition)
 		{
 			val.conditionData = Pool.Get<ConditionData>();
@@ -1423,6 +1437,14 @@ public class Item
 		flags = (Flag)load.flags;
 		worldEnt.uid = load.worldEntity;
 		heldEntity.uid = load.heldEntity;
+		if (load.ammoCount == 0)
+		{
+			ammoCount = null;
+		}
+		else
+		{
+			ammoCount = load.ammoCount - 1;
+		}
 		if (isServer)
 		{
 			Net.sv.RegisterUID(uid.Value);

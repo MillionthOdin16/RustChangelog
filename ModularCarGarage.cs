@@ -1245,8 +1245,8 @@ public class ModularCarGarage : ContainerIOEntity
 	[RPC_Server.IsVisible(3f)]
 	public void RPC_RequestAddLock(RPCMessage msg)
 	{
-		//IL_00ad: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
 		if (!HasOccupant || carOccupant.CarLock.HasALock)
 		{
 			return;
@@ -1254,7 +1254,7 @@ public class ModularCarGarage : ContainerIOEntity
 		BasePlayer player = msg.player;
 		if (!((Object)(object)player == (Object)null))
 		{
-			string code = msg.read.String(256);
+			string code = msg.read.String(256, false);
 			ItemAmount itemAmount = lockResourceCost;
 			if ((float)player.inventory.GetAmount(itemAmount.itemDef.itemid) >= itemAmount.amount && carOccupant.CarLock.TryAddALock(code, player.userID))
 			{
@@ -1283,8 +1283,8 @@ public class ModularCarGarage : ContainerIOEntity
 	[RPC_Server.IsVisible(3f)]
 	public void RPC_RequestNewCode(RPCMessage msg)
 	{
-		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
 		if (!HasOccupant || !carOccupant.CarLock.HasALock)
 		{
 			return;
@@ -1292,7 +1292,7 @@ public class ModularCarGarage : ContainerIOEntity
 		BasePlayer player = msg.player;
 		if (!((Object)(object)player == (Object)null))
 		{
-			string newCode = msg.read.String(256);
+			string newCode = msg.read.String(256, false);
 			if (carOccupant.CarLock.TrySetNewCode(newCode, player.userID))
 			{
 				Effect.server.Run(changeLockCodeEffect.resourcePath, this, 0u, Vector3.zero, Vector3.zero);

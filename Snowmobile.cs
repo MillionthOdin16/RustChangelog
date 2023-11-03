@@ -492,7 +492,7 @@ public class Snowmobile : GroundVehicle, VehicleChassisVisuals<Snowmobile>.IClie
 		}
 		engineController.CheckEngineState();
 		RaycastHit val = default(RaycastHit);
-		if (!carPhysics.IsGrounded() && Physics.Raycast(((Component)this).transform.position, Vector3.down, ref val, 10f, 1084293377, (QueryTriggerInteraction)1))
+		if (!carPhysics.IsGrounded() && Physics.Raycast(((Component)this).transform.position, Vector3.down, ref val, 10f, 1218511105, (QueryTriggerInteraction)1))
 		{
 			Vector3 normal = ((RaycastHit)(ref val)).normal;
 			Vector3 right = ((Component)this).transform.right;

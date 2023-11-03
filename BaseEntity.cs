@@ -415,6 +415,8 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		{
 			private float maximumDistance;
 
+			public bool CheckParent { get; set; }
+
 			public MaxDistance(float maxDist)
 			{
 				maximumDistance = maxDist;
@@ -422,17 +424,24 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 
 			public override string GetArgs()
 			{
-				return maximumDistance.ToString("0.00f");
+				return maximumDistance.ToString("0.00f") + (CheckParent ? ", true" : "");
 			}
 
-			public static bool Test(uint id, string debugName, BaseEntity ent, BasePlayer player, float maximumDistance)
+			public static bool Test(uint id, string debugName, BaseEntity ent, BasePlayer player, float maximumDistance, bool checkParent = false)
 			{
 				//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+				//IL_004b: Unknown result type (might be due to invalid IL or missing references)
 				if ((Object)(object)ent == (Object)null || (Object)(object)player == (Object)null)
 				{
 					return false;
 				}
-				return ent.Distance(player.eyes.position) <= maximumDistance;
+				bool flag = ent.Distance(player.eyes.position) <= maximumDistance;
+				if (checkParent && !flag)
+				{
+					BaseEntity parentEntity = ent.GetParentEntity();
+					flag = (Object)(object)parentEntity != (Object)null && parentEntity.Distance(player.eyes.position) <= maximumDistance;
+				}
+				return flag;
 			}
 		}
 
@@ -730,7 +739,6 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 
 	public Model model;
 
-	[InspectorFlags]
 	public Flags flags;
 
 	[NonSerialized]
@@ -1378,11 +1386,11 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
 		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 val = target - position;
 		float magnitude = ((Vector3)(ref val)).magnitude;
 		if (magnitude < Mathf.Epsilon)
@@ -1391,6 +1399,7 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		}
 		Vector3 val2 = val / magnitude;
 		Vector3 val3 = val2 * Mathf.Min(magnitude, 0.01f);
+		maxDistance = Mathf.Min(maxDistance, magnitude + 0.2f);
 		return IsVisible(new Ray(position + val3, val2), 1218519041, maxDistance);
 	}
 
@@ -2549,20 +2558,29 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 
 	public virtual void OnParentChanging(BaseEntity oldParent, BaseEntity newParent)
 	{
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
 		Rigidbody component = ((Component)this).GetComponent<Rigidbody>();
-		if (Object.op_Implicit((Object)(object)component))
+		if (!Object.op_Implicit((Object)(object)component))
 		{
-			if ((Object)(object)oldParent != (Object)null && (Object)(object)((Component)oldParent).GetComponent<Rigidbody>() == (Object)null)
+			return;
+		}
+		if ((Object)(object)oldParent != (Object)null)
+		{
+			Rigidbody component2 = ((Component)oldParent).GetComponent<Rigidbody>();
+			if ((Object)(object)component2 == (Object)null || component2.isKinematic)
 			{
 				component.velocity += oldParent.GetWorldVelocity();
 			}
-			if ((Object)(object)newParent != (Object)null && (Object)(object)((Component)newParent).GetComponent<Rigidbody>() == (Object)null)
+		}
+		if ((Object)(object)newParent != (Object)null)
+		{
+			Rigidbody component3 = ((Component)newParent).GetComponent<Rigidbody>();
+			if ((Object)(object)component3 == (Object)null || component3.isKinematic)
 			{
 				component.velocity -= newParent.GetWorldVelocity();
 			}
@@ -2570,6 +2588,11 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 	}
 
 	public virtual BuildingPrivlidge GetBuildingPrivilege()
+	{
+		return GetNearestBuildingPrivledge();
+	}
+
+	public BuildingPrivlidge GetNearestBuildingPrivledge()
 	{
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
 		return GetBuildingPrivilege(WorldSpaceBounds());
@@ -3653,7 +3676,7 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 			if (!((Object)(object)player == (Object)null) && player.rpcHistory.TryIncrement(num, (ulong)ConVar.Server.maxpacketspersecond_rpc_signal))
 			{
 				Signal signal = (Signal)msg.read.Int32();
-				string arg = msg.read.String(256);
+				string arg = msg.read.String(256, false);
 				SignalBroadcast(signal, arg, msg.connection);
 			}
 		}

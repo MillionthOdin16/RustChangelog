@@ -11,13 +11,13 @@ public static class NetworkWriteEx
 		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
 		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0253: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0258: Unknown result type (might be due to invalid IL or missing references)
-		//IL_027e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0283: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02aa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02d2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02fa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0254: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0259: Unknown result type (might be due to invalid IL or missing references)
+		//IL_027f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0284: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02ab: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02d3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02fb: Unknown result type (might be due to invalid IL or missing references)
 		if (typeof(T) == typeof(Vector3))
 		{
 			Vector3 val = GenericsUtil.Cast<T, Vector3>(obj);
@@ -72,7 +72,7 @@ public static class NetworkWriteEx
 		}
 		if (typeof(T) == typeof(string))
 		{
-			write.String(GenericsUtil.Cast<T, string>(obj));
+			write.String(GenericsUtil.Cast<T, string>(obj), false);
 			return;
 		}
 		if (typeof(T) == typeof(sbyte))

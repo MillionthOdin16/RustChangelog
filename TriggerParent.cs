@@ -2,6 +2,7 @@ using System;
 using Rust;
 using UnityEngine;
 
+[RequireComponent(typeof(Collider))]
 public class TriggerParent : TriggerBase, IServerComponent
 {
 	[Tooltip("Deparent if the parented entity clips into an obstacle")]
@@ -22,9 +23,14 @@ public class TriggerParent : TriggerBase, IServerComponent
 	[Tooltip("If the player is already parented to something else, they'll switch over to another parent only if this is true")]
 	public bool overrideOtherTriggers;
 
-	public float parentMaxLocalY = float.PositiveInfinity;
+	[Tooltip("Requires associatedMountable to be set. Prevents players entering the trigger if there's something between their feet and the bottom of the parent trigger")]
+	public bool checkForObjUnderFeet;
 
 	public const int CLIP_CHECK_MASK = 1218511105;
+
+	protected Collider triggerCollider;
+
+	protected float triggerHeight;
 
 	private BasePlayer killPlayerTemp;
 
@@ -79,8 +85,6 @@ public class TriggerParent : TriggerBase, IServerComponent
 
 	public virtual bool ShouldParent(BaseEntity ent, bool bypassOtherTriggerCheck = false)
 	{
-		//IL_00e3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e8: Unknown result type (might be due to invalid IL or missing references)
 		if (!ent.canTriggerParent)
 		{
 			return false;
@@ -101,6 +105,10 @@ public class TriggerParent : TriggerBase, IServerComponent
 		{
 			return false;
 		}
+		if (checkForObjUnderFeet && HasObjUnderFeet(ent))
+		{
+			return false;
+		}
 		BasePlayer basePlayer = ent.ToPlayer();
 		if ((Object)(object)basePlayer != (Object)null)
 		{
@@ -113,14 +121,6 @@ public class TriggerParent : TriggerBase, IServerComponent
 				return false;
 			}
 			if (!parentSleepers && basePlayer.IsSleeping())
-			{
-				return false;
-			}
-		}
-		if (!float.IsInfinity(parentMaxLocalY))
-		{
-			BaseEntity parentEntity2 = ent.GetParentEntity();
-			if ((!parentEntity2.IsValid() || !((Object)(object)parentEntity2 == (Object)(object)((Component)this).gameObject.ToBaseEntity())) && ((Component)this).transform.InverseTransformPoint(((Component)ent).transform.position).y > parentMaxLocalY)
 			{
 				return false;
 			}
@@ -219,5 +219,36 @@ public class TriggerParent : TriggerBase, IServerComponent
 	{
 		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
 		return GamePhysics.CheckOBB(ent.WorldSpaceBounds(), 1218511105, (QueryTriggerInteraction)1);
+	}
+
+	private bool HasObjUnderFeet(BaseEntity ent)
+	{
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
+		Vector3 val = ent.PivotPoint() + ((Component)ent).transform.up * 0.1f;
+		float maxDistance = triggerHeight + 0.1f;
+		Ray ray = default(Ray);
+		((Ray)(ref ray))._002Ector(val, -((Component)this).transform.up);
+		Debug.DrawRay(((Ray)(ref ray)).origin, ((Ray)(ref ray)).direction, Color.blue, 1f);
+		if (GamePhysics.Trace(ray, 0f, out var hitInfo, maxDistance, 429990145, (QueryTriggerInteraction)1, ent) && (Object)(object)((RaycastHit)(ref hitInfo)).collider != (Object)null)
+		{
+			BaseEntity other = ((Component)this).gameObject.ToBaseEntity();
+			BaseEntity baseEntity = ((RaycastHit)(ref hitInfo)).collider.ToBaseEntity();
+			if ((Object)(object)baseEntity == (Object)null || !baseEntity.EqualNetID((BaseNetworkable)other))
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 }

@@ -28,7 +28,7 @@ public class BaseLock : BaseEntity
 					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
-						if (!RPC_Server.MaxDistance.Test(3572556655u, "RPC_TakeLock", this, player, 3f))
+						if (!RPC_Server.MaxDistance.Test(3572556655u, "RPC_TakeLock", this, player, 3f, checkParent: true))
 						{
 							return true;
 						}
@@ -95,7 +95,7 @@ public class BaseLock : BaseEntity
 	}
 
 	[RPC_Server]
-	[RPC_Server.MaxDistance(3f)]
+	[RPC_Server.MaxDistance(3f, CheckParent = true)]
 	public void RPC_TakeLock(RPCMessage rpc)
 	{
 		if (rpc.player.CanInteract() && !IsLocked())

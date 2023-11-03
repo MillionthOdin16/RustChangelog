@@ -167,6 +167,15 @@ public class PlanterBox : StorageContainer, ISplashable
 		return false;
 	}
 
+	public override bool CanPickup(BasePlayer player)
+	{
+		if (base.CanPickup(player))
+		{
+			return !HasPlants();
+		}
+		return false;
+	}
+
 	private bool ItemIsFertilizer(Item item)
 	{
 		return item.info.shortname == "fertilizer";
@@ -360,6 +369,18 @@ public class PlanterBox : StorageContainer, ISplashable
 	{
 		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
 		return Mathf.Max(Climate.GetTemperature(((Component)this).transform.position), 15f);
+	}
+
+	private bool HasPlants()
+	{
+		foreach (BaseEntity child in children)
+		{
+			if (child is GrowableEntity)
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private void CalculateRainFactor()

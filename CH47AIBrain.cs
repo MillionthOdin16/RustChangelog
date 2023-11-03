@@ -369,7 +369,7 @@ public class CH47AIBrain : BaseAIBrain
 			{
 				Vector3 val = Vector3Ex.Direction2D(((Component)closest).transform.position, position);
 				RaycastHit val2 = default(RaycastHit);
-				if (Physics.SphereCast(position, 15f, val, ref val2, num, 1084293377))
+				if (Physics.SphereCast(position, 15f, val, ref val2, num, 1218511105))
 				{
 					Vector3 val3 = Vector3.Cross(val, Vector3.up);
 					moveTarget = ((RaycastHit)(ref val2)).point + val3 * 50f;

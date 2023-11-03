@@ -162,7 +162,7 @@ public class Admin : ConsoleSystem
 		if (!flag && @string.Length == 0)
 		{
 			text = text + "hostname: " + Server.hostname + "\n";
-			text = text + "version : " + 2509 + " secure (secure mode enabled, connected to Steam3)\n";
+			text = text + "version : " + 2511 + " secure (secure mode enabled, connected to Steam3)\n";
 			text = text + "map     : " + Server.level + "\n";
 			text += $"players : {((IEnumerable<BasePlayer>)BasePlayer.activePlayerList).Count()} ({Server.maxplayers} max) ({SingletonComponent<ServerMgr>.Instance.connectionQueue.Queued} queued) ({SingletonComponent<ServerMgr>.Instance.connectionQueue.Joining} joining)\n\n";
 		}
@@ -1277,11 +1277,11 @@ public class Admin : ConsoleSystem
 		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0093: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00a3: Expected O, but got Unknown
-		//IL_00d9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00de: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0101: Expected O, but got Unknown
+		//IL_00dc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0104: Expected O, but got Unknown
 		if ((Object)(object)entity == (Object)null)
 		{
 			return false;
@@ -1316,12 +1316,8 @@ public class Admin : ConsoleSystem
 			}
 			autoTurret.SendNetworkUpdate();
 		}
-		else
+		else if (entity is BuildingPrivlidge buildingPrivlidge)
 		{
-			if (!(entity is BuildingPrivlidge buildingPrivlidge))
-			{
-				return false;
-			}
 			if (state)
 			{
 				buildingPrivlidge.authorizedPlayers.Add(new PlayerNameID
@@ -1336,6 +1332,22 @@ public class Admin : ConsoleSystem
 				buildingPrivlidge.authorizedPlayers.RemoveAll((PlayerNameID x) => x.userid == userId);
 			}
 			buildingPrivlidge.SendNetworkUpdate();
+		}
+		else
+		{
+			if (!(entity is ModularCar modularCar))
+			{
+				return false;
+			}
+			if (state)
+			{
+				modularCar.CarLock.TryAddPlayer(userId);
+			}
+			else
+			{
+				modularCar.CarLock.TryRemovePlayer(userId);
+			}
+			modularCar.SendNetworkUpdate();
 		}
 		return true;
 	}
@@ -1623,7 +1635,7 @@ public class Admin : ConsoleSystem
 		result.NetworkOut = (int)((Net.sv != null) ? ((BaseNetwork)Net.sv).GetStat((Connection)null, (StatTypeLong)1) : 0);
 		result.Restarting = SingletonComponent<ServerMgr>.Instance.Restarting;
 		result.SaveCreatedTime = SaveRestore.SaveCreatedTime.ToString();
-		result.Version = 2509;
+		result.Version = 2511;
 		result.Protocol = Protocol.printable;
 		return result;
 	}

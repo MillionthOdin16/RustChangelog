@@ -292,7 +292,7 @@ public class VehicleModuleStorage : VehicleModuleSeating
 		BasePlayer player = msg.player;
 		if (!((Object)(object)player == (Object)null))
 		{
-			string codeEntered = msg.read.String(256);
+			string codeEntered = msg.read.String(256, false);
 			if (base.Car.CarLock.TryOpenWithCode(player, codeEntered))
 			{
 				TryOpen(player);

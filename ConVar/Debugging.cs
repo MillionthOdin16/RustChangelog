@@ -312,6 +312,7 @@ public class Debugging : ConsoleSystem
 		AdjustHealth(arg.Player(), 1000f);
 		AdjustCalories(arg.Player(), 1000f);
 		AdjustHydration(arg.Player(), 1000f);
+		AdjustRadiation(arg.Player(), -10000f);
 	}
 
 	[ServerVar]
@@ -338,6 +339,59 @@ public class Debugging : ConsoleSystem
 		AdjustHydration(arg.Player(), arg.GetInt(0, 1), arg.GetInt(1, 1));
 	}
 
+	[ServerVar]
+	public static void sethealth(Arg arg)
+	{
+		if (!arg.HasArgs(1))
+		{
+			arg.ReplyWith("Please enter an amount.");
+			return;
+		}
+		int @int = arg.GetInt(0, 0);
+		BasePlayer usePlayer = GetUsePlayer(arg, 1);
+		if (Object.op_Implicit((Object)(object)usePlayer))
+		{
+			usePlayer.SetHealth(@int);
+		}
+	}
+
+	[ServerVar]
+	public static void setdamage(Arg arg)
+	{
+		BasePlayer basePlayer = arg.Player();
+		if (!arg.HasArgs(1))
+		{
+			arg.ReplyWith("Please enter an amount.");
+			return;
+		}
+		int @int = arg.GetInt(0, 0);
+		BasePlayer usePlayer = GetUsePlayer(arg, 1);
+		if (Object.op_Implicit((Object)(object)usePlayer))
+		{
+			float damageAmount = usePlayer.health - (float)@int;
+			HitInfo info = new HitInfo(basePlayer, basePlayer, DamageType.Bullet, damageAmount);
+			usePlayer.OnAttacked(info);
+		}
+	}
+
+	[ServerVar]
+	public static void setfood(Arg arg)
+	{
+		setattribute(arg, MetabolismAttribute.Type.Calories);
+	}
+
+	[ServerVar]
+	public static void setwater(Arg arg)
+	{
+		setattribute(arg, MetabolismAttribute.Type.Hydration);
+	}
+
+	[ServerVar]
+	public static void setradiation(Arg arg)
+	{
+		setattribute(arg, MetabolismAttribute.Type.Radiation);
+	}
+
 	private static void AdjustHealth(BasePlayer player, float amount, string bone = null)
 	{
 		HitInfo hitInfo = new HitInfo(player, player, DamageType.Bullet, 0f - amount);
@@ -356,6 +410,41 @@ public class Debugging : ConsoleSystem
 	private static void AdjustHydration(BasePlayer player, float amount, float time = 1f)
 	{
 		player.metabolism.ApplyChange(MetabolismAttribute.Type.Hydration, amount, time);
+	}
+
+	private static void AdjustRadiation(BasePlayer player, float amount, float time = 1f)
+	{
+		player.metabolism.SetAttribute(MetabolismAttribute.Type.Radiation, amount);
+	}
+
+	private static void setattribute(Arg arg, MetabolismAttribute.Type type)
+	{
+		if (!arg.HasArgs(1))
+		{
+			arg.ReplyWith("Please enter an amount.");
+			return;
+		}
+		int @int = arg.GetInt(0, 0);
+		BasePlayer usePlayer = GetUsePlayer(arg, 1);
+		if (Object.op_Implicit((Object)(object)usePlayer))
+		{
+			usePlayer.metabolism.SetAttribute(type, @int);
+		}
+	}
+
+	private static BasePlayer GetUsePlayer(Arg arg, int playerArgument)
+	{
+		BasePlayer basePlayer = null;
+		if (arg.HasArgs(playerArgument + 1))
+		{
+			BasePlayer player = arg.GetPlayer(playerArgument);
+			if (!Object.op_Implicit((Object)(object)player))
+			{
+				return null;
+			}
+			return player;
+		}
+		return arg.Player();
 	}
 
 	[ServerVar]

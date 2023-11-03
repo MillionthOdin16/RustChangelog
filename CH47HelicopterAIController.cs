@@ -463,7 +463,7 @@ public class CH47HelicopterAIController : CH47Helicopter
 			Vector3 normalized = ((Vector3)(ref val)).normalized;
 			RaycastHit val4 = default(RaycastHit);
 			RaycastHit val5 = default(RaycastHit);
-			if (Physics.SphereCast(((Component)this).transform.position - normalized * 20f, 20f, normalized, ref val4, 75f, 1084293377) && Physics.SphereCast(((RaycastHit)(ref val4)).point + Vector3.up * 200f, 20f, Vector3.down, ref val5, 200f, 1084293377))
+			if (Physics.SphereCast(((Component)this).transform.position - normalized * 20f, 20f, normalized, ref val4, 75f, 1218511105) && Physics.SphereCast(((RaycastHit)(ref val4)).point + Vector3.up * 200f, 20f, Vector3.down, ref val5, 200f, 1218511105))
 			{
 				num2 = ((RaycastHit)(ref val5)).point.y + hoverHeight;
 			}

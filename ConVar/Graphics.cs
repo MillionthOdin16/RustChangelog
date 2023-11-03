@@ -148,6 +148,8 @@ public class Graphics : ConsoleSystem
 			bool flag = (int)SystemInfo.graphicsDeviceType == 17;
 			KeywordUtil.EnsureKeywordState("SHADOW_QUALITY_HIGH", !flag && _shadowquality == 2);
 			KeywordUtil.EnsureKeywordState("SHADOW_QUALITY_VERYHIGH", !flag && _shadowquality == 3);
+			KeywordUtil.EnsureKeywordState("FORWARD_SHADOWS_MEDIUM", _shadowquality == 1);
+			KeywordUtil.EnsureKeywordState("FORWARD_SHADOWS_HIGH", _shadowquality >= 2);
 		}
 	}
 

@@ -314,6 +314,28 @@ public class PathInterpolator
 		return Tangents[MaxIndex];
 	}
 
+	public Vector3 GetPointByIndex(int i)
+	{
+		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		if (!Circular)
+		{
+			return Points[Mathf.Clamp(i, 0, Points.Length - 1)];
+		}
+		return Points[(i % Points.Length + Points.Length) % Points.Length];
+	}
+
+	public Vector3 GetTangentByIndex(int i)
+	{
+		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		Vector3 val = GetPoint(i + 1) - GetPoint(i - 1);
+		return ((Vector3)(ref val)).normalized;
+	}
+
 	public Vector3 GetPoint(float distance)
 	{
 		//IL_000e: Unknown result type (might be due to invalid IL or missing references)

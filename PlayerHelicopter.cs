@@ -144,6 +144,8 @@ public class PlayerHelicopter : BaseHelicopter, IEngineControllerUser, IEntity, 
 
 	protected const Flags RADAR_LOCK_FLAG = Flags.Reserved13;
 
+	protected const Flags ENGINE_STARTING_FLAG = Flags.Reserved4;
+
 	private TimeSince timeSinceCachedFuelFraction;
 
 	private float cachedFuelFraction;

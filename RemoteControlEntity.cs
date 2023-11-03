@@ -208,10 +208,10 @@ public class RemoteControlEntity : BaseCombatEntity, IRemoteControllable
 		{
 			return;
 		}
-		string text = msg.read.String(256);
+		string text = msg.read.String(256, false);
 		if (string.IsNullOrEmpty(text) || ComputerStation.IsValidIdentifier(text))
 		{
-			string text2 = msg.read.String(256);
+			string text2 = msg.read.String(256, false);
 			if (ComputerStation.IsValidIdentifier(text2) && text == GetIdentifier())
 			{
 				Debug.Log((object)"SetID success!");
