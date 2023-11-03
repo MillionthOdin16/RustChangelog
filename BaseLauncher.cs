@@ -263,22 +263,31 @@ public class BaseLauncher : BaseProjectile
 			num3 = ((RaycastHit)(ref val4)).distance - 0.1f;
 		}
 		BaseEntity baseEntity = GameManager.server.CreateEntity(component.projectileObject.resourcePath, val + val3 * num3);
-		if (!((Object)(object)baseEntity == (Object)null))
+		if ((Object)(object)baseEntity == (Object)null)
 		{
-			baseEntity.creatorEntity = player;
-			ServerProjectile component2 = ((Component)baseEntity).GetComponent<ServerProjectile>();
-			if (Object.op_Implicit((Object)(object)component2))
-			{
-				component2.InitializeVelocity(GetInheritedVelocity(player, val3) + val3 * component2.speed * initialSpeedMultiplier);
-			}
-			baseEntity.Spawn();
-			ProjectileLaunched_Server(component2);
-			Analytics.Azure.OnExplosiveLaunched(player, baseEntity, this);
-			StartAttackCooldown(ScaleRepeatDelay(repeatDelay));
-			Item ownerItem = GetOwnerItem();
-			if (ownerItem != null && !base.UsingInfiniteAmmoCheat)
+			return;
+		}
+		baseEntity.creatorEntity = player;
+		ServerProjectile component2 = ((Component)baseEntity).GetComponent<ServerProjectile>();
+		if (Object.op_Implicit((Object)(object)component2))
+		{
+			component2.InitializeVelocity(GetInheritedVelocity(player, val3) + val3 * component2.speed * initialSpeedMultiplier);
+		}
+		baseEntity.Spawn();
+		ProjectileLaunched_Server(component2);
+		Analytics.Azure.OnExplosiveLaunched(player, baseEntity, this);
+		StartAttackCooldown(ScaleRepeatDelay(repeatDelay));
+		Item ownerItem = GetOwnerItem();
+		if (ownerItem != null)
+		{
+			if (!base.UsingInfiniteAmmoCheat)
 			{
 				ownerItem.LoseCondition(Random.Range(1f, 2f));
+			}
+			BaseMountable mounted2 = player.GetMounted();
+			if ((Object)(object)mounted2 != (Object)null)
+			{
+				mounted2.OnWeaponFired(this);
 			}
 		}
 	}

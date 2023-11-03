@@ -2148,43 +2148,6 @@ public class OcclusionCulling : MonoBehaviour
 		}
 	}
 
-	private static int ProcessOccludees_Passthrough(OccludeeState.State[] states, int[] bucket, int bucketCount, Color32[] results, int resultCount, int[] changed, ref int changedCount, Vector4[] frustumPlanes, float time, uint frame)
-	{
-		int num = 0;
-		for (int i = 0; i < bucketCount; i++)
-		{
-			int num2 = bucket[i];
-			if (num2 < 0 || num2 >= resultCount || states[num2].active == 0)
-			{
-				continue;
-			}
-			OccludeeState.State state = states[num2];
-			bool flag = true;
-			if (flag || frame < state.waitFrame)
-			{
-				state.waitTime = time + state.minTimeVisible;
-			}
-			if (!flag)
-			{
-				flag = time < state.waitTime;
-			}
-			if (flag != (state.isVisible != 0))
-			{
-				if (state.callback != 0)
-				{
-					changed[changedCount++] = num2;
-				}
-				else
-				{
-					state.isVisible = (byte)(flag ? 1 : 0);
-				}
-			}
-			states[num2] = state;
-			num += ((!flag) ? 1 : 0);
-		}
-		return num;
-	}
-
 	private void ApplyVisibility_Fast(float time, uint frame)
 	{
 		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
@@ -2249,30 +2212,52 @@ public class OcclusionCulling : MonoBehaviour
 
 	private void ApplyVisibility_Passthrough(float time, uint frame)
 	{
-		bool ready = staticSet.Ready;
-		bool ready2 = dynamicSet.Ready;
+		OccludeeState.State[] array = staticStates.array;
+		OccludeeState.State[] array2 = dynamicStates.array;
 		for (int i = 0; i < grid.Size; i++)
 		{
 			Cell cell = grid[i];
-			if (cell == null || gridSet.resultData.Length == 0)
+			if (cell == null)
 			{
 				continue;
 			}
-			bool flag = true;
-			if (cell.isVisible || flag)
+			int[] slots = cell.staticBucket.Slots;
+			int size = cell.staticBucket.Size;
+			int num = staticSet.resultData.Length;
+			for (int j = 0; j < size; j++)
 			{
-				int num = 0;
-				int num2 = 0;
-				if (ready && cell.staticBucket.Count > 0)
+				int num2 = slots[j];
+				if (num2 >= 0 && num2 < num && array[num2].active != 0 && array[num2].isVisible == 0)
 				{
-					num = ProcessOccludees_Passthrough(staticStates.array, cell.staticBucket.Slots, cell.staticBucket.Size, staticSet.resultData, staticSet.resultData.Length, staticVisibilityChanged.array, ref staticVisibilityChanged.count, frustumPlanes, time, frame);
+					if (array[num2].callback != 0)
+					{
+						staticVisibilityChanged.array[staticVisibilityChanged.count++] = num2;
+					}
+					else
+					{
+						array[num2].isVisible = 1;
+					}
 				}
-				if (ready2 && cell.dynamicBucket.Count > 0)
-				{
-					num2 = ProcessOccludees_Passthrough(dynamicStates.array, cell.dynamicBucket.Slots, cell.dynamicBucket.Size, dynamicSet.resultData, dynamicSet.resultData.Length, dynamicVisibilityChanged.array, ref dynamicVisibilityChanged.count, frustumPlanes, time, frame);
-				}
-				cell.isVisible = flag || num < cell.staticBucket.Count || num2 < cell.dynamicBucket.Count;
 			}
+			int[] slots2 = cell.dynamicBucket.Slots;
+			int size2 = cell.dynamicBucket.Size;
+			int num3 = dynamicSet.resultData.Length;
+			for (int k = 0; k < size2; k++)
+			{
+				int num4 = slots2[k];
+				if (num4 >= 0 && num4 < num3 && array2[num4].active != 0 && array2[num4].isVisible == 0)
+				{
+					if (array2[num4].callback != 0)
+					{
+						dynamicVisibilityChanged.array[dynamicVisibilityChanged.count++] = num4;
+					}
+					else
+					{
+						array2[num4].isVisible = 1;
+					}
+				}
+			}
+			cell.isVisible = true;
 		}
 	}
 }
