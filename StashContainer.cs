@@ -22,7 +22,7 @@ public class StashContainer : StorageContainer
 
 	public float uncoverRange = 3f;
 
-	private float lastToggleTime = 0f;
+	private float lastToggleTime;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -34,7 +34,7 @@ public class StashContainer : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_HideStash "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_HideStash "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_HideStash", 0);
 				try
@@ -53,7 +53,7 @@ public class StashContainer : StorageContainer
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -65,7 +65,7 @@ public class StashContainer : StorageContainer
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -85,12 +85,12 @@ public class StashContainer : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_WantsUnhide "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_WantsUnhide "));
 				}
-				TimeWarning val5 = TimeWarning.New("RPC_WantsUnhide", 0);
+				TimeWarning val2 = TimeWarning.New("RPC_WantsUnhide", 0);
 				try
 				{
-					TimeWarning val6 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsVisible.Test(298671803u, "RPC_WantsUnhide", this, player, 3f))
@@ -100,11 +100,11 @@ public class StashContainer : StorageContainer
 					}
 					finally
 					{
-						((IDisposable)val6)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val7 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -116,7 +116,7 @@ public class StashContainer : StorageContainer
 						}
 						finally
 						{
-							((IDisposable)val7)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -127,7 +127,7 @@ public class StashContainer : StorageContainer
 				}
 				finally
 				{
-					((IDisposable)val5)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -139,29 +139,23 @@ public class StashContainer : StorageContainer
 		return base.OnRpcMessage(player, rpc, msg);
 	}
 
-	public bool IsHidden()
-	{
-		return HasFlag(Flags.Reserved5);
-	}
-
 	public bool PlayerInRange(BasePlayer ply)
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
 		if (Vector3.Distance(((Component)this).transform.position, ((Component)ply).transform.position) <= uncoverRange)
 		{
 			Vector3 val = ((Component)this).transform.position - ply.eyes.position;
 			Vector3 normalized = ((Vector3)(ref val)).normalized;
-			float num = Vector3.Dot(ply.eyes.BodyForward(), normalized);
-			if (num > 0.95f)
+			if (Vector3.Dot(ply.eyes.BodyForward(), normalized) > 0.95f)
 			{
 				return true;
 			}
@@ -171,23 +165,21 @@ public class StashContainer : StorageContainer
 
 	public override void InitShared()
 	{
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
 		base.InitShared();
 		((Component)visuals).transform.localPosition = Vector3Ex.WithY(((Component)visuals).transform.localPosition, raisedOffset);
 	}
 
 	public void DoOccludedCheck()
 	{
-		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		Ray val = default(Ray);
-		((Ray)(ref val))._002Ector(((Component)this).transform.position + Vector3.up * 5f, Vector3.down);
-		if (Physics.SphereCast(val, 0.25f, 5f, 2097152))
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		if (Physics.SphereCast(new Ray(((Component)this).transform.position + Vector3.up * 5f, Vector3.down), 0.25f, 5f, 2097152))
 		{
 			DropItems();
 			Kill();
@@ -263,13 +255,18 @@ public class StashContainer : StorageContainer
 	public override void OnFlagsChanged(Flags old, Flags next)
 	{
 		base.OnFlagsChanged(old, next);
-		bool flag = (old & Flags.Reserved5) == Flags.Reserved5;
-		bool flag2 = (next & Flags.Reserved5) == Flags.Reserved5;
-		if (flag != flag2)
+		bool num = (old & Flags.Reserved5) == Flags.Reserved5;
+		bool flag = (next & Flags.Reserved5) == Flags.Reserved5;
+		if (num != flag)
 		{
-			float num = (flag2 ? burriedOffset : raisedOffset);
+			float num2 = (flag ? burriedOffset : raisedOffset);
 			LeanTween.cancel(((Component)visuals).gameObject);
-			LeanTween.moveLocalY(((Component)visuals).gameObject, num, 1f);
+			LeanTween.moveLocalY(((Component)visuals).gameObject, num2, 1f);
 		}
+	}
+
+	public bool IsHidden()
+	{
+		return HasFlag(Flags.Reserved5);
 	}
 }

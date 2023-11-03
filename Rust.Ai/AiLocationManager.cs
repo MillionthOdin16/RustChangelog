@@ -21,9 +21,9 @@ public class AiLocationManager : FacepunchBehaviour, IServerComponent
 
 	public CoverPointVolume DynamicCoverPointVolume;
 
-	public bool SnapCoverPointsToGround = false;
+	public bool SnapCoverPointsToGround;
 
-	private List<PathInterestNode> patrolPoints = null;
+	private List<PathInterestNode> patrolPoints;
 
 	public AiLocationSpawner.SquadSpawnerLocation LocationType
 	{
@@ -39,17 +39,16 @@ public class AiLocationManager : FacepunchBehaviour, IServerComponent
 
 	private void Awake()
 	{
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
 		Managers.Add(this);
 		if (!SnapCoverPointsToGround)
 		{
 			return;
 		}
 		AICoverPoint[] componentsInChildren = ((Component)CoverPointGroup).GetComponentsInChildren<AICoverPoint>();
-		AICoverPoint[] array = componentsInChildren;
 		NavMeshHit val = default(NavMeshHit);
-		foreach (AICoverPoint aICoverPoint in array)
+		foreach (AICoverPoint aICoverPoint in componentsInChildren)
 		{
 			if (NavMesh.SamplePosition(((Component)aICoverPoint).transform.position, ref val, 4f, -1))
 			{
@@ -65,10 +64,10 @@ public class AiLocationManager : FacepunchBehaviour, IServerComponent
 
 	public PathInterestNode GetFirstPatrolPointInRange(Vector3 from, float minRange = 10f, float maxRange = 100f)
 	{
-		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)PatrolPointGroup == (Object)null)
 		{
 			return null;
@@ -97,10 +96,10 @@ public class AiLocationManager : FacepunchBehaviour, IServerComponent
 
 	public PathInterestNode GetRandomPatrolPointInRange(Vector3 from, float minRange = 10f, float maxRange = 100f, PathInterestNode currentPatrolPoint = null)
 	{
-		//IL_00ba: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)PatrolPointGroup == (Object)null)
 		{
 			return null;

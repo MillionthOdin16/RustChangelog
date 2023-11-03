@@ -2,12 +2,12 @@ using UnityEngine;
 
 public class TerrainPathConnect : MonoBehaviour
 {
-	public InfrastructureType Type = InfrastructureType.Road;
+	public InfrastructureType Type;
 
 	public PathFinder.Point GetPathFinderPoint(int res, Vector3 worldPos)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
 		float num = TerrainMeta.NormalizeX(worldPos.x);
 		float num2 = TerrainMeta.NormalizeZ(worldPos.z);
 		PathFinder.Point result = default(PathFinder.Point);
@@ -18,7 +18,7 @@ public class TerrainPathConnect : MonoBehaviour
 
 	public PathFinder.Point GetPathFinderPoint(int res)
 	{
-		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
 		return GetPathFinderPoint(res, ((Component)this).transform.position);
 	}
 }

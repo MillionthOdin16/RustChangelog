@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Facepunch.Extend;
 using Network;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 [Factory("global")]
 public class DiagnosticsConSys : ConsoleSystem
@@ -50,18 +48,64 @@ public class DiagnosticsConSys : ConsoleSystem
 		WriteTextToFile(targetFolder + "UnityEngine.Animators.Counts.Enabled.txt", stringBuilder3.ToString());
 	}
 
+	[ServerVar]
+	[ClientVar]
+	public static void dump(Arg args)
+	{
+		if (Directory.Exists("diagnostics"))
+		{
+			Directory.CreateDirectory("diagnostics");
+		}
+		int num = 1;
+		while (Directory.Exists("diagnostics/" + num))
+		{
+			num++;
+		}
+		Directory.CreateDirectory("diagnostics/" + num);
+		string targetFolder = "diagnostics/" + num + "/";
+		DumpLODGroups(targetFolder);
+		DumpSystemInformation(targetFolder);
+		DumpGameObjects(targetFolder);
+		DumpObjects(targetFolder);
+		DumpEntities(targetFolder);
+		DumpNetwork(targetFolder);
+		DumpPhysics(targetFolder);
+		DumpAnimators(targetFolder);
+	}
+
+	private static void DumpSystemInformation(string targetFolder)
+	{
+		WriteTextToFile(targetFolder + "System.Info.txt", SystemInfoGeneralText.currentInfo);
+	}
+
+	private static void WriteTextToFile(string file, string text)
+	{
+		File.WriteAllText(file, text);
+	}
+
 	private static void DumpEntities(string targetFolder)
 	{
-		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
 		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
 		StringBuilder stringBuilder = new StringBuilder();
 		stringBuilder.AppendLine("All entities");
 		stringBuilder.AppendLine();
-		foreach (BaseNetworkable serverEntity in BaseNetworkable.serverEntities)
+		Enumerator<BaseNetworkable> enumerator = BaseNetworkable.serverEntities.GetEnumerator();
+		try
 		{
-			stringBuilder.AppendFormat("{1}\t{0}", serverEntity.PrefabName, ((NetworkableId)(((_003F?)serverEntity.net?.ID) ?? default(NetworkableId))).Value);
-			stringBuilder.AppendLine();
+			while (enumerator.MoveNext())
+			{
+				BaseNetworkable current = enumerator.Current;
+				stringBuilder.AppendFormat("{1}\t{0}", current.PrefabName, ((NetworkableId)(((_003F?)current.net?.ID) ?? default(NetworkableId))).Value);
+				stringBuilder.AppendLine();
+			}
+		}
+		finally
+		{
+			((IDisposable)enumerator).Dispose();
 		}
 		WriteTextToFile(targetFolder + "UnityEngine.Entity.SV.List.txt", stringBuilder.ToString());
 		StringBuilder stringBuilder2 = new StringBuilder();
@@ -114,8 +158,8 @@ public class DiagnosticsConSys : ConsoleSystem
 
 	private static void DumpNetwork(string targetFolder)
 	{
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
 		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
 		if (!((BaseNetwork)Net.sv).IsConnected())
 		{
 			return;
@@ -175,18 +219,6 @@ public class DiagnosticsConSys : ConsoleSystem
 			stringBuilder2.AppendLine();
 		}
 		WriteTextToFile(targetFolder + "UnityEngine.ScriptableObject.Count.txt", stringBuilder2.ToString());
-		StringBuilder stringBuilder3 = new StringBuilder();
-		stringBuilder3.AppendLine("All active UnityEngine.Object, ordered by memory");
-		stringBuilder3.AppendLine();
-		foreach (IGrouping<Type, Object> item3 in from x in source
-			group x by ((object)x).GetType() into x
-			orderby x.Sum((Object y) => Profiler.GetRuntimeMemorySize(y)) descending
-			select x)
-		{
-			stringBuilder3.AppendFormat("{2}{1}{0}", ((object)item3.First()).GetType().Name, item3.Count().ToString("N0").PadRight(12), NumberExtensions.FormatBytes<int>(item3.Sum((Object y) => Profiler.GetRuntimeMemorySize(y)), false).PadRight(20));
-			stringBuilder3.AppendLine();
-		}
-		WriteTextToFile(targetFolder + "UnityEngine.Object.Memory.txt", stringBuilder3.ToString());
 	}
 
 	private static void DumpPhysics(string targetFolder)
@@ -240,7 +272,7 @@ public class DiagnosticsConSys : ConsoleSystem
 
 	private static void DumpRigidBodies(string targetFolder)
 	{
-		//IL_01eb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01dc: Unknown result type (might be due to invalid IL or missing references)
 		Rigidbody[] source = Object.FindObjectsOfType<Rigidbody>();
 		StringBuilder stringBuilder = new StringBuilder();
 		stringBuilder.AppendLine("RigidBody");
@@ -284,8 +316,8 @@ public class DiagnosticsConSys : ConsoleSystem
 		stringBuilder = new StringBuilder();
 		stringBuilder.AppendLine("All active game objects including components");
 		stringBuilder.AppendLine();
-		Transform[] array2 = rootObjects;
-		foreach (Transform tx2 in array2)
+		array = rootObjects;
+		foreach (Transform tx2 in array)
 		{
 			DumpGameObjectRecursive(stringBuilder, tx2, 0, includeComponents: true);
 			stringBuilder.AppendLine();
@@ -351,39 +383,5 @@ public class DiagnosticsConSys : ConsoleSystem
 		{
 			DumpGameObjectRecursive(str, tx.GetChild(l), indent + 2, includeComponents);
 		}
-	}
-
-	[ServerVar]
-	[ClientVar]
-	public static void dump(Arg args)
-	{
-		if (Directory.Exists("diagnostics"))
-		{
-			Directory.CreateDirectory("diagnostics");
-		}
-		int i;
-		for (i = 1; Directory.Exists("diagnostics/" + i); i++)
-		{
-		}
-		Directory.CreateDirectory("diagnostics/" + i);
-		string targetFolder = "diagnostics/" + i + "/";
-		DumpLODGroups(targetFolder);
-		DumpSystemInformation(targetFolder);
-		DumpGameObjects(targetFolder);
-		DumpObjects(targetFolder);
-		DumpEntities(targetFolder);
-		DumpNetwork(targetFolder);
-		DumpPhysics(targetFolder);
-		DumpAnimators(targetFolder);
-	}
-
-	private static void DumpSystemInformation(string targetFolder)
-	{
-		WriteTextToFile(targetFolder + "System.Info.txt", SystemInfoGeneralText.currentInfo);
-	}
-
-	private static void WriteTextToFile(string file, string text)
-	{
-		File.WriteAllText(file, text);
 	}
 }

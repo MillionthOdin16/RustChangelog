@@ -58,7 +58,7 @@ public class BaseArcadeMachine : BaseVehicle
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - BroadcastEntityMessage "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - BroadcastEntityMessage "));
 				}
 				TimeWarning val2 = TimeWarning.New("BroadcastEntityMessage", 0);
 				try
@@ -81,7 +81,7 @@ public class BaseArcadeMachine : BaseVehicle
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -93,7 +93,7 @@ public class BaseArcadeMachine : BaseVehicle
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -113,12 +113,12 @@ public class BaseArcadeMachine : BaseVehicle
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - DestroyMessageFromHost "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - DestroyMessageFromHost "));
 				}
-				TimeWarning val5 = TimeWarning.New("DestroyMessageFromHost", 0);
+				TimeWarning val2 = TimeWarning.New("DestroyMessageFromHost", 0);
 				try
 				{
-					TimeWarning val6 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsVisible.Test(1365277306u, "DestroyMessageFromHost", this, player, 3f))
@@ -128,11 +128,11 @@ public class BaseArcadeMachine : BaseVehicle
 					}
 					finally
 					{
-						((IDisposable)val6)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val7 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -144,7 +144,7 @@ public class BaseArcadeMachine : BaseVehicle
 						}
 						finally
 						{
-							((IDisposable)val7)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -155,7 +155,7 @@ public class BaseArcadeMachine : BaseVehicle
 				}
 				finally
 				{
-					((IDisposable)val5)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -164,12 +164,12 @@ public class BaseArcadeMachine : BaseVehicle
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - GetSnapshotFromClient "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - GetSnapshotFromClient "));
 				}
-				TimeWarning val8 = TimeWarning.New("GetSnapshotFromClient", 0);
+				TimeWarning val2 = TimeWarning.New("GetSnapshotFromClient", 0);
 				try
 				{
-					TimeWarning val9 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.CallsPerSecond.Test(2467852388u, "GetSnapshotFromClient", this, player, 30uL))
@@ -183,11 +183,11 @@ public class BaseArcadeMachine : BaseVehicle
 					}
 					finally
 					{
-						((IDisposable)val9)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val10 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -199,7 +199,7 @@ public class BaseArcadeMachine : BaseVehicle
 						}
 						finally
 						{
-							((IDisposable)val10)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex3)
@@ -210,7 +210,7 @@ public class BaseArcadeMachine : BaseVehicle
 				}
 				finally
 				{
-					((IDisposable)val8)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -219,12 +219,12 @@ public class BaseArcadeMachine : BaseVehicle
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RequestAddScore "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RequestAddScore "));
 				}
-				TimeWarning val11 = TimeWarning.New("RequestAddScore", 0);
+				TimeWarning val2 = TimeWarning.New("RequestAddScore", 0);
 				try
 				{
-					TimeWarning val12 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsVisible.Test(2990871635u, "RequestAddScore", this, player, 3f))
@@ -234,11 +234,11 @@ public class BaseArcadeMachine : BaseVehicle
 					}
 					finally
 					{
-						((IDisposable)val12)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val13 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -250,7 +250,7 @@ public class BaseArcadeMachine : BaseVehicle
 						}
 						finally
 						{
-							((IDisposable)val13)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex4)
@@ -261,7 +261,7 @@ public class BaseArcadeMachine : BaseVehicle
 				}
 				finally
 				{
-					((IDisposable)val11)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}

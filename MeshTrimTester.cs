@@ -9,5 +9,5 @@ public class MeshTrimTester : MonoBehaviour
 
 	public MeshFilter TargetMeshFilter;
 
-	public int SubtractIndex = 0;
+	public int SubtractIndex;
 }

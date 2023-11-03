@@ -5,7 +5,6 @@ using Facepunch;
 using ProtoBuf;
 using Rust;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 public class StabilityEntity : DecayEntity
 {
@@ -15,9 +14,7 @@ public class StabilityEntity : DecayEntity
 		{
 			if (((ObjectWorkQueue<StabilityEntity>)this).ShouldAdd(entity))
 			{
-				Profiler.BeginSample("StabilityCheck");
 				entity.StabilityCheck();
-				Profiler.EndSample();
 			}
 		}
 
@@ -43,9 +40,9 @@ public class StabilityEntity : DecayEntity
 	{
 		protected override void RunJob(Bounds bounds)
 		{
-			//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0021: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+			//IL_001c: Unknown result type (might be due to invalid IL or missing references)
 			if (!ConVar.Server.stability)
 			{
 				return;
@@ -60,15 +57,11 @@ public class StabilityEntity : DecayEntity
 				{
 					if (item is StabilityEntity)
 					{
-						Profiler.BeginSample("StabilityEntity.OnPhysicsNeighbourChanged");
 						(item as StabilityEntity).OnPhysicsNeighbourChanged();
-						Profiler.EndSample();
 					}
 					else
 					{
-						Profiler.BeginSample("BroadcastMessage OnPhysicsNeighbourChanged");
 						((Component)item).BroadcastMessage("OnPhysicsNeighbourChanged", (SendMessageOptions)1);
-						Profiler.EndSample();
 					}
 				}
 			}
@@ -78,9 +71,9 @@ public class StabilityEntity : DecayEntity
 
 	private class Support
 	{
-		public StabilityEntity parent = null;
+		public StabilityEntity parent;
 
-		public EntityLink link = null;
+		public EntityLink link;
 
 		public float factor = 1f;
 
@@ -107,51 +100,23 @@ public class StabilityEntity : DecayEntity
 		}
 	}
 
-	public static StabilityCheckWorkQueue stabilityCheckQueue = new StabilityCheckWorkQueue();
-
-	public static UpdateSurroundingsQueue updateSurroundingsQueue = new UpdateSurroundingsQueue();
-
-	public bool grounded = false;
+	public bool grounded;
 
 	[NonSerialized]
-	public float cachedStability = 0f;
+	public float cachedStability;
 
 	[NonSerialized]
 	public int cachedDistanceFromGround = int.MaxValue;
 
-	private List<Support> supports = null;
+	private List<Support> supports;
 
-	private int stabilityStrikes = 0;
+	private int stabilityStrikes;
 
-	private bool dirty = false;
+	private bool dirty;
 
-	public override void Save(SaveInfo info)
-	{
-		base.Save(info);
-		Profiler.BeginSample("StabilityEntity.Save");
-		info.msg.stabilityEntity = Pool.Get<StabilityEntity>();
-		info.msg.stabilityEntity.stability = cachedStability;
-		info.msg.stabilityEntity.distanceFromGround = cachedDistanceFromGround;
-		Profiler.EndSample();
-	}
+	public static StabilityCheckWorkQueue stabilityCheckQueue = new StabilityCheckWorkQueue();
 
-	public override void Load(LoadInfo info)
-	{
-		base.Load(info);
-		if (info.msg.stabilityEntity != null)
-		{
-			cachedStability = info.msg.stabilityEntity.stability;
-			cachedDistanceFromGround = info.msg.stabilityEntity.distanceFromGround;
-			if (cachedStability <= 0f)
-			{
-				cachedStability = 0f;
-			}
-			if (cachedDistanceFromGround <= 0)
-			{
-				cachedDistanceFromGround = int.MaxValue;
-			}
-		}
-	}
+	public static UpdateSurroundingsQueue updateSurroundingsQueue = new UpdateSurroundingsQueue();
 
 	public override void ResetState()
 	{
@@ -173,7 +138,6 @@ public class StabilityEntity : DecayEntity
 		{
 			return;
 		}
-		Profiler.BeginSample("InitializeSupports");
 		List<EntityLink> entityLinks = GetEntityLinks();
 		for (int i = 0; i < entityLinks.Count; i++)
 		{
@@ -190,7 +154,6 @@ public class StabilityEntity : DecayEntity
 				}
 			}
 		}
-		Profiler.EndSample();
 	}
 
 	public int DistanceFromGround(StabilityEntity ignoreEntity = null)
@@ -210,8 +173,7 @@ public class StabilityEntity : DecayEntity
 		int num = int.MaxValue;
 		for (int i = 0; i < supports.Count; i++)
 		{
-			Support support = supports[i];
-			StabilityEntity stabilityEntity = support.SupportEntity(ignoreEntity);
+			StabilityEntity stabilityEntity = supports[i].SupportEntity(ignoreEntity);
 			if (!((Object)(object)stabilityEntity == (Object)null))
 			{
 				int num2 = stabilityEntity.CachedDistanceFromGround(ignoreEntity);
@@ -272,8 +234,7 @@ public class StabilityEntity : DecayEntity
 		int num = int.MaxValue;
 		for (int i = 0; i < supports.Count; i++)
 		{
-			Support support = supports[i];
-			StabilityEntity stabilityEntity = support.SupportEntity(ignoreEntity);
+			StabilityEntity stabilityEntity = supports[i].SupportEntity(ignoreEntity);
 			if (!((Object)(object)stabilityEntity == (Object)null))
 			{
 				int num2 = stabilityEntity.cachedDistanceFromGround;
@@ -328,17 +289,13 @@ public class StabilityEntity : DecayEntity
 			InitializeSupports();
 		}
 		bool flag = false;
-		Profiler.BeginSample("DistanceFromGround");
 		int num = DistanceFromGround();
-		Profiler.EndSample();
 		if (num != cachedDistanceFromGround)
 		{
 			cachedDistanceFromGround = num;
 			flag = true;
 		}
-		Profiler.BeginSample("SupportValue");
 		float num2 = SupportValue();
-		Profiler.EndSample();
 		if (Mathf.Abs(cachedStability - num2) > Stability.accuracy)
 		{
 			cachedStability = num2;
@@ -347,10 +304,8 @@ public class StabilityEntity : DecayEntity
 		if (flag)
 		{
 			dirty = true;
-			Profiler.BeginSample("CacheInvalidate");
 			UpdateConnectedEntities();
 			UpdateStability();
-			Profiler.EndSample();
 		}
 		else if (dirty)
 		{
@@ -361,16 +316,12 @@ public class StabilityEntity : DecayEntity
 		{
 			if (stabilityStrikes < Stability.strikes)
 			{
-				Profiler.BeginSample("StabilityStrike");
 				UpdateStability();
 				stabilityStrikes++;
-				Profiler.EndSample();
 			}
 			else
 			{
-				Profiler.BeginSample("Kill");
 				Kill(DestroyMode.Gib);
-				Profiler.EndSample();
 			}
 		}
 		else
@@ -386,9 +337,9 @@ public class StabilityEntity : DecayEntity
 
 	public void UpdateSurroundingEntities()
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
 		UpdateSurroundingsQueue obj = updateSurroundingsQueue;
 		OBB val = WorldSpaceBounds();
 		((ObjectWorkQueue<Bounds>)obj).Add(((OBB)(ref val)).ToBounds());
@@ -441,5 +392,31 @@ public class StabilityEntity : DecayEntity
 	{
 		base.DoServerDestroy();
 		UpdateSurroundingEntities();
+	}
+
+	public override void Save(SaveInfo info)
+	{
+		base.Save(info);
+		info.msg.stabilityEntity = Pool.Get<StabilityEntity>();
+		info.msg.stabilityEntity.stability = cachedStability;
+		info.msg.stabilityEntity.distanceFromGround = cachedDistanceFromGround;
+	}
+
+	public override void Load(LoadInfo info)
+	{
+		base.Load(info);
+		if (info.msg.stabilityEntity != null)
+		{
+			cachedStability = info.msg.stabilityEntity.stability;
+			cachedDistanceFromGround = info.msg.stabilityEntity.distanceFromGround;
+			if (cachedStability <= 0f)
+			{
+				cachedStability = 0f;
+			}
+			if (cachedDistanceFromGround <= 0)
+			{
+				cachedDistanceFromGround = int.MaxValue;
+			}
+		}
 	}
 }

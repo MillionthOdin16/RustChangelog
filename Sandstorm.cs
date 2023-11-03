@@ -16,11 +16,11 @@ public class Sandstorm : MonoBehaviour
 
 	private void Update()
 	{
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
 		((Component)this).transform.RotateAround(((Component)this).transform.position, Vector3.up, Time.deltaTime * m_flSwirl);
 		Vector3 eulerAngles = ((Component)this).transform.eulerAngles;
 		eulerAngles.x = -7f + Mathf.Sin(Time.time * 2.5f) * 7f;

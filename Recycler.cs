@@ -29,7 +29,7 @@ public class Recycler : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SVSwitch "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SVSwitch "));
 				}
 				TimeWarning val2 = TimeWarning.New("SVSwitch", 0);
 				try
@@ -48,7 +48,7 @@ public class Recycler : StorageContainer
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -60,7 +60,7 @@ public class Recycler : StorageContainer
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -90,7 +90,11 @@ public class Recycler : StorageContainer
 
 	private bool CanBeRecycled(Item item)
 	{
-		return item != null && (Object)(object)item.info.Blueprint != (Object)null;
+		if (item != null)
+		{
+			return (Object)(object)item.info.Blueprint != (Object)null;
+		}
+		return false;
 	}
 
 	public override void ServerInit()
@@ -119,7 +123,11 @@ public class Recycler : StorageContainer
 				return false;
 			}
 		}
-		return targetSlot >= num || CanBeRecycled(item);
+		if (targetSlot < num)
+		{
+			return CanBeRecycled(item);
+		}
+		return true;
 	}
 
 	[RPC_Server]
@@ -127,7 +135,7 @@ public class Recycler : StorageContainer
 	private void SVSwitch(RPCMessage msg)
 	{
 		bool flag = msg.read.Bit();
-		if (flag == IsOn() || (Object)(object)msg.player == (Object)null || (flag && !HasRecyclable()))
+		if (flag == IsOn() || (Object)(object)msg.player == (Object)null || (!flag && onlyOneUser && (Object)(object)msg.player.inventory.loot.entitySource != (Object)(object)this) || (flag && !HasRecyclable()))
 		{
 			return;
 		}
@@ -147,15 +155,15 @@ public class Recycler : StorageContainer
 
 	public bool MoveItemToOutput(Item newItem)
 	{
-		//IL_00f5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0109: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0114: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0129: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0135: Unknown result type (might be due to invalid IL or missing references)
-		//IL_013b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ad: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ed: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f3: Unknown result type (might be due to invalid IL or missing references)
 		int num = -1;
 		for (int i = 6; i < 12; i++)
 		{
@@ -206,7 +214,7 @@ public class Recycler : StorageContainer
 
 	public void RecycleThink()
 	{
-		//IL_0167: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012a: Unknown result type (might be due to invalid IL or missing references)
 		bool flag = false;
 		float num = recycleEfficiency;
 		for (int i = 0; i < 6; i++)
@@ -308,8 +316,8 @@ public class Recycler : StorageContainer
 
 	public void StartRecycling()
 	{
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
 		if (!IsOn())
 		{
 			((FacepunchBehaviour)this).InvokeRepeating((Action)RecycleThink, 5f, 5f);
@@ -321,8 +329,8 @@ public class Recycler : StorageContainer
 
 	public void StopRecycling()
 	{
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
 		((FacepunchBehaviour)this).CancelInvoke((Action)RecycleThink);
 		if (IsOn())
 		{

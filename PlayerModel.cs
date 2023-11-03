@@ -35,12 +35,9 @@ public class PlayerModel : ListComponent<PlayerModel>
 		ZiplineHold = 27,
 		Sit_Locomotive = 28,
 		Sit_Throne = 29,
+		Parachute = 30,
 		Standing = 128
 	}
-
-	public Transform[] Shoulders;
-
-	public Transform[] AdditionalSpineBones;
 
 	protected static int speed = Animator.StringToHash("speed");
 
@@ -92,9 +89,9 @@ public class PlayerModel : ListComponent<PlayerModel>
 
 	protected static int vehicle_aim_speed = Animator.StringToHash("vehicleAimYawSpeed");
 
-	protected static int onPhone = Animator.StringToHash("onPhone");
-
 	protected static int usePoseTransition = Animator.StringToHash("usePoseTransition");
+
+	protected static int onPhone = Animator.StringToHash("onPhone");
 
 	protected static int leftFootIK = Animator.StringToHash("leftFootIK");
 
@@ -109,6 +106,12 @@ public class PlayerModel : ListComponent<PlayerModel>
 	protected static int rightReaction = Animator.StringToHash("rightReaction");
 
 	protected static int ladderType = Animator.StringToHash("ladderType");
+
+	protected static int hasParachute = Animator.StringToHash("hasParachute");
+
+	protected static int nonGroundedTime = Animator.StringToHash("nonGroundedTime");
+
+	protected static int deployParachuteTrigger = Animator.StringToHash("deployParachute");
 
 	public BoxCollider collision;
 
@@ -183,7 +186,7 @@ public class PlayerModel : ListComponent<PlayerModel>
 
 	[Header("Parameters")]
 	[Range(0f, 1f)]
-	public float voiceVolume = 0f;
+	public float voiceVolume;
 
 	[Range(0f, 1f)]
 	public float skinColor = 1f;
@@ -192,28 +195,41 @@ public class PlayerModel : ListComponent<PlayerModel>
 	public float skinNumber = 1f;
 
 	[Range(0f, 1f)]
-	public float meshNumber = 0f;
+	public float meshNumber;
 
 	[Range(0f, 1f)]
-	public float hairNumber = 0f;
+	public float hairNumber;
 
 	[Range(0f, 1f)]
-	public int skinType = 0;
+	public int skinType;
 
 	public MovementSounds movementSounds;
 
-	public bool showSash = false;
+	public bool showSash;
 
 	public int tempPoseType;
 
 	public uint underwearSkin;
 
-	public ulong overrideSkinSeed { get; private set; } = 0uL;
+	public Transform[] Shoulders;
 
+	public Transform[] AdditionalSpineBones;
+
+	public ulong overrideSkinSeed { get; private set; }
 
 	public bool IsFemale => skinType == 1;
 
-	public SkinSetCollection SkinSet => IsFemale ? FemaleSkin : MaleSkin;
+	public SkinSetCollection SkinSet
+	{
+		get
+		{
+			if (!IsFemale)
+			{
+				return MaleSkin;
+			}
+			return FemaleSkin;
+		}
+	}
 
 	public Quaternion AimAngles { get; set; }
 
@@ -221,9 +237,7 @@ public class PlayerModel : ListComponent<PlayerModel>
 
 	private static Vector3 GetFlat(Vector3 dir)
 	{
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
 		dir.y = 0f;
 		return ((Vector3)(ref dir)).normalized;
 	}

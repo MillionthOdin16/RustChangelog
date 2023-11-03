@@ -33,8 +33,8 @@ public static class Auth_CentralizedBans
 		}
 		if (connection.ownerid != 0L && connection.ownerid != connection.userid)
 		{
-			string ownerUrl = Server.bansServerEndpoint + connection.ownerid;
-			UnityWebRequest ownerRequest = UnityWebRequest.Get(ownerUrl);
+			string text = Server.bansServerEndpoint + connection.ownerid;
+			UnityWebRequest ownerRequest = UnityWebRequest.Get(text);
 			ownerRequest.timeout = Server.bansServerTimeout;
 			yield return ownerRequest.SendWebRequest();
 			if (CheckIfPlayerBanned(connection.ownerid, connection, ownerRequest))
@@ -42,8 +42,8 @@ public static class Auth_CentralizedBans
 				yield break;
 			}
 		}
-		string userUrl = Server.bansServerEndpoint + connection.userid;
-		UnityWebRequest userRequest = UnityWebRequest.Get(userUrl);
+		string text2 = Server.bansServerEndpoint + connection.userid;
+		UnityWebRequest userRequest = UnityWebRequest.Get(text2);
 		userRequest.timeout = Server.bansServerTimeout;
 		yield return userRequest.SendWebRequest();
 		if (!CheckIfPlayerBanned(connection.userid, connection, userRequest))

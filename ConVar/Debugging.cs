@@ -109,6 +109,63 @@ public class Debugging : ConsoleSystem
 		}
 	}
 
+	[ServerVar]
+	public static void spawnParachuteTester(Arg arg)
+	{
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
+		float @float = arg.GetFloat(0, 50f);
+		BasePlayer basePlayer = arg.Player();
+		BasePlayer basePlayer2 = GameManager.server.CreateEntity("assets/prefabs/player/player.prefab", ((Component)basePlayer).transform.position + Vector3.up * @float, Quaternion.LookRotation(basePlayer.eyes.BodyForward())) as BasePlayer;
+		basePlayer2.Spawn();
+		basePlayer2.eyes.rotation = basePlayer.eyes.rotation;
+		basePlayer2.SendNetworkUpdate();
+		Inventory.copyTo(basePlayer, basePlayer2);
+		if (!basePlayer2.HasValidParachuteEquipped())
+		{
+			basePlayer2.inventory.containerWear.GiveItem(ItemManager.CreateByName("parachute", 1, 0uL));
+		}
+		basePlayer2.RequestParachuteDeploy();
+	}
+
+	[ServerVar]
+	public static void deleteEntitiesByShortname(Arg arg)
+	{
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		string text = arg.GetString(0, "").ToLower();
+		float @float = arg.GetFloat(1, 0f);
+		BasePlayer basePlayer = arg.Player();
+		List<BaseNetworkable> list = Pool.GetList<BaseNetworkable>();
+		Enumerator<BaseNetworkable> enumerator = BaseNetworkable.serverEntities.GetEnumerator();
+		try
+		{
+			while (enumerator.MoveNext())
+			{
+				BaseNetworkable current = enumerator.Current;
+				if (current.ShortPrefabName == text && (@float == 0f || ((Object)(object)basePlayer != (Object)null && basePlayer.Distance(current as BaseEntity) <= @float)))
+				{
+					list.Add(current);
+				}
+			}
+		}
+		finally
+		{
+			((IDisposable)enumerator).Dispose();
+		}
+		Debug.Log((object)$"Deleting {list.Count} {text}...");
+		foreach (BaseNetworkable item in list)
+		{
+			item.Kill();
+		}
+		Pool.FreeList<BaseNetworkable>(ref list);
+	}
+
 	[ServerVar(Help = "Takes you in and out of your current network group, causing you to delete and then download all entities in your PVS again")]
 	public static void flushgroup(Arg arg)
 	{
@@ -130,16 +187,17 @@ public class Debugging : ConsoleSystem
 	[ServerVar(Help = "reset all puzzles")]
 	public static void puzzlereset(Arg arg)
 	{
-		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
-		BasePlayer basePlayer = arg.Player();
-		if (!((Object)(object)basePlayer == (Object)null))
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		if (!((Object)(object)arg.Player() == (Object)null))
 		{
 			PuzzleReset[] array = Object.FindObjectsOfType<PuzzleReset>();
 			Debug.Log((object)"iterating...");
 			PuzzleReset[] array2 = array;
 			foreach (PuzzleReset puzzleReset in array2)
 			{
-				Debug.Log((object)("resetting puzzle at :" + ((Component)puzzleReset).transform.position));
+				Vector3 position = ((Component)puzzleReset).transform.position;
+				Debug.Log((object)("resetting puzzle at :" + ((object)(Vector3)(ref position)).ToString()));
 				puzzleReset.DoReset();
 				puzzleReset.ResetTimer();
 			}
@@ -149,16 +207,16 @@ public class Debugging : ConsoleSystem
 	[ServerVar(EditorOnly = true, Help = "respawn all puzzles from their prefabs")]
 	public static void puzzleprefabrespawn(Arg arg)
 	{
-		//IL_00dc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ed: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0101: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00dd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ec: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f6: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0106: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_018c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0108: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0166: Unknown result type (might be due to invalid IL or missing references)
 		foreach (BaseNetworkable item in BaseNetworkable.serverEntities.Where((BaseNetworkable x) => x is IOEntity && PrefabAttribute.server.Find<Construction>(x.prefabID) == null).ToList())
 		{
 			item.Kill();
@@ -303,23 +361,22 @@ public class Debugging : ConsoleSystem
 	[ServerVar]
 	public static void ResetSleepingBagTimers(Arg arg)
 	{
-		BasePlayer player = arg.Player();
-		SleepingBag.ResetTimersForPlayer(player);
+		SleepingBag.ResetTimersForPlayer(arg.Player());
 	}
 
 	[ServerVar(Help = "Spawn lots of IO entities to lag the server")]
 	public static void bench_io(Arg arg)
 	{
-		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0167: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0178: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0182: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0184: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0189: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0194: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0196: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0132: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0143: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0148: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0154: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0161: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer basePlayer = arg.Player();
 		if ((Object)(object)basePlayer == (Object)null || !basePlayer.IsAdmin)
 		{
@@ -376,26 +433,26 @@ public class Debugging : ConsoleSystem
 		}
 		static void Connect(IOEntity InputIOEnt, IOEntity OutputIOEnt)
 		{
-			//IL_0076: Unknown result type (might be due to invalid IL or missing references)
-			//IL_007b: Unknown result type (might be due to invalid IL or missing references)
-			//IL_008f: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0094: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0099: Unknown result type (might be due to invalid IL or missing references)
-			//IL_009e: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0069: Unknown result type (might be due to invalid IL or missing references)
+			//IL_006e: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0082: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0087: Unknown result type (might be due to invalid IL or missing references)
+			//IL_008c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0091: Unknown result type (might be due to invalid IL or missing references)
 			int num = 0;
 			int num2 = 0;
 			WireTool.WireColour wireColour = WireTool.WireColour.Default;
 			IOEntity.IOSlot iOSlot = InputIOEnt.inputs[num];
-			IOEntity.IOSlot iOSlot2 = OutputIOEnt.outputs[num2];
+			IOEntity.IOSlot obj = OutputIOEnt.outputs[num2];
 			iOSlot.connectedTo.Set(OutputIOEnt);
 			iOSlot.connectedToSlot = num2;
 			iOSlot.wireColour = wireColour;
 			iOSlot.connectedTo.Init();
-			iOSlot2.connectedTo.Set(InputIOEnt);
-			iOSlot2.connectedToSlot = num;
-			iOSlot2.wireColour = wireColour;
-			iOSlot2.connectedTo.Init();
-			iOSlot2.linePoints = (Vector3[])(object)new Vector3[2]
+			obj.connectedTo.Set(InputIOEnt);
+			obj.connectedToSlot = num;
+			obj.wireColour = wireColour;
+			obj.connectedTo.Init();
+			obj.linePoints = (Vector3[])(object)new Vector3[2]
 			{
 				Vector3.zero,
 				((Component)OutputIOEnt).transform.InverseTransformPoint(((Component)InputIOEnt).transform.TransformPoint(iOSlot.handlePosition))

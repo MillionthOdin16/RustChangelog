@@ -3,7 +3,7 @@ using UnityEngine;
 public class Horse : BaseAnimalNPC
 {
 	[ServerVar(Help = "Population active on the server, per square km", ShowInAdminUI = true)]
-	public static float Population = 0f;
+	public static float Population;
 
 	public override float RealisticMass => 500f;
 
@@ -28,9 +28,9 @@ public class Horse : BaseAnimalNPC
 		if ((Object)(object)collectibleEntity != (Object)null)
 		{
 			ItemAmount[] itemList = collectibleEntity.itemList;
-			foreach (ItemAmount itemAmount in itemList)
+			for (int i = 0; i < itemList.Length; i++)
 			{
-				if (itemAmount.itemDef.category == ItemCategory.Food)
+				if (itemList[i].itemDef.category == ItemCategory.Food)
 				{
 					return true;
 				}

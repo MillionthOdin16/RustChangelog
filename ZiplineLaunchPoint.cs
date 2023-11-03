@@ -25,11 +25,11 @@ public class ZiplineLaunchPoint : BaseEntity
 
 	public float LineSlackAmount = 2f;
 
-	public bool RegenLine = false;
+	public bool RegenLine;
 
 	private List<Vector3> ziplineTargets = new List<Vector3>();
 
-	private List<Vector3> linePoints = null;
+	private List<Vector3> linePoints;
 
 	public GameObjectRef ArrivalPointRef;
 
@@ -43,7 +43,7 @@ public class ZiplineLaunchPoint : BaseEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - MountPlayer "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - MountPlayer "));
 				}
 				TimeWarning val2 = TimeWarning.New("MountPlayer", 0);
 				try
@@ -66,7 +66,7 @@ public class ZiplineLaunchPoint : BaseEntity
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -78,7 +78,7 @@ public class ZiplineLaunchPoint : BaseEntity
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -110,11 +110,11 @@ public class ZiplineLaunchPoint : BaseEntity
 
 	public override void PostMapEntitySpawn()
 	{
-		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00af: Unknown result type (might be due to invalid IL or missing references)
 		base.PostMapEntitySpawn();
 		FindZiplineTarget(ref ziplineTargets);
 		CalculateZiplinePoints(ziplineTargets, ref linePoints);
@@ -123,12 +123,11 @@ public class ZiplineLaunchPoint : BaseEntity
 			Kill();
 			return;
 		}
-		float num = Vector3.Distance(linePoints[0], linePoints[linePoints.Count - 1]);
-		if (num > 100f && ArrivalPointRef != null && ArrivalPointRef.isValid)
+		if (Vector3.Distance(linePoints[0], linePoints[linePoints.Count - 1]) > 100f && ArrivalPointRef != null && ArrivalPointRef.isValid)
 		{
-			ZiplineArrivalPoint ziplineArrivalPoint = base.gameManager.CreateEntity(ArrivalPointRef.resourcePath, linePoints[linePoints.Count - 1]) as ZiplineArrivalPoint;
-			ziplineArrivalPoint.SetPositions(linePoints);
-			ziplineArrivalPoint.Spawn();
+			ZiplineArrivalPoint obj = base.gameManager.CreateEntity(ArrivalPointRef.resourcePath, linePoints[linePoints.Count - 1]) as ZiplineArrivalPoint;
+			obj.SetPositions(linePoints);
+			obj.Spawn();
 		}
 		UpdateBuildingBlocks();
 		SendNetworkUpdate();
@@ -136,51 +135,51 @@ public class ZiplineLaunchPoint : BaseEntity
 
 	private void FindZiplineTarget(ref List<Vector3> foundPositions)
 	{
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0092: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0097: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b0: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00be: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d1: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00da: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0108: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0109: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0131: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0172: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0173: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0189: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0191: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01aa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01d6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01e9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_023b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0247: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0267: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0273: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0287: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0293: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02c2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02d6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02e9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0163: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0177: Unknown result type (might be due to invalid IL or missing references)
+		//IL_017c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0203: Unknown result type (might be due to invalid IL or missing references)
+		//IL_021a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0226: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0238: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0244: Unknown result type (might be due to invalid IL or missing references)
+		//IL_026b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_027e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0290: Unknown result type (might be due to invalid IL or missing references)
 		foundPositions.Clear();
 		Vector3 position = LineDeparturePoint.position;
 		List<ZiplineTarget> list = Pool.GetList<ZiplineTarget>();
-		GamePhysics.OverlapSphere<ZiplineTarget>(position + ((Component)this).transform.forward * 200f, 200f, list, 1218511105, (QueryTriggerInteraction)1);
+		GamePhysics.OverlapSphere<ZiplineTarget>(position + ((Component)this).transform.forward * 200f, 200f, list, 1084293377, (QueryTriggerInteraction)1);
 		ZiplineTarget ziplineTarget = null;
 		float num = float.MaxValue;
 		float num2 = 3f;
@@ -232,9 +231,9 @@ public class ZiplineLaunchPoint : BaseEntity
 					{
 						if (!((Object)(object)item3 == (Object)(object)item2) && item3.IsValidChainPoint(item2.Target.position, item.Target.position))
 						{
-							bool flag3 = CheckLineOfSight(((Component)item2).transform.position, ((Component)item3).transform.position);
-							bool flag4 = CheckLineOfSight(((Component)item3).transform.position, ((Component)item).transform.position);
-							if (flag3 && flag4)
+							bool num5 = CheckLineOfSight(((Component)item2).transform.position, ((Component)item3).transform.position);
+							bool flag3 = CheckLineOfSight(((Component)item3).transform.position, ((Component)item).transform.position);
+							if (num5 && flag3)
 							{
 								num = num4;
 								ziplineTarget = item;
@@ -252,21 +251,25 @@ public class ZiplineLaunchPoint : BaseEntity
 
 	private bool CheckLineOfSight(Vector3 from, Vector3 to)
 	{
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0004: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 val = CalculateLineMidPoint(from, to) - Vector3.up * 0.75f;
-		return GamePhysics.LineOfSightRadius(from, to, 1218511105, 0.5f, 2f) && GamePhysics.LineOfSightRadius(from, val, 1218511105, 0.5f, 2f) && GamePhysics.LineOfSightRadius(val, to, 1218511105, 0.5f, 2f);
+		if (GamePhysics.LineOfSightRadius(from, to, 1084293377, 0.5f, 2f) && GamePhysics.LineOfSightRadius(from, val, 1084293377, 0.5f, 2f))
+		{
+			return GamePhysics.LineOfSightRadius(val, to, 1084293377, 0.5f, 2f);
+		}
+		return false;
 	}
 
 	[RPC_Server]
@@ -274,34 +277,34 @@ public class ZiplineLaunchPoint : BaseEntity
 	[RPC_Server.CallsPerSecond(2uL)]
 	private void MountPlayer(RPCMessage msg)
 	{
-		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
 		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0097: Unknown result type (might be due to invalid IL or missing references)
 		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00a2: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ad: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00dd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ac: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ba: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00dc: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00e6: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00eb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0108: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0117: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0121: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0159: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0120: Unknown result type (might be due to invalid IL or missing references)
 		if (IsBusy() || (Object)(object)msg.player == (Object)null || msg.player.Distance(LineDeparturePoint.position) > 3f || !IsPlayerFacingValidDirection(msg.player) || ziplineTargets.Count == 0)
 		{
 			return;
@@ -334,12 +337,12 @@ public class ZiplineLaunchPoint : BaseEntity
 
 	public override void Save(SaveInfo info)
 	{
-		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
 		base.Save(info);
 		if (info.msg.zipline == null)
 		{
@@ -355,31 +358,42 @@ public class ZiplineLaunchPoint : BaseEntity
 	[ServerVar(ServerAdmin = true)]
 	public static void report(Arg arg)
 	{
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
 		float num = 0f;
 		int num2 = 0;
 		int num3 = 0;
-		foreach (BaseNetworkable serverEntity in BaseNetworkable.serverEntities)
+		Enumerator<BaseNetworkable> enumerator = BaseNetworkable.serverEntities.GetEnumerator();
+		try
 		{
-			if (serverEntity is ZiplineLaunchPoint ziplineLaunchPoint)
+			while (enumerator.MoveNext())
 			{
-				float lineLength = ziplineLaunchPoint.GetLineLength();
-				num2++;
-				num += lineLength;
+				BaseNetworkable current = enumerator.Current;
+				if (current is ZiplineLaunchPoint ziplineLaunchPoint)
+				{
+					float lineLength = ziplineLaunchPoint.GetLineLength();
+					num2++;
+					num += lineLength;
+				}
+				else if (current is ZiplineArrivalPoint)
+				{
+					num3++;
+				}
 			}
-			else if (serverEntity is ZiplineArrivalPoint)
-			{
-				num3++;
-			}
+		}
+		finally
+		{
+			((IDisposable)enumerator).Dispose();
 		}
 		arg.ReplyWith($"{num2} ziplines, total distance: {num:F2}, avg length: {num / (float)num2:F2}, arrival points: {num3}");
 	}
 
 	public override void Load(LoadInfo info)
 	{
-		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
 		base.Load(info);
 		if (info.msg.zipline == null)
 		{
@@ -394,10 +408,10 @@ public class ZiplineLaunchPoint : BaseEntity
 
 	private void CalculateZiplinePoints(List<Vector3> targets, ref List<Vector3> points)
 	{
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
 		if (points == null && targets.Count != 0)
 		{
 			Vector3[] array = (Vector3[])(object)new Vector3[targets.Count + 1];
@@ -418,13 +432,11 @@ public class ZiplineLaunchPoint : BaseEntity
 
 	private Vector3 CalculateLineMidPoint(Vector3 start, Vector3 endPoint)
 	{
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 result = Vector3.Lerp(start, endPoint, 0.5f);
 		result.y -= LineSlackAmount;
 		return result;
@@ -432,68 +444,64 @@ public class ZiplineLaunchPoint : BaseEntity
 
 	private void UpdateBuildingBlocks()
 	{
-		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00af: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0103: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0108: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0114: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0119: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0122: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0124: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0126: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0194: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0196: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0137: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0139: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ad: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00da: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00df: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0138: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ef: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f1: Unknown result type (might be due to invalid IL or missing references)
 		BoxCollider[] buildingBlocks = BuildingBlocks;
-		foreach (BoxCollider val in buildingBlocks)
+		for (int i = 0; i < buildingBlocks.Length; i++)
 		{
-			((Component)val).gameObject.SetActive(false);
+			((Component)buildingBlocks[i]).gameObject.SetActive(false);
 		}
-		BoxCollider[] pointBuildingBlocks = PointBuildingBlocks;
-		foreach (BoxCollider val2 in pointBuildingBlocks)
+		buildingBlocks = PointBuildingBlocks;
+		for (int i = 0; i < buildingBlocks.Length; i++)
 		{
-			((Component)val2).gameObject.SetActive(false);
+			((Component)buildingBlocks[i]).gameObject.SetActive(false);
 		}
 		SpawnableBoundsBlocker[] spawnableBoundsBlockers = SpawnableBoundsBlockers;
-		foreach (SpawnableBoundsBlocker spawnableBoundsBlocker in spawnableBoundsBlockers)
+		for (int i = 0; i < spawnableBoundsBlockers.Length; i++)
 		{
-			((Component)spawnableBoundsBlocker).gameObject.SetActive(false);
+			((Component)spawnableBoundsBlockers[i]).gameObject.SetActive(false);
 		}
 		int num = 0;
 		if (ziplineTargets.Count <= 0)
 		{
 			return;
 		}
-		Vector3 val3 = Vector3.zero;
+		Vector3 val = Vector3.zero;
 		int startIndex2 = 0;
-		for (int l = 0; l < linePoints.Count; l++)
+		for (int j = 0; j < linePoints.Count; j++)
 		{
-			if (l == 0 || (base.isClient && l == 1))
+			if (j == 0 || (base.isClient && j == 1))
 			{
 				continue;
 			}
-			Vector3 val4 = linePoints[l];
-			Vector3 val5 = val4 - Vector3Ex.WithY(linePoints[l - 1], val4.y);
-			Vector3 normalized = ((Vector3)(ref val5)).normalized;
-			if (val3 != Vector3.zero)
+			Vector3 val2 = linePoints[j];
+			Vector3 val3 = val2 - Vector3Ex.WithY(linePoints[j - 1], val2.y);
+			Vector3 normalized = ((Vector3)(ref val3)).normalized;
+			if (val != Vector3.zero && Vector3.Dot(normalized, val) < 0.98f)
 			{
-				float num2 = Vector3.Dot(normalized, val3);
-				if (num2 < 0.98f)
+				if (num < BuildingBlocks.Length)
 				{
-					if (num < BuildingBlocks.Length)
-					{
-						SetUpBuildingBlock(BuildingBlocks[num], PointBuildingBlocks[num], SpawnableBoundsBlockers[num++], startIndex2, l - 1);
-					}
-					startIndex2 = l - 1;
+					SetUpBuildingBlock(BuildingBlocks[num], PointBuildingBlocks[num], SpawnableBoundsBlockers[num++], startIndex2, j - 1);
 				}
+				startIndex2 = j - 1;
 			}
-			val3 = normalized;
+			val = normalized;
 		}
 		if (num < BuildingBlocks.Length)
 		{
@@ -501,66 +509,66 @@ public class ZiplineLaunchPoint : BaseEntity
 		}
 		void SetUpBuildingBlock(BoxCollider longCollider, BoxCollider pointCollider, SpawnableBoundsBlocker spawnBlocker, int startIndex, int endIndex)
 		{
-			//IL_0009: Unknown result type (might be due to invalid IL or missing references)
-			//IL_000e: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+			//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+			//IL_001b: Unknown result type (might be due to invalid IL or missing references)
 			//IL_001c: Unknown result type (might be due to invalid IL or missing references)
-			//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0021: Unknown result type (might be due to invalid IL or missing references)
 			//IL_0022: Unknown result type (might be due to invalid IL or missing references)
 			//IL_0023: Unknown result type (might be due to invalid IL or missing references)
 			//IL_0024: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0025: Unknown result type (might be due to invalid IL or missing references)
-			//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-			//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0033: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+			//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+			//IL_003c: Unknown result type (might be due to invalid IL or missing references)
 			//IL_003d: Unknown result type (might be due to invalid IL or missing references)
 			//IL_003e: Unknown result type (might be due to invalid IL or missing references)
-			//IL_003f: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0045: Unknown result type (might be due to invalid IL or missing references)
-			//IL_004a: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0052: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0060: Unknown result type (might be due to invalid IL or missing references)
-			//IL_007c: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0081: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0086: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0088: Unknown result type (might be due to invalid IL or missing references)
-			//IL_008f: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00c6: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00c7: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00df: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00e4: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00e9: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00ee: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00ef: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00f7: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0120: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0128: Unknown result type (might be due to invalid IL or missing references)
-			//IL_014b: Unknown result type (might be due to invalid IL or missing references)
-			//IL_009d: Unknown result type (might be due to invalid IL or missing references)
-			//IL_009f: Unknown result type (might be due to invalid IL or missing references)
-			Vector3 val6 = linePoints[startIndex];
-			Vector3 val7 = linePoints[endIndex];
-			Vector3 val8 = Vector3.zero;
-			Vector3 center = val6 - val7;
+			//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0051: Unknown result type (might be due to invalid IL or missing references)
+			//IL_005e: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0078: Unknown result type (might be due to invalid IL or missing references)
+			//IL_007d: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0082: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0084: Unknown result type (might be due to invalid IL or missing references)
+			//IL_008b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00a2: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00b6: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00ce: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00d3: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00d8: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00dd: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00de: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00e5: Unknown result type (might be due to invalid IL or missing references)
+			//IL_010d: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0114: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0135: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0093: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0095: Unknown result type (might be due to invalid IL or missing references)
+			Vector3 val4 = linePoints[startIndex];
+			Vector3 val5 = linePoints[endIndex];
+			Vector3 val6 = Vector3.zero;
+			Vector3 center = val4 - val5;
 			Quaternion rotation = Quaternion.LookRotation(((Vector3)(ref center)).normalized, Vector3.up);
-			Vector3 position = Vector3.Lerp(val6, val7, 0.5f);
+			Vector3 position = Vector3.Lerp(val4, val5, 0.5f);
 			((Component)longCollider).transform.position = position;
 			((Component)longCollider).transform.rotation = rotation;
-			for (int m = startIndex; m < endIndex; m++)
+			for (int k = startIndex; k < endIndex; k++)
 			{
-				Vector3 val9 = ((Component)longCollider).transform.InverseTransformPoint(linePoints[m]);
-				if (val9.y < val8.y)
+				Vector3 val7 = ((Component)longCollider).transform.InverseTransformPoint(linePoints[k]);
+				if (val7.y < val6.y)
 				{
-					val8 = val9;
+					val6 = val7;
 				}
 			}
-			float num3 = Mathf.Abs(val8.y) + 2f;
-			float num4 = Vector3.Distance(val6, val7);
-			center = (longCollider.size = (spawnBlocker.BoxCollider.size = new Vector3(0.5f, num3, num4) + Vector3.one));
+			float num2 = Mathf.Abs(val6.y) + 2f;
+			float num3 = Vector3.Distance(val4, val5);
+			center = (longCollider.size = (spawnBlocker.BoxCollider.size = new Vector3(0.5f, num2, num3) + Vector3.one));
 			BoxCollider boxCollider = spawnBlocker.BoxCollider;
-			((Vector3)(ref center))._002Ector(0f, 0f - num3 * 0.5f, 0f);
+			((Vector3)(ref center))._002Ector(0f, 0f - num2 * 0.5f, 0f);
 			boxCollider.center = center;
 			longCollider.center = center;
 			((Component)longCollider).gameObject.SetActive(true);
@@ -576,16 +584,15 @@ public class ZiplineLaunchPoint : BaseEntity
 
 	private bool IsPlayerFacingValidDirection(BasePlayer ply)
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		float num = Vector3.Dot(ply.eyes.HeadForward(), ((Component)this).transform.forward);
-		return num > 0.2f;
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		return Vector3.Dot(ply.eyes.HeadForward(), ((Component)this).transform.forward) > 0.2f;
 	}
 
 	public float GetLineLength()
 	{
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
 		if (linePoints == null)
 		{
 			return 0f;

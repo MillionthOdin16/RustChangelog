@@ -2,9 +2,9 @@ using UnityEngine;
 
 public class SprayCanSpray_Decal : SprayCanSpray, ICustomMaterialReplacer, IPropRenderNotify, INotifyLOD
 {
-	public DeferredDecal DecalComponent = null;
+	public DeferredDecal DecalComponent;
 
-	public GameObject IconPreviewRoot = null;
+	public GameObject IconPreviewRoot;
 
-	public Material DefaultMaterial = null;
+	public Material DefaultMaterial;
 }

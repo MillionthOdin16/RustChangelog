@@ -1,11 +1,12 @@
 using System;
+using System.Collections.Generic;
 using Facepunch;
 using UnityEngine;
 
 public class ServerBrowserTagGroup : MonoBehaviour
 {
 	[Tooltip("If set then queries will filter out servers matching unselected tags in the group")]
-	public bool isExclusive = false;
+	public bool isExclusive;
 
 	[NonSerialized]
 	public ServerBrowserTag[] tags;
@@ -26,9 +27,9 @@ public class ServerBrowserTagGroup : MonoBehaviour
 	public bool AnyActive()
 	{
 		ServerBrowserTag[] array = tags;
-		foreach (ServerBrowserTag serverBrowserTag in array)
+		for (int i = 0; i < array.Length; i++)
 		{
-			if (serverBrowserTag.IsActive)
+			if (array[i].IsActive)
 			{
 				return true;
 			}
@@ -36,14 +37,14 @@ public class ServerBrowserTagGroup : MonoBehaviour
 		return false;
 	}
 
-	public void Refresh(in ServerInfo server, ref int tagsEnabled, int maxTags)
+	public void Refresh(HashSet<string> serverTags, ref int tagsEnabled, int maxTags)
 	{
 		Initialize();
 		bool flag = false;
 		ServerBrowserTag[] array = tags;
 		foreach (ServerBrowserTag serverBrowserTag in array)
 		{
-			if ((!isExclusive || !flag) && tagsEnabled <= maxTags && ((ServerInfo)(ref server)).Tags.Contains(serverBrowserTag.serverTag))
+			if ((!isExclusive || !flag) && tagsEnabled <= maxTags && serverTags.Contains(serverBrowserTag.serverTag))
 			{
 				ComponentExtensions.SetActive<ServerBrowserTag>(serverBrowserTag, true);
 				tagsEnabled++;

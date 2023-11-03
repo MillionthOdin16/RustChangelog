@@ -34,7 +34,17 @@ public static class ServerUsers
 		public long expiry;
 
 		[JsonIgnore]
-		public bool IsExpired => expiry > 0 && Epoch.Current > expiry;
+		public bool IsExpired
+		{
+			get
+			{
+				if (expiry > 0)
+				{
+					return Epoch.Current > expiry;
+				}
+				return false;
+			}
+		}
 	}
 
 	private static Dictionary<ulong, User> users = new Dictionary<ulong, User>();
@@ -97,12 +107,12 @@ public static class ServerUsers
 
 	public static void Load()
 	{
-		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
 		Clear();
 		string serverFolder = Server.GetServerFolder("cfg");
 		Option server;
@@ -130,18 +140,16 @@ public static class ServerUsers
 
 	public static void Save()
 	{
-		List<ulong> list = (from kv in users
+		foreach (ulong item in (from kv in users
 			where kv.Value.IsExpired
-			select kv.Key).ToList();
-		foreach (ulong item in list)
+			select kv.Key).ToList())
 		{
 			Remove(item);
 		}
 		string serverFolder = Server.GetServerFolder("cfg");
 		StringBuilder stringBuilder = new StringBuilder(67108864);
 		stringBuilder.Clear();
-		IEnumerable<User> all = GetAll(UserGroup.Banned);
-		foreach (User item2 in all)
+		foreach (User item2 in GetAll(UserGroup.Banned))
 		{
 			if (!(item2.notes == "EAC"))
 			{

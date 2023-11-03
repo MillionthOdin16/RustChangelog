@@ -8,10 +8,10 @@ public static class EffectNetwork
 {
 	public static void Send(Effect effect)
 	{
-		//IL_00c2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ed: Unknown result type (might be due to invalid IL or missing references)
-		//IL_016c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0119: Unknown result type (might be due to invalid IL or missing references)
 		if (Net.sv == null || !((BaseNetwork)Net.sv).IsConnected())
 		{
 			return;
@@ -66,7 +66,7 @@ public static class EffectNetwork
 
 	public static void Send(Effect effect, Connection target)
 	{
-		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
 		((EffectData)effect).pooledstringid = StringPool.Get(effect.pooledString);
 		if (((EffectData)effect).pooledstringid == 0)
 		{

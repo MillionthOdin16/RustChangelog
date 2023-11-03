@@ -29,6 +29,10 @@ public sealed class ChromaticAberration : PostProcessEffectSettings
 
 	public override bool IsEnabledAndSupported(PostProcessRenderContext context)
 	{
-		return enabled.value && intensity.value > 0f;
+		if (enabled.value)
+		{
+			return intensity.value > 0f;
+		}
+		return false;
 	}
 }

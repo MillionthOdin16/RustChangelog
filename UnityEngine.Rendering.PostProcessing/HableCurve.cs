@@ -57,9 +57,7 @@ public class HableCurve
 		{
 			get
 			{
-				//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-				//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-				//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+				//IL_0026: Unknown result type (might be due to invalid IL or missing references)
 				Segment segment = parent.m_Segments[0];
 				return new Vector4(segment.offsetX, segment.offsetY, segment.scaleX, segment.scaleY);
 			}
@@ -69,9 +67,7 @@ public class HableCurve
 		{
 			get
 			{
-				//IL_0025: Unknown result type (might be due to invalid IL or missing references)
-				//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-				//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+				//IL_0024: Unknown result type (might be due to invalid IL or missing references)
 				Segment segment = parent.m_Segments[0];
 				return new Vector4(segment.lnA, segment.B, 0f, 0f);
 			}
@@ -81,9 +77,7 @@ public class HableCurve
 		{
 			get
 			{
-				//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-				//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-				//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+				//IL_0026: Unknown result type (might be due to invalid IL or missing references)
 				Segment segment = parent.m_Segments[1];
 				return new Vector4(segment.offsetX, segment.offsetY, segment.scaleX, segment.scaleY);
 			}
@@ -93,9 +87,7 @@ public class HableCurve
 		{
 			get
 			{
-				//IL_0025: Unknown result type (might be due to invalid IL or missing references)
-				//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-				//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+				//IL_0024: Unknown result type (might be due to invalid IL or missing references)
 				Segment segment = parent.m_Segments[1];
 				return new Vector4(segment.lnA, segment.B, 0f, 0f);
 			}
@@ -105,9 +97,7 @@ public class HableCurve
 		{
 			get
 			{
-				//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-				//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-				//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+				//IL_0026: Unknown result type (might be due to invalid IL or missing references)
 				Segment segment = parent.m_Segments[2];
 				return new Vector4(segment.offsetX, segment.offsetY, segment.scaleX, segment.scaleY);
 			}
@@ -117,9 +107,7 @@ public class HableCurve
 		{
 			get
 			{
-				//IL_0025: Unknown result type (might be due to invalid IL or missing references)
-				//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-				//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+				//IL_0024: Unknown result type (might be due to invalid IL or missing references)
 				Segment segment = parent.m_Segments[2];
 				return new Vector4(segment.lnA, segment.B, 0f, 0f);
 			}
@@ -156,8 +144,7 @@ public class HableCurve
 	{
 		float num = x * inverseWhitePoint;
 		int num2 = ((!(num < x0)) ? ((num < x1) ? 1 : 2) : 0);
-		Segment segment = m_Segments[num2];
-		return segment.Eval(num);
+		return m_Segments[num2].Eval(num);
 	}
 
 	public void Init(float toeStrength, float toeLength, float shoulderStrength, float shoulderLength, float shoulderAngle, float gamma)
@@ -202,13 +189,13 @@ public class HableCurve
 		float num2 = 0f;
 		AsSlopeIntercept(out var m, out var b, directParams.x0, directParams.x1, directParams.y0, directParams.y1);
 		float gamma = srcParams.gamma;
-		Segment segment = m_Segments[1];
-		segment.offsetX = 0f - b / m;
-		segment.offsetY = 0f;
-		segment.scaleX = 1f;
-		segment.scaleY = 1f;
-		segment.lnA = gamma * Mathf.Log(m);
-		segment.B = gamma;
+		Segment obj = m_Segments[1];
+		obj.offsetX = 0f - b / m;
+		obj.offsetY = 0f;
+		obj.scaleX = 1f;
+		obj.scaleY = 1f;
+		obj.lnA = gamma * Mathf.Log(m);
+		obj.B = gamma;
 		num = EvalDerivativeLinearGamma(m, b, gamma, directParams.x0);
 		num2 = EvalDerivativeLinearGamma(m, b, gamma, directParams.x1);
 		directParams.y0 = Mathf.Max(1E-05f, Mathf.Pow(directParams.y0, directParams.gamma));
@@ -216,24 +203,24 @@ public class HableCurve
 		directParams.overshootY = Mathf.Pow(1f + directParams.overshootY, directParams.gamma) - 1f;
 		x0 = directParams.x0;
 		x1 = directParams.x1;
-		Segment segment2 = m_Segments[0];
-		segment2.offsetX = 0f;
-		segment2.offsetY = 0f;
-		segment2.scaleX = 1f;
-		segment2.scaleY = 1f;
+		Segment obj2 = m_Segments[0];
+		obj2.offsetX = 0f;
+		obj2.offsetY = 0f;
+		obj2.scaleX = 1f;
+		obj2.scaleY = 1f;
 		SolveAB(out var lnA, out var B, directParams.x0, directParams.y0, num);
-		segment2.lnA = lnA;
-		segment2.B = B;
-		Segment segment3 = m_Segments[2];
+		obj2.lnA = lnA;
+		obj2.B = B;
+		Segment obj3 = m_Segments[2];
 		float num3 = 1f + directParams.overshootX - directParams.x1;
 		float y = 1f + directParams.overshootY - directParams.y1;
 		SolveAB(out var lnA2, out var B2, num3, y, num2);
-		segment3.offsetX = 1f + directParams.overshootX;
-		segment3.offsetY = 1f + directParams.overshootY;
-		segment3.scaleX = -1f;
-		segment3.scaleY = -1f;
-		segment3.lnA = lnA2;
-		segment3.B = B2;
+		obj3.offsetX = 1f + directParams.overshootX;
+		obj3.offsetY = 1f + directParams.overshootY;
+		obj3.scaleX = -1f;
+		obj3.scaleY = -1f;
+		obj3.lnA = lnA2;
+		obj3.B = B2;
 		float num4 = m_Segments[2].Eval(1f);
 		float num5 = 1f / num4;
 		m_Segments[0].offsetY *= num5;

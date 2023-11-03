@@ -8,15 +8,15 @@ public class Impostor : MonoBehaviour, IClientComponent, IPrefabPreProcess
 	public ImpostorAsset asset;
 
 	[Header("Baking")]
-	public GameObject reference = null;
+	public GameObject reference;
 
-	public float angle = 0f;
+	public float angle;
 
 	public int resolution = 1024;
 
 	public int padding = 32;
 
-	public bool spriteOutlineAsMesh = false;
+	public bool spriteOutlineAsMesh;
 
 	private void OnEnable()
 	{

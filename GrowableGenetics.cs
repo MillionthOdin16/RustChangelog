@@ -31,7 +31,7 @@ public static class GrowableGenetics
 
 	public static void CrossBreed(GrowableEntity growable)
 	{
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
 		List<GrowableEntity> list = Pool.GetList<GrowableEntity>();
 		Vis.Entities(((Component)growable).transform.position, 1.5f, list, 524288, (QueryTriggerInteraction)2);
 		bool flag = false;

@@ -13,7 +13,7 @@ public class GenerateRiverTerrain : ProceduralComponent
 
 	public override void Process(uint seed)
 	{
-		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
 		TerrainHeightMap heightMap = TerrainMeta.HeightMap;
 		for (int i = 0; i < 1; i++)
 		{

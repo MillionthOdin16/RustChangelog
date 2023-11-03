@@ -16,13 +16,13 @@ public class SprayCanSpray_Freehand : SprayCanSpray
 
 	private Color colour = Color.white;
 
-	private float width = 0f;
+	private float width;
 
 	private EntityRef<BasePlayer> editingPlayer;
 
-	public GroundWatch groundWatch = null;
+	public GroundWatch groundWatch;
 
-	public MeshCollider meshCollider = null;
+	public MeshCollider meshCollider;
 
 	public const int MaxLinePointLength = 60;
 
@@ -40,7 +40,7 @@ public class SprayCanSpray_Freehand : SprayCanSpray
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_AddPointMidSpray "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_AddPointMidSpray "));
 				}
 				TimeWarning val2 = TimeWarning.New("Server_AddPointMidSpray", 0);
 				try
@@ -76,12 +76,12 @@ public class SprayCanSpray_Freehand : SprayCanSpray
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_FinishEditing "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_FinishEditing "));
 				}
-				TimeWarning val4 = TimeWarning.New("Server_FinishEditing", 0);
+				TimeWarning val2 = TimeWarning.New("Server_FinishEditing", 0);
 				try
 				{
-					TimeWarning val5 = TimeWarning.New("Call", 0);
+					TimeWarning val3 = TimeWarning.New("Call", 0);
 					try
 					{
 						RPCMessage rPCMessage = default(RPCMessage);
@@ -93,7 +93,7 @@ public class SprayCanSpray_Freehand : SprayCanSpray
 					}
 					finally
 					{
-						((IDisposable)val5)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 				}
 				catch (Exception ex2)
@@ -103,7 +103,7 @@ public class SprayCanSpray_Freehand : SprayCanSpray
 				}
 				finally
 				{
-					((IDisposable)val4)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -131,10 +131,10 @@ public class SprayCanSpray_Freehand : SprayCanSpray
 
 	public override void Save(SaveInfo info)
 	{
-		//IL_00dd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0107: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ee: Unknown result type (might be due to invalid IL or missing references)
 		base.Save(info);
 		if (info.msg.sprayLine == null)
 		{
@@ -159,8 +159,8 @@ public class SprayCanSpray_Freehand : SprayCanSpray
 
 	public void SetColour(Color newColour)
 	{
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
 		colour = newColour;
 	}
 
@@ -172,16 +172,16 @@ public class SprayCanSpray_Freehand : SprayCanSpray
 	[RPC_Server]
 	private void Server_AddPointMidSpray(RPCMessage msg)
 	{
-		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0095: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
 		if (AcceptingChanges && !((Object)(object)editingPlayer.Get(serverside: true) != (Object)(object)msg.player) && LinePoints.Count + 1 <= 60)
 		{
 			Vector3 val = msg.read.Vector3();
@@ -219,10 +219,10 @@ public class SprayCanSpray_Freehand : SprayCanSpray
 	[RPC_Server]
 	private void Server_FinishEditing(RPCMessage msg)
 	{
-		//IL_0162: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0167: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0180: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0122: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0127: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0140: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer basePlayer = editingPlayer.Get(serverside: true);
 		if ((Object)(object)msg.player != (Object)(object)basePlayer)
 		{
@@ -272,10 +272,10 @@ public class SprayCanSpray_Freehand : SprayCanSpray
 
 	public void AddInitialPoint(Vector3 atNormal)
 	{
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
 		LinePoints = new List<AlignedLineDrawer.LinePoint>
 		{
 			new AlignedLineDrawer.LinePoint
@@ -288,12 +288,12 @@ public class SprayCanSpray_Freehand : SprayCanSpray
 
 	private void UpdateGroundWatch()
 	{
-		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
 		if (base.isServer && LinePoints.Count > 1)
 		{
 			Vector3 groundPosition = Vector3.Lerp(LinePoints[0].LocalPosition, LinePoints[LinePoints.Count - 1].LocalPosition, 0.5f);
@@ -306,9 +306,9 @@ public class SprayCanSpray_Freehand : SprayCanSpray
 
 	public override void Load(LoadInfo info)
 	{
-		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0095: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c1: Unknown result type (might be due to invalid IL or missing references)
 		base.Load(info);
 		if (info.msg.sprayLine != null)
 		{
@@ -326,10 +326,10 @@ public class SprayCanSpray_Freehand : SprayCanSpray
 
 	private void CopyPoints(List<AlignedLineDrawer.LinePoint> from, List<LinePoint> to)
 	{
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
 		to.Clear();
 		foreach (AlignedLineDrawer.LinePoint item in from)
 		{
@@ -342,8 +342,8 @@ public class SprayCanSpray_Freehand : SprayCanSpray
 
 	private void CopyPoints(List<AlignedLineDrawer.LinePoint> from, List<Vector3> to)
 	{
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
 		to.Clear();
 		foreach (AlignedLineDrawer.LinePoint item in from)
 		{
@@ -354,10 +354,10 @@ public class SprayCanSpray_Freehand : SprayCanSpray
 
 	private void CopyPoints(List<LinePoint> from, List<AlignedLineDrawer.LinePoint> to)
 	{
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
 		to.Clear();
 		foreach (LinePoint item in from)
 		{

@@ -26,9 +26,9 @@ internal sealed class AutoExposureRenderer : PostProcessEffectRenderer<AutoExpos
 
 	private void CheckTexture(int eye, int id)
 	{
-		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0049: Expected O, but got Unknown
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Expected O, but got Unknown
 		if ((Object)(object)m_AutoExposurePool[eye][id] == (Object)null || !m_AutoExposurePool[eye][id].IsCreated())
 		{
 			m_AutoExposurePool[eye][id] = new RenderTexture(1, 1, 0, (RenderTextureFormat)14)
@@ -41,14 +41,14 @@ internal sealed class AutoExposureRenderer : PostProcessEffectRenderer<AutoExpos
 
 	public override void Render(PostProcessRenderContext context)
 	{
-		//IL_0193: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01db: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01f5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02d1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02e8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_022e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0257: Unknown result type (might be due to invalid IL or missing references)
-		//IL_026b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0182: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01e2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02b1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02c7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0213: Unknown result type (might be due to invalid IL or missing references)
+		//IL_023a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_024e: Unknown result type (might be due to invalid IL or missing references)
 		CommandBuffer command = context.command;
 		command.BeginSample("AutoExposureLookup");
 		CheckTexture(context.xrActiveEye, 0);
@@ -61,32 +61,32 @@ internal sealed class AutoExposureRenderer : PostProcessEffectRenderer<AutoExpos
 		float value2 = base.settings.maxLuminance.value;
 		base.settings.minLuminance.value = Mathf.Min(value, value2);
 		base.settings.maxLuminance.value = Mathf.Max(value, value2);
-		bool flag = m_ResetHistory || !Application.isPlaying;
+		bool num = m_ResetHistory || !Application.isPlaying;
 		string text = null;
-		text = ((!flag && base.settings.eyeAdaptation.value != EyeAdaptation.Fixed) ? "KAutoExposureAvgLuminance_progressive" : "KAutoExposureAvgLuminance_fixed");
+		text = ((!num && base.settings.eyeAdaptation.value != EyeAdaptation.Fixed) ? "KAutoExposureAvgLuminance_progressive" : "KAutoExposureAvgLuminance_fixed");
 		ComputeShader autoExposure = context.resources.computeShaders.autoExposure;
-		int num = autoExposure.FindKernel(text);
-		command.SetComputeBufferParam(autoExposure, num, "_HistogramBuffer", context.logHistogram.data);
+		int num2 = autoExposure.FindKernel(text);
+		command.SetComputeBufferParam(autoExposure, num2, "_HistogramBuffer", context.logHistogram.data);
 		command.SetComputeVectorParam(autoExposure, "_Params1", new Vector4(x * 0.01f, y * 0.01f, RuntimeUtilities.Exp2(base.settings.minLuminance.value), RuntimeUtilities.Exp2(base.settings.maxLuminance.value)));
 		command.SetComputeVectorParam(autoExposure, "_Params2", new Vector4(base.settings.speedDown.value, base.settings.speedUp.value, base.settings.keyValue.value, Time.deltaTime));
 		command.SetComputeVectorParam(autoExposure, "_ScaleOffsetRes", context.logHistogram.GetHistogramScaleOffsetRes(context));
-		if (flag)
+		if (num)
 		{
 			m_CurrentAutoExposure = m_AutoExposurePool[context.xrActiveEye][0];
-			command.SetComputeTextureParam(autoExposure, num, "_Destination", RenderTargetIdentifier.op_Implicit((Texture)(object)m_CurrentAutoExposure));
-			command.DispatchCompute(autoExposure, num, 1, 1, 1);
+			command.SetComputeTextureParam(autoExposure, num2, "_Destination", RenderTargetIdentifier.op_Implicit((Texture)(object)m_CurrentAutoExposure));
+			command.DispatchCompute(autoExposure, num2, 1, 1, 1);
 			RuntimeUtilities.CopyTexture(command, RenderTargetIdentifier.op_Implicit((Texture)(object)m_AutoExposurePool[context.xrActiveEye][0]), RenderTargetIdentifier.op_Implicit((Texture)(object)m_AutoExposurePool[context.xrActiveEye][1]));
 			m_ResetHistory = false;
 		}
 		else
 		{
-			int num2 = m_AutoExposurePingPong[context.xrActiveEye];
-			RenderTexture val = m_AutoExposurePool[context.xrActiveEye][++num2 % 2];
-			RenderTexture val2 = m_AutoExposurePool[context.xrActiveEye][++num2 % 2];
-			command.SetComputeTextureParam(autoExposure, num, "_Source", RenderTargetIdentifier.op_Implicit((Texture)(object)val));
-			command.SetComputeTextureParam(autoExposure, num, "_Destination", RenderTargetIdentifier.op_Implicit((Texture)(object)val2));
-			command.DispatchCompute(autoExposure, num, 1, 1, 1);
-			m_AutoExposurePingPong[context.xrActiveEye] = ++num2 % 2;
+			int num3 = m_AutoExposurePingPong[context.xrActiveEye];
+			RenderTexture val = m_AutoExposurePool[context.xrActiveEye][++num3 % 2];
+			RenderTexture val2 = m_AutoExposurePool[context.xrActiveEye][++num3 % 2];
+			command.SetComputeTextureParam(autoExposure, num2, "_Source", RenderTargetIdentifier.op_Implicit((Texture)(object)val));
+			command.SetComputeTextureParam(autoExposure, num2, "_Destination", RenderTargetIdentifier.op_Implicit((Texture)(object)val2));
+			command.DispatchCompute(autoExposure, num2, 1, 1, 1);
+			m_AutoExposurePingPong[context.xrActiveEye] = ++num3 % 2;
 			m_CurrentAutoExposure = val2;
 		}
 		command.EndSample("AutoExposureLookup");
@@ -99,10 +99,9 @@ internal sealed class AutoExposureRenderer : PostProcessEffectRenderer<AutoExpos
 		RenderTexture[][] autoExposurePool = m_AutoExposurePool;
 		foreach (RenderTexture[] array in autoExposurePool)
 		{
-			RenderTexture[] array2 = array;
-			foreach (RenderTexture obj in array2)
+			for (int j = 0; j < array.Length; j++)
 			{
-				RuntimeUtilities.Destroy((Object)(object)obj);
+				RuntimeUtilities.Destroy((Object)(object)array[j]);
 			}
 		}
 	}

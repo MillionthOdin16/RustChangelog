@@ -3,9 +3,9 @@ using UnityEngine;
 public class LandmarkInfo : MonoBehaviour
 {
 	[Header("LandmarkInfo")]
-	public bool shouldDisplayOnMap = false;
+	public bool shouldDisplayOnMap;
 
-	public bool isLayerSpecific = false;
+	public bool isLayerSpecific;
 
 	public Phrase displayPhrase;
 

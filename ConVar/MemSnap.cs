@@ -21,26 +21,20 @@ public class MemSnap : ConsoleSystem
 	[ServerVar]
 	public static void managed(Arg arg)
 	{
-		string text = NeedProfileFolder();
-		string text2 = text + "/memdump-" + DateTime.Now.ToString("MM-dd-yyyy-h-mm-ss") + ".snap";
-		MemoryProfiler.TakeSnapshot(text2, (Action<string, bool>)null, (CaptureFlags)1);
+		MemoryProfiler.TakeSnapshot(NeedProfileFolder() + "/memdump-" + DateTime.Now.ToString("MM-dd-yyyy-h-mm-ss") + ".snap", (Action<string, bool>)null, (CaptureFlags)1);
 	}
 
 	[ClientVar]
 	[ServerVar]
 	public static void native(Arg arg)
 	{
-		string text = NeedProfileFolder();
-		string text2 = text + "/memdump-" + DateTime.Now.ToString("MM-dd-yyyy-h-mm-ss") + ".snap";
-		MemoryProfiler.TakeSnapshot(text2, (Action<string, bool>)null, (CaptureFlags)2);
+		MemoryProfiler.TakeSnapshot(NeedProfileFolder() + "/memdump-" + DateTime.Now.ToString("MM-dd-yyyy-h-mm-ss") + ".snap", (Action<string, bool>)null, (CaptureFlags)2);
 	}
 
 	[ClientVar]
 	[ServerVar]
 	public static void full(Arg arg)
 	{
-		string text = NeedProfileFolder();
-		string text2 = text + "/memdump-" + DateTime.Now.ToString("MM-dd-yyyy-h-mm-ss") + ".snap";
-		MemoryProfiler.TakeSnapshot(text2, (Action<string, bool>)null, (CaptureFlags)31);
+		MemoryProfiler.TakeSnapshot(NeedProfileFolder() + "/memdump-" + DateTime.Now.ToString("MM-dd-yyyy-h-mm-ss") + ".snap", (Action<string, bool>)null, (CaptureFlags)31);
 	}
 }

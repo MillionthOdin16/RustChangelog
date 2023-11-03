@@ -26,24 +26,24 @@ public class ByteMap
 				return values[num];
 			case 2:
 			{
-				uint num2 = values[num];
+				byte num7 = values[num];
 				uint num3 = values[num + 1];
-				return (num2 << 8) | num3;
+				return (uint)(num7 << 8) | num3;
 			}
 			case 3:
 			{
-				uint num2 = values[num];
+				byte num6 = values[num];
 				uint num3 = values[num + 1];
 				uint num4 = values[num + 2];
-				return (num2 << 16) | (num3 << 8) | num4;
+				return (uint)(num6 << 16) | (num3 << 8) | num4;
 			}
 			default:
 			{
-				uint num2 = values[num];
+				byte num2 = values[num];
 				uint num3 = values[num + 1];
 				uint num4 = values[num + 2];
 				uint num5 = values[num + 3];
-				return (num2 << 24) | (num3 << 16) | (num4 << 8) | num5;
+				return (uint)(num2 << 24) | (num3 << 16) | (num4 << 8) | num5;
 			}
 			}
 		}

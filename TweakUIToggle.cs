@@ -4,7 +4,7 @@ public class TweakUIToggle : TweakUIBase
 {
 	public Toggle toggleControl;
 
-	public bool inverse = false;
+	public bool inverse;
 
 	public static string lastConVarChanged;
 
@@ -31,8 +31,8 @@ public class TweakUIToggle : TweakUIBase
 
 	protected override void SetConvarValue()
 	{
-		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
 		base.SetConvarValue();
 		if (conVar != null)
 		{

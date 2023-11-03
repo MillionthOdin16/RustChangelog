@@ -14,7 +14,7 @@ public class HBHFSensor : BaseDetector
 
 	public const Flags Flag_IncludeAuthed = Flags.Reserved3;
 
-	private int detectedPlayers = 0;
+	private int detectedPlayers;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -26,7 +26,7 @@ public class HBHFSensor : BaseDetector
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SetIncludeAuth "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SetIncludeAuth "));
 				}
 				TimeWarning val2 = TimeWarning.New("SetIncludeAuth", 0);
 				try
@@ -45,7 +45,7 @@ public class HBHFSensor : BaseDetector
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -57,7 +57,7 @@ public class HBHFSensor : BaseDetector
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -77,12 +77,12 @@ public class HBHFSensor : BaseDetector
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SetIncludeOthers "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SetIncludeOthers "));
 				}
-				TimeWarning val5 = TimeWarning.New("SetIncludeOthers", 0);
+				TimeWarning val2 = TimeWarning.New("SetIncludeOthers", 0);
 				try
 				{
-					TimeWarning val6 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsVisible.Test(2223203375u, "SetIncludeOthers", this, player, 3f))
@@ -92,11 +92,11 @@ public class HBHFSensor : BaseDetector
 					}
 					finally
 					{
-						((IDisposable)val6)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val7 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -108,7 +108,7 @@ public class HBHFSensor : BaseDetector
 						}
 						finally
 						{
-							((IDisposable)val7)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -119,7 +119,7 @@ public class HBHFSensor : BaseDetector
 				}
 				finally
 				{
-					((IDisposable)val5)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -152,14 +152,14 @@ public class HBHFSensor : BaseDetector
 
 	public void UpdatePassthroughAmount()
 	{
-		//IL_0173: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0178: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ac: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0126: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0152: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0157: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
 		if (base.isClient)
 		{
 			return;
