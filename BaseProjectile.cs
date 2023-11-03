@@ -79,79 +79,6 @@ public class BaseProjectile : AttackEntity
 			}
 			return ammoSource.HasAmmo(definition.ammoTypes);
 		}
-
-		public void SwitchAmmoTypesIfNeeded(IAmmoContainer ammoSource)
-		{
-			//IL_0030: Unknown result type (might be due to invalid IL or missing references)
-			List<Item> list = ammoSource.FindItemsByItemID(ammoType.itemid).ToList();
-			if (list.Count != 0)
-			{
-				return;
-			}
-			List<Item> list2 = new List<Item>();
-			ammoSource.FindAmmo(list2, definition.ammoTypes);
-			if (list2.Count == 0)
-			{
-				return;
-			}
-			list = ammoSource.FindItemsByItemID(list2[0].info.itemid).ToList();
-			if (list != null && list.Count != 0)
-			{
-				if (contents > 0)
-				{
-					ammoSource.GiveItem(ItemManager.CreateByItemID(ammoType.itemid, contents, 0uL));
-					contents = 0;
-				}
-				ammoType = list[0].info;
-			}
-		}
-
-		public bool TryReload(IAmmoContainer ammoSource, int desiredAmount = -1, bool canRefundAmmo = true)
-		{
-			//IL_0030: Unknown result type (might be due to invalid IL or missing references)
-			List<Item> list = ammoSource.FindItemsByItemID(ammoType.itemid).ToList();
-			if (list.Count == 0)
-			{
-				List<Item> list2 = new List<Item>();
-				ammoSource.FindAmmo(list2, definition.ammoTypes);
-				if (list2.Count == 0)
-				{
-					return false;
-				}
-				list = ammoSource.FindItemsByItemID(list2[0].info.itemid).ToList();
-				if (list == null || list.Count == 0)
-				{
-					return false;
-				}
-				if (contents > 0)
-				{
-					if (canRefundAmmo)
-					{
-						ammoSource.GiveItem(ItemManager.CreateByItemID(ammoType.itemid, contents, 0uL));
-					}
-					contents = 0;
-				}
-				ammoType = list[0].info;
-			}
-			int num = desiredAmount;
-			if (num == -1)
-			{
-				num = capacity - contents;
-			}
-			foreach (Item item in list)
-			{
-				_ = item.amount;
-				int num2 = Mathf.Min(num, item.amount);
-				item.UseItem(num2);
-				contents += num2;
-				num -= num2;
-				if (num <= 0)
-				{
-					break;
-				}
-			}
-			return true;
-		}
 	}
 
 	public static class BaseProjectileFlags
@@ -651,6 +578,95 @@ public class BaseProjectile : AttackEntity
 		return base.OnRpcMessage(player, rpc, msg);
 	}
 
+	protected bool TryReload(IAmmoContainer ammoSource, int desiredAmount, bool canRefundAmmo = true)
+	{
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		List<Item> list = ammoSource.FindItemsByItemID(primaryMagazine.ammoType.itemid).ToList();
+		if (list.Count == 0)
+		{
+			List<Item> list2 = new List<Item>();
+			ammoSource.FindAmmo(list2, primaryMagazine.definition.ammoTypes);
+			if (list2.Count == 0)
+			{
+				return false;
+			}
+			list = ammoSource.FindItemsByItemID(list2[0].info.itemid).ToList();
+			if (list == null || list.Count == 0)
+			{
+				return false;
+			}
+			if (primaryMagazine.contents > 0)
+			{
+				if (canRefundAmmo)
+				{
+					ammoSource.GiveItem(ItemManager.CreateByItemID(primaryMagazine.ammoType.itemid, primaryMagazine.contents, 0uL));
+				}
+				SetAmmoCount(0);
+			}
+			primaryMagazine.ammoType = list[0].info;
+		}
+		int num = desiredAmount;
+		if (num == -1)
+		{
+			num = primaryMagazine.capacity - primaryMagazine.contents;
+		}
+		foreach (Item item in list)
+		{
+			_ = item.amount;
+			int num2 = Mathf.Min(num, item.amount);
+			item.UseItem(num2);
+			ModifyAmmoCount(num2);
+			num -= num2;
+			if (num <= 0)
+			{
+				break;
+			}
+		}
+		return true;
+	}
+
+	public void SwitchAmmoTypesIfNeeded(IAmmoContainer ammoSource)
+	{
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		List<Item> list = ammoSource.FindItemsByItemID(primaryMagazine.ammoType.itemid).ToList();
+		if (list.Count != 0)
+		{
+			return;
+		}
+		List<Item> list2 = new List<Item>();
+		ammoSource.FindAmmo(list2, primaryMagazine.definition.ammoTypes);
+		if (list2.Count == 0)
+		{
+			return;
+		}
+		list = ammoSource.FindItemsByItemID(list2[0].info.itemid).ToList();
+		if (list != null && list.Count != 0)
+		{
+			if (primaryMagazine.contents > 0)
+			{
+				ammoSource.GiveItem(ItemManager.CreateByItemID(primaryMagazine.ammoType.itemid, primaryMagazine.contents, 0uL));
+				SetAmmoCount(0);
+			}
+			primaryMagazine.ammoType = list[0].info;
+		}
+	}
+
+	public void SetAmmoCount(int newCount)
+	{
+		primaryMagazine.contents = newCount;
+		Item item = GetItem();
+		if (item != null)
+		{
+			item.ammoCount = newCount;
+			item.MarkDirty();
+		}
+	}
+
+	public void ModifyAmmoCount(int amount)
+	{
+		SetAmmoCount(primaryMagazine.contents + amount);
+	}
+
 	public override Vector3 GetInheritedVelocity(BasePlayer player, Vector3 direction)
 	{
 		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
@@ -754,7 +770,7 @@ public class BaseProjectile : AttackEntity
 
 	public override void TopUpAmmo()
 	{
-		primaryMagazine.contents = primaryMagazine.capacity;
+		SetAmmoCount(primaryMagazine.capacity);
 	}
 
 	public override void ServerReload()
@@ -768,7 +784,7 @@ public class BaseProjectile : AttackEntity
 			{
 				ownerPlayer.SignalBroadcast(Signal.Reload);
 			}
-			primaryMagazine.contents = primaryMagazine.capacity;
+			SetAmmoCount(primaryMagazine.capacity);
 		}
 	}
 
@@ -822,53 +838,53 @@ public class BaseProjectile : AttackEntity
 
 	public override void ServerUse(float damageModifier, Transform originOverride = null)
 	{
+		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d1: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00dd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d0: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00e2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00ee: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00f3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ac: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ff: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0104: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0106: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0150: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0164: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0167: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0175: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0176: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0178: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0186: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0187: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0189: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0427: Unknown result type (might be due to invalid IL or missing references)
-		//IL_043a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0416: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0429: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0438: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0439: Unknown result type (might be due to invalid IL or missing references)
+		//IL_043b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0440: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0449: Unknown result type (might be due to invalid IL or missing references)
-		//IL_044a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_044c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0451: Unknown result type (might be due to invalid IL or missing references)
-		//IL_045a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_042e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0435: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02e5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02ec: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02f1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02fe: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0303: Unknown result type (might be due to invalid IL or missing references)
-		//IL_030c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0311: Unknown result type (might be due to invalid IL or missing references)
-		//IL_031a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_031f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0328: Unknown result type (might be due to invalid IL or missing references)
-		//IL_032d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03ad: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03b2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03b7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03c7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03cc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03d1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_041d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0424: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02d4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02db: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02e0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02ed: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02f2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02fb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0300: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0309: Unknown result type (might be due to invalid IL or missing references)
+		//IL_030e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0317: Unknown result type (might be due to invalid IL or missing references)
+		//IL_031c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_039c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03a1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03a6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03b6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03bb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03c0: Unknown result type (might be due to invalid IL or missing references)
 		if (base.isClient || HasAttackCooldown())
 		{
 			return;
@@ -881,10 +897,10 @@ public class BaseProjectile : AttackEntity
 			StartAttackCooldownRaw(1f);
 			return;
 		}
-		primaryMagazine.contents--;
+		ModifyAmmoCount(-1);
 		if (primaryMagazine.contents < 0)
 		{
-			primaryMagazine.contents = 0;
+			SetAmmoCount(0);
 		}
 		bool flag2 = flag && ownerPlayer.IsNpc;
 		if (flag2 && (ownerPlayer.isMounted || (Object)(object)ownerPlayer.GetParentEntity() != (Object)null))
@@ -1027,18 +1043,18 @@ public class BaseProjectile : AttackEntity
 
 	public void DelayedModsChanged()
 	{
+		//IL_0115: Unknown result type (might be due to invalid IL or missing references)
 		//IL_011a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0157: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0159: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0163: Unknown result type (might be due to invalid IL or missing references)
-		//IL_016a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0170: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0152: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0154: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0165: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0135: Unknown result type (might be due to invalid IL or missing references)
 		//IL_013a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_013f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0144: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0149: Unknown result type (might be due to invalid IL or missing references)
 		//IL_014e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0153: Unknown result type (might be due to invalid IL or missing references)
 		int num = Mathf.CeilToInt(ProjectileWeaponMod.Mult(this, (ProjectileWeaponMod x) => x.magazineCapacity, (ProjectileWeaponMod.Modifier y) => y.scalar, 1f) * (float)primaryMagazine.definition.builtInSize);
 		if (num == primaryMagazine.capacity)
 		{
@@ -1058,7 +1074,7 @@ public class BaseProjectile : AttackEntity
 			{
 				itemContainer = GetCachedItem().parent;
 			}
-			primaryMagazine.contents = 0;
+			SetAmmoCount(0);
 			if (itemContainer != null)
 			{
 				Item item = ItemManager.Create(primaryMagazine.ammoType, contents, 0uL);
@@ -1087,10 +1103,10 @@ public class BaseProjectile : AttackEntity
 
 	public void UnloadAmmo(Item item, BasePlayer player)
 	{
-		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
 		BaseProjectile component = ((Component)item.GetHeldEntity()).GetComponent<BaseProjectile>();
 		if (!component.canUnloadAmmo || !Object.op_Implicit((Object)(object)component))
 		{
@@ -1099,7 +1115,8 @@ public class BaseProjectile : AttackEntity
 		int contents = component.primaryMagazine.contents;
 		if (contents > 0)
 		{
-			component.primaryMagazine.contents = 0;
+			component.SetAmmoCount(0);
+			item.MarkDirty();
 			SendNetworkUpdateImmediate();
 			Item item2 = ItemManager.Create(component.primaryMagazine.ammoType, contents, 0uL);
 			if (!item2.MoveToContainer(player.inventory.containerMain))
@@ -1124,7 +1141,7 @@ public class BaseProjectile : AttackEntity
 			BaseProjectile component = ((Component)item.GetHeldEntity()).GetComponent<BaseProjectile>();
 			if (Object.op_Implicit((Object)(object)component))
 			{
-				component.primaryMagazine.contents = 0;
+				component.SetAmmoCount(0);
 			}
 		}
 	}
@@ -1346,7 +1363,7 @@ public class BaseProjectile : AttackEntity
 
 	public virtual bool TryReloadMagazine(IAmmoContainer ammoSource, int desiredAmount = -1)
 	{
-		if (!primaryMagazine.TryReload(ammoSource, desiredAmount))
+		if (!TryReload(ammoSource, desiredAmount))
 		{
 			return false;
 		}
@@ -1386,7 +1403,7 @@ public class BaseProjectile : AttackEntity
 			if (primaryMagazine.contents > 0)
 			{
 				ownerPlayer.GiveItem(ItemManager.CreateByItemID(primaryMagazine.ammoType.itemid, primaryMagazine.contents, 0uL));
-				primaryMagazine.contents = 0;
+				SetAmmoCount(0);
 			}
 			primaryMagazine.ammoType = itemDefinition;
 			SendNetworkUpdateImmediate();
@@ -1421,7 +1438,7 @@ public class BaseProjectile : AttackEntity
 		fractionalInsertCounter = 0;
 		if (CanRefundAmmo)
 		{
-			primaryMagazine.SwitchAmmoTypesIfNeeded(player.inventory);
+			SwitchAmmoTypesIfNeeded(player.inventory);
 		}
 		OnReloadStarted();
 		StartReloadCooldown(GetReloadDuration());
@@ -1545,26 +1562,26 @@ public class BaseProjectile : AttackEntity
 	[RPC_Server.IsActiveItem]
 	private void CLProject(RPCMessage msg)
 	{
-		//IL_023f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0244: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0322: Unknown result type (might be due to invalid IL or missing references)
-		//IL_029d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02b4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02bb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02c4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02da: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02e1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0261: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0434: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0439: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0277: Unknown result type (might be due to invalid IL or missing references)
-		//IL_027c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_027e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0282: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0287: Unknown result type (might be due to invalid IL or missing references)
-		//IL_028c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0290: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0292: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0233: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0238: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0316: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0291: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02a8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02af: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02b8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02ce: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02d5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0255: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0428: Unknown result type (might be due to invalid IL or missing references)
+		//IL_042d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_026b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0270: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0272: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0276: Unknown result type (might be due to invalid IL or missing references)
+		//IL_027b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0280: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0284: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0286: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer player = msg.player;
 		if (!VerifyClientAttack(player))
 		{
@@ -1595,7 +1612,7 @@ public class BaseProjectile : AttackEntity
 		}
 		if (!base.UsingInfiniteAmmoCheat)
 		{
-			primaryMagazine.contents--;
+			ModifyAmmoCount(-1);
 		}
 		ItemModProjectile component = ((Component)primaryMagazineAmmo).GetComponent<ItemModProjectile>();
 		if ((Object)(object)component == (Object)null)
@@ -1679,6 +1696,11 @@ public class BaseProjectile : AttackEntity
 			sensation.InitiatorPlayer = player;
 			sensation.Initiator = player;
 			Sense.Stimulate(sensation);
+			BaseMountable mounted = player.GetMounted();
+			if ((Object)(object)mounted != (Object)null)
+			{
+				mounted.OnWeaponFired(this);
+			}
 			EACServer.LogPlayerUseWeapon(player, this);
 		}
 	}

@@ -747,7 +747,7 @@ public class SleepingBag : DecayEntity
 	{
 		if (msg.player.CanInteract())
 		{
-			string str = msg.read.String(256);
+			string str = msg.read.String(256, false);
 			str = WordFilter.Filter(str);
 			if (string.IsNullOrEmpty(str))
 			{

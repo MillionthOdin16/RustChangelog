@@ -540,9 +540,9 @@ public class Signage : IOEntity, ILOD, ISignage, IUGCBrowserEntity
 	[RPC_Server.MaxDistance(5f)]
 	public void UpdateSign(RPCMessage msg)
 	{
-		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0119: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fb: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)msg.player == (Object)null || !CanUpdateSign(msg.player))
 		{
 			return;
@@ -552,7 +552,7 @@ public class Signage : IOEntity, ILOD, ISignage, IUGCBrowserEntity
 		{
 			return;
 		}
-		byte[] array = msg.read.BytesWithSize(10485760u);
+		byte[] array = msg.read.BytesWithSize(10485760u, false);
 		if (msg.read.Unread > 0 && msg.read.Bit() && !msg.player.IsAdmin)
 		{
 			Debug.LogWarning((object)$"{msg.player} tried to upload a sign from a file but they aren't admin, ignoring");

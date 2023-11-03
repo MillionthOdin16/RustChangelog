@@ -309,7 +309,7 @@ public class ExcavatorArm : BaseEntity
 	[RPC_Server.MaxDistance(3f)]
 	public void RPC_SetResourceTarget(RPCMessage msg)
 	{
-		switch (msg.read.String(256))
+		switch (msg.read.String(256, false))
 		{
 		case "HQM":
 			resourceMiningIndex = 0;

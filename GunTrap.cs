@@ -201,7 +201,16 @@ public class GunTrap : StorageContainer
 	{
 		if ((Object)(object)_cachedTc == (Object)null || Time.realtimeSinceStartup > _cacheTimeout)
 		{
-			_cachedTc = GetBuildingPrivilege();
+			_cachedTc = null;
+			BuildingManager.Building building = GetBuilding();
+			if (building != null)
+			{
+				_cachedTc = building.GetDominatingBuildingPrivilege();
+			}
+			if ((Object)(object)_cachedTc == (Object)null)
+			{
+				return GetNearestBuildingPrivledge();
+			}
 			_cacheTimeout = Time.realtimeSinceStartup + 3f;
 		}
 		if ((Object)(object)_cachedTc != (Object)null && _cachedTc.IsDestroyed)

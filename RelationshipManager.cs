@@ -19,7 +19,7 @@ public class RelationshipManager : BaseEntity
 		Enemy
 	}
 
-	public class PlayerRelationshipInfo : IPooled, IServerFileReceiver
+	public class PlayerRelationshipInfo : IPooled, IServerFileReceiver, IPlayerInfo
 	{
 		public string displayName;
 
@@ -36,6 +36,20 @@ public class RelationshipManager : BaseEntity
 		public float lastSeenTime;
 
 		public float lastMugshotTime;
+
+		public ulong UserId => player;
+
+		public string UserName => displayName;
+
+		public bool IsOnline => false;
+
+		public bool IsMe => false;
+
+		public bool IsFriend => false;
+
+		public bool IsPlayingThisGame => true;
+
+		public string ServerEndpoint => string.Empty;
 
 		public void EnterPool()
 		{
@@ -1091,7 +1105,7 @@ public class RelationshipManager : BaseEntity
 	{
 		ulong userID = msg.player.userID;
 		ulong player = msg.read.UInt64();
-		string notes = msg.read.String(256);
+		string notes = msg.read.String(256, false);
 		GetRelationships(userID).GetRelations(player).notes = notes;
 		MarkRelationshipsDirtyFor(userID);
 	}
@@ -1100,12 +1114,12 @@ public class RelationshipManager : BaseEntity
 	[RPC_Server.CallsPerSecond(10uL)]
 	public void SERVER_ReceiveMugshot(RPCMessage msg)
 	{
-		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00be: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
 		ulong userID = msg.player.userID;
 		ulong num = msg.read.UInt64();
 		uint num2 = msg.read.UInt32();
-		byte[] array = msg.read.BytesWithSize(65536u);
+		byte[] array = msg.read.BytesWithSize(65536u, false);
 		if (array != null && ImageProcessing.IsValidJPG(array, 256, 512) && relationships.TryGetValue(userID, out var value) && value.relations.TryGetValue(num, out var value2))
 		{
 			uint steamIdHash = GetSteamIdHash(userID, num);
@@ -1430,23 +1444,27 @@ public class RelationshipManager : BaseEntity
 	[ServerUserVar]
 	public static void sendinvite(Arg arg)
 	{
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0097: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer basePlayer = arg.Player();
 		PlayerTeam playerTeam = ServerInstance.FindTeam(basePlayer.currentTeam);
-		RaycastHit hit = default(RaycastHit);
-		if (playerTeam == null || (Object)(object)playerTeam.GetLeader() == (Object)null || (Object)(object)playerTeam.GetLeader() != (Object)(object)basePlayer || !Physics.Raycast(basePlayer.eyes.position, basePlayer.eyes.HeadForward(), ref hit, 5f, 1218652417, (QueryTriggerInteraction)1))
+		if (playerTeam == null || (Object)(object)playerTeam.GetLeader() == (Object)null || (Object)(object)playerTeam.GetLeader() != (Object)(object)basePlayer)
 		{
 			return;
 		}
-		BaseEntity entity = hit.GetEntity();
-		if (Object.op_Implicit((Object)(object)entity))
+		ulong uLong = arg.GetULong(0, 0uL);
+		if (uLong == 0L)
 		{
-			BasePlayer component = ((Component)entity).GetComponent<BasePlayer>();
-			if (Object.op_Implicit((Object)(object)component) && (Object)(object)component != (Object)(object)basePlayer && !component.IsNpc && component.currentTeam == 0L)
+			return;
+		}
+		BasePlayer basePlayer2 = BaseNetworkable.serverEntities.Find(new NetworkableId(uLong)) as BasePlayer;
+		if (Object.op_Implicit((Object)(object)basePlayer2) && (Object)(object)basePlayer2 != (Object)(object)basePlayer && !basePlayer2.IsNpc && basePlayer2.currentTeam == 0L)
+		{
+			float num = 7f;
+			if (!(Vector3.Distance(((Component)basePlayer2).transform.position, ((Component)basePlayer).transform.position) > num))
 			{
-				playerTeam.SendInvite(component);
+				playerTeam.SendInvite(basePlayer2);
 			}
 		}
 	}

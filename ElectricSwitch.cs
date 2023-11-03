@@ -100,7 +100,16 @@ public class ElectricSwitch : IOEntity
 		return GetCurrentEnergy();
 	}
 
-	public override void IOStateChanged(int inputAmount, int inputSlot)
+	public override int CalculateCurrentEnergy(int inputAmount, int inputSlot)
+	{
+		if (inputSlot != 0)
+		{
+			return GetCurrentEnergy();
+		}
+		return base.CalculateCurrentEnergy(inputAmount, inputSlot);
+	}
+
+	public override void UpdateHasPower(int inputAmount, int inputSlot)
 	{
 		if (inputSlot == 1 && inputAmount > 0)
 		{
@@ -110,7 +119,10 @@ public class ElectricSwitch : IOEntity
 		{
 			SetSwitch(wantsOn: false);
 		}
-		base.IOStateChanged(inputAmount, inputSlot);
+		if (inputSlot == 0)
+		{
+			base.UpdateHasPower(inputAmount, inputSlot);
+		}
 	}
 
 	public override void ServerInit()

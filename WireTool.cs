@@ -4,6 +4,7 @@ using System.Linq;
 using ConVar;
 using Facepunch;
 using Network;
+using ProtoBuf;
 using Rust;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -57,6 +58,10 @@ public class WireTool : HeldEntity
 	public IOEntity.IOType wireType;
 
 	public float RadialMenuHoldTime = 0.25f;
+
+	public float disconnectDelay = 0.15f;
+
+	public float clearDelay = 0.65f;
 
 	private const float IndustrialWallOffset = 0.04f;
 
@@ -592,28 +597,100 @@ public class WireTool : HeldEntity
 	{
 		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
 		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ba: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01bf: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer player = msg.player;
-		if (CanPlayerUseWires(player))
+		if (!CanPlayerUseWires(player))
 		{
-			NetworkableId uid = msg.read.EntityID();
-			int clearIndex = msg.read.Int32();
-			bool isInput = msg.read.Bit();
-			AttemptClearSlot(BaseNetworkable.serverEntities.Find(uid), player, clearIndex, isInput);
+			return;
+		}
+		NetworkableId uid = msg.read.EntityID();
+		int num = msg.read.Int32();
+		bool flag = msg.read.Bit();
+		bool flag2 = msg.read.Bit();
+		IOEntity iOEntity = BaseNetworkable.serverEntities.Find(uid) as IOEntity;
+		if ((Object)(object)iOEntity == (Object)null)
+		{
+			return;
+		}
+		IOEntity.IOSlot iOSlot = (flag ? iOEntity.inputs : iOEntity.outputs)[num];
+		IOEntity iOEntity2 = iOSlot.connectedTo.Get();
+		if ((Object)(object)iOEntity2 == (Object)null)
+		{
+			return;
+		}
+		IOEntity.IOSlot iOSlot2 = (flag ? iOEntity2.outputs : iOEntity2.inputs)[iOSlot.connectedToSlot];
+		WireReconnectMessage val = Pool.Get<WireReconnectMessage>();
+		try
+		{
+			val.isInput = !flag;
+			val.slotIndex = iOSlot.connectedToSlot;
+			val.entityId = iOSlot.connectedTo.Get().net.ID;
+			val.wireColor = 0;
+			val.linePoints = Pool.GetList<Vector3>();
+			IOEntity iOEntity3 = iOEntity;
+			Vector3[] array = iOSlot.linePoints;
+			if (array == null || array.Length == 0)
+			{
+				iOEntity3 = iOEntity2;
+				array = iOSlot2.linePoints;
+			}
+			if (array == null)
+			{
+				array = (Vector3[])(object)new Vector3[0];
+			}
+			bool flag3 = (Object)(object)iOEntity3 != (Object)(object)iOEntity;
+			if ((Object)(object)iOEntity == (Object)(object)iOEntity3 && flag)
+			{
+				flag3 = true;
+			}
+			val.linePoints.AddRange(array);
+			if (flag3)
+			{
+				val.linePoints.Reverse();
+			}
+			if (val.linePoints.Count >= 2)
+			{
+				val.linePoints.RemoveAt(0);
+				val.linePoints.RemoveAt(val.linePoints.Count - 1);
+			}
+			for (int i = 0; i < val.linePoints.Count; i++)
+			{
+				val.linePoints[i] = ((Component)iOEntity3).transform.TransformPoint(val.linePoints[i]);
+			}
+			if (AttemptClearSlot(iOEntity, player, num, flag) && flag2)
+			{
+				ClientRPCPlayer<WireReconnectMessage>(null, player, "OnWireCleared", val);
+			}
+		}
+		finally
+		{
+			((IDisposable)val)?.Dispose();
 		}
 	}
 
-	public static void AttemptClearSlot(BaseNetworkable clearEnt, BasePlayer ply, int clearIndex, bool isInput)
+	public static bool AttemptClearSlot(BaseNetworkable clearEnt, BasePlayer ply, int clearIndex, bool isInput)
 	{
 		IOEntity iOEntity = (((Object)(object)clearEnt == (Object)null) ? null : ((Component)clearEnt).GetComponent<IOEntity>());
-		if ((Object)(object)iOEntity == (Object)null || ((Object)(object)ply != (Object)null && !CanModifyEntity(ply, iOEntity)) || clearIndex >= (isInput ? iOEntity.inputs.Length : iOEntity.outputs.Length))
+		if ((Object)(object)iOEntity == (Object)null)
 		{
-			return;
+			return false;
+		}
+		if ((Object)(object)ply != (Object)null && !CanModifyEntity(ply, iOEntity))
+		{
+			return false;
+		}
+		if (clearIndex >= (isInput ? iOEntity.inputs.Length : iOEntity.outputs.Length))
+		{
+			return false;
 		}
 		IOEntity.IOSlot iOSlot = (isInput ? iOEntity.inputs[clearIndex] : iOEntity.outputs[clearIndex]);
 		if ((Object)(object)iOSlot.connectedTo.Get() == (Object)null)
 		{
-			return;
+			return false;
 		}
 		IOEntity iOEntity2 = iOSlot.connectedTo.Get();
 		IOEntity.IOSlot obj = (isInput ? iOEntity2.outputs[iOSlot.connectedToSlot] : iOEntity2.inputs[iOSlot.connectedToSlot]);
@@ -628,7 +705,7 @@ public class WireTool : HeldEntity
 		iOSlot.Clear();
 		obj.Clear();
 		iOEntity.MarkDirtyForceUpdateOutputs();
-		iOEntity.SendNetworkUpdate();
+		iOEntity.SendNetworkUpdateImmediate();
 		iOEntity.RefreshIndustrialPreventBuilding();
 		if ((Object)(object)iOEntity2 != (Object)null)
 		{
@@ -649,7 +726,7 @@ public class WireTool : HeldEntity
 				}
 			}
 		}
-		iOEntity2.SendNetworkUpdate();
+		iOEntity2.SendNetworkUpdateImmediate();
 		if ((Object)(object)iOEntity != (Object)null && iOEntity.ioType == IOEntity.IOType.Industrial)
 		{
 			iOEntity.NotifyIndustrialNetworkChanged();
@@ -658,6 +735,7 @@ public class WireTool : HeldEntity
 		{
 			iOEntity2.NotifyIndustrialNetworkChanged();
 		}
+		return true;
 	}
 
 	[RPC_Server]

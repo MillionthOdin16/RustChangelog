@@ -377,7 +377,7 @@ public class NPCTalking : NPCShopKeeper, IConversationProvider
 	public void ConversationAction(RPCMessage msg)
 	{
 		BasePlayer player = msg.player;
-		string action = msg.read.String(256);
+		string action = msg.read.String(256, false);
 		OnConversationAction(player, action);
 	}
 

@@ -486,7 +486,7 @@ public class PhoneController : EntityComponent<BaseEntity>
 	{
 		if (!((Object)(object)msg.player != (Object)(object)currentPlayer))
 		{
-			string text = msg.read.String(256);
+			string text = msg.read.String(256, false);
 			if (text.Length > 20)
 			{
 				text = text.Substring(0, 20);
@@ -528,7 +528,7 @@ public class PhoneController : EntityComponent<BaseEntity>
 				savedNumbers.entries = Pool.GetList<DirectoryEntry>();
 			}
 			int num = msg.read.Int32();
-			string text = msg.read.String(256);
+			string text = msg.read.String(256, false);
 			if (IsSavedContactValid(text, num) && savedNumbers.entries.Count < 10)
 			{
 				DirectoryEntry val = Pool.Get<DirectoryEntry>();
@@ -643,7 +643,7 @@ public class PhoneController : EntityComponent<BaseEntity>
 	{
 		if (!((Object)(object)msg.player == (Object)null))
 		{
-			byte[] data = msg.read.BytesWithSize(10485760u);
+			byte[] data = msg.read.BytesWithSize(10485760u, false);
 			PhoneController telephone = TelephoneManager.GetTelephone(msg.read.Int32());
 			if (!((Object)(object)telephone == (Object)null) && Cassette.IsOggValid(data, telephone.cachedCassette))
 			{

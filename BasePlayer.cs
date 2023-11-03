@@ -144,6 +144,12 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		public const uint FlashBlindId = 235662700u;
 	}
 
+	public enum GestureStartSource
+	{
+		ServerAction,
+		Player
+	}
+
 	public enum MapNoteType
 	{
 		Death,
@@ -3071,8 +3077,8 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 	[RPC_Server.CallsPerSecond(3uL)]
 	private void ServerRequestEmojiData(RPCMessage msg)
 	{
-		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
-		string text = msg.read.String(256);
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		string text = msg.read.String(256, false);
 		if (RustEmojiLibrary.allServerEmoji.TryGetValue(text, out var value))
 		{
 			byte[] array = FileStorage.server.Get(value.CRC, value.FileType, RustEmojiLibrary.EmojiStorageNetworkId);
@@ -3315,13 +3321,13 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		}
 	}
 
-	public void Server_StartGesture(GestureConfig toPlay)
+	public void Server_StartGesture(GestureConfig toPlay, GestureStartSource startSource = GestureStartSource.Player)
 	{
-		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0089: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e1: Unknown result type (might be due to invalid IL or missing references)
-		if (!((Object)(object)toPlay != (Object)null) || !toPlay.IsOwnedBy(this) || !toPlay.CanBeUsedBy(this))
+		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fe: Unknown result type (might be due to invalid IL or missing references)
+		if (((Object)(object)toPlay != (Object)null && toPlay.hideInWheel && startSource == GestureStartSource.Player && !ConVar.Server.cinematic) || !((Object)(object)toPlay != (Object)null) || !toPlay.IsOwnedBy(this) || !toPlay.CanBeUsedBy(this))
 		{
 			return;
 		}
@@ -4093,7 +4099,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		Missions val = Pool.Get<Missions>();
 		val.missions = Pool.GetList<MissionInstance>();
 		val.activeMission = GetActiveMission();
-		val.protocol = 242;
+		val.protocol = 243;
 		val.seed = World.Seed;
 		val.saveCreatedTime = Epoch.FromDateTime(SaveRestore.SaveCreatedTime);
 		foreach (BaseMission.MissionInstance mission in missions)
@@ -4201,7 +4207,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			uint seed = loadedMissions.seed;
 			int saveCreatedTime = loadedMissions.saveCreatedTime;
 			int num2 = Epoch.FromDateTime(SaveRestore.SaveCreatedTime);
-			if (242 != protocol || World.Seed != seed || num2 != saveCreatedTime)
+			if (243 != protocol || World.Seed != seed || num2 != saveCreatedTime)
 			{
 				Debug.Log((object)"Missions were from old protocol or different seed, or not from a loaded save. Clearing");
 				loadedMissions.activeMission = -1;
@@ -7688,7 +7694,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				playerCorpse.SetFlag(Flags.Reserved5, HasPlayerFlag(PlayerFlags.DisplaySash));
 				if (!flag)
 				{
-					playerCorpse.TakeFrom(inventory.containerMain, inventory.containerWear, inventory.containerBelt);
+					playerCorpse.TakeFrom(this, inventory.containerMain, inventory.containerWear, inventory.containerBelt);
 				}
 				playerCorpse.playerName = displayName;
 				playerCorpse.streamerName = RandomUsernames.Get(userID);
@@ -8628,8 +8634,8 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 	[RPC_Server.CallsPerSecond(1uL)]
 	public void PerformanceReport(RPCMessage msg)
 	{
-		string text = msg.read.String(256);
-		string text2 = msg.read.StringRaw(8388608u);
+		string text = msg.read.String(256, false);
+		string text2 = msg.read.StringRaw(8388608, false);
 		ClientPerformanceReport clientPerformanceReport = JsonConvert.DeserializeObject<ClientPerformanceReport>(text2);
 		if (clientPerformanceReport.user_id != UserIDString)
 		{
@@ -8706,11 +8712,11 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 	[RPC_Server.CallsPerSecond(1uL)]
 	public void OnPlayerReported(RPCMessage msg)
 	{
-		string text = msg.read.String(256);
-		string message = msg.read.StringMultiLine(2048);
-		string type = msg.read.String(256);
-		string text2 = msg.read.String(256);
-		string text3 = msg.read.String(256);
+		string text = msg.read.String(256, false);
+		string message = msg.read.StringMultiLine(2048, false);
+		string type = msg.read.String(256, false);
+		string text2 = msg.read.String(256, false);
+		string text3 = msg.read.String(256, false);
 		DebugEx.Log((object)$"[PlayerReport] {this} reported {text3}[{text2}] - \"{text}\"", (StackTraceLogType)0);
 		RCon.Broadcast(RCon.LogType.Report, new
 		{
@@ -8728,19 +8734,19 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 	[RPC_Server.CallsPerSecond(1uL)]
 	public void OnFeedbackReport(RPCMessage msg)
 	{
-		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f6: Unknown result type (might be due to invalid IL or missing references)
 		if (ConVar.Server.printReportsToConsole || !string.IsNullOrEmpty(ConVar.Server.reportsServerEndpoint))
 		{
-			string text = msg.read.String(256);
-			string text2 = msg.read.StringMultiLine(2048);
+			string text = msg.read.String(256, false);
+			string text2 = msg.read.StringMultiLine(2048, false);
 			ReportType val = (ReportType)Mathf.Clamp(msg.read.Int32(), 0, 5);
 			if (ConVar.Server.printReportsToConsole)
 			{
@@ -8756,7 +8762,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			}
 			if (!string.IsNullOrEmpty(ConVar.Server.reportsServerEndpoint))
 			{
-				string image = msg.read.StringMultiLine(60000);
+				string image = msg.read.StringMultiLine(60000, false);
 				Feedback val2 = default(Feedback);
 				val2.Type = val;
 				val2.Message = text2;
@@ -9609,13 +9615,13 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 	public void OnReceivedVoice(byte[] data)
 	{
 		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
 		NetWrite obj = ((BaseNetwork)Net.sv).StartWrite();
 		obj.PacketID((Type)21);
 		obj.EntityID(net.ID);
-		obj.BytesWithSize(data);
+		obj.BytesWithSize(data, false);
 		float num = 0f;
 		if (HasPlayerFlag(PlayerFlags.VoiceRangeBoost))
 		{
@@ -10568,9 +10574,28 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		Pool.FreeList<BasePlayer>(ref list);
 	}
 
+	private bool ManuallyCheckSafezone()
+	{
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		if (!base.isServer)
+		{
+			return false;
+		}
+		List<Collider> list = Pool.GetList<Collider>();
+		Vis.Colliders<Collider>(((Component)this).transform.position, 0f, list, -1, (QueryTriggerInteraction)2);
+		foreach (Collider item in list)
+		{
+			if ((Object)(object)((Component)item).GetComponent<TriggerSafeZone>() != (Object)null)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public override bool OnStartBeingLooted(BasePlayer baseEntity)
 	{
-		if ((baseEntity.InSafeZone() || InSafeZone()) && baseEntity.userID != userID)
+		if ((baseEntity.InSafeZone() || InSafeZone() || ManuallyCheckSafezone()) && baseEntity.userID != userID)
 		{
 			return false;
 		}

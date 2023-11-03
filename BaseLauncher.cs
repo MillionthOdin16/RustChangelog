@@ -85,24 +85,24 @@ public class BaseLauncher : BaseProjectile
 
 	public override void ServerUse(float damageModifier, Transform originOverride = null)
 	{
+		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0102: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0103: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0106: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0112: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0118: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0167: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0172: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0101: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0107: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0156: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0161: Unknown result type (might be due to invalid IL or missing references)
 		ItemModProjectile component = ((Component)primaryMagazine.ammoType).GetComponent<ItemModProjectile>();
 		if (!Object.op_Implicit((Object)(object)component))
 		{
@@ -119,10 +119,10 @@ public class BaseLauncher : BaseProjectile
 			base.ServerUse(damageModifier, originOverride);
 			return;
 		}
-		primaryMagazine.contents--;
+		ModifyAmmoCount(-1);
 		if (primaryMagazine.contents < 0)
 		{
-			primaryMagazine.contents = 0;
+			SetAmmoCount(0);
 		}
 		Vector3 val = ((Component)MuzzlePoint).transform.forward;
 		Vector3 position = ((Component)MuzzlePoint).transform.position;
@@ -159,40 +159,40 @@ public class BaseLauncher : BaseProjectile
 	[RPC_Server.IsActiveItem]
 	private void SV_Launch(RPCMessage msg)
 	{
+		//IL_00d8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00dd: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00e4: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00e9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fe: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0162: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ed: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0156: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0142: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0147: Unknown result type (might be due to invalid IL or missing references)
 		//IL_014e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0153: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0132: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0126: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0127: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0133: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0138: Unknown result type (might be due to invalid IL or missing references)
-		//IL_013f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0140: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0145: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01e5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01e6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01d6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01d8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01dd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0217: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0218: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0134: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0139: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01da: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ca: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01cc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_020b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_020c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_020f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0214: Unknown result type (might be due to invalid IL or missing references)
 		//IL_021b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0220: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0227: Unknown result type (might be due to invalid IL or missing references)
-		//IL_022d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0260: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0261: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0266: Unknown result type (might be due to invalid IL or missing references)
-		//IL_026e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0279: Unknown result type (might be due to invalid IL or missing references)
-		//IL_027e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0221: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0254: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0255: Unknown result type (might be due to invalid IL or missing references)
+		//IL_025a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0262: Unknown result type (might be due to invalid IL or missing references)
+		//IL_026d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0272: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer player = msg.player;
 		if (!VerifyClientAttack(player))
 		{
@@ -215,7 +215,7 @@ public class BaseLauncher : BaseProjectile
 				player.stats.combat.LogInvalid(player, this, "magazine_empty");
 				return;
 			}
-			primaryMagazine.contents--;
+			ModifyAmmoCount(-1);
 		}
 		SignalBroadcast(Signal.Attack, string.Empty, player.net.connection);
 		Vector3 val = msg.read.Vector3();
@@ -263,22 +263,31 @@ public class BaseLauncher : BaseProjectile
 			num3 = ((RaycastHit)(ref val4)).distance - 0.1f;
 		}
 		BaseEntity baseEntity = GameManager.server.CreateEntity(component.projectileObject.resourcePath, val + val3 * num3);
-		if (!((Object)(object)baseEntity == (Object)null))
+		if ((Object)(object)baseEntity == (Object)null)
 		{
-			baseEntity.creatorEntity = player;
-			ServerProjectile component2 = ((Component)baseEntity).GetComponent<ServerProjectile>();
-			if (Object.op_Implicit((Object)(object)component2))
-			{
-				component2.InitializeVelocity(GetInheritedVelocity(player, val3) + val3 * component2.speed * initialSpeedMultiplier);
-			}
-			baseEntity.Spawn();
-			ProjectileLaunched_Server(component2);
-			Analytics.Azure.OnExplosiveLaunched(player, baseEntity, this);
-			StartAttackCooldown(ScaleRepeatDelay(repeatDelay));
-			Item ownerItem = GetOwnerItem();
-			if (ownerItem != null && !base.UsingInfiniteAmmoCheat)
+			return;
+		}
+		baseEntity.creatorEntity = player;
+		ServerProjectile component2 = ((Component)baseEntity).GetComponent<ServerProjectile>();
+		if (Object.op_Implicit((Object)(object)component2))
+		{
+			component2.InitializeVelocity(GetInheritedVelocity(player, val3) + val3 * component2.speed * initialSpeedMultiplier);
+		}
+		baseEntity.Spawn();
+		ProjectileLaunched_Server(component2);
+		Analytics.Azure.OnExplosiveLaunched(player, baseEntity, this);
+		StartAttackCooldown(ScaleRepeatDelay(repeatDelay));
+		Item ownerItem = GetOwnerItem();
+		if (ownerItem != null)
+		{
+			if (!base.UsingInfiniteAmmoCheat)
 			{
 				ownerItem.LoseCondition(Random.Range(1f, 2f));
+			}
+			BaseMountable mounted2 = player.GetMounted();
+			if ((Object)(object)mounted2 != (Object)null)
+			{
+				mounted2.OnWeaponFired(this);
 			}
 		}
 	}

@@ -138,9 +138,9 @@ public class LootableCorpse : BaseCorpse, LootPanel.IHasLootPanel
 		containers = null;
 	}
 
-	public void TakeFrom(params ItemContainer[] source)
+	public void TakeFrom(BaseEntity fromEntity, params ItemContainer[] source)
 	{
-		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
 		Assert.IsTrue(containers == null, "Initializing Twice");
 		TimeWarning val = TimeWarning.New("Corpse.TakeFrom", 0);
 		try
@@ -166,6 +166,16 @@ public class LootableCorpse : BaseCorpse, LootPanel.IHasLootPanel
 		finally
 		{
 			((IDisposable)val)?.Dispose();
+		}
+		HeadDispenser headDispenser = default(HeadDispenser);
+		if (((Component)this).gameObject.TryGetComponent<HeadDispenser>(ref headDispenser))
+		{
+			GameObject val2 = GameManager.server.FindPrefab(fromEntity.prefabID);
+			BasePlayer overrideEntity = default(BasePlayer);
+			if ((Object)(object)val2 != (Object)null && val2.TryGetComponent<BasePlayer>(ref overrideEntity))
+			{
+				headDispenser.overrideEntity = overrideEntity;
+			}
 		}
 	}
 

@@ -83,7 +83,7 @@ public class Entity : ConsoleSystem
 		}
 	}
 
-	private struct EntitySpawnRequest
+	public struct EntitySpawnRequest
 	{
 		public string PrefabName;
 
@@ -300,7 +300,7 @@ public class Entity : ConsoleSystem
 		}
 	}
 
-	private static EntitySpawnRequest GetSpawnEntityFromName(string name)
+	public static EntitySpawnRequest GetSpawnEntityFromName(string name)
 	{
 		EntitySpawnRequest result;
 		if (string.IsNullOrEmpty(name))

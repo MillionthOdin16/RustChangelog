@@ -50,7 +50,7 @@ public class StabilityEntity : DecayEntity
 			List<BaseEntity> list = Pool.GetList<BaseEntity>();
 			Vector3 center = ((Bounds)(ref bounds)).center;
 			Vector3 extents = ((Bounds)(ref bounds)).extents;
-			Vis.Entities(center, ((Vector3)(ref extents)).magnitude + 1f, list, 69372162, (QueryTriggerInteraction)2);
+			Vis.Entities(center, ((Vector3)(ref extents)).magnitude + 1f, list, -2145220350, (QueryTriggerInteraction)2);
 			foreach (BaseEntity item in list)
 			{
 				if (!item.IsDestroyed && !item.isClient)

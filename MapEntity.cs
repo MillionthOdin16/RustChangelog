@@ -114,8 +114,8 @@ public class MapEntity : HeldEntity
 	[RPC_Server.FromOwner]
 	public void ImageUpdate(RPCMessage msg)
 	{
-		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0097: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)msg.player == (Object)null)
 		{
 			return;
@@ -128,7 +128,7 @@ public class MapEntity : HeldEntity
 			return;
 		}
 		uint num2 = (uint)(b * 1000 + b2);
-		byte[] array = msg.read.BytesWithSize(10485760u);
+		byte[] array = msg.read.BytesWithSize(10485760u, false);
 		if (array != null)
 		{
 			FileStorage.server.RemoveEntityNum(net.ID, num2);

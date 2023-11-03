@@ -135,6 +135,12 @@ public abstract class ItemModAssociatedEntity<T> : ItemMod where T : BaseEntity
 		return null;
 	}
 
+	public static bool GetAssociatedEntity(Item item, out T result, bool isServer = true)
+	{
+		result = GetAssociatedEntity(item, isServer);
+		return (Object)(object)result != (Object)null;
+	}
+
 	public static T GetAssociatedEntity(Item item, bool isServer = true)
 	{
 		//IL_0028: Unknown result type (might be due to invalid IL or missing references)

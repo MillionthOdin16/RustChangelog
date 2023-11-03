@@ -1,6 +1,7 @@
 using System;
 using ConVar;
 using Facepunch.Rust;
+using Rust;
 using UnityEngine;
 
 public class DroppedItem : WorldItem
@@ -45,7 +46,7 @@ public class DroppedItem : WorldItem
 
 	public virtual float GetDespawnDuration()
 	{
-		return item?.GetDespawnDuration() ?? Server.itemdespawn;
+		return item?.GetDespawnDuration() ?? ConVar.Server.itemdespawn;
 	}
 
 	public void IdleDestroy()
@@ -57,7 +58,15 @@ public class DroppedItem : WorldItem
 
 	public override void OnCollision(Collision collision, BaseEntity hitEntity)
 	{
-		if (item != null && item.MaxStackable() > 1)
+		if (item == null)
+		{
+			return;
+		}
+		if (collision.collider.IsOnLayer((Layer)23))
+		{
+			((FacepunchBehaviour)this).Invoke((Action)FellThroughTerrainInvoke, 0.33f);
+		}
+		if (item.MaxStackable() > 1)
 		{
 			DroppedItem droppedItem = hitEntity as DroppedItem;
 			if (!((Object)(object)droppedItem == (Object)null) && droppedItem.item != null && !((Object)(object)droppedItem.item.info != (Object)(object)item.info))
@@ -65,6 +74,47 @@ public class DroppedItem : WorldItem
 				droppedItem.OnDroppedOn(this);
 			}
 		}
+	}
+
+	private void FellThroughTerrainInvoke()
+	{
+		if (!CheckFellThroughTerrain())
+		{
+			((FacepunchBehaviour)this).Invoke((Action)FellThroughTerrainInvoke2, 0.5f);
+		}
+	}
+
+	private void FellThroughTerrainInvoke2()
+	{
+		CheckFellThroughTerrain();
+	}
+
+	private bool CheckFellThroughTerrain()
+	{
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
+		if (base.IsDestroyed)
+		{
+			return false;
+		}
+		if (AntiHack.TestInsideTerrain(((Component)this).transform.position))
+		{
+			float num = TerrainMeta.Position.y + TerrainMeta.Terrain.SampleHeight(((Component)this).transform.position);
+			Vector3 position = ((Component)this).transform.position;
+			position.y = num + ((Bounds)(ref bounds)).size.y + 0.05f;
+			((Component)this).transform.position = position;
+			rB.velocity = Vector3.zero;
+			rB.angularVelocity = Vector3.zero;
+			return true;
+		}
+		return false;
 	}
 
 	public void OnDroppedOn(DroppedItem di)
@@ -126,22 +176,6 @@ public class DroppedItem : WorldItem
 		{
 			OnParented();
 		}
-		SetCollisionForParent(newParent);
-	}
-
-	private void SetCollisionForParent(BaseEntity parent)
-	{
-		if (!((Object)(object)rB == (Object)null))
-		{
-			if (parent.IsValid() && (Object)(object)((Component)parent).GetComponent<Rigidbody>() != (Object)null)
-			{
-				rB.collisionDetectionMode = (CollisionDetectionMode)3;
-			}
-			else
-			{
-				rB.collisionDetectionMode = (CollisionDetectionMode)2;
-			}
-		}
 	}
 
 	internal override void OnParentRemoved()
@@ -182,7 +216,6 @@ public class DroppedItem : WorldItem
 		((Component)childCollider).gameObject.layer = ((Component)this).gameObject.layer;
 		rB.isKinematic = false;
 		rB.useGravity = true;
-		rB.collisionDetectionMode = (CollisionDetectionMode)2;
 		rB.WakeUp();
 		if (GetDespawnDuration() < float.PositiveInfinity)
 		{
@@ -242,8 +275,8 @@ public class DroppedItem : WorldItem
 			rB.mass = mass;
 			rB.drag = drag;
 			rB.angularDrag = angularDrag;
-			SetCollisionForParent(GetParentEntity());
 			rB.interpolation = (RigidbodyInterpolation)0;
+			rB.collisionDetectionMode = (CollisionDetectionMode)3;
 			Renderer[] componentsInChildren = val.GetComponentsInChildren<Renderer>(true);
 			for (int i = 0; i < componentsInChildren.Length; i++)
 			{

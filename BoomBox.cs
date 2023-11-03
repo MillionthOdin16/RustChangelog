@@ -270,7 +270,7 @@ public class BoomBox : EntityComponent<BaseEntity>, INotifyLOD
 
 	public void Server_UpdateRadioIP(BaseEntity.RPCMessage msg)
 	{
-		string text = msg.read.String(256);
+		string text = msg.read.String(256, false);
 		if (IsStationValid(text))
 		{
 			if ((Object)(object)msg.player != (Object)null)

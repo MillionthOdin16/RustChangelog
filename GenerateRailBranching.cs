@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class GenerateRailBranching : ProceduralComponent
@@ -45,89 +46,88 @@ public class GenerateRailBranching : ProceduralComponent
 
 	public override void Process(uint seed)
 	{
-		//IL_00fc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0101: Unknown result type (might be due to invalid IL or missing references)
-		//IL_022c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0231: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0237: Unknown result type (might be due to invalid IL or missing references)
-		//IL_023c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_023e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0240: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0121: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0123: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0125: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0255: Unknown result type (might be due to invalid IL or missing references)
-		//IL_025a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0260: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0265: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0269: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0721: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0749: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0139: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0277: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0284: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0290: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0335: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0345: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03cf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0406: Unknown result type (might be due to invalid IL or missing references)
-		//IL_040f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0414: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0419: Unknown result type (might be due to invalid IL or missing references)
-		//IL_041e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0424: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0430: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0435: Unknown result type (might be due to invalid IL or missing references)
-		//IL_043a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_043f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0448: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0451: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0456: Unknown result type (might be due to invalid IL or missing references)
-		//IL_045b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0460: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0195: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02c5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02ca: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02d0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02d5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02d7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02d9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ba: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01bc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01be: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02ee: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02f3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02f9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02fe: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0302: Unknown result type (might be due to invalid IL or missing references)
+		//IL_07b8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_07e0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0310: Unknown result type (might be due to invalid IL or missing references)
+		//IL_031c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0327: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03cc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03dc: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0466: Unknown result type (might be due to invalid IL or missing references)
-		//IL_047c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0481: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0486: Unknown result type (might be due to invalid IL or missing references)
-		//IL_048b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_048d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_048f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0491: Unknown result type (might be due to invalid IL or missing references)
 		//IL_049d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_049f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_04a1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_04e3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04a6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04ab: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04b0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04b5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04bb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04c7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04cc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04d1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04d6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04df: Unknown result type (might be due to invalid IL or missing references)
 		//IL_04e8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_04ea: Unknown result type (might be due to invalid IL or missing references)
-		//IL_04ef: Unknown result type (might be due to invalid IL or missing references)
-		//IL_04f1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_04f6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_04f8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04ed: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04f2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04f7: Unknown result type (might be due to invalid IL or missing references)
 		//IL_04fd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0508: Unknown result type (might be due to invalid IL or missing references)
-		//IL_050a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_050f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_051a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_051c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0521: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0576: Unknown result type (might be due to invalid IL or missing references)
-		//IL_057b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0513: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0518: Unknown result type (might be due to invalid IL or missing references)
+		//IL_051d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0522: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0524: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0526: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0528: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0534: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0536: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0538: Unknown result type (might be due to invalid IL or missing references)
+		//IL_057a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_057f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0584: Unknown result type (might be due to invalid IL or missing references)
-		//IL_059e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_05a3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_05a7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_05ac: Unknown result type (might be due to invalid IL or missing references)
-		//IL_05d8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_05dd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_05e4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0581: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0586: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0588: Unknown result type (might be due to invalid IL or missing references)
+		//IL_058d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_058f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0594: Unknown result type (might be due to invalid IL or missing references)
+		//IL_059f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_05a1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_05a6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_05b1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_05b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_05b8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_060d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0612: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0616: Unknown result type (might be due to invalid IL or missing references)
+		//IL_061b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0635: Unknown result type (might be due to invalid IL or missing references)
+		//IL_063a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_063e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0643: Unknown result type (might be due to invalid IL or missing references)
+		//IL_066f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0674: Unknown result type (might be due to invalid IL or missing references)
+		//IL_067b: Unknown result type (might be due to invalid IL or missing references)
 		if (World.Networked)
 		{
-			TerrainMeta.Path.Rails.Clear();
-			TerrainMeta.Path.Rails.AddRange(World.GetPaths("Rail"));
 			return;
 		}
 		int num = Mathf.RoundToInt(40f);
@@ -139,6 +139,21 @@ public class GenerateRailBranching : ProceduralComponent
 		int[,] array = TerrainPath.CreateRailCostmap(ref seed);
 		PathFinder pathFinder = new PathFinder(array);
 		int length = array.GetLength(0);
+		foreach (MonumentInfo monument in TerrainMeta.Path.Monuments)
+		{
+			TerrainPathConnect[] array2 = (from target in ((Component)monument).GetComponentsInChildren<TerrainPathConnect>(true)
+				where target.Type == InfrastructureType.Rail
+				select target).ToArray();
+			foreach (TerrainPathConnect terrainPathConnect in array2)
+			{
+				pathFinder.PushPointsAdditional.Add(PathFinder.GetPoint(((Component)terrainPathConnect).transform.position, length));
+			}
+		}
+		if (pathFinder.PushPointsAdditional.Count > 0)
+		{
+			pathFinder.PushDistance = 10;
+			pathFinder.PushMultiplier = int.MaxValue;
+		}
 		List<Vector3> list2 = new List<Vector3>();
 		List<Vector3> list3 = new List<Vector3>();
 		List<Vector3> list4 = new List<Vector3>();
@@ -199,10 +214,10 @@ public class GenerateRailBranching : ProceduralComponent
 				{
 					continue;
 				}
-				PathFinder.Point pathFinderPoint = GetPathFinderPoint(val6, length);
-				PathFinder.Point pathFinderPoint2 = GetPathFinderPoint(val7, length);
+				PathFinder.Point point = PathFinder.GetPoint(val6, length);
+				PathFinder.Point point2 = PathFinder.GetPoint(val7, length);
 				l += num9;
-				PathFinder.Node node = pathFinder.FindPath(pathFinderPoint, pathFinderPoint2, 250000);
+				PathFinder.Node node = pathFinder.FindPath(point, point2, 250000);
 				if (node == null)
 				{
 					continue;
@@ -331,17 +346,5 @@ public class GenerateRailBranching : ProceduralComponent
 			rail.AdjustPlacementMap(20f);
 		}
 		TerrainMeta.Path.Rails.AddRange(list);
-	}
-
-	public PathFinder.Point GetPathFinderPoint(Vector3 worldPos, int res)
-	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		float num = TerrainMeta.NormalizeX(worldPos.x);
-		float num2 = TerrainMeta.NormalizeZ(worldPos.z);
-		PathFinder.Point result = default(PathFinder.Point);
-		result.x = Mathf.Clamp((int)(num * (float)res), 0, res - 1);
-		result.y = Mathf.Clamp((int)(num2 * (float)res), 0, res - 1);
-		return result;
 	}
 }

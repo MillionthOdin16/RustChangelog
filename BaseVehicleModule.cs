@@ -583,7 +583,7 @@ public class BaseVehicleModule : BaseVehicle, IPrefabPreProcess
 		{
 			return;
 		}
-		string lookingAtColldierName = msg.read.String(256);
+		string lookingAtColldierName = msg.read.String(256, false);
 		VehicleModuleSlidingComponent[] array = slidingComponents;
 		foreach (VehicleModuleSlidingComponent vehicleModuleSlidingComponent in array)
 		{
