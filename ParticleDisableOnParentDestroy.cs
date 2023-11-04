@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class ParticleDisableOnParentDestroy : MonoBehaviour, IOnParentDestroying
 {
-	public float destroyAfterSeconds = 0f;
+	public float destroyAfterSeconds;
 
 	public void OnParentDestroying()
 	{

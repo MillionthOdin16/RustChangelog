@@ -32,7 +32,7 @@ public class TweakUIDropdown : TweakUIBase
 
 	public NameValue[] nameValues;
 
-	public bool assignImageColor = false;
+	public bool assignImageColor;
 
 	public UnityEvent onValueChanged = new UnityEvent();
 
@@ -54,8 +54,8 @@ public class TweakUIDropdown : TweakUIBase
 
 	public void UpdateDropdownOptions()
 	{
-		//IL_00b8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c2: Expected O, but got Unknown
+		//IL_00a0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00aa: Expected O, but got Unknown
 		List<RustButton> list = Pool.GetList<RustButton>();
 		((Component)DropdownContainer).GetComponentsInChildren<RustButton>(false, list);
 		foreach (RustButton item in list)
@@ -65,15 +65,15 @@ public class TweakUIDropdown : TweakUIBase
 		Pool.FreeList<RustButton>(ref list);
 		for (int i = 0; i < nameValues.Length; i++)
 		{
-			GameObject val = Object.Instantiate<GameObject>(DropdownItemPrefab, (Transform)(object)DropdownContainer);
+			GameObject obj = Object.Instantiate<GameObject>(DropdownItemPrefab, (Transform)(object)DropdownContainer);
 			int itemIndex = i;
-			RustButton component = val.GetComponent<RustButton>();
+			RustButton component = obj.GetComponent<RustButton>();
 			component.Text.SetPhrase(nameValues[i].label);
 			component.OnPressed.AddListener((UnityAction)delegate
 			{
 				ChangeValue(itemIndex);
 			});
-			val.SetActive(true);
+			obj.SetActive(true);
 		}
 	}
 
@@ -87,17 +87,17 @@ public class TweakUIDropdown : TweakUIBase
 
 	public void OnDropdownOpen()
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000d: Expected O, but got Unknown
-		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0097: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Expected O, but got Unknown
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
 		RectTransform val = (RectTransform)((Component)this).transform;
 		if (((Transform)val).position.y <= (float)Screen.height / 2f)
 		{
@@ -116,7 +116,7 @@ public class TweakUIDropdown : TweakUIBase
 	{
 		Opener.SetToggleFalse();
 		int num = Mathf.Clamp(index, 0, nameValues.Length - 1);
-		bool flag = num != currentValue;
+		bool num2 = num != currentValue;
 		currentValue = num;
 		if (ApplyImmediatelyOnChange)
 		{
@@ -126,7 +126,7 @@ public class TweakUIDropdown : TweakUIBase
 		{
 			ShowValue(nameValues[currentValue].value);
 		}
-		if (flag)
+		if (num2)
 		{
 			UnityEvent obj = onValueChanged;
 			if (obj != null)
@@ -158,7 +158,7 @@ public class TweakUIDropdown : TweakUIBase
 
 	private void ShowValue(string value)
 	{
-		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
 		for (int i = 0; i < nameValues.Length; i++)
 		{
 			if (!(nameValues[i].value != value))

@@ -7,20 +7,20 @@ public sealed class PostProcessVolume : MonoBehaviour
 	public PostProcessProfile sharedProfile;
 
 	[Tooltip("Check this box to mark this volume as global. This volume's Profile will be applied to the whole Scene.")]
-	public bool isGlobal = false;
+	public bool isGlobal;
 
 	public Bounds bounds;
 
 	[Min(0f)]
 	[Tooltip("The distance (from the attached Collider) to start blending from. A value of 0 means there will be no blending and the Volume overrides will be applied immediatly upon entry to the attached Collider.")]
-	public float blendDistance = 0f;
+	public float blendDistance;
 
 	[Range(0f, 1f)]
 	[Tooltip("The total weight of this Volume in the Scene. A value of 0 signifies that it will have no effect, 1 signifies full effect.")]
 	public float weight = 1f;
 
 	[Tooltip("The volume priority in the stack. A higher value means higher priority. Negative values are supported.")]
-	public float priority = 0f;
+	public float priority;
 
 	private int m_PreviousLayer;
 
@@ -52,7 +52,17 @@ public sealed class PostProcessVolume : MonoBehaviour
 		}
 	}
 
-	internal PostProcessProfile profileRef => ((Object)(object)m_InternalProfile == (Object)null) ? sharedProfile : m_InternalProfile;
+	internal PostProcessProfile profileRef
+	{
+		get
+		{
+			if (!((Object)(object)m_InternalProfile == (Object)null))
+			{
+				return m_InternalProfile;
+			}
+			return sharedProfile;
+		}
+	}
 
 	public bool HasInstantiatedProfile()
 	{
@@ -87,24 +97,24 @@ public sealed class PostProcessVolume : MonoBehaviour
 
 	private void OnDrawGizmos()
 	{
-		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ac: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0092: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
 		if (!isGlobal)
 		{
 			Vector3 lossyScale = ((Component)this).transform.lossyScale;

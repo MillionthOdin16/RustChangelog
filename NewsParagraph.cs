@@ -13,13 +13,12 @@ public class NewsParagraph : MonoBehaviour, IPointerClickHandler, IEventSystemHa
 
 	public void OnPointerClick(PointerEventData eventData)
 	{
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001e: Invalid comparison between Unknown and I4
-		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
-		if ((Object)(object)Text == (Object)null || Links == null || (int)eventData.button > 0)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
+		if ((Object)(object)Text == (Object)null || Links == null || (int)eventData.button != 0)
 		{
 			return;
 		}

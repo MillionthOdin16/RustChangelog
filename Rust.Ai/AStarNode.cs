@@ -4,9 +4,9 @@ public class AStarNode
 {
 	public AStarNode Parent;
 
-	public float G = 0f;
+	public float G;
 
-	public float H = 0f;
+	public float H;
 
 	public IAIPathNode Node;
 

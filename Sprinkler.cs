@@ -3,13 +3,12 @@ using System.Collections.Generic;
 using ConVar;
 using Facepunch;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 public class Sprinkler : IOEntity
 {
 	public float SplashFrequency = 1f;
 
-	public Transform Eyes = null;
+	public Transform Eyes;
 
 	public int WaterPerSplash = 1;
 
@@ -23,7 +22,7 @@ public class Sprinkler : IOEntity
 
 	private TimeSince updateSplashableCache;
 
-	private bool forceUpdateSplashables = false;
+	private bool forceUpdateSplashables;
 
 	public override bool BlockFluidDraining => (Object)(object)currentFuelSource != (Object)null;
 
@@ -45,35 +44,32 @@ public class Sprinkler : IOEntity
 
 	private void DoSplash()
 	{
-		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b7: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00bc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ce: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ca: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00d3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00da: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00df: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ed: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ef: Unknown result type (might be due to invalid IL or missing references)
-		//IL_016d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013f: Unknown result type (might be due to invalid IL or missing references)
 		TimeWarning val = TimeWarning.New("SprinklerSplash", 0);
 		try
 		{
 			int num = WaterPerSplash;
 			if (TimeSince.op_Implicit(updateSplashableCache) > SplashFrequency * 4f || forceUpdateSplashables)
 			{
-				Profiler.BeginSample("UpdateCachedSplashables");
 				cachedSplashables.Clear();
 				forceUpdateSplashables = false;
 				updateSplashableCache = TimeSince.op_Implicit(0f);
@@ -98,34 +94,21 @@ public class Sprinkler : IOEntity
 					}
 				}
 				Pool.FreeList<BaseEntity>(ref list);
-				Profiler.EndSample();
-			}
-			else
-			{
-				Profiler.BeginSample("UseCachedSplashables");
-				Profiler.EndSample();
 			}
 			if (cachedSplashables.Count > 0)
 			{
 				int amount = num / cachedSplashables.Count;
 				foreach (ISplashable cachedSplashable in cachedSplashables)
 				{
-					Profiler.BeginSample("CheckCanSplash");
-					if (cachedSplashable.IsUnityNull() || !cachedSplashable.WantsSplash(currentFuelType, amount))
+					if (!cachedSplashable.IsUnityNull() && cachedSplashable.WantsSplash(currentFuelType, amount))
 					{
-						Profiler.EndSample();
-						continue;
+						int num3 = cachedSplashable.DoSplash(currentFuelType, amount);
+						num -= num3;
+						if (num <= 0)
+						{
+							break;
+						}
 					}
-					Profiler.EndSample();
-					Profiler.BeginSample("ApplySplash");
-					int num3 = cachedSplashable.DoSplash(currentFuelType, amount);
-					Profiler.EndSample();
-					num -= num3;
-					if (num > 0)
-					{
-						continue;
-					}
-					break;
 				}
 			}
 			if (DecayPerSplash > 0f)

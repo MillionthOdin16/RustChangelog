@@ -9,8 +9,8 @@ public class ChangelogButton : MonoBehaviour
 
 	private void Update()
 	{
-		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006d: Expected O, but got Unknown
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005f: Expected O, but got Unknown
 		BaseGameMode activeGameMode = BaseGameMode.GetActiveGameMode(serverside: false);
 		if ((Object)(object)activeGameMode != (Object)null)
 		{

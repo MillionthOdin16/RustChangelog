@@ -108,7 +108,7 @@ public class CardGameUI : UIDialog
 
 	public Phrase phraseAllIn;
 
-	public GameObject amountChangeRoot = null;
+	public GameObject amountChangeRoot;
 
 	public RustText amountChangeText;
 
@@ -145,9 +145,9 @@ public class CardGameUI : UIDialog
 
 	public Sprite cardBackSmall;
 
-	private static Sprite cardBackLargeStatic = null;
+	private static Sprite cardBackLargeStatic;
 
-	private static Sprite cardBackSmallStatic = null;
+	private static Sprite cardBackSmallStatic;
 
 	[SerializeField]
 	private TexasHoldEmUI texasHoldEmUI;

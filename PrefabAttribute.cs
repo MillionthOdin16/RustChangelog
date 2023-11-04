@@ -76,8 +76,9 @@ public abstract class PrefabAttribute : MonoBehaviour, IPrefabPreProcess
 				{
 					GameManager.server.FindPrefab(prefabID);
 				}
-				else if (clientside && !serverside)
+				else if (clientside)
 				{
+					_ = serverside;
 				}
 			}
 			return value;
@@ -154,18 +155,18 @@ public abstract class PrefabAttribute : MonoBehaviour, IPrefabPreProcess
 
 	public virtual void PreProcess(IPrefabProcessor preProcess, GameObject rootObj, string name, bool serverside, bool clientside, bool bundling)
 	{
-		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
 		if (!bundling)
 		{
 			fullName = name;
@@ -221,7 +222,11 @@ public abstract class PrefabAttribute : MonoBehaviour, IPrefabPreProcess
 
 	public override int GetHashCode()
 	{
-		return (hierachyName != null) ? hierachyName.GetHashCode() : ((Object)this).GetHashCode();
+		if (hierachyName == null)
+		{
+			return ((Object)this).GetHashCode();
+		}
+		return hierachyName.GetHashCode();
 	}
 
 	public static implicit operator bool(PrefabAttribute exists)

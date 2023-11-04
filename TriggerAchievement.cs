@@ -64,12 +64,7 @@ public class TriggerAchievement : TriggerBase
 		if (!string.IsNullOrEmpty(requiredVehicleName))
 		{
 			BaseVehicle mountedVehicle = component.GetMountedVehicle();
-			if ((Object)(object)mountedVehicle == (Object)null)
-			{
-				return;
-			}
-			string shortPrefabName = mountedVehicle.ShortPrefabName;
-			if (!shortPrefabName.Contains(requiredVehicleName))
+			if ((Object)(object)mountedVehicle == (Object)null || !mountedVehicle.ShortPrefabName.Contains(requiredVehicleName))
 			{
 				return;
 			}

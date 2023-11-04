@@ -20,5 +20,5 @@ public class WeightedAnimationRandomiser : StateMachineBehaviour
 
 	public IdleChance[] IdleTransitions = new IdleChance[0];
 
-	public bool AllowRepeats = false;
+	public bool AllowRepeats;
 }

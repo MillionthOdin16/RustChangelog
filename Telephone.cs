@@ -36,28 +36,37 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 
 	public Transform AnsweringMachineHotspot;
 
-	public Transform[] HandsetRoots = null;
+	public Transform[] HandsetRoots;
 
 	public ItemDefinition[] ValidCassettes;
 
-	public Transform ParentedHandsetTransform = null;
+	public Transform ParentedHandsetTransform;
 
-	public LineRenderer CableLineRenderer = null;
+	public LineRenderer CableLineRenderer;
 
-	public Transform CableStartPoint = null;
+	public Transform CableStartPoint;
 
-	public Transform CableEndPoint = null;
+	public Transform CableEndPoint;
 
 	public float LineDroopAmount = 0.25f;
 
-	public PhoneController Controller = null;
+	public PhoneController Controller;
 
-	public uint AnsweringMessageId => ((Object)(object)cachedCassette != (Object)null) ? cachedCassette.AudioId : 0u;
-
-	public Cassette cachedCassette { get; private set; } = null;
-
+	public Cassette cachedCassette { get; private set; }
 
 	public BaseEntity ToBaseEntity => this;
+
+	public uint AnsweringMessageId
+	{
+		get
+		{
+			if (!((Object)(object)cachedCassette != (Object)null))
+			{
+				return 0u;
+			}
+			return cachedCassette.AudioId;
+		}
+	}
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -69,7 +78,7 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - AnswerPhone "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - AnswerPhone "));
 				}
 				TimeWarning val2 = TimeWarning.New("AnswerPhone", 0);
 				try
@@ -88,7 +97,7 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -100,7 +109,7 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -120,12 +129,12 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ClearCurrentUser "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ClearCurrentUser "));
 				}
-				TimeWarning val5 = TimeWarning.New("ClearCurrentUser", 0);
+				TimeWarning val2 = TimeWarning.New("ClearCurrentUser", 0);
 				try
 				{
-					TimeWarning val6 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.MaxDistance.Test(2754362156u, "ClearCurrentUser", this, player, 9f))
@@ -135,11 +144,11 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 					}
 					finally
 					{
-						((IDisposable)val6)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val7 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -151,7 +160,7 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 						}
 						finally
 						{
-							((IDisposable)val7)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -162,7 +171,7 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 				}
 				finally
 				{
-					((IDisposable)val5)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -171,12 +180,12 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - InitiateCall "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - InitiateCall "));
 				}
-				TimeWarning val8 = TimeWarning.New("InitiateCall", 0);
+				TimeWarning val2 = TimeWarning.New("InitiateCall", 0);
 				try
 				{
-					TimeWarning val9 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.MaxDistance.Test(1095090232u, "InitiateCall", this, player, 3f))
@@ -186,11 +195,11 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 					}
 					finally
 					{
-						((IDisposable)val9)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val10 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -202,7 +211,7 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 						}
 						finally
 						{
-							((IDisposable)val10)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex3)
@@ -213,7 +222,7 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 				}
 				finally
 				{
-					((IDisposable)val8)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -222,12 +231,12 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_AddSavedNumber "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_AddSavedNumber "));
 				}
-				TimeWarning val11 = TimeWarning.New("Server_AddSavedNumber", 0);
+				TimeWarning val2 = TimeWarning.New("Server_AddSavedNumber", 0);
 				try
 				{
-					TimeWarning val12 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.CallsPerSecond.Test(2606442785u, "Server_AddSavedNumber", this, player, 5uL))
@@ -241,11 +250,11 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 					}
 					finally
 					{
-						((IDisposable)val12)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val13 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -257,7 +266,7 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 						}
 						finally
 						{
-							((IDisposable)val13)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex4)
@@ -268,7 +277,7 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 				}
 				finally
 				{
-					((IDisposable)val11)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -277,12 +286,12 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_RemoveSavedNumber "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_RemoveSavedNumber "));
 				}
-				TimeWarning val14 = TimeWarning.New("Server_RemoveSavedNumber", 0);
+				TimeWarning val2 = TimeWarning.New("Server_RemoveSavedNumber", 0);
 				try
 				{
-					TimeWarning val15 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.CallsPerSecond.Test(1402406333u, "Server_RemoveSavedNumber", this, player, 5uL))
@@ -296,11 +305,11 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 					}
 					finally
 					{
-						((IDisposable)val15)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val16 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -312,7 +321,7 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 						}
 						finally
 						{
-							((IDisposable)val16)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex5)
@@ -323,7 +332,7 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 				}
 				finally
 				{
-					((IDisposable)val14)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -332,12 +341,12 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_RequestPhoneDirectory "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_RequestPhoneDirectory "));
 				}
-				TimeWarning val17 = TimeWarning.New("Server_RequestPhoneDirectory", 0);
+				TimeWarning val2 = TimeWarning.New("Server_RequestPhoneDirectory", 0);
 				try
 				{
-					TimeWarning val18 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.CallsPerSecond.Test(942544266u, "Server_RequestPhoneDirectory", this, player, 5uL))
@@ -351,11 +360,11 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 					}
 					finally
 					{
-						((IDisposable)val18)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val19 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -367,7 +376,7 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 						}
 						finally
 						{
-							((IDisposable)val19)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex6)
@@ -378,7 +387,7 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 				}
 				finally
 				{
-					((IDisposable)val17)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -387,12 +396,12 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ServerDeleteVoicemail "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ServerDeleteVoicemail "));
 				}
-				TimeWarning val20 = TimeWarning.New("ServerDeleteVoicemail", 0);
+				TimeWarning val2 = TimeWarning.New("ServerDeleteVoicemail", 0);
 				try
 				{
-					TimeWarning val21 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.CallsPerSecond.Test(1240133378u, "ServerDeleteVoicemail", this, player, 5uL))
@@ -406,11 +415,11 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 					}
 					finally
 					{
-						((IDisposable)val21)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val22 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -422,7 +431,7 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 						}
 						finally
 						{
-							((IDisposable)val22)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex7)
@@ -433,7 +442,7 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 				}
 				finally
 				{
-					((IDisposable)val20)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -442,12 +451,12 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ServerHangUp "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ServerHangUp "));
 				}
-				TimeWarning val23 = TimeWarning.New("ServerHangUp", 0);
+				TimeWarning val2 = TimeWarning.New("ServerHangUp", 0);
 				try
 				{
-					TimeWarning val24 = TimeWarning.New("Call", 0);
+					TimeWarning val3 = TimeWarning.New("Call", 0);
 					try
 					{
 						RPCMessage rPCMessage = default(RPCMessage);
@@ -459,7 +468,7 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 					}
 					finally
 					{
-						((IDisposable)val24)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 				}
 				catch (Exception ex8)
@@ -469,7 +478,7 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 				}
 				finally
 				{
-					((IDisposable)val23)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -478,12 +487,12 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ServerPlayVoicemail "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ServerPlayVoicemail "));
 				}
-				TimeWarning val25 = TimeWarning.New("ServerPlayVoicemail", 0);
+				TimeWarning val2 = TimeWarning.New("ServerPlayVoicemail", 0);
 				try
 				{
-					TimeWarning val26 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.CallsPerSecond.Test(239260010u, "ServerPlayVoicemail", this, player, 5uL))
@@ -497,11 +506,11 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 					}
 					finally
 					{
-						((IDisposable)val26)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val27 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -513,7 +522,7 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 						}
 						finally
 						{
-							((IDisposable)val27)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex9)
@@ -524,7 +533,7 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 				}
 				finally
 				{
-					((IDisposable)val25)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -533,12 +542,12 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ServerSendVoicemail "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ServerSendVoicemail "));
 				}
-				TimeWarning val28 = TimeWarning.New("ServerSendVoicemail", 0);
+				TimeWarning val2 = TimeWarning.New("ServerSendVoicemail", 0);
 				try
 				{
-					TimeWarning val29 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.CallsPerSecond.Test(189198880u, "ServerSendVoicemail", this, player, 5uL))
@@ -548,11 +557,11 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 					}
 					finally
 					{
-						((IDisposable)val29)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val30 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -564,7 +573,7 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 						}
 						finally
 						{
-							((IDisposable)val30)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex10)
@@ -575,7 +584,7 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 				}
 				finally
 				{
-					((IDisposable)val28)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -584,12 +593,12 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ServerStopVoicemail "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ServerStopVoicemail "));
 				}
-				TimeWarning val31 = TimeWarning.New("ServerStopVoicemail", 0);
+				TimeWarning val2 = TimeWarning.New("ServerStopVoicemail", 0);
 				try
 				{
-					TimeWarning val32 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.CallsPerSecond.Test(2760189029u, "ServerStopVoicemail", this, player, 5uL))
@@ -603,11 +612,11 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 					}
 					finally
 					{
-						((IDisposable)val32)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val33 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -619,7 +628,7 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 						}
 						finally
 						{
-							((IDisposable)val33)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex11)
@@ -630,7 +639,7 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 				}
 				finally
 				{
-					((IDisposable)val31)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -639,12 +648,12 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SetCurrentUser "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SetCurrentUser "));
 				}
-				TimeWarning val34 = TimeWarning.New("SetCurrentUser", 0);
+				TimeWarning val2 = TimeWarning.New("SetCurrentUser", 0);
 				try
 				{
-					TimeWarning val35 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.MaxDistance.Test(3900772076u, "SetCurrentUser", this, player, 3f))
@@ -654,11 +663,11 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 					}
 					finally
 					{
-						((IDisposable)val35)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val36 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -670,7 +679,7 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 						}
 						finally
 						{
-							((IDisposable)val36)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex12)
@@ -681,7 +690,7 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 				}
 				finally
 				{
-					((IDisposable)val34)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -690,12 +699,12 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - UpdatePhoneName "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - UpdatePhoneName "));
 				}
-				TimeWarning val37 = TimeWarning.New("UpdatePhoneName", 0);
+				TimeWarning val2 = TimeWarning.New("UpdatePhoneName", 0);
 				try
 				{
-					TimeWarning val38 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.CallsPerSecond.Test(2760249627u, "UpdatePhoneName", this, player, 5uL))
@@ -709,11 +718,11 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 					}
 					finally
 					{
-						((IDisposable)val38)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val39 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -725,7 +734,7 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 						}
 						finally
 						{
-							((IDisposable)val39)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex13)
@@ -736,7 +745,7 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 				}
 				finally
 				{
-					((IDisposable)val37)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -748,10 +757,83 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 		return base.OnRpcMessage(player, rpc, msg);
 	}
 
+	public override void Load(LoadInfo info)
+	{
+		//IL_00ee: Unknown result type (might be due to invalid IL or missing references)
+		base.Load(info);
+		if (info.msg?.telephone == null)
+		{
+			return;
+		}
+		Controller.PhoneNumber = info.msg.telephone.phoneNumber;
+		Controller.PhoneName = info.msg.telephone.phoneName;
+		Controller.lastDialedNumber = info.msg.telephone.lastNumber;
+		Controller.savedVoicemail = Pool.GetList<VoicemailEntry>();
+		foreach (VoicemailEntry item in info.msg.telephone.voicemail)
+		{
+			Controller.savedVoicemail.Add(item);
+			item.ShouldPool = false;
+		}
+		if (!info.fromDisk)
+		{
+			Controller.currentPlayerRef.uid = info.msg.telephone.usingPlayer;
+		}
+		PhoneDirectory savedNumbers = Controller.savedNumbers;
+		if (savedNumbers != null)
+		{
+			savedNumbers.ResetToPool();
+		}
+		Controller.savedNumbers = info.msg.telephone.savedNumbers;
+		if (Controller.savedNumbers != null)
+		{
+			Controller.savedNumbers.ShouldPool = false;
+		}
+		if (info.fromDisk)
+		{
+			SetFlag(Flags.Busy, b: false);
+		}
+	}
+
+	public override bool CanPickup(BasePlayer player)
+	{
+		if (!base.CanPickup(player))
+		{
+			return false;
+		}
+		return (Object)(object)Controller.currentPlayer == (Object)null;
+	}
+
+	public override void OnFlagsChanged(Flags old, Flags next)
+	{
+		base.OnFlagsChanged(old, next);
+		if (base.isServer)
+		{
+			if (Controller.RequirePower && next.HasFlag(Flags.Busy) && !next.HasFlag(Flags.Reserved8))
+			{
+				Controller.ServerHangUp();
+			}
+			if (old.HasFlag(Flags.Busy) != next.HasFlag(Flags.Busy))
+			{
+				if (next.HasFlag(Flags.Busy))
+				{
+					if (!((FacepunchBehaviour)this).IsInvoking((Action)Controller.WatchForDisconnects))
+					{
+						((FacepunchBehaviour)this).InvokeRepeating((Action)Controller.WatchForDisconnects, 0f, 0.1f);
+					}
+				}
+				else
+				{
+					((FacepunchBehaviour)this).CancelInvoke((Action)Controller.WatchForDisconnects);
+				}
+			}
+		}
+		Controller.OnFlagsChanged(old, next);
+	}
+
 	public override void Save(SaveInfo info)
 	{
-		//IL_0134: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0139: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011f: Unknown result type (might be due to invalid IL or missing references)
 		base.Save(info);
 		if (info.msg.telephone == null)
 		{
@@ -831,15 +913,15 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 
 	public void OnCassetteInserted(Cassette c)
 	{
-		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
 		cachedCassette = c;
 		ClientRPC<NetworkableId>(null, "ClientOnCassetteChanged", c.net.ID);
 	}
 
 	public void OnCassetteRemoved(Cassette c)
 	{
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
 		cachedCassette = null;
 		Controller.DeleteAllVoicemail();
 		ClientRPC<NetworkableId>(null, "ClientOnCassetteChanged", default(NetworkableId));
@@ -848,9 +930,9 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 	private bool CanAcceptItem(Item item, int targetSlot)
 	{
 		ItemDefinition[] validCassettes = ValidCassettes;
-		foreach (ItemDefinition itemDefinition in validCassettes)
+		for (int i = 0; i < validCassettes.Length; i++)
 		{
-			if ((Object)(object)itemDefinition == (Object)(object)item.info)
+			if ((Object)(object)validCassettes[i] == (Object)(object)item.info)
 			{
 				return true;
 			}
@@ -934,78 +1016,5 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 			return base.GetPassthroughAmount(outputSlot);
 		}
 		return 0;
-	}
-
-	public override void Load(LoadInfo info)
-	{
-		//IL_0102: Unknown result type (might be due to invalid IL or missing references)
-		base.Load(info);
-		if (info.msg?.telephone == null)
-		{
-			return;
-		}
-		Controller.PhoneNumber = info.msg.telephone.phoneNumber;
-		Controller.PhoneName = info.msg.telephone.phoneName;
-		Controller.lastDialedNumber = info.msg.telephone.lastNumber;
-		Controller.savedVoicemail = Pool.GetList<VoicemailEntry>();
-		foreach (VoicemailEntry item in info.msg.telephone.voicemail)
-		{
-			Controller.savedVoicemail.Add(item);
-			item.ShouldPool = false;
-		}
-		if (!info.fromDisk)
-		{
-			Controller.currentPlayerRef.uid = info.msg.telephone.usingPlayer;
-		}
-		PhoneDirectory savedNumbers = Controller.savedNumbers;
-		if (savedNumbers != null)
-		{
-			savedNumbers.ResetToPool();
-		}
-		Controller.savedNumbers = info.msg.telephone.savedNumbers;
-		if (Controller.savedNumbers != null)
-		{
-			Controller.savedNumbers.ShouldPool = false;
-		}
-		if (info.fromDisk)
-		{
-			SetFlag(Flags.Busy, b: false);
-		}
-	}
-
-	public override bool CanPickup(BasePlayer player)
-	{
-		if (!base.CanPickup(player))
-		{
-			return false;
-		}
-		return (Object)(object)Controller.currentPlayer == (Object)null;
-	}
-
-	public override void OnFlagsChanged(Flags old, Flags next)
-	{
-		base.OnFlagsChanged(old, next);
-		if (base.isServer)
-		{
-			if (Controller.RequirePower && next.HasFlag(Flags.Busy) && !next.HasFlag(Flags.Reserved8))
-			{
-				Controller.ServerHangUp();
-			}
-			if (old.HasFlag(Flags.Busy) != next.HasFlag(Flags.Busy))
-			{
-				if (next.HasFlag(Flags.Busy))
-				{
-					if (!((FacepunchBehaviour)this).IsInvoking((Action)Controller.WatchForDisconnects))
-					{
-						((FacepunchBehaviour)this).InvokeRepeating((Action)Controller.WatchForDisconnects, 0f, 0.1f);
-					}
-				}
-				else
-				{
-					((FacepunchBehaviour)this).CancelInvoke((Action)Controller.WatchForDisconnects);
-				}
-			}
-		}
-		Controller.OnFlagsChanged(old, next);
 	}
 }

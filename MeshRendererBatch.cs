@@ -34,14 +34,14 @@ public class MeshRendererBatch : MeshBatch
 
 	public void Setup(Vector3 position, Material material, ShadowCastingMode shadows, int layer)
 	{
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0041: Invalid comparison between Unknown and I4
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003c: Invalid comparison between Unknown and I4
 		Vector3 val2 = (((Component)this).transform.position = position);
 		this.position = val2;
 		((Component)this).gameObject.layer = layer;
@@ -65,10 +65,10 @@ public class MeshRendererBatch : MeshBatch
 
 	public void Add(MeshRendererInstance instance)
 	{
-		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
 		ref Vector3 reference = ref instance.position;
 		reference -= position;
 		meshGroup.data.Add(instance);

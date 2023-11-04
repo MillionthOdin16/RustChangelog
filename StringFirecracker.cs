@@ -31,8 +31,8 @@ public class StringFirecracker : TimedExplosive
 
 	public void CreatePinJoint()
 	{
-		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
 		if (!((Object)(object)serverClientJoint != (Object)null))
 		{
 			serverClientJoint = ((Component)this).gameObject.AddComponent<SpringJoint>();

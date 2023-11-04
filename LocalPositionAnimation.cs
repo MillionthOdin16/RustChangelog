@@ -4,7 +4,7 @@ public class LocalPositionAnimation : MonoBehaviour, IClientComponent
 {
 	public Vector3 centerPosition;
 
-	public bool worldSpace = false;
+	public bool worldSpace;
 
 	public float scaleX = 1f;
 

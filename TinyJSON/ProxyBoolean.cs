@@ -18,6 +18,10 @@ public sealed class ProxyBoolean : Variant
 
 	public override string ToString(IFormatProvider provider)
 	{
-		return value ? "true" : "false";
+		if (!value)
+		{
+			return "false";
+		}
+		return "true";
 	}
 }

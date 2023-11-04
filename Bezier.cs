@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using Facepunch;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 public static class Bezier
 {
@@ -24,33 +23,33 @@ public static class Bezier
 
 	public static void ApplyLineSlack(Vector3[] positions, float[] slackLevels, ref List<Vector3> result, int tesselationLevel)
 	{
-		//IL_014c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ee: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0108: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0113: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0115: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0119: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0120: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0125: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0129: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d6: Unknown result type (might be due to invalid IL or missing references)
 		if (positions.Length < 2 || slackLevels.Length == 0)
 		{
 			return;
 		}
 		bool flag = false;
-		foreach (float num in slackLevels)
+		for (int i = 0; i < slackLevels.Length; i++)
 		{
-			if (num > 0f)
+			if (slackLevels[i] > 0f)
 			{
 				flag = true;
 				break;
@@ -61,7 +60,6 @@ public static class Bezier
 			result.AddRange(positions);
 			return;
 		}
-		Profiler.BeginSample("Bezier.ApplySlack");
 		for (int j = 0; j < positions.Length; j++)
 		{
 			if (j < positions.Length - 1)
@@ -76,9 +74,9 @@ public static class Bezier
 				result.Add(val);
 				for (int k = 0; k < tesselationLevel; k++)
 				{
-					float num2 = (float)k / (float)tesselationLevel;
-					num2 = Mathx.RemapValClamped(num2, 0f, 1f, 0.1f, 0.9f);
-					Vector3 item = Vector3.Lerp(Vector3.Lerp(val, val3, num2), Vector3.Lerp(val3, val2, num2), num2);
+					float num = (float)k / (float)tesselationLevel;
+					num = Mathx.RemapValClamped(num, 0f, 1f, 0.1f, 0.9f);
+					Vector3 item = Vector3.Lerp(Vector3.Lerp(val, val3, num), Vector3.Lerp(val3, val2, num), num);
 					result.Add(item);
 				}
 			}
@@ -87,6 +85,5 @@ public static class Bezier
 				result.Add(positions[j]);
 			}
 		}
-		Profiler.EndSample();
 	}
 }

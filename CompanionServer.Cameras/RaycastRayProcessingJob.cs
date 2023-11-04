@@ -37,36 +37,36 @@ public struct RaycastRayProcessingJob : IJobParallelFor
 
 	public void Execute(int index)
 	{
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ba: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0103: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0108: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0111: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0093: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ca: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00de: Unknown result type (might be due to invalid IL or missing references)
 		ref readonly RaycastHit @readonly = ref raycastHits.GetReadonly<RaycastHit>(index);
 		int colliderId = @readonly.GetColliderId();
-		bool flag = colliderId != 0;
+		bool num = colliderId != 0;
 		byte b = 0;
-		if (flag)
+		if (num)
 		{
-			int num = Interlocked.Increment(ref BurstUtil.Get(in foundCollidersIndex, 0));
-			if (num <= foundColliders.Length)
+			int num2 = Interlocked.Increment(ref BurstUtil.Get(in foundCollidersIndex, 0));
+			if (num2 <= foundColliders.Length)
 			{
-				foundColliders[num - 1] = colliderId;
+				foundColliders[num2 - 1] = colliderId;
 			}
-			int num2 = BinarySearch(colliderIds, colliderId);
-			if (num2 >= 0)
+			int num3 = BinarySearch(colliderIds, colliderId);
+			if (num3 >= 0)
 			{
-				b = colliderMaterials[num2];
-				Interlocked.Increment(ref BurstUtil.Get(in colliderHits, num2));
+				b = colliderMaterials[num3];
+				Interlocked.Increment(ref BurstUtil.Get(in colliderHits, num3));
 			}
 		}
 		float distance;
 		RaycastHit val;
-		if (!flag)
+		if (!num)
 		{
 			distance = farPlane;
 		}
@@ -75,19 +75,19 @@ public struct RaycastRayProcessingJob : IJobParallelFor
 			val = @readonly;
 			distance = ((RaycastHit)(ref val)).distance;
 		}
-		float num3 = distance;
+		float num4 = distance;
 		if (b == 7)
 		{
 			b = 0;
-			num3 *= 1.1f;
+			num4 *= 1.1f;
 		}
-		float num4 = math.clamp(num3 / farPlane, 0f, 1f);
+		float num5 = math.clamp(num4 / farPlane, 0f, 1f);
 		float3 val2 = cameraForward;
 		val = @readonly;
-		float num5 = math.max(math.dot(val2, float3.op_Implicit(((RaycastHit)(ref val)).normal)), 0f);
-		ushort num6 = (ushort)(num4 * 1023f);
-		byte b2 = (byte)(num5 * 63f);
-		outputs[index] = (num6 >> 8 << 24) | ((num6 & 0xFF) << 16) | (b2 << 8) | b;
+		float num6 = math.max(math.dot(val2, float3.op_Implicit(((RaycastHit)(ref val)).normal)), 0f);
+		ushort num7 = (ushort)(num5 * 1023f);
+		byte b2 = (byte)(num6 * 63f);
+		outputs[index] = (num7 >> 8 << 24) | ((num7 & 0xFF) << 16) | (b2 << 8) | b;
 	}
 
 	private static int BinarySearch(NativeArray<int> haystack, int needle)

@@ -36,39 +36,44 @@ public class VolumetricDustParticles : MonoBehaviour
 
 	public static bool isFeatureSupported = true;
 
-	private ParticleSystem m_Particles = null;
+	private ParticleSystem m_Particles;
 
-	private ParticleSystemRenderer m_Renderer = null;
+	private ParticleSystemRenderer m_Renderer;
 
 	private static bool ms_NoMainCameraLogged = false;
 
 	private static Camera ms_MainCamera = null;
 
-	private VolumetricLightBeam m_Master = null;
+	private VolumetricLightBeam m_Master;
 
 	public bool isCulled { get; private set; }
 
 	public bool particlesAreInstantiated => Object.op_Implicit((Object)(object)m_Particles);
 
-	public int particlesCurrentCount => Object.op_Implicit((Object)(object)m_Particles) ? m_Particles.particleCount : 0;
+	public int particlesCurrentCount
+	{
+		get
+		{
+			if (!Object.op_Implicit((Object)(object)m_Particles))
+			{
+				return 0;
+			}
+			return m_Particles.particleCount;
+		}
+	}
 
 	public int particlesMaxCount
 	{
 		get
 		{
-			//IL_0017: Unknown result type (might be due to invalid IL or missing references)
-			//IL_001c: Unknown result type (might be due to invalid IL or missing references)
-			int result;
+			//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+			//IL_001a: Unknown result type (might be due to invalid IL or missing references)
 			if (!Object.op_Implicit((Object)(object)m_Particles))
 			{
-				result = 0;
+				return 0;
 			}
-			else
-			{
-				MainModule main = m_Particles.main;
-				result = ((MainModule)(ref main)).maxParticles;
-			}
-			return result;
+			MainModule main = m_Particles.main;
+			return ((MainModule)(ref main)).maxParticles;
 		}
 	}
 
@@ -156,32 +161,32 @@ public class VolumetricDustParticles : MonoBehaviour
 
 	private void SetParticleProperties()
 	{
+		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
 		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00eb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0120: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0125: Unknown result type (might be due to invalid IL or missing references)
-		//IL_013a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01bf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ce: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01e0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01f8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01fd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_019f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a6: Expected O, but got Unknown
-		//IL_028f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0294: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0298: Unknown result type (might be due to invalid IL or missing references)
-		//IL_029d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02aa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ad: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00df: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ed: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0124: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0197: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01cb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_017a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0181: Expected O, but got Unknown
+		//IL_025c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0261: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0265: Unknown result type (might be due to invalid IL or missing references)
+		//IL_026a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0276: Unknown result type (might be due to invalid IL or missing references)
 		if (!Object.op_Implicit((Object)(object)m_Particles) || !((Component)m_Particles).gameObject.activeSelf)
 		{
 			return;
@@ -248,9 +253,9 @@ public class VolumetricDustParticles : MonoBehaviour
 
 	private void UpdateCulling()
 	{
-		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
 		if (!Object.op_Implicit((Object)(object)m_Particles))
 		{
 			return;
@@ -262,8 +267,7 @@ public class VolumetricDustParticles : MonoBehaviour
 			{
 				float num = cullingMaxDistance * cullingMaxDistance;
 				Bounds bounds = m_Master.bounds;
-				float num2 = ((Bounds)(ref bounds)).SqrDistance(((Component)mainCamera).transform.position);
-				flag = num2 <= num;
+				flag = ((Bounds)(ref bounds)).SqrDistance(((Component)mainCamera).transform.position) <= num;
 			}
 			else
 			{

@@ -4,7 +4,7 @@ public class CH47AIBrain : BaseAIBrain
 {
 	public class DropCrate : BasicAIState
 	{
-		private float nextDropTime = 0f;
+		private float nextDropTime;
 
 		public DropCrate()
 			: base(AIState.DropCrate)
@@ -13,19 +13,27 @@ public class CH47AIBrain : BaseAIBrain
 
 		public override bool CanInterrupt()
 		{
-			return base.CanInterrupt() && !CanDrop();
+			if (base.CanInterrupt())
+			{
+				return !CanDrop();
+			}
+			return false;
 		}
 
 		public bool CanDrop()
 		{
-			return Time.time > nextDropTime && (brain.GetBrainBaseEntity() as CH47HelicopterAIController).CanDropCrate();
+			if (Time.time > nextDropTime)
+			{
+				return (brain.GetBrainBaseEntity() as CH47HelicopterAIController).CanDropCrate();
+			}
+			return false;
 		}
 
 		public override float GetWeight()
 		{
-			//IL_0081: Unknown result type (might be due to invalid IL or missing references)
-			//IL_009d: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0060: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0079: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0084: Unknown result type (might be due to invalid IL or missing references)
 			if (!CanDrop())
 			{
 				return 0f;
@@ -52,29 +60,29 @@ public class CH47AIBrain : BaseAIBrain
 
 		public override void StateEnter(BaseAIBrain brain, BaseEntity entity)
 		{
-			//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-			//IL_004e: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0053: Unknown result type (might be due to invalid IL or missing references)
-			//IL_005a: Unknown result type (might be due to invalid IL or missing references)
-			CH47HelicopterAIController cH47HelicopterAIController = entity as CH47HelicopterAIController;
-			cH47HelicopterAIController.SetDropDoorOpen(open: true);
-			cH47HelicopterAIController.EnableFacingOverride(enabled: false);
-			CH47DropZone closest = CH47DropZone.GetClosest(((Component)cH47HelicopterAIController).transform.position);
+			//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+			//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0051: Unknown result type (might be due to invalid IL or missing references)
+			CH47HelicopterAIController obj = entity as CH47HelicopterAIController;
+			obj.SetDropDoorOpen(open: true);
+			obj.EnableFacingOverride(enabled: false);
+			CH47DropZone closest = CH47DropZone.GetClosest(((Component)obj).transform.position);
 			if ((Object)(object)closest == (Object)null)
 			{
 				nextDropTime = Time.time + 60f;
 			}
 			brain.mainInterestPoint = ((Component)closest).transform.position;
-			cH47HelicopterAIController.SetMoveTarget(brain.mainInterestPoint);
+			obj.SetMoveTarget(brain.mainInterestPoint);
 			base.StateEnter(brain, entity);
 		}
 
 		public override StateStatus StateThink(float delta, BaseAIBrain brain, BaseEntity entity)
 		{
-			//IL_001b: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0026: Unknown result type (might be due to invalid IL or missing references)
-			//IL_003d: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+			//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+			//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0041: Unknown result type (might be due to invalid IL or missing references)
 			base.StateThink(delta, brain, entity);
 			CH47HelicopterAIController cH47HelicopterAIController = entity as CH47HelicopterAIController;
 			if (CanDrop() && Vector3Ex.Distance2D(brain.mainInterestPoint, ((Component)cH47HelicopterAIController).transform.position) < 5f)
@@ -99,9 +107,9 @@ public class CH47AIBrain : BaseAIBrain
 
 	public class EgressState : BasicAIState
 	{
-		private bool killing = false;
+		private bool killing;
 
-		private bool egressAltitueAchieved = false;
+		private bool egressAltitueAchieved;
 
 		public EgressState()
 			: base(AIState.Egress)
@@ -123,38 +131,40 @@ public class CH47AIBrain : BaseAIBrain
 			CH47AIBrain component = ((Component)brain).GetComponent<CH47AIBrain>();
 			if ((Object)(object)component != (Object)null)
 			{
-				return (component.Age > 1800f) ? 10000f : 0f;
+				if (!(component.Age > 1800f))
+				{
+					return 0f;
+				}
+				return 10000f;
 			}
 			return 0f;
 		}
 
 		public override void StateEnter(BaseAIBrain brain, BaseEntity entity)
 		{
-			//IL_001f: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0024: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0046: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0035: Unknown result type (might be due to invalid IL or missing references)
-			//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-			//IL_003e: Unknown result type (might be due to invalid IL or missing references)
-			//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-			//IL_004d: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0052: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0053: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0058: Unknown result type (might be due to invalid IL or missing references)
+			//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+			//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+			//IL_004a: Unknown result type (might be due to invalid IL or missing references)
+			//IL_004f: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0055: Unknown result type (might be due to invalid IL or missing references)
 			//IL_005a: Unknown result type (might be due to invalid IL or missing references)
-			//IL_005c: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0061: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0066: Unknown result type (might be due to invalid IL or missing references)
-			//IL_006a: Unknown result type (might be due to invalid IL or missing references)
-			//IL_006f: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0076: Unknown result type (might be due to invalid IL or missing references)
-			//IL_007b: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0080: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0097: Unknown result type (might be due to invalid IL or missing references)
-			CH47HelicopterAIController cH47HelicopterAIController = entity as CH47HelicopterAIController;
-			cH47HelicopterAIController.EnableFacingOverride(enabled: false);
-			Transform transform = ((Component)cH47HelicopterAIController).transform;
-			Rigidbody rigidBody = cH47HelicopterAIController.rigidBody;
+			//IL_005f: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0062: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0067: Unknown result type (might be due to invalid IL or missing references)
+			//IL_006d: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0072: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0077: Unknown result type (might be due to invalid IL or missing references)
+			//IL_008d: Unknown result type (might be due to invalid IL or missing references)
+			CH47HelicopterAIController obj = entity as CH47HelicopterAIController;
+			obj.EnableFacingOverride(enabled: false);
+			Transform transform = ((Component)obj).transform;
+			Rigidbody rigidBody = obj.rigidBody;
 			Vector3 velocity = rigidBody.velocity;
 			Vector3 val;
 			if (!(((Vector3)(ref velocity)).magnitude < 0.1f))
@@ -167,28 +177,27 @@ public class CH47AIBrain : BaseAIBrain
 				val = transform.forward;
 			}
 			Vector3 val2 = val;
-			Vector3 val3 = Vector3.Cross(transform.up, val2);
-			Vector3 val4 = Vector3.Cross(val3, Vector3.up);
-			brain.mainInterestPoint = transform.position + val4 * 8000f;
+			Vector3 val3 = Vector3.Cross(Vector3.Cross(transform.up, val2), Vector3.up);
+			brain.mainInterestPoint = transform.position + val3 * 8000f;
 			brain.mainInterestPoint.y = 100f;
-			cH47HelicopterAIController.SetMoveTarget(brain.mainInterestPoint);
+			obj.SetMoveTarget(brain.mainInterestPoint);
 			base.StateEnter(brain, entity);
 		}
 
 		public override StateStatus StateThink(float delta, BaseAIBrain brain, BaseEntity entity)
 		{
-			//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-			//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-			//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00f9: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0052: Unknown result type (might be due to invalid IL or missing references)
-			//IL_006b: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0070: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00d6: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00d7: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00e3: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0058: Unknown result type (might be due to invalid IL or missing references)
+			//IL_005d: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00af: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00ba: Unknown result type (might be due to invalid IL or missing references)
+			//IL_008f: Unknown result type (might be due to invalid IL or missing references)
+			//IL_009a: Unknown result type (might be due to invalid IL or missing references)
 			base.StateThink(delta, brain, entity);
 			if (killing)
 			{
@@ -233,12 +242,12 @@ public class CH47AIBrain : BaseAIBrain
 
 		public override void StateEnter(BaseAIBrain brain, BaseEntity entity)
 		{
-			//IL_000a: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0015: Unknown result type (might be due to invalid IL or missing references)
-			//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-			//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-			//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+			//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+			//IL_002b: Unknown result type (might be due to invalid IL or missing references)
 			CH47HelicopterAIController cH47HelicopterAIController = entity as CH47HelicopterAIController;
 			Vector3 position = cH47HelicopterAIController.GetPosition();
 			Vector3 velocity = cH47HelicopterAIController.rigidBody.velocity;
@@ -249,13 +258,13 @@ public class CH47AIBrain : BaseAIBrain
 
 	public class LandState : BasicAIState
 	{
-		private float landedForSeconds = 0f;
+		private float landedForSeconds;
 
-		private float lastLandtime = 0f;
+		private float lastLandtime;
 
 		private float landingHeight = 20f;
 
-		private float nextDismountTime = 0f;
+		private float nextDismountTime;
 
 		public LandState()
 			: base(AIState.Land)
@@ -282,44 +291,43 @@ public class CH47AIBrain : BaseAIBrain
 
 		public override StateStatus StateThink(float delta, BaseAIBrain brain, BaseEntity entity)
 		{
-			//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-			//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0024: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-			//IL_002b: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0053: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0058: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0069: Unknown result type (might be due to invalid IL or missing references)
-			//IL_006e: Unknown result type (might be due to invalid IL or missing references)
-			//IL_008a: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0096: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00cf: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0188: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0194: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01a9: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01ae: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01b3: Unknown result type (might be due to invalid IL or missing references)
-			//IL_022c: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01d7: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01dc: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01dd: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01e2: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01e4: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01ea: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0201: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0203: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0208: Unknown result type (might be due to invalid IL or missing references)
-			//IL_020d: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0211: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0216: Unknown result type (might be due to invalid IL or missing references)
-			//IL_021d: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0222: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0227: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+			//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+			//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0045: Unknown result type (might be due to invalid IL or missing references)
+			//IL_004a: Unknown result type (might be due to invalid IL or missing references)
+			//IL_005a: Unknown result type (might be due to invalid IL or missing references)
+			//IL_005f: Unknown result type (might be due to invalid IL or missing references)
+			//IL_007b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0087: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00be: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0161: Unknown result type (might be due to invalid IL or missing references)
+			//IL_016c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0181: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0186: Unknown result type (might be due to invalid IL or missing references)
+			//IL_018b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01f3: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01a5: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01aa: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01ab: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01b0: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01b2: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01b8: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01ca: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01cc: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01d1: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01d6: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01da: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01df: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01e6: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01eb: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01f0: Unknown result type (might be due to invalid IL or missing references)
 			base.StateThink(delta, brain, entity);
 			CH47HelicopterAIController cH47HelicopterAIController = entity as CH47HelicopterAIController;
 			Vector3 position = ((Component)cH47HelicopterAIController).transform.position;
-			Vector3 forward = ((Component)cH47HelicopterAIController).transform.forward;
+			_ = ((Component)cH47HelicopterAIController).transform.forward;
 			CH47LandingZone closest = CH47LandingZone.GetClosest(cH47HelicopterAIController.landingTarget);
 			if (!Object.op_Implicit((Object)(object)closest))
 			{
@@ -332,17 +340,25 @@ public class CH47AIBrain : BaseAIBrain
 			bool altitudeProtection = num > 15f && position.y < ((Component)closest).transform.position.y + 10f;
 			cH47HelicopterAIController.EnableFacingOverride(enabled);
 			cH47HelicopterAIController.SetAltitudeProtection(altitudeProtection);
-			bool flag = Mathf.Abs(((Component)closest).transform.position.y - position.y) < 3f && num <= 5f && magnitude < 1f;
-			if (flag)
+			int num2;
+			if (Mathf.Abs(((Component)closest).transform.position.y - position.y) < 3f && num <= 5f)
 			{
-				landedForSeconds += delta;
-				if (lastLandtime == 0f)
+				num2 = ((magnitude < 1f) ? 1 : 0);
+				if (num2 != 0)
 				{
-					lastLandtime = Time.time;
+					landedForSeconds += delta;
+					if (lastLandtime == 0f)
+					{
+						lastLandtime = Time.time;
+					}
 				}
 			}
-			float num2 = 1f - Mathf.InverseLerp(0f, 7f, num);
-			landingHeight -= 4f * num2 * Time.deltaTime;
+			else
+			{
+				num2 = 0;
+			}
+			float num3 = 1f - Mathf.InverseLerp(0f, 7f, num);
+			landingHeight -= 4f * num3 * Time.deltaTime;
 			if (landingHeight < -5f)
 			{
 				landingHeight = -5f;
@@ -353,14 +369,14 @@ public class CH47AIBrain : BaseAIBrain
 			{
 				Vector3 val = Vector3Ex.Direction2D(((Component)closest).transform.position, position);
 				RaycastHit val2 = default(RaycastHit);
-				if (Physics.SphereCast(position, 15f, val, ref val2, num, 1218511105))
+				if (Physics.SphereCast(position, 15f, val, ref val2, num, 1084293377))
 				{
 					Vector3 val3 = Vector3.Cross(val, Vector3.up);
 					moveTarget = ((RaycastHit)(ref val2)).point + val3 * 50f;
 				}
 			}
 			cH47HelicopterAIController.SetMoveTarget(moveTarget);
-			if (flag)
+			if (num2 != 0)
 			{
 				if (landedForSeconds > 1f && Time.time > nextDismountTime)
 				{
@@ -376,8 +392,7 @@ public class CH47AIBrain : BaseAIBrain
 				}
 				if (landedForSeconds > 8f)
 				{
-					CH47AIBrain component = ((Component)brain).GetComponent<CH47AIBrain>();
-					component.ForceSetAge(float.PositiveInfinity);
+					((Component)brain).GetComponent<CH47AIBrain>().ForceSetAge(float.PositiveInfinity);
 				}
 			}
 			return StateStatus.Running;
@@ -385,8 +400,8 @@ public class CH47AIBrain : BaseAIBrain
 
 		public override void StateEnter(BaseAIBrain brain, BaseEntity entity)
 		{
-			//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-			//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+			//IL_000c: Unknown result type (might be due to invalid IL or missing references)
 			brain.mainInterestPoint = (entity as CH47HelicopterAIController).landingTarget;
 			landingHeight = 15f;
 			base.StateEnter(brain, entity);
@@ -394,10 +409,10 @@ public class CH47AIBrain : BaseAIBrain
 
 		public override void StateLeave(BaseAIBrain brain, BaseEntity entity)
 		{
-			CH47HelicopterAIController cH47HelicopterAIController = entity as CH47HelicopterAIController;
-			cH47HelicopterAIController.EnableFacingOverride(enabled: false);
-			cH47HelicopterAIController.SetAltitudeProtection(on: true);
-			cH47HelicopterAIController.SetMinHoverHeight(30f);
+			CH47HelicopterAIController obj = entity as CH47HelicopterAIController;
+			obj.EnableFacingOverride(enabled: false);
+			obj.SetAltitudeProtection(on: true);
+			obj.SetMinHoverHeight(30f);
 			landedForSeconds = 0f;
 			base.StateLeave(brain, entity);
 		}
@@ -417,9 +432,7 @@ public class CH47AIBrain : BaseAIBrain
 
 		public Vector3 GetOrbitCenter()
 		{
-			//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-			//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-			//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0006: Unknown result type (might be due to invalid IL or missing references)
 			return brain.mainInterestPoint;
 		}
 
@@ -439,74 +452,67 @@ public class CH47AIBrain : BaseAIBrain
 
 		public override void StateEnter(BaseAIBrain brain, BaseEntity entity)
 		{
-			CH47HelicopterAIController cH47HelicopterAIController = entity as CH47HelicopterAIController;
-			cH47HelicopterAIController.EnableFacingOverride(enabled: true);
-			cH47HelicopterAIController.InitiateAnger();
+			CH47HelicopterAIController obj = entity as CH47HelicopterAIController;
+			obj.EnableFacingOverride(enabled: true);
+			obj.InitiateAnger();
 			base.StateEnter(brain, entity);
 		}
 
 		public override StateStatus StateThink(float delta, BaseAIBrain brain, BaseEntity entity)
 		{
-			//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0017: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-			//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-			//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+			//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+			//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_001c: Unknown result type (might be due to invalid IL or missing references)
 			//IL_0021: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0026: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0028: Unknown result type (might be due to invalid IL or missing references)
-			//IL_002d: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0035: Unknown result type (might be due to invalid IL or missing references)
-			//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-			//IL_003f: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0044: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0046: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0048: Unknown result type (might be due to invalid IL or missing references)
-			//IL_006f: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0071: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0076: Unknown result type (might be due to invalid IL or missing references)
-			//IL_007a: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0084: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0089: Unknown result type (might be due to invalid IL or missing references)
-			//IL_008e: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0092: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0097: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0099: Unknown result type (might be due to invalid IL or missing references)
-			//IL_009a: Unknown result type (might be due to invalid IL or missing references)
-			//IL_009e: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0022: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+			//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0033: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+			//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+			//IL_005f: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0060: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0065: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0072: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0077: Unknown result type (might be due to invalid IL or missing references)
+			//IL_007c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0080: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0085: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0087: Unknown result type (might be due to invalid IL or missing references)
+			//IL_008b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0090: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0095: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0098: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00a0: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00a2: Unknown result type (might be due to invalid IL or missing references)
 			//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00b6: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00b7: Unknown result type (might be due to invalid IL or missing references)
 			Vector3 orbitCenter = GetOrbitCenter();
 			CH47HelicopterAIController cH47HelicopterAIController = entity as CH47HelicopterAIController;
-			CH47HelicopterAIController cH47HelicopterAIController2 = cH47HelicopterAIController;
-			Vector3 position = cH47HelicopterAIController2.GetPosition();
+			Vector3 position = cH47HelicopterAIController.GetPosition();
 			Vector3 val = Vector3Ex.Direction2D(orbitCenter, position);
 			Vector3 val2 = Vector3.Cross(Vector3.up, val);
-			Vector3 val3 = Vector3.Cross(((Component)cH47HelicopterAIController2).transform.right, Vector3.up);
-			float num = Vector3.Dot(val3, val2);
-			float num2 = ((num < 0f) ? (-1f) : 1f);
-			float num3 = 75f;
-			Vector3 val4 = -val + val2 * num2 * 0.6f;
-			Vector3 normalized = ((Vector3)(ref val4)).normalized;
-			Vector3 val5 = orbitCenter + normalized * num3;
-			cH47HelicopterAIController2.SetMoveTarget(val5);
-			cH47HelicopterAIController2.SetAimDirection(Vector3Ex.Direction2D(val5, position));
+			float num = ((Vector3.Dot(Vector3.Cross(((Component)cH47HelicopterAIController).transform.right, Vector3.up), val2) < 0f) ? (-1f) : 1f);
+			float num2 = 75f;
+			Vector3 val3 = -val + val2 * num * 0.6f;
+			Vector3 normalized = ((Vector3)(ref val3)).normalized;
+			Vector3 val4 = orbitCenter + normalized * num2;
+			cH47HelicopterAIController.SetMoveTarget(val4);
+			cH47HelicopterAIController.SetAimDirection(Vector3Ex.Direction2D(val4, position));
 			base.StateThink(delta, brain, entity);
 			return StateStatus.Running;
 		}
 
 		public override void StateLeave(BaseAIBrain brain, BaseEntity entity)
 		{
-			CH47HelicopterAIController cH47HelicopterAIController = entity as CH47HelicopterAIController;
-			cH47HelicopterAIController.EnableFacingOverride(enabled: false);
-			cH47HelicopterAIController.CancelAnger();
+			CH47HelicopterAIController obj = entity as CH47HelicopterAIController;
+			obj.EnableFacingOverride(enabled: false);
+			obj.CancelAnger();
 			base.StateLeave(brain, entity);
 		}
 	}
@@ -517,15 +523,15 @@ public class CH47AIBrain : BaseAIBrain
 
 		public override void StateEnter(BaseAIBrain brain, BaseEntity entity)
 		{
-			//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+			//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0014: Unknown result type (might be due to invalid IL or missing references)
 			base.StateEnter(brain, entity);
 			brain.mainInterestPoint = brain.PathFinder.GetRandomPatrolPoint();
 		}
 
 		public override StateStatus StateThink(float delta, BaseAIBrain brain, BaseEntity entity)
 		{
-			//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0011: Unknown result type (might be due to invalid IL or missing references)
 			base.StateThink(delta, brain, entity);
 			(entity as CH47HelicopterAIController).SetMoveTarget(brain.mainInterestPoint);
 			return StateStatus.Running;
@@ -533,22 +539,24 @@ public class CH47AIBrain : BaseAIBrain
 
 		public bool AtPatrolDestination()
 		{
-			//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0011: Unknown result type (might be due to invalid IL or missing references)
 			return Vector3Ex.Distance2D(GetDestination(), ((Component)brain).transform.position) < patrolApproachDist;
 		}
 
 		public Vector3 GetDestination()
 		{
-			//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-			//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-			//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0006: Unknown result type (might be due to invalid IL or missing references)
 			return brain.mainInterestPoint;
 		}
 
 		public override bool CanInterrupt()
 		{
-			return base.CanInterrupt() && AtPatrolDestination();
+			if (base.CanInterrupt())
+			{
+				return AtPatrolDestination();
+			}
+			return false;
 		}
 
 		public override float GetWeight()

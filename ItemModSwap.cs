@@ -6,9 +6,9 @@ public class ItemModSwap : ItemMod
 
 	public ItemAmount[] becomeItem;
 
-	public bool sendPlayerPickupNotification = false;
+	public bool sendPlayerPickupNotification;
 
-	public bool sendPlayerDropNotification = false;
+	public bool sendPlayerDropNotification;
 
 	public float xpScale = 1f;
 
@@ -16,8 +16,8 @@ public class ItemModSwap : ItemMod
 
 	public override void DoAction(Item item, BasePlayer player)
 	{
-		//IL_01e3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01e8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0182: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0187: Unknown result type (might be due to invalid IL or missing references)
 		if (item.amount < 1)
 		{
 			return;
@@ -34,7 +34,7 @@ public class ItemModSwap : ItemMod
 				}
 				if (sendPlayerPickupNotification)
 				{
-					player.Command("note.inv", item2.info.itemid, item2.amount);
+					player.Command("note.inv", item2.info.itemid, itemAmount.amount);
 				}
 			}
 		}

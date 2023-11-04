@@ -7,13 +7,13 @@ using UnityEngine.Assertions;
 
 public class DeployableBoomBox : ContainerIOEntity, ICassettePlayer, IAudioConnectionSource
 {
-	public BoomBox BoxController = null;
+	public BoomBox BoxController;
 
 	public int PowerUsageWhilePlaying = 10;
 
 	public const int MaxBacktrackHopsClient = 30;
 
-	public bool IsStatic = false;
+	public bool IsStatic;
 
 	public BaseEntity ToBaseEntity => this;
 
@@ -27,7 +27,7 @@ public class DeployableBoomBox : ContainerIOEntity, ICassettePlayer, IAudioConne
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_UpdateRadioIP "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_UpdateRadioIP "));
 				}
 				TimeWarning val2 = TimeWarning.New("Server_UpdateRadioIP", 0);
 				try
@@ -50,7 +50,7 @@ public class DeployableBoomBox : ContainerIOEntity, ICassettePlayer, IAudioConne
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -62,7 +62,7 @@ public class DeployableBoomBox : ContainerIOEntity, ICassettePlayer, IAudioConne
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -82,12 +82,12 @@ public class DeployableBoomBox : ContainerIOEntity, ICassettePlayer, IAudioConne
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ServerTogglePlay "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ServerTogglePlay "));
 				}
-				TimeWarning val5 = TimeWarning.New("ServerTogglePlay", 0);
+				TimeWarning val2 = TimeWarning.New("ServerTogglePlay", 0);
 				try
 				{
-					TimeWarning val6 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsVisible.Test(1785864031u, "ServerTogglePlay", this, player, 3f))
@@ -97,11 +97,11 @@ public class DeployableBoomBox : ContainerIOEntity, ICassettePlayer, IAudioConne
 					}
 					finally
 					{
-						((IDisposable)val6)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val7 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -113,7 +113,7 @@ public class DeployableBoomBox : ContainerIOEntity, ICassettePlayer, IAudioConne
 						}
 						finally
 						{
-							((IDisposable)val7)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -124,7 +124,7 @@ public class DeployableBoomBox : ContainerIOEntity, ICassettePlayer, IAudioConne
 				}
 				finally
 				{
-					((IDisposable)val5)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -143,12 +143,20 @@ public class DeployableBoomBox : ContainerIOEntity, ICassettePlayer, IAudioConne
 
 	public override int ConsumptionAmount()
 	{
-		return IsOn() ? PowerUsageWhilePlaying : 0;
+		if (!IsOn())
+		{
+			return 0;
+		}
+		return PowerUsageWhilePlaying;
 	}
 
 	public override int DesiredPower()
 	{
-		return IsOn() ? PowerUsageWhilePlaying : 0;
+		if (!IsOn())
+		{
+			return 0;
+		}
+		return PowerUsageWhilePlaying;
 	}
 
 	public override void UpdateHasPower(int inputAmount, int inputSlot)
@@ -181,9 +189,9 @@ public class DeployableBoomBox : ContainerIOEntity, ICassettePlayer, IAudioConne
 	private bool ItemFilter(Item item, int count)
 	{
 		ItemDefinition[] validCassettes = BoxController.ValidCassettes;
-		foreach (ItemDefinition itemDefinition in validCassettes)
+		for (int i = 0; i < validCassettes.Length; i++)
 		{
-			if ((Object)(object)itemDefinition == (Object)(object)item.info)
+			if ((Object)(object)validCassettes[i] == (Object)(object)item.info)
 			{
 				return true;
 			}

@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class InstrumentDebugInput : MonoBehaviour
 {
-	public InstrumentKeyController KeyController = null;
+	public InstrumentKeyController KeyController;
 
 	public InstrumentKeyController.KeySet Note = new InstrumentKeyController.KeySet
 	{
@@ -16,5 +16,5 @@ public class InstrumentDebugInput : MonoBehaviour
 
 	public float StopAfter = 0.1f;
 
-	public SoundDefinition OverrideDefinition = null;
+	public SoundDefinition OverrideDefinition;
 }

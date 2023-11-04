@@ -32,31 +32,27 @@ public class BigWheelBettingTerminal : StorageContainer
 
 	public new void OnDrawGizmos()
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
 		Gizmos.color = Color.yellow;
-		Vector3 val = ((Component)this).transform.TransformPoint(seatedPlayerOffset);
-		Gizmos.DrawSphere(val, offsetCheckRadius);
+		Gizmos.DrawSphere(((Component)this).transform.TransformPoint(seatedPlayerOffset), offsetCheckRadius);
 		base.OnDrawGizmos();
 	}
 
 	public bool IsPlayerValid(BasePlayer player)
 	{
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
 		if (!player.isMounted || !(player.GetMounted() is BaseChair))
 		{
 			return false;
 		}
 		Vector3 val = ((Component)this).transform.TransformPoint(seatedPlayerOffset);
-		float num = Vector3Ex.Distance2D(((Component)player).transform.position, val);
-		if (num > offsetCheckRadius)
+		if (Vector3Ex.Distance2D(((Component)player).transform.position, val) > offsetCheckRadius)
 		{
 			return false;
 		}
@@ -69,22 +65,22 @@ public class BigWheelBettingTerminal : StorageContainer
 		{
 			return false;
 		}
-		bool flag = base.PlayerOpenLoot(player, panelToOpen);
-		if (flag)
+		bool num = base.PlayerOpenLoot(player, panelToOpen);
+		if (num)
 		{
 			lastPlayer = player;
 		}
-		return flag;
+		return num;
 	}
 
 	public bool TrySetBigWheel(BigWheelGame newWheel)
 	{
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
 		if (base.isClient)
 		{
 			return false;
@@ -92,8 +88,7 @@ public class BigWheelBettingTerminal : StorageContainer
 		if ((Object)(object)bigWheel != (Object)null && (Object)(object)bigWheel != (Object)(object)newWheel)
 		{
 			float num = Vector3.SqrMagnitude(((Component)bigWheel).transform.position - ((Component)this).transform.position);
-			float num2 = Vector3.SqrMagnitude(((Component)newWheel).transform.position - ((Component)this).transform.position);
-			if (num2 >= num)
+			if (Vector3.SqrMagnitude(((Component)newWheel).transform.position - ((Component)this).transform.position) >= num)
 			{
 				return false;
 			}

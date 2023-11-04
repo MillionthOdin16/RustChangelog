@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using Facepunch;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 public static class WaterLevel
 {
@@ -19,12 +18,12 @@ public static class WaterLevel
 
 	public static float Factor(Vector3 start, Vector3 end, float radius, bool waves, bool volumes, BaseEntity forEntity = null)
 	{
-		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
 		TimeWarning val = TimeWarning.New("WaterLevel.Factor", 0);
 		try
 		{
@@ -39,12 +38,12 @@ public static class WaterLevel
 
 	public static float Factor(Bounds bounds, bool waves, bool volumes, BaseEntity forEntity = null)
 	{
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
 		TimeWarning val = TimeWarning.New("WaterLevel.Factor", 0);
 		try
 		{
@@ -63,7 +62,7 @@ public static class WaterLevel
 
 	public static bool Test(Vector3 pos, bool waves, bool volumes, BaseEntity forEntity = null)
 	{
-		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
 		TimeWarning val = TimeWarning.New("WaterLevel.Test", 0);
 		try
 		{
@@ -77,7 +76,7 @@ public static class WaterLevel
 
 	public static float GetWaterDepth(Vector3 pos, bool waves, bool volumes, BaseEntity forEntity = null)
 	{
-		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
 		TimeWarning val = TimeWarning.New("WaterLevel.GetWaterDepth", 0);
 		try
 		{
@@ -91,7 +90,7 @@ public static class WaterLevel
 
 	public static float GetOverallWaterDepth(Vector3 pos, bool waves, bool volumes, BaseEntity forEntity = null, bool noEarlyExit = false)
 	{
-		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
 		TimeWarning val = TimeWarning.New("WaterLevel.GetOverallWaterDepth", 0);
 		try
 		{
@@ -105,17 +104,17 @@ public static class WaterLevel
 
 	public static WaterInfo GetBuoyancyWaterInfo(Vector3 pos, Vector2 posUV, float terrainHeight, float waterHeight, bool doDeepwaterChecks, BaseEntity forEntity)
 	{
-		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0130: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ee: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ef: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d9: Unknown result type (might be due to invalid IL or missing references)
 		TimeWarning val = TimeWarning.New("WaterLevel.GetWaterInfo", 0);
 		try
 		{
@@ -158,15 +157,15 @@ public static class WaterLevel
 
 	public static WaterInfo GetWaterInfo(Vector3 pos, bool waves, bool volumes, BaseEntity forEntity = null, bool noEarlyExit = false)
 	{
-		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0095: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ec: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
 		TimeWarning val = TimeWarning.New("WaterLevel.GetWaterInfo", 0);
 		try
 		{
@@ -207,14 +206,14 @@ public static class WaterLevel
 
 	public static WaterInfo GetWaterInfo(Bounds bounds, bool waves, bool volumes, BaseEntity forEntity = null)
 	{
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0095: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
 		TimeWarning val = TimeWarning.New("WaterLevel.GetWaterInfo", 0);
 		try
 		{
@@ -251,26 +250,26 @@ public static class WaterLevel
 
 	public static WaterInfo GetWaterInfo(Vector3 start, Vector3 end, float radius, bool waves, bool volumes, BaseEntity forEntity = null)
 	{
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00db: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00dc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ed: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0100: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0107: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00dd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f9: Unknown result type (might be due to invalid IL or missing references)
 		TimeWarning val = TimeWarning.New("WaterLevel.GetWaterInfo", 0);
 		try
 		{
@@ -315,11 +314,11 @@ public static class WaterLevel
 
 	public static WaterInfo GetWaterInfo(Camera cam, bool waves, bool volumes, BaseEntity forEntity = null, bool noEarlyExit = false)
 	{
-		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
 		TimeWarning val = TimeWarning.New("WaterLevel.GetWaterInfo", 0);
 		try
 		{
@@ -337,8 +336,8 @@ public static class WaterLevel
 
 	private static float GetWaterLevel(Vector3 pos)
 	{
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
 		float num = (Object.op_Implicit((Object)(object)TerrainMeta.HeightMap) ? TerrainMeta.WaterMap.GetHeight(pos) : 0f);
 		if (num < WaterSystem.MaxLevel())
 		{
@@ -354,98 +353,74 @@ public static class WaterLevel
 
 	private static WaterInfo GetWaterInfoFromVolumes(Bounds bounds, BaseEntity forEntity)
 	{
-		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
-		Profiler.BeginSample("CheckWaterVolumes:Bounds");
+		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
 		WaterInfo info = default(WaterInfo);
 		if ((Object)(object)forEntity == (Object)null)
 		{
 			List<WaterVolume> list = Pool.GetList<WaterVolume>();
 			Vis.Components<WaterVolume>(new OBB(bounds), list, 262144, (QueryTriggerInteraction)2);
-			foreach (WaterVolume item in list)
+			using (List<WaterVolume>.Enumerator enumerator = list.GetEnumerator())
 			{
-				if (item.Test(bounds, out info))
+				while (enumerator.MoveNext() && !enumerator.Current.Test(bounds, out info))
 				{
-					break;
 				}
 			}
 			Pool.FreeList<WaterVolume>(ref list);
-			Profiler.EndSample();
 			return info;
 		}
-		if (forEntity.WaterTestFromVolumes(bounds, out info))
-		{
-			Profiler.EndSample();
-			return info;
-		}
-		Profiler.EndSample();
+		forEntity.WaterTestFromVolumes(bounds, out info);
 		return info;
 	}
 
 	private static WaterInfo GetWaterInfoFromVolumes(Vector3 pos, BaseEntity forEntity)
 	{
-		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
-		Profiler.BeginSample("CheckWaterVolumes:Pos");
+		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
 		WaterInfo info = default(WaterInfo);
 		if ((Object)(object)forEntity == (Object)null)
 		{
 			List<WaterVolume> list = Pool.GetList<WaterVolume>();
 			Vis.Components<WaterVolume>(pos, 0.1f, list, 262144, (QueryTriggerInteraction)2);
-			foreach (WaterVolume item in list)
+			using (List<WaterVolume>.Enumerator enumerator = list.GetEnumerator())
 			{
-				if (item.Test(pos, out info))
+				while (enumerator.MoveNext() && !enumerator.Current.Test(pos, out info))
 				{
-					break;
 				}
 			}
 			Pool.FreeList<WaterVolume>(ref list);
-			Profiler.EndSample();
 			return info;
 		}
-		if (forEntity.WaterTestFromVolumes(pos, out info))
-		{
-			Profiler.EndSample();
-			return info;
-		}
-		Profiler.EndSample();
+		forEntity.WaterTestFromVolumes(pos, out info);
 		return info;
 	}
 
 	private static WaterInfo GetWaterInfoFromVolumes(Vector3 start, Vector3 end, float radius, BaseEntity forEntity)
 	{
-		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
-		Profiler.BeginSample("CheckWaterVolumes:Capsule");
+		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
 		WaterInfo info = default(WaterInfo);
 		if ((Object)(object)forEntity == (Object)null)
 		{
 			List<WaterVolume> list = Pool.GetList<WaterVolume>();
 			Vis.Components<WaterVolume>(start, end, radius, list, 262144, (QueryTriggerInteraction)2);
-			foreach (WaterVolume item in list)
+			using (List<WaterVolume>.Enumerator enumerator = list.GetEnumerator())
 			{
-				if (item.Test(start, end, radius, out info))
+				while (enumerator.MoveNext() && !enumerator.Current.Test(start, end, radius, out info))
 				{
-					break;
 				}
 			}
 			Pool.FreeList<WaterVolume>(ref list);
-			Profiler.EndSample();
 			return info;
 		}
-		if (forEntity.WaterTestFromVolumes(start, end, radius, out info))
-		{
-			Profiler.EndSample();
-			return info;
-		}
-		Profiler.EndSample();
+		forEntity.WaterTestFromVolumes(start, end, radius, out info);
 		return info;
 	}
 }

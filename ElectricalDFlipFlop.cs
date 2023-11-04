@@ -4,13 +4,13 @@ using UnityEngine;
 public class ElectricalDFlipFlop : IOEntity
 {
 	[NonSerialized]
-	private int setAmount = 0;
+	private int setAmount;
 
 	[NonSerialized]
-	private int resetAmount = 0;
+	private int resetAmount;
 
 	[NonSerialized]
-	private int toggleAmount = 0;
+	private int toggleAmount;
 
 	public override void UpdateHasPower(int inputAmount, int inputSlot)
 	{
@@ -49,10 +49,10 @@ public class ElectricalDFlipFlop : IOEntity
 	{
 		if (IsPowered())
 		{
-			bool flag = IsOn();
+			bool num = IsOn();
 			bool desiredState = GetDesiredState();
 			SetFlag(Flags.On, desiredState);
-			if (flag != IsOn())
+			if (num != IsOn())
 			{
 				MarkDirtyForceUpdateOutputs();
 			}

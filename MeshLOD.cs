@@ -12,5 +12,5 @@ public class MeshLOD : LODComponent, IBatchingHandler
 	}
 
 	[Horizontal(1, 0)]
-	public State[] States = null;
+	public State[] States;
 }

@@ -37,11 +37,31 @@ public class PatternFirework : MortarFirework, IUGCBrowserEntity
 	[NonSerialized]
 	public FuseLength ShellFuseLength;
 
-	public uint[] GetContentCRCs => (Design == null || Design.stars.Count <= 0) ? Array.Empty<uint>() : new uint[1] { 1u };
+	public uint[] GetContentCRCs
+	{
+		get
+		{
+			if (Design == null || Design.stars.Count <= 0)
+			{
+				return Array.Empty<uint>();
+			}
+			return new uint[1] { 1u };
+		}
+	}
 
 	public UGCType ContentType => UGCType.PatternBoomer;
 
-	public List<ulong> EditingHistory => (Design != null) ? new List<ulong> { Design.editedBy } : new List<ulong>();
+	public List<ulong> EditingHistory
+	{
+		get
+		{
+			if (Design == null)
+			{
+				return new List<ulong>();
+			}
+			return new List<ulong> { Design.editedBy };
+		}
+	}
 
 	public BaseNetworkable UgcEntity => this;
 
@@ -78,10 +98,10 @@ public class PatternFirework : MortarFirework, IUGCBrowserEntity
 	[RPC_Server.CallsPerSecond(5uL)]
 	private void ServerSetFireworkDesign(RPCMessage rpc)
 	{
-		//IL_00e0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0124: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0129: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ba: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ff: Unknown result type (might be due to invalid IL or missing references)
 		if (!PlayerCanModify(rpc.player))
 		{
 			return;
@@ -92,8 +112,7 @@ public class PatternFirework : MortarFirework, IUGCBrowserEntity
 			while (val.stars.Count > MaxStars)
 			{
 				int index = val.stars.Count - 1;
-				Star val2 = val.stars[index];
-				val2.Dispose();
+				val.stars[index].Dispose();
 				val.stars.RemoveAt(index);
 			}
 			foreach (Star star in val.stars)
@@ -196,7 +215,7 @@ public class PatternFirework : MortarFirework, IUGCBrowserEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ServerSetFireworkDesign "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ServerSetFireworkDesign "));
 				}
 				TimeWarning val2 = TimeWarning.New("ServerSetFireworkDesign", 0);
 				try
@@ -219,7 +238,7 @@ public class PatternFirework : MortarFirework, IUGCBrowserEntity
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -231,7 +250,7 @@ public class PatternFirework : MortarFirework, IUGCBrowserEntity
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -251,12 +270,12 @@ public class PatternFirework : MortarFirework, IUGCBrowserEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SetShellFuseLength "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SetShellFuseLength "));
 				}
-				TimeWarning val5 = TimeWarning.New("SetShellFuseLength", 0);
+				TimeWarning val2 = TimeWarning.New("SetShellFuseLength", 0);
 				try
 				{
-					TimeWarning val6 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.CallsPerSecond.Test(2132764204u, "SetShellFuseLength", this, player, 5uL))
@@ -270,11 +289,11 @@ public class PatternFirework : MortarFirework, IUGCBrowserEntity
 					}
 					finally
 					{
-						((IDisposable)val6)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val7 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -286,7 +305,7 @@ public class PatternFirework : MortarFirework, IUGCBrowserEntity
 						}
 						finally
 						{
-							((IDisposable)val7)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -297,7 +316,7 @@ public class PatternFirework : MortarFirework, IUGCBrowserEntity
 				}
 				finally
 				{
-					((IDisposable)val5)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -306,12 +325,12 @@ public class PatternFirework : MortarFirework, IUGCBrowserEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - StartOpenDesigner "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - StartOpenDesigner "));
 				}
-				TimeWarning val8 = TimeWarning.New("StartOpenDesigner", 0);
+				TimeWarning val2 = TimeWarning.New("StartOpenDesigner", 0);
 				try
 				{
-					TimeWarning val9 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.CallsPerSecond.Test(2760408151u, "StartOpenDesigner", this, player, 5uL))
@@ -325,11 +344,11 @@ public class PatternFirework : MortarFirework, IUGCBrowserEntity
 					}
 					finally
 					{
-						((IDisposable)val9)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val10 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -341,7 +360,7 @@ public class PatternFirework : MortarFirework, IUGCBrowserEntity
 						}
 						finally
 						{
-							((IDisposable)val10)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex3)
@@ -352,7 +371,7 @@ public class PatternFirework : MortarFirework, IUGCBrowserEntity
 				}
 				finally
 				{
-					((IDisposable)val8)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}

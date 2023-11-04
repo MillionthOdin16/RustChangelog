@@ -7,7 +7,7 @@ public class AnimatedBuildingBlock : StabilityEntity
 
 	private bool animatorIsOpen = true;
 
-	private bool isAnimating = false;
+	private bool isAnimating;
 
 	public override void ServerInit()
 	{
@@ -36,14 +36,14 @@ public class AnimatedBuildingBlock : StabilityEntity
 		{
 			return;
 		}
-		bool flag = animatorNeedsInitializing || animatorIsOpen != IsOpen() || (init && isAnimating);
-		bool flag2 = animatorNeedsInitializing || init;
-		if (flag)
+		bool num = animatorNeedsInitializing || animatorIsOpen != IsOpen() || (init && isAnimating);
+		bool flag = animatorNeedsInitializing || init;
+		if (num)
 		{
 			isAnimating = true;
 			((Behaviour)model.animator).enabled = true;
 			model.animator.SetBool("open", animatorIsOpen = IsOpen());
-			if (flag2)
+			if (flag)
 			{
 				model.animator.fireEvents = false;
 				if (((Behaviour)model.animator).isActiveAndEnabled)
@@ -62,7 +62,7 @@ public class AnimatedBuildingBlock : StabilityEntity
 				}
 			}
 		}
-		else if (flag2)
+		else if (flag)
 		{
 			PutAnimatorToSleep();
 		}

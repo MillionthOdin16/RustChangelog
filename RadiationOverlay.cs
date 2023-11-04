@@ -3,7 +3,7 @@ using UnityEngine.Rendering.PostProcessing;
 
 public class RadiationOverlay : MonoBehaviour
 {
-	public SoundDefinition[] geigerSounds = null;
+	public SoundDefinition[] geigerSounds;
 
 	public PostProcessVolume postProcessVolume;
 }

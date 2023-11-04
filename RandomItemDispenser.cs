@@ -25,7 +25,7 @@ public class RandomItemDispenser : PrefabAttribute, IServerComponent
 
 	public void DistributeItems(BasePlayer forPlayer, Vector3 distributorPosition)
 	{
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
 		RandomItemChance[] chances = Chances;
 		foreach (RandomItemChance itemChance in chances)
 		{
@@ -39,13 +39,13 @@ public class RandomItemDispenser : PrefabAttribute, IServerComponent
 
 	private bool TryAward(RandomItemChance itemChance, BasePlayer forPlayer, Vector3 distributorPosition)
 	{
-		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
 		float num = Random.Range(0f, 1f);
 		if (itemChance.Chance >= num)
 		{
