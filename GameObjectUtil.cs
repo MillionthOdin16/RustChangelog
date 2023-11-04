@@ -5,9 +5,10 @@ public static class GameObjectUtil
 	public static void GlobalBroadcast(string messageName, object param = null)
 	{
 		Transform[] rootObjects = TransformUtil.GetRootObjects();
-		for (int i = 0; i < rootObjects.Length; i++)
+		Transform[] array = rootObjects;
+		foreach (Transform val in array)
 		{
-			((Component)rootObjects[i]).BroadcastMessage(messageName, param, (SendMessageOptions)1);
+			((Component)val).BroadcastMessage(messageName, param, (SendMessageOptions)1);
 		}
 	}
 }

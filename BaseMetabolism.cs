@@ -2,6 +2,7 @@ using System;
 using ConVar;
 using Rust;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 public static class BaseMetabolism
 {
@@ -47,8 +48,12 @@ public abstract class BaseMetabolism<T> : EntityComponent<T> where T : BaseComba
 		{
 			if (Object.op_Implicit((Object)(object)owner) && !owner.IsDead())
 			{
+				Profiler.BeginSample("RunMetabolism");
 				RunMetabolism(ownerEntity, timeSinceLastMetabolism);
+				Profiler.EndSample();
+				Profiler.BeginSample("DoMetabolismDamage");
 				DoMetabolismDamage(ownerEntity, timeSinceLastMetabolism);
+				Profiler.EndSample();
 			}
 			timeSinceLastMetabolism = 0f;
 		}
@@ -70,14 +75,14 @@ public abstract class BaseMetabolism<T> : EntityComponent<T> where T : BaseComba
 		}
 		if (hydration.value <= 20f)
 		{
-			TimeWarning val = TimeWarning.New("Hyration Hurt", 0);
+			TimeWarning val2 = TimeWarning.New("Hyration Hurt", 0);
 			try
 			{
 				ownerEntity.Hurt(Mathf.InverseLerp(20f, 0f, hydration.value) * delta * (2f / 15f), DamageType.Thirst);
 			}
 			finally
 			{
-				((IDisposable)val)?.Dispose();
+				((IDisposable)val2)?.Dispose();
 			}
 		}
 	}
@@ -104,11 +109,7 @@ public abstract class BaseMetabolism<T> : EntityComponent<T> where T : BaseComba
 
 	public bool ShouldDie()
 	{
-		if (Object.op_Implicit((Object)(object)owner))
-		{
-			return owner.Health() <= 0f;
-		}
-		return false;
+		return Object.op_Implicit((Object)(object)owner) && owner.Health() <= 0f;
 	}
 
 	public virtual MetabolismAttribute FindAttribute(MetabolismAttribute.Type type)

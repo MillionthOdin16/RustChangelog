@@ -3,14 +3,14 @@ using UnityEngine;
 public class TriggerVehicleDrag : TriggerBase, IServerComponent
 {
 	[Tooltip("If set, the entering object must have line of sight to this transform to be added, note this is only checked on entry")]
-	public Transform losEyes;
+	public Transform losEyes = null;
 
-	public float vehicleDrag;
+	public float vehicleDrag = 0f;
 
 	internal override GameObject InterestedInObject(GameObject obj)
 	{
-		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
 		obj = base.InterestedInObject(obj);
 		if ((Object)(object)obj == (Object)null)
 		{

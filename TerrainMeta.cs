@@ -110,16 +110,16 @@ public class TerrainMeta : MonoBehaviour
 
 	public static bool OutOfBounds(Vector3 worldPos)
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
 		if (worldPos.x < Position.x)
 		{
 			return true;
@@ -141,20 +141,20 @@ public class TerrainMeta : MonoBehaviour
 
 	public static bool OutOfMargin(Vector3 worldPos)
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
 		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
 		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
 		if (worldPos.x < Position.x - Size.x)
 		{
 			return true;
@@ -174,57 +174,35 @@ public class TerrainMeta : MonoBehaviour
 		return false;
 	}
 
-	public static float InnerDistToEdge2D(Vector3 worldPos)
-	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
-		float num = Position.x - Size.x;
-		float num2 = Position.x + Size.x + Size.x;
-		float num3 = Position.z - Size.z;
-		float num4 = Position.z + Size.z + Size.z;
-		float num5 = Mathf.Abs(worldPos.x - num);
-		float num6 = Mathf.Abs(worldPos.x - num2);
-		float num7 = Mathf.Abs(worldPos.z - num3);
-		float num8 = Mathf.Abs(worldPos.z - num4);
-		return Mathf.Min(new float[4] { num5, num6, num7, num8 });
-	}
-
 	public static Vector3 RandomPointOffshore()
 	{
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00ac: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0100: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b8: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00dd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0104: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0116: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0121: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0126: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00dc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ee: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ff: Unknown result type (might be due to invalid IL or missing references)
 		float num = Random.Range(-1f, 1f);
 		float num2 = Random.Range(0f, 100f);
 		Vector3 val = default(Vector3);
@@ -246,16 +224,18 @@ public class TerrainMeta : MonoBehaviour
 
 	public static Vector3 Normalize(Vector3 worldPos)
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
 		float num = (worldPos.x - Position.x) * OneOverSize.x;
 		float num2 = (worldPos.y - Position.y) * OneOverSize.y;
 		float num3 = (worldPos.z - Position.z) * OneOverSize.z;
@@ -264,37 +244,39 @@ public class TerrainMeta : MonoBehaviour
 
 	public static float NormalizeX(float x)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
 		return (x - Position.x) * OneOverSize.x;
 	}
 
 	public static float NormalizeY(float y)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
 		return (y - Position.y) * OneOverSize.y;
 	}
 
 	public static float NormalizeZ(float z)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
 		return (z - Position.z) * OneOverSize.z;
 	}
 
 	public static Vector3 Denormalize(Vector3 normPos)
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
 		float num = Position.x + normPos.x * Size.x;
 		float num2 = Position.y + normPos.y * Size.y;
 		float num3 = Position.z + normPos.z * Size.z;
@@ -303,22 +285,22 @@ public class TerrainMeta : MonoBehaviour
 
 	public static float DenormalizeX(float normX)
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
 		return Position.x + normX * Size.x;
 	}
 
 	public static float DenormalizeY(float normY)
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
 		return Position.y + normY * Size.y;
 	}
 
 	public static float DenormalizeZ(float normZ)
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
 		return Position.z + normZ * Size.z;
 	}
 
@@ -332,19 +314,19 @@ public class TerrainMeta : MonoBehaviour
 
 	public void Init(Terrain terrainOverride = null, TerrainConfig configOverride = null)
 	{
-		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0196: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01aa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01bf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01d3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01dd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01e7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01cb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01e0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01eb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ff: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0209: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)terrainOverride != (Object)null)
 		{
 			terrain = terrainOverride;
@@ -380,9 +362,9 @@ public class TerrainMeta : MonoBehaviour
 		HighestPoint = new Vector3(Position.x, Position.y + Size.y, Position.z);
 		LowestPoint = new Vector3(Position.x, Position.y, Position.z);
 		TerrainExtension[] components = ((Component)this).GetComponents<TerrainExtension>();
-		for (int i = 0; i < components.Length; i++)
+		foreach (TerrainExtension terrainExtension in components)
 		{
-			components[i].Init(terrain, config);
+			terrainExtension.Init(terrain, config);
 		}
 		uint seed = World.Seed;
 		int num = SeedRandom.Range(ref seed, 0, 4) * 90;
@@ -394,11 +376,11 @@ public class TerrainMeta : MonoBehaviour
 
 	public static void InitNoTerrain(bool createPath = false)
 	{
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
 		Size = new Vector3(4096f, 4096f, 4096f);
 		OneOverSize = Vector3Ex.Inverse(Size);
 		Position = -0.5f * Size;
@@ -407,50 +389,50 @@ public class TerrainMeta : MonoBehaviour
 	public void SetupComponents()
 	{
 		TerrainExtension[] components = ((Component)this).GetComponents<TerrainExtension>();
-		foreach (TerrainExtension obj in components)
+		foreach (TerrainExtension terrainExtension in components)
 		{
-			obj.Setup();
-			obj.isInitialized = true;
+			terrainExtension.Setup();
+			terrainExtension.isInitialized = true;
 		}
 	}
 
 	public void PostSetupComponents()
 	{
 		TerrainExtension[] components = ((Component)this).GetComponents<TerrainExtension>();
-		for (int i = 0; i < components.Length; i++)
+		foreach (TerrainExtension terrainExtension in components)
 		{
-			components[i].PostSetup();
+			terrainExtension.PostSetup();
 		}
 	}
 
 	public void BindShaderProperties()
 	{
-		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0144: Unknown result type (might be due to invalid IL or missing references)
-		//IL_018f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0194: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01df: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01e4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_022f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0234: Unknown result type (might be due to invalid IL or missing references)
-		//IL_027f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0284: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02cf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02d4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_031f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0324: Unknown result type (might be due to invalid IL or missing references)
-		//IL_036f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0374: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03bf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03c4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_04a2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_04a7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_04b6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_04bb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_04ca: Unknown result type (might be due to invalid IL or missing references)
-		//IL_04cf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00dc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0198: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01e9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ee: Unknown result type (might be due to invalid IL or missing references)
+		//IL_023a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_023f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_028b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0290: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02dc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02e1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_032d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0332: Unknown result type (might be due to invalid IL or missing references)
+		//IL_037e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0383: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03cf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03d4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04de: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04e3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04f3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04f8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0508: Unknown result type (might be due to invalid IL or missing references)
+		//IL_050d: Unknown result type (might be due to invalid IL or missing references)
 		if (Object.op_Implicit((Object)(object)config))
 		{
 			Shader.SetGlobalTexture("Terrain_AlbedoArray", config.AlbedoArray);
@@ -484,7 +466,9 @@ public class TerrainMeta : MonoBehaviour
 			Shader.SetGlobalTexture("Terrain_Control0", (Texture)(object)SplatMap.SplatTexture0);
 			Shader.SetGlobalTexture("Terrain_Control1", (Texture)(object)SplatMap.SplatTexture1);
 		}
-		Object.op_Implicit((Object)(object)WaterMap);
+		if (Object.op_Implicit((Object)(object)WaterMap))
+		{
+		}
 		if (Object.op_Implicit((Object)(object)DistanceMap))
 		{
 			Shader.SetGlobalTexture("Terrain_Distance", (Texture)(object)DistanceMap.DistanceTexture);

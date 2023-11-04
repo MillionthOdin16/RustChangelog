@@ -68,7 +68,7 @@ public class TerrainAtlasSet : ScriptableObject
 
 	public bool generateTextureAtlases = true;
 
-	public bool generateTextureArrays;
+	public bool generateTextureArrays = false;
 
 	public string splatSearchPrefix = "terrain_";
 
@@ -84,12 +84,12 @@ public class TerrainAtlasSet : ScriptableObject
 
 	public void CheckReset()
 	{
-		//IL_00ec: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0111: Unknown result type (might be due to invalid IL or missing references)
 		//IL_012c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0131: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0151: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0171: Unknown result type (might be due to invalid IL or missing references)
 		if (splatNames == null)
 		{
 			splatNames = new string[8] { "Dirt", "Snow", "Sand", "Rock", "Grass", "Forest", "Stones", "Gravel" };

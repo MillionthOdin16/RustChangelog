@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Profiling;
 
 public class EntityCollisionMessage : EntityComponent<BaseEntity>
 {
@@ -8,7 +9,9 @@ public class EntityCollisionMessage : EntityComponent<BaseEntity>
 		{
 			return;
 		}
+		Profiler.BeginSample("GetEntity");
 		BaseEntity baseEntity = collision.GetEntity();
+		Profiler.EndSample();
 		if ((Object)(object)baseEntity == (Object)(object)base.baseEntity)
 		{
 			return;
@@ -24,6 +27,8 @@ public class EntityCollisionMessage : EntityComponent<BaseEntity>
 				baseEntity = baseEntity.ToServer<BaseEntity>();
 			}
 		}
+		Profiler.BeginSample("baseEntity.OnCollision");
 		base.baseEntity.OnCollision(collision, baseEntity);
+		Profiler.EndSample();
 	}
 }

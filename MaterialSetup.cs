@@ -2,5 +2,5 @@ using UnityEngine;
 
 public class MaterialSetup : MonoBehaviour, IClientComponent
 {
-	public MaterialConfig config;
+	public MaterialConfig config = null;
 }

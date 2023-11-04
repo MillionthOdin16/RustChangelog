@@ -16,7 +16,7 @@ public class RepairBench : StorageContainer
 
 	public const float REPAIR_COST_FRACTION = 0.2f;
 
-	private float nextSkinChangeTime;
+	private float nextSkinChangeTime = 0f;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -28,7 +28,7 @@ public class RepairBench : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ChangeSkin "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ChangeSkin "));
 				}
 				TimeWarning val2 = TimeWarning.New("ChangeSkin", 0);
 				try
@@ -47,7 +47,7 @@ public class RepairBench : StorageContainer
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -59,7 +59,7 @@ public class RepairBench : StorageContainer
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -79,12 +79,12 @@ public class RepairBench : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RepairItem "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RepairItem "));
 				}
-				TimeWarning val2 = TimeWarning.New("RepairItem", 0);
+				TimeWarning val5 = TimeWarning.New("RepairItem", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					TimeWarning val6 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsVisible.Test(1178348163u, "RepairItem", this, player, 3f))
@@ -94,11 +94,11 @@ public class RepairBench : StorageContainer
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val6)?.Dispose();
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val7 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -110,7 +110,7 @@ public class RepairBench : StorageContainer
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val7)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -121,7 +121,7 @@ public class RepairBench : StorageContainer
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val5)?.Dispose();
 				}
 				return true;
 			}
@@ -200,8 +200,8 @@ public class RepairBench : StorageContainer
 	[RPC_Server.IsVisible(3f)]
 	public void ChangeSkin(RPCMessage msg)
 	{
-		//IL_04af: Unknown result type (might be due to invalid IL or missing references)
-		//IL_04b4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0581: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0586: Unknown result type (might be due to invalid IL or missing references)
 		if (Time.realtimeSinceStartup < nextSkinChangeTime)
 		{
 			return;
@@ -339,8 +339,8 @@ public class RepairBench : StorageContainer
 
 	public static void RepairAnItem(Item itemToRepair, BasePlayer player, BaseEntity repairBenchEntity, float maxConditionLostOnRepair, bool mustKnowBlueprint)
 	{
-		//IL_020a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_020f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_028f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0294: Unknown result type (might be due to invalid IL or missing references)
 		if (itemToRepair == null)
 		{
 			return;
@@ -368,7 +368,8 @@ public class RepairBench : StorageContainer
 			if (item.itemDef.category != ItemCategory.Component)
 			{
 				int amount = player.inventory.GetAmount(item.itemDef.itemid);
-				if (Mathf.CeilToInt(item.amount * num) > amount)
+				int num2 = Mathf.CeilToInt(item.amount * num);
+				if (num2 > amount)
 				{
 					flag = true;
 					break;

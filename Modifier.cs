@@ -50,12 +50,12 @@ public class Modifier
 
 	public Modifier Save()
 	{
-		Modifier obj = Pool.Get<Modifier>();
-		obj.type = (int)Type;
-		obj.source = (int)Source;
-		obj.value = Value;
-		obj.timeRemaing = TimeRemaining;
-		return obj;
+		Modifier val = Pool.Get<Modifier>();
+		val.type = (int)Type;
+		val.source = (int)Source;
+		val.value = Value;
+		val.timeRemaing = TimeRemaining;
+		return val;
 	}
 
 	public void Load(Modifier m)

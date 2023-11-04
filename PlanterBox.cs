@@ -7,10 +7,11 @@ using ProtoBuf;
 using Rust;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.Profiling;
 
 public class PlanterBox : StorageContainer, ISplashable
 {
-	public int soilSaturation;
+	public int soilSaturation = 0;
 
 	public int soilSaturationMax = 8000;
 
@@ -54,7 +55,7 @@ public class PlanterBox : StorageContainer, ISplashable
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_RequestSaturationUpdate "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_RequestSaturationUpdate "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_RequestSaturationUpdate", 0);
 				try
@@ -73,7 +74,7 @@ public class PlanterBox : StorageContainer, ISplashable
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -85,7 +86,7 @@ public class PlanterBox : StorageContainer, ISplashable
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -110,8 +111,8 @@ public class PlanterBox : StorageContainer, ISplashable
 
 	public override void ServerInit()
 	{
-		//IL_0128: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0130: Unknown result type (might be due to invalid IL or missing references)
 		base.ServerInit();
 		base.inventory.onItemAddedRemoved = OnItemAddedOrRemoved;
 		base.inventory.SetOnlyAllowedItem(allowedItem);
@@ -265,21 +266,17 @@ public class PlanterBox : StorageContainer, ISplashable
 		{
 			return false;
 		}
-		if (!(splashType.shortname == "water.salt"))
-		{
-			return soilSaturation < soilSaturationMax;
-		}
-		return true;
+		return splashType.shortname == "water.salt" || soilSaturation < soilSaturationMax;
 	}
 
 	public int DoSplash(ItemDefinition splashType, int amount)
 	{
-		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
 		if (splashType.shortname == "water.salt")
 		{
 			soilSaturation = 0;
@@ -308,13 +305,17 @@ public class PlanterBox : StorageContainer, ISplashable
 		{
 			return;
 		}
+		Profiler.BeginSample("UpdateGrowableChildren");
 		foreach (BaseEntity child in children)
 		{
 			if (!((Object)(object)child == (Object)null) && !((Object)(object)child == (Object)(object)ignoreEntity) && child is GrowableEntity growableEntity)
 			{
+				Profiler.BeginSample("QueueGrowable");
 				growableEntity.QueueForQualityUpdate();
+				Profiler.EndSample();
 			}
 		}
+		Profiler.EndSample();
 	}
 
 	public void ForceLightUpdate()
@@ -335,9 +336,9 @@ public class PlanterBox : StorageContainer, ISplashable
 
 	private float CalculateSunExposure()
 	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
 		return GrowableEntity.SunRaycast(((Component)this).transform.position + new Vector3(0f, 1f, 0f));
 	}
 
@@ -358,16 +359,19 @@ public class PlanterBox : StorageContainer, ISplashable
 
 	private float CalculatePlantTemperature()
 	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		return Mathf.Max(Climate.GetTemperature(((Component)this).transform.position), 15f);
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		Profiler.BeginSample("GetPlantTemperature_Planter");
+		float temperature = Climate.GetTemperature(((Component)this).transform.position);
+		Profiler.EndSample();
+		return Mathf.Max(temperature, 15f);
 	}
 
 	private void CalculateRainFactor()
 	{
-		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
 		if (sunExposure.Get(force: false) > 0f)
 		{
 			float rain = Climate.GetRain(((Component)this).transform.position);

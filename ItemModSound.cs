@@ -14,8 +14,8 @@ public class ItemModSound : ItemMod
 
 	public override void OnParentChanged(Item item)
 	{
-		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
 		if (!Application.isLoadingSave && actionType == Type.OnAttachToWeapon && item.parentItem != null && item.parentItem.info.category == ItemCategory.Weapon)
 		{
 			BasePlayer ownerPlayer = item.parentItem.GetOwnerPlayer();

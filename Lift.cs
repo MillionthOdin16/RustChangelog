@@ -23,7 +23,7 @@ public class Lift : AnimatedBuildingBlock
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_UseLift "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_UseLift "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_UseLift", 0);
 				try
@@ -42,7 +42,7 @@ public class Lift : AnimatedBuildingBlock
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -54,7 +54,7 @@ public class Lift : AnimatedBuildingBlock
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -115,8 +115,8 @@ public class Lift : AnimatedBuildingBlock
 
 	public override void Spawn()
 	{
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
 		base.Spawn();
 		if (!Application.isLoadingSave)
 		{

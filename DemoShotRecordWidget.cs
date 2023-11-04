@@ -5,37 +5,37 @@ public class DemoShotRecordWidget : MonoBehaviour
 {
 	public RustInput NameInput;
 
-	public GameObject RecordingRoot;
+	public GameObject RecordingRoot = null;
 
-	public GameObject PreRecordingRoot;
+	public GameObject PreRecordingRoot = null;
 
-	public RustButton CountdownToggle;
+	public RustButton CountdownToggle = null;
 
-	public RustButton PauseOnSaveToggle;
+	public RustButton PauseOnSaveToggle = null;
 
-	public RustButton ReturnToStartToggle;
+	public RustButton ReturnToStartToggle = null;
 
-	public RustButton RecordDofToggle;
+	public RustButton RecordDofToggle = null;
 
-	public RustOption FolderDropdown;
+	public RustOption FolderDropdown = null;
 
-	public GameObject RecordingUnderlay;
+	public GameObject RecordingUnderlay = null;
 
-	public AudioSource CountdownAudio;
+	public AudioSource CountdownAudio = null;
 
-	public GameObject ShotRecordTime;
+	public GameObject ShotRecordTime = null;
 
-	public RustText ShotRecordTimeText;
+	public RustText ShotRecordTimeText = null;
 
-	public RustText ShotNameText;
+	public RustText ShotNameText = null;
 
-	public GameObject RecordingInProcessRoot;
+	public GameObject RecordingInProcessRoot = null;
 
-	public GameObject CountdownActiveRoot;
+	public GameObject CountdownActiveRoot = null;
 
-	public GameObject CountdownActiveSliderRoot;
+	public GameObject CountdownActiveSliderRoot = null;
 
-	public RustSlider CountdownActiveSlider;
+	public RustSlider CountdownActiveSlider = null;
 
-	public RustText CountdownActiveText;
+	public RustText CountdownActiveText = null;
 }

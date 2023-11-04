@@ -7,27 +7,27 @@ public class SlicedGranularAudioClip : MonoBehaviour, IClientComponent
 	{
 		private float[] sourceData;
 
-		private int startSample;
+		private int startSample = 0;
 
-		private int currentSample;
+		private int currentSample = 0;
 
-		private int attackTimeSamples;
+		private int attackTimeSamples = 0;
 
-		private int sustainTimeSamples;
+		private int sustainTimeSamples = 0;
 
-		private int releaseTimeSamples;
+		private int releaseTimeSamples = 0;
 
-		private float gain;
+		private float gain = 0f;
 
-		private float gainPerSampleAttack;
+		private float gainPerSampleAttack = 0f;
 
-		private float gainPerSampleRelease;
+		private float gainPerSampleRelease = 0f;
 
-		private int attackEndSample;
+		private int attackEndSample = 0;
 
-		private int releaseStartSample;
+		private int releaseStartSample = 0;
 
-		private int endSample;
+		private int endSample = 0;
 
 		public bool finished => currentSample >= endSample;
 
@@ -95,15 +95,15 @@ public class SlicedGranularAudioClip : MonoBehaviour, IClientComponent
 
 	public float grainFrequency = 0.1f;
 
-	public int grainAttackSamples;
+	public int grainAttackSamples = 0;
 
-	public int grainSustainSamples;
+	public int grainSustainSamples = 0;
 
-	public int grainReleaseSamples;
+	public int grainReleaseSamples = 0;
 
-	public int grainFrequencySamples;
+	public int grainFrequencySamples = 0;
 
-	public int samplesUntilNextGrain;
+	public int samplesUntilNextGrain = 0;
 
 	public List<Grain> grains = new List<Grain>();
 

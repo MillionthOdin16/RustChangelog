@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using ConVar;
 using Rust;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 public static class BaseModifiers
 {
@@ -46,7 +47,8 @@ public abstract class BaseModifiers<T> : EntityComponent<T> where T : BaseCombat
 			return;
 		}
 		int maxModifiersForSourceType = GetMaxModifiersForSourceType(modifier.Source);
-		if (GetTypeSourceCount(modifier.Type, modifier.Source) >= maxModifiersForSourceType)
+		int typeSourceCount = GetTypeSourceCount(modifier.Type, modifier.Source);
+		if (typeSourceCount >= maxModifiersForSourceType)
 		{
 			Modifier shortestLifeModifier = GetShortestLifeModifier(modifier.Type, modifier.Source);
 			if (shortestLifeModifier == null)
@@ -205,7 +207,9 @@ public abstract class BaseModifiers<T> : EntityComponent<T> where T : BaseCombat
 		{
 			if ((Object)(object)owner != (Object)null && !owner.IsDead())
 			{
+				Profiler.BeginSample("TickModifiers");
 				TickModifiers(ownerEntity, timeSinceLastTick);
+				Profiler.EndSample();
 			}
 			timeSinceLastTick = 0f;
 		}

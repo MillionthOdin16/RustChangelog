@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class FavouriteRadioStation : MonoBehaviour
 {
-	public RustText UrlText;
+	public RustText UrlText = null;
 
-	public GameObject XmasRoot;
+	public GameObject XmasRoot = null;
 }

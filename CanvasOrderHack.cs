@@ -13,8 +13,8 @@ public class CanvasOrderHack : MonoBehaviour
 				val.sortingOrder = sortingOrder + 1;
 			}
 		}
-		componentsInChildren = ((Component)this).GetComponentsInChildren<Canvas>(true);
-		foreach (Canvas val2 in componentsInChildren)
+		Canvas[] componentsInChildren2 = ((Component)this).GetComponentsInChildren<Canvas>(true);
+		foreach (Canvas val2 in componentsInChildren2)
 		{
 			if (val2.overrideSorting)
 			{

@@ -16,9 +16,9 @@ public class EntityListScriptableObject : ScriptableObject
 			return false;
 		}
 		BaseEntity[] array = entities;
-		for (int i = 0; i < array.Length; i++)
+		foreach (BaseEntity baseEntity in array)
 		{
-			if (array[i].prefabID == prefabId)
+			if (baseEntity.prefabID == prefabId)
 			{
 				return true;
 			}

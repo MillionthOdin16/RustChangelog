@@ -2,6 +2,7 @@ using System;
 using Facepunch;
 using ProtoBuf;
 using UnityEngine;
+using UnityEngine.Profiling;
 using UnityEngine.Serialization;
 
 public class ResourceEntity : BaseEntity
@@ -17,7 +18,7 @@ public class ResourceEntity : BaseEntity
 	internal ResourceDispenser resourceDispenser;
 
 	[NonSerialized]
-	protected bool isKilled;
+	protected bool isKilled = false;
 
 	public override void Load(LoadInfo info)
 	{
@@ -51,11 +52,13 @@ public class ResourceEntity : BaseEntity
 	public override void Save(SaveInfo info)
 	{
 		base.Save(info);
+		Profiler.BeginSample("ResourceEntity.Save");
 		if (info.forDisk)
 		{
 			info.msg.resource = Pool.Get<BaseResource>();
 			info.msg.resource.health = Health();
 		}
+		Profiler.EndSample();
 	}
 
 	public override float MaxHealth()
