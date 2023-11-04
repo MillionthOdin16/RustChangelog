@@ -18,9 +18,9 @@ public class MovementSounds : MonoBehaviour
 
 	private SoundModulation.Modulator waterGainMod;
 
-	public bool inWater = false;
+	public bool inWater;
 
-	public float waterLevel = 0f;
+	public float waterLevel;
 
-	public bool mute = false;
+	public bool mute;
 }

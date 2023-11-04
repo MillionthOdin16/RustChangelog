@@ -4,10 +4,10 @@ using UnityEngine;
 public class VertexColorStream : MonoBehaviour
 {
 	[HideInInspector]
-	public Mesh originalMesh = null;
+	public Mesh originalMesh;
 
 	[HideInInspector]
-	public Mesh paintedMesh = null;
+	public Mesh paintedMesh;
 
 	[HideInInspector]
 	public MeshHolder meshHold;
@@ -60,8 +60,8 @@ public class VertexColorStream : MonoBehaviour
 
 	public void init(Mesh origMesh, bool destroyOld)
 	{
-		//IL_013a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_013f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0133: Unknown result type (might be due to invalid IL or missing references)
 		originalMesh = origMesh;
 		paintedMesh = Object.Instantiate<Mesh>(origMesh);
 		if (destroyOld)
@@ -117,8 +117,8 @@ public class VertexColorStream : MonoBehaviour
 
 	public Vector3[] setVertices(Vector3[] _deformedVertices)
 	{
-		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
 		paintedMesh.vertices = _deformedVertices;
 		meshHold._vertices = _deformedVertices;
 		paintedMesh.RecalculateNormals();
@@ -193,10 +193,10 @@ public class VertexColorStream : MonoBehaviour
 
 	public void rebuild()
 	{
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0023: Expected O, but got Unknown
-		//IL_02aa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Expected O, but got Unknown
+		//IL_013b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0267: Unknown result type (might be due to invalid IL or missing references)
 		if (!Object.op_Implicit((Object)(object)((Component)this).GetComponent<MeshFilter>()))
 		{
 			return;

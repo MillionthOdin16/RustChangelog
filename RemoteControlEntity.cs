@@ -18,7 +18,7 @@ public class RemoteControlEntity : BaseCombatEntity, IRemoteControllable
 
 	public GameObjectRef IDPanelPrefab;
 
-	public RemoteControllableControls rcControls = RemoteControllableControls.None;
+	public RemoteControllableControls rcControls;
 
 	public bool CanPing => true;
 
@@ -28,7 +28,17 @@ public class RemoteControlEntity : BaseCombatEntity, IRemoteControllable
 
 	public CameraViewerId? ControllingViewerId { get; private set; }
 
-	public bool IsBeingControlled => ViewerCount > 0 && ControllingViewerId.HasValue;
+	public bool IsBeingControlled
+	{
+		get
+		{
+			if (ViewerCount > 0)
+			{
+				return ControllingViewerId.HasValue;
+			}
+			return false;
+		}
+	}
 
 	public virtual bool RequiresMouse => false;
 
@@ -46,7 +56,7 @@ public class RemoteControlEntity : BaseCombatEntity, IRemoteControllable
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_SetID "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_SetID "));
 				}
 				TimeWarning val2 = TimeWarning.New("Server_SetID", 0);
 				try
@@ -65,7 +75,7 @@ public class RemoteControlEntity : BaseCombatEntity, IRemoteControllable
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -77,7 +87,7 @@ public class RemoteControlEntity : BaseCombatEntity, IRemoteControllable
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -146,7 +156,7 @@ public class RemoteControlEntity : BaseCombatEntity, IRemoteControllable
 
 	public void UpdateIdentifier(string newID, bool clientSend = false)
 	{
-		string text = rcIdentifier;
+		_ = rcIdentifier;
 		if (base.isServer)
 		{
 			if (!IDInUse(newID))
@@ -236,7 +246,11 @@ public class RemoteControlEntity : BaseCombatEntity, IRemoteControllable
 
 	protected virtual bool CanChangeID(BasePlayer player)
 	{
-		return (Object)(object)player != (Object)null && player.CanBuild() && player.IsBuildingAuthed() && player.IsHoldingEntity<Hammer>();
+		if ((Object)(object)player != (Object)null && player.CanBuild() && player.IsBuildingAuthed())
+		{
+			return player.IsHoldingEntity<Hammer>();
+		}
+		return false;
 	}
 
 	public static bool IDInUse(string id)

@@ -80,12 +80,12 @@ public class TriggerHurtEx : TriggerBase, IServerComponent, IHurtTrigger
 
 	internal void DoDamage(BaseEntity ent, HurtType type, List<DamageTypeEntry> damage, GameObjectRef effect, float multiply = 1f)
 	{
-		//IL_00fb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0100: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ca: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
 		if (!damageEnabled)
 		{
 			return;
@@ -167,14 +167,14 @@ public class TriggerHurtEx : TriggerBase, IServerComponent, IHurtTrigger
 
 	private void OnTick()
 	{
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
 		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
 		ProcessQueues();
 		if (entityInfo == null)
 		{
@@ -201,8 +201,8 @@ public class TriggerHurtEx : TriggerBase, IServerComponent, IHurtTrigger
 
 	private void ProcessQueues()
 	{
-		//IL_009e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
 		if (entityAddList != null)
 		{
 			foreach (BaseEntity entityAdd in entityAddList)

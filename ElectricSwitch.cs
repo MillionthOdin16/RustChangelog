@@ -6,7 +6,7 @@ using UnityEngine.Assertions;
 
 public class ElectricSwitch : IOEntity
 {
-	public bool isToggleSwitch = false;
+	public bool isToggleSwitch;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -18,7 +18,7 @@ public class ElectricSwitch : IOEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SVSwitch "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SVSwitch "));
 				}
 				TimeWarning val2 = TimeWarning.New("SVSwitch", 0);
 				try
@@ -37,7 +37,7 @@ public class ElectricSwitch : IOEntity
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -49,7 +49,7 @@ public class ElectricSwitch : IOEntity
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -79,7 +79,11 @@ public class ElectricSwitch : IOEntity
 
 	public override int ConsumptionAmount()
 	{
-		return IsOn() ? 1 : 0;
+		if (!IsOn())
+		{
+			return 0;
+		}
+		return 1;
 	}
 
 	public override void ResetIOState()
@@ -89,7 +93,11 @@ public class ElectricSwitch : IOEntity
 
 	public override int GetPassthroughAmount(int outputSlot = 0)
 	{
-		return IsOn() ? GetCurrentEnergy() : 0;
+		if (!IsOn())
+		{
+			return 0;
+		}
+		return GetCurrentEnergy();
 	}
 
 	public override void IOStateChanged(int inputAmount, int inputSlot)

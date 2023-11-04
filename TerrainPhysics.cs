@@ -14,7 +14,7 @@ public class TerrainPhysics : TerrainExtension
 
 	public PhysicMaterial GetMaterial(Vector3 worldPos)
 	{
-		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)splat == (Object)null || materials.Length == 0)
 		{
 			return null;

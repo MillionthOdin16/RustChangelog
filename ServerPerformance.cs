@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Facepunch;
@@ -9,15 +8,15 @@ using UnityEngine.Profiling;
 
 public class ServerPerformance : BaseMonoBehaviour
 {
-	public static ulong deaths = 0uL;
+	public static ulong deaths;
 
-	public static ulong spawns = 0uL;
+	public static ulong spawns;
 
-	public static ulong position_changes = 0uL;
+	public static ulong position_changes;
 
 	private string fileName;
 
-	private int lastFrame = 0;
+	private int lastFrame;
 
 	private void Start()
 	{
@@ -106,10 +105,10 @@ public class ServerPerformance : BaseMonoBehaviour
 	public static void ComponentReport(string filename, string Title, Object[] objects)
 	{
 		File.AppendAllText(filename, "\r\n\r\n" + Title + ":\r\n\r\n");
-		IEnumerable<IGrouping<string, Object>> source = from x in objects
-			group x by WorkoutPrefabName(((Component)((x is Component) ? x : null)).gameObject);
-		source = source.OrderByDescending((IGrouping<string, Object> x) => x.Count());
-		foreach (IGrouping<string, Object> item in source)
+		foreach (IGrouping<string, Object> item in from x in objects
+			group x by WorkoutPrefabName(((Component)((x is Component) ? x : null)).gameObject) into x
+			orderby x.Count() descending
+			select x)
 		{
 			File.AppendAllText(filename, "\t" + WorkoutPrefabName(((Component)/*isinst with value type is only supported in some contexts*/).gameObject) + " - " + item.Count() + "\r\n");
 		}

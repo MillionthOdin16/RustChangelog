@@ -25,7 +25,7 @@ public class ShopFront : StorageContainer
 
 	public ItemContainer customerInventory;
 
-	private bool swappingItems = false;
+	private bool swappingItems;
 
 	private float AngleDotProduct => 1f - maxUseAngle / 90f;
 
@@ -41,7 +41,7 @@ public class ShopFront : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - AcceptClicked "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - AcceptClicked "));
 				}
 				TimeWarning val2 = TimeWarning.New("AcceptClicked", 0);
 				try
@@ -60,7 +60,7 @@ public class ShopFront : StorageContainer
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -72,7 +72,7 @@ public class ShopFront : StorageContainer
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -92,12 +92,12 @@ public class ShopFront : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - CancelClicked "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - CancelClicked "));
 				}
-				TimeWarning val5 = TimeWarning.New("CancelClicked", 0);
+				TimeWarning val2 = TimeWarning.New("CancelClicked", 0);
 				try
 				{
-					TimeWarning val6 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsVisible.Test(3168107540u, "CancelClicked", this, player, 3f))
@@ -107,11 +107,11 @@ public class ShopFront : StorageContainer
 					}
 					finally
 					{
-						((IDisposable)val6)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val7 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -123,7 +123,7 @@ public class ShopFront : StorageContainer
 						}
 						finally
 						{
-							((IDisposable)val7)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -134,7 +134,7 @@ public class ShopFront : StorageContainer
 				}
 				finally
 				{
-					((IDisposable)val5)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -153,7 +153,15 @@ public class ShopFront : StorageContainer
 
 	public bool IsTradingPlayer(BasePlayer player)
 	{
-		return (Object)(object)player != (Object)null && (IsPlayerCustomer(player) || IsPlayerVendor(player));
+		if ((Object)(object)player != (Object)null)
+		{
+			if (!IsPlayerCustomer(player))
+			{
+				return IsPlayerVendor(player);
+			}
+			return true;
+		}
+		return false;
 	}
 
 	public bool IsPlayerCustomer(BasePlayer player)
@@ -168,12 +176,12 @@ public class ShopFront : StorageContainer
 
 	public bool PlayerInVendorPos(BasePlayer player)
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 right = ((Component)this).transform.right;
 		Vector3 val = ((Component)player).transform.position - ((Component)this).transform.position;
 		return Vector3.Dot(right, ((Vector3)(ref val)).normalized) <= 0f - AngleDotProduct;
@@ -181,12 +189,12 @@ public class ShopFront : StorageContainer
 
 	public bool PlayerInCustomerPos(BasePlayer player)
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 right = ((Component)this).transform.right;
 		Vector3 val = ((Component)player).transform.position - ((Component)this).transform.position;
 		return Vector3.Dot(right, ((Vector3)(ref val)).normalized) >= AngleDotProduct;
@@ -221,8 +229,8 @@ public class ShopFront : StorageContainer
 
 	public void CompleteTrade()
 	{
-		//IL_00fe: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0103: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00db: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e0: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)vendorPlayer != (Object)null && (Object)(object)customerPlayer != (Object)null && HasFlag(Flags.Reserved1) && HasFlag(Flags.Reserved2))
 		{
 			try
@@ -282,12 +290,8 @@ public class ShopFront : StorageContainer
 	{
 		if (IsTradingPlayer(msg.player))
 		{
-			if (Object.op_Implicit((Object)(object)vendorPlayer))
-			{
-			}
-			if (Object.op_Implicit((Object)(object)customerPlayer))
-			{
-			}
+			Object.op_Implicit((Object)(object)vendorPlayer);
+			Object.op_Implicit((Object)(object)customerPlayer);
 			ResetTrade();
 		}
 	}
@@ -365,7 +369,11 @@ public class ShopFront : StorageContainer
 
 	public override bool CanOpenLootPanel(BasePlayer player, string panelName)
 	{
-		return base.CanOpenLootPanel(player, panelName) && LootEligable(player);
+		if (base.CanOpenLootPanel(player, panelName))
+		{
+			return LootEligable(player);
+		}
+		return false;
 	}
 
 	public void ReturnPlayerItems(BasePlayer player)
@@ -439,12 +447,12 @@ public class ShopFront : StorageContainer
 
 	public void UpdatePlayers()
 	{
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
 		ClientRPC<NetworkableId, NetworkableId>(null, "CLIENT_ReceivePlayers", (NetworkableId)(((Object)(object)vendorPlayer == (Object)null) ? default(NetworkableId) : vendorPlayer.net.ID), (NetworkableId)(((Object)(object)customerPlayer == (Object)null) ? default(NetworkableId) : customerPlayer.net.ID));
 	}
 }

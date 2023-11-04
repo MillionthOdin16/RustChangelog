@@ -11,7 +11,7 @@ public class ItemSkin : SteamInventoryItem
 	[Tooltip("If set, whenever we make an item with this skin, we'll spawn this item without a skin instead")]
 	public ItemDefinition Redirect;
 
-	public SteamInventoryItem UnlockedViaSteamItem = null;
+	public SteamInventoryItem UnlockedViaSteamItem;
 
 	public void ApplySkin(GameObject obj)
 	{

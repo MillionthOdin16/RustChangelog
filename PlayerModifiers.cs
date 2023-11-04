@@ -2,7 +2,6 @@ using System;
 using Facepunch;
 using Network;
 using ProtoBuf;
-using UnityEngine.Profiling;
 
 public class PlayerModifiers : BaseModifiers<BasePlayer>
 {
@@ -22,9 +21,7 @@ public class PlayerModifiers : BaseModifiers<BasePlayer>
 	public override void ServerUpdate(BaseCombatEntity ownerEntity)
 	{
 		base.ServerUpdate(ownerEntity);
-		Profiler.BeginSample("SendModifierChangesToClient");
 		SendChangesToClient();
-		Profiler.EndSample();
 	}
 
 	public PlayerModifiers Save()

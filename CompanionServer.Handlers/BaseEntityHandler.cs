@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace CompanionServer.Handlers;
 
-public abstract class BaseEntityHandler<T> : BaseHandler<T> where T : class
+public abstract class BaseEntityHandler<T> : BasePlayerHandler<T> where T : class
 {
 	protected AppIOEntity Entity { get; private set; }
 
@@ -14,8 +14,8 @@ public abstract class BaseEntityHandler<T> : BaseHandler<T> where T : class
 
 	public override ValidationResult Validate()
 	{
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
 		ValidationResult validationResult = base.Validate();
 		if (validationResult != 0)
 		{

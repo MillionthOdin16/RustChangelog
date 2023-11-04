@@ -15,15 +15,15 @@ public class SteamFriendsList : MonoBehaviour
 
 	public bool IncludeFriendsList = true;
 
-	public bool IncludeRecentlySeen = false;
+	public bool IncludeRecentlySeen;
 
-	public bool IncludeLastAttacker = false;
+	public bool IncludeLastAttacker;
 
-	public bool IncludeRecentlyPlayedWith = false;
+	public bool IncludeRecentlyPlayedWith;
 
-	public bool ShowTeamFirst = false;
+	public bool ShowTeamFirst;
 
-	public bool HideSteamIdsInStreamerMode = false;
+	public bool HideSteamIdsInStreamerMode;
 
 	public bool RefreshOnEnable = true;
 

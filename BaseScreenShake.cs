@@ -14,7 +14,7 @@ public abstract class BaseScreenShake : MonoBehaviour
 
 	public float length = 2f;
 
-	internal float timeTaken = 0f;
+	internal float timeTaken;
 
 	private int currentFrame = -1;
 

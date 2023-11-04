@@ -6,7 +6,6 @@ using Network;
 using ProtoBuf;
 using UnityEngine;
 using UnityEngine.Assertions;
-using UnityEngine.Profiling;
 
 public class DroppedItemContainer : BaseCombatEntity, LootPanel.IHasLootPanel, IContainerSounds, ILootableEntity
 {
@@ -22,7 +21,7 @@ public class DroppedItemContainer : BaseCombatEntity, LootPanel.IHasLootPanel, I
 
 	public bool ItemBasedDespawn;
 
-	public bool onlyOwnerLoot = false;
+	public bool onlyOwnerLoot;
 
 	public SoundDefinition openSound;
 
@@ -56,7 +55,7 @@ public class DroppedItemContainer : BaseCombatEntity, LootPanel.IHasLootPanel, I
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_OpenLoot "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_OpenLoot "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_OpenLoot", 0);
 				try
@@ -75,7 +74,7 @@ public class DroppedItemContainer : BaseCombatEntity, LootPanel.IHasLootPanel, I
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -87,7 +86,7 @@ public class DroppedItemContainer : BaseCombatEntity, LootPanel.IHasLootPanel, I
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -112,7 +111,7 @@ public class DroppedItemContainer : BaseCombatEntity, LootPanel.IHasLootPanel, I
 
 	public override bool OnStartBeingLooted(BasePlayer baseEntity)
 	{
-		if (baseEntity.InSafeZone() && baseEntity.userID != playerSteamID)
+		if ((baseEntity.InSafeZone() || InSafeZone()) && baseEntity.userID != playerSteamID)
 		{
 			return false;
 		}
@@ -188,14 +187,15 @@ public class DroppedItemContainer : BaseCombatEntity, LootPanel.IHasLootPanel, I
 
 	public void TakeFrom(ItemContainer[] source, float destroyPercent = 0f)
 	{
-		//IL_0150: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ff: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0115: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a9: Unknown result type (might be due to invalid IL or missing references)
 		Assert.IsTrue(inventory == null, "Initializing Twice");
 		TimeWarning val = TimeWarning.New("DroppedItemContainer.TakeFrom", 0);
 		try
 		{
 			int num = 0;
-			foreach (ItemContainer itemContainer in source)
+			ItemContainer[] array = source;
+			foreach (ItemContainer itemContainer in array)
 			{
 				num += itemContainer.itemList.Count;
 			}
@@ -204,12 +204,12 @@ public class DroppedItemContainer : BaseCombatEntity, LootPanel.IHasLootPanel, I
 			inventory.GiveUID();
 			inventory.entityOwner = this;
 			inventory.SetFlag(ItemContainer.Flag.NoItemInput, b: true);
-			Profiler.BeginSample("DroppedItemContainer.TakeFromIter");
 			List<Item> list = Pool.GetList<Item>();
-			foreach (ItemContainer itemContainer2 in source)
+			array = source;
+			for (int i = 0; i < array.Length; i++)
 			{
-				Item[] array = itemContainer2.itemList.ToArray();
-				foreach (Item item in array)
+				Item[] array2 = array[i].itemList.ToArray();
+				foreach (Item item in array2)
 				{
 					if (destroyPercent > 0f)
 					{
@@ -231,9 +231,9 @@ public class DroppedItemContainer : BaseCombatEntity, LootPanel.IHasLootPanel, I
 				int num2 = Mathf.FloorToInt((float)list.Count * destroyPercent);
 				int num3 = Mathf.Max(0, list.Count - num2);
 				ListEx.Shuffle<Item>(list, (uint)Random.Range(0, int.MaxValue));
-				for (int l = 0; l < num3; l++)
+				for (int k = 0; k < num3; k++)
 				{
-					Item item2 = list[l];
+					Item item2 = list[k];
 					if (!item2.MoveToContainer(inventory))
 					{
 						item2.DropAndTossUpwards(((Component)this).transform.position);
@@ -241,7 +241,6 @@ public class DroppedItemContainer : BaseCombatEntity, LootPanel.IHasLootPanel, I
 				}
 			}
 			Pool.FreeList<Item>(ref list);
-			Profiler.EndSample();
 			ResetRemovalTime();
 		}
 		finally

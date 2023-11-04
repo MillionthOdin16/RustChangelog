@@ -28,8 +28,8 @@ public class HitNumber : MonoBehaviour
 
 	public void OnDrawGizmos()
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
 		Gizmos.color = Color.white;
 		Gizmos.DrawSphere(((Component)this).transform.position, 0.025f);
 	}

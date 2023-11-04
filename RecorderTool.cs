@@ -8,9 +8,9 @@ using UnityEngine.Assertions;
 public class RecorderTool : ThrownWeapon, ICassettePlayer
 {
 	[ClientVar(Saved = true)]
-	public static bool debugRecording = false;
+	public static bool debugRecording;
 
-	public AudioSource RecorderAudioSource = null;
+	public AudioSource RecorderAudioSource;
 
 	public SoundDefinition RecordStartSfx;
 
@@ -24,10 +24,19 @@ public class RecorderTool : ThrownWeapon, ICassettePlayer
 
 	public float ThrowScale = 3f;
 
-	public Cassette cachedCassette { get; private set; } = null;
+	public Cassette cachedCassette { get; private set; }
 
-
-	public Sprite LoadedCassetteIcon => ((Object)(object)cachedCassette != (Object)null) ? cachedCassette.HudSprite : null;
+	public Sprite LoadedCassetteIcon
+	{
+		get
+		{
+			if (!((Object)(object)cachedCassette != (Object)null))
+			{
+				return null;
+			}
+			return cachedCassette.HudSprite;
+		}
+	}
 
 	public BaseEntity ToBaseEntity => this;
 
@@ -41,7 +50,7 @@ public class RecorderTool : ThrownWeapon, ICassettePlayer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_TogglePlaying "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_TogglePlaying "));
 				}
 				TimeWarning val2 = TimeWarning.New("Server_TogglePlaying", 0);
 				try
@@ -60,7 +69,7 @@ public class RecorderTool : ThrownWeapon, ICassettePlayer
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -72,7 +81,7 @@ public class RecorderTool : ThrownWeapon, ICassettePlayer
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -110,7 +119,7 @@ public class RecorderTool : ThrownWeapon, ICassettePlayer
 
 	public void OnCassetteInserted(Cassette c)
 	{
-		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
 		cachedCassette = c;
 		ClientRPC<NetworkableId>(null, "Client_OnCassetteInserted", c.net.ID);
 	}
@@ -124,8 +133,7 @@ public class RecorderTool : ThrownWeapon, ICassettePlayer
 	protected override void SetUpThrownWeapon(BaseEntity ent)
 	{
 		base.SetUpThrownWeapon(ent);
-		BasePlayer ownerPlayer = GetOwnerPlayer();
-		if ((Object)(object)ownerPlayer != (Object)null)
+		if ((Object)(object)GetOwnerPlayer() != (Object)null)
 		{
 			ent.OwnerID = GetOwnerPlayer().userID;
 		}

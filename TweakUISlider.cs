@@ -33,8 +33,8 @@ public class TweakUISlider : TweakUIBase
 
 	protected override void SetConvarValue()
 	{
-		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
 		base.SetConvarValue();
 		if (conVar != null)
 		{

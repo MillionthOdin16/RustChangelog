@@ -35,9 +35,9 @@ public class BenchmarkInfo : SingletonComponent<BenchmarkInfo>
 
 	private void Update()
 	{
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
 		if (!(RealTimeSince.op_Implicit(timeSinceUpdated) < 0.25f))
 		{
 			timeSinceUpdated = RealTimeSince.op_Implicit(0f);

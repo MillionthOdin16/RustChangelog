@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 public class WaterCollision : MonoBehaviour
 {
@@ -17,8 +16,8 @@ public class WaterCollision : MonoBehaviour
 
 	public void Clear()
 	{
-		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
 		if (waterColliders.Count == 0)
 		{
 			return;
@@ -31,8 +30,7 @@ public class WaterCollision : MonoBehaviour
 			{
 				while (enumerator2.MoveNext())
 				{
-					Collider current = enumerator2.Current;
-					Physics.IgnoreCollision(current, enumerator.Current, false);
+					Physics.IgnoreCollision(enumerator2.Current, enumerator.Current, false);
 				}
 			}
 			finally
@@ -58,36 +56,31 @@ public class WaterCollision : MonoBehaviour
 
 	public bool GetIgnore(Vector3 pos, float radius = 0.01f)
 	{
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		Profiler.BeginSample("WaterCollision.GetIgnore");
-		bool result = GamePhysics.CheckSphere<WaterVisibilityTrigger>(pos, radius, 262144, (QueryTriggerInteraction)2);
-		Profiler.EndSample();
-		return result;
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		return GamePhysics.CheckSphere<WaterVisibilityTrigger>(pos, radius, 262144, (QueryTriggerInteraction)2);
 	}
 
 	public bool GetIgnore(Bounds bounds)
 	{
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		Profiler.BeginSample("WaterCollision.GetIgnore");
-		bool result = GamePhysics.CheckBounds<WaterVisibilityTrigger>(bounds, 262144, (QueryTriggerInteraction)2);
-		Profiler.EndSample();
-		return result;
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		return GamePhysics.CheckBounds<WaterVisibilityTrigger>(bounds, 262144, (QueryTriggerInteraction)2);
 	}
 
 	public bool GetIgnore(Vector3 start, Vector3 end, float radius)
 	{
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		Profiler.BeginSample("WaterCollision.GetIgnore");
-		bool result = GamePhysics.CheckCapsule<WaterVisibilityTrigger>(start, end, radius, 262144, (QueryTriggerInteraction)2);
-		Profiler.EndSample();
-		return result;
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		return GamePhysics.CheckCapsule<WaterVisibilityTrigger>(start, end, radius, 262144, (QueryTriggerInteraction)2);
 	}
 
 	public bool GetIgnore(RaycastHit hit)
 	{
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-		return waterColliders.Contains(((RaycastHit)(ref hit)).collider) && GetIgnore(((RaycastHit)(ref hit)).point);
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		if (waterColliders.Contains(((RaycastHit)(ref hit)).collider))
+		{
+			return GetIgnore(((RaycastHit)(ref hit)).point);
+		}
+		return false;
 	}
 
 	public bool GetIgnore(Collider collider)

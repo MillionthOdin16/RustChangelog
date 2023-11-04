@@ -109,7 +109,11 @@ public class PerformanceLogging
 
 	private TimeSpan GetLagSpikeThreshold()
 	{
-		return isClient ? TimeSpan.FromMilliseconds(100.0) : TimeSpan.FromMilliseconds(200.0);
+		if (!isClient)
+		{
+			return TimeSpan.FromMilliseconds(200.0);
+		}
+		return TimeSpan.FromMilliseconds(100.0);
 	}
 
 	public void OnFrame()
@@ -200,8 +204,7 @@ public class PerformanceLogging
 						if (obj2 != null)
 						{
 							List<PluginInfo> list = new List<PluginInfo>();
-							IEnumerable enumerable = obj2.GetType().GetMethod("GetPlugins")?.Invoke(obj2, null) as IEnumerable;
-							foreach (object item in enumerable)
+							foreach (object item in obj2.GetType().GetMethod("GetPlugins")?.Invoke(obj2, null) as IEnumerable)
 							{
 								if (item != null)
 								{
@@ -289,14 +292,19 @@ public class PerformanceLogging
 			["cpu_frequency"] = SystemInfo.processorFrequency.ToString(),
 			["cpu_name"] = SystemInfo.processorType.Trim(),
 			["system_memory"] = SystemInfo.systemMemorySize.ToString(),
-			["os"] = SystemInfo.operatingSystem
+			["os"] = SystemInfo.operatingSystem,
+			["supports_compute_shaders"] = SystemInfo.supportsComputeShaders.ToString(),
+			["supports_async_compute"] = SystemInfo.supportsAsyncCompute.ToString(),
+			["supports_async_gpu_readback"] = SystemInfo.supportsAsyncGPUReadback.ToString(),
+			["supports_3d_textures"] = SystemInfo.supports3DTextures.ToString(),
+			["supports_instancing"] = SystemInfo.supportsInstancing.ToString()
 		};
 		Dictionary<string, string> obj3 = new Dictionary<string, string> { ["unity"] = Application.unityVersion ?? "editor" };
 		BuildInfo current2 = BuildInfo.Current;
 		obj3["changeset"] = ((current2 != null) ? current2.Scm.ChangeId : null) ?? "editor";
 		BuildInfo current3 = BuildInfo.Current;
 		obj3["branch"] = ((current3 != null) ? current3.Scm.Branch : null) ?? "editor";
-		obj3["network_version"] = 2402.ToString();
+		obj3["network_version"] = 2509.ToString();
 		Dictionary<string, string> dictionary = obj3;
 		dictionary["eos_sdk"] = ((object)VersionInterface.GetVersion())?.ToString() ?? "disabled";
 		record.AddObject("hardware", data).AddObject("application", dictionary);
@@ -310,9 +318,8 @@ public class PerformanceLogging
 			{
 				await ProcessPerformanceData(record, frametimes, ping);
 			}
-			catch (Exception ex3)
+			catch (Exception ex2)
 			{
-				Exception ex2 = ex3;
 				Debug.LogException(ex2);
 			}
 		});
@@ -345,6 +352,7 @@ public class PerformanceLogging
 			}
 			Frametimes = Pool.GetList<TimeSpan>();
 			PingHistory = Pool.GetList<int>();
+			lagSpikes.Clear();
 			garbageCollections.Clear();
 		}
 	}
@@ -359,8 +367,8 @@ public class PerformanceLogging
 		sortedList.AddRange(frametimes);
 		sortedList.Sort();
 		int count = frametimes.Count;
-		int num = Mathf.Max(1, frametimes.Count / 100);
-		int num2 = Mathf.Max(1, frametimes.Count / 1000);
+		Mathf.Max(1, frametimes.Count / 100);
+		Mathf.Max(1, frametimes.Count / 1000);
 		TimeSpan value = default(TimeSpan);
 		for (int i = 0; i < count; i++)
 		{
@@ -368,8 +376,7 @@ public class PerformanceLogging
 			value += timeSpan;
 		}
 		double frametime_average = value.TotalMilliseconds / (double)count;
-		double num3 = sortedList.Sum((TimeSpan x) => Math.Pow(x.TotalMilliseconds - frametime_average, 2.0));
-		double value2 = Math.Sqrt(num3 / (double)sortedList.Count - 1.0);
+		double value2 = Math.Sqrt(sortedList.Sum((TimeSpan x) => Math.Pow(x.TotalMilliseconds - frametime_average, 2.0)) / (double)sortedList.Count - 1.0);
 		record.AddField("total_time", value).AddField("frames", count).AddField("frametime_average", value.TotalSeconds / (double)count)
 			.AddField("frametime_99_9", sortedList[Mathf.Clamp(count - count / 1000, 0, count - 1)])
 			.AddField("frametime_99", sortedList[Mathf.Clamp(count - count / 100, 0, count - 1)])

@@ -76,8 +76,8 @@ public class NewsSource : MonoBehaviour
 
 	public void SetStory(SteamNewsSource.Story story)
 	{
-		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ca: Expected O, but got Unknown
+		//IL_00b9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c3: Expected O, but got Unknown
 		PlayerPrefs.SetInt("lastNewsDate", story.date);
 		TransformEx.DestroyAllChildren((Transform)(object)container, false);
 		((TMP_Text)title).text = story.name;
@@ -100,32 +100,28 @@ public class NewsSource : MonoBehaviour
 			coverImage.Load(firstImage);
 		}
 		RustText[] componentsInChildren = ((Component)container).GetComponentsInChildren<RustText>();
-		foreach (RustText val in componentsInChildren)
+		for (int i = 0; i < componentsInChildren.Length; i++)
 		{
-			val.DoAutoSize();
+			componentsInChildren[i].DoAutoSize();
 		}
 		BlogInfo GetBlogPost()
 		{
 			Manifest manifest = Application.Manifest;
-			object result;
 			if (manifest == null)
 			{
-				result = null;
+				return null;
 			}
-			else
+			NewsInfo news = manifest.News;
+			if (news == null)
 			{
-				NewsInfo news = manifest.News;
-				if (news == null)
-				{
-					result = null;
-				}
-				else
-				{
-					BlogInfo[] blogs = news.Blogs;
-					result = ((blogs != null) ? List.FindWith<BlogInfo, string>((IReadOnlyCollection<BlogInfo>)(object)blogs, (Func<BlogInfo, string>)((BlogInfo b) => b.Title), story.name, (IEqualityComparer<string>)StringComparer.InvariantCultureIgnoreCase) : null);
-				}
+				return null;
 			}
-			return (BlogInfo)result;
+			BlogInfo[] blogs = news.Blogs;
+			if (blogs == null)
+			{
+				return null;
+			}
+			return List.FindWith<BlogInfo, string>((IReadOnlyCollection<BlogInfo>)(object)blogs, (Func<BlogInfo, string>)((BlogInfo b) => b.Title), story.name, (IEqualityComparer<string>)StringComparer.InvariantCultureIgnoreCase);
 		}
 	}
 
@@ -143,8 +139,8 @@ public class NewsSource : MonoBehaviour
 			case "previewyoutube":
 				if (depth == 0)
 				{
-					string[] array3 = value3.Split(';');
-					AppendYouTube(ref currentParagraph, array3[0]);
+					string[] array2 = value3.Split(';', StringSplitOptions.None);
+					AppendYouTube(ref currentParagraph, array2[0]);
 				}
 				break;
 			case "h1":
@@ -188,7 +184,7 @@ public class NewsSource : MonoBehaviour
 				break;
 			case "url":
 			{
-				if (StringExtensions.Contains(value4, "[img]", StringComparison.InvariantCultureIgnoreCase))
+				if (value4.Contains("[img]", StringComparison.InvariantCultureIgnoreCase))
 				{
 					ParseBbcode(ref currentParagraph, value4, ref firstImage, depth);
 					break;
@@ -203,9 +199,8 @@ public class NewsSource : MonoBehaviour
 			case "list":
 			{
 				currentParagraph.AppendLine();
-				string[] bulletPoints2 = GetBulletPoints(value4);
-				string[] array2 = bulletPoints2;
-				foreach (string text3 in array2)
+				string[] array = GetBulletPoints(value4);
+				foreach (string text3 in array)
 				{
 					if (!string.IsNullOrWhiteSpace(text3))
 					{
@@ -258,11 +253,11 @@ public class NewsSource : MonoBehaviour
 		if (currentParagraph.StringBuilder.Length > 0)
 		{
 			string text = currentParagraph.StringBuilder.ToString();
-			RustText val = Object.Instantiate<RustText>(paragraphTemplate, (Transform)(object)container);
-			ComponentExtensions.SetActive<RustText>(val, true);
-			val.SetText(text);
+			RustText obj = Object.Instantiate<RustText>(paragraphTemplate, (Transform)(object)container);
+			ComponentExtensions.SetActive<RustText>(obj, true);
+			obj.SetText(text);
 			NewsParagraph newsParagraph = default(NewsParagraph);
-			if (((Component)val).TryGetComponent<NewsParagraph>(ref newsParagraph))
+			if (((Component)obj).TryGetComponent<NewsParagraph>(ref newsParagraph))
 			{
 				newsParagraph.Links = currentParagraph.Links;
 			}
@@ -273,20 +268,20 @@ public class NewsSource : MonoBehaviour
 	private void AppendImage(ref ParagraphBuilder currentParagraph, string url)
 	{
 		AppendParagraph(ref currentParagraph);
-		HttpImage val = Object.Instantiate<HttpImage>(imageTemplate, (Transform)(object)container);
-		ComponentExtensions.SetActive<HttpImage>(val, true);
-		val.Load(url);
+		HttpImage obj = Object.Instantiate<HttpImage>(imageTemplate, (Transform)(object)container);
+		ComponentExtensions.SetActive<HttpImage>(obj, true);
+		obj.Load(url);
 	}
 
 	private void AppendYouTube(ref ParagraphBuilder currentParagraph, string videoId)
 	{
-		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007b: Expected O, but got Unknown
+		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0073: Expected O, but got Unknown
 		AppendParagraph(ref currentParagraph);
-		HttpImage val = Object.Instantiate<HttpImage>(youtubeTemplate, (Transform)(object)container);
-		ComponentExtensions.SetActive<HttpImage>(val, true);
-		val.Load("https://img.youtube.com/vi/" + videoId + "/maxresdefault.jpg");
-		RustButton component = ((Component)val).GetComponent<RustButton>();
+		HttpImage obj = Object.Instantiate<HttpImage>(youtubeTemplate, (Transform)(object)container);
+		ComponentExtensions.SetActive<HttpImage>(obj, true);
+		obj.Load("https://img.youtube.com/vi/" + videoId + "/maxresdefault.jpg");
+		RustButton component = ((Component)obj).GetComponent<RustButton>();
 		if ((Object)(object)component != (Object)null)
 		{
 			string videoUrl = "https://www.youtube.com/watch?v=" + videoId;

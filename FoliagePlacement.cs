@@ -8,7 +8,7 @@ public class FoliagePlacement : ScriptableObject
 	public float Density = 2f;
 
 	[Header("Filter")]
-	public SpawnFilter Filter = null;
+	public SpawnFilter Filter;
 
 	[FormerlySerializedAs("Cutoff")]
 	public float FilterCutoff = 0.5f;
@@ -29,22 +29,22 @@ public class FoliagePlacement : ScriptableObject
 
 	[Header("LOD")]
 	[Range(0f, 1f)]
-	public float DistanceDensity = 0f;
+	public float DistanceDensity;
 
 	[Range(1f, 2f)]
 	public float DistanceScaling = 2f;
 
 	[Header("Visuals")]
-	public Material material = null;
+	public Material material;
 
 	[FormerlySerializedAs("mesh")]
-	public Mesh mesh0 = null;
+	public Mesh mesh0;
 
 	[FormerlySerializedAs("mesh")]
-	public Mesh mesh1 = null;
+	public Mesh mesh1;
 
 	[FormerlySerializedAs("mesh")]
-	public Mesh mesh2 = null;
+	public Mesh mesh2;
 
 	public const int lods = 5;
 

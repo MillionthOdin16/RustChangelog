@@ -53,9 +53,7 @@ public class TrainCarFuelHatches : MonoBehaviour
 		if (!isMoving)
 		{
 			opening = linedUp;
-			if (opening)
-			{
-			}
+			_ = opening;
 			isMoving = true;
 			InvokeHandler.InvokeRepeating((Behaviour)(object)this, (Action)MoveTick, 0f, 0f);
 		}
@@ -127,7 +125,7 @@ public class TrainCarFuelHatches : MonoBehaviour
 
 	private void SetAngle(Transform transform, float angle)
 	{
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
 		_angles.x = angle;
 		transform.localEulerAngles = _angles;
 	}

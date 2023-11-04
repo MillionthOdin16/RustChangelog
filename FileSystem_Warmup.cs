@@ -36,7 +36,11 @@ public class FileSystem_Warmup : MonoBehaviour
 
 	public static IEnumerator Run(string[] assetList, Action<string> statusFunction = null, string format = null, int priority = 0)
 	{
-		return (Global.warmupConcurrency > 1) ? RunAsyncImpl(assetList, statusFunction, format, priority) : RunImpl(assetList, statusFunction, format);
+		if (Global.warmupConcurrency <= 1)
+		{
+			return RunImpl(assetList, statusFunction, format);
+		}
+		return RunAsyncImpl(assetList, statusFunction, format, priority);
 	}
 
 	private static IEnumerator RunAsyncImpl(string[] assetList, Action<string> statusFunction, string format, int priority)
@@ -51,10 +55,10 @@ public class FileSystem_Warmup : MonoBehaviour
 		int warmupIndex = 0;
 		while (((CustomYieldInstruction)preload).MoveNext() || warmupIndex < preload.TotalCount)
 		{
-			float frameBudget = CalculateFrameBudget();
-			if (frameBudget > 0f)
+			float num = CalculateFrameBudget();
+			if (num > 0f)
 			{
-				while (warmupIndex < preload.Results.Count && sw.Elapsed.TotalSeconds < (double)frameBudget)
+				while (warmupIndex < preload.Results.Count && sw.Elapsed.TotalSeconds < (double)num)
 				{
 					PrefabWarmup(preload.Results[warmupIndex++].Item1);
 				}

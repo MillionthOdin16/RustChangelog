@@ -29,7 +29,7 @@ public class MedicalTool : AttackEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - UseOther "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - UseOther "));
 				}
 				TimeWarning val2 = TimeWarning.New("UseOther", 0);
 				try
@@ -48,7 +48,7 @@ public class MedicalTool : AttackEntity
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -60,7 +60,7 @@ public class MedicalTool : AttackEntity
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -80,12 +80,12 @@ public class MedicalTool : AttackEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - UseSelf "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - UseSelf "));
 				}
-				TimeWarning val5 = TimeWarning.New("UseSelf", 0);
+				TimeWarning val2 = TimeWarning.New("UseSelf", 0);
 				try
 				{
-					TimeWarning val6 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsActiveItem.Test(2918424470u, "UseSelf", this, player))
@@ -95,11 +95,11 @@ public class MedicalTool : AttackEntity
 					}
 					finally
 					{
-						((IDisposable)val6)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val7 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -111,7 +111,7 @@ public class MedicalTool : AttackEntity
 						}
 						finally
 						{
-							((IDisposable)val7)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -122,7 +122,7 @@ public class MedicalTool : AttackEntity
 				}
 				finally
 				{
-					((IDisposable)val5)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -138,9 +138,9 @@ public class MedicalTool : AttackEntity
 	[RPC_Server.IsActiveItem]
 	private void UseOther(RPCMessage msg)
 	{
-		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer player = msg.player;
 		if (!VerifyClientAttack(player))
 		{

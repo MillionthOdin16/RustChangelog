@@ -19,11 +19,11 @@ public class ResourceDispenser : EntityComponent<BaseEntity>, IServerComponent
 	[Serializable]
 	public class GatherPropertyEntry
 	{
-		public float gatherDamage = 0f;
+		public float gatherDamage;
 
-		public float destroyFraction = 0f;
+		public float destroyFraction;
 
-		public float conditionLost = 0f;
+		public float conditionLost;
 	}
 
 	[Serializable]
@@ -90,7 +90,7 @@ public class ResourceDispenser : EntityComponent<BaseEntity>, IServerComponent
 
 	public float fractionRemaining = 1f;
 
-	private float categoriesRemaining = 0f;
+	private float categoriesRemaining;
 
 	private float startingItemCounts;
 
@@ -128,14 +128,14 @@ public class ResourceDispenser : EntityComponent<BaseEntity>, IServerComponent
 
 	public void DoGather(HitInfo info)
 	{
-		//IL_0101: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0229: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0244: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0249: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0251: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0256: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00eb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01cc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01e7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ec: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f9: Unknown result type (might be due to invalid IL or missing references)
 		if (!base.baseEntity.isServer || !info.CanGather || info.DidGather)
 		{
 			return;
@@ -167,17 +167,16 @@ public class ResourceDispenser : EntityComponent<BaseEntity>, IServerComponent
 		}
 		else
 		{
-			float num3 = info.damageTypes.Total();
-			num = num3;
+			num = info.damageTypes.Total();
 			num2 = 0.5f;
 		}
-		float num4 = fractionRemaining;
+		float num3 = fractionRemaining;
 		GiveResources(info.InitiatorPlayer, num, num2, info.Weapon);
 		UpdateFraction();
-		float num5 = 0f;
+		float num4 = 0f;
 		if (fractionRemaining <= 0f)
 		{
-			num5 = base.baseEntity.MaxHealth();
+			num4 = base.baseEntity.MaxHealth();
 			if (info.DidGather && num2 < maxDestroyFractionForFinishBonus)
 			{
 				AssignFinishBonus(info.InitiatorPlayer, 1f - num2, info.Weapon);
@@ -185,9 +184,9 @@ public class ResourceDispenser : EntityComponent<BaseEntity>, IServerComponent
 		}
 		else
 		{
-			num5 = (num4 - fractionRemaining) * base.baseEntity.MaxHealth();
+			num4 = (num3 - fractionRemaining) * base.baseEntity.MaxHealth();
 		}
-		HitInfo hitInfo = new HitInfo(info.Initiator, base.baseEntity, DamageType.Generic, num5, ((Component)this).transform.position);
+		HitInfo hitInfo = new HitInfo(info.Initiator, base.baseEntity, DamageType.Generic, num4, ((Component)this).transform.position);
 		hitInfo.gatherScale = 0f;
 		hitInfo.PointStart = info.PointStart;
 		hitInfo.PointEnd = info.PointEnd;
@@ -223,7 +222,7 @@ public class ResourceDispenser : EntityComponent<BaseEntity>, IServerComponent
 
 	private void GiveResources(BasePlayer entity, float gatherDamage, float destroyFraction, AttackEntity attackWeapon)
 	{
-		//IL_023f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0252: Unknown result type (might be due to invalid IL or missing references)
 		if (!entity.IsValid() || gatherDamage <= 0f)
 		{
 			return;
@@ -253,20 +252,19 @@ public class ResourceDispenser : EntityComponent<BaseEntity>, IServerComponent
 		UpdateVars();
 		if (Object.op_Implicit((Object)(object)entity))
 		{
-			Item item = attackWeapon.GetItem();
-			Debug.Assert(item != null, string.Concat("Attack Weapon ", attackWeapon, " has no Item"));
-			Debug.Assert(((ItemId)(ref attackWeapon.ownerItemUID)).IsValid, string.Concat("Attack Weapon ", attackWeapon, " ownerItemUID is 0"));
-			Debug.Assert((Object)(object)attackWeapon.GetParentEntity() != (Object)null, string.Concat("Attack Weapon ", attackWeapon, " GetParentEntity is null"));
-			Debug.Assert(attackWeapon.GetParentEntity().IsValid(), string.Concat("Attack Weapon ", attackWeapon, " GetParentEntity is not valid"));
-			Debug.Assert((Object)(object)attackWeapon.GetParentEntity().ToPlayer() != (Object)null, string.Concat("Attack Weapon ", attackWeapon, " GetParentEntity is not a player"));
-			Debug.Assert(!attackWeapon.GetParentEntity().ToPlayer().IsDead(), string.Concat("Attack Weapon ", attackWeapon, " GetParentEntity is not valid"));
+			Debug.Assert(attackWeapon.GetItem() != null, "Attack Weapon " + ((object)attackWeapon)?.ToString() + " has no Item");
+			Debug.Assert(((ItemId)(ref attackWeapon.ownerItemUID)).IsValid, "Attack Weapon " + ((object)attackWeapon)?.ToString() + " ownerItemUID is 0");
+			Debug.Assert((Object)(object)attackWeapon.GetParentEntity() != (Object)null, "Attack Weapon " + ((object)attackWeapon)?.ToString() + " GetParentEntity is null");
+			Debug.Assert(attackWeapon.GetParentEntity().IsValid(), "Attack Weapon " + ((object)attackWeapon)?.ToString() + " GetParentEntity is not valid");
+			Debug.Assert((Object)(object)attackWeapon.GetParentEntity().ToPlayer() != (Object)null, "Attack Weapon " + ((object)attackWeapon)?.ToString() + " GetParentEntity is not a player");
+			Debug.Assert(!attackWeapon.GetParentEntity().ToPlayer().IsDead(), "Attack Weapon " + ((object)attackWeapon)?.ToString() + " GetParentEntity is not valid");
 			BasePlayer ownerPlayer = attackWeapon.GetOwnerPlayer();
-			Debug.Assert((Object)(object)ownerPlayer != (Object)null, string.Concat("Attack Weapon ", attackWeapon, " ownerPlayer is null"));
-			Debug.Assert((Object)(object)ownerPlayer == (Object)(object)entity, string.Concat("Attack Weapon ", attackWeapon, " ownerPlayer is not player"));
+			Debug.Assert((Object)(object)ownerPlayer != (Object)null, "Attack Weapon " + ((object)attackWeapon)?.ToString() + " ownerPlayer is null");
+			Debug.Assert((Object)(object)ownerPlayer == (Object)(object)entity, "Attack Weapon " + ((object)attackWeapon)?.ToString() + " ownerPlayer is not player");
 			if ((Object)(object)ownerPlayer != (Object)null)
 			{
-				Debug.Assert((Object)(object)ownerPlayer.inventory != (Object)null, string.Concat("Attack Weapon ", attackWeapon, " ownerPlayer inventory is null"));
-				Debug.Assert(ownerPlayer.inventory.FindItemUID(attackWeapon.ownerItemUID) != null, string.Concat("Attack Weapon ", attackWeapon, " FindItemUID is null"));
+				Debug.Assert((Object)(object)ownerPlayer.inventory != (Object)null, "Attack Weapon " + ((object)attackWeapon)?.ToString() + " ownerPlayer inventory is null");
+				Debug.Assert(ownerPlayer.inventory.FindItemByUID(attackWeapon.ownerItemUID) != null, "Attack Weapon " + ((object)attackWeapon)?.ToString() + " FindItemByUID is null");
 			}
 		}
 	}
@@ -291,31 +289,30 @@ public class ResourceDispenser : EntityComponent<BaseEntity>, IServerComponent
 		}
 		float num = Mathf.Min(gatherDamage, base.baseEntity.Health()) / base.baseEntity.MaxHealth();
 		float num2 = itemAmt.startAmount / startingItemCounts;
-		float num3 = itemAmt.startAmount * num / num2;
-		float num4 = Mathf.Clamp(num3, 0f, itemAmt.amount);
-		num4 = Mathf.Round(num4);
-		float num5 = num4 * destroyFraction * 2f;
-		if (itemAmt.amount <= num4 + num5)
+		float num3 = Mathf.Clamp(itemAmt.startAmount * num / num2, 0f, itemAmt.amount);
+		num3 = Mathf.Round(num3);
+		float num4 = num3 * destroyFraction * 2f;
+		if (itemAmt.amount <= num3 + num4)
 		{
-			float num6 = (num4 + num5) / itemAmt.amount;
-			num4 /= num6;
-			num5 /= num6;
+			float num5 = (num3 + num4) / itemAmt.amount;
+			num3 /= num5;
+			num4 /= num5;
 		}
+		itemAmt.amount -= Mathf.Floor(num3);
 		itemAmt.amount -= Mathf.Floor(num4);
-		itemAmt.amount -= Mathf.Floor(num5);
-		if (num4 < 1f)
+		if (num3 < 1f)
 		{
-			num4 = ((Random.Range(0f, 1f) <= num4) ? 1f : 0f);
+			num3 = ((Random.Range(0f, 1f) <= num3) ? 1f : 0f);
 			itemAmt.amount = 0f;
 		}
 		if (itemAmt.amount < 0f)
 		{
 			itemAmt.amount = 0f;
 		}
-		if (num4 >= 1f)
+		if (num3 >= 1f)
 		{
-			int num7 = CalculateGatherBonus(entity, itemAmt, num4);
-			int iAmount = Mathf.FloorToInt(num4) + num7;
+			int num6 = CalculateGatherBonus(entity, itemAmt, num3);
+			int iAmount = Mathf.FloorToInt(num3) + num6;
 			Item item = ItemManager.CreateByItemID(itemAmt.itemid, iAmount, 0uL);
 			if (item != null)
 			{

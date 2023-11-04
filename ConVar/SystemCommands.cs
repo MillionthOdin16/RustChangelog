@@ -19,7 +19,7 @@ public static class SystemCommands
 			arg.ReplyWith("Format is 'cpu_affinity {core,core1-core2,etc}'");
 			return;
 		}
-		string[] array = arg.GetString(0, "").Split(',');
+		string[] array = arg.GetString(0, "").Split(',', StringSplitOptions.None);
 		HashSet<int> hashSet = new HashSet<int>();
 		string[] array2 = array;
 		foreach (string text in array2)
@@ -34,7 +34,7 @@ public static class SystemCommands
 				{
 					continue;
 				}
-				string[] array3 = text.Split('-');
+				string[] array3 = text.Split('-', StringSplitOptions.None);
 				if (array3.Length != 2)
 				{
 					arg.ReplyWith("Failed to parse section " + text + ", format should be '0-15'");
@@ -73,15 +73,14 @@ public static class SystemCommands
 				num |= 1L << k;
 			}
 		}
-		if (num == 0)
+		if (num == 0L)
 		{
 			arg.ReplyWith("No cores provided (bitmask empty)! Format is 'cpu_affinity {core,core1-core2,etc}'");
 			return;
 		}
 		try
 		{
-			Process currentProcess = Process.GetCurrentProcess();
-			WindowsAffinityShim.SetProcessAffinityMask(currentProcess.Handle, new IntPtr(num));
+			WindowsAffinityShim.SetProcessAffinityMask(Process.GetCurrentProcess().Handle, new IntPtr(num));
 		}
 		catch (Exception arg2)
 		{
@@ -95,8 +94,8 @@ public static class SystemCommands
 	[ClientVar]
 	public static void cpu_priority(Arg arg)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0007: Invalid comparison between Unknown and I4
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Invalid comparison between Unknown and I4
 		if ((int)Application.platform == 1)
 		{
 			arg.ReplyWith("OSX is not a supported platform");
@@ -124,8 +123,7 @@ public static class SystemCommands
 		}
 		try
 		{
-			Process currentProcess = Process.GetCurrentProcess();
-			WindowsAffinityShim.SetPriorityClass(currentProcess.Handle, (uint)mask);
+			WindowsAffinityShim.SetPriorityClass(Process.GetCurrentProcess().Handle, (uint)mask);
 		}
 		catch (Exception arg2)
 		{

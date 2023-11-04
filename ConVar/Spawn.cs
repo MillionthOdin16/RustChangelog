@@ -81,8 +81,8 @@ public class Spawn : ConsoleSystem
 	[ServerVar]
 	public static void scalars(Arg args)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0007: Expected O, but got Unknown
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Expected O, but got Unknown
 		TextTable val = new TextTable();
 		val.AddColumn("Type");
 		val.AddColumn("Value");
@@ -117,10 +117,10 @@ public class Spawn : ConsoleSystem
 	[ServerVar]
 	public static void cargoshipevent(Arg args)
 	{
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
 		BaseEntity baseEntity = GameManager.server.CreateEntity("assets/content/vehicles/boats/cargoship/cargoshiptest.prefab");
 		if ((Object)(object)baseEntity != (Object)null)
 		{

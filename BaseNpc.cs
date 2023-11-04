@@ -9,10 +9,20 @@ using Rust.Ai;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.Assertions;
-using UnityEngine.Profiling;
 
 public class BaseNpc : BaseCombatEntity
 {
+	public enum Behaviour
+	{
+		Idle,
+		Wander,
+		Attack,
+		Flee,
+		Eat,
+		Sleep,
+		RetreatingToCover
+	}
+
 	[Flags]
 	public enum AiFlags
 	{
@@ -217,29 +227,15 @@ public class BaseNpc : BaseCombatEntity
 		public bool OnlyAggroMarkedTargets;
 	}
 
-	public enum Behaviour
-	{
-		Idle,
-		Wander,
-		Attack,
-		Flee,
-		Eat,
-		Sleep,
-		RetreatingToCover
-	}
+	public int agentTypeIndex;
 
-	[NonSerialized]
-	public Transform ChaseTransform;
-
-	public int agentTypeIndex = 0;
-
-	public bool NewAI = false;
+	public bool NewAI;
 
 	public bool LegacyNavigation = true;
 
 	private Vector3 stepDirection;
 
-	private float maxFleeTime = 0f;
+	private float maxFleeTime;
 
 	private float fleeHealthThresholdPercentage = 1f;
 
@@ -249,9 +245,9 @@ public class BaseNpc : BaseCombatEntity
 
 	private float aggroTimeout = float.NegativeInfinity;
 
-	private float lastAggroChanceResult = 0f;
+	private float lastAggroChanceResult;
 
-	private float lastAggroChanceCalcTime = 0f;
+	private float lastAggroChanceCalcTime;
 
 	private const float aggroChanceRecalcTimeout = 5f;
 
@@ -272,7 +268,7 @@ public class BaseNpc : BaseCombatEntity
 
 	private static readonly AnimationCurve speedFractionResponse = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
-	private bool _traversingNavMeshLink = false;
+	private bool _traversingNavMeshLink;
 
 	private OffMeshLinkData _currentNavMeshLink;
 
@@ -280,51 +276,20 @@ public class BaseNpc : BaseCombatEntity
 
 	private float _currentNavMeshLinkTraversalTime;
 
-	private float _currentNavMeshLinkTraversalTimeDelta = 0f;
+	private float _currentNavMeshLinkTraversalTimeDelta;
 
 	private Quaternion _currentNavMeshLinkOrientation;
 
 	private Vector3 _currentNavMeshLinkEndPos;
 
-	private float nextAttackTime = 0f;
+	private float nextAttackTime;
 
 	[SerializeField]
 	[InspectorFlags]
 	public Enum topologyPreference = (Enum)96;
 
-	[InspectorFlags]
-	public AiFlags aiFlags = (AiFlags)0;
-
 	[NonSerialized]
-	public byte[] CurrentFacts = new byte[Enum.GetValues(typeof(Facts)).Length];
-
-	[Header("NPC Senses")]
-	public int ForgetUnseenEntityTime = 10;
-
-	public float SensesTickRate = 0.5f;
-
-	[NonSerialized]
-	public BaseEntity[] SensesResults = new BaseEntity[64];
-
-	private float lastTickTime = 0f;
-
-	private float playerTargetDecisionStartTime = 0f;
-
-	private float animalTargetDecisionStartTime = 0f;
-
-	private bool isAlreadyCheckingPathPending = false;
-
-	private int numPathPendingAttempts = 0;
-
-	private float accumPathPendingDelay = 0f;
-
-	public const float TickRate = 0.1f;
-
-	private Vector3 lastStuckPos;
-
-	private float nextFlinchTime;
-
-	private float _lastHeardGunshotTime = float.NegativeInfinity;
+	public Transform ChaseTransform;
 
 	[Header("BaseNpc")]
 	public GameObjectRef CorpsePrefab;
@@ -350,15 +315,15 @@ public class BaseNpc : BaseCombatEntity
 
 	public LayerMask movementMask = LayerMask.op_Implicit(429990145);
 
-	public float stuckDuration = 0f;
+	public float stuckDuration;
 
-	public float lastStuckTime = 0f;
+	public float lastStuckTime;
 
-	public float idleDuration = 0f;
+	public float idleDuration;
 
 	private bool _isDormant;
 
-	private float lastSetDestinationTime = 0f;
+	private float lastSetDestinationTime;
 
 	[NonSerialized]
 	public StateTimer BusyTimer;
@@ -374,6 +339,40 @@ public class BaseNpc : BaseCombatEntity
 
 	[NonSerialized]
 	public VitalLevel Hydration;
+
+	[InspectorFlags]
+	public AiFlags aiFlags;
+
+	[NonSerialized]
+	public byte[] CurrentFacts = new byte[Enum.GetValues(typeof(Facts)).Length];
+
+	[Header("NPC Senses")]
+	public int ForgetUnseenEntityTime = 10;
+
+	public float SensesTickRate = 0.5f;
+
+	[NonSerialized]
+	public BaseEntity[] SensesResults = new BaseEntity[64];
+
+	private float lastTickTime;
+
+	private float playerTargetDecisionStartTime;
+
+	private float animalTargetDecisionStartTime;
+
+	private bool isAlreadyCheckingPathPending;
+
+	private int numPathPendingAttempts;
+
+	private float accumPathPendingDelay;
+
+	public const float TickRate = 0.1f;
+
+	private Vector3 lastStuckPos;
+
+	private float nextFlinchTime;
+
+	private float _lastHeardGunshotTime = float.NegativeInfinity;
 
 	public int AgentTypeIndex
 	{
@@ -394,48 +393,6 @@ public class BaseNpc : BaseCombatEntity
 	public bool IsOnOffmeshLinkAndReachedNewCoord { get; set; }
 
 	public float GetAttackRate => AttackRate;
-
-	public bool IsSitting
-	{
-		get
-		{
-			return HasAiFlag(AiFlags.Sitting);
-		}
-		set
-		{
-			SetAiFlag(AiFlags.Sitting, value);
-		}
-	}
-
-	public bool IsChasing
-	{
-		get
-		{
-			return HasAiFlag(AiFlags.Chasing);
-		}
-		set
-		{
-			SetAiFlag(AiFlags.Chasing, value);
-		}
-	}
-
-	public bool IsSleeping
-	{
-		get
-		{
-			return HasAiFlag(AiFlags.Sleeping);
-		}
-		set
-		{
-			SetAiFlag(AiFlags.Sleeping, value);
-		}
-	}
-
-	public float SecondsSinceLastHeardGunshot => Time.time - _lastHeardGunshotTime;
-
-	public Vector3 LastHeardGunshotDirection { get; set; }
-
-	public float TargetSpeed { get; set; }
 
 	public override bool IsNpc => true;
 
@@ -472,11 +429,8 @@ public class BaseNpc : BaseCombatEntity
 	{
 		get
 		{
-			//IL_001f: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0024: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0016: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+			//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+			//IL_000e: Unknown result type (might be due to invalid IL or missing references)
 			if (IsNavRunning())
 			{
 				return GetNavAgent.destination;
@@ -485,7 +439,7 @@ public class BaseNpc : BaseCombatEntity
 		}
 		set
 		{
-			//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+			//IL_000e: Unknown result type (might be due to invalid IL or missing references)
 			if (IsNavRunning())
 			{
 				GetNavAgent.destination = value;
@@ -506,7 +460,7 @@ public class BaseNpc : BaseCombatEntity
 		}
 		set
 		{
-			//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0012: Unknown result type (might be due to invalid IL or missing references)
 			if (IsNavRunning())
 			{
 				if (value)
@@ -613,6 +567,48 @@ public class BaseNpc : BaseCombatEntity
 
 	public Behaviour CurrentBehaviour { get; set; }
 
+	public bool IsSitting
+	{
+		get
+		{
+			return HasAiFlag(AiFlags.Sitting);
+		}
+		set
+		{
+			SetAiFlag(AiFlags.Sitting, value);
+		}
+	}
+
+	public bool IsChasing
+	{
+		get
+		{
+			return HasAiFlag(AiFlags.Chasing);
+		}
+		set
+		{
+			SetAiFlag(AiFlags.Chasing, value);
+		}
+	}
+
+	public bool IsSleeping
+	{
+		get
+		{
+			return HasAiFlag(AiFlags.Sleeping);
+		}
+		set
+		{
+			SetAiFlag(AiFlags.Sleeping, value);
+		}
+	}
+
+	public float SecondsSinceLastHeardGunshot => Time.time - _lastHeardGunshotTime;
+
+	public Vector3 LastHeardGunshotDirection { get; set; }
+
+	public float TargetSpeed { get; set; }
+
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
 		TimeWarning val = TimeWarning.New("BaseNpc.OnRpcMessage", 0);
@@ -626,92 +622,14 @@ public class BaseNpc : BaseCombatEntity
 		return base.OnRpcMessage(player, rpc, msg);
 	}
 
-	public void UpdateDestination(Vector3 position)
-	{
-		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-		if (IsStopped)
-		{
-			IsStopped = false;
-		}
-		Vector3 val = Destination - position;
-		if (((Vector3)(ref val)).sqrMagnitude > 0.010000001f)
-		{
-			Destination = position;
-		}
-		ChaseTransform = null;
-	}
-
-	public void UpdateDestination(Transform tx)
-	{
-		IsStopped = false;
-		ChaseTransform = tx;
-	}
-
-	public void StopMoving()
-	{
-		IsStopped = true;
-		ChaseTransform = null;
-		SetFact(Facts.PathToTargetStatus, 0);
-	}
-
-	public override void ApplyInheritedVelocity(Vector3 velocity)
-	{
-		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0004: Unknown result type (might be due to invalid IL or missing references)
-		ServerPosition = GetNewNavPosWithVelocity(this, velocity);
-	}
-
-	public static Vector3 GetNewNavPosWithVelocity(BaseEntity ent, Vector3 velocity)
-	{
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
-		BaseEntity baseEntity = ent.GetParentEntity();
-		if ((Object)(object)baseEntity != (Object)null)
-		{
-			velocity = ((Component)baseEntity).transform.InverseTransformDirection(velocity);
-		}
-		Vector3 val = ent.ServerPosition + velocity * Time.fixedDeltaTime;
-		NavMeshHit val2 = default(NavMeshHit);
-		NavMesh.Raycast(ent.ServerPosition, val, ref val2, -1);
-		if (!Vector3Ex.IsNaNOrInfinity(((NavMeshHit)(ref val2)).position))
-		{
-			return ((NavMeshHit)(ref val2)).position;
-		}
-		return ent.ServerPosition;
-	}
-
 	public override string DebugText()
 	{
-		string text = base.DebugText();
-		text += $"\nBehaviour: {CurrentBehaviour}";
-		text += $"\nAttackTarget: {AttackTarget}";
-		text += $"\nFoodTarget: {FoodTarget}";
-		return text + $"\nSleep: {Sleep:0.00}";
+		return string.Concat(string.Concat(string.Concat(base.DebugText() + $"\nBehaviour: {CurrentBehaviour}", $"\nAttackTarget: {AttackTarget}"), $"\nFoodTarget: {FoodTarget}"), $"\nSleep: {Sleep:0.00}");
 	}
 
 	public void TickAi()
 	{
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
 		if (!AI.think)
 		{
 			return;
@@ -741,7 +659,7 @@ public class BaseNpc : BaseCombatEntity
 		{
 			return;
 		}
-		TimeWarning val2 = TimeWarning.New("TickMetabolism", 0);
+		val = TimeWarning.New("TickMetabolism", 0);
 		try
 		{
 			TickSleep();
@@ -750,18 +668,18 @@ public class BaseNpc : BaseCombatEntity
 		}
 		finally
 		{
-			((IDisposable)val2)?.Dispose();
+			((IDisposable)val)?.Dispose();
 		}
 	}
 
 	private void TickSpeed()
 	{
-		//IL_0134: Unknown result type (might be due to invalid IL or missing references)
-		//IL_013f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0145: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0153: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0117: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0122: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0127: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012a: Unknown result type (might be due to invalid IL or missing references)
 		if (!LegacyNavigation)
 		{
 			return;
@@ -798,8 +716,8 @@ public class BaseNpc : BaseCombatEntity
 
 	protected virtual void TickMetabolism()
 	{
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
 		float num = 0.00016666666f;
 		if (CurrentBehaviour == Behaviour.Sleep)
 		{
@@ -816,9 +734,8 @@ public class BaseNpc : BaseCombatEntity
 			float num2 = 1f / 15f;
 			Stamina.Add(0.1f * num2);
 		}
-		if (!(base.SecondsSinceAttacked > 60f))
-		{
-		}
+		_ = base.SecondsSinceAttacked;
+		_ = 60f;
 	}
 
 	public virtual bool WantsToEat(BaseEntity best)
@@ -857,8 +774,7 @@ public class BaseNpc : BaseCombatEntity
 				num *= 0.1f;
 			}
 		}
-		BasePlayer basePlayer = ent as BasePlayer;
-		if ((Object)(object)basePlayer != (Object)null)
+		if ((Object)(object)(ent as BasePlayer) != (Object)null)
 		{
 			num += 1f;
 		}
@@ -887,11 +803,11 @@ public class BaseNpc : BaseCombatEntity
 
 	public void TickNavigationWater()
 	{
-		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b0: Unknown result type (might be due to invalid IL or missing references)
 		if (!LegacyNavigation || !AI.move || !IsNavRunning())
 		{
 			return;
@@ -926,11 +842,11 @@ public class BaseNpc : BaseCombatEntity
 
 	public void TickNavigation()
 	{
-		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00dc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
 		if (!LegacyNavigation || !AI.move || !IsNavRunning())
 		{
 			return;
@@ -964,23 +880,22 @@ public class BaseNpc : BaseCombatEntity
 
 	private void TickChase()
 	{
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
 		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
-		Profiler.BeginSample("ChaseTransform");
+		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 val = ChaseTransform.position;
 		Vector3 val2 = ((Component)this).transform.position - val;
 		if ((double)((Vector3)(ref val2)).magnitude < 5.0)
@@ -992,7 +907,6 @@ public class BaseNpc : BaseCombatEntity
 		{
 			NavAgent.SetDestination(val);
 		}
-		Profiler.EndSample();
 	}
 
 	private void HandleNavMeshLinkTraversal(float delta, ref Vector3 moveToPosition)
@@ -1009,66 +923,66 @@ public class BaseNpc : BaseCombatEntity
 
 	private bool HandleNavMeshLinkTraversalStart(float delta)
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ce: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01d3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01da: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01e6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01f1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01f6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01fd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0202: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0207: Unknown result type (might be due to invalid IL or missing references)
-		//IL_020c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ea: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ef: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0250: Unknown result type (might be due to invalid IL or missing references)
-		//IL_025b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0260: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0265: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0169: Unknown result type (might be due to invalid IL or missing references)
-		//IL_016e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0176: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0182: Unknown result type (might be due to invalid IL or missing references)
-		//IL_018e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0199: Unknown result type (might be due to invalid IL or missing references)
-		//IL_019e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01aa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01af: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0112: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0117: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0190: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0195: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01cc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01db: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_021b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0226: Unknown result type (might be due to invalid IL or missing references)
+		//IL_022b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0230: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0140: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0148: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0154: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0160: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0170: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0177: Unknown result type (might be due to invalid IL or missing references)
+		//IL_017c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0181: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0186: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0108: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0113: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0118: Unknown result type (might be due to invalid IL or missing references)
 		//IL_011f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0124: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0137: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0142: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0147: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0153: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0158: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0129: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012e: Unknown result type (might be due to invalid IL or missing references)
 		OffMeshLinkData currentOffMeshLinkData = NavAgent.currentOffMeshLinkData;
 		if (!((OffMeshLinkData)(ref currentOffMeshLinkData)).valid || !((OffMeshLinkData)(ref currentOffMeshLinkData)).activated || (Object)(object)((OffMeshLinkData)(ref currentOffMeshLinkData)).offMeshLink == (Object)null)
 		{
@@ -1079,8 +993,7 @@ public class BaseNpc : BaseCombatEntity
 		normalized.y = 0f;
 		Vector3 desiredVelocity = NavAgent.desiredVelocity;
 		desiredVelocity.y = 0f;
-		float num = Vector3.Dot(desiredVelocity, normalized);
-		if (num < 0.1f)
+		if (Vector3.Dot(desiredVelocity, normalized) < 0.1f)
 		{
 			CompleteNavMeshLink();
 			return false;
@@ -1091,8 +1004,7 @@ public class BaseNpc : BaseCombatEntity
 		if (((OffMeshLinkData)(ref currentOffMeshLinkData)).offMeshLink.biDirectional)
 		{
 			val = ((OffMeshLinkData)(ref currentOffMeshLinkData)).endPos - ServerPosition;
-			float sqrMagnitude = ((Vector3)(ref val)).sqrMagnitude;
-			if (sqrMagnitude < 0.05f)
+			if (((Vector3)(ref val)).sqrMagnitude < 0.05f)
 			{
 				_currentNavMeshLinkEndPos = ((OffMeshLinkData)(ref currentOffMeshLinkData)).startPos;
 				_currentNavMeshLinkOrientation = Quaternion.LookRotation(((OffMeshLinkData)(ref currentOffMeshLinkData)).startPos + Vector3.up * (((OffMeshLinkData)(ref currentOffMeshLinkData)).endPos.y - ((OffMeshLinkData)(ref currentOffMeshLinkData)).startPos.y) - ((OffMeshLinkData)(ref currentOffMeshLinkData)).endPos);
@@ -1111,35 +1023,36 @@ public class BaseNpc : BaseCombatEntity
 		_traversingNavMeshLink = true;
 		NavAgent.ActivateCurrentOffMeshLink(false);
 		NavAgent.obstacleAvoidanceType = (ObstacleAvoidanceType)0;
-		float num2 = Mathf.Max(NavAgent.speed, 2.8f);
+		float num = Mathf.Max(NavAgent.speed, 2.8f);
 		Vector3 val2 = ((OffMeshLinkData)(ref _currentNavMeshLink)).startPos - ((OffMeshLinkData)(ref _currentNavMeshLink)).endPos;
 		float magnitude = ((Vector3)(ref val2)).magnitude;
-		_currentNavMeshLinkTraversalTime = magnitude / num2;
+		_currentNavMeshLinkTraversalTime = magnitude / num;
 		_currentNavMeshLinkTraversalTimeDelta = 0f;
-		if (_currentNavMeshLinkName == "OpenDoorLink" || _currentNavMeshLinkName == "JumpRockLink" || _currentNavMeshLinkName == "JumpFoundationLink")
+		if (!(_currentNavMeshLinkName == "OpenDoorLink") && !(_currentNavMeshLinkName == "JumpRockLink"))
 		{
+			_ = _currentNavMeshLinkName == "JumpFoundationLink";
 		}
 		return true;
 	}
 
 	private void HandleNavMeshLinkTraversalTick(float delta, ref Vector3 moveToPosition)
 	{
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00df: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
 		if (_currentNavMeshLinkName == "OpenDoorLink")
 		{
 			moveToPosition = Vector3.Lerp(((OffMeshLinkData)(ref _currentNavMeshLink)).startPos, ((OffMeshLinkData)(ref _currentNavMeshLink)).endPos, _currentNavMeshLinkTraversalTimeDelta);
@@ -1160,11 +1073,11 @@ public class BaseNpc : BaseCombatEntity
 
 	private bool IsNavMeshLinkTraversalComplete(float delta, ref Vector3 moveToPosition)
 	{
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
 		if (_currentNavMeshLinkTraversalTimeDelta >= _currentNavMeshLinkTraversalTime)
 		{
 			moveToPosition = ((OffMeshLinkData)(ref _currentNavMeshLink)).endPos;
@@ -1190,29 +1103,36 @@ public class BaseNpc : BaseCombatEntity
 
 	private void TickFollowPath(ref Vector3 moveToPosition)
 	{
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
-		Profiler.BeginSample("NavAgent.nextPosition");
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
 		moveToPosition = NavAgent.nextPosition;
-		Profiler.EndSample();
 		Vector3 desiredVelocity = NavAgent.desiredVelocity;
 		stepDirection = ((Vector3)(ref desiredVelocity)).normalized;
 	}
 
 	private bool ValidateNextPosition(ref Vector3 moveToPosition)
 	{
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
-		Profiler.BeginSample("ValidBounds.Test");
-		bool flag = ValidBounds.Test(moveToPosition);
-		Profiler.EndSample();
-		if (!flag && (Object)(object)((Component)this).transform != (Object)null && !base.IsDestroyed)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
+		if (!ValidBounds.Test(moveToPosition) && (Object)(object)((Component)this).transform != (Object)null && !base.IsDestroyed)
 		{
-			Debug.Log((object)string.Concat("Invalid NavAgent Position: ", this, " ", moveToPosition, " (destroying)"));
+			string[] obj = new string[5]
+			{
+				"Invalid NavAgent Position: ",
+				((object)this)?.ToString(),
+				" ",
+				null,
+				null
+			};
+			Vector3 val = moveToPosition;
+			obj[3] = ((object)(Vector3)(ref val)).ToString();
+			obj[4] = " (destroying)";
+			Debug.Log((object)string.Concat(obj));
 			Kill();
 			return false;
 		}
@@ -1221,13 +1141,9 @@ public class BaseNpc : BaseCombatEntity
 
 	private void UpdatePositionAndRotation(Vector3 moveToPosition)
 	{
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		Profiler.BeginSample("Update ServerPosition");
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
 		ServerPosition = moveToPosition;
-		Profiler.EndSample();
-		Profiler.BeginSample("Update Rotation");
 		UpdateAiRotation();
-		Profiler.EndSample();
 	}
 
 	private void TickIdle()
@@ -1244,12 +1160,12 @@ public class BaseNpc : BaseCombatEntity
 
 	public void TickStuck()
 	{
-		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0092: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
 		if (IsNavRunning() && !NavAgent.isStopped)
 		{
 			Vector3 val = lastStuckPos - ServerPosition;
@@ -1285,43 +1201,43 @@ public class BaseNpc : BaseCombatEntity
 
 	public void UpdateAiRotation()
 	{
-		//IL_00fe: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0104: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0109: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0126: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0147: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0149: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0095: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00c4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0180: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0186: Unknown result type (might be due to invalid IL or missing references)
-		//IL_018b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0190: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01f5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01fb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0200: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0205: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ba: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01bf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_022f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0234: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ca: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0121: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0127: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0131: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0092: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_017c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0182: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0187: Unknown result type (might be due to invalid IL or missing references)
+		//IL_018c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0150: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0155: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ac: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b1: Unknown result type (might be due to invalid IL or missing references)
 		if (!IsNavRunning() || CurrentBehaviour == Behaviour.Sleep)
 		{
 			return;
@@ -1329,13 +1245,11 @@ public class BaseNpc : BaseCombatEntity
 		if (_traversingNavMeshLink)
 		{
 			Vector3 val = (((Object)(object)ChaseTransform != (Object)null) ? (ChaseTransform.localPosition - ServerPosition) : ((!((Object)(object)AttackTarget != (Object)null)) ? (NavAgent.destination - ServerPosition) : (AttackTarget.ServerPosition - ServerPosition)));
-			float sqrMagnitude = ((Vector3)(ref val)).sqrMagnitude;
-			if (sqrMagnitude > 1f)
+			if (((Vector3)(ref val)).sqrMagnitude > 1f)
 			{
 				val = _currentNavMeshLinkEndPos - ServerPosition;
 			}
-			sqrMagnitude = ((Vector3)(ref val)).sqrMagnitude;
-			if (sqrMagnitude > 0.001f)
+			if (((Vector3)(ref val)).sqrMagnitude > 0.001f)
 			{
 				ServerRotation = _currentNavMeshLinkOrientation;
 				return;
@@ -1347,8 +1261,7 @@ public class BaseNpc : BaseCombatEntity
 			if (((Vector3)(ref val2)).sqrMagnitude > 1f)
 			{
 				Vector3 val3 = stepDirection;
-				float sqrMagnitude2 = ((Vector3)(ref val3)).sqrMagnitude;
-				if (sqrMagnitude2 > 0.001f)
+				if (((Vector3)(ref val3)).sqrMagnitude > 0.001f)
 				{
 					ServerRotation = Quaternion.LookRotation(val3);
 					return;
@@ -1358,8 +1271,8 @@ public class BaseNpc : BaseCombatEntity
 		if (Object.op_Implicit((Object)(object)ChaseTransform) && CurrentBehaviour == Behaviour.Attack)
 		{
 			Vector3 val4 = ChaseTransform.localPosition - ServerPosition;
-			float sqrMagnitude3 = ((Vector3)(ref val4)).sqrMagnitude;
-			if (sqrMagnitude3 < 9f && sqrMagnitude3 > 0.001f)
+			float sqrMagnitude = ((Vector3)(ref val4)).sqrMagnitude;
+			if (sqrMagnitude < 9f && sqrMagnitude > 0.001f)
 			{
 				ServerRotation = Quaternion.LookRotation(((Vector3)(ref val4)).normalized);
 			}
@@ -1367,8 +1280,8 @@ public class BaseNpc : BaseCombatEntity
 		else if (Object.op_Implicit((Object)(object)AttackTarget) && CurrentBehaviour == Behaviour.Attack)
 		{
 			Vector3 val5 = AttackTarget.ServerPosition - ServerPosition;
-			float sqrMagnitude4 = ((Vector3)(ref val5)).sqrMagnitude;
-			if (sqrMagnitude4 < 9f && sqrMagnitude4 > 0.001f)
+			float sqrMagnitude2 = ((Vector3)(ref val5)).sqrMagnitude;
+			if (sqrMagnitude2 < 9f && sqrMagnitude2 > 0.001f)
 			{
 				ServerRotation = Quaternion.LookRotation(((Vector3)(ref val5)).normalized);
 			}
@@ -1382,18 +1295,17 @@ public class BaseNpc : BaseCombatEntity
 
 	public virtual void StartAttack()
 	{
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
 		if (!Object.op_Implicit((Object)(object)AttackTarget) || !AttackReady())
 		{
 			return;
 		}
 		Vector3 val = AttackTarget.ServerPosition - ServerPosition;
-		float magnitude = ((Vector3)(ref val)).magnitude;
-		if (!(magnitude > AttackRange))
+		if (!(((Vector3)(ref val)).magnitude > AttackRange))
 		{
 			nextAttackTime = Time.realtimeSinceStartup + AttackRate;
 			BaseCombatEntity combatTarget = CombatTarget;
@@ -1410,18 +1322,17 @@ public class BaseNpc : BaseCombatEntity
 
 	public void Attack(BaseCombatEntity target)
 	{
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
 		if (!((Object)(object)target == (Object)null))
 		{
 			Vector3 val = target.ServerPosition - ServerPosition;
-			float magnitude = ((Vector3)(ref val)).magnitude;
-			if (magnitude > 0.001f)
+			if (((Vector3)(ref val)).magnitude > 0.001f)
 			{
 				ServerRotation = Quaternion.LookRotation(((Vector3)(ref val)).normalized);
 			}
@@ -1435,7 +1346,7 @@ public class BaseNpc : BaseCombatEntity
 
 	public virtual void Eat()
 	{
-		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
 		if (Object.op_Implicit((Object)(object)FoodTarget))
 		{
 			BusyTimer.Activate(0.5f);
@@ -1452,7 +1363,7 @@ public class BaseNpc : BaseCombatEntity
 
 	public virtual void Startled()
 	{
-		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
 		ClientRPC<Vector3>(null, "Startled", ((Component)this).transform.position);
 	}
 
@@ -1497,7 +1408,7 @@ public class BaseNpc : BaseCombatEntity
 
 	private void TickBehaviourState()
 	{
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
 		if (GetFact(Facts.WantsToFlee) == 1 && IsNavRunning() && (int)NavAgent.pathStatus == 0 && Time.realtimeSinceStartup - (maxFleeTime - Stats.MaxFleeTime) > 0.5f)
 		{
 			TickFlee();
@@ -1721,9 +1632,205 @@ public class BaseNpc : BaseCombatEntity
 
 	public int TopologyPreference()
 	{
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Expected I4, but got Unknown
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Expected I4, but got Unknown
 		return (int)topologyPreference;
+	}
+
+	public void UpdateDestination(Vector3 position)
+	{
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		if (IsStopped)
+		{
+			IsStopped = false;
+		}
+		Vector3 val = Destination - position;
+		if (((Vector3)(ref val)).sqrMagnitude > 0.010000001f)
+		{
+			Destination = position;
+		}
+		ChaseTransform = null;
+	}
+
+	public void UpdateDestination(Transform tx)
+	{
+		IsStopped = false;
+		ChaseTransform = tx;
+	}
+
+	public void StopMoving()
+	{
+		IsStopped = true;
+		ChaseTransform = null;
+		SetFact(Facts.PathToTargetStatus, 0);
+	}
+
+	public override void ApplyInheritedVelocity(Vector3 velocity)
+	{
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
+		ServerPosition = GetNewNavPosWithVelocity(this, velocity);
+	}
+
+	public static Vector3 GetNewNavPosWithVelocity(BaseEntity ent, Vector3 velocity)
+	{
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
+		BaseEntity baseEntity = ent.GetParentEntity();
+		if ((Object)(object)baseEntity != (Object)null)
+		{
+			velocity = ((Component)baseEntity).transform.InverseTransformDirection(velocity);
+		}
+		Vector3 val = ent.ServerPosition + velocity * Time.fixedDeltaTime;
+		NavMeshHit val2 = default(NavMeshHit);
+		NavMesh.Raycast(ent.ServerPosition, val, ref val2, -1);
+		if (!Vector3Ex.IsNaNOrInfinity(((NavMeshHit)(ref val2)).position))
+		{
+			return ((NavMeshHit)(ref val2)).position;
+		}
+		return ent.ServerPosition;
+	}
+
+	public bool IsNavRunning()
+	{
+		if ((Object)(object)GetNavAgent != (Object)null && ((Behaviour)GetNavAgent).enabled)
+		{
+			return GetNavAgent.isOnNavMesh;
+		}
+		return false;
+	}
+
+	public void Pause()
+	{
+		if ((Object)(object)GetNavAgent != (Object)null && ((Behaviour)GetNavAgent).enabled)
+		{
+			((Behaviour)GetNavAgent).enabled = false;
+		}
+	}
+
+	public void Resume()
+	{
+		if (!GetNavAgent.isOnNavMesh)
+		{
+			((MonoBehaviour)this).StartCoroutine(TryForceToNavmesh());
+		}
+		else
+		{
+			((Behaviour)GetNavAgent).enabled = true;
+		}
+	}
+
+	private IEnumerator TryForceToNavmesh()
+	{
+		yield return null;
+		int numTries = 0;
+		float waitForRetryTime2 = 1f;
+		float maxDistanceMultiplier = 2f;
+		if ((Object)(object)SingletonComponent<DynamicNavMesh>.Instance != (Object)null)
+		{
+			while (SingletonComponent<DynamicNavMesh>.Instance.IsBuilding)
+			{
+				yield return CoroutineEx.waitForSecondsRealtime(waitForRetryTime2);
+				waitForRetryTime2 += 0.5f;
+			}
+		}
+		waitForRetryTime2 = 1f;
+		NavMeshHit val = default(NavMeshHit);
+		for (; numTries < 4; numTries++)
+		{
+			if (!GetNavAgent.isOnNavMesh)
+			{
+				if (NavMesh.SamplePosition(ServerPosition, ref val, GetNavAgent.height * maxDistanceMultiplier, GetNavAgent.areaMask))
+				{
+					ServerPosition = ((NavMeshHit)(ref val)).position;
+					GetNavAgent.Warp(ServerPosition);
+					((Behaviour)GetNavAgent).enabled = true;
+					yield break;
+				}
+				yield return CoroutineEx.waitForSecondsRealtime(waitForRetryTime2);
+				maxDistanceMultiplier *= 1.5f;
+				waitForRetryTime2 *= 1.5f;
+				continue;
+			}
+			((Behaviour)GetNavAgent).enabled = true;
+			yield break;
+		}
+		Debug.LogWarningFormat("Failed to spawn {0} on a valid navmesh.", new object[1] { ((Object)this).name });
+		DieInstantly();
+	}
+
+	public float GetWantsToAttack(BaseEntity target)
+	{
+		return WantsToAttack(target);
+	}
+
+	public bool BusyTimerActive()
+	{
+		return BusyTimer.IsActive;
+	}
+
+	public void SetBusyFor(float dur)
+	{
+		BusyTimer.Activate(dur);
+	}
+
+	internal float WantsToAttack(BaseEntity target)
+	{
+		if ((Object)(object)target == (Object)null)
+		{
+			return 0f;
+		}
+		if (CurrentBehaviour == Behaviour.Sleep)
+		{
+			return 0f;
+		}
+		if (!target.HasAnyTrait(TraitFlag.Animal | TraitFlag.Human))
+		{
+			return 0f;
+		}
+		if (((object)target).GetType() == ((object)this).GetType())
+		{
+			return 1f - Stats.Tolerance;
+		}
+		return 1f;
+	}
+
+	public override void Save(SaveInfo info)
+	{
+		base.Save(info);
+		info.msg.baseNPC = Pool.Get<BaseNPC>();
+		info.msg.baseNPC.flags = (int)aiFlags;
+	}
+
+	public override void Load(LoadInfo info)
+	{
+		base.Load(info);
+		if (info.msg.baseNPC != null)
+		{
+			aiFlags = (AiFlags)info.msg.baseNPC.flags;
+		}
+	}
+
+	public override float MaxVelocity()
+	{
+		return Stats.Speed;
 	}
 
 	public bool HasAiFlag(AiFlags f)
@@ -1733,16 +1840,16 @@ public class BaseNpc : BaseCombatEntity
 
 	public void SetAiFlag(AiFlags f, bool set)
 	{
-		AiFlags aiFlags = this.aiFlags;
+		AiFlags num = aiFlags;
 		if (set)
 		{
-			this.aiFlags |= f;
+			aiFlags |= f;
 		}
 		else
 		{
-			this.aiFlags &= ~f;
+			aiFlags &= ~f;
 		}
-		if (aiFlags != this.aiFlags && base.isServer)
+		if (num != aiFlags && base.isServer)
 		{
 			SendNetworkUpdate();
 		}
@@ -1873,7 +1980,7 @@ public class BaseNpc : BaseCombatEntity
 
 	public byte GetPathStatus()
 	{
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
 		if (!IsNavRunning())
 		{
 			return 2;
@@ -1883,8 +1990,6 @@ public class BaseNpc : BaseCombatEntity
 
 	public NavMeshPathStatus ToPathStatus(byte value)
 	{
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
 		return (NavMeshPathStatus)value;
 	}
 
@@ -1894,23 +1999,15 @@ public class BaseNpc : BaseCombatEntity
 		{
 			if (Time.realtimeSinceStartup > lastTickTime + SensesTickRate)
 			{
-				Profiler.BeginSample("TickHearing");
 				TickHearing();
-				Profiler.EndSample();
 				TickSmell();
 				lastTickTime = Time.realtimeSinceStartup;
 			}
-			Profiler.BeginSample("TickEnemyAwareness");
-			Profiler.EndSample();
 			if (!AI.animal_ignore_food)
 			{
-				Profiler.BeginSample("TickFoodAwareness");
 				TickFoodAwareness();
-				Profiler.EndSample();
 			}
-			Profiler.BeginSample("UpdateSelfFacts");
 			UpdateSelfFacts();
-			Profiler.EndSample();
 		}
 	}
 
@@ -2003,22 +2100,21 @@ public class BaseNpc : BaseCombatEntity
 
 	private static bool WithinVisionCone(BaseNpc npc, BaseEntity other)
 	{
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
 		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
 		if (Mathf.Approximately(npc.Stats.VisionCone, -1f))
 		{
 			return true;
 		}
 		Vector3 val = other.ServerPosition - npc.ServerPosition;
 		Vector3 normalized = ((Vector3)(ref val)).normalized;
-		float num = Vector3.Dot(((Component)npc).transform.forward, normalized);
-		if (num < npc.Stats.VisionCone)
+		if (Vector3.Dot(((Component)npc).transform.forward, normalized) < npc.Stats.VisionCone)
 		{
 			return false;
 		}
@@ -2027,24 +2123,20 @@ public class BaseNpc : BaseCombatEntity
 
 	public void SetTargetPathStatus(float pendingDelay = 0.05f)
 	{
-		Profiler.BeginSample("SetTargetPathStatus");
-		if (isAlreadyCheckingPathPending)
+		if (!isAlreadyCheckingPathPending)
 		{
-			Profiler.EndSample();
-			return;
+			if (NavAgent.pathPending && numPathPendingAttempts < 10)
+			{
+				isAlreadyCheckingPathPending = true;
+				((FacepunchBehaviour)this).Invoke((Action)DelayedTargetPathStatus, pendingDelay);
+			}
+			else
+			{
+				numPathPendingAttempts = 0;
+				accumPathPendingDelay = 0f;
+				SetFact(Facts.PathToTargetStatus, GetPathStatus());
+			}
 		}
-		if (NavAgent.pathPending && numPathPendingAttempts < 10)
-		{
-			isAlreadyCheckingPathPending = true;
-			((FacepunchBehaviour)this).Invoke((Action)DelayedTargetPathStatus, pendingDelay);
-		}
-		else
-		{
-			numPathPendingAttempts = 0;
-			accumPathPendingDelay = 0f;
-			SetFact(Facts.PathToTargetStatus, GetPathStatus());
-		}
-		Profiler.EndSample();
 	}
 
 	private void DelayedTargetPathStatus()
@@ -2113,11 +2205,11 @@ public class BaseNpc : BaseCombatEntity
 
 	protected virtual void OnSenseGunshot(Sensation sensation)
 	{
-		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
 		_lastHeardGunshotTime = Time.time;
 		Vector3 val = sensation.Position - ((Component)this).transform.localPosition;
 		LastHeardGunshotDirection = ((Vector3)(ref val)).normalized;
@@ -2125,127 +2217,5 @@ public class BaseNpc : BaseCombatEntity
 		{
 			CurrentBehaviour = Behaviour.Flee;
 		}
-	}
-
-	public bool IsNavRunning()
-	{
-		return (Object)(object)GetNavAgent != (Object)null && ((Behaviour)GetNavAgent).enabled && GetNavAgent.isOnNavMesh;
-	}
-
-	public void Pause()
-	{
-		if ((Object)(object)GetNavAgent != (Object)null && ((Behaviour)GetNavAgent).enabled)
-		{
-			((Behaviour)GetNavAgent).enabled = false;
-		}
-	}
-
-	public void Resume()
-	{
-		if (!GetNavAgent.isOnNavMesh)
-		{
-			((MonoBehaviour)this).StartCoroutine(TryForceToNavmesh());
-		}
-		else
-		{
-			((Behaviour)GetNavAgent).enabled = true;
-		}
-	}
-
-	private IEnumerator TryForceToNavmesh()
-	{
-		yield return null;
-		int numTries = 0;
-		float waitForRetryTime2 = 1f;
-		float maxDistanceMultiplier = 2f;
-		if ((Object)(object)SingletonComponent<DynamicNavMesh>.Instance != (Object)null)
-		{
-			while (SingletonComponent<DynamicNavMesh>.Instance.IsBuilding)
-			{
-				yield return CoroutineEx.waitForSecondsRealtime(waitForRetryTime2);
-				waitForRetryTime2 += 0.5f;
-			}
-		}
-		waitForRetryTime2 = 1f;
-		NavMeshHit hit = default(NavMeshHit);
-		for (; numTries < 4; numTries++)
-		{
-			if (!GetNavAgent.isOnNavMesh)
-			{
-				if (NavMesh.SamplePosition(ServerPosition, ref hit, GetNavAgent.height * maxDistanceMultiplier, GetNavAgent.areaMask))
-				{
-					ServerPosition = ((NavMeshHit)(ref hit)).position;
-					GetNavAgent.Warp(ServerPosition);
-					((Behaviour)GetNavAgent).enabled = true;
-					yield break;
-				}
-				hit = default(NavMeshHit);
-				yield return CoroutineEx.waitForSecondsRealtime(waitForRetryTime2);
-				maxDistanceMultiplier *= 1.5f;
-				waitForRetryTime2 *= 1.5f;
-				continue;
-			}
-			((Behaviour)GetNavAgent).enabled = true;
-			yield break;
-		}
-		Debug.LogWarningFormat("Failed to spawn {0} on a valid navmesh.", new object[1] { ((Object)this).name });
-		DieInstantly();
-	}
-
-	public float GetWantsToAttack(BaseEntity target)
-	{
-		return WantsToAttack(target);
-	}
-
-	public bool BusyTimerActive()
-	{
-		return BusyTimer.IsActive;
-	}
-
-	public void SetBusyFor(float dur)
-	{
-		BusyTimer.Activate(dur);
-	}
-
-	internal float WantsToAttack(BaseEntity target)
-	{
-		if ((Object)(object)target == (Object)null)
-		{
-			return 0f;
-		}
-		if (CurrentBehaviour == Behaviour.Sleep)
-		{
-			return 0f;
-		}
-		if (!target.HasAnyTrait(TraitFlag.Animal | TraitFlag.Human))
-		{
-			return 0f;
-		}
-		if (((object)target).GetType() == ((object)this).GetType())
-		{
-			return 1f - Stats.Tolerance;
-		}
-		return 1f;
-	}
-
-	public override void Save(SaveInfo info)
-	{
-		base.Save(info);
-		info.msg.baseNPC = Pool.Get<BaseNPC>();
-		info.msg.baseNPC.flags = (int)aiFlags;
-	}
-
-	public override void Load(LoadInfo info)
-	{
-		base.Load(info);
-		if (info.msg.baseNPC != null)
-		{
-			aiFlags = (AiFlags)info.msg.baseNPC.flags;
-		}
-	}
-
-	public override float MaxVelocity()
-	{
-		return Stats.Speed;
 	}
 }

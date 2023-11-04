@@ -11,8 +11,7 @@ public class HalloweenHunt : EggHuntEvent
 		if (topHunters.Count > 0)
 		{
 			EggHunter eggHunter = topHunters[0];
-			string message = eggHunter.displayName + " is the top creep with " + eggHunter.numEggs + " candies collected.";
-			Chat.Broadcast(message, "", "#eee", 0uL);
+			Chat.Broadcast(eggHunter.displayName + " is the top creep with " + eggHunter.numEggs + " candies collected.", "", "#eee", 0uL);
 			for (int i = 0; i < topHunters.Count; i++)
 			{
 				EggHunter eggHunter2 = topHunters[i];

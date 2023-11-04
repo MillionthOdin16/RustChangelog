@@ -6,8 +6,8 @@ public class TriggerRagdollRelocate : TriggerBase
 
 	internal override void OnObjectAdded(GameObject obj, Collider col)
 	{
-		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
 		base.OnObjectAdded(obj, col);
 		BaseEntity baseEntity = obj.transform.ToBaseEntity();
 		if ((Object)(object)baseEntity != (Object)null && baseEntity.isServer)
@@ -31,13 +31,13 @@ public class TriggerRagdollRelocate : TriggerBase
 
 	private void RepositionTransform(Transform t)
 	{
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 val = targetLocation.InverseTransformPoint(t.position);
 		val.y = 0f;
 		val = targetLocation.TransformPoint(val);

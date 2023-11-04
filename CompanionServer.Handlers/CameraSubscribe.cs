@@ -5,12 +5,12 @@ using UnityEngine;
 
 namespace CompanionServer.Handlers;
 
-public class CameraSubscribe : BaseHandler<AppCameraSubscribe>
+public class CameraSubscribe : BasePlayerHandler<AppCameraSubscribe>
 {
 	public override void Execute()
 	{
-		//IL_019b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0132: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013d: Unknown result type (might be due to invalid IL or missing references)
 		if (!CameraRenderer.enabled)
 		{
 			SendError("not_enabled");
@@ -60,8 +60,7 @@ public class CameraSubscribe : BaseHandler<AppCameraSubscribe>
 			SendError("not_found");
 			return;
 		}
-		float num = Vector3.Distance(((Component)base.Player).transform.position, ((Component)ent).transform.position);
-		if (num >= remoteControllable.MaxRange)
+		if (Vector3.Distance(((Component)base.Player).transform.position, ((Component)ent).transform.position) >= remoteControllable.MaxRange)
 		{
 			base.Client.EndViewing();
 			SendError("not_found");

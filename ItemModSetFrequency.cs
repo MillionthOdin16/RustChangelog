@@ -19,16 +19,16 @@ public class ItemModSetFrequency : ItemMod
 
 	public int defaultFrequency = -1;
 
-	public bool loseConditionOnChange = false;
+	public bool loseConditionOnChange;
 
 	private static List<ItemTime> itemsOnCooldown = new List<ItemTime>();
 
 	public override void ServerCommand(Item item, string command, BasePlayer player)
 	{
-		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0190: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0195: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0131: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0136: Unknown result type (might be due to invalid IL or missing references)
 		base.ServerCommand(item, command, player);
 		if (command.Contains("SetFrequency"))
 		{
@@ -47,8 +47,7 @@ public class ItemModSetFrequency : ItemMod
 				}
 			}
 			int result = 0;
-			string s = command.Substring(command.IndexOf(":") + 1);
-			if (int.TryParse(s, out result))
+			if (int.TryParse(command.Substring(command.IndexOf(":") + 1), out result))
 			{
 				BaseEntity heldEntity = item.GetHeldEntity();
 				if ((Object)(object)heldEntity != (Object)null && heldEntity is Detonator detonator)
@@ -95,8 +94,8 @@ public class ItemModSetFrequency : ItemMod
 
 	public override void OnItemCreated(Item item)
 	{
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001a: Expected O, but got Unknown
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Expected O, but got Unknown
 		if (item.instanceData == null)
 		{
 			item.instanceData = new InstanceData();

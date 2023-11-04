@@ -113,13 +113,21 @@ public class VehicleEngineController<TOwner> where TOwner : BaseVehicle, IEngine
 
 	public bool CanRunEngine()
 	{
-		return owner.MeetsEngineRequirements() && FuelSystem.HasFuel() && !IsWaterlogged() && !owner.IsDead();
+		if (owner.MeetsEngineRequirements() && FuelSystem.HasFuel() && !IsWaterlogged())
+		{
+			return !owner.IsDead();
+		}
+		return false;
 	}
 
 	public bool IsWaterlogged()
 	{
-		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
-		return (Object)(object)waterloggedPoint != (Object)null && WaterLevel.Test(waterloggedPoint.position, waves: true, volumes: true, owner);
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		if ((Object)(object)waterloggedPoint != (Object)null)
+		{
+			return WaterLevel.Test(waterloggedPoint.position, waves: true, volumes: true, owner);
+		}
+		return false;
 	}
 
 	public int TickFuel(float fuelPerSecond)

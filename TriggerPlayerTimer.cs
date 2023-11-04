@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class TriggerPlayerTimer : TriggerBase
 {
-	public BaseEntity TargetEntity = null;
+	public BaseEntity TargetEntity;
 
 	public float DamageAmount = 20f;
 

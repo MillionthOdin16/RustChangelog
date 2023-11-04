@@ -24,7 +24,7 @@ public class SnowmobileChassisVisuals : VehicleChassisVisuals<Snowmobile>, IClie
 	private float treadSpeedMultiplier = 0.01f;
 
 	[SerializeField]
-	private bool flipRightSkiExtension = false;
+	private bool flipRightSkiExtension;
 
 	[SerializeField]
 	private Transform leftSki;

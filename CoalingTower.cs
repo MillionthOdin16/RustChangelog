@@ -23,8 +23,6 @@ public class CoalingTower : IOEntity, INotifyEntityTrigger
 		TrainHasThrottle
 	}
 
-	private TrainCarUnloadable tcUnloadingNow;
-
 	[Header("Coaling Tower")]
 	[SerializeField]
 	private BoxCollider unloadingBounds;
@@ -195,6 +193,8 @@ public class CoalingTower : IOEntity, INotifyEntityTrigger
 
 	private Sound unloadDestinationSound;
 
+	private TrainCarUnloadable tcUnloadingNow;
+
 	private bool HasTrainCar => activeTrainCarRef.IsValid(base.isServer);
 
 	private bool HasUnloadable => activeUnloadableRef.IsValid(base.isServer);
@@ -203,14 +203,179 @@ public class CoalingTower : IOEntity, INotifyEntityTrigger
 
 	public Vector3 UnloadingPos { get; private set; }
 
+	public override void InitShared()
+	{
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		base.InitShared();
+		LootTypeIndex = new NetworkedProperty<int>(this);
+		UnloadingPos = ((Component)unloadingBounds).transform.position + ((Component)unloadingBounds).transform.rotation * unloadingBounds.center;
+		unloadersInWorld.Add(this);
+	}
+
+	public override void DestroyShared()
+	{
+		base.DestroyShared();
+		unloadersInWorld.Remove(this);
+	}
+
+	public override void Load(LoadInfo info)
+	{
+		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
+		base.Load(info);
+		if (info.msg.coalingTower != null)
+		{
+			LootTypeIndex.Value = info.msg.coalingTower.lootTypeIndex;
+			oreStorageInstance.uid = info.msg.coalingTower.oreStorageID;
+			fuelStorageInstance.uid = info.msg.coalingTower.fuelStorageID;
+		}
+	}
+
+	public static bool IsUnderAnUnloader(TrainCar trainCar, out bool isLinedUp, out Vector3 unloaderPos)
+	{
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
+		foreach (CoalingTower item in unloadersInWorld)
+		{
+			if (item.TrainCarIsUnder(trainCar, out isLinedUp))
+			{
+				unloaderPos = item.UnloadingPos;
+				return true;
+			}
+		}
+		isLinedUp = false;
+		unloaderPos = Vector3.zero;
+		return false;
+	}
+
+	public bool TrainCarIsUnder(TrainCar trainCar, out bool isLinedUp)
+	{
+		isLinedUp = false;
+		if (!trainCar.IsValid())
+		{
+			return false;
+		}
+		TrainCarUnloadable activeUnloadable = GetActiveUnloadable();
+		if ((Object)(object)activeUnloadable != (Object)null && activeUnloadable.EqualNetID((BaseNetworkable)trainCar))
+		{
+			isLinedUp = HasUnloadableLinedUp;
+			return true;
+		}
+		return false;
+	}
+
+	private OreHopper GetOreStorage()
+	{
+		OreHopper oreHopper = oreStorageInstance.Get(base.isServer);
+		if (oreHopper.IsValid())
+		{
+			return oreHopper;
+		}
+		return null;
+	}
+
+	private PercentFullStorageContainer GetFuelStorage()
+	{
+		PercentFullStorageContainer percentFullStorageContainer = fuelStorageInstance.Get(base.isServer);
+		if (percentFullStorageContainer.IsValid())
+		{
+			return percentFullStorageContainer;
+		}
+		return null;
+	}
+
+	private TrainCar GetActiveTrainCar()
+	{
+		TrainCar trainCar = activeTrainCarRef.Get(base.isServer);
+		if (trainCar.IsValid())
+		{
+			return trainCar;
+		}
+		return null;
+	}
+
+	private TrainCarUnloadable GetActiveUnloadable()
+	{
+		TrainCarUnloadable trainCarUnloadable = activeUnloadableRef.Get(base.isServer);
+		if (trainCarUnloadable.IsValid())
+		{
+			return trainCarUnloadable;
+		}
+		return null;
+	}
+
+	private bool OutputBinIsFull()
+	{
+		TrainCarUnloadable activeUnloadable = GetActiveUnloadable();
+		if ((Object)(object)activeUnloadable == (Object)null)
+		{
+			return false;
+		}
+		switch (activeUnloadable.wagonType)
+		{
+		case TrainCarUnloadable.WagonType.Lootboxes:
+			return false;
+		case TrainCarUnloadable.WagonType.Fuel:
+		{
+			PercentFullStorageContainer fuelStorage = GetFuelStorage();
+			if (!((Object)(object)fuelStorage != (Object)null))
+			{
+				return false;
+			}
+			return fuelStorage.IsFull();
+		}
+		default:
+		{
+			OreHopper oreStorage = GetOreStorage();
+			if (!((Object)(object)oreStorage != (Object)null))
+			{
+				return false;
+			}
+			return oreStorage.IsFull();
+		}
+		}
+	}
+
+	private bool WagonIsEmpty()
+	{
+		TrainCarUnloadable activeUnloadable = GetActiveUnloadable();
+		if ((Object)(object)activeUnloadable != (Object)null)
+		{
+			return activeUnloadable.GetOrePercent() == 0f;
+		}
+		return true;
+	}
+
+	private bool CanUnloadNow(out ActionAttemptStatus attemptStatus)
+	{
+		if (!HasUnloadableLinedUp)
+		{
+			attemptStatus = ActionAttemptStatus.NoTrainCar;
+			return false;
+		}
+		if (OutputBinIsFull())
+		{
+			attemptStatus = ActionAttemptStatus.OutputIsFull;
+			return false;
+		}
+		attemptStatus = ActionAttemptStatus.NoError;
+		return IsPowered();
+	}
+
 	public override void Save(SaveInfo info)
 	{
-		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
 		base.Save(info);
 		info.msg.coalingTower = Pool.Get<CoalingTower>();
 		info.msg.coalingTower.lootTypeIndex = LootTypeIndex;
@@ -278,8 +443,7 @@ public class CoalingTower : IOEntity, INotifyEntityTrigger
 
 	private void SetActiveTrainCar(TrainCar trainCar)
 	{
-		TrainCar activeTrainCar = GetActiveTrainCar();
-		if (!((Object)(object)activeTrainCar == (Object)(object)trainCar))
+		if (!((Object)(object)GetActiveTrainCar() == (Object)(object)trainCar))
 		{
 			activeTrainCarRef.Set(trainCar);
 			if (trainCar is TrainCarUnloadable entity)
@@ -290,9 +454,9 @@ public class CoalingTower : IOEntity, INotifyEntityTrigger
 			{
 				activeUnloadableRef.Set(null);
 			}
-			bool flag = activeUnloadableRef.IsValid(serverside: true);
+			bool num = activeUnloadableRef.IsValid(serverside: true);
 			CheckWagonLinedUp(networkUpdate: false);
-			if (flag)
+			if (num)
 			{
 				((FacepunchBehaviour)this).InvokeRandomized((Action)CheckWagonLinedUp, 0.15f, 0.15f, 0.015f);
 			}
@@ -333,7 +497,7 @@ public class CoalingTower : IOEntity, INotifyEntityTrigger
 			attemptStatus = ActionAttemptStatus.NoTrainCar;
 			return false;
 		}
-		bool flag = activeUnloadable.wagonType == TrainCarUnloadable.WagonType.Fuel;
+		_ = activeUnloadable.wagonType;
 		if (!CanUnloadNow(out attemptStatus))
 		{
 			return false;
@@ -460,24 +624,24 @@ public class CoalingTower : IOEntity, INotifyEntityTrigger
 
 	private bool TryShuntTrain(bool next, out ActionAttemptStatus attemptStatus)
 	{
-		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0092: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0102: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0110: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0111: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0116: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0127: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ea: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
 		if (!IsPowered() || HasFlag(Flags.Reserved3) || HasFlag(Flags.Reserved4))
 		{
 			attemptStatus = ActionAttemptStatus.GenericError;
@@ -496,11 +660,10 @@ public class CoalingTower : IOEntity, INotifyEntityTrigger
 		{
 			Vector3 position = ((Component)activeTrainCar).transform.position;
 			Vector3 val = unloadingPos - position;
-			bool flag = Vector3.Dot(((Component)this).transform.forward, val) >= 0f;
-			if (flag == next)
+			if (Vector3.Dot(((Component)this).transform.forward, val) >= 0f == next)
 			{
 				result = activeTrainCar;
-				goto IL_00f6;
+				goto IL_00ba;
 			}
 		}
 		if (!activeTrainCar.TryGetTrainCar(next, ((Component)this).transform.forward, out result))
@@ -508,8 +671,8 @@ public class CoalingTower : IOEntity, INotifyEntityTrigger
 			attemptStatus = (next ? ActionAttemptStatus.NoNextTrainCar : ActionAttemptStatus.NoPrevTrainCar);
 			return false;
 		}
-		goto IL_00f6;
-		IL_00f6:
+		goto IL_00ba;
+		IL_00ba:
 		Vector3 position2 = ((Component)result).transform.position;
 		position2.y = 0f;
 		Vector3 shuntDirection = unloadingPos - position2;
@@ -565,163 +728,6 @@ public class CoalingTower : IOEntity, INotifyEntityTrigger
 		}
 	}
 
-	public override void InitShared()
-	{
-		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
-		base.InitShared();
-		LootTypeIndex = new NetworkedProperty<int>(this);
-		UnloadingPos = ((Component)unloadingBounds).transform.position + ((Component)unloadingBounds).transform.rotation * unloadingBounds.center;
-		unloadersInWorld.Add(this);
-	}
-
-	public override void DestroyShared()
-	{
-		base.DestroyShared();
-		unloadersInWorld.Remove(this);
-	}
-
-	public override void Load(LoadInfo info)
-	{
-		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
-		base.Load(info);
-		if (info.msg.coalingTower != null)
-		{
-			LootTypeIndex.Value = info.msg.coalingTower.lootTypeIndex;
-			oreStorageInstance.uid = info.msg.coalingTower.oreStorageID;
-			fuelStorageInstance.uid = info.msg.coalingTower.fuelStorageID;
-		}
-	}
-
-	public static bool IsUnderAnUnloader(TrainCar trainCar, out bool isLinedUp, out Vector3 unloaderPos)
-	{
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
-		foreach (CoalingTower item in unloadersInWorld)
-		{
-			if (item.TrainCarIsUnder(trainCar, out isLinedUp))
-			{
-				unloaderPos = item.UnloadingPos;
-				return true;
-			}
-		}
-		isLinedUp = false;
-		unloaderPos = Vector3.zero;
-		return false;
-	}
-
-	public bool TrainCarIsUnder(TrainCar trainCar, out bool isLinedUp)
-	{
-		isLinedUp = false;
-		if (!trainCar.IsValid())
-		{
-			return false;
-		}
-		TrainCarUnloadable activeUnloadable = GetActiveUnloadable();
-		if ((Object)(object)activeUnloadable != (Object)null && activeUnloadable.EqualNetID((BaseNetworkable)trainCar))
-		{
-			isLinedUp = HasUnloadableLinedUp;
-			return true;
-		}
-		return false;
-	}
-
-	private OreHopper GetOreStorage()
-	{
-		OreHopper oreHopper = oreStorageInstance.Get(base.isServer);
-		if (oreHopper.IsValid())
-		{
-			return oreHopper;
-		}
-		return null;
-	}
-
-	private PercentFullStorageContainer GetFuelStorage()
-	{
-		PercentFullStorageContainer percentFullStorageContainer = fuelStorageInstance.Get(base.isServer);
-		if (percentFullStorageContainer.IsValid())
-		{
-			return percentFullStorageContainer;
-		}
-		return null;
-	}
-
-	private TrainCar GetActiveTrainCar()
-	{
-		TrainCar trainCar = activeTrainCarRef.Get(base.isServer);
-		if (trainCar.IsValid())
-		{
-			return trainCar;
-		}
-		return null;
-	}
-
-	private TrainCarUnloadable GetActiveUnloadable()
-	{
-		TrainCarUnloadable trainCarUnloadable = activeUnloadableRef.Get(base.isServer);
-		if (trainCarUnloadable.IsValid())
-		{
-			return trainCarUnloadable;
-		}
-		return null;
-	}
-
-	private bool OutputBinIsFull()
-	{
-		TrainCarUnloadable activeUnloadable = GetActiveUnloadable();
-		if ((Object)(object)activeUnloadable == (Object)null)
-		{
-			return false;
-		}
-		switch (activeUnloadable.wagonType)
-		{
-		case TrainCarUnloadable.WagonType.Lootboxes:
-			return false;
-		case TrainCarUnloadable.WagonType.Fuel:
-		{
-			PercentFullStorageContainer fuelStorage = GetFuelStorage();
-			return (Object)(object)fuelStorage != (Object)null && fuelStorage.IsFull();
-		}
-		default:
-		{
-			OreHopper oreStorage = GetOreStorage();
-			return (Object)(object)oreStorage != (Object)null && oreStorage.IsFull();
-		}
-		}
-	}
-
-	private bool WagonIsEmpty()
-	{
-		TrainCarUnloadable activeUnloadable = GetActiveUnloadable();
-		if ((Object)(object)activeUnloadable != (Object)null)
-		{
-			return activeUnloadable.GetOrePercent() == 0f;
-		}
-		return true;
-	}
-
-	private bool CanUnloadNow(out ActionAttemptStatus attemptStatus)
-	{
-		if (!HasUnloadableLinedUp)
-		{
-			attemptStatus = ActionAttemptStatus.NoTrainCar;
-			return false;
-		}
-		if (OutputBinIsFull())
-		{
-			attemptStatus = ActionAttemptStatus.OutputIsFull;
-			return false;
-		}
-		attemptStatus = ActionAttemptStatus.NoError;
-		return IsPowered();
-	}
-
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
 		TimeWarning val = TimeWarning.New("CoalingTower.OnRpcMessage", 0);
@@ -732,7 +738,7 @@ public class CoalingTower : IOEntity, INotifyEntityTrigger
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_Next "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_Next "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_Next", 0);
 				try
@@ -751,7 +757,7 @@ public class CoalingTower : IOEntity, INotifyEntityTrigger
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -763,7 +769,7 @@ public class CoalingTower : IOEntity, INotifyEntityTrigger
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -783,12 +789,12 @@ public class CoalingTower : IOEntity, INotifyEntityTrigger
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_Prev "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_Prev "));
 				}
-				TimeWarning val5 = TimeWarning.New("RPC_Prev", 0);
+				TimeWarning val2 = TimeWarning.New("RPC_Prev", 0);
 				try
 				{
-					TimeWarning val6 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.MaxDistance.Test(3656312045u, "RPC_Prev", this, player, 3f))
@@ -798,11 +804,11 @@ public class CoalingTower : IOEntity, INotifyEntityTrigger
 					}
 					finally
 					{
-						((IDisposable)val6)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val7 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -814,7 +820,7 @@ public class CoalingTower : IOEntity, INotifyEntityTrigger
 						}
 						finally
 						{
-							((IDisposable)val7)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -825,7 +831,7 @@ public class CoalingTower : IOEntity, INotifyEntityTrigger
 				}
 				finally
 				{
-					((IDisposable)val5)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -834,12 +840,12 @@ public class CoalingTower : IOEntity, INotifyEntityTrigger
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_Unload "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_Unload "));
 				}
-				TimeWarning val8 = TimeWarning.New("RPC_Unload", 0);
+				TimeWarning val2 = TimeWarning.New("RPC_Unload", 0);
 				try
 				{
-					TimeWarning val9 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.MaxDistance.Test(998476828u, "RPC_Unload", this, player, 3f))
@@ -849,11 +855,11 @@ public class CoalingTower : IOEntity, INotifyEntityTrigger
 					}
 					finally
 					{
-						((IDisposable)val9)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val10 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -865,7 +871,7 @@ public class CoalingTower : IOEntity, INotifyEntityTrigger
 						}
 						finally
 						{
-							((IDisposable)val10)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex3)
@@ -876,7 +882,7 @@ public class CoalingTower : IOEntity, INotifyEntityTrigger
 				}
 				finally
 				{
-					((IDisposable)val8)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}

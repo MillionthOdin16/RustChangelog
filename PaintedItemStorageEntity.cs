@@ -13,13 +13,33 @@ public class PaintedItemStorageEntity : BaseEntity, IServerFileReceiver, IUGCBro
 {
 	private uint _currentImageCrc;
 
-	private ulong lastEditedBy = 0uL;
+	private ulong lastEditedBy;
 
-	public uint[] GetContentCRCs => (_currentImageCrc == 0) ? Array.Empty<uint>() : new uint[1] { _currentImageCrc };
+	public uint[] GetContentCRCs
+	{
+		get
+		{
+			if (_currentImageCrc == 0)
+			{
+				return Array.Empty<uint>();
+			}
+			return new uint[1] { _currentImageCrc };
+		}
+	}
 
 	public UGCType ContentType => UGCType.ImageJpg;
 
-	public List<ulong> EditingHistory => (lastEditedBy != 0) ? new List<ulong> { lastEditedBy } : new List<ulong>();
+	public List<ulong> EditingHistory
+	{
+		get
+		{
+			if (lastEditedBy == 0)
+			{
+				return new List<ulong>();
+			}
+			return new List<ulong> { lastEditedBy };
+		}
+	}
 
 	public BaseNetworkable UgcEntity => this;
 
@@ -33,7 +53,7 @@ public class PaintedItemStorageEntity : BaseEntity, IServerFileReceiver, IUGCBro
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_UpdateImage "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_UpdateImage "));
 				}
 				TimeWarning val2 = TimeWarning.New("Server_UpdateImage", 0);
 				try
@@ -52,7 +72,7 @@ public class PaintedItemStorageEntity : BaseEntity, IServerFileReceiver, IUGCBro
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -64,7 +84,7 @@ public class PaintedItemStorageEntity : BaseEntity, IServerFileReceiver, IUGCBro
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -112,12 +132,12 @@ public class PaintedItemStorageEntity : BaseEntity, IServerFileReceiver, IUGCBro
 	[RPC_Server.CallsPerSecond(3uL)]
 	private void Server_UpdateImage(RPCMessage msg)
 	{
-		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ba: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_019a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0145: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012c: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)msg.player == (Object)null || msg.player.userID != base.OwnerID)
 		{
 			return;
@@ -166,7 +186,7 @@ public class PaintedItemStorageEntity : BaseEntity, IServerFileReceiver, IUGCBro
 
 	internal override void DoServerDestroy()
 	{
-		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
 		base.DoServerDestroy();
 		if (!Application.isQuitting && net != null)
 		{

@@ -47,25 +47,25 @@ public class ProjectileWeaponMod : BaseEntity
 	public bool isLight;
 
 	[Header("MuzzleBrake")]
-	public bool isMuzzleBrake = false;
+	public bool isMuzzleBrake;
 
 	[Header("MuzzleBoost")]
-	public bool isMuzzleBoost = false;
+	public bool isMuzzleBoost;
 
 	[Header("Scope")]
-	public bool isScope = false;
+	public bool isScope;
 
-	public float zoomAmountDisplayOnly = 0f;
+	public float zoomAmountDisplayOnly;
 
 	[Header("Magazine")]
 	public Modifier magazineCapacity;
 
-	public bool needsOnForEffects = false;
+	public bool needsOnForEffects;
 
 	[Header("Burst")]
 	public int burstCount = -1;
 
-	public float timeBetweenBursts = 0f;
+	public float timeBetweenBursts;
 
 	public override void ServerInit()
 	{

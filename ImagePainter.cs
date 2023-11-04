@@ -45,12 +45,12 @@ public class ImagePainter : MonoBehaviour, IPointerDownHandler, IEventSystemHand
 
 	public virtual void OnPointerDown(PointerEventData eventData)
 	{
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Invalid comparison between Unknown and I4
-		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Invalid comparison between Unknown and I4
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
 		if ((int)eventData.button != 1)
 		{
 			Vector2 position = default(Vector2);
@@ -62,17 +62,17 @@ public class ImagePainter : MonoBehaviour, IPointerDownHandler, IEventSystemHand
 
 	public virtual void OnPointerUp(PointerEventData eventData)
 	{
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
 		pointerState[eventData.button].isDown = false;
 	}
 
 	public virtual void OnDrag(PointerEventData eventData)
 	{
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Invalid comparison between Unknown and I4
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Invalid comparison between Unknown and I4
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
 		if ((int)eventData.button == 1)
 		{
 			if (Object.op_Implicit((Object)(object)redirectRightClick))
@@ -90,8 +90,8 @@ public class ImagePainter : MonoBehaviour, IPointerDownHandler, IEventSystemHand
 
 	public virtual void OnBeginDrag(PointerEventData eventData)
 	{
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Invalid comparison between Unknown and I4
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Invalid comparison between Unknown and I4
 		if ((int)eventData.button == 1 && Object.op_Implicit((Object)(object)redirectRightClick))
 		{
 			((Component)redirectRightClick).SendMessage("OnBeginDrag", (object)eventData);
@@ -100,8 +100,8 @@ public class ImagePainter : MonoBehaviour, IPointerDownHandler, IEventSystemHand
 
 	public virtual void OnEndDrag(PointerEventData eventData)
 	{
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Invalid comparison between Unknown and I4
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Invalid comparison between Unknown and I4
 		if ((int)eventData.button == 1 && Object.op_Implicit((Object)(object)redirectRightClick))
 		{
 			((Component)redirectRightClick).SendMessage("OnEndDrag", (object)eventData);
@@ -110,8 +110,8 @@ public class ImagePainter : MonoBehaviour, IPointerDownHandler, IEventSystemHand
 
 	public virtual void OnInitializePotentialDrag(PointerEventData eventData)
 	{
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Invalid comparison between Unknown and I4
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Invalid comparison between Unknown and I4
 		if ((int)eventData.button == 1 && Object.op_Implicit((Object)(object)redirectRightClick))
 		{
 			((Component)redirectRightClick).SendMessage("OnInitializePotentialDrag", (object)eventData);
@@ -120,25 +120,25 @@ public class ImagePainter : MonoBehaviour, IPointerDownHandler, IEventSystemHand
 
 	private void DrawAt(Vector2 position, InputButton button)
 	{
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b6: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
 		if (brush == null)
 		{
 			return;

@@ -6,7 +6,7 @@ using ntw.CurvedTextMeshPro;
 
 public class SkullTrophy : StorageContainer
 {
-	public RustText NameText = null;
+	public RustText NameText;
 
 	public TextProOnACircle CircleModifier;
 
@@ -22,7 +22,7 @@ public class SkullTrophy : StorageContainer
 
 	public float SunriseTime = 5f;
 
-	public MeshRenderer[] SkullRenderers = null;
+	public MeshRenderer[] SkullRenderers;
 
 	public Material[] DaySkull;
 
@@ -30,9 +30,12 @@ public class SkullTrophy : StorageContainer
 
 	public Material[] NoSkull;
 
+	public const Flags HasSkull = Flags.Reserved1;
+
 	public override void OnItemAddedOrRemoved(Item item, bool added)
 	{
 		base.OnItemAddedOrRemoved(item, added);
+		SetFlag(Flags.Reserved1, base.inventory.GetSlot(0) != null);
 		SendNetworkUpdate();
 	}
 
