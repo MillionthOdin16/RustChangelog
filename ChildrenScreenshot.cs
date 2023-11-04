@@ -20,14 +20,14 @@ public class ChildrenScreenshot : MonoBehaviour
 	[ContextMenu("Create Screenshots")]
 	public void CreateScreenshots()
 	{
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0013: Expected O, but got Unknown
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0019: Expected O, but got Unknown
-		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00aa: Expected O, but got Unknown
-		//IL_0141: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Expected O, but got Unknown
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001a: Expected O, but got Unknown
+		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b4: Expected O, but got Unknown
+		//IL_0152: Unknown result type (might be due to invalid IL or missing references)
 		RenderTexture val = new RenderTexture(width, height, 0);
 		GameObject val2 = new GameObject();
 		Camera val3 = val2.AddComponent<Camera>();
@@ -69,20 +69,20 @@ public class ChildrenScreenshot : MonoBehaviour
 
 	public void PositionCamera(Camera cam, GameObject obj)
 	{
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ac: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
 		Bounds bounds = default(Bounds);
 		((Bounds)(ref bounds))._002Ector(obj.transform.position, Vector3.zero * 0.1f);
 		bool flag = true;

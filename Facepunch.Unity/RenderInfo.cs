@@ -51,16 +51,16 @@ public static class RenderInfo
 
 		public static RendererInstance From(Renderer renderer)
 		{
-			//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-			//IL_001e: Invalid comparison between Unknown and I4
-			//IL_0052: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0057: Unknown result type (might be due to invalid IL or missing references)
-			//IL_005a: Unknown result type (might be due to invalid IL or missing references)
-			//IL_005f: Unknown result type (might be due to invalid IL or missing references)
-			//IL_006f: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0074: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0077: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0086: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+			//IL_001f: Invalid comparison between Unknown and I4
+			//IL_0053: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0058: Unknown result type (might be due to invalid IL or missing references)
+			//IL_005b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0060: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0070: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0075: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0078: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0087: Unknown result type (might be due to invalid IL or missing references)
 			RendererInstance result = default(RendererInstance);
 			result.IsVisible = renderer.isVisible;
 			result.CastShadows = (int)renderer.shadowCastingMode > 0;
@@ -132,9 +132,9 @@ public static class RenderInfo
 		Renderer[] array = Object.FindObjectsOfType<Renderer>();
 		List<RendererInstance> list = new List<RendererInstance>();
 		Renderer[] array2 = array;
-		for (int i = 0; i < array2.Length; i++)
+		foreach (Renderer renderer in array2)
 		{
-			RendererInstance item = RendererInstance.From(array2[i]);
+			RendererInstance item = RendererInstance.From(renderer);
 			list.Add(item);
 		}
 		string text = string.Format(Application.dataPath + "/../RenderInfo-{0:yyyy-MM-dd_hh-mm-ss-tt}.txt", DateTime.Now);

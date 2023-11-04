@@ -4,7 +4,7 @@ using UnityEngine;
 
 public static class SystemInfoEx
 {
-	private static bool[] supportedRenderTextureFormats;
+	private static bool[] supportedRenderTextureFormats = null;
 
 	public static int systemMemoryUsed => (int)(System_GetMemoryUsage() / 1024 / 1024);
 
@@ -13,7 +13,7 @@ public static class SystemInfoEx
 
 	public static bool SupportsRenderTextureFormat(RenderTextureFormat format)
 	{
-		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
 		if (supportedRenderTextureFormats == null)
 		{
 			Array values = Enum.GetValues(typeof(RenderTextureFormat));

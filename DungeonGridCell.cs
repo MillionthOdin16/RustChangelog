@@ -25,9 +25,9 @@ public class DungeonGridCell : MonoBehaviour
 	public bool ShouldAvoid(uint id)
 	{
 		GameObjectRef[] avoidNeighbours = AvoidNeighbours;
-		for (int i = 0; i < avoidNeighbours.Length; i++)
+		foreach (GameObjectRef gameObjectRef in avoidNeighbours)
 		{
-			if (avoidNeighbours[i].resourceID == id)
+			if (gameObjectRef.resourceID == id)
 			{
 				return true;
 			}

@@ -4,7 +4,7 @@ public class ExplosionsShaderFloatCurves : MonoBehaviour
 {
 	public string ShaderProperty = "_BumpAmt";
 
-	public int MaterialID;
+	public int MaterialID = 0;
 
 	public AnimationCurve FloatPropertyCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 

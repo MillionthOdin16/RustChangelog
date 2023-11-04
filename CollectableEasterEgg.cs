@@ -16,7 +16,7 @@ public class CollectableEasterEgg : BaseEntity
 
 	public ItemDefinition itemToGive;
 
-	private float lastPickupStartTime;
+	private float lastPickupStartTime = 0f;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -28,7 +28,7 @@ public class CollectableEasterEgg : BaseEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_PickUp "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_PickUp "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_PickUp", 0);
 				try
@@ -47,7 +47,7 @@ public class CollectableEasterEgg : BaseEntity
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -59,7 +59,7 @@ public class CollectableEasterEgg : BaseEntity
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -79,12 +79,12 @@ public class CollectableEasterEgg : BaseEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_StartPickUp "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_StartPickUp "));
 				}
-				TimeWarning val2 = TimeWarning.New("RPC_StartPickUp", 0);
+				TimeWarning val5 = TimeWarning.New("RPC_StartPickUp", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					TimeWarning val6 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsVisible.Test(2243088389u, "RPC_StartPickUp", this, player, 3f))
@@ -94,11 +94,11 @@ public class CollectableEasterEgg : BaseEntity
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val6)?.Dispose();
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val7 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -110,7 +110,7 @@ public class CollectableEasterEgg : BaseEntity
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val7)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -121,7 +121,7 @@ public class CollectableEasterEgg : BaseEntity
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val5)?.Dispose();
 				}
 				return true;
 			}
@@ -156,17 +156,18 @@ public class CollectableEasterEgg : BaseEntity
 	[RPC_Server.IsVisible(3f)]
 	public void RPC_PickUp(RPCMessage msg)
 	{
-		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00af: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00eb: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)msg.player == (Object)null)
 		{
 			return;
 		}
 		float num = Time.realtimeSinceStartup - lastPickupStartTime;
-		if (!Object.op_Implicit((Object)(object)(msg.player.GetHeldEntity() as EasterBasket)) && (num > 2f || num < 0.8f))
+		EasterBasket easterBasket = msg.player.GetHeldEntity() as EasterBasket;
+		if (!Object.op_Implicit((Object)(object)easterBasket) && (num > 2f || num < 0.8f))
 		{
 			return;
 		}

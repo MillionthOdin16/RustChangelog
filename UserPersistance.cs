@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using Facepunch;
 using Facepunch.Math;
-using Facepunch.Nexus;
 using Facepunch.Rust;
 using Facepunch.Sqlite;
 using ProtoBuf;
@@ -28,22 +27,22 @@ public class UserPersistance : IDisposable
 
 	public UserPersistance(string strFolder)
 	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0010: Expected O, but got Unknown
-		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0096: Expected O, but got Unknown
-		//IL_00f8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0102: Expected O, but got Unknown
-		//IL_0146: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0150: Expected O, but got Unknown
-		//IL_01ab: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b5: Expected O, but got Unknown
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Expected O, but got Unknown
+		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a2: Expected O, but got Unknown
+		//IL_0120: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012a: Expected O, but got Unknown
+		//IL_0188: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0192: Expected O, but got Unknown
+		//IL_0202: Unknown result type (might be due to invalid IL or missing references)
+		//IL_020c: Expected O, but got Unknown
 		blueprints = new Database();
 		BaseGameMode activeGameMode = BaseGameMode.GetActiveGameMode(serverside: true);
 		string text = strFolder + "/player.blueprints.";
 		if ((Object)(object)activeGameMode != (Object)null && activeGameMode.wipeBpsOnProtocol)
 		{
-			text = text + 242 + ".";
+			text = text + 239 + ".";
 		}
 		blueprints.Open(text + 5 + ".db", false);
 		if (!blueprints.TableExists("data"))
@@ -75,7 +74,7 @@ public class UserPersistance : IDisposable
 			tokens.Execute("ALTER TABLE data ADD COLUMN locked BOOLEAN DEFAULT 0");
 		}
 		playerState = new Database();
-		playerState.Open(strFolder + "/player.states." + 242 + ".db", false);
+		playerState.Open(strFolder + "/player.states." + 239 + ".db", false);
 		if (!playerState.TableExists("data"))
 		{
 			playerState.Execute("CREATE TABLE data ( userid INT PRIMARY KEY, state BLOB )");
@@ -130,20 +129,9 @@ public class UserPersistance : IDisposable
 
 	private PersistantPlayer FetchFromDatabase(ulong playerID)
 	{
-		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
 		try
 		{
-			byte[] array = null;
-			NexusPlayer player;
-			Variable val = default(Variable);
-			if (!NexusServer.Started)
-			{
-				array = blueprints.Query<byte[], ulong>("SELECT info FROM data WHERE userid = ?", playerID);
-			}
-			else if (NexusServer.TryGetPlayer(playerID, out player) && player.TryGetVariable(NexusVariables.Blueprints, ref val) && (int)val.Type == 0)
-			{
-				array = val.GetAsBinary();
-			}
+			byte[] array = blueprints.QueryBlob<string>("SELECT info FROM data WHERE userid = ?", playerID.ToString());
 			if (array != null)
 			{
 				return PersistantPlayer.Deserialize(array);
@@ -171,19 +159,7 @@ public class UserPersistance : IDisposable
 			{
 				((IDisposable)val2)?.Dispose();
 			}
-			NexusPlayer player;
-			if (!NexusServer.Started)
-			{
-				blueprints.Execute<ulong, byte[], int>("INSERT OR REPLACE INTO data ( userid, info, updated ) VALUES ( ?, ?, ? )", playerID, array, Epoch.Current);
-			}
-			else if (!NexusServer.TryGetPlayer(playerID, out player))
-			{
-				Debug.LogError((object)$"Couldn't find NexusPlayer to save player info! {playerID}");
-			}
-			else
-			{
-				player.SetVariable(NexusVariables.Blueprints, array, false, true);
-			}
+			blueprints.Execute<string, byte[], int>("INSERT OR REPLACE INTO data ( userid, info, updated ) VALUES ( ?, ?, ? )", playerID.ToString(), array, Epoch.Current);
 		}
 		finally
 		{
@@ -210,7 +186,7 @@ public class UserPersistance : IDisposable
 			{
 				((IDisposable)val2)?.Dispose();
 			}
-			deaths.Execute<ulong, int, int, byte[]>("INSERT INTO data ( userid, born, died, info ) VALUES ( ?, ?, ?, ? )", playerID, (int)lifeStory.timeBorn, (int)lifeStory.timeDied, array);
+			deaths.Execute<string, int, int, byte[]>("INSERT INTO data ( userid, born, died, info ) VALUES ( ?, ?, ?, ? )", playerID.ToString(), (int)lifeStory.timeBorn, (int)lifeStory.timeDied, array);
 		}
 		finally
 		{
@@ -229,14 +205,14 @@ public class UserPersistance : IDisposable
 		{
 			try
 			{
-				byte[] array = deaths.Query<byte[], ulong>("SELECT info FROM data WHERE userid = ? ORDER BY died DESC LIMIT 1", playerID);
+				byte[] array = deaths.QueryBlob<string>("SELECT info FROM data WHERE userid = ? ORDER BY died DESC LIMIT 1", playerID.ToString());
 				if (array == null)
 				{
 					return null;
 				}
-				PlayerLifeStory obj = PlayerLifeStory.Deserialize(array);
-				obj.ShouldPool = false;
-				return obj;
+				PlayerLifeStory val2 = PlayerLifeStory.Deserialize(array);
+				val2.ShouldPool = false;
+				return val2;
 			}
 			catch (Exception ex)
 			{
@@ -252,7 +228,7 @@ public class UserPersistance : IDisposable
 
 	public string GetPlayerName(ulong playerID)
 	{
-		if (playerID == 0L)
+		if (playerID == 0)
 		{
 			return null;
 		}
@@ -260,7 +236,7 @@ public class UserPersistance : IDisposable
 		{
 			return value;
 		}
-		string text = identities.Query<string, ulong>("SELECT username FROM data WHERE userid = ?", playerID);
+		string text = identities.QueryString<ulong>("SELECT username FROM data WHERE userid = ?", playerID);
 		nameCache[playerID] = text;
 		return text;
 	}
@@ -269,7 +245,8 @@ public class UserPersistance : IDisposable
 	{
 		if (playerID != 0L && !string.IsNullOrEmpty(name))
 		{
-			if (string.IsNullOrEmpty(GetPlayerName(playerID)))
+			string playerName = GetPlayerName(playerID);
+			if (string.IsNullOrEmpty(playerName))
 			{
 				identities.Execute<ulong, string>("INSERT INTO data ( userid, username ) VALUES ( ?, ? )", playerID, name);
 			}
@@ -297,10 +274,10 @@ public class UserPersistance : IDisposable
 				locked = tuple.Item2;
 				return tuple.Item1;
 			}
-			int num = tokens.Query<int, ulong>("SELECT token FROM data WHERE userid = ?", playerID);
+			int num = tokens.QueryInt<ulong>("SELECT token FROM data WHERE userid = ?", playerID);
 			if (num != 0)
 			{
-				bool flag = tokens.Query<int, ulong>("SELECT locked FROM data WHERE userid = ?", playerID) != 0;
+				bool flag = tokens.QueryInt<ulong>("SELECT locked FROM data WHERE userid = ?", playerID) != 0;
 				tokenCache.Add(playerID, (num, flag));
 				locked = flag;
 				return num;
@@ -327,7 +304,7 @@ public class UserPersistance : IDisposable
 		try
 		{
 			tokenCache.Remove(playerID);
-			bool flag = tokens.Query<int, ulong>("SELECT locked FROM data WHERE userid = ?", playerID) != 0;
+			bool flag = tokens.QueryInt<ulong>("SELECT locked FROM data WHERE userid = ?", playerID) != 0;
 			int num = GenerateAppToken();
 			tokens.Execute<ulong, int, bool>("INSERT OR REPLACE INTO data ( userid, token, locked ) VALUES ( ?, ?, ? )", playerID, num, flag);
 			tokenCache.Add(playerID, (num, false));
@@ -366,11 +343,11 @@ public class UserPersistance : IDisposable
 
 	public byte[] GetPlayerState(ulong playerID)
 	{
-		if (playerID == 0L)
+		if (playerID == 0)
 		{
 			return null;
 		}
-		return playerState.Query<byte[], ulong>("SELECT state FROM data WHERE userid = ?", playerID);
+		return playerState.QueryBlob<ulong>("SELECT state FROM data WHERE userid = ?", playerID);
 	}
 
 	public void SetPlayerState(ulong playerID, byte[] state)
@@ -399,7 +376,7 @@ public class UserPersistance : IDisposable
 
 	public void ResetPlayerState(ulong playerID)
 	{
-		if (playerID != 0L)
+		if (playerID != 0)
 		{
 			playerState.Execute<ulong>("DELETE FROM data WHERE userid = ?", playerID);
 		}

@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class RandomDynamicPrefab : MonoBehaviour, IClientComponent, ILOD
 {
-	public uint Seed;
+	public uint Seed = 0u;
 
 	public float Distance = 100f;
 

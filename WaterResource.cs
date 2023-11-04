@@ -4,13 +4,13 @@ public class WaterResource
 {
 	public static ItemDefinition GetAtPoint(Vector3 pos)
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
 		return ItemManager.FindItemDefinition(IsFreshWater(pos) ? "water" : "water.salt");
 	}
 
 	public static bool IsFreshWater(Vector3 pos)
 	{
-		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)TerrainMeta.TopologyMap == (Object)null)
 		{
 			return false;

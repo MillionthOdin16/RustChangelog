@@ -33,8 +33,8 @@ public class Toolgun : Hammer
 
 	public override void DoAttackShared(HitInfo info)
 	{
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
 		if (base.isServer)
 		{
 			ClientRPC<Vector3, Vector3>(null, "EffectSpawn", info.HitPositionWorld, info.HitNormalWorld);

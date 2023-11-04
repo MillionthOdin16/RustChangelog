@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using ConVar;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 public class Poolable : MonoBehaviour, IClientComponent, IPrefabPostProcess
 {
@@ -155,6 +156,7 @@ public class Poolable : MonoBehaviour, IClientComponent, IPrefabPostProcess
 
 	public void SetBehaviourEnabled(bool state)
 	{
+		Profiler.BeginSample(state ? "GameObject.BehaviourEnable" : "GameObject.BehaviourDisable");
 		try
 		{
 			if (!state)
@@ -167,33 +169,38 @@ public class Poolable : MonoBehaviour, IClientComponent, IPrefabPostProcess
 				}
 				for (int j = 0; j < particles.Length; j++)
 				{
-					ParticleSystem obj = particles[j];
-					obj.Stop();
-					obj.Clear();
+					ParticleSystem val2 = particles[j];
+					val2.Stop();
+					val2.Clear();
 				}
-				return;
 			}
-			for (int k = 0; k < particles.Length; k++)
+			else
 			{
-				ParticleSystem val2 = particles[k];
-				if (val2.playOnAwake)
+				for (int k = 0; k < particles.Length; k++)
 				{
-					val2.Play();
+					ParticleSystem val3 = particles[k];
+					if (val3.playOnAwake)
+					{
+						val3.Play();
+					}
 				}
-			}
-			for (int l = 0; l < behaviours.Length; l++)
-			{
-				behaviours[l].enabled = behaviourStates[l];
+				for (int l = 0; l < behaviours.Length; l++)
+				{
+					Behaviour val4 = behaviours[l];
+					val4.enabled = behaviourStates[l];
+				}
 			}
 		}
 		catch (Exception ex)
 		{
 			Debug.LogError((object)("Pooling error: " + ((Object)this).name + " (" + ex.Message + ")"));
 		}
+		Profiler.EndSample();
 	}
 
 	public void SetComponentEnabled(bool state)
 	{
+		Profiler.BeginSample(state ? "GameObject.ComponentEnable" : "GameObject.ComponentDisable");
 		try
 		{
 			if (!state)
@@ -228,21 +235,24 @@ public class Poolable : MonoBehaviour, IClientComponent, IPrefabPostProcess
 			{
 				for (int m = 0; m < renderers.Length; m++)
 				{
-					renderers[m].enabled = rendererStates[m];
+					Renderer val5 = renderers[m];
+					val5.enabled = rendererStates[m];
 				}
 				for (int n = 0; n < lodgroups.Length; n++)
 				{
-					lodgroups[n].enabled = lodgroupStates[n];
+					LODGroup val6 = lodgroups[n];
+					val6.enabled = lodgroupStates[n];
 				}
 				for (int num = 0; num < colliders.Length; num++)
 				{
-					colliders[num].enabled = colliderStates[num];
+					Collider val7 = colliders[num];
+					val7.enabled = colliderStates[num];
 				}
 				for (int num2 = 0; num2 < rigidbodies.Length; num2++)
 				{
-					Rigidbody obj = rigidbodies[num2];
-					obj.isKinematic = rigidbodyStates[num2];
-					obj.detectCollisions = true;
+					Rigidbody val8 = rigidbodies[num2];
+					val8.isKinematic = rigidbodyStates[num2];
+					val8.detectCollisions = true;
 				}
 			}
 		}
@@ -250,5 +260,6 @@ public class Poolable : MonoBehaviour, IClientComponent, IPrefabPostProcess
 		{
 			Debug.LogError((object)("Pooling error: " + ((Object)this).name + " (" + ex.Message + ")"));
 		}
+		Profiler.EndSample();
 	}
 }

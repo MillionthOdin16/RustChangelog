@@ -26,7 +26,7 @@ public class PlayerModelHair : MonoBehaviour
 
 	public HairType type;
 
-	private Dictionary<Renderer, RendererMaterials> materials;
+	private Dictionary<Renderer, RendererMaterials> materials = null;
 
 	public Dictionary<Renderer, RendererMaterials> Materials => materials;
 
@@ -95,7 +95,8 @@ public class PlayerModelHair : MonoBehaviour
 
 	public static float GetRandomHairType(float hairNum, int typeIndex)
 	{
-		Random.InitState(Mathf.FloorToInt(hairNum * 100000f) + typeIndex);
+		int num = Mathf.FloorToInt(hairNum * 100000f);
+		Random.InitState(num + typeIndex);
 		return Random.Range(0f, 1f);
 	}
 }

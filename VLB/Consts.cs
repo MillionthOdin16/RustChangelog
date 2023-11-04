@@ -121,17 +121,7 @@ public static class Consts
 
 	public const int ConfigSharedMeshSegments = 5;
 
-	public static HideFlags ProceduralObjectsHideFlags
-	{
-		get
-		{
-			if (ProceduralObjectsVisibleInEditor)
-			{
-				return (HideFlags)60;
-			}
-			return (HideFlags)61;
-		}
-	}
+	public static HideFlags ProceduralObjectsHideFlags => (HideFlags)(ProceduralObjectsVisibleInEditor ? 60 : 61);
 
 	static Consts()
 	{

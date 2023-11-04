@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 public class SolarPanel : IOEntity
 {
@@ -36,15 +37,16 @@ public class SolarPanel : IOEntity
 
 	public void SunUpdate()
 	{
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
 		int num = currentEnergy;
+		Profiler.BeginSample("SolarPanel.SunUpdate");
 		if (TOD_Sky.Instance.IsNight)
 		{
 			num = 0;
@@ -60,20 +62,17 @@ public class SolarPanel : IOEntity
 			}
 			num = Mathf.FloorToInt((float)maximalPowerOutput * num3 * base.healthFraction);
 		}
-		bool num4 = currentEnergy != num;
+		bool flag = currentEnergy != num;
 		currentEnergy = num;
-		if (num4)
+		if (flag)
 		{
 			MarkDirty();
 		}
+		Profiler.EndSample();
 	}
 
 	public override int GetPassthroughAmount(int outputSlot = 0)
 	{
-		if (outputSlot != 0)
-		{
-			return 0;
-		}
-		return currentEnergy;
+		return (outputSlot == 0) ? currentEnergy : 0;
 	}
 }

@@ -6,9 +6,9 @@ public class ItemModCycle : ItemMod
 
 	public float timeBetweenCycles = 1f;
 
-	public float timerStart;
+	public float timerStart = 0f;
 
-	public bool onlyAdvanceTimerWhenPass;
+	public bool onlyAdvanceTimerWhenPass = false;
 
 	public override void OnItemCreated(Item itemcreated)
 	{
@@ -33,9 +33,9 @@ public class ItemModCycle : ItemMod
 	private bool CanCycle(Item item)
 	{
 		ItemMod[] array = actions;
-		for (int i = 0; i < array.Length; i++)
+		foreach (ItemMod itemMod in array)
 		{
-			if (!array[i].CanDoAction(item, item.GetOwnerPlayer()))
+			if (!itemMod.CanDoAction(item, item.GetOwnerPlayer()))
 			{
 				return false;
 			}
@@ -47,9 +47,9 @@ public class ItemModCycle : ItemMod
 	{
 		BasePlayer ownerPlayer = item.GetOwnerPlayer();
 		ItemMod[] array = actions;
-		for (int i = 0; i < array.Length; i++)
+		foreach (ItemMod itemMod in array)
 		{
-			array[i].DoAction(item, ownerPlayer);
+			itemMod.DoAction(item, ownerPlayer);
 		}
 	}
 

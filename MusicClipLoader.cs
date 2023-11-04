@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Facepunch;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 public class MusicClipLoader
 {
@@ -21,19 +22,23 @@ public class MusicClipLoader
 
 	public void Update()
 	{
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0024: Invalid comparison between Unknown and I4
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002d: Invalid comparison between Unknown and I4
-		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006f: Invalid comparison between Unknown and I4
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Invalid comparison between Unknown and I4
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003a: Invalid comparison between Unknown and I4
+		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b0: Invalid comparison between Unknown and I4
+		Profiler.BeginSample("MusicClipLoader.Update");
 		for (int num = clipsToLoad.Count - 1; num >= 0; num--)
 		{
 			AudioClip val = clipsToLoad[num];
 			if ((int)val.loadState != 2 && (int)val.loadState != 1)
 			{
+				Profiler.BeginSample("AudioClip.LoadAudioData");
 				val.LoadAudioData();
+				Profiler.EndSample();
 				clipsToLoad.RemoveAt(num);
+				Profiler.EndSample();
 				return;
 			}
 		}
@@ -42,15 +47,20 @@ public class MusicClipLoader
 			AudioClip val2 = clipsToUnload[num2];
 			if ((int)val2.loadState == 2)
 			{
+				Profiler.BeginSample("AudioClip.UnloadAudioData");
 				val2.UnloadAudioData();
+				Profiler.EndSample();
 				clipsToUnload.RemoveAt(num2);
-				break;
+				Profiler.EndSample();
+				return;
 			}
 		}
+		Profiler.EndSample();
 	}
 
 	public void Refresh()
 	{
+		Profiler.BeginSample("MusicClipLoader.Refresh");
 		for (int i = 0; i < SingletonComponent<MusicManager>.Instance.activeMusicClips.Count; i++)
 		{
 			MusicTheme.PositionedClip positionedClip = SingletonComponent<MusicManager>.Instance.activeMusicClips[i];
@@ -81,6 +91,7 @@ public class MusicClipLoader
 				Pool.Free<LoadedAudioClip>(ref loadedAudioClip2);
 			}
 		}
+		Profiler.EndSample();
 	}
 
 	private LoadedAudioClip FindLoadedClip(AudioClip clip)

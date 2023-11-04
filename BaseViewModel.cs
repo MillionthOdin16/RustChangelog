@@ -15,7 +15,7 @@ public class BaseViewModel : MonoBehaviour
 
 	public GameObject[] hideSightMeshes;
 
-	public bool isGestureViewModel;
+	public bool isGestureViewModel = false;
 
 	public Transform MuzzlePoint;
 

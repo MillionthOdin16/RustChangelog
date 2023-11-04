@@ -13,7 +13,7 @@ public class FuelGenerator : ContainerIOEntity
 
 	protected float fuelTickRate = 3f;
 
-	private float pendingFuel;
+	private float pendingFuel = 0f;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -25,7 +25,7 @@ public class FuelGenerator : ContainerIOEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_EngineSwitch "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_EngineSwitch "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_EngineSwitch", 0);
 				try
@@ -44,7 +44,7 @@ public class FuelGenerator : ContainerIOEntity
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -56,7 +56,7 @@ public class FuelGenerator : ContainerIOEntity
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -119,11 +119,7 @@ public class FuelGenerator : ContainerIOEntity
 
 	public override int CalculateCurrentEnergy(int inputAmount, int inputSlot)
 	{
-		if (!IsOn())
-		{
-			return 0;
-		}
-		return outputEnergy;
+		return IsOn() ? outputEnergy : 0;
 	}
 
 	public void UpdateCurrentEnergy()
@@ -133,17 +129,14 @@ public class FuelGenerator : ContainerIOEntity
 
 	public override int GetPassthroughAmount(int outputSlot = 0)
 	{
-		if (outputSlot != 0)
-		{
-			return 0;
-		}
-		return currentEnergy;
+		return (outputSlot == 0) ? currentEnergy : 0;
 	}
 
 	[RPC_Server]
 	[RPC_Server.IsVisible(3f)]
 	public void RPC_EngineSwitch(RPCMessage msg)
 	{
+		BasePlayer player = msg.player;
 		bool generatorState = msg.read.Bit();
 		SetGeneratorState(generatorState);
 	}

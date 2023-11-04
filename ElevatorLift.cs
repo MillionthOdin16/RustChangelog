@@ -6,17 +6,17 @@ using UnityEngine.Assertions;
 
 public class ElevatorLift : BaseCombatEntity
 {
-	public GameObject DescendingHurtTrigger;
+	public GameObject DescendingHurtTrigger = null;
 
-	public GameObject MovementCollider;
+	public GameObject MovementCollider = null;
 
-	public Transform UpButtonPoint;
+	public Transform UpButtonPoint = null;
 
-	public Transform DownButtonPoint;
+	public Transform DownButtonPoint = null;
 
-	public TriggerNotify VehicleTrigger;
+	public TriggerNotify VehicleTrigger = null;
 
-	public GameObjectRef LiftArrivalScreenBounce;
+	public GameObjectRef LiftArrivalScreenBounce = null;
 
 	public SoundDefinition liftMovementLoopDef;
 
@@ -26,7 +26,7 @@ public class ElevatorLift : BaseCombatEntity
 
 	public SoundDefinition liftMovementAccentSoundDef;
 
-	public GameObjectRef liftButtonPressedEffect;
+	public GameObjectRef liftButtonPressedEffect = null;
 
 	public float movementAccentMinInterval = 0.75f;
 
@@ -54,7 +54,7 @@ public class ElevatorLift : BaseCombatEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_RaiseLowerFloor "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_RaiseLowerFloor "));
 				}
 				TimeWarning val2 = TimeWarning.New("Server_RaiseLowerFloor", 0);
 				try
@@ -73,7 +73,7 @@ public class ElevatorLift : BaseCombatEntity
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -85,7 +85,7 @@ public class ElevatorLift : BaseCombatEntity
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -126,8 +126,8 @@ public class ElevatorLift : BaseCombatEntity
 	[RPC_Server.IsVisible(3f)]
 	public void Server_RaiseLowerFloor(RPCMessage msg)
 	{
-		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
 		if (CanMove())
 		{
 			Elevator.Direction direction = (Elevator.Direction)msg.read.Int32();
@@ -180,10 +180,11 @@ public class ElevatorLift : BaseCombatEntity
 		{
 			foreach (BaseEntity entityContent in VehicleTrigger.entityContents)
 			{
-				if (!(entityContent is Drone))
+				if (entityContent is Drone)
 				{
-					return false;
+					continue;
 				}
+				return false;
 			}
 		}
 		return true;

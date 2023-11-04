@@ -17,15 +17,15 @@ public class StorageContainer : DecayEntity, IItemContainerEntity, IIdealSlotEnt
 
 	public bool dropsLoot = true;
 
-	public float dropLootDestroyPercent;
+	public float dropLootDestroyPercent = 0f;
 
-	public bool dropFloats;
+	public bool dropFloats = false;
 
 	public bool isLootable = true;
 
 	public bool isLockable = true;
 
-	public bool isMonitorable;
+	public bool isMonitorable = false;
 
 	public string panelName = "generic";
 
@@ -37,11 +37,11 @@ public class StorageContainer : DecayEntity, IItemContainerEntity, IIdealSlotEnt
 
 	public ItemDefinition allowedItem2;
 
-	public int maxStackSize;
+	public int maxStackSize = 0;
 
-	public bool needsBuildingPrivilegeToUse;
+	public bool needsBuildingPrivilegeToUse = false;
 
-	public bool mustBeMountedToUse;
+	public bool mustBeMountedToUse = false;
 
 	public SoundDefinition openSound;
 
@@ -54,7 +54,7 @@ public class StorageContainer : DecayEntity, IItemContainerEntity, IIdealSlotEnt
 
 	public ItemCategory onlyAcceptCategory = ItemCategory.All;
 
-	public bool onlyOneUser;
+	public bool onlyOneUser = false;
 
 	public Phrase LootPanelTitle => panelTitle;
 
@@ -80,7 +80,7 @@ public class StorageContainer : DecayEntity, IItemContainerEntity, IIdealSlotEnt
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_OpenLoot "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_OpenLoot "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_OpenLoot", 0);
 				try
@@ -99,7 +99,7 @@ public class StorageContainer : DecayEntity, IItemContainerEntity, IIdealSlotEnt
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -111,7 +111,7 @@ public class StorageContainer : DecayEntity, IItemContainerEntity, IIdealSlotEnt
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -146,14 +146,14 @@ public class StorageContainer : DecayEntity, IItemContainerEntity, IIdealSlotEnt
 
 	public virtual void OnDrawGizmos()
 	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
 		Gizmos.matrix = ((Component)this).transform.localToWorldMatrix;
 		Gizmos.color = Color.yellow;
 		Gizmos.DrawCube(dropPosition, Vector3.one * 0.1f);
@@ -197,17 +197,9 @@ public class StorageContainer : DecayEntity, IItemContainerEntity, IIdealSlotEnt
 		bool flag = (Object)(object)GetSlot(Slot.Lock) != (Object)null;
 		if (base.isClient)
 		{
-			if (base.CanPickup(player))
-			{
-				return !flag;
-			}
-			return false;
+			return base.CanPickup(player) && !flag;
 		}
-		if ((!pickup.requireEmptyInv || inventory == null || inventory.itemList.Count == 0) && base.CanPickup(player))
-		{
-			return !flag;
-		}
-		return false;
+		return (!pickup.requireEmptyInv || inventory == null || inventory.itemList.Count == 0) && base.CanPickup(player) && !flag;
 	}
 
 	public override void OnPickedUp(Item createdItem, BasePlayer player)
@@ -363,7 +355,7 @@ public class StorageContainer : DecayEntity, IItemContainerEntity, IIdealSlotEnt
 
 	public virtual bool PlayerOpenLoot(BasePlayer player, string panelToOpen = "", bool doPositionChecks = true)
 	{
-		if (IsLocked() || IsTransferring())
+		if (IsLocked())
 		{
 			player.ShowToast(GameTip.Styles.Red_Normal, LockedMessage);
 			return false;
@@ -429,9 +421,9 @@ public class StorageContainer : DecayEntity, IItemContainerEntity, IIdealSlotEnt
 
 	public static void DropItems(IItemContainerEntity containerEntity, BaseEntity initiator = null)
 	{
-		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ac: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b7: Unknown result type (might be due to invalid IL or missing references)
 		ItemContainer itemContainer = containerEntity.inventory;
 		if (itemContainer == null || itemContainer.itemList == null || itemContainer.itemList.Count == 0 || !containerEntity.DropsLoot)
 		{
@@ -444,11 +436,12 @@ public class StorageContainer : DecayEntity, IItemContainerEntity, IIdealSlotEnt
 				containerEntity.DropBonusItems(initiator, itemContainer);
 			}
 			DropUtil.DropItems(itemContainer, containerEntity.GetDropPosition());
+			return;
 		}
-		else
+		string prefab = (containerEntity.DropFloats ? "assets/prefabs/misc/item drop/item_drop_buoyant.prefab" : "assets/prefabs/misc/item drop/item_drop.prefab");
+		DroppedItemContainer droppedItemContainer = itemContainer.Drop(prefab, containerEntity.GetDropPosition(), containerEntity.Transform.rotation, containerEntity.DestroyLootPercent);
+		if (!((Object)(object)droppedItemContainer != (Object)null))
 		{
-			string prefab = (containerEntity.DropFloats ? "assets/prefabs/misc/item drop/item_drop_buoyant.prefab" : "assets/prefabs/misc/item drop/item_drop.prefab");
-			_ = (Object)(object)itemContainer.Drop(prefab, containerEntity.GetDropPosition(), containerEntity.Transform.rotation, containerEntity.DestroyLootPercent) != (Object)null;
 		}
 	}
 
@@ -458,22 +451,26 @@ public class StorageContainer : DecayEntity, IItemContainerEntity, IIdealSlotEnt
 
 	public override Vector3 GetDropPosition()
 	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
 		Matrix4x4 localToWorldMatrix = ((Component)this).transform.localToWorldMatrix;
 		return ((Matrix4x4)(ref localToWorldMatrix)).MultiplyPoint(dropPosition);
 	}
 
 	public override Vector3 GetDropVelocity()
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 inheritedDropVelocity = GetInheritedDropVelocity();
 		Matrix4x4 localToWorldMatrix = ((Component)this).transform.localToWorldMatrix;
 		return inheritedDropVelocity + ((Matrix4x4)(ref localToWorldMatrix)).MultiplyVector(dropPosition);
@@ -508,8 +505,10 @@ public class StorageContainer : DecayEntity, IItemContainerEntity, IIdealSlotEnt
 
 	public virtual ItemContainerId GetIdealContainer(BasePlayer player, Item item, bool altMove)
 	{
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
 		return default(ItemContainerId);
 	}
 
@@ -532,11 +531,7 @@ public class StorageContainer : DecayEntity, IItemContainerEntity, IIdealSlotEnt
 		{
 			return true;
 		}
-		if (onlyOneUser)
-		{
-			return !IsOpen();
-		}
-		return true;
+		return !onlyOneUser || !IsOpen();
 	}
 
 	protected bool HasAttachedStorageAdaptor()

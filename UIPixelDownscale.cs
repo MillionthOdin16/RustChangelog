@@ -20,8 +20,8 @@ public class UIPixelDownscale : MonoBehaviour
 
 	private void Update()
 	{
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
 		if ((float)Screen.width < CanvasScaler.referenceResolution.x || (float)Screen.height < CanvasScaler.referenceResolution.y)
 		{
 			CanvasScaler.uiScaleMode = (ScaleMode)0;

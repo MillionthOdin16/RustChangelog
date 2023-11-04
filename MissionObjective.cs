@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Profiling;
 
 public class MissionObjective : ScriptableObject
 {
@@ -19,16 +20,15 @@ public class MissionObjective : ScriptableObject
 
 	public bool CanProgress(int index, BaseMission.MissionInstance instance)
 	{
-		if (instance.GetMission().objectives[index].onlyProgressIfStarted)
-		{
-			return IsStarted(index, instance);
-		}
-		return true;
+		BaseMission.MissionObjectiveEntry missionObjectiveEntry = instance.GetMission().objectives[index];
+		return !missionObjectiveEntry.onlyProgressIfStarted || IsStarted(index, instance);
 	}
 
 	public bool ShouldObjectiveStart(int index, BaseMission.MissionInstance instance)
 	{
-		int[] startAfterCompletedObjectives = instance.GetMission().objectives[index].startAfterCompletedObjectives;
+		BaseMission mission = instance.GetMission();
+		BaseMission.MissionObjectiveEntry missionObjectiveEntry = mission.objectives[index];
+		int[] startAfterCompletedObjectives = missionObjectiveEntry.startAfterCompletedObjectives;
 		foreach (int num in startAfterCompletedObjectives)
 		{
 			if (!instance.objectiveStatuses[num].completed && !instance.objectiveStatuses[num].failed)
@@ -41,11 +41,7 @@ public class MissionObjective : ScriptableObject
 
 	public bool IsCompleted(int index, BaseMission.MissionInstance instance)
 	{
-		if (!instance.objectiveStatuses[index].completed)
-		{
-			return instance.objectiveStatuses[index].failed;
-		}
-		return true;
+		return instance.objectiveStatuses[index].completed || instance.objectiveStatuses[index].failed;
 	}
 
 	public virtual bool ShouldThink(int index, BaseMission.MissionInstance instance)
@@ -65,9 +61,11 @@ public class MissionObjective : ScriptableObject
 
 	public virtual void Think(int index, BaseMission.MissionInstance instance, BasePlayer assignee, float delta)
 	{
+		Profiler.BeginSample("MissionObjective.Think");
 		if (ShouldObjectiveStart(index, instance) && !IsStarted(index, instance))
 		{
 			ObjectiveStarted(assignee, index, instance);
 		}
+		Profiler.EndSample();
 	}
 }

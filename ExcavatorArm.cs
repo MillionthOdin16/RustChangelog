@@ -47,17 +47,17 @@ public class ExcavatorArm : BaseEntity
 
 	public Phrase excavatorPhrase;
 
-	private float movedAmount;
+	private float movedAmount = 0f;
 
-	private float currentTurnThrottle;
+	private float currentTurnThrottle = 0f;
 
-	private float lastMoveYaw;
+	private float lastMoveYaw = 0f;
 
-	private float excavatorStartTime;
+	private float excavatorStartTime = 0f;
 
-	private float nextNotificationTime;
+	private float nextNotificationTime = 0f;
 
-	private int resourceMiningIndex;
+	private int resourceMiningIndex = 0;
 
 	protected override float PositionTickRate => 0.05f;
 
@@ -71,7 +71,7 @@ public class ExcavatorArm : BaseEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_SetResourceTarget "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_SetResourceTarget "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_SetResourceTarget", 0);
 				try
@@ -90,7 +90,7 @@ public class ExcavatorArm : BaseEntity
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -102,7 +102,7 @@ public class ExcavatorArm : BaseEntity
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -122,12 +122,12 @@ public class ExcavatorArm : BaseEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_StopMining "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_StopMining "));
 				}
-				TimeWarning val2 = TimeWarning.New("RPC_StopMining", 0);
+				TimeWarning val5 = TimeWarning.New("RPC_StopMining", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					TimeWarning val6 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.MaxDistance.Test(2882020740u, "RPC_StopMining", this, player, 3f))
@@ -137,11 +137,11 @@ public class ExcavatorArm : BaseEntity
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val6)?.Dispose();
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val7 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -153,7 +153,7 @@ public class ExcavatorArm : BaseEntity
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val7)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -164,7 +164,7 @@ public class ExcavatorArm : BaseEntity
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val5)?.Dispose();
 				}
 				return true;
 			}
@@ -193,7 +193,7 @@ public class ExcavatorArm : BaseEntity
 
 	public void FixedUpdate()
 	{
-		//IL_00d9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f2: Unknown result type (might be due to invalid IL or missing references)
 		if (!base.isClient)
 		{
 			bool flag = IsMining() && IsPowered();
@@ -217,8 +217,8 @@ public class ExcavatorArm : BaseEntity
 
 	public void BeginMining()
 	{
-		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
 		if (!IsPowered())
 		{
 			return;
@@ -263,10 +263,10 @@ public class ExcavatorArm : BaseEntity
 
 	public void ProduceResources()
 	{
-		//IL_00ec: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0100: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0104: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0112: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0118: Unknown result type (might be due to invalid IL or missing references)
 		float num = resourceProductionTickRate / timeForFullResources;
 		float num2 = resourcesToMine[resourceMiningIndex].amount * num;
 		pendingResources[resourceMiningIndex].amount += num2;
@@ -381,7 +381,7 @@ public class ExcavatorArm : BaseEntity
 
 	public void Init()
 	{
-		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
 		pendingResources = new ItemAmount[resourcesToMine.Length];
 		for (int i = 0; i < resourcesToMine.Length; i++)
 		{

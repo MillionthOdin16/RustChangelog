@@ -100,5 +100,5 @@ public class WaterOverlay : MonoBehaviour, IClientComponent
 
 	public EffectParams cinematicParams = EffectParams.DefaultCinematic;
 
-	public Material[] UnderwaterFogMaterials;
+	public Material[] UnderwaterFogMaterials = null;
 }

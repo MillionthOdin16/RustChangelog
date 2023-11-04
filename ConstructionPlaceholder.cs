@@ -5,53 +5,44 @@ using UnityEngine.Rendering;
 [ExecuteInEditMode]
 public class ConstructionPlaceholder : PrefabAttribute, IPrefabPreProcess
 {
-	public Mesh mesh;
+	public Mesh mesh = null;
 
-	public Material material;
+	public Material material = null;
 
-	public bool renderer;
+	public bool renderer = false;
 
-	public bool collider;
-
-	[NonSerialized]
-	public MeshRenderer MeshRenderer;
-
-	[NonSerialized]
-	public MeshFilter MeshFilter;
-
-	[NonSerialized]
-	public MeshCollider MeshCollider;
+	public bool collider = false;
 
 	protected override void AttributeSetup(GameObject rootObj, string name, bool serverside, bool clientside, bool bundling)
 	{
 		base.AttributeSetup(rootObj, name, serverside, clientside, bundling);
-		if (!clientside || !((Behaviour)this).enabled)
+		if (!clientside)
 		{
 			return;
 		}
 		if (renderer)
 		{
-			MeshFilter = rootObj.GetComponent<MeshFilter>();
-			MeshRenderer = rootObj.GetComponent<MeshRenderer>();
-			if (!Object.op_Implicit((Object)(object)MeshFilter))
+			MeshFilter component = rootObj.GetComponent<MeshFilter>();
+			MeshRenderer component2 = rootObj.GetComponent<MeshRenderer>();
+			if (!Object.op_Implicit((Object)(object)component))
 			{
-				MeshFilter = rootObj.AddComponent<MeshFilter>();
-				MeshFilter.sharedMesh = mesh;
+				component = rootObj.AddComponent<MeshFilter>();
+				component.sharedMesh = mesh;
 			}
-			if (!Object.op_Implicit((Object)(object)MeshRenderer))
+			if (!Object.op_Implicit((Object)(object)component2))
 			{
-				MeshRenderer = rootObj.AddComponent<MeshRenderer>();
-				((Renderer)MeshRenderer).sharedMaterial = material;
-				((Renderer)MeshRenderer).shadowCastingMode = (ShadowCastingMode)0;
+				component2 = rootObj.AddComponent<MeshRenderer>();
+				((Renderer)component2).sharedMaterial = material;
+				((Renderer)component2).shadowCastingMode = (ShadowCastingMode)0;
 			}
 		}
 		if (collider)
 		{
-			MeshCollider = rootObj.GetComponent<MeshCollider>();
-			if (!Object.op_Implicit((Object)(object)MeshCollider))
+			MeshCollider component3 = rootObj.GetComponent<MeshCollider>();
+			if (!Object.op_Implicit((Object)(object)component3))
 			{
-				MeshCollider = rootObj.AddComponent<MeshCollider>();
-				MeshCollider.sharedMesh = mesh;
+				component3 = rootObj.AddComponent<MeshCollider>();
+				component3.sharedMesh = mesh;
 			}
 		}
 	}
