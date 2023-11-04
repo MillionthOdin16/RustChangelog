@@ -29,7 +29,7 @@ public abstract class CardGameController : IDisposable
 
 	public const int IDLE_KICK_SECONDS = 240;
 
-	private CardList localPlayerCards;
+	private readonly CardList localPlayerCards;
 
 	protected int activePlayerIndex;
 
@@ -384,7 +384,7 @@ public abstract class CardGameController : IDisposable
 
 	protected abstract int GetAvailableInputsForPlayer(CardPlayerData playerData);
 
-	protected abstract void HandlePlayerLeavingDuringTheirTurn(CardPlayerData pData);
+	protected abstract void HandlePlayerLeavingTable(CardPlayerData pData);
 
 	protected abstract void SubEndRound();
 
@@ -462,16 +462,9 @@ public abstract class CardGameController : IDisposable
 
 	public void LeaveTable(CardPlayerData pData)
 	{
-		if (HasActiveRound && TryGetActivePlayer(out var activePlayer))
+		if (HasActiveRound)
 		{
-			if (pData == activePlayer)
-			{
-				HandlePlayerLeavingDuringTheirTurn(activePlayer);
-			}
-			else if (pData.HasUserInCurrentRound && pData.mountIndex < activePlayer.mountIndex && activePlayerIndex > 0)
-			{
-				activePlayerIndex--;
-			}
+			HandlePlayerLeavingTable(pData);
 		}
 		pData.ClearAllData();
 		if (HasActiveRound && NumPlayersInCurrentRound() < MinPlayers)

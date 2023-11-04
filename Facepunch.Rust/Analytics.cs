@@ -679,14 +679,14 @@ public static class Analytics
 
 		private static void TryLogEntityKilled(BaseNetworkable entity)
 		{
-			//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+			//IL_001e: Unknown result type (might be due to invalid IL or missing references)
 			if (!Stats)
 			{
 				return;
 			}
 			try
 			{
-				if (trackedSpawnedIds.Contains(entity.net.ID))
+				if (entity.IsValid() && trackedSpawnedIds.Contains(entity.net.ID))
 				{
 					EventRecord.New("entity_killed").AddField("entity", Object.op_Implicit((Object)(object)entity)).Submit();
 				}
