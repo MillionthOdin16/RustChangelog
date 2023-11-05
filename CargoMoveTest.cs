@@ -5,9 +5,9 @@ public class CargoMoveTest : FacepunchBehaviour
 {
 	public int targetNodeIndex = -1;
 
-	private float currentThrottle = 0f;
+	private float currentThrottle;
 
-	private float turnScale = 0f;
+	private float turnScale;
 
 	private void Awake()
 	{
@@ -26,51 +26,47 @@ public class CargoMoveTest : FacepunchBehaviour
 
 	public void UpdateMovement()
 	{
-		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0109: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0156: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0160: Unknown result type (might be due to invalid IL or missing references)
-		//IL_016a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0175: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_018b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0190: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0129: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0134: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0148: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0153: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0158: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0168: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016d: Unknown result type (might be due to invalid IL or missing references)
 		if (TerrainMeta.Path.OceanPatrolFar == null || TerrainMeta.Path.OceanPatrolFar.Count == 0 || targetNodeIndex == -1)
 		{
 			return;
 		}
 		Vector3 val = TerrainMeta.Path.OceanPatrolFar[targetNodeIndex];
-		Vector3 val2 = val;
 		float num = 0f;
-		Vector3 val3 = val2 - ((Component)this).transform.position;
-		Vector3 normalized = ((Vector3)(ref val3)).normalized;
+		Vector3 val2 = val - ((Component)this).transform.position;
+		Vector3 normalized = ((Vector3)(ref val2)).normalized;
 		float num2 = Vector3.Dot(((Component)this).transform.forward, normalized);
-		float num3 = Mathf.InverseLerp(0.5f, 1f, num2);
-		num = num3;
-		float num4 = Vector3.Dot(((Component)this).transform.right, normalized);
-		float num5 = 5f;
-		float num6 = Mathf.InverseLerp(0.05f, 0.5f, Mathf.Abs(num4));
-		turnScale = Mathf.Lerp(turnScale, num6, Time.deltaTime * 0.2f);
-		float num7 = ((!(num4 < 0f)) ? 1 : (-1));
-		((Component)this).transform.Rotate(Vector3.up, num5 * Time.deltaTime * turnScale * num7, (Space)0);
+		num = Mathf.InverseLerp(0.5f, 1f, num2);
+		float num3 = Vector3.Dot(((Component)this).transform.right, normalized);
+		float num4 = 5f;
+		float num5 = Mathf.InverseLerp(0.05f, 0.5f, Mathf.Abs(num3));
+		turnScale = Mathf.Lerp(turnScale, num5, Time.deltaTime * 0.2f);
+		float num6 = ((!(num3 < 0f)) ? 1 : (-1));
+		((Component)this).transform.Rotate(Vector3.up, num4 * Time.deltaTime * turnScale * num6, (Space)0);
 		currentThrottle = Mathf.Lerp(currentThrottle, num, Time.deltaTime * 0.2f);
 		Transform transform = ((Component)this).transform;
 		transform.position += ((Component)this).transform.forward * 5f * Time.deltaTime * currentThrottle;
-		if (Vector3.Distance(((Component)this).transform.position, val2) < 60f)
+		if (Vector3.Distance(((Component)this).transform.position, val) < 60f)
 		{
 			targetNodeIndex++;
 			if (targetNodeIndex >= TerrainMeta.Path.OceanPatrolFar.Count)
@@ -82,10 +78,10 @@ public class CargoMoveTest : FacepunchBehaviour
 
 	public int GetClosestNodeToUs()
 	{
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
 		int result = 0;
 		float num = float.PositiveInfinity;
 		for (int i = 0; i < TerrainMeta.Path.OceanPatrolFar.Count; i++)
@@ -103,17 +99,15 @@ public class CargoMoveTest : FacepunchBehaviour
 
 	public void OnDrawGizmosSelected()
 	{
-		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
 		if (TerrainMeta.Path.OceanPatrolFar != null)
 		{
 			Gizmos.color = Color.red;

@@ -2,7 +2,6 @@ using System;
 using Facepunch;
 using ProtoBuf;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 public class ElectricWindmill : IOEntity
 {
@@ -16,7 +15,7 @@ public class ElectricWindmill : IOEntity
 
 	public Transform wooshOrigin;
 
-	public float targetSpeed = 0f;
+	public float targetSpeed;
 
 	private float serverWindSpeed;
 
@@ -32,10 +31,10 @@ public class ElectricWindmill : IOEntity
 
 	public float GetWindSpeedScale()
 	{
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
 		float num = Time.time / 600f;
 		float num2 = ((Component)this).transform.position.x / 512f;
 		float num3 = ((Component)this).transform.position.z / 512f;
@@ -46,8 +45,7 @@ public class ElectricWindmill : IOEntity
 		{
 			num5 = 0f;
 		}
-		float num6 = Mathf.InverseLerp(0f, 50f, num5);
-		return Mathf.Clamp01(num6 * 0.5f + num4);
+		return Mathf.Clamp01(Mathf.InverseLerp(0f, 50f, num5) * 0.5f + num4);
 	}
 
 	public override void Load(LoadInfo info)
@@ -77,21 +75,21 @@ public class ElectricWindmill : IOEntity
 
 	public bool AmIVisible()
 	{
-		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
 		int num = 15;
 		Vector3 val = ((Component)this).transform.position + Vector3.up * 6f;
 		if (!IsVisible(val + ((Component)this).transform.up * (float)num, (float)(num + 1)))
@@ -108,38 +106,37 @@ public class ElectricWindmill : IOEntity
 
 	public void WindUpdate()
 	{
-		Profiler.BeginSample("ElectricWindmill.WindUpdate");
 		serverWindSpeed = GetWindSpeedScale();
 		if (!AmIVisible())
 		{
 			serverWindSpeed = 0f;
 		}
 		int num = Mathf.FloorToInt((float)maxPowerGeneration * serverWindSpeed);
-		bool flag = currentEnergy != num;
+		bool num2 = currentEnergy != num;
 		currentEnergy = num;
-		if (flag)
+		if (num2)
 		{
 			MarkDirty();
 		}
 		SendNetworkUpdate();
-		Profiler.EndSample();
 	}
 
 	public override int GetPassthroughAmount(int outputSlot = 0)
 	{
-		return (outputSlot == 0) ? currentEnergy : 0;
+		if (outputSlot != 0)
+		{
+			return 0;
+		}
+		return currentEnergy;
 	}
 
 	public Vector3 GetWindAimDir(float time)
 	{
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
-		float num = time / 3600f;
-		float num2 = num * 360f;
-		int num3 = 10;
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		float num = time / 3600f * 360f;
+		int num2 = 10;
 		Vector3 val = default(Vector3);
-		((Vector3)(ref val))._002Ector(Mathf.Sin(num2 * ((float)Math.PI / 180f)) * (float)num3, 0f, Mathf.Cos(num2 * ((float)Math.PI / 180f)) * (float)num3);
+		((Vector3)(ref val))._002Ector(Mathf.Sin(num * ((float)Math.PI / 180f)) * (float)num2, 0f, Mathf.Cos(num * ((float)Math.PI / 180f)) * (float)num2);
 		return ((Vector3)(ref val)).normalized;
 	}
 }

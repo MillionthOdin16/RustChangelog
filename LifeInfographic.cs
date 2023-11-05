@@ -17,29 +17,29 @@ public class LifeInfographic : MonoBehaviour
 	}
 
 	[NonSerialized]
-	public PlayerLifeStory life = null;
+	public PlayerLifeStory life;
 
 	public GameObject container;
 
-	public RawImage AttackerAvatarImage = null;
+	public RawImage AttackerAvatarImage;
 
-	public Image DamageSourceImage = null;
+	public Image DamageSourceImage;
 
 	public LifeInfographicStat[] Stats;
 
 	public Animator[] AllAnimators;
 
-	public GameObject WeaponRoot = null;
+	public GameObject WeaponRoot;
 
-	public GameObject DistanceRoot = null;
+	public GameObject DistanceRoot;
 
-	public GameObject DistanceDivider = null;
+	public GameObject DistanceDivider;
 
-	public Image WeaponImage = null;
+	public Image WeaponImage;
 
 	public DamageSetting[] DamageDisplays;
 
-	public Texture2D defaultAvatarTexture = null;
+	public Texture2D defaultAvatarTexture;
 
-	public bool ShowDebugData = false;
+	public bool ShowDebugData;
 }

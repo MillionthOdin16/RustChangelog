@@ -14,5 +14,5 @@ public class ExcavatorEffects : MonoBehaviour
 
 	public GameObject[] ambientMetalRattles;
 
-	public bool wasMining = false;
+	public bool wasMining;
 }

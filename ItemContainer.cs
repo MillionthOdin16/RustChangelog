@@ -6,9 +6,8 @@ using ProtoBuf;
 using Rust;
 using UnityEngine;
 using UnityEngine.Assertions;
-using UnityEngine.Profiling;
 
-public sealed class ItemContainer
+public sealed class ItemContainer : IAmmoContainer
 {
 	[Flags]
 	public enum Flag
@@ -45,7 +44,7 @@ public sealed class ItemContainer
 		CannotAcceptRightNow
 	}
 
-	public Flag flags = (Flag)0;
+	public Flag flags;
 
 	public ContentsType allowedContents;
 
@@ -55,23 +54,23 @@ public sealed class ItemContainer
 
 	public int capacity = 2;
 
-	public ItemContainerId uid = default(ItemContainerId);
+	public ItemContainerId uid;
 
-	public bool dirty = false;
+	public bool dirty;
 
 	public List<Item> itemList = new List<Item>();
 
 	public float temperature = 15f;
 
-	public Item parent = null;
+	public Item parent;
 
-	public BasePlayer playerOwner = null;
+	public BasePlayer playerOwner;
 
-	public BaseEntity entityOwner = null;
+	public BaseEntity entityOwner;
 
-	public bool isServer = false;
+	public bool isServer;
 
-	public int maxStackSize = 0;
+	public int maxStackSize;
 
 	public Func<Item, int, bool> canAcceptItem;
 
@@ -81,21 +80,26 @@ public sealed class ItemContainer
 
 	public Action<Item> onPreItemRemove;
 
-	public bool HasLimitedAllowedItems => onlyAllowedItems != null && onlyAllowedItems.Length != 0;
+	public bool HasLimitedAllowedItems
+	{
+		get
+		{
+			if (onlyAllowedItems != null)
+			{
+				return onlyAllowedItems.Length != 0;
+			}
+			return false;
+		}
+	}
 
 	public Vector3 dropPosition
 	{
 		get
 		{
-			//IL_0017: Unknown result type (might be due to invalid IL or missing references)
-			//IL_001c: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0035: Unknown result type (might be due to invalid IL or missing references)
-			//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0085: Unknown result type (might be due to invalid IL or missing references)
-			//IL_007d: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0082: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0069: Unknown result type (might be due to invalid IL or missing references)
-			//IL_006e: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+			//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0060: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0050: Unknown result type (might be due to invalid IL or missing references)
 			if (Object.op_Implicit((Object)(object)playerOwner))
 			{
 				return playerOwner.GetDropPosition();
@@ -121,15 +125,10 @@ public sealed class ItemContainer
 	{
 		get
 		{
-			//IL_0017: Unknown result type (might be due to invalid IL or missing references)
-			//IL_001c: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0035: Unknown result type (might be due to invalid IL or missing references)
-			//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0085: Unknown result type (might be due to invalid IL or missing references)
-			//IL_007d: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0082: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0069: Unknown result type (might be due to invalid IL or missing references)
-			//IL_006e: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+			//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0060: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0050: Unknown result type (might be due to invalid IL or missing references)
 			if (Object.op_Implicit((Object)(object)playerOwner))
 			{
 				return playerOwner.GetDropVelocity();
@@ -191,7 +190,7 @@ public sealed class ItemContainer
 
 	public void ServerInitialize(Item parentItem, int iMaxCapacity)
 	{
-		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
 		parent = parentItem;
 		capacity = iMaxCapacity;
 		uid = default(ItemContainerId);
@@ -205,8 +204,8 @@ public sealed class ItemContainer
 
 	public void GiveUID()
 	{
-		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
 		Assert.IsTrue(!((ItemContainerId)(ref uid)).IsValid, "Calling GiveUID - but already has a uid!");
 		uid = new ItemContainerId(Net.sv.TakeUID());
 	}
@@ -226,8 +225,8 @@ public sealed class ItemContainer
 
 	public DroppedItemContainer Drop(string prefab, Vector3 pos, Quaternion rot, float destroyPercent)
 	{
-		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
 		if (itemList == null || itemList.Count == 0)
 		{
 			return null;
@@ -248,8 +247,8 @@ public sealed class ItemContainer
 
 	public static DroppedItemContainer Drop(string prefab, Vector3 pos, Quaternion rot, params ItemContainer[] containers)
 	{
-		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
 		int num = 0;
 		foreach (ItemContainer itemContainer in containers)
 		{
@@ -314,7 +313,7 @@ public sealed class ItemContainer
 
 	public Item FindItemByUID(ItemId iUID)
 	{
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
 		for (int i = 0; i < itemList.Count; i++)
 		{
 			Item item = itemList[i];
@@ -374,20 +373,22 @@ public sealed class ItemContainer
 	public void SetOnlyAllowedItems(params ItemDefinition[] defs)
 	{
 		int num = 0;
-		foreach (ItemDefinition itemDefinition in defs)
+		ItemDefinition[] array = defs;
+		for (int i = 0; i < array.Length; i++)
 		{
-			if ((Object)(object)itemDefinition != (Object)null)
+			if ((Object)(object)array[i] != (Object)null)
 			{
 				num++;
 			}
 		}
 		onlyAllowedItems = new ItemDefinition[num];
 		int num2 = 0;
-		foreach (ItemDefinition itemDefinition2 in defs)
+		array = defs;
+		foreach (ItemDefinition itemDefinition in array)
 		{
-			if ((Object)(object)itemDefinition2 != (Object)null)
+			if ((Object)(object)itemDefinition != (Object)null)
 			{
-				onlyAllowedItems[num2] = itemDefinition2;
+				onlyAllowedItems[num2] = itemDefinition;
 				num2++;
 			}
 		}
@@ -440,8 +441,8 @@ public sealed class ItemContainer
 
 	public Item GetNonFullStackWithinRange(Item def, Vector2i range)
 	{
-		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
 		int count = itemList.Count;
 		for (int i = 0; i < count; i++)
 		{
@@ -514,15 +515,15 @@ public sealed class ItemContainer
 	internal void Clear()
 	{
 		Item[] array = itemList.ToArray();
-		foreach (Item item in array)
+		for (int i = 0; i < array.Length; i++)
 		{
-			item.Remove();
+			array[i].Remove();
 		}
 	}
 
 	public void Kill()
 	{
-		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
 		this.onDirty = null;
 		canAcceptItem = null;
 		slotIsReserved = null;
@@ -570,7 +571,7 @@ public sealed class ItemContainer
 		return null;
 	}
 
-	public Item FindItemsByItemName(string name)
+	public Item FindItemByItemName(string name)
 	{
 		ItemDefinition itemDefinition = ItemManager.FindItemDefinition(name);
 		if ((Object)(object)itemDefinition == (Object)null)
@@ -589,8 +590,8 @@ public sealed class ItemContainer
 
 	public Item FindBySubEntityID(NetworkableId subEntityID)
 	{
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
 		if (!((NetworkableId)(ref subEntityID)).IsValid)
 		{
 			return null;
@@ -612,9 +613,8 @@ public sealed class ItemContainer
 
 	public ItemContainer Save()
 	{
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
-		Profiler.BeginSample("ItemContainer.Save");
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
 		ItemContainer val = Pool.Get<ItemContainer>();
 		val.contents = Pool.GetList<Item>();
 		val.UID = uid;
@@ -650,16 +650,15 @@ public sealed class ItemContainer
 				val.contents.Add(item.Save(bIncludeContainer: true));
 			}
 		}
-		Profiler.EndSample();
 		return val;
 	}
 
 	public void Load(ItemContainer container)
 	{
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0177: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0154: Unknown result type (might be due to invalid IL or missing references)
 		TimeWarning val = TimeWarning.New("ItemContainer.Load", 0);
 		try
 		{
@@ -715,7 +714,7 @@ public sealed class ItemContainer
 			{
 				((IDisposable)val2)?.Dispose();
 			}
-			TimeWarning val3 = TimeWarning.New("Delete old items", 0);
+			val2 = TimeWarning.New("Delete old items", 0);
 			try
 			{
 				foreach (Item item2 in list)
@@ -728,7 +727,7 @@ public sealed class ItemContainer
 			}
 			finally
 			{
-				((IDisposable)val3)?.Dispose();
+				((IDisposable)val2)?.Dispose();
 			}
 			dirty = true;
 			Pool.FreeList<Item>(ref list);
@@ -746,7 +745,11 @@ public sealed class ItemContainer
 
 	public int ContainerMaxStackSize()
 	{
-		return (maxStackSize > 0) ? maxStackSize : int.MaxValue;
+		if (maxStackSize <= 0)
+		{
+			return int.MaxValue;
+		}
+		return maxStackSize;
 	}
 
 	public int Take(List<Item> collect, int itemid, int iAmount)
@@ -797,24 +800,64 @@ public sealed class ItemContainer
 		return num;
 	}
 
+	public bool TryTakeOne(int itemid, out Item item)
+	{
+		item = null;
+		foreach (Item item3 in itemList)
+		{
+			if (item3.info.itemid == itemid)
+			{
+				if (item3.amount > 1)
+				{
+					item3.MarkDirty();
+					item3.amount--;
+					Item item2 = ItemManager.CreateByItemID(itemid, 1, 0uL);
+					item2.amount = 1;
+					item2.CollectedForCrafting(playerOwner);
+					item = item2;
+				}
+				else
+				{
+					item = item3;
+				}
+				break;
+			}
+		}
+		if (item != null)
+		{
+			item.RemoveFromContainer();
+			return true;
+		}
+		return false;
+	}
+
+	public bool GiveItem(Item item, ItemContainer container = null)
+	{
+		if (item == null)
+		{
+			return false;
+		}
+		if (container != null && item.MoveToContainer(container))
+		{
+			return true;
+		}
+		return item.MoveToContainer(this);
+	}
+
 	public void OnCycle(float delta)
 	{
-		Profiler.BeginSample("ItemContainer.OnCycle");
 		for (int i = 0; i < itemList.Count; i++)
 		{
 			if (itemList[i].IsValid())
 			{
-				Profiler.BeginSample("Item.OnCycle");
 				itemList[i].OnCycle(delta);
-				Profiler.EndSample();
 			}
 		}
-		Profiler.EndSample();
 	}
 
 	public void FindAmmo(List<Item> list, AmmoTypes ammoType)
 	{
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
 		for (int i = 0; i < itemList.Count; i++)
 		{
 			itemList[i].FindAmmo(list, ammoType);
@@ -823,7 +866,7 @@ public sealed class ItemContainer
 
 	public bool HasAmmo(AmmoTypes ammoType)
 	{
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
 		for (int i = 0; i < itemList.Count; i++)
 		{
 			if (itemList[i].HasAmmo(ammoType))
@@ -836,7 +879,7 @@ public sealed class ItemContainer
 
 	public int GetAmmoAmount(AmmoTypes ammoType)
 	{
-		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
 		int num = 0;
 		for (int i = 0; i < itemList.Count; i++)
 		{
@@ -873,6 +916,10 @@ public sealed class ItemContainer
 				}
 			}
 			else if ((Object)(object)slot.info == (Object)(object)item.info || (Object)(object)slot.info.isRedirectOf == (Object)(object)item.info || (Object)(object)item.info.isRedirectOf == (Object)(object)slot.info)
+			{
+				num += slot.amount;
+			}
+			else if ((Object)(object)slot.info.isRedirectOf != (Object)null && (Object)(object)slot.info.isRedirectOf == (Object)(object)item.info.isRedirectOf)
 			{
 				num += slot.amount;
 			}
@@ -948,8 +995,7 @@ public sealed class ItemContainer
 	{
 		for (int i = 0; i < itemList.Count; i++)
 		{
-			Item item = itemList[i];
-			item.OnMovedToWorld();
+			itemList[i].OnMovedToWorld();
 		}
 	}
 
@@ -957,8 +1003,7 @@ public sealed class ItemContainer
 	{
 		for (int i = 0; i < itemList.Count; i++)
 		{
-			Item item = itemList[i];
-			item.OnRemovedFromWorld();
+			itemList[i].OnRemovedFromWorld();
 		}
 	}
 
@@ -979,9 +1024,9 @@ public sealed class ItemContainer
 
 	internal ItemContainer FindContainer(ItemContainerId id)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
 		if (id == uid)
 		{
 			return this;
@@ -1048,5 +1093,17 @@ public sealed class ItemContainer
 			}
 		}
 		return CanAcceptResult.CanAccept;
+	}
+
+	public bool HasBackpackItem()
+	{
+		foreach (Item item in itemList)
+		{
+			if (!item.isBroken && item.IsBackpack())
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 }

@@ -35,11 +35,11 @@ public class WipeTimer : BaseEntity
 	[ServerVar(Help = "Custom cron expression for the wipe schedule. Overrides all other convars (except wipeUnixTimestampOverride) if set. Uses Cronos as a parser: https://github.com/HangfireIO/Cronos/")]
 	public static string wipeCronOverride = "";
 
-	public bool useWipeDayOverride = false;
+	public bool useWipeDayOverride;
 
 	public DayOfWeek wipeDayOfWeekOverride = DayOfWeek.Thursday;
 
-	public WipeFrequency wipeFrequency = WipeFrequency.Monthly;
+	public WipeFrequency wipeFrequency;
 
 	[ServerVar(Name = "days_to_add_test")]
 	public static int daysToAddTest = 0;
@@ -142,8 +142,7 @@ public class WipeTimer : BaseEntity
 	public TimeSpan GetTimeSpanUntilWipe()
 	{
 		DateTimeOffset dateTimeOffset = DateTimeOffset.UtcNow.AddDays(daysToAddTest).AddHours(hoursToAddTest);
-		DateTimeOffset wipeTime = GetWipeTime(dateTimeOffset);
-		return wipeTime - dateTimeOffset;
+		return GetWipeTime(dateTimeOffset) - dateTimeOffset;
 	}
 
 	public long GetTicksUntilWipe()
@@ -213,8 +212,7 @@ public class WipeTimer : BaseEntity
 		}
 		try
 		{
-			CronExpression cronExpression = GetCronExpression(wipeFrequency, useWipeDayOverride ? ((int)wipeDayOfWeekOverride) : wipeDayOfWeek, wipeHourOfDay);
-			return cronExpression.GetNextOccurrence(nowTime, GetTimeZone(), false) ?? DateTimeOffset.MaxValue;
+			return GetCronExpression(wipeFrequency, useWipeDayOverride ? ((int)wipeDayOfWeekOverride) : wipeDayOfWeek, wipeHourOfDay).GetNextOccurrence(nowTime, GetTimeZone(), false) ?? DateTimeOffset.MaxValue;
 		}
 		catch (Exception ex)
 		{

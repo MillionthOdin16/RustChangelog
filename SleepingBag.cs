@@ -10,7 +10,6 @@ using ProtoBuf;
 using Rust;
 using UnityEngine;
 using UnityEngine.Assertions;
-using UnityEngine.Profiling;
 
 public class SleepingBag : DecayEntity
 {
@@ -55,7 +54,7 @@ public class SleepingBag : DecayEntity
 	}
 
 	[NonSerialized]
-	public ulong deployerUserID = 0uL;
+	public ulong deployerUserID;
 
 	public GameObject renameDialog;
 
@@ -89,11 +88,11 @@ public class SleepingBag : DecayEntity
 
 	public Phrase bedAssigningBlocked = new Phrase("bag_assign_blocked", "That player has blocked bag assignment");
 
-	internal float unlockTime = 0f;
+	internal float unlockTime;
 
 	public static List<SleepingBag> sleepingBags = new List<SleepingBag>();
 
-	private bool notifyPlayerOnServerInit = false;
+	private bool notifyPlayerOnServerInit;
 
 	private static Dictionary<ulong, List<SleepingBag>> bagsPerPlayer = new Dictionary<ulong, List<SleepingBag>>();
 
@@ -119,7 +118,7 @@ public class SleepingBag : DecayEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - AssignToFriend "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - AssignToFriend "));
 				}
 				TimeWarning val2 = TimeWarning.New("AssignToFriend", 0);
 				try
@@ -138,7 +137,7 @@ public class SleepingBag : DecayEntity
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -150,7 +149,7 @@ public class SleepingBag : DecayEntity
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -170,12 +169,12 @@ public class SleepingBag : DecayEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Rename "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Rename "));
 				}
-				TimeWarning val5 = TimeWarning.New("Rename", 0);
+				TimeWarning val2 = TimeWarning.New("Rename", 0);
 				try
 				{
-					TimeWarning val6 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsVisible.Test(1335950295u, "Rename", this, player, 3f))
@@ -185,11 +184,11 @@ public class SleepingBag : DecayEntity
 					}
 					finally
 					{
-						((IDisposable)val6)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val7 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -201,7 +200,7 @@ public class SleepingBag : DecayEntity
 						}
 						finally
 						{
-							((IDisposable)val7)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -212,7 +211,7 @@ public class SleepingBag : DecayEntity
 				}
 				finally
 				{
-					((IDisposable)val5)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -221,12 +220,12 @@ public class SleepingBag : DecayEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_MakeBed "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_MakeBed "));
 				}
-				TimeWarning val8 = TimeWarning.New("RPC_MakeBed", 0);
+				TimeWarning val2 = TimeWarning.New("RPC_MakeBed", 0);
 				try
 				{
-					TimeWarning val9 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsVisible.Test(42669546u, "RPC_MakeBed", this, player, 3f))
@@ -236,11 +235,11 @@ public class SleepingBag : DecayEntity
 					}
 					finally
 					{
-						((IDisposable)val9)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val10 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -252,7 +251,7 @@ public class SleepingBag : DecayEntity
 						}
 						finally
 						{
-							((IDisposable)val10)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex3)
@@ -263,7 +262,7 @@ public class SleepingBag : DecayEntity
 				}
 				finally
 				{
-					((IDisposable)val8)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -272,12 +271,12 @@ public class SleepingBag : DecayEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_MakePublic "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_MakePublic "));
 				}
-				TimeWarning val11 = TimeWarning.New("RPC_MakePublic", 0);
+				TimeWarning val2 = TimeWarning.New("RPC_MakePublic", 0);
 				try
 				{
-					TimeWarning val12 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsVisible.Test(393812086u, "RPC_MakePublic", this, player, 3f))
@@ -287,11 +286,11 @@ public class SleepingBag : DecayEntity
 					}
 					finally
 					{
-						((IDisposable)val12)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val13 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -303,7 +302,7 @@ public class SleepingBag : DecayEntity
 						}
 						finally
 						{
-							((IDisposable)val13)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex4)
@@ -314,7 +313,7 @@ public class SleepingBag : DecayEntity
 				}
 				finally
 				{
-					((IDisposable)val11)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -338,7 +337,15 @@ public class SleepingBag : DecayEntity
 
 	public virtual bool ValidForPlayer(ulong playerID, bool ignoreTimers)
 	{
-		return deployerUserID == playerID && (ignoreTimers || unlockTime < Time.realtimeSinceStartup);
+		if (deployerUserID == playerID)
+		{
+			if (!ignoreTimers)
+			{
+				return unlockTime < Time.realtimeSinceStartup;
+			}
+			return true;
+		}
+		return false;
 	}
 
 	public static CanAssignBedResult? CanAssignBed(BasePlayer player, SleepingBag newBag, ulong targetPlayer, int countOffset = 1, int maxOffset = 0, SleepingBag ignore = null)
@@ -368,9 +375,12 @@ public class SleepingBag : DecayEntity
 				}
 				else
 				{
-					RelationshipManager.PlayerRelationships relationships = RelationshipManager.ServerInstance.GetRelationships(targetPlayer);
-					RelationshipManager.PlayerRelationshipInfo relations = relationships.GetRelations(player.userID);
+					RelationshipManager.PlayerRelationshipInfo relations = RelationshipManager.ServerInstance.GetRelationships(targetPlayer).GetRelations(player.userID);
 					if (relations != null && relations.type == RelationshipManager.RelationshipType.Friend)
+					{
+						flag = true;
+					}
+					if (!flag && (Object)(object)ClanManager.ServerInstance != (Object)null && basePlayer.clanId != 0L && basePlayer.clanId == player.clanId)
 					{
 						flag = true;
 					}
@@ -410,8 +420,7 @@ public class SleepingBag : DecayEntity
 	public static CanBuildResult? CanBuildBed(BasePlayer player, Construction construction)
 	{
 		GameObject obj = GameManager.server.FindPrefab(construction.prefabID);
-		BaseEntity baseEntity = ((obj != null) ? obj.GetComponent<BaseEntity>() : null);
-		if (baseEntity is SleepingBag)
+		if (((obj != null) ? obj.GetComponent<BaseEntity>() : null) is SleepingBag)
 		{
 			CanAssignBedResult? canAssignBedResult = CanAssignBed(player, null, player.userID);
 			if (canAssignBedResult.HasValue)
@@ -447,16 +456,18 @@ public class SleepingBag : DecayEntity
 	{
 		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0056: Invalid comparison between Unknown and I4
+		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
 		SleepingBag[] array = FindForPlayer(player.userID, ignoreTimers: true);
 		SleepingBag sleepingBag2 = array.FirstOrDefault((SleepingBag x) => x.ValidForPlayer(player.userID, ignoreTimers: false) && x.net.ID == sleepingBag && x.unlockTime < Time.realtimeSinceStartup);
 		if ((Object)(object)sleepingBag2 == (Object)null)
 		{
 			return false;
 		}
-		if (sleepingBag2.IsOccupied())
+		if ((int)sleepingBag2.GetRespawnState(player.userID) != 1)
 		{
 			return false;
 		}
@@ -464,16 +475,16 @@ public class SleepingBag : DecayEntity
 		player.RespawnAt(pos, rot, sleepingBag2);
 		sleepingBag2.PostPlayerSpawn(player);
 		SleepingBag[] array2 = array;
-		foreach (SleepingBag bag in array2)
+		for (int i = 0; i < array2.Length; i++)
 		{
-			SetBagTimer(bag, pos, SleepingBagResetReason.Respawned);
+			SetBagTimer(array2[i], pos, SleepingBagResetReason.Respawned);
 		}
 		return true;
 	}
 
 	public static void AddBagForPlayer(SleepingBag bag, ulong user, bool networkUpdate = true)
 	{
-		if (user == 0)
+		if (user == 0L)
 		{
 			return;
 		}
@@ -494,7 +505,7 @@ public class SleepingBag : DecayEntity
 
 	public static void RemoveBagForPlayer(SleepingBag bag, ulong user)
 	{
-		if (user != 0 && bagsPerPlayer.TryGetValue(user, out var value))
+		if (user != 0L && bagsPerPlayer.TryGetValue(user, out var value))
 		{
 			if (value.Remove(bag))
 			{
@@ -518,7 +529,7 @@ public class SleepingBag : DecayEntity
 
 	public static int GetSleepingBagCount(ulong userId)
 	{
-		if (userId == 0)
+		if (userId == 0L)
 		{
 			return 0;
 		}
@@ -529,16 +540,39 @@ public class SleepingBag : DecayEntity
 		return value.Count;
 	}
 
+	public static bool TrySpawnPlayer(BasePlayer player, NetworkableId sleepingBag, out string errorMessage)
+	{
+		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		if (!player.IsDead())
+		{
+			errorMessage = "Couldn't spawn - player is not dead!";
+			return false;
+		}
+		if (player.CanRespawn())
+		{
+			if (SpawnPlayer(player, sleepingBag))
+			{
+				player.MarkRespawn();
+				errorMessage = null;
+				return true;
+			}
+			errorMessage = "Couldn't spawn in sleeping bag!";
+			return false;
+		}
+		errorMessage = "You can't respawn again so quickly, wait a while";
+		return false;
+	}
+
 	public virtual void SetUnlockTime(float newTime)
 	{
 		unlockTime = newTime;
 	}
 
-	public static bool DestroyBag(BasePlayer player, NetworkableId sleepingBag)
+	public static bool DestroyBag(ulong userID, NetworkableId sleepingBag)
 	{
 		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		SleepingBag sleepingBag2 = FindForPlayer(player.userID, ignoreTimers: true).FirstOrDefault((SleepingBag x) => x.net.ID == sleepingBag);
+		SleepingBag sleepingBag2 = FindForPlayer(userID, ignoreTimers: true).FirstOrDefault((SleepingBag x) => x.net.ID == sleepingBag);
 		if ((Object)(object)sleepingBag2 == (Object)null)
 		{
 			return false;
@@ -546,32 +580,35 @@ public class SleepingBag : DecayEntity
 		RemoveBagForPlayer(sleepingBag2, sleepingBag2.deployerUserID);
 		sleepingBag2.deployerUserID = 0uL;
 		sleepingBag2.SendNetworkUpdate();
-		player.SendRespawnOptions();
-		Analytics.Azure.OnBagUnclaimed(player, sleepingBag2);
+		BasePlayer basePlayer = BasePlayer.FindByID(userID);
+		if ((Object)(object)basePlayer != (Object)null)
+		{
+			basePlayer.SendRespawnOptions();
+			Analytics.Azure.OnBagUnclaimed(basePlayer, sleepingBag2);
+		}
 		return true;
 	}
 
 	public static void ResetTimersForPlayer(BasePlayer player)
 	{
 		SleepingBag[] array = FindForPlayer(player.userID, ignoreTimers: true);
-		SleepingBag[] array2 = array;
-		foreach (SleepingBag sleepingBag in array2)
+		for (int i = 0; i < array.Length; i++)
 		{
-			sleepingBag.unlockTime = 0f;
+			array[i].unlockTime = 0f;
 		}
 	}
 
 	public virtual void GetSpawnPos(out Vector3 pos, out Quaternion rot)
 	{
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
 		pos = ((Component)this).transform.position + spawnOffset;
 		Quaternion rotation = ((Component)this).transform.rotation;
 		rot = Quaternion.Euler(0f, ((Quaternion)(ref rotation)).eulerAngles.y, 0f);
@@ -584,7 +621,7 @@ public class SleepingBag : DecayEntity
 
 	private void SetDeployedBy(BasePlayer player)
 	{
-		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
 		if (!((Object)(object)player == (Object)null))
 		{
 			deployerUserID = player.userID;
@@ -596,21 +633,21 @@ public class SleepingBag : DecayEntity
 
 	public static void OnPlayerDeath(BasePlayer player)
 	{
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
 		SleepingBag[] array = FindForPlayer(player.userID, ignoreTimers: true);
-		foreach (SleepingBag bag in array)
+		for (int i = 0; i < array.Length; i++)
 		{
-			SetBagTimer(bag, ((Component)player).transform.position, SleepingBagResetReason.Death);
+			SetBagTimer(array[i], ((Component)player).transform.position, SleepingBagResetReason.Death);
 		}
 	}
 
 	public static void SetBagTimer(SleepingBag bag, Vector3 position, SleepingBagResetReason reason)
 	{
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0122: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ee: Unknown result type (might be due to invalid IL or missing references)
 		BaseGameMode activeGameMode = BaseGameMode.GetActiveGameMode(serverside: true);
 		float? num = null;
 		if ((Object)(object)activeGameMode != (Object)null)
@@ -633,8 +670,7 @@ public class SleepingBag : DecayEntity
 		}
 		float realtimeSinceStartup = Time.realtimeSinceStartup;
 		SleepingBag[] array = sleepingBags.Where((SleepingBag x) => x.deployerUserID != 0L && x.deployerUserID == bag.deployerUserID && x.unlockTime > Time.realtimeSinceStartup).ToArray();
-		SleepingBag[] array2 = array;
-		foreach (SleepingBag sleepingBag in array2)
+		foreach (SleepingBag sleepingBag in array)
 		{
 			if (bag.unlockTime > realtimeSinceStartup && Vector3.Distance(((Component)sleepingBag).transform.position, position) <= ConVar.Server.respawnresetrange)
 			{
@@ -651,7 +687,7 @@ public class SleepingBag : DecayEntity
 		if (!sleepingBags.Contains(this))
 		{
 			sleepingBags.Add(this);
-			if (deployerUserID != 0)
+			if (deployerUserID != 0L)
 			{
 				AddBagForPlayer(this, deployerUserID, !Application.isLoadingSave);
 			}
@@ -700,11 +736,9 @@ public class SleepingBag : DecayEntity
 	public override void Save(SaveInfo info)
 	{
 		base.Save(info);
-		Profiler.BeginSample("SleepingBag.Save");
 		info.msg.sleepingBag = Pool.Get<SleepingBag>();
 		info.msg.sleepingBag.name = niceName;
 		info.msg.sleepingBag.deployerID = deployerUserID;
-		Profiler.EndSample();
 	}
 
 	[RPC_Server]
@@ -738,7 +772,7 @@ public class SleepingBag : DecayEntity
 			return;
 		}
 		ulong num = msg.read.UInt64();
-		if (num == 0)
+		if (num == 0L)
 		{
 			return;
 		}
@@ -865,16 +899,25 @@ public class SleepingBag : DecayEntity
 		p.SendRespawnOptions();
 	}
 
-	public virtual bool IsOccupied()
+	public virtual RespawnState GetRespawnState(ulong userID)
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		return WaterLevel.Test(((Component)this).transform.position, waves: true, volumes: false);
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+		if (!WaterLevel.Test(((Component)this).transform.position, waves: true, volumes: false))
+		{
+			if (!TriggerNoRespawnZone.InAnyNoRespawnZone(((Component)this).transform.position))
+			{
+				return (RespawnState)1;
+			}
+			return (RespawnState)4;
+		}
+		return (RespawnState)3;
 	}
 
 	public virtual bool IsMobile()
 	{
-		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002c: Invalid comparison between Unknown and I4
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Invalid comparison between Unknown and I4
 		BaseEntity baseEntity = GetParentEntity();
 		if ((Object)(object)baseEntity != (Object)null && baseEntity is BaseVehicle)
 		{
@@ -905,6 +948,10 @@ public class SleepingBag : DecayEntity
 
 	public override bool CanPickup(BasePlayer player)
 	{
-		return base.CanPickup(player) && player.userID == deployerUserID;
+		if (base.CanPickup(player))
+		{
+			return player.userID == deployerUserID;
+		}
+		return false;
 	}
 }

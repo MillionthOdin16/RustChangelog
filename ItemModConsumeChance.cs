@@ -10,9 +10,9 @@ public class ItemModConsumeChance : ItemModConsume
 
 	private bool GetChance()
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
 		State state = Random.state;
 		Random.InitState(Time.frameCount);
 		bool result = Random.Range(0f, 1f) <= chanceForSecondaryConsume;

@@ -15,8 +15,8 @@ public class TabToggle : MonoBehaviour
 
 	public void Awake()
 	{
-		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006a: Expected O, but got Unknown
+		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005e: Expected O, but got Unknown
 		if (!Object.op_Implicit((Object)(object)TabHolder))
 		{
 			return;

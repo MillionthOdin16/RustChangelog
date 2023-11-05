@@ -14,7 +14,7 @@ public class GraveyardFence : SimpleBuildingBlock
 
 	public override void DestroyShared()
 	{
-		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
 		base.DestroyShared();
 		List<GraveyardFence> list = Pool.GetList<GraveyardFence>();
 		Vis.Entities(((Component)this).transform.position, 5f, list, 2097152, (QueryTriggerInteraction)2);
@@ -27,26 +27,22 @@ public class GraveyardFence : SimpleBuildingBlock
 
 	public virtual void UpdatePillars()
 	{
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
 		BoxCollider[] array = pillars;
 		foreach (BoxCollider val in array)
 		{
 			((Component)val).gameObject.SetActive(true);
-			Vector3 val2 = ((Component)val).transform.TransformPoint(val.center);
-			Collider[] array2 = Physics.OverlapBox(val2, val.size * 0.5f, ((Component)val).transform.rotation, 2097152);
-			Collider[] array3 = array2;
-			foreach (Collider val3 in array3)
+			Collider[] array2 = Physics.OverlapBox(((Component)val).transform.TransformPoint(val.center), val.size * 0.5f, ((Component)val).transform.rotation, 2097152);
+			foreach (Collider val2 in array2)
 			{
-				if (((Component)val3).CompareTag("Usable Auxiliary"))
+				if (((Component)val2).CompareTag("Usable Auxiliary"))
 				{
-					BaseEntity baseEntity = ((Component)val3).gameObject.ToBaseEntity();
-					if (!((Object)(object)baseEntity == (Object)null) && !EqualNetID((BaseNetworkable)baseEntity) && (Object)(object)val3 != (Object)(object)val)
+					BaseEntity baseEntity = ((Component)val2).gameObject.ToBaseEntity();
+					if (!((Object)(object)baseEntity == (Object)null) && !EqualNetID((BaseNetworkable)baseEntity) && (Object)(object)val2 != (Object)(object)val)
 					{
 						((Component)val).gameObject.SetActive(false);
 					}

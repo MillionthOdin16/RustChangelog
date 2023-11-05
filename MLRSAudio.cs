@@ -23,13 +23,13 @@ public class MLRSAudio : MonoBehaviour
 	[SerializeField]
 	private float yawDeltaThreshold = 0.5f;
 
-	private float lastPitch = 0f;
+	private float lastPitch;
 
-	private float lastYaw = 0f;
+	private float lastYaw;
 
-	private float pitchDelta = 0f;
+	private float pitchDelta;
 
-	private float yawDelta = 0f;
+	private float yawDelta;
 
 	public SoundDefinition turretMovementStartDef;
 

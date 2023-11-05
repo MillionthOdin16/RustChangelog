@@ -6,7 +6,7 @@ public class UIMapVendingMachineMarkerCluster : MonoBehaviour
 {
 	public List<UIMapVendingMachineMarker> markers = new List<UIMapVendingMachineMarker>();
 
-	public GameObject OpenRoot = null;
+	public GameObject OpenRoot;
 
-	public TextMeshProUGUI CountText = null;
+	public TextMeshProUGUI CountText;
 }

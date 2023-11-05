@@ -34,9 +34,7 @@ public class SkinSet : ScriptableObject
 
 	internal Color GetSkinColor(float skinNumber)
 	{
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
 		return SkinColour.Evaluate(skinNumber);
 	}
 }

@@ -12,14 +12,16 @@ public class SocketMod_EntityType : SocketMod
 
 	public BaseEntity searchType;
 
-	public bool wantsCollide = false;
+	public bool wantsCollide;
+
+	public static Phrase ErrorPhrase = new Phrase("error_entitytype", "Invalid entity type");
 
 	private void OnDrawGizmosSelected()
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
 		Gizmos.matrix = ((Component)this).transform.localToWorldMatrix;
 		Gizmos.color = (wantsCollide ? new Color(0f, 1f, 0f, 0.7f) : new Color(1f, 0f, 0f, 0.7f));
 		Gizmos.DrawSphere(Vector3.zero, sphereRadius);
@@ -27,32 +29,35 @@ public class SocketMod_EntityType : SocketMod
 
 	public override bool DoCheck(Construction.Placement place)
 	{
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
+		bool flag = !wantsCollide;
 		Vector3 position = place.position + place.rotation * worldPosition;
 		List<BaseEntity> list = Pool.GetList<BaseEntity>();
 		Vis.Entities(position, sphereRadius, list, ((LayerMask)(ref layerMask)).value, queryTriggers);
 		foreach (BaseEntity item in list)
 		{
-			bool flag = ((object)item).GetType().IsAssignableFrom(((object)searchType).GetType());
-			if (flag && wantsCollide)
+			bool flag2 = ((object)item).GetType().IsAssignableFrom(((object)searchType).GetType());
+			if (flag2 && wantsCollide)
 			{
-				Pool.FreeList<BaseEntity>(ref list);
-				return true;
+				flag = true;
+				break;
 			}
-			if (flag && !wantsCollide)
+			if (flag2 && !wantsCollide)
 			{
-				Pool.FreeList<BaseEntity>(ref list);
-				return false;
+				flag = false;
+				break;
 			}
 		}
+		if (!flag)
+		{
+			Construction.lastPlacementError = ErrorPhrase.translated;
+		}
 		Pool.FreeList<BaseEntity>(ref list);
-		return !wantsCollide;
+		return flag;
 	}
 }

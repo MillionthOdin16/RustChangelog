@@ -2,7 +2,6 @@ using System;
 using ConVar;
 using Facepunch.Rust;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 public class DroppedItem : WorldItem
 {
@@ -21,7 +20,7 @@ public class DroppedItem : WorldItem
 
 	private Rigidbody rB;
 
-	private const int interactionOnlyLayer = 19;
+	private const int INTERACTION_ONLY_LAYER = 19;
 
 	[NonSerialized]
 	public DropReasonEnum DropReason;
@@ -63,17 +62,18 @@ public class DroppedItem : WorldItem
 			DroppedItem droppedItem = hitEntity as DroppedItem;
 			if (!((Object)(object)droppedItem == (Object)null) && droppedItem.item != null && !((Object)(object)droppedItem.item.info != (Object)(object)item.info))
 			{
-				Profiler.BeginSample("OnDroppedOn");
 				droppedItem.OnDroppedOn(this);
-				Profiler.EndSample();
 			}
 		}
 	}
 
 	public void OnDroppedOn(DroppedItem di)
 	{
-		//IL_02a1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02a6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0222: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0227: Unknown result type (might be due to invalid IL or missing references)
+		//IL_025e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0263: Unknown result type (might be due to invalid IL or missing references)
+		//IL_026e: Unknown result type (might be due to invalid IL or missing references)
 		if (item == null || di.item == null || (Object)(object)di.item.info != (Object)(object)item.info || (di.item.IsBlueprint() && di.item.blueprintTarget != item.blueprintTarget) || (di.item.hasCondition && di.item.condition != di.item.maxCondition) || (item.hasCondition && item.condition != item.maxCondition))
 		{
 			return;
@@ -103,6 +103,7 @@ public class DroppedItem : WorldItem
 			}
 			di.DestroyItem();
 			di.Kill();
+			int worldModelIndex = item.info.GetWorldModelIndex(item.amount);
 			item.amount = num3;
 			item.MarkDirty();
 			if (GetDespawnDuration() < float.PositiveInfinity)
@@ -110,6 +111,11 @@ public class DroppedItem : WorldItem
 				((FacepunchBehaviour)this).Invoke((Action)IdleDestroy, GetDespawnDuration());
 			}
 			Effect.server.Run("assets/bundled/prefabs/fx/notice/stack.world.fx.prefab", this, 0u, Vector3.zero, Vector3.zero);
+			int worldModelIndex2 = item.info.GetWorldModelIndex(item.amount);
+			if (worldModelIndex != worldModelIndex2)
+			{
+				item.Drop(((Component)this).transform.position, Vector3.zero, ((Component)this).transform.rotation);
+			}
 		}
 	}
 
@@ -140,24 +146,24 @@ public class DroppedItem : WorldItem
 
 	internal override void OnParentRemoved()
 	{
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
 		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0095: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0093: Unknown result type (might be due to invalid IL or missing references)
 		//IL_009f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)rB == (Object)null)
 		{
 			base.OnParentRemoved();
@@ -193,13 +199,22 @@ public class DroppedItem : WorldItem
 		}
 	}
 
+	protected override bool TransformHasMoved()
+	{
+		if (base.TransformHasMoved() && !rB.isKinematic)
+		{
+			return !rB.IsSleeping();
+		}
+		return false;
+	}
+
 	public override void PostInitShared()
 	{
-		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
 		base.PostInitShared();
 		GameObject val = null;
-		val = ((item == null || !item.info.worldModelPrefab.isValid) ? Object.Instantiate<GameObject>(itemModel) : item.info.worldModelPrefab.Instantiate());
+		val = ((item == null || !item.GetWorldModel().isValid) ? Object.Instantiate<GameObject>(itemModel) : item.GetWorldModel().Instantiate());
 		val.transform.SetParent(((Component)this).transform, false);
 		val.transform.localPosition = Vector3.zero;
 		val.transform.localRotation = Quaternion.identity;
@@ -230,9 +245,9 @@ public class DroppedItem : WorldItem
 			SetCollisionForParent(GetParentEntity());
 			rB.interpolation = (RigidbodyInterpolation)0;
 			Renderer[] componentsInChildren = val.GetComponentsInChildren<Renderer>(true);
-			foreach (Renderer val2 in componentsInChildren)
+			for (int i = 0; i < componentsInChildren.Length; i++)
 			{
-				val2.enabled = false;
+				componentsInChildren[i].enabled = false;
 			}
 		}
 		if (item != null)

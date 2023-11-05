@@ -14,7 +14,7 @@ public class PressButton : IOEntity
 
 	public const Flags Flag_EmittingPower = Flags.Reserved3;
 
-	public bool smallBurst = false;
+	public bool smallBurst;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -26,7 +26,7 @@ public class PressButton : IOEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Press "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Press "));
 				}
 				TimeWarning val2 = TimeWarning.New("Press", 0);
 				try
@@ -45,7 +45,7 @@ public class PressButton : IOEntity
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -57,7 +57,7 @@ public class PressButton : IOEntity
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)

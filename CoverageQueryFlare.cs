@@ -16,9 +16,9 @@ public class CoverageQueryFlare : BaseMonoBehaviour, IClientComponent
 
 	public float dotMax = -1f;
 
-	public CoverageQueries.RadiusSpace coverageRadiusSpace = CoverageQueries.RadiusSpace.ScreenNormalized;
+	public CoverageQueries.RadiusSpace coverageRadiusSpace;
 
 	public float coverageRadius = 0.01f;
 
-	public LODDistanceMode DistanceMode = LODDistanceMode.XYZ;
+	public LODDistanceMode DistanceMode;
 }

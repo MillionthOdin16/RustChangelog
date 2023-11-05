@@ -29,7 +29,7 @@ public class NPCTalking : NPCShopKeeper, IConversationProvider
 
 	private List<BasePlayer> conversingPlayers = new List<BasePlayer>();
 
-	private BasePlayer lastActionPlayer = null;
+	private BasePlayer lastActionPlayer;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -41,7 +41,7 @@ public class NPCTalking : NPCShopKeeper, IConversationProvider
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ConversationAction "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ConversationAction "));
 				}
 				TimeWarning val2 = TimeWarning.New("ConversationAction", 0);
 				try
@@ -64,7 +64,7 @@ public class NPCTalking : NPCShopKeeper, IConversationProvider
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -76,7 +76,7 @@ public class NPCTalking : NPCShopKeeper, IConversationProvider
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -96,12 +96,12 @@ public class NPCTalking : NPCShopKeeper, IConversationProvider
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_BeginTalking "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_BeginTalking "));
 				}
-				TimeWarning val5 = TimeWarning.New("Server_BeginTalking", 0);
+				TimeWarning val2 = TimeWarning.New("Server_BeginTalking", 0);
 				try
 				{
-					TimeWarning val6 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.CallsPerSecond.Test(2112414875u, "Server_BeginTalking", this, player, 1uL))
@@ -115,11 +115,11 @@ public class NPCTalking : NPCShopKeeper, IConversationProvider
 					}
 					finally
 					{
-						((IDisposable)val6)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val7 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -131,7 +131,7 @@ public class NPCTalking : NPCShopKeeper, IConversationProvider
 						}
 						finally
 						{
-							((IDisposable)val7)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -142,7 +142,7 @@ public class NPCTalking : NPCShopKeeper, IConversationProvider
 				}
 				finally
 				{
-					((IDisposable)val5)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -151,12 +151,12 @@ public class NPCTalking : NPCShopKeeper, IConversationProvider
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_EndTalking "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_EndTalking "));
 				}
-				TimeWarning val8 = TimeWarning.New("Server_EndTalking", 0);
+				TimeWarning val2 = TimeWarning.New("Server_EndTalking", 0);
 				try
 				{
-					TimeWarning val9 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.CallsPerSecond.Test(1597539152u, "Server_EndTalking", this, player, 1uL))
@@ -170,11 +170,11 @@ public class NPCTalking : NPCShopKeeper, IConversationProvider
 					}
 					finally
 					{
-						((IDisposable)val9)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val10 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -186,7 +186,7 @@ public class NPCTalking : NPCShopKeeper, IConversationProvider
 						}
 						finally
 						{
-							((IDisposable)val10)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex3)
@@ -197,7 +197,7 @@ public class NPCTalking : NPCShopKeeper, IConversationProvider
 				}
 				finally
 				{
-					((IDisposable)val8)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -206,12 +206,12 @@ public class NPCTalking : NPCShopKeeper, IConversationProvider
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_ResponsePressed "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_ResponsePressed "));
 				}
-				TimeWarning val11 = TimeWarning.New("Server_ResponsePressed", 0);
+				TimeWarning val2 = TimeWarning.New("Server_ResponsePressed", 0);
 				try
 				{
-					TimeWarning val12 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.CallsPerSecond.Test(2713250658u, "Server_ResponsePressed", this, player, 5uL))
@@ -225,11 +225,11 @@ public class NPCTalking : NPCShopKeeper, IConversationProvider
 					}
 					finally
 					{
-						((IDisposable)val12)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val13 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -241,7 +241,7 @@ public class NPCTalking : NPCShopKeeper, IConversationProvider
 						}
 						finally
 						{
-							((IDisposable)val13)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex4)
@@ -252,7 +252,7 @@ public class NPCTalking : NPCShopKeeper, IConversationProvider
 				}
 				finally
 				{
-					((IDisposable)val11)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -383,8 +383,8 @@ public class NPCTalking : NPCShopKeeper, IConversationProvider
 
 	public bool ValidConversationPlayer(BasePlayer player)
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
 		if (Vector3.Distance(((Component)player).transform.position, ((Component)this).transform.position) > maxConversationDistance)
 		{
 			return false;
@@ -440,8 +440,8 @@ public class NPCTalking : NPCShopKeeper, IConversationProvider
 
 	public virtual void OnConversationAction(BasePlayer player, string action)
 	{
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
 		if (action == "openvending")
 		{
 			InvisibleVendingMachine vendingMachine = GetVendingMachine();
@@ -465,21 +465,19 @@ public class NPCTalking : NPCShopKeeper, IConversationProvider
 			{
 				if (!((Object)(object)conversingPlayer == (Object)(object)player) && !((Object)(object)conversingPlayer == (Object)null))
 				{
-					ConversationData conversationFor = GetConversationFor(player);
-					int speechNodeIndex = conversationFor.GetSpeechNodeIndex("startbusy");
+					int speechNodeIndex = GetConversationFor(player).GetSpeechNodeIndex("startbusy");
 					ForceSpeechNode(conversingPlayer, speechNodeIndex);
 				}
 			}
 			int num = nPCConversationResultAction.scrapCost;
-			List<Item> list = player.inventory.FindItemIDs(itemDefinition.itemid);
+			List<Item> list = player.inventory.FindItemsByItemID(itemDefinition.itemid);
 			foreach (Item item in list)
 			{
 				num -= item.amount;
 			}
 			if (num > 0)
 			{
-				ConversationData conversationFor2 = GetConversationFor(player);
-				int speechNodeIndex2 = conversationFor2.GetSpeechNodeIndex("toopoor");
+				int speechNodeIndex2 = GetConversationFor(player).GetSpeechNodeIndex("toopoor");
 				ForceSpeechNode(player, speechNodeIndex2);
 				break;
 			}

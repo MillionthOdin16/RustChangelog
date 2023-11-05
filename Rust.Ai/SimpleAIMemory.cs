@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using ConVar;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 namespace Rust.AI;
 
@@ -34,11 +33,10 @@ public class SimpleAIMemory
 
 	public void SetKnown(BaseEntity ent, BaseEntity owner, AIBrainSenses brainSenses)
 	{
-		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ac: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ba: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01bf: Unknown result type (might be due to invalid IL or missing references)
-		Profiler.BeginSample("SimpleAIMemory.SetKnown");
+		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0138: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013d: Unknown result type (might be due to invalid IL or missing references)
 		IAISenses iAISenses = owner as IAISenses;
 		BasePlayer basePlayer = ent as BasePlayer;
 		if ((Object)(object)basePlayer != (Object)null && PlayerIgnoreList.Contains(basePlayer))
@@ -62,7 +60,6 @@ public class SimpleAIMemory
 				value.Position = ((Component)ent).transform.position;
 				value.Timestamp = Mathf.Max(Time.realtimeSinceStartup, value.Timestamp);
 				All[i] = value;
-				Profiler.EndSample();
 				return;
 			}
 		}
@@ -70,7 +67,6 @@ public class SimpleAIMemory
 		{
 			if (ConVar.AI.ignoreplayers && !basePlayer.IsNpc)
 			{
-				Profiler.EndSample();
 				return;
 			}
 			Players.Add(ent);
@@ -96,7 +92,6 @@ public class SimpleAIMemory
 			Position = ((Component)ent).transform.position,
 			Timestamp = Time.realtimeSinceStartup
 		});
-		Profiler.EndSample();
 	}
 
 	public void SetLOS(BaseEntity ent, bool flag)
@@ -169,8 +164,8 @@ public class SimpleAIMemory
 
 	public static string GetIgnoredPlayers()
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0007: Expected O, but got Unknown
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Expected O, but got Unknown
 		TextTable val = new TextTable();
 		val.AddColumns(new string[2] { "Name", "Steam ID" });
 		foreach (BasePlayer playerIgnore in PlayerIgnoreList)

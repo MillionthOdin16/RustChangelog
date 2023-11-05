@@ -27,11 +27,11 @@ public class ReportBug : UIDialog
 
 	public UIBackgroundBlur BlurController;
 
-	public RustButton SubmitButton = null;
+	public RustButton SubmitButton;
 
-	public GameObject SubmitErrorRoot = null;
+	public GameObject SubmitErrorRoot;
 
-	public RustText CooldownText = null;
+	public RustText CooldownText;
 
-	public RustText ContentMissingText = null;
+	public RustText ContentMissingText;
 }

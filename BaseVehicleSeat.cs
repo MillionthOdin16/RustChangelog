@@ -2,11 +2,16 @@ using UnityEngine;
 
 public class BaseVehicleSeat : BaseVehicleMountPoint
 {
-	public float mountedAnimationSpeed = 0f;
+	[Header("Vehicle Seat")]
+	public float mountedAnimationSpeed;
 
-	public bool sendClientInputToVehicleParent = false;
+	public bool sendClientInputToVehicleParent;
 
-	public bool forcePlayerModelUpdate = false;
+	public bool forcePlayerModelUpdate;
+
+	public bool giveCrosshair;
+
+	public bool canTeamInteract = true;
 
 	public override void ScaleDamageForPlayer(BasePlayer player, HitInfo info)
 	{

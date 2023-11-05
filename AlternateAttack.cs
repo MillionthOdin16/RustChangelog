@@ -2,9 +2,9 @@ using UnityEngine;
 
 public class AlternateAttack : StateMachineBehaviour
 {
-	public bool random = false;
+	public bool random;
 
-	public bool dontIncrement = false;
+	public bool dontIncrement;
 
 	public string[] targetTransitions;
 

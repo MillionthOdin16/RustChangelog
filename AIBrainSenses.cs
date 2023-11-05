@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using ConVar;
 using Rust.AI;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 public class AIBrainSenses
 {
@@ -52,11 +51,11 @@ public class AIBrainSenses
 
 	private float listenRange;
 
-	private bool hostileTargetsOnly = false;
+	private bool hostileTargetsOnly;
 
-	private bool senseFriendlies = false;
+	private bool senseFriendlies;
 
-	private bool refreshKnownLOS = false;
+	private bool refreshKnownLOS;
 
 	private EntityType senseTypes;
 
@@ -122,7 +121,6 @@ public class AIBrainSenses
 		{
 			return;
 		}
-		Profiler.BeginSample("AIBrainSenses.UpdateSenses");
 		nextUpdateTime = Time.time + UpdateInterval;
 		if (senseTypes != 0)
 		{
@@ -140,18 +138,16 @@ public class AIBrainSenses
 			}
 		}
 		Memory.Forget(MemoryDuration);
-		Profiler.EndSample();
 	}
 
 	public void UpdateKnownPlayersLOS()
 	{
-		//IL_00b9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
 		if (Time.time < nextKnownPlayersLOSUpdateTime)
 		{
 			return;
 		}
-		Profiler.BeginSample("AIBrainSenses.UpdateKnownPlayersLOS");
 		nextKnownPlayersLOSUpdateTime = Time.time + knownPlayersLOSUpdateInterval;
 		foreach (BaseEntity player in Memory.Players)
 		{
@@ -165,46 +161,37 @@ public class AIBrainSenses
 				}
 			}
 		}
-		Profiler.EndSample();
 	}
 
 	private void SensePlayers()
 	{
-		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
-		Profiler.BeginSample("AIBrainSenses.SensePlayers.GetPlayersInSphereAndAiCaresAbout");
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
 		int playersInSphere = BaseEntity.Query.Server.GetPlayersInSphere(((Component)owner).transform.position, maxRange, playerQueryResults, aiCaresAbout);
-		Profiler.EndSample();
-		Profiler.BeginSample("AIBrainSenses.SensePlayers.SetKnown");
 		for (int i = 0; i < playersInSphere; i++)
 		{
 			BasePlayer ent = playerQueryResults[i];
 			Memory.SetKnown(ent, owner, this);
 		}
-		Profiler.EndSample();
 	}
 
 	private void SenseBrains()
 	{
-		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
-		Profiler.BeginSample("AIBrainSenses.SenseBrains.GetBrainsInSphereAndAiCaresAbout");
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
 		int brainsInSphere = BaseEntity.Query.Server.GetBrainsInSphere(((Component)owner).transform.position, maxRange, queryResults, aiCaresAbout);
-		Profiler.EndSample();
-		Profiler.BeginSample("AIBrainSenses.SenseBrains.SetKnown");
 		for (int i = 0; i < brainsInSphere; i++)
 		{
 			BaseEntity ent = queryResults[i];
 			Memory.SetKnown(ent, owner, this);
 		}
-		Profiler.EndSample();
 	}
 
 	private bool AiCaresAbout(BaseEntity entity)
 	{
-		//IL_0134: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01e2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ed: Unknown result type (might be due to invalid IL or missing references)
-		//IL_028d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0298: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0109: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0114: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0166: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0171: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)entity == (Object)null)
 		{
 			return false;
@@ -221,13 +208,14 @@ public class AIBrainSenses
 		{
 			return false;
 		}
-		Profiler.BeginSample("AIBrainSenses.IsValidSenseType");
-		if (!IsValidSenseType(entity))
+		if (entity.IsTransferProtected())
 		{
-			Profiler.EndSample();
 			return false;
 		}
-		Profiler.EndSample();
+		if (!IsValidSenseType(entity))
+		{
+			return false;
+		}
 		BaseCombatEntity baseCombatEntity = entity as BaseCombatEntity;
 		BasePlayer basePlayer = entity as BasePlayer;
 		if ((Object)(object)basePlayer != (Object)null && basePlayer.IsDead())
@@ -238,38 +226,27 @@ public class AIBrainSenses
 		{
 			return false;
 		}
-		Profiler.BeginSample("AIBrainSenses.CanLastNoiseBeHeard");
 		if (listenRange > 0f && (Object)(object)baseCombatEntity != (Object)null && baseCombatEntity.TimeSinceLastNoise <= 1f && baseCombatEntity.CanLastNoiseBeHeard(((Component)owner).transform.position, listenRange))
 		{
-			Profiler.EndSample();
 			return true;
 		}
-		Profiler.EndSample();
-		Profiler.BeginSample("AIBrainSenses.ShouldSenseFriendlies");
 		if (senseFriendlies && ownerSenses != null && ownerSenses.IsFriendly(entity))
 		{
-			Profiler.EndSample();
 			return true;
 		}
-		Profiler.EndSample();
 		float num = float.PositiveInfinity;
-		Profiler.BeginSample("AIBrainSenses.DistanceCheck");
 		if ((Object)(object)baseCombatEntity != (Object)null && AI.accuratevisiondistance)
 		{
 			num = Vector3.Distance(((Component)owner).transform.position, ((Component)baseCombatEntity).transform.position);
 			if (num > maxRange)
 			{
-				Profiler.EndSample();
 				return false;
 			}
 		}
-		Profiler.EndSample();
-		Profiler.BeginSample("AIBrainSenses.Vision");
 		if (checkVision && !IsTargetInVision(entity))
 		{
 			if (!ignoreNonVisionSneakers)
 			{
-				Profiler.EndSample();
 				return false;
 			}
 			if ((Object)(object)basePlayer != (Object)null && !basePlayer.IsNpc)
@@ -280,25 +257,18 @@ public class AIBrainSenses
 				}
 				if ((basePlayer.IsDucked() && num >= brain.IgnoreSneakersMaxDistance) || num >= brain.IgnoreNonVisionMaxDistance)
 				{
-					Profiler.EndSample();
 					return false;
 				}
 			}
 		}
-		Profiler.EndSample();
-		Profiler.BeginSample("AIBrainSenses.HostileTargetsOnly");
 		if (hostileTargetsOnly && (Object)(object)baseCombatEntity != (Object)null && !baseCombatEntity.IsHostile() && !(baseCombatEntity is ScarecrowNPC))
 		{
-			Profiler.EndSample();
 			return false;
 		}
-		Profiler.EndSample();
 		if (checkLOS && ownerAttack != null)
 		{
-			Profiler.BeginSample("AIBrainSenses.AiCaresAbout.CheckLOS");
 			bool flag = ownerAttack.CanSeeTarget(entity);
 			Memory.SetLOS(entity, flag);
-			Profiler.EndSample();
 			if (!flag)
 			{
 				return false;
@@ -357,22 +327,15 @@ public class AIBrainSenses
 
 	private bool IsTargetInVision(BaseEntity target)
 	{
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
-		Profiler.BeginSample("AIBrainSenses.IsTargetInVision");
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 val = Vector3Ex.Direction(((Component)target).transform.position, ((Component)owner).transform.position);
-		Vector3 val2 = (((Object)(object)playerOwner != (Object)null) ? playerOwner.eyes.BodyForward() : ((Component)owner).transform.forward);
-		float num = Vector3.Dot(val2, val);
-		bool result = num >= visionCone;
-		Profiler.EndSample();
-		return result;
+		return Vector3.Dot(((Object)(object)playerOwner != (Object)null) ? playerOwner.eyes.BodyForward() : ((Component)owner).transform.forward, val) >= visionCone;
 	}
 
 	public BaseEntity GetNearestPlayer(float rangeFraction)
@@ -392,13 +355,12 @@ public class AIBrainSenses
 
 	private BaseEntity GetNearest(List<BaseEntity> entities, float rangeFraction)
 	{
-		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
 		if (entities == null || entities.Count == 0)
 		{
 			return null;
 		}
-		Profiler.BeginSample("AIBrainSenses.GetNearest");
 		float num = float.PositiveInfinity;
 		BaseEntity result = null;
 		foreach (BaseEntity entity in entities)
@@ -412,7 +374,6 @@ public class AIBrainSenses
 				}
 			}
 		}
-		Profiler.EndSample();
 		return result;
 	}
 }

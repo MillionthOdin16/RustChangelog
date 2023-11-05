@@ -11,8 +11,8 @@ public class UIGenesDisplay : MonoBehaviour
 
 	public void Init(GrowableGenes genes)
 	{
-		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
 		int num = 0;
 		GrowableGene[] genes2 = genes.Genes;
 		foreach (GrowableGene gene in genes2)
@@ -40,8 +40,8 @@ public class UIGenesDisplay : MonoBehaviour
 
 	private void InitFirstRow(GrowableGenes genes)
 	{
-		//IL_0101: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
 		int num = 0;
 		GrowableGene[] genes2 = genes.Genes;
 		foreach (GrowableGene growableGene in genes2)
@@ -71,8 +71,8 @@ public class UIGenesDisplay : MonoBehaviour
 
 	private void InitSecondRow(GrowableGenes genes)
 	{
-		//IL_0105: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c4: Unknown result type (might be due to invalid IL or missing references)
 		int num = 0;
 		GrowableGene[] genes2 = genes.Genes;
 		foreach (GrowableGene growableGene in genes2)
@@ -111,11 +111,11 @@ public class UIGenesDisplay : MonoBehaviour
 
 	private void ShowDiagLink(int index, float rotation, GrowableGene nextGene)
 	{
-		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 localEulerAngles = ((Component)TextDiagLinks[index]).transform.localEulerAngles;
 		localEulerAngles.z = rotation;
 		((Component)TextDiagLinks[index]).transform.localEulerAngles = localEulerAngles;
