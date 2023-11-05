@@ -15,11 +15,11 @@ public class PoweredRemoteControlEntity : IOEntity, IRemoteControllable
 
 	public GameObjectRef IDPanelPrefab;
 
-	public RemoteControllableControls rcControls;
+	public RemoteControllableControls rcControls = RemoteControllableControls.None;
 
-	public bool isStatic;
+	public bool isStatic = false;
 
-	public bool appendEntityIDToIdentifier;
+	public bool appendEntityIDToIdentifier = false;
 
 	public virtual bool RequiresMouse => false;
 
@@ -37,17 +37,7 @@ public class PoweredRemoteControlEntity : IOEntity, IRemoteControllable
 
 	public CameraViewerId? ControllingViewerId { get; private set; }
 
-	public bool IsBeingControlled
-	{
-		get
-		{
-			if (ViewerCount > 0)
-			{
-				return ControllingViewerId.HasValue;
-			}
-			return false;
-		}
-	}
+	public bool IsBeingControlled => ViewerCount > 0 && ControllingViewerId.HasValue;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -59,7 +49,7 @@ public class PoweredRemoteControlEntity : IOEntity, IRemoteControllable
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_SetID "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_SetID "));
 				}
 				TimeWarning val2 = TimeWarning.New("Server_SetID", 0);
 				try
@@ -78,7 +68,7 @@ public class PoweredRemoteControlEntity : IOEntity, IRemoteControllable
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -90,7 +80,7 @@ public class PoweredRemoteControlEntity : IOEntity, IRemoteControllable
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -143,7 +133,7 @@ public class PoweredRemoteControlEntity : IOEntity, IRemoteControllable
 		if (IsStatic() && rcIdentifier.Contains(text))
 		{
 			int length = rcIdentifier.IndexOf(text);
-			_ = text.Length;
+			int length2 = text.Length;
 			string text2 = rcIdentifier.Substring(0, length);
 			text2 += ((object)(NetworkableId)(ref net.ID)).ToString();
 			UpdateIdentifier(text2);
@@ -186,11 +176,7 @@ public class PoweredRemoteControlEntity : IOEntity, IRemoteControllable
 
 	public virtual bool CanControl(ulong playerID)
 	{
-		if (!IsPowered())
-		{
-			return IsStatic();
-		}
-		return true;
+		return IsPowered() || IsStatic();
 	}
 
 	public BaseEntity GetEnt()
@@ -264,7 +250,7 @@ public class PoweredRemoteControlEntity : IOEntity, IRemoteControllable
 
 	public void UpdateIdentifier(string newID, bool clientSend = false)
 	{
-		_ = rcIdentifier;
+		string text = rcIdentifier;
 		if (base.isServer)
 		{
 			if (!RemoteControlEntity.IDInUse(newID))
@@ -297,10 +283,6 @@ public class PoweredRemoteControlEntity : IOEntity, IRemoteControllable
 
 	protected bool CanChangeID(BasePlayer player)
 	{
-		if ((Object)(object)player != (Object)null && player.CanBuild())
-		{
-			return player.IsBuildingAuthed();
-		}
-		return false;
+		return (Object)(object)player != (Object)null && player.CanBuild() && player.IsBuildingAuthed();
 	}
 }

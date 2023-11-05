@@ -7,8 +7,8 @@ public class ItemModStudyBlueprint : ItemMod
 
 	public override void ServerCommand(Item item, string command, BasePlayer player)
 	{
-		//IL_0150: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0155: Unknown result type (might be due to invalid IL or missing references)
+		//IL_025f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0264: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)item.GetOwnerPlayer() != (Object)(object)player)
 		{
 			bool flag = false;
@@ -25,7 +25,28 @@ public class ItemModStudyBlueprint : ItemMod
 				return;
 			}
 		}
-		if (!(command == "study") || !item.IsBlueprint() || IsBlueprintUnlocked(item, player, out var blueprintTargetDef, out var blueprint))
+		if (!(command == "study") || !item.IsBlueprint())
+		{
+			return;
+		}
+		ItemDefinition blueprintTargetDef = item.blueprintTargetDef;
+		ItemBlueprint blueprint = blueprintTargetDef.Blueprint;
+		bool flag2 = player.blueprints.IsUnlocked(blueprintTargetDef);
+		if (flag2 && (Object)(object)blueprint != (Object)null && blueprint.additionalUnlocks != null && blueprint.additionalUnlocks.Count > 0)
+		{
+			foreach (ItemDefinition additionalUnlock in blueprint.additionalUnlocks)
+			{
+				if (!player.blueprints.IsUnlocked(additionalUnlock))
+				{
+					flag2 = false;
+				}
+			}
+		}
+		if ((Object)(object)blueprint != (Object)null && blueprint.defaultBlueprint)
+		{
+			flag2 = true;
+		}
+		if (flag2)
 		{
 			return;
 		}
@@ -36,49 +57,18 @@ public class ItemModStudyBlueprint : ItemMod
 		}
 		item2.UseItem();
 		player.blueprints.Unlock(blueprintTargetDef);
-		Analytics.Azure.OnBlueprintLearned(player, blueprintTargetDef, "blueprint", ResearchTable.ScrapForResearch(blueprintTargetDef), player);
+		Analytics.Azure.OnBlueprintLearned(player, blueprintTargetDef, "blueprint");
 		if ((Object)(object)blueprint != (Object)null && blueprint.additionalUnlocks != null && blueprint.additionalUnlocks.Count > 0)
 		{
-			foreach (ItemDefinition additionalUnlock in blueprint.additionalUnlocks)
+			foreach (ItemDefinition additionalUnlock2 in blueprint.additionalUnlocks)
 			{
-				player.blueprints.Unlock(additionalUnlock);
-				Analytics.Azure.OnBlueprintLearned(player, additionalUnlock, "blueprint", 0, player);
+				player.blueprints.Unlock(additionalUnlock2);
+				Analytics.Azure.OnBlueprintLearned(player, additionalUnlock2, "blueprint");
 			}
 		}
 		if (studyEffect.isValid)
 		{
 			Effect.server.Run(studyEffect.resourcePath, player, StringPool.Get("head"), Vector3.zero, Vector3.zero);
 		}
-	}
-
-	private static bool IsBlueprintUnlocked(Item item, BasePlayer player, out ItemDefinition blueprintTargetDef, out ItemBlueprint blueprint)
-	{
-		blueprintTargetDef = item.blueprintTargetDef;
-		blueprint = blueprintTargetDef.Blueprint;
-		bool flag = IsBlueprintUnlocked(blueprintTargetDef, player);
-		if (flag && (Object)(object)blueprint != (Object)null && blueprint.additionalUnlocks != null && blueprint.additionalUnlocks.Count > 0)
-		{
-			foreach (ItemDefinition additionalUnlock in blueprint.additionalUnlocks)
-			{
-				if (!IsBlueprintUnlocked(additionalUnlock, player))
-				{
-					flag = false;
-				}
-			}
-		}
-		if ((Object)(object)blueprint != (Object)null && blueprint.defaultBlueprint)
-		{
-			flag = true;
-		}
-		if (flag)
-		{
-			return true;
-		}
-		return false;
-	}
-
-	public static bool IsBlueprintUnlocked(ItemDefinition def, BasePlayer player)
-	{
-		return player.blueprints.IsUnlocked(def);
 	}
 }

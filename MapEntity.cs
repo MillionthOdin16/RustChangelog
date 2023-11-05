@@ -6,6 +6,7 @@ using Network;
 using ProtoBuf;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.Profiling;
 
 public class MapEntity : HeldEntity
 {
@@ -25,7 +26,7 @@ public class MapEntity : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ImageUpdate "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ImageUpdate "));
 				}
 				TimeWarning val2 = TimeWarning.New("ImageUpdate", 0);
 				try
@@ -48,7 +49,7 @@ public class MapEntity : HeldEntity
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -60,7 +61,7 @@ public class MapEntity : HeldEntity
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -102,11 +103,13 @@ public class MapEntity : HeldEntity
 	public override void Save(SaveInfo info)
 	{
 		base.Save(info);
+		Profiler.BeginSample("MapEntity.Save");
 		info.msg.mapEntity = Pool.Get<MapEntity>();
 		info.msg.mapEntity.fogImages = Pool.Get<List<uint>>();
 		info.msg.mapEntity.fogImages.AddRange(fogImages);
 		info.msg.mapEntity.paintImages = Pool.Get<List<uint>>();
 		info.msg.mapEntity.paintImages.AddRange(paintImages);
+		Profiler.EndSample();
 	}
 
 	[RPC_Server]
@@ -114,8 +117,8 @@ public class MapEntity : HeldEntity
 	[RPC_Server.FromOwner]
 	public void ImageUpdate(RPCMessage msg)
 	{
-		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0097: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c3: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)msg.player == (Object)null)
 		{
 			return;

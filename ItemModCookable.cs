@@ -14,7 +14,7 @@ public class ItemModCookable : ItemMod
 
 	public int highTemp;
 
-	public bool setCookingFlag;
+	public bool setCookingFlag = false;
 
 	public void OnValidate()
 	{
@@ -30,19 +30,15 @@ public class ItemModCookable : ItemMod
 
 	public bool CanBeCookedByAtTemperature(float temperature)
 	{
-		if (temperature > (float)lowTemp)
-		{
-			return temperature < (float)highTemp;
-		}
-		return false;
+		return temperature > (float)lowTemp && temperature < (float)highTemp;
 	}
 
 	private void CycleCooking(Item item, float delta)
 	{
-		//IL_0183: Unknown result type (might be due to invalid IL or missing references)
-		//IL_018e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0195: Unknown result type (might be due to invalid IL or missing references)
-		//IL_019b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01e2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ed: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01fa: Unknown result type (might be due to invalid IL or missing references)
 		if (!CanBeCookedByAtTemperature(item.temperature) || item.cookTimeLeft < 0f)
 		{
 			if (setCookingFlag && item.HasFlag(Item.Flag.Cooking))

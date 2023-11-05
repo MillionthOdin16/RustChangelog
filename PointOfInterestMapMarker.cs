@@ -8,7 +8,7 @@ public class PointOfInterestMapMarker : MonoBehaviour
 
 	public Image MapIconOuter;
 
-	public GameObject LeaderRoot;
+	public GameObject LeaderRoot = null;
 
 	public GameObject EditPopup;
 
@@ -26,7 +26,7 @@ public class PointOfInterestMapMarker : MonoBehaviour
 
 	public MapMarkerIconSelector[] ColourSelectors;
 
-	public bool IsListWidget;
+	public bool IsListWidget = false;
 
-	public GameObject DeleteButton;
+	public GameObject DeleteButton = null;
 }

@@ -18,5 +18,5 @@ public class ItemPreviewIcon : BaseMonoBehaviour, IInventoryChanged, IItemAmount
 	public Text amountText;
 
 	[NonSerialized]
-	public Item item;
+	public Item item = null;
 }

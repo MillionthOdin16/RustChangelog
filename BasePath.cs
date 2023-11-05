@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 public class BasePath : MonoBehaviour, IAIPath
 {
@@ -51,12 +52,12 @@ public class BasePath : MonoBehaviour, IAIPath
 
 	public static void AutoGenerateLinks(BasePath path, float maxRange = -1f)
 	{
-		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
 		path.AddChildren();
 		foreach (BasePathNode node in path.nodes)
 		{
@@ -80,12 +81,13 @@ public class BasePath : MonoBehaviour, IAIPath
 
 	public void GetNodesNear(Vector3 point, ref List<IAIPathNode> nearNodes, float dist = 10f)
 	{
-		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		Profiler.BeginSample("BasePath.GetNodesNear");
 		foreach (BasePathNode node in nodes)
 		{
 			Vector3 val = Vector3Ex.XZ(point) - Vector3Ex.XZ(node.Position);
@@ -94,14 +96,16 @@ public class BasePath : MonoBehaviour, IAIPath
 				nearNodes.Add(node);
 			}
 		}
+		Profiler.EndSample();
 	}
 
 	public IAIPathNode GetClosestToPoint(Vector3 point)
 	{
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
+		Profiler.BeginSample("BasePath.GetClosestToPoint");
 		IAIPathNode result = nodes[0];
 		float num = float.PositiveInfinity;
 		foreach (BasePathNode node in nodes)
@@ -117,27 +121,29 @@ public class BasePath : MonoBehaviour, IAIPath
 				}
 			}
 		}
+		Profiler.EndSample();
 		return result;
 	}
 
 	public IAIPathInterestNode GetRandomInterestNodeAwayFrom(Vector3 from, float dist = 10f)
 	{
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
 		PathInterestNode pathInterestNode = null;
 		int num = 0;
 		while ((Object)(object)pathInterestNode == (Object)null && num < 20)
 		{
 			pathInterestNode = interestZones[Random.Range(0, interestZones.Count)];
 			Vector3 val = ((Component)pathInterestNode).transform.position - from;
-			if (!(((Vector3)(ref val)).sqrMagnitude < dist * dist))
+			if (((Vector3)(ref val)).sqrMagnitude < dist * dist)
 			{
-				break;
+				pathInterestNode = null;
+				num++;
+				continue;
 			}
-			pathInterestNode = null;
-			num++;
+			break;
 		}
 		if ((Object)(object)pathInterestNode == (Object)null)
 		{

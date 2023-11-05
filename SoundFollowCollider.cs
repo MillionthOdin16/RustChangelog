@@ -8,5 +8,5 @@ public class SoundFollowCollider : MonoBehaviour, IClientComponent
 
 	public Bounds soundFollowBounds;
 
-	public bool startImmediately;
+	public bool startImmediately = false;
 }

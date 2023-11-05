@@ -111,7 +111,8 @@ public class BlackjackController : CardGameController
 	public void InputsToList(int availableInputs, List<BlackjackInputOption> result)
 	{
 		BlackjackInputOption[] array = (BlackjackInputOption[])Enum.GetValues(typeof(BlackjackInputOption));
-		foreach (BlackjackInputOption blackjackInputOption in array)
+		BlackjackInputOption[] array2 = array;
+		foreach (BlackjackInputOption blackjackInputOption in array2)
 		{
 			if (blackjackInputOption != 0 && ((uint)availableInputs & (uint)blackjackInputOption) == (uint)blackjackInputOption)
 			{
@@ -160,11 +161,7 @@ public class BlackjackController : CardGameController
 	{
 		int cardsValue = GetCardsValue(cards, CardsValueMode.Low);
 		int cardsValue2 = GetCardsValue(cards, CardsValueMode.High);
-		if (cardsValue2 <= 21)
-		{
-			return cardsValue2;
-		}
-		return cardsValue;
+		return (cardsValue2 > 21) ? cardsValue : cardsValue2;
 	}
 
 	public int GetCardValue(PlayingCard card, CardsValueMode mode)
@@ -178,11 +175,7 @@ public class BlackjackController : CardGameController
 		{
 			return 10;
 		}
-		if (mode != 0)
-		{
-			return 11;
-		}
-		return 1;
+		return (mode == CardsValueMode.Low) ? 1 : 11;
 	}
 
 	public bool Has21(List<PlayingCard> cards)
@@ -192,11 +185,7 @@ public class BlackjackController : CardGameController
 
 	public bool HasBlackjack(List<PlayingCard> cards)
 	{
-		if (GetCardsValue(cards, CardsValueMode.High) == 21)
-		{
-			return cards.Count == 2;
-		}
-		return false;
+		return GetCardsValue(cards, CardsValueMode.High) == 21 && cards.Count == 2;
 	}
 
 	public bool HasBusted(List<PlayingCard> cards)
@@ -290,7 +279,9 @@ public class BlackjackController : CardGameController
 
 	public int ResultsToInt(BlackjackRoundResult mainResult, BlackjackRoundResult splitResult, int insurancePayout)
 	{
-		return (int)(mainResult + 10 * (int)splitResult + 100 * insurancePayout);
+		int num = (int)mainResult;
+		num += 10 * (int)splitResult;
+		return num + 100 * insurancePayout;
 	}
 
 	public void ResultsFromInt(int result, out BlackjackRoundResult mainResult, out BlackjackRoundResult splitResult, out int insurancePayout)
@@ -336,7 +327,8 @@ public class BlackjackController : CardGameController
 		BlackjackInputOption blackjackInputOption = list[Random.Range(0, list.Count)];
 		if (AllBetsPlaced)
 		{
-			if (GetOptimalCardsValue(pdBlackjack.Cards) < 17 && list.Contains(BlackjackInputOption.Hit))
+			int optimalCardsValue = GetOptimalCardsValue(pdBlackjack.Cards);
+			if (optimalCardsValue < 17 && list.Contains(BlackjackInputOption.Hit))
 			{
 				blackjackInputOption = BlackjackInputOption.Hit;
 			}
@@ -351,13 +343,13 @@ public class BlackjackController : CardGameController
 		}
 		if (list.Count > 0)
 		{
-			int value = 0;
+			int num = 0;
 			if (blackjackInputOption == BlackjackInputOption.SubmitBet)
 			{
-				value = MinBuyIn;
+				num = MinBuyIn;
 			}
-			Debug.Log((object)(pdBlackjack.UserID + " Taking random action: " + blackjackInputOption.ToString() + " with value " + value));
-			ReceivedInputFromPlayer(pdBlackjack, (int)blackjackInputOption, countAsAction: true, value);
+			Debug.Log((object)string.Concat(pdBlackjack.UserID, " Taking random action: ", blackjackInputOption, " with value ", num));
+			ReceivedInputFromPlayer(pdBlackjack, (int)blackjackInputOption, countAsAction: true, num);
 		}
 		else
 		{
@@ -584,7 +576,7 @@ public class BlackjackController : CardGameController
 		case BlackjackInputOption.Split:
 		{
 			PlayingCard playingCard = pdBlackjack.Cards[1];
-			bool num = playingCard.Rank == Rank.Ace;
+			bool flag = playingCard.Rank == Rank.Ace;
 			pdBlackjack.SplitCards.Add(playingCard);
 			pdBlackjack.Cards.Remove(playingCard);
 			cardStack.TryTakeCard(out var card2);
@@ -592,7 +584,7 @@ public class BlackjackController : CardGameController
 			cardStack.TryTakeCard(out card2);
 			pdBlackjack.SplitCards.Add(card2);
 			selectedMoveValue = TryMakeBet(pdBlackjack, pdBlackjack.betThisRound, BetType.Split);
-			if (num)
+			if (flag)
 			{
 				pdBlackjack.SetHasCompletedTurn(hasActed: true);
 			}
@@ -761,9 +753,9 @@ public class BlackjackController : CardGameController
 	protected override void EndCycle()
 	{
 		CardPlayerData[] playerData = base.PlayerData;
-		for (int i = 0; i < playerData.Length; i++)
+		foreach (CardPlayerData cardPlayerData in playerData)
 		{
-			playerData[i].SetHasCompletedTurn(hasActed: false);
+			cardPlayerData.SetHasCompletedTurn(hasActed: false);
 		}
 		if (dealerCards.Count == 0)
 		{
@@ -815,7 +807,8 @@ public class BlackjackController : CardGameController
 	private void DealerPlayInvoke()
 	{
 		int cardsValue = GetCardsValue(dealerCards, CardsValueMode.High);
-		if (GetCardsValue(dealerCards, CardsValueMode.Low) < 17 && (cardsValue < 17 || cardsValue > 21))
+		int cardsValue2 = GetCardsValue(dealerCards, CardsValueMode.Low);
+		if (cardsValue2 < 17 && (cardsValue < 17 || cardsValue > 21))
 		{
 			cardStack.TryTakeCard(out var card);
 			dealerCards.Add(card);

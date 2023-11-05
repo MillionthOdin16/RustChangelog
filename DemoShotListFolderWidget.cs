@@ -5,17 +5,17 @@ public class DemoShotListFolderWidget : MonoBehaviour
 {
 	public RustButton FolderName;
 
-	public Transform ChildRoot;
+	public Transform ChildRoot = null;
 
-	public GameObject UpArrow;
+	public GameObject UpArrow = null;
 
-	public GameObject DownArrow;
+	public GameObject DownArrow = null;
 
-	public RustText CountText;
+	public RustText CountText = null;
 
-	public GameObject OpenRoot;
+	public GameObject OpenRoot = null;
 
-	public GameObject ModifyRoot;
+	public GameObject ModifyRoot = null;
 
-	public RustInput FolderRenameInput;
+	public RustInput FolderRenameInput = null;
 }

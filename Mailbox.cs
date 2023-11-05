@@ -12,9 +12,9 @@ public class Mailbox : StorageContainer
 
 	public ItemDefinition[] allowedItems;
 
-	public bool autoSubmitWhenClosed;
+	public bool autoSubmitWhenClosed = false;
 
-	public bool shouldMarkAsFull;
+	public bool shouldMarkAsFull = false;
 
 	public int mailInputSlot => inventorySlots - 1;
 
@@ -28,7 +28,7 @@ public class Mailbox : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_Submit "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_Submit "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_Submit", 0);
 				try
@@ -74,11 +74,7 @@ public class Mailbox : StorageContainer
 
 	public bool IsFull()
 	{
-		if (shouldMarkAsFull)
-		{
-			return HasFlag(Flags.Reserved1);
-		}
-		return false;
+		return shouldMarkAsFull && HasFlag(Flags.Reserved1);
 	}
 
 	public void MarkFull(bool full)
@@ -101,11 +97,7 @@ public class Mailbox : StorageContainer
 			}
 			return false;
 		}
-		if (!HasFreeSpace())
-		{
-			return !shouldMarkAsFull;
-		}
-		return true;
+		return HasFreeSpace() || !shouldMarkAsFull;
 	}
 
 	private bool HasFreeSpace()
@@ -137,10 +129,10 @@ public class Mailbox : StorageContainer
 
 	public override void PlayerStoppedLooting(BasePlayer player)
 	{
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
 		if (autoSubmitWhenClosed)
 		{
 			SubmitInputItems(player);
@@ -168,13 +160,13 @@ public class Mailbox : StorageContainer
 
 	public void SubmitInputItems(BasePlayer fromPlayer)
 	{
-		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ad: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ba: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
 		Item slot = base.inventory.GetSlot(mailInputSlot);
 		if (IsFull() || slot == null)
 		{
@@ -210,11 +202,7 @@ public class Mailbox : StorageContainer
 		{
 			flag = item == base.inventory.GetSlot(mailInputSlot);
 		}
-		if (flag)
-		{
-			return base.CanMoveFrom(player, item);
-		}
-		return false;
+		return flag && base.CanMoveFrom(player, item);
 	}
 
 	public override bool ItemFilter(Item item, int targetSlot)

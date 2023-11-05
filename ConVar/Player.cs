@@ -87,8 +87,8 @@ public class Player : ConsoleSystem
 	[ServerUserVar]
 	public static void cinematic_gesture(Arg arg)
 	{
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
 		if (Server.cinematic)
 		{
 			string @string = arg.GetString(0, "");
@@ -135,11 +135,11 @@ public class Player : ConsoleSystem
 	[ServerUserVar]
 	public static void mount(Arg arg)
 	{
-		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0107: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014d: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer basePlayer = arg.Player();
 		if (!basePlayer.IsAdmin && !basePlayer.IsDeveloper && !Server.cinematic)
 		{
@@ -269,8 +269,8 @@ public class Player : ConsoleSystem
 	[ServerVar]
 	public static void wakeupall(Arg arg)
 	{
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer basePlayer = arg.Player();
 		if (!basePlayer.IsAdmin && !basePlayer.IsDeveloper && !Server.cinematic)
 		{
@@ -375,9 +375,9 @@ public class Player : ConsoleSystem
 	[ServerVar(ServerAdmin = true)]
 	public static void fillwater(Arg arg)
 	{
-		bool num = arg.GetString(0, "").ToLower() == "salt";
+		bool flag = arg.GetString(0, "").ToLower() == "salt";
 		BasePlayer basePlayer = arg.Player();
-		ItemDefinition liquidType = ItemManager.FindItemDefinition(num ? "water.salt" : "water");
+		ItemDefinition liquidType = ItemManager.FindItemDefinition(flag ? "water.salt" : "water");
 		ItemModContainer itemModContainer = default(ItemModContainer);
 		for (int i = 0; i < PlayerBelt.MaxBeltSlots; i++)
 		{
@@ -443,7 +443,7 @@ public class Player : ConsoleSystem
 	[ServerVar]
 	public static void gesture_radius(Arg arg)
 	{
-		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer basePlayer = arg.Player();
 		if ((Object)(object)basePlayer == (Object)null || !basePlayer.IsAdmin)
 		{
@@ -476,7 +476,7 @@ public class Player : ConsoleSystem
 	[ServerVar]
 	public static void stopgesture_radius(Arg arg)
 	{
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer basePlayer = arg.Player();
 		if ((Object)(object)basePlayer == (Object)null || !basePlayer.IsAdmin)
 		{

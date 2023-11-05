@@ -14,7 +14,7 @@ public class ChippyBoss : SpriteArcadeEntity
 
 		public ArcadeEntityController damageInstance;
 
-		public bool destroyed;
+		public bool destroyed = false;
 	}
 
 	public Vector2 roamDistance;

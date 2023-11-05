@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class SlotMachineStorage : StorageContainer
 {
-	public int Amount;
+	public int Amount = 0;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{

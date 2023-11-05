@@ -9,7 +9,7 @@ using UnityEngine.UI;
 
 public class PowerCounter : IOEntity
 {
-	private int counterNumber;
+	private int counterNumber = 0;
 
 	private int targetCounterNumber = 10;
 
@@ -37,7 +37,7 @@ public class PowerCounter : IOEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SERVER_SetTarget "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SERVER_SetTarget "));
 				}
 				TimeWarning val2 = TimeWarning.New("SERVER_SetTarget", 0);
 				try
@@ -56,7 +56,7 @@ public class PowerCounter : IOEntity
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -68,7 +68,7 @@ public class PowerCounter : IOEntity
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -88,12 +88,12 @@ public class PowerCounter : IOEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ToggleDisplayMode "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ToggleDisplayMode "));
 				}
-				TimeWarning val2 = TimeWarning.New("ToggleDisplayMode", 0);
+				TimeWarning val5 = TimeWarning.New("ToggleDisplayMode", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					TimeWarning val6 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsVisible.Test(3222475159u, "ToggleDisplayMode", this, player, 3f))
@@ -103,11 +103,11 @@ public class PowerCounter : IOEntity
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val6)?.Dispose();
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val7 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -119,7 +119,7 @@ public class PowerCounter : IOEntity
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val7)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -130,7 +130,7 @@ public class PowerCounter : IOEntity
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val5)?.Dispose();
 				}
 				return true;
 			}
@@ -154,11 +154,7 @@ public class PowerCounter : IOEntity
 
 	public bool CanPlayerAdmin(BasePlayer player)
 	{
-		if ((Object)(object)player != (Object)null)
-		{
-			return player.CanBuild();
-		}
-		return false;
+		return (Object)(object)player != (Object)null && player.CanBuild();
 	}
 
 	public int GetTarget()
@@ -186,7 +182,8 @@ public class PowerCounter : IOEntity
 	[RPC_Server.IsVisible(3f)]
 	public void ToggleDisplayMode(RPCMessage msg)
 	{
-		if (msg.player.CanBuild())
+		BasePlayer player = msg.player;
+		if (player.CanBuild())
 		{
 			SetFlag(Flags.Reserved2, msg.read.Bit(), recursive: false, networkupdate: false);
 			MarkDirty();

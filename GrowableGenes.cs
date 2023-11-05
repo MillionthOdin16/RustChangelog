@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 public class GrowableGenes
 {
@@ -87,15 +88,17 @@ public class GrowableGenes
 
 	public int GetGeneTypeCount(GrowableGenetics.GeneType geneType)
 	{
+		Profiler.BeginSample("GetGeneTypeCount");
 		int num = 0;
 		GrowableGene[] genes = Genes;
-		for (int i = 0; i < genes.Length; i++)
+		foreach (GrowableGene growableGene in genes)
 		{
-			if (genes[i].Type == geneType)
+			if (growableGene.Type == geneType)
 			{
 				num++;
 			}
 		}
+		Profiler.EndSample();
 		return num;
 	}
 
@@ -103,9 +106,9 @@ public class GrowableGenes
 	{
 		int num = 0;
 		GrowableGene[] genes = Genes;
-		for (int i = 0; i < genes.Length; i++)
+		foreach (GrowableGene growableGene in genes)
 		{
-			if (genes[i].IsPositive())
+			if (growableGene.IsPositive())
 			{
 				num++;
 			}
@@ -117,9 +120,9 @@ public class GrowableGenes
 	{
 		int num = 0;
 		GrowableGene[] genes = Genes;
-		for (int i = 0; i < genes.Length; i++)
+		foreach (GrowableGene growableGene in genes)
 		{
-			if (!genes[i].IsPositive())
+			if (!growableGene.IsPositive())
 			{
 				num++;
 			}

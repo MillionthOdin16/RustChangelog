@@ -4,9 +4,9 @@ using UnityEngine.UI;
 
 public class SlotMachinePayoutWidget : MonoBehaviour
 {
-	public RustText PayoutAmount;
+	public RustText PayoutAmount = null;
 
-	public GameObject AnyText;
+	public GameObject AnyText = null;
 
 	public Image[] Faces;
 }

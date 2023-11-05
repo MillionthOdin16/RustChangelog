@@ -30,7 +30,7 @@ public class InstantCameraTool : HeldEntity
 
 	private TimeSince _sinceLastPhoto;
 
-	private bool hasSentAchievement;
+	private bool hasSentAchievement = false;
 
 	public const string PhotographPlayerAchievement = "SUMMER_PAPARAZZI";
 
@@ -44,7 +44,7 @@ public class InstantCameraTool : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - TakePhoto "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - TakePhoto "));
 				}
 				TimeWarning val2 = TimeWarning.New("TakePhoto", 0);
 				try
@@ -67,7 +67,7 @@ public class InstantCameraTool : HeldEntity
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -79,7 +79,7 @@ public class InstantCameraTool : HeldEntity
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -107,20 +107,22 @@ public class InstantCameraTool : HeldEntity
 	[RPC_Server.CallsPerSecond(3uL)]
 	private void TakePhoto(RPCMessage msg)
 	{
-		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0142: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0116: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0123: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0129: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0187: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0197: Unknown result type (might be due to invalid IL or missing references)
-		//IL_019c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ac: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0201: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01aa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0172: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0178: Unknown result type (might be due to invalid IL or missing references)
+		//IL_017f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0185: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0203: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0208: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0211: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0213: Unknown result type (might be due to invalid IL or missing references)
+		//IL_021a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_021f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0272: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer player = msg.player;
 		Item item = GetItem();
 		if ((Object)(object)player == (Object)null || item == null || item.condition <= 0f)
@@ -162,7 +164,8 @@ public class InstantCameraTool : HeldEntity
 		{
 			item2.Drop(player.GetDropPosition(), player.GetDropVelocity());
 		}
-		EffectNetwork.Send(new Effect(screenshotEffect.resourcePath, ((Component)this).transform.position, ((Component)this).transform.forward, msg.connection));
+		Effect effect = new Effect(screenshotEffect.resourcePath, ((Component)this).transform.position, ((Component)this).transform.forward, msg.connection);
+		EffectNetwork.Send(effect);
 		if (!hasSentAchievement && !string.IsNullOrEmpty("SUMMER_PAPARAZZI"))
 		{
 			Vector3 position = GetOwnerPlayer().eyes.position;

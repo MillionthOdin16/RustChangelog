@@ -3,6 +3,7 @@ using ConVar;
 using Facepunch;
 using ProtoBuf;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 public class BaseCorpse : BaseCombatEntity
 {
@@ -34,8 +35,8 @@ public class BaseCorpse : BaseCombatEntity
 
 	public virtual void InitCorpse(BaseEntity pr)
 	{
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
 		parentEnt = pr;
 		((Component)this).transform.SetPositionAndRotation(parentEnt.CenterPoint(), ((Component)parentEnt).transform.rotation);
 		SpawnPointInstance component = ((Component)this).GetComponent<SpawnPointInstance>();
@@ -96,8 +97,8 @@ public class BaseCorpse : BaseCombatEntity
 
 	public override void Save(SaveInfo info)
 	{
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
 		base.Save(info);
 		info.msg.corpse = Pool.Get<Corpse>();
 		if (parentEnt.IsValid())
@@ -116,9 +117,9 @@ public class BaseCorpse : BaseCombatEntity
 		try
 		{
 			BaseEntity[] array = takeChildrenFrom.children.ToArray();
-			for (int i = 0; i < array.Length; i++)
+			foreach (BaseEntity baseEntity in array)
 			{
-				array[i].SwitchParent(this);
+				baseEntity.SwitchParent(this);
 			}
 		}
 		finally
@@ -133,13 +134,13 @@ public class BaseCorpse : BaseCombatEntity
 
 	private Rigidbody SetupRigidBody()
 	{
-		//IL_0158: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0170: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0189: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ce: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01e1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01fc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ea: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0103: Unknown result type (might be due to invalid IL or missing references)
 		if (base.isServer)
 		{
 			GameObject val = base.gameManager.FindPrefab(prefabRagdoll.resourcePath);
@@ -157,45 +158,48 @@ public class BaseCorpse : BaseCombatEntity
 				Debug.LogError((object)("[BaseCorpse] ragdoll.primaryBody isn't set!" + ((Object)((Component)component).gameObject).name));
 				return null;
 			}
-			if ((Object)(object)((Component)this).gameObject.GetComponent<Collider>() == (Object)null)
+			Collider component2 = ((Component)this).gameObject.GetComponent<Collider>();
+			if ((Object)(object)component2 == (Object)null)
 			{
-				BoxCollider component2 = ((Component)component.primaryBody).GetComponent<BoxCollider>();
-				if ((Object)(object)component2 == (Object)null)
+				BoxCollider component3 = ((Component)component.primaryBody).GetComponent<BoxCollider>();
+				if ((Object)(object)component3 == (Object)null)
 				{
 					Debug.LogError((object)"Ragdoll has unsupported primary collider (make it supported) ", (Object)(object)component);
 					return null;
 				}
-				BoxCollider obj = ((Component)this).gameObject.AddComponent<BoxCollider>();
-				obj.size = component2.size * 2f;
-				obj.center = component2.center;
-				((Collider)obj).sharedMaterial = ((Collider)component2).sharedMaterial;
+				BoxCollider val2 = ((Component)this).gameObject.AddComponent<BoxCollider>();
+				val2.size = component3.size * 2f;
+				val2.center = component3.center;
+				((Collider)val2).sharedMaterial = ((Collider)component3).sharedMaterial;
 			}
 		}
-		Rigidbody val2 = ((Component)this).GetComponent<Rigidbody>();
-		if ((Object)(object)val2 == (Object)null)
+		Rigidbody val3 = ((Component)this).GetComponent<Rigidbody>();
+		if ((Object)(object)val3 == (Object)null)
 		{
-			val2 = ((Component)this).gameObject.AddComponent<Rigidbody>();
+			val3 = ((Component)this).gameObject.AddComponent<Rigidbody>();
 		}
-		val2.mass = 10f;
-		val2.useGravity = true;
-		val2.drag = 0.5f;
-		val2.angularDrag = 0.5f;
-		val2.collisionDetectionMode = (CollisionDetectionMode)0;
-		val2.sleepThreshold = 0.05f;
+		val3.mass = 10f;
+		val3.useGravity = true;
+		val3.drag = 0.5f;
+		val3.angularDrag = 0.5f;
+		val3.collisionDetectionMode = (CollisionDetectionMode)0;
+		val3.sleepThreshold = 0.05f;
 		if (base.isServer)
 		{
-			Buoyancy component3 = ((Component)this).GetComponent<Buoyancy>();
-			if ((Object)(object)component3 != (Object)null)
+			Profiler.BeginSample("BaseCorpse.Setup");
+			Buoyancy component4 = ((Component)this).GetComponent<Buoyancy>();
+			if ((Object)(object)component4 != (Object)null)
 			{
-				component3.rigidBody = val2;
+				component4.rigidBody = val3;
 			}
+			Profiler.EndSample();
 			Vector3 velocity = Vector3Ex.Range(-1f, 1f);
 			velocity.y += 1f;
-			val2.velocity = velocity;
-			val2.collisionDetectionMode = (CollisionDetectionMode)3;
-			val2.angularVelocity = Vector3Ex.Range(-10f, 10f);
+			val3.velocity = velocity;
+			val3.collisionDetectionMode = (CollisionDetectionMode)3;
+			val3.angularVelocity = Vector3Ex.Range(-10f, 10f);
 		}
-		return val2;
+		return val3;
 	}
 
 	public override void Load(LoadInfo info)
@@ -209,12 +213,14 @@ public class BaseCorpse : BaseCombatEntity
 
 	private void Load(Corpse corpse)
 	{
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
 		if (base.isServer)
 		{
 			parentEnt = BaseNetworkable.serverEntities.Find(corpse.parentID) as BaseEntity;
 		}
-		_ = base.isClient;
+		if (!base.isClient)
+		{
+		}
 	}
 
 	public override void OnAttacked(HitInfo info)

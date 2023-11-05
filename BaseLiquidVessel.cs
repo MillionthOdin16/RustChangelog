@@ -25,23 +25,23 @@ public class BaseLiquidVessel : AttackEntity
 
 	public SoundDefinition fillFromWorldSoundDef;
 
-	public bool hasLid;
+	public bool hasLid = false;
 
 	public float throwScale = 10f;
 
-	public bool canDrinkFrom;
+	public bool canDrinkFrom = false;
 
-	public bool updateVMWater;
+	public bool updateVMWater = false;
 
-	public float minThrowFrac;
+	public float minThrowFrac = 0f;
 
-	public bool useThrowAnim;
+	public bool useThrowAnim = false;
 
 	public float fillMlPerSec = 500f;
 
-	private float lastFillTime;
+	private float lastFillTime = 0f;
 
-	private float nextFreeTime;
+	private float nextFreeTime = 0f;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -53,7 +53,7 @@ public class BaseLiquidVessel : AttackEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - DoDrink "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - DoDrink "));
 				}
 				TimeWarning val2 = TimeWarning.New("DoDrink", 0);
 				try
@@ -72,7 +72,7 @@ public class BaseLiquidVessel : AttackEntity
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -84,7 +84,7 @@ public class BaseLiquidVessel : AttackEntity
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -104,12 +104,12 @@ public class BaseLiquidVessel : AttackEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SendFilling "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SendFilling "));
 				}
-				TimeWarning val2 = TimeWarning.New("SendFilling", 0);
+				TimeWarning val5 = TimeWarning.New("SendFilling", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Call", 0);
+					TimeWarning val6 = TimeWarning.New("Call", 0);
 					try
 					{
 						RPCMessage rPCMessage = default(RPCMessage);
@@ -121,7 +121,7 @@ public class BaseLiquidVessel : AttackEntity
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val6)?.Dispose();
 					}
 				}
 				catch (Exception ex2)
@@ -131,7 +131,7 @@ public class BaseLiquidVessel : AttackEntity
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val5)?.Dispose();
 				}
 				return true;
 			}
@@ -140,12 +140,12 @@ public class BaseLiquidVessel : AttackEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ThrowContents "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ThrowContents "));
 				}
-				TimeWarning val2 = TimeWarning.New("ThrowContents", 0);
+				TimeWarning val7 = TimeWarning.New("ThrowContents", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Call", 0);
+					TimeWarning val8 = TimeWarning.New("Call", 0);
 					try
 					{
 						RPCMessage rPCMessage = default(RPCMessage);
@@ -157,7 +157,7 @@ public class BaseLiquidVessel : AttackEntity
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val8)?.Dispose();
 					}
 				}
 				catch (Exception ex3)
@@ -167,7 +167,7 @@ public class BaseLiquidVessel : AttackEntity
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val7)?.Dispose();
 				}
 				return true;
 			}
@@ -187,8 +187,8 @@ public class BaseLiquidVessel : AttackEntity
 
 	public override void OnHeldChanged()
 	{
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
 		base.OnHeldChanged();
 		if (IsDisabled())
 		{
@@ -226,10 +226,10 @@ public class BaseLiquidVessel : AttackEntity
 
 	public void StartFilling()
 	{
-		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00dc: Unknown result type (might be due to invalid IL or missing references)
 		float num = Time.realtimeSinceStartup - lastFillTime;
 		StopFilling();
 		((FacepunchBehaviour)this).InvokeRepeating((Action)FillCheck, 0f, 0.3f);
@@ -264,11 +264,11 @@ public class BaseLiquidVessel : AttackEntity
 
 	public void FillCheck()
 	{
-		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008b: Unknown result type (might be due to invalid IL or missing references)
 		if (base.isClient)
 		{
 			return;
@@ -278,22 +278,23 @@ public class BaseLiquidVessel : AttackEntity
 		{
 			return;
 		}
-		float num = (Time.realtimeSinceStartup - lastFillTime) * fillMlPerSec;
+		float num = Time.realtimeSinceStartup - lastFillTime;
+		float num2 = num * fillMlPerSec;
 		Vector3 pos = ((Component)ownerPlayer).transform.position - new Vector3(0f, 1f, 0f);
 		LiquidContainer facingLiquidContainer = GetFacingLiquidContainer();
 		if ((Object)(object)facingLiquidContainer == (Object)null && CanFillFromWorld())
 		{
-			AddLiquid(WaterResource.GetAtPoint(pos), Mathf.FloorToInt(num));
+			AddLiquid(WaterResource.GetAtPoint(pos), Mathf.FloorToInt(num2));
 		}
 		else if ((Object)(object)facingLiquidContainer != (Object)null && facingLiquidContainer.HasLiquidItem())
 		{
-			int num2 = Mathf.CeilToInt((1f - HeldFraction()) * (float)MaxHoldable());
-			if (num2 > 0)
+			int num3 = Mathf.CeilToInt((1f - HeldFraction()) * (float)MaxHoldable());
+			if (num3 > 0)
 			{
 				Item liquidItem = facingLiquidContainer.GetLiquidItem();
-				int num3 = Mathf.Min(Mathf.CeilToInt(num), Mathf.Min(liquidItem.amount, num2));
-				AddLiquid(liquidItem.info, num3);
-				liquidItem.UseItem(num3);
+				int num4 = Mathf.Min(Mathf.CeilToInt(num2), Mathf.Min(liquidItem.amount, num3));
+				AddLiquid(liquidItem.info, num4);
+				liquidItem.UseItem(num4);
 				facingLiquidContainer.OpenTap(2f);
 			}
 		}
@@ -304,7 +305,8 @@ public class BaseLiquidVessel : AttackEntity
 	{
 		if (!base.UsingInfiniteAmmoCheat)
 		{
-			Item slot = GetItem().contents.GetSlot(0);
+			Item item = GetItem();
+			Item slot = item.contents.GetSlot(0);
 			if (slot != null)
 			{
 				slot.UseItem(amount);
@@ -440,27 +442,28 @@ public class BaseLiquidVessel : AttackEntity
 		foreach (Item item2 in item.contents.itemList)
 		{
 			ItemModConsume component = ((Component)item2.info).GetComponent<ItemModConsume>();
-			if (!((Object)(object)component == (Object)null) && component.CanDoAction(item2, msg.player))
+			if ((Object)(object)component == (Object)null || !component.CanDoAction(item2, msg.player))
 			{
-				component.DoAction(item2, msg.player);
-				break;
+				continue;
 			}
+			component.DoAction(item2, msg.player);
+			break;
 		}
 	}
 
 	[RPC_Server]
 	private void ThrowContents(RPCMessage msg)
 	{
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer ownerPlayer = GetOwnerPlayer();
 		if (!((Object)(object)ownerPlayer == (Object)null))
 		{
@@ -471,15 +474,15 @@ public class BaseLiquidVessel : AttackEntity
 
 	public void DoThrow(Vector3 pos, Vector3 velocity)
 	{
-		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ec: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer ownerPlayer = GetOwnerPlayer();
 		if ((Object)(object)ownerPlayer == (Object)null)
 		{
@@ -518,7 +521,7 @@ public class BaseLiquidVessel : AttackEntity
 
 	public bool CanFillFromWorld()
 	{
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer ownerPlayer = GetOwnerPlayer();
 		if (!Object.op_Implicit((Object)(object)ownerPlayer))
 		{
@@ -538,8 +541,8 @@ public class BaseLiquidVessel : AttackEntity
 
 	public LiquidContainer GetFacingLiquidContainer()
 	{
-		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer ownerPlayer = GetOwnerPlayer();
 		if (!Object.op_Implicit((Object)(object)ownerPlayer))
 		{

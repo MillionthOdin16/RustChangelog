@@ -9,7 +9,7 @@ public class ConsoleInput
 
 	public string[] statusText = new string[3] { "", "", "" };
 
-	internal float nextUpdate;
+	internal float nextUpdate = 0f;
 
 	public bool valid => Console.BufferWidth > 0;
 
@@ -33,6 +33,7 @@ public class ConsoleInput
 		{
 			Console.ForegroundColor = ConsoleColor.White;
 			Console.CursorTop++;
+			Console.ForegroundColor = ConsoleColor.Yellow;
 			for (int i = 0; i < statusText.Length; i++)
 			{
 				Console.CursorLeft = 0;

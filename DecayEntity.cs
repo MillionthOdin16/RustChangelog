@@ -5,6 +5,7 @@ using Facepunch;
 using ProtoBuf;
 using Rust;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 public class DecayEntity : BaseCombatEntity
 {
@@ -13,11 +14,11 @@ public class DecayEntity : BaseCombatEntity
 	public Vector3 debrisRotationOffset = Vector3.zero;
 
 	[NonSerialized]
-	public uint buildingID;
+	public uint buildingID = 0u;
 
-	private float decayTimer;
+	private float decayTimer = 0f;
 
-	private float upkeepTimer;
+	private float upkeepTimer = 0f;
 
 	private Upkeep upkeep;
 
@@ -25,11 +26,44 @@ public class DecayEntity : BaseCombatEntity
 
 	private DecayPoint[] decayPoints;
 
-	private float lastDecayTick;
+	private float lastDecayTick = 0f;
 
 	private float decayVariance = 1f;
 
 	public virtual bool BypassInsideDecayMultiplier => false;
+
+	public override void Save(SaveInfo info)
+	{
+		base.Save(info);
+		Profiler.BeginSample("DecayEntity.Save");
+		info.msg.decayEntity = Pool.Get<DecayEntity>();
+		info.msg.decayEntity.buildingID = buildingID;
+		if (info.forDisk)
+		{
+			info.msg.decayEntity.decayTimer = decayTimer;
+			info.msg.decayEntity.upkeepTimer = upkeepTimer;
+		}
+		Profiler.EndSample();
+	}
+
+	public override void Load(LoadInfo info)
+	{
+		base.Load(info);
+		if (info.msg.decayEntity == null)
+		{
+			return;
+		}
+		decayTimer = info.msg.decayEntity.decayTimer;
+		upkeepTimer = info.msg.decayEntity.upkeepTimer;
+		if (buildingID != info.msg.decayEntity.buildingID)
+		{
+			AttachToBuilding(info.msg.decayEntity.buildingID);
+			if (info.fromDisk)
+			{
+				BuildingManager.server.LoadBuildingID(buildingID);
+			}
+		}
+	}
 
 	public override void ResetState()
 	{
@@ -150,10 +184,10 @@ public class DecayEntity : BaseCombatEntity
 
 	public BuildingBlock GetNearbyBuildingBlock()
 	{
-		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
 		float num = float.MaxValue;
 		BuildingBlock result = null;
 		Vector3 position = PivotPoint();
@@ -268,8 +302,9 @@ public class DecayEntity : BaseCombatEntity
 			}
 			if (num4 > 0f)
 			{
-				float num5 = num2 / decay.GetDecayDuration(this) * MaxHealth();
-				Hurt(num5 * num4 * decayVariance, DamageType.Decay);
+				float num5 = num2 / decay.GetDecayDuration(this);
+				float num6 = num5 * MaxHealth();
+				Hurt(num6 * num4 * decayVariance, DamageType.Decay);
 			}
 		}
 		finally
@@ -286,11 +321,11 @@ public class DecayEntity : BaseCombatEntity
 
 	public override void OnKilled(HitInfo info)
 	{
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
 		if (debrisPrefab.isValid)
 		{
 			BaseEntity baseEntity = GameManager.server.CreateEntity(debrisPrefab.resourcePath, ((Component)this).transform.position, ((Component)this).transform.rotation * Quaternion.Euler(debrisRotationOffset));
@@ -301,56 +336,5 @@ public class DecayEntity : BaseCombatEntity
 			}
 		}
 		base.OnKilled(info);
-	}
-
-	public override bool SupportsChildDeployables()
-	{
-		BaseEntity baseEntity = GetParentEntity();
-		if (!((Object)(object)baseEntity != (Object)null))
-		{
-			return false;
-		}
-		return baseEntity.ForceDeployableSetParent();
-	}
-
-	public override bool ForceDeployableSetParent()
-	{
-		BaseEntity baseEntity = GetParentEntity();
-		if (!((Object)(object)baseEntity != (Object)null))
-		{
-			return false;
-		}
-		return baseEntity.ForceDeployableSetParent();
-	}
-
-	public override void Save(SaveInfo info)
-	{
-		base.Save(info);
-		info.msg.decayEntity = Pool.Get<DecayEntity>();
-		info.msg.decayEntity.buildingID = buildingID;
-		if (info.forDisk)
-		{
-			info.msg.decayEntity.decayTimer = decayTimer;
-			info.msg.decayEntity.upkeepTimer = upkeepTimer;
-		}
-	}
-
-	public override void Load(LoadInfo info)
-	{
-		base.Load(info);
-		if (info.msg.decayEntity == null)
-		{
-			return;
-		}
-		decayTimer = info.msg.decayEntity.decayTimer;
-		upkeepTimer = info.msg.decayEntity.upkeepTimer;
-		if (buildingID != info.msg.decayEntity.buildingID)
-		{
-			AttachToBuilding(info.msg.decayEntity.buildingID);
-			if (info.fromDisk)
-			{
-				BuildingManager.server.LoadBuildingID(buildingID);
-			}
-		}
 	}
 }

@@ -28,9 +28,9 @@ public class TweakUIMultiSelect : TweakUIBase
 		{
 			string @string = conVar.String;
 			Toggle[] componentsInChildren = ((Component)toggleGroup).GetComponentsInChildren<Toggle>();
-			foreach (Toggle obj in componentsInChildren)
+			foreach (Toggle val in componentsInChildren)
 			{
-				obj.isOn = ((Object)obj).name == @string;
+				val.isOn = ((Object)val).name == @string;
 			}
 		}
 	}

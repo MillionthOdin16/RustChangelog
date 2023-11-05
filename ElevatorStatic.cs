@@ -5,24 +5,24 @@ using UnityEngine;
 
 public class ElevatorStatic : Elevator
 {
-	public bool StaticTop;
+	public bool StaticTop = false;
 
 	private const Flags LiftRecentlyArrived = Flags.Reserved3;
 
 	private List<ElevatorStatic> floorPositions = new List<ElevatorStatic>();
 
-	private ElevatorStatic ownerElevator;
+	private ElevatorStatic ownerElevator = null;
 
 	protected override bool IsStatic => true;
 
 	public override void Spawn()
 	{
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
 		base.Spawn();
 		SetFlag(Flags.Reserved2, b: true);
 		SetFlag(Flags.Reserved1, StaticTop);
@@ -31,7 +31,9 @@ public class ElevatorStatic : Elevator
 			return;
 		}
 		List<RaycastHit> list = Pool.GetList<RaycastHit>();
-		GamePhysics.TraceAll(new Ray(((Component)this).transform.position, -Vector3.up), 0f, list, 200f, 262144, (QueryTriggerInteraction)2);
+		Ray ray = default(Ray);
+		((Ray)(ref ray))._002Ector(((Component)this).transform.position, -Vector3.up);
+		GamePhysics.TraceAll(ray, 0f, list, 200f, 262144, (QueryTriggerInteraction)2);
 		foreach (RaycastHit item in list)
 		{
 			RaycastHit current = item;
@@ -61,23 +63,22 @@ public class ElevatorStatic : Elevator
 
 	protected override bool IsValidFloor(int targetFloor)
 	{
-		if (targetFloor >= 0)
-		{
-			return targetFloor <= base.Floor;
-		}
-		return false;
+		return targetFloor >= 0 && targetFloor <= base.Floor;
 	}
 
 	protected override Vector3 GetWorldSpaceFloorPosition(int targetFloor)
 	{
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
 		if (targetFloor == base.Floor)
 		{
 			return ((Component)this).transform.position + Vector3.up * 1f;
@@ -183,11 +184,7 @@ public class ElevatorStatic : Elevator
 
 	public override int GetPassthroughAmount(int outputSlot = 0)
 	{
-		if (!HasFlag(Flags.Reserved3))
-		{
-			return 0;
-		}
-		return 1;
+		return HasFlag(Flags.Reserved3) ? 1 : 0;
 	}
 
 	public override void Load(LoadInfo info)

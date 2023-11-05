@@ -7,7 +7,7 @@ public class TriggerPlayerForce : TriggerBase, IServerComponent
 
 	public float pushVelocity = 5f;
 
-	public bool requireUpAxis;
+	public bool requireUpAxis = false;
 
 	private const float HACK_DISABLE_TIME = 4f;
 
@@ -45,7 +45,7 @@ public class TriggerPlayerForce : TriggerBase, IServerComponent
 
 	internal override void OnEntityLeave(BaseEntity ent)
 	{
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
 		base.OnEntityLeave(ent);
 		ent.ApplyInheritedVelocity(Vector3.zero);
 	}
@@ -72,11 +72,11 @@ public class TriggerPlayerForce : TriggerBase, IServerComponent
 
 	protected void FixedUpdate()
 	{
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
 		if (entityContents == null)
 		{
 			return;
@@ -93,15 +93,17 @@ public class TriggerPlayerForce : TriggerBase, IServerComponent
 
 	private Vector3 GetPushVelocity(GameObject obj)
 	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
 		Bounds bounds = ((Collider)triggerCollider).bounds;
 		Vector3 val = -(((Bounds)(ref bounds)).center - obj.transform.position);
 		((Vector3)(ref val)).Normalize();
@@ -123,11 +125,7 @@ public class TriggerPlayerForce : TriggerBase, IServerComponent
 			{
 				return false;
 			}
-			if ((Object)(object)basePlayer != (Object)null && basePlayer.IsAlive())
-			{
-				return !basePlayer.isMounted;
-			}
-			return false;
+			return (Object)(object)basePlayer != (Object)null && basePlayer.IsAlive() && !basePlayer.isMounted;
 		}
 		return true;
 	}

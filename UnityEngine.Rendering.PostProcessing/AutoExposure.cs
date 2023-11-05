@@ -61,10 +61,6 @@ public sealed class AutoExposure : PostProcessEffectSettings
 
 	public override bool IsEnabledAndSupported(PostProcessRenderContext context)
 	{
-		if (enabled.value && SystemInfo.supportsComputeShaders && !RuntimeUtilities.isAndroidOpenGL && ((RenderTextureFormat)14).IsSupported() && Object.op_Implicit((Object)(object)context.resources.computeShaders.autoExposure))
-		{
-			return Object.op_Implicit((Object)(object)context.resources.computeShaders.exposureHistogram);
-		}
-		return false;
+		return enabled.value && SystemInfo.supportsComputeShaders && !RuntimeUtilities.isAndroidOpenGL && ((RenderTextureFormat)14).IsSupported() && Object.op_Implicit((Object)(object)context.resources.computeShaders.autoExposure) && Object.op_Implicit((Object)(object)context.resources.computeShaders.exposureHistogram);
 	}
 }

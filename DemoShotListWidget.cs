@@ -11,13 +11,13 @@ public class DemoShotListWidget : SingletonComponent<DemoShotListWidget>
 
 	public RustInput FolderNameInput;
 
-	public GameObject ShotsRoot;
+	public GameObject ShotsRoot = null;
 
-	public GameObject NoShotsRoot;
+	public GameObject NoShotsRoot = null;
 
-	public GameObject TopUpArrow;
+	public GameObject TopUpArrow = null;
 
-	public GameObject TopDownArrow;
+	public GameObject TopDownArrow = null;
 
-	public Canvas DragCanvas;
+	public Canvas DragCanvas = null;
 }

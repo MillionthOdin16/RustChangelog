@@ -9,12 +9,12 @@ public class MusicChangeIntensity : MonoBehaviour
 	{
 		public float distance = 60f;
 
-		public float raiseTo;
+		public float raiseTo = 0f;
 
-		public bool forceStartMusicInSuppressedMusicZones;
+		public bool forceStartMusicInSuppressedMusicZones = false;
 	}
 
-	public float raiseTo;
+	public float raiseTo = 0f;
 
 	public List<DistanceIntensity> distanceIntensities = new List<DistanceIntensity>();
 

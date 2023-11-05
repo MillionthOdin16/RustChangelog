@@ -1,6 +1,6 @@
 public class WorldGrid : SingletonComponent<WorldGrid>, IClientComponent
 {
-	public static bool Paused;
+	public static bool Paused = false;
 
 	public float CellSize = 50f;
 

@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class AITraversalWaitPoint : MonoBehaviour
 {
-	public float nextFreeTime;
+	public float nextFreeTime = 0f;
 
 	public bool Occupied()
 	{

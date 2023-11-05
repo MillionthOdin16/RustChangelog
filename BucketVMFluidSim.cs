@@ -10,9 +10,9 @@ public class BucketVMFluidSim : MonoBehaviour
 
 	public ParticleSystem waterFill;
 
-	public float waterLevel;
+	public float waterLevel = 0f;
 
-	public float targetWaterLevel;
+	public float targetWaterLevel = 0f;
 
 	public AudioSource waterSpill;
 

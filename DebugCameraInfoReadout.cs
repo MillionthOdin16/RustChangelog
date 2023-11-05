@@ -2,5 +2,5 @@ using Rust.UI;
 
 public class DebugCameraInfoReadout : SingletonComponent<DebugCameraInfoReadout>
 {
-	public RustText ReadoutText;
+	public RustText ReadoutText = null;
 }

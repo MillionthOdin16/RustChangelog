@@ -15,9 +15,9 @@ public abstract class DeployVolume : PrefabAttribute
 	public LayerMask layers = LayerMask.op_Implicit(537001984);
 
 	[InspectorFlags]
-	public ColliderInfo.Flags ignore;
+	public ColliderInfo.Flags ignore = (ColliderInfo.Flags)0;
 
-	public EntityMode entityMode;
+	public EntityMode entityMode = EntityMode.ExcludeList;
 
 	[FormerlySerializedAs("entities")]
 	public BaseEntity[] entityList;
@@ -27,7 +27,8 @@ public abstract class DeployVolume : PrefabAttribute
 
 	public bool IsBuildingBlock { get; set; }
 
-	public static Collider LastDeployHit { get; private set; }
+	public static Collider LastDeployHit { get; private set; } = null;
+
 
 	protected override Type GetIndexedType()
 	{
@@ -46,8 +47,8 @@ public abstract class DeployVolume : PrefabAttribute
 
 	public static bool Check(Vector3 position, Quaternion rotation, DeployVolume[] volumes, int mask = -1)
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
 		for (int i = 0; i < volumes.Length; i++)
 		{
 			if (volumes[i].Check(position, rotation, mask))
@@ -60,9 +61,9 @@ public abstract class DeployVolume : PrefabAttribute
 
 	public static bool Check(Vector3 position, Quaternion rotation, DeployVolume[] volumes, OBB test, int mask = -1)
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
 		for (int i = 0; i < volumes.Length; i++)
 		{
 			if (volumes[i].Check(position, rotation, test, mask))
@@ -75,7 +76,7 @@ public abstract class DeployVolume : PrefabAttribute
 
 	public static bool CheckSphere(Vector3 pos, float radius, int layerMask, DeployVolume volume)
 	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
 		List<Collider> list = Pool.GetList<Collider>();
 		GamePhysics.OverlapSphere(pos, radius, list, layerMask, (QueryTriggerInteraction)2);
 		bool result = CheckFlags(list, volume);
@@ -85,8 +86,8 @@ public abstract class DeployVolume : PrefabAttribute
 
 	public static bool CheckCapsule(Vector3 start, Vector3 end, float radius, int layerMask, DeployVolume volume)
 	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
 		List<Collider> list = Pool.GetList<Collider>();
 		GamePhysics.OverlapCapsule(start, end, radius, list, layerMask, (QueryTriggerInteraction)2);
 		bool result = CheckFlags(list, volume);
@@ -96,7 +97,7 @@ public abstract class DeployVolume : PrefabAttribute
 
 	public static bool CheckOBB(OBB obb, int layerMask, DeployVolume volume)
 	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
 		List<Collider> list = Pool.GetList<Collider>();
 		GamePhysics.OverlapOBB(obb, list, layerMask, (QueryTriggerInteraction)2);
 		bool result = CheckFlags(list, volume);
@@ -106,7 +107,7 @@ public abstract class DeployVolume : PrefabAttribute
 
 	public static bool CheckBounds(Bounds bounds, int layerMask, DeployVolume volume)
 	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
 		List<Collider> list = Pool.GetList<Collider>();
 		GamePhysics.OverlapBounds(bounds, list, layerMask, (QueryTriggerInteraction)2);
 		bool result = CheckFlags(list, volume);

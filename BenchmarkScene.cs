@@ -6,7 +6,7 @@ public class BenchmarkScene : MonoBehaviour
 
 	public string BenchmarkIdent = "benchmark";
 
-	public int MaxNumberOfFrames;
+	public int MaxNumberOfFrames = 0;
 
 	public int MaxNumberOfSeconds = 10;
 }

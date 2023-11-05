@@ -6,7 +6,8 @@ public class ElectricalBlocker : IOEntity
 
 	public override int GetPassthroughAmount(int outputSlot = 0)
 	{
-		return base.GetPassthroughAmount(outputSlot) * ((!IsOn()) ? 1 : 0);
+		int passthroughAmount = base.GetPassthroughAmount(outputSlot);
+		return passthroughAmount * ((!IsOn()) ? 1 : 0);
 	}
 
 	public override bool WantsPower()
@@ -27,11 +28,11 @@ public class ElectricalBlocker : IOEntity
 
 	public virtual void UpdateBlocked()
 	{
-		bool num = IsOn();
+		bool flag = IsOn();
 		SetFlag(Flags.On, input1Amount > 0, recursive: false, networkupdate: false);
 		SetFlag(Flags.Reserved8, IsOn(), recursive: false, networkupdate: false);
 		UpdateHasPower(input1Amount + input2Amount, 1);
-		if (num != IsOn())
+		if (flag != IsOn())
 		{
 			MarkDirty();
 		}

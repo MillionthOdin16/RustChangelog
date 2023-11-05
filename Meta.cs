@@ -38,7 +38,7 @@ public class Meta : ConsoleSystem
 	[ClientVar(Help = "if_true <command> <condition> - runs a command if the condition is true")]
 	public static void if_true(Arg args)
 	{
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
 		string @string = args.GetString(0, "");
 		bool @bool = args.GetBool(1, false);
 		if (@bool)
@@ -50,7 +50,7 @@ public class Meta : ConsoleSystem
 	[ClientVar(Help = "if_false <command> <condition> - runs a command if the condition is false")]
 	public static void if_false(Arg args)
 	{
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
 		string @string = args.GetString(0, "");
 		bool @bool = args.GetBool(1, true);
 		if (!@bool)
@@ -83,8 +83,8 @@ public class Meta : ConsoleSystem
 	[ClientVar(Help = "exec [command_1] ... - runs all of the commands passed as arguments (also, if the last argument is true/false then that will flow into each command's arguments)")]
 	public static void exec(Arg args)
 	{
-		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
 		List<string> list = Pool.GetList<string>();
 		for (int i = 0; i < 32; i++)
 		{

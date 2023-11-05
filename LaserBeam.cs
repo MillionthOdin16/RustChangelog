@@ -22,7 +22,7 @@ public class LaserBeam : MonoBehaviour
 
 	public float movementThreshhold = 0.15f;
 
-	public bool isFirstPerson;
+	public bool isFirstPerson = false;
 
-	public Transform emissionOverride;
+	public Transform emissionOverride = null;
 }

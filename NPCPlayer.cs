@@ -3,6 +3,7 @@ using System.Collections;
 using ConVar;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.Profiling;
 
 public class NPCPlayer : BasePlayer
 {
@@ -32,21 +33,21 @@ public class NPCPlayer : BasePlayer
 
 	private bool _isDormant;
 
-	protected float lastGunShotTime;
+	protected float lastGunShotTime = 0f;
 
-	private float triggerEndTime;
+	private float triggerEndTime = 0f;
 
-	protected float nextTriggerTime;
+	protected float nextTriggerTime = 0f;
 
-	private float lastThinkTime;
+	private float lastThinkTime = 0f;
 
-	private float lastPositionUpdateTime;
+	private float lastPositionUpdateTime = 0f;
 
-	private float lastMovementTickTime;
+	private float lastMovementTickTime = 0f;
 
 	private Vector3 lastPos;
 
-	private float lastThrowTime;
+	private float lastThrowTime = 0f;
 
 	public override bool IsNpc => true;
 
@@ -59,7 +60,9 @@ public class NPCPlayer : BasePlayer
 		set
 		{
 			_isDormant = value;
-			_ = _isDormant;
+			if (!_isDormant)
+			{
+			}
 		}
 	}
 
@@ -96,10 +99,10 @@ public class NPCPlayer : BasePlayer
 
 	public override void ServerInit()
 	{
-		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
 		if (base.isClient)
 		{
 			return;
@@ -142,21 +145,21 @@ public class NPCPlayer : BasePlayer
 
 	public override void ApplyInheritedVelocity(Vector3 velocity)
 	{
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0004: Unknown result type (might be due to invalid IL or missing references)
 		ServerPosition = BaseNpc.GetNewNavPosWithVelocity(this, velocity);
 	}
 
 	public void RandomMove()
 	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
 		float num = 8f;
 		Vector2 val = Random.insideUnitCircle * num;
 		SetDestination(spawnPos + new Vector3(val.x, 0f, val.y));
@@ -164,19 +167,21 @@ public class NPCPlayer : BasePlayer
 
 	public virtual void SetDestination(Vector3 newDestination)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
 		finalDestination = newDestination;
 	}
 
 	public AttackEntity GetAttackEntity()
 	{
-		return GetHeldEntity() as AttackEntity;
+		HeldEntity heldEntity = GetHeldEntity();
+		return heldEntity as AttackEntity;
 	}
 
 	public BaseProjectile GetGun()
 	{
-		AttackEntity attackEntity = GetHeldEntity() as AttackEntity;
+		HeldEntity heldEntity = GetHeldEntity();
+		AttackEntity attackEntity = heldEntity as AttackEntity;
 		if ((Object)(object)attackEntity == (Object)null)
 		{
 			return null;
@@ -220,7 +225,8 @@ public class NPCPlayer : BasePlayer
 
 	public virtual bool ShotTest(float targetDist)
 	{
-		AttackEntity attackEntity = GetHeldEntity() as AttackEntity;
+		HeldEntity heldEntity = GetHeldEntity();
+		AttackEntity attackEntity = heldEntity as AttackEntity;
 		if ((Object)(object)attackEntity == (Object)null)
 		{
 			return false;
@@ -280,7 +286,8 @@ public class NPCPlayer : BasePlayer
 
 	public bool MeleeAttack()
 	{
-		AttackEntity attackEntity = GetHeldEntity() as AttackEntity;
+		HeldEntity heldEntity = GetHeldEntity();
+		AttackEntity attackEntity = heldEntity as AttackEntity;
 		if ((Object)(object)attackEntity == (Object)null)
 		{
 			return false;
@@ -296,7 +303,8 @@ public class NPCPlayer : BasePlayer
 
 	public virtual void TriggerDown()
 	{
-		AttackEntity attackEntity = GetHeldEntity() as AttackEntity;
+		HeldEntity heldEntity = GetHeldEntity();
+		AttackEntity attackEntity = heldEntity as AttackEntity;
 		if ((Object)(object)attackEntity != (Object)null)
 		{
 			attackEntity.ServerUse(damageScale);
@@ -311,30 +319,31 @@ public class NPCPlayer : BasePlayer
 
 	public virtual void EquipWeapon(bool skipDeployDelay = false)
 	{
-		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)inventory == (Object)null || inventory.containerBelt == null)
 		{
 			return;
 		}
 		Item slot = inventory.containerBelt.GetSlot(0);
-		if (slot == null)
+		if (slot != null)
 		{
-			return;
-		}
-		UpdateActiveItem(inventory.containerBelt.GetSlot(0).uid);
-		BaseEntity heldEntity = slot.GetHeldEntity();
-		if (!((Object)(object)heldEntity != (Object)null))
-		{
-			return;
-		}
-		AttackEntity component = ((Component)heldEntity).GetComponent<AttackEntity>();
-		if ((Object)(object)component != (Object)null)
-		{
-			if (skipDeployDelay)
+			UpdateActiveItem(inventory.containerBelt.GetSlot(0).uid);
+			BaseEntity heldEntity = slot.GetHeldEntity();
+			if ((Object)(object)heldEntity != (Object)null)
 			{
-				component.ResetAttackCooldown();
+				AttackEntity component = ((Component)heldEntity).GetComponent<AttackEntity>();
+				if ((Object)(object)component != (Object)null)
+				{
+					if (skipDeployDelay)
+					{
+						component.ResetAttackCooldown();
+					}
+					component.TopUpAmmo();
+				}
 			}
-			component.TopUpAmmo();
+		}
+		if (!skipDeployDelay)
+		{
 		}
 	}
 
@@ -377,7 +386,8 @@ public class NPCPlayer : BasePlayer
 
 	public override float GetNetworkTime()
 	{
-		if (Time.realtimeSinceStartup - lastPositionUpdateTime > PositionTickRate * 2f)
+		float num = Time.realtimeSinceStartup - lastPositionUpdateTime;
+		if (num > PositionTickRate * 2f)
 		{
 			return Time.time;
 		}
@@ -386,22 +396,24 @@ public class NPCPlayer : BasePlayer
 
 	public virtual void MovementUpdate(float delta)
 	{
-		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ac: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e1: Unknown result type (might be due to invalid IL or missing references)
 		if (!LegacyNavigation || base.isClient || !IsAlive() || IsWounded() || (!base.isMounted && !IsNavRunning()))
 		{
 			return;
 		}
 		if (IsDormant || !syncPosition)
 		{
+			Profiler.BeginSample("NPCPlayer.MovementUpdate.AssignDestination");
 			if (IsNavRunning())
 			{
 				NavAgent.destination = ServerPosition;
 			}
+			Profiler.EndSample();
 			return;
 		}
 		Vector3 moveToPosition = ((Component)this).transform.position;
@@ -418,10 +430,13 @@ public class NPCPlayer : BasePlayer
 
 	private bool ValidateNextPosition(ref Vector3 moveToPosition)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		if (!ValidBounds.Test(moveToPosition) && (Object)(object)((Component)this).transform != (Object)null && !base.IsDestroyed)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		Profiler.BeginSample("ValidBounds.Test");
+		bool flag = ValidBounds.Test(moveToPosition);
+		Profiler.EndSample();
+		if (!flag && (Object)(object)((Component)this).transform != (Object)null && !base.IsDestroyed)
 		{
-			Debug.Log((object)("Invalid NavAgent Position: " + ((object)this)?.ToString() + " " + ((object)(Vector3)(ref moveToPosition)).ToString() + " (destroying)"));
+			Debug.Log((object)string.Concat("Invalid NavAgent Position: ", this, " ", ((object)(Vector3)(ref moveToPosition)).ToString(), " (destroying)"));
 			Kill();
 			return false;
 		}
@@ -436,8 +451,8 @@ public class NPCPlayer : BasePlayer
 
 	protected virtual void UpdatePositionAndRotation(Vector3 moveToPosition)
 	{
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
 		lastPositionUpdateTime = Time.time;
 		ServerPosition = moveToPosition;
 		SetAimDirection(GetAimDirection());
@@ -445,7 +460,9 @@ public class NPCPlayer : BasePlayer
 
 	public Vector3 GetPosition()
 	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
 		return ((Component)this).transform.position;
 	}
 
@@ -462,19 +479,23 @@ public class NPCPlayer : BasePlayer
 
 	public virtual Vector3 GetAimDirection()
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-		if (Vector3Ex.Distance2D(finalDestination, GetPosition()) >= 1f)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
+		float num = Vector3Ex.Distance2D(finalDestination, GetPosition());
+		if (num >= 1f)
 		{
 			Vector3 val = finalDestination - GetPosition();
 			Vector3 normalized = ((Vector3)(ref val)).normalized;
@@ -485,19 +506,19 @@ public class NPCPlayer : BasePlayer
 
 	public virtual void SetAimDirection(Vector3 newAim)
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
 		if (!(newAim == Vector3.zero))
 		{
 			AttackEntity attackEntity = GetAttackEntity();
@@ -530,12 +551,12 @@ public class NPCPlayer : BasePlayer
 
 	public bool TryUseThrownWeapon(Item item, BaseEntity target, float attackRate)
 	{
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
 		if (HasThrownItemCooldown())
 		{
 			return false;
@@ -569,7 +590,7 @@ public class NPCPlayer : BasePlayer
 
 	protected bool UseThrownWeapon(Item item, BaseEntity target)
 	{
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
 		UpdateActiveItem(item.uid);
 		ThrownWeapon thrownWeapon = GetActiveItem().GetHeldEntity() as ThrownWeapon;
 		if ((Object)(object)thrownWeapon == (Object)null)
@@ -600,9 +621,13 @@ public class NPCPlayer : BasePlayer
 		for (int i = 0; i < inventory.containerBelt.capacity; i++)
 		{
 			Item slot = inventory.containerBelt.GetSlot(i);
-			if (slot != null && (Object)(object)(slot.GetHeldEntity() as ThrownWeapon) != (Object)null)
+			if (slot != null)
 			{
-				return slot;
+				ThrownWeapon thrownWeapon = slot.GetHeldEntity() as ThrownWeapon;
+				if ((Object)(object)thrownWeapon != (Object)null)
+				{
+					return slot;
+				}
 			}
 		}
 		return null;

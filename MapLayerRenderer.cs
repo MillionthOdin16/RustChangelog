@@ -6,81 +6,30 @@ using UnityEngine.Rendering;
 
 public class MapLayerRenderer : SingletonComponent<MapLayerRenderer>
 {
+	private NetworkableId? _currentlyRenderedDungeon = null;
+
+	private int? _underwaterLabFloorCount;
+
 	public Camera renderCamera;
 
 	public CameraEvent cameraEvent;
 
 	public Material renderMaterial;
 
-	private MapLayer? _currentlyRenderedLayer;
-
-	private NetworkableId? _currentlyRenderedDungeon;
-
-	private int? _underwaterLabFloorCount;
-
-	public void Render(MapLayer layer)
-	{
-		if (layer < MapLayer.TrainTunnels)
-		{
-			return;
-		}
-		if (layer == MapLayer.Dungeons)
-		{
-			RenderDungeonsLayer();
-		}
-		else if (layer != _currentlyRenderedLayer)
-		{
-			_currentlyRenderedLayer = layer;
-			switch (layer)
-			{
-			case MapLayer.TrainTunnels:
-				RenderTrainLayer();
-				break;
-			case MapLayer.Underwater1:
-			case MapLayer.Underwater2:
-			case MapLayer.Underwater3:
-			case MapLayer.Underwater4:
-			case MapLayer.Underwater5:
-			case MapLayer.Underwater6:
-			case MapLayer.Underwater7:
-			case MapLayer.Underwater8:
-				RenderUnderwaterLabs((int)(layer - 1));
-				break;
-			}
-		}
-	}
-
-	private void RenderImpl(CommandBuffer cb)
-	{
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
-		double num = (double)World.Size * 1.5;
-		renderCamera.orthographicSize = (float)num / 2f;
-		renderCamera.RemoveAllCommandBuffers();
-		renderCamera.AddCommandBuffer(cameraEvent, cb);
-		renderCamera.Render();
-		renderCamera.RemoveAllCommandBuffers();
-	}
-
-	public static MapLayerRenderer GetOrCreate()
-	{
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		if ((Object)(object)SingletonComponent<MapLayerRenderer>.Instance != (Object)null)
-		{
-			return SingletonComponent<MapLayerRenderer>.Instance;
-		}
-		return GameManager.server.CreatePrefab("assets/prefabs/engine/maplayerrenderer.prefab", Vector3.zero, Quaternion.identity).GetComponent<MapLayerRenderer>();
-	}
+	private MapLayer? _currentlyRenderedLayer = null;
 
 	private void RenderDungeonsLayer()
 	{
-		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00dc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0095: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
-		ProceduralDynamicDungeon proceduralDynamicDungeon = FindDungeon(MainCamera.isValid ? MainCamera.position : Vector3.zero);
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a2: Unknown result type (might be due to invalid IL or missing references)
+		Vector3 position = (MainCamera.isValid ? MainCamera.position : Vector3.zero);
+		ProceduralDynamicDungeon proceduralDynamicDungeon = FindDungeon(position);
 		if (_currentlyRenderedLayer == MapLayer.Dungeons)
 		{
 			NetworkableId? currentlyRenderedDungeon = _currentlyRenderedDungeon;
@@ -105,17 +54,17 @@ public class MapLayerRenderer : SingletonComponent<MapLayerRenderer>
 
 	private CommandBuffer BuildCommandBufferDungeons(ProceduralDynamicDungeon closest)
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0011: Expected O, but got Unknown
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Expected O, but got Unknown
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00db: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f0: Unknown result type (might be due to invalid IL or missing references)
 		CommandBuffer val = new CommandBuffer
 		{
 			name = "DungeonsLayer Render"
@@ -151,8 +100,8 @@ public class MapLayerRenderer : SingletonComponent<MapLayerRenderer>
 
 	public static ProceduralDynamicDungeon FindDungeon(Vector3 position, float maxDist = 200f)
 	{
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
 		ProceduralDynamicDungeon result = null;
 		float num = 100000f;
 		foreach (ProceduralDynamicDungeon dungeon in ProceduralDynamicDungeon.dungeons)
@@ -185,24 +134,25 @@ public class MapLayerRenderer : SingletonComponent<MapLayerRenderer>
 
 	private CommandBuffer BuildCommandBufferTrainTunnels()
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0011: Expected O, but got Unknown
-		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Expected O, but got Unknown
+		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b6: Unknown result type (might be due to invalid IL or missing references)
 		CommandBuffer val = new CommandBuffer
 		{
 			name = "TrainLayer Render"
 		};
+		List<DungeonGridCell> dungeonGridCells = TerrainMeta.Path.DungeonGridCells;
 		MeshFilter val3 = default(MeshFilter);
-		foreach (DungeonGridCell dungeonGridCell in TerrainMeta.Path.DungeonGridCells)
+		foreach (DungeonGridCell item in dungeonGridCells)
 		{
-			if (dungeonGridCell.MapRenderers == null || dungeonGridCell.MapRenderers.Length == 0)
+			if (item.MapRenderers == null || item.MapRenderers.Length == 0)
 			{
 				continue;
 			}
-			MeshRenderer[] mapRenderers = dungeonGridCell.MapRenderers;
+			MeshRenderer[] mapRenderers = item.MapRenderers;
 			foreach (MeshRenderer val2 in mapRenderers)
 			{
 				if (!((Object)(object)val2 == (Object)null) && ((Component)val2).TryGetComponent<MeshFilter>(ref val3))
@@ -246,24 +196,25 @@ public class MapLayerRenderer : SingletonComponent<MapLayerRenderer>
 
 	private CommandBuffer BuildCommandBufferUnderwaterLabs(int floor)
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0011: Expected O, but got Unknown
-		//IL_00bd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Expected O, but got Unknown
+		//IL_00ee: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fe: Unknown result type (might be due to invalid IL or missing references)
 		CommandBuffer val = new CommandBuffer
 		{
 			name = "UnderwaterLabLayer Render"
 		};
+		List<DungeonBaseInfo> dungeonBaseEntrances = TerrainMeta.Path.DungeonBaseEntrances;
 		MeshFilter val3 = default(MeshFilter);
-		foreach (DungeonBaseInfo dungeonBaseEntrance in TerrainMeta.Path.DungeonBaseEntrances)
+		foreach (DungeonBaseInfo item in dungeonBaseEntrances)
 		{
-			if (dungeonBaseEntrance.Floors.Count <= floor)
+			if (item.Floors.Count <= floor)
 			{
 				continue;
 			}
-			foreach (DungeonBaseLink link in dungeonBaseEntrance.Floors[floor].Links)
+			foreach (DungeonBaseLink link in item.Floors[floor].Links)
 			{
 				if (link.MapRenderers == null || link.MapRenderers.Length == 0)
 				{
@@ -286,5 +237,52 @@ public class MapLayerRenderer : SingletonComponent<MapLayerRenderer>
 			}
 		}
 		return val;
+	}
+
+	public void Render(MapLayer layer)
+	{
+		if (layer < MapLayer.TrainTunnels)
+		{
+			return;
+		}
+		if (layer == MapLayer.Dungeons)
+		{
+			RenderDungeonsLayer();
+		}
+		else if (layer != _currentlyRenderedLayer)
+		{
+			_currentlyRenderedLayer = layer;
+			if (layer == MapLayer.TrainTunnels)
+			{
+				RenderTrainLayer();
+			}
+			else if (layer >= MapLayer.Underwater1 && layer <= MapLayer.Underwater8)
+			{
+				RenderUnderwaterLabs((int)(layer - 1));
+			}
+		}
+	}
+
+	private void RenderImpl(CommandBuffer cb)
+	{
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		double num = (double)World.Size * 1.5;
+		renderCamera.orthographicSize = (float)num / 2f;
+		renderCamera.RemoveAllCommandBuffers();
+		renderCamera.AddCommandBuffer(cameraEvent, cb);
+		renderCamera.Render();
+		renderCamera.RemoveAllCommandBuffers();
+	}
+
+	public static MapLayerRenderer GetOrCreate()
+	{
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		if ((Object)(object)SingletonComponent<MapLayerRenderer>.Instance != (Object)null)
+		{
+			return SingletonComponent<MapLayerRenderer>.Instance;
+		}
+		GameObject val = GameManager.server.CreatePrefab("assets/prefabs/engine/maplayerrenderer.prefab", Vector3.zero, Quaternion.identity);
+		return val.GetComponent<MapLayerRenderer>();
 	}
 }
