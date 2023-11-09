@@ -159,7 +159,7 @@ public class ConstructionSocket : Socket_Base
 		Matrix4x4 val2 = Matrix4x4.TRS(socketPosition, socketRotation, Vector3.one);
 		Vector3 val3 = ((Matrix4x4)(ref val)).MultiplyPoint3x4(worldPosition);
 		Vector3 val4 = ((Matrix4x4)(ref val2)).MultiplyPoint3x4(socket.worldPosition);
-		if (Vector3.Distance(val3, val4) > 0.01f)
+		if (Vector3.Distance(val3, val4) > 0.02f)
 		{
 			return false;
 		}
@@ -174,7 +174,7 @@ public class ConstructionSocket : Socket_Base
 		{
 			num = Mathf.Min(num, Vector3.Angle(val5, -val6));
 		}
-		if (num > 1f)
+		if (num > 2f)
 		{
 			return false;
 		}
