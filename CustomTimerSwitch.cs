@@ -18,7 +18,7 @@ public class CustomTimerSwitch : TimerSwitch
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SERVER_SetTime "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SERVER_SetTime "));
 				}
 				TimeWarning val2 = TimeWarning.New("SERVER_SetTime", 0);
 				try
@@ -37,7 +37,7 @@ public class CustomTimerSwitch : TimerSwitch
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -49,7 +49,7 @@ public class CustomTimerSwitch : TimerSwitch
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -95,10 +95,6 @@ public class CustomTimerSwitch : TimerSwitch
 
 	public bool CanPlayerAdmin(BasePlayer player)
 	{
-		if ((Object)(object)player != (Object)null && player.CanBuild())
-		{
-			return !IsOn();
-		}
-		return false;
+		return (Object)(object)player != (Object)null && player.CanBuild() && !IsOn();
 	}
 }

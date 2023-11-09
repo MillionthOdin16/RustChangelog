@@ -53,17 +53,15 @@ public sealed class TemporalAntialiasing
 
 	public bool IsSupported()
 	{
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0015: Invalid comparison between Unknown and I4
-		if (SystemInfo.supportedRenderTargetCount >= 2 && SystemInfo.supportsMotionVectors)
-		{
-			return (int)SystemInfo.graphicsDeviceType != 8;
-		}
-		return false;
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Invalid comparison between Unknown and I4
+		return SystemInfo.supportedRenderTargetCount >= 2 && SystemInfo.supportsMotionVectors && (int)SystemInfo.graphicsDeviceType != 8;
 	}
 
 	internal DepthTextureMode GetCameraFlags()
 	{
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
 		return (DepthTextureMode)5;
 	}
 
@@ -74,8 +72,11 @@ public sealed class TemporalAntialiasing
 
 	private Vector2 GenerateRandomOffset()
 	{
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-		Vector2 result = new Vector2(HaltonSeq.Get((sampleIndex & 0x3FF) + 1, 2) - 0.5f, HaltonSeq.Get((sampleIndex & 0x3FF) + 1, 3) - 0.5f);
+		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
+		Vector2 result = default(Vector2);
+		((Vector2)(ref result))._002Ector(HaltonSeq.Get((sampleIndex & 0x3FF) + 1, 2) - 0.5f, HaltonSeq.Get((sampleIndex & 0x3FF) + 1, 3) - 0.5f);
 		if (++sampleIndex >= sampleCount)
 		{
 			sampleIndex = 0;
@@ -85,22 +86,24 @@ public sealed class TemporalAntialiasing
 
 	public Matrix4x4 GetJitteredProjectionMatrix(Camera camera)
 	{
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00af: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
 		jitter = GenerateRandomOffset();
 		jitter *= jitterSpread;
 		Matrix4x4 result = ((jitteredMatrixFunc == null) ? (camera.orthographic ? RuntimeUtilities.GetJitteredOrthographicProjectionMatrix(camera, jitter) : RuntimeUtilities.GetJitteredPerspectiveProjectionMatrix(camera, jitter)) : jitteredMatrixFunc(camera, jitter));
@@ -111,8 +114,8 @@ public sealed class TemporalAntialiasing
 
 	public void ConfigureJitteredProjectionMatrix(PostProcessRenderContext context)
 	{
-		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
 		Camera camera = context.camera;
 		camera.nonJitteredProjectionMatrix = camera.projectionMatrix;
 		camera.projectionMatrix = GetJitteredProjectionMatrix(camera);
@@ -121,28 +124,28 @@ public sealed class TemporalAntialiasing
 
 	public void ConfigureStereoJitteredProjectionMatrices(PostProcessRenderContext context)
 	{
-		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0068: Invalid comparison between Unknown and I4
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006f: Invalid comparison between Unknown and I4
+		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
 		Camera camera = context.camera;
 		jitter = GenerateRandomOffset();
 		jitter *= jitterSpread;
@@ -168,12 +171,12 @@ public sealed class TemporalAntialiasing
 
 	private RenderTexture CheckHistory(int id, PostProcessRenderContext context)
 	{
-		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ed: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00dc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0112: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0119: Unknown result type (might be due to invalid IL or missing references)
 		int xrActiveEye = context.xrActiveEye;
 		if (m_HistoryTextures[xrActiveEye] == null)
 		{
@@ -203,15 +206,15 @@ public sealed class TemporalAntialiasing
 
 	internal void Render(PostProcessRenderContext context)
 	{
-		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0107: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0113: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0102: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0110: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0115: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0128: Unknown result type (might be due to invalid IL or missing references)
 		PropertySheet propertySheet = context.propertySheets.Get(context.resources.shaders.temporalAntialiasing);
 		CommandBuffer command = context.command;
 		command.BeginSample("TemporalAntialiasing");

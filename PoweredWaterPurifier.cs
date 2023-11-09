@@ -7,11 +7,11 @@ public class PoweredWaterPurifier : WaterPurifier
 
 	public int PowerDrain = 5;
 
-	public Material PoweredMaterial;
+	public Material PoweredMaterial = null;
 
-	public Material UnpoweredMaterial;
+	public Material UnpoweredMaterial = null;
 
-	public MeshRenderer TargetRenderer;
+	public MeshRenderer TargetRenderer = null;
 
 	public override void ResetState()
 	{
@@ -24,21 +24,13 @@ public class PoweredWaterPurifier : WaterPurifier
 		{
 			return base.CanPickup(player);
 		}
-		if (base.CanPickup(player) && !HasDirtyWater() && (Object)(object)waterStorage != (Object)null)
-		{
-			if (waterStorage.inventory != null)
-			{
-				return waterStorage.inventory.itemList.Count == 0;
-			}
-			return true;
-		}
-		return false;
+		return base.CanPickup(player) && !HasDirtyWater() && (Object)(object)waterStorage != (Object)null && (waterStorage.inventory == null || waterStorage.inventory.itemList.Count == 0);
 	}
 
 	protected override void SpawnStorageEnt(bool load)
 	{
-		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
 		if (load)
 		{
 			foreach (BaseEntity child in children)

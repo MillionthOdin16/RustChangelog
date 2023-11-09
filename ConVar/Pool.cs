@@ -35,8 +35,8 @@ public class Pool : ConsoleSystem
 	[ClientVar]
 	public static void print_memory(Arg arg)
 	{
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001e: Expected O, but got Unknown
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Expected O, but got Unknown
 		if (Pool.Directory.Count == 0)
 		{
 			arg.ReplyWith("Memory pool is empty.");
@@ -72,8 +72,8 @@ public class Pool : ConsoleSystem
 	[ClientVar]
 	public static void print_arraypool(Arg arg)
 	{
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0013: Expected O, but got Unknown
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Expected O, but got Unknown
 		ArrayPool<byte> arrayPool = BaseNetwork.ArrayPool;
 		ConcurrentQueue<byte[]>[] buffer = arrayPool.GetBuffer();
 		TextTable val = new TextTable();
@@ -103,8 +103,8 @@ public class Pool : ConsoleSystem
 	[ClientVar]
 	public static void print_prefabs(Arg arg)
 	{
-		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0037: Expected O, but got Unknown
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Expected O, but got Unknown
 		PrefabPoolCollection pool = GameManager.server.pool;
 		if (pool.storage.Count == 0)
 		{
@@ -115,27 +115,19 @@ public class Pool : ConsoleSystem
 		TextTable val = new TextTable();
 		val.AddColumn("id");
 		val.AddColumn("name");
-		val.AddColumn("missed");
 		val.AddColumn("count");
-		val.AddColumn("target");
-		val.AddColumn("added");
-		val.AddColumn("removed");
-		foreach (PrefabPool item in pool.storage.Values.OrderByDescending((PrefabPool x) => x.Missed))
+		foreach (KeyValuePair<uint, PrefabPool> item in pool.storage)
 		{
-			string text = StringPool.Get(item.PrefabName).ToString();
-			string prefabName = item.PrefabName;
-			string text2 = item.Count.ToString();
-			if (string.IsNullOrEmpty(@string) || StringEx.Contains(prefabName, @string, CompareOptions.IgnoreCase))
+			string text = item.Key.ToString();
+			string text2 = StringPool.Get(item.Key);
+			string text3 = item.Value.Count.ToString();
+			if (string.IsNullOrEmpty(@string) || StringEx.Contains(text2, @string, CompareOptions.IgnoreCase))
 			{
-				val.AddRow(new string[7]
+				val.AddRow(new string[3]
 				{
 					text,
-					Path.GetFileNameWithoutExtension(prefabName),
-					text2,
-					item.TargetCapacity.ToString(),
-					item.Missed.ToString(),
-					item.Pushed.ToString(),
-					item.Popped.ToString()
+					Path.GetFileNameWithoutExtension(text2),
+					text3
 				});
 			}
 		}
@@ -146,8 +138,8 @@ public class Pool : ConsoleSystem
 	[ClientVar]
 	public static void print_assets(Arg arg)
 	{
-		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002b: Expected O, but got Unknown
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0037: Expected O, but got Unknown
 		if (AssetPool.storage.Count == 0)
 		{
 			arg.ReplyWith("Asset pool is empty.");
@@ -175,7 +167,8 @@ public class Pool : ConsoleSystem
 	[ClientVar]
 	public static void clear_memory(Arg arg)
 	{
-		Pool.Clear(arg.GetString(0, string.Empty));
+		string @string = arg.GetString(0, string.Empty);
+		Pool.Clear(@string);
 	}
 
 	[ServerVar]
@@ -190,7 +183,8 @@ public class Pool : ConsoleSystem
 	[ClientVar]
 	public static void clear_assets(Arg arg)
 	{
-		AssetPool.Clear(arg.GetString(0, string.Empty));
+		string @string = arg.GetString(0, string.Empty);
+		AssetPool.Clear(@string);
 	}
 
 	[ServerVar]

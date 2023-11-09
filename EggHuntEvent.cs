@@ -22,7 +22,7 @@ public class EggHuntEvent : BaseHuntEvent
 
 	public float warnTime = 20f;
 
-	public float timeAlive;
+	public float timeAlive = 0f;
 
 	public static EggHuntEvent serverEvent = null;
 
@@ -39,11 +39,7 @@ public class EggHuntEvent : BaseHuntEvent
 
 	public bool IsEventActive()
 	{
-		if (timeAlive > warmupTime)
-		{
-			return timeAlive - warmupTime < durationSeconds;
-		}
-		return false;
+		return timeAlive > warmupTime && timeAlive - warmupTime < durationSeconds;
 	}
 
 	public override void ServerInit()
@@ -65,29 +61,29 @@ public class EggHuntEvent : BaseHuntEvent
 
 	public void SpawnEggsAtPoint(int numEggs, Vector3 pos, Vector3 aimDir, float minDist = 1f, float maxDist = 2f)
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
 		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0093: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0097: Unknown result type (might be due to invalid IL or missing references)
 		for (int i = 0; i < numEggs; i++)
 		{
 			Vector3 val = pos;
@@ -103,10 +99,10 @@ public class EggHuntEvent : BaseHuntEvent
 	[ContextMenu("SpawnDebug")]
 	public void SpawnEggs()
 	{
-		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
 		Enumerator<BasePlayer> enumerator = BasePlayer.activePlayerList.GetEnumerator();
 		try
 		{
@@ -124,14 +120,14 @@ public class EggHuntEvent : BaseHuntEvent
 
 	public void RandPickup()
 	{
-		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
 		Enumerator<BasePlayer> enumerator = BasePlayer.activePlayerList.GetEnumerator();
 		try
 		{
 			while (enumerator.MoveNext())
 			{
-				_ = enumerator.Current;
+				BasePlayer current = enumerator.Current;
 			}
 		}
 		finally
@@ -142,8 +138,8 @@ public class EggHuntEvent : BaseHuntEvent
 
 	public void EggCollected(BasePlayer player)
 	{
-		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cf: Unknown result type (might be due to invalid IL or missing references)
 		EggHunter eggHunter = null;
 		if (_eggHunters.ContainsKey(player.userID))
 		{
@@ -163,8 +159,9 @@ public class EggHuntEvent : BaseHuntEvent
 		}
 		eggHunter.numEggs++;
 		QueueUpdate();
-		int num = ((!((float)Mathf.RoundToInt(player.eggVision) * 0.5f < 1f)) ? 1 : Random.Range(0, 2));
-		SpawnEggsAtPoint(Random.Range(1 + num, 2 + num), ((Component)player).transform.position, player.eyes.BodyForward(), 15f, 25f);
+		int num = Mathf.RoundToInt(player.eggVision);
+		int num2 = ((!((float)num * 0.5f < 1f)) ? 1 : Random.Range(0, 2));
+		SpawnEggsAtPoint(Random.Range(1 + num2, 2 + num2), ((Component)player).transform.position, player.eyes.BodyForward(), 15f, 25f);
 	}
 
 	public void QueueUpdate()
@@ -235,7 +232,8 @@ public class EggHuntEvent : BaseHuntEvent
 		if (topHunters.Count > 0)
 		{
 			EggHunter eggHunter = topHunters[0];
-			Chat.Broadcast(eggHunter.displayName + " is the top bunny with " + eggHunter.numEggs + " eggs collected.", "", "#eee", 0uL);
+			string message = eggHunter.displayName + " is the top bunny with " + eggHunter.numEggs + " eggs collected.";
+			Chat.Broadcast(message, "", "#eee", 0uL);
 			for (int i = 0; i < topHunters.Count; i++)
 			{
 				EggHunter eggHunter2 = topHunters[i];

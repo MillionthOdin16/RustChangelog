@@ -75,6 +75,8 @@ internal sealed class MultiScaleVO : IAmbientOcclusionMethod
 
 	public DepthTextureMode GetCameraFlags()
 	{
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
 		return (DepthTextureMode)1;
 	}
 
@@ -85,9 +87,9 @@ internal sealed class MultiScaleVO : IAmbientOcclusionMethod
 
 	private void Alloc(CommandBuffer cmd, int id, MipLevel size, RenderTextureFormat format, bool uav)
 	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
 		RenderTextureDescriptor val = default(RenderTextureDescriptor);
 		((RenderTextureDescriptor)(ref val)).width = m_Widths[(int)size];
 		((RenderTextureDescriptor)(ref val)).height = m_Heights[(int)size];
@@ -104,9 +106,9 @@ internal sealed class MultiScaleVO : IAmbientOcclusionMethod
 
 	private void AllocArray(CommandBuffer cmd, int id, MipLevel size, RenderTextureFormat format, bool uav)
 	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
 		RenderTextureDescriptor val = default(RenderTextureDescriptor);
 		((RenderTextureDescriptor)(ref val)).width = m_Widths[(int)size];
 		((RenderTextureDescriptor)(ref val)).height = m_Heights[(int)size];
@@ -128,8 +130,11 @@ internal sealed class MultiScaleVO : IAmbientOcclusionMethod
 
 	private Vector4 CalculateZBufferParams(Camera camera)
 	{
-		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
 		float num = camera.farClipPlane / camera.nearClipPlane;
 		if (SystemInfo.usesReversedZBuffer)
 		{
@@ -140,46 +145,50 @@ internal sealed class MultiScaleVO : IAmbientOcclusionMethod
 
 	private float CalculateTanHalfFovHeight(Camera camera)
 	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
 		Matrix4x4 projectionMatrix = camera.projectionMatrix;
 		return 1f / ((Matrix4x4)(ref projectionMatrix))[0, 0];
 	}
 
 	private Vector2 GetSize(MipLevel mip)
 	{
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
 		return new Vector2((float)m_Widths[(int)mip], (float)m_Heights[(int)mip]);
 	}
 
 	private Vector3 GetSizeArray(MipLevel mip)
 	{
-		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
 		return new Vector3((float)m_Widths[(int)mip], (float)m_Heights[(int)mip], 16f);
 	}
 
 	public void GenerateAOMap(CommandBuffer cmd, Camera camera, RenderTargetIdentifier destination, RenderTargetIdentifier? depthMap, bool invert, bool isMSAA)
 	{
-		//IL_0092: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ad: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0110: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0117: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0123: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0150: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0157: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0163: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0190: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0197: Unknown result type (might be due to invalid IL or missing references)
-		//IL_019c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ca: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01cd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01d2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01d9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ef: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0124: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0129: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0130: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0165: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0171: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ab: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01db: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01de: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01e3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ea: Unknown result type (might be due to invalid IL or missing references)
 		m_Widths[0] = camera.pixelWidth * ((!RuntimeUtilities.isSinglePassStereoEnabled) ? 1 : 2);
 		m_Heights[0] = camera.pixelHeight;
 		for (int i = 1; i < 7; i++)
@@ -246,24 +255,24 @@ internal sealed class MultiScaleVO : IAmbientOcclusionMethod
 
 	private void PushDownsampleCommands(CommandBuffer cmd, Camera camera, RenderTargetIdentifier? depthMap, bool isMSAA)
 	{
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00af: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00c6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00dd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0107: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0119: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0182: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0199: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01de: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00de: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0122: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0135: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01bd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ed: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0205: Unknown result type (might be due to invalid IL or missing references)
 		bool flag = false;
 		RenderTargetIdentifier val = default(RenderTargetIdentifier);
 		if (depthMap.HasValue)
@@ -307,18 +316,18 @@ internal sealed class MultiScaleVO : IAmbientOcclusionMethod
 
 	private void PushRenderCommands(CommandBuffer cmd, int source, int destination, Vector3 sourceSize, float tanHalfFovH, bool isMSAA)
 	{
-		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0258: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0265: Unknown result type (might be due to invalid IL or missing references)
-		//IL_026d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0272: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02a9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02ae: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02c2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02d6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02f2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0302: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0312: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_026c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0279: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0281: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0286: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02be: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02c3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02d8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02ed: Unknown result type (might be due to invalid IL or missing references)
+		//IL_030b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_031b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_032b: Unknown result type (might be due to invalid IL or missing references)
 		float num = 2f * tanHalfFovH * 10f / sourceSize.x;
 		if (RuntimeUtilities.isSinglePassStereoEnabled)
 		{
@@ -373,23 +382,23 @@ internal sealed class MultiScaleVO : IAmbientOcclusionMethod
 
 	private void PushUpsampleCommands(CommandBuffer cmd, int lowResDepth, int interleavedAO, int highResDepth, int? highResAO, RenderTargetIdentifier dest, Vector3 lowResDepthSize, Vector2 highResDepthSize, bool isMSAA, bool invert = false)
 	{
-		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fe: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0103: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0119: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0102: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0126: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0133: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0171: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0184: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01bf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0140: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0158: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0181: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0195: Unknown result type (might be due to invalid IL or missing references)
 		//IL_01cf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01e7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01bc: Unknown result type (might be due to invalid IL or missing references)
 		ComputeShader multiScaleAOUpsample = m_Resources.computeShaders.multiScaleAOUpsample;
 		int num = 0;
 		num = (isMSAA ? multiScaleAOUpsample.FindKernel(highResAO.HasValue ? "MultiScaleVOUpSample_MSAA_blendout" : (invert ? "MultiScaleVOUpSample_MSAA_invert" : "MultiScaleVOUpSample_MSAA")) : multiScaleAOUpsample.FindKernel(highResAO.HasValue ? "MultiScaleVOUpSample_blendout" : (invert ? "MultiScaleVOUpSample_invert" : "MultiScaleVOUpSample")));
@@ -436,10 +445,10 @@ internal sealed class MultiScaleVO : IAmbientOcclusionMethod
 
 	private void PreparePropertySheet(PostProcessRenderContext context)
 	{
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
 		PropertySheet propertySheet = context.propertySheets.Get(m_Resources.shaders.multiScaleAO);
 		propertySheet.ClearKeywords();
 		propertySheet.properties.SetVector(ShaderIDs.AOColor, Color.op_Implicit(Color.white - m_Settings.color.value));
@@ -448,11 +457,11 @@ internal sealed class MultiScaleVO : IAmbientOcclusionMethod
 
 	private void CheckAOTexture(PostProcessRenderContext context)
 	{
-		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
 		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007d: Expected O, but got Unknown
+		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008d: Expected O, but got Unknown
 		if ((Object)(object)m_AmbientOnlyAO == (Object)null || !m_AmbientOnlyAO.IsCreated() || ((Texture)m_AmbientOnlyAO).width != context.width || ((Texture)m_AmbientOnlyAO).height != context.height)
 		{
 			RuntimeUtilities.Destroy((Object)(object)m_AmbientOnlyAO);
@@ -468,7 +477,7 @@ internal sealed class MultiScaleVO : IAmbientOcclusionMethod
 
 	private void PushDebug(PostProcessRenderContext context)
 	{
-		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
 		if (context.IsDebugOverlayEnabled(DebugOverlay.AmbientOcclusion))
 		{
 			context.PushDebugOverlay(context.command, RenderTargetIdentifier.op_Implicit((Texture)(object)m_AmbientOnlyAO), m_PropertySheet, 3);
@@ -477,14 +486,14 @@ internal sealed class MultiScaleVO : IAmbientOcclusionMethod
 
 	public void RenderAfterOpaque(PostProcessRenderContext context)
 	{
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0038: Invalid comparison between Unknown and I4
-		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Invalid comparison between Unknown and I4
+		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
 		CommandBuffer command = context.command;
 		command.BeginSample("Ambient Occlusion");
 		SetResources(context.resources);
@@ -504,7 +513,7 @@ internal sealed class MultiScaleVO : IAmbientOcclusionMethod
 
 	public void RenderAmbientOnly(PostProcessRenderContext context)
 	{
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
 		CommandBuffer command = context.command;
 		command.BeginSample("Ambient Occlusion Render");
 		SetResources(context.resources);
@@ -517,9 +526,9 @@ internal sealed class MultiScaleVO : IAmbientOcclusionMethod
 
 	public void CompositeAmbientOnly(PostProcessRenderContext context)
 	{
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
 		CommandBuffer command = context.command;
 		command.BeginSample("Ambient Occlusion Composite");
 		command.SetGlobalTexture(ShaderIDs.MSVOcclusionTexture, RenderTargetIdentifier.op_Implicit((Texture)(object)m_AmbientOnlyAO));

@@ -5,11 +5,11 @@ using UnityEngine;
 
 public class FishLookup : PrefabAttribute
 {
-	public ItemModFishable FallbackFish;
+	public ItemModFishable FallbackFish = null;
 
-	private static ItemModFishable[] AvailableFish;
+	private static ItemModFishable[] AvailableFish = null;
 
-	public static ItemDefinition[] BaitItems;
+	public static ItemDefinition[] BaitItems = null;
 
 	private static TimeSince lastShuffle;
 
@@ -19,7 +19,7 @@ public class FishLookup : PrefabAttribute
 
 	public static void LoadFish()
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
 		if (AvailableFish != null)
 		{
 			if (TimeSince.op_Implicit(lastShuffle) > 5f)
@@ -51,8 +51,8 @@ public class FishLookup : PrefabAttribute
 
 	public ItemDefinition GetFish(Vector3 worldPos, WaterBody bodyType, ItemDefinition lure, out ItemModFishable fishable, ItemModFishable ignoreFish)
 	{
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
 		LoadFish();
 		ItemModCompostable itemModCompostable = default(ItemModCompostable);
 		float num = (((Component)lure).TryGetComponent<ItemModCompostable>(ref itemModCompostable) ? itemModCompostable.BaitValue : 0f);

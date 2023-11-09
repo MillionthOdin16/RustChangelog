@@ -22,7 +22,8 @@ public class PathSequencePowerline : PathSequence
 				flag = sequence.Count == 0 || pathIndex == pathLength - 1;
 				if (!flag)
 				{
-					flag = GetIndexCountToRule(sequence, SequenceRule.PowerlinePlatform) >= 2;
+					int indexCountToRule = GetIndexCountToRule(sequence, SequenceRule.PowerlinePlatform);
+					flag = indexCountToRule >= 2;
 				}
 			}
 		}
@@ -31,8 +32,8 @@ public class PathSequencePowerline : PathSequence
 			flag = pathLength < 3;
 			if (!flag)
 			{
-				int indexCountToRule = GetIndexCountToRule(sequence, SequenceRule.PowerlinePlatform);
-				flag = indexCountToRule < 2 && indexCountToRule != sequence.Count && pathIndex < pathLength - 1;
+				int indexCountToRule2 = GetIndexCountToRule(sequence, SequenceRule.PowerlinePlatform);
+				flag = indexCountToRule2 < 2 && indexCountToRule2 != sequence.Count && pathIndex < pathLength - 1;
 			}
 		}
 		if (flag)

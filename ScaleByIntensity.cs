@@ -10,17 +10,17 @@ public class ScaleByIntensity : MonoBehaviour
 
 	private void Start()
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
 		initialScale = ((Component)this).transform.localScale;
 	}
 
 	private void Update()
 	{
-		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
 		((Component)this).transform.localScale = (((Behaviour)intensitySource).enabled ? (initialScale * intensitySource.intensity / maxIntensity) : Vector3.zero);
 	}
 }

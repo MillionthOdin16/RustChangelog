@@ -10,9 +10,9 @@ public class Igniter : IOEntity
 
 	public float IgniteFrequency = 1f;
 
-	public float IgniteStartDelay;
+	public float IgniteStartDelay = 0f;
 
-	public Transform LineOfSightEyes;
+	public Transform LineOfSightEyes = null;
 
 	public float SelfDamagePerIgnite = 0.5f;
 
@@ -38,9 +38,9 @@ public class Igniter : IOEntity
 
 	private void IgniteInRange()
 	{
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d9: Unknown result type (might be due to invalid IL or missing references)
 		List<BaseEntity> list = Pool.GetList<BaseEntity>();
 		Vis.Entities(LineOfSightEyes.position, IgniteRange, list, 1237019409, (QueryTriggerInteraction)2);
 		int num = 0;

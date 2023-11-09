@@ -7,5 +7,5 @@ public class EmojiController : ListComponent<EmojiController>
 
 	public RawImage VideoImage;
 
-	public RectTransform rectTransform;
+	public RectTransform rectTransform = null;
 }

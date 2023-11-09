@@ -2,7 +2,7 @@ using UnityEngine;
 
 public abstract class Graph : MonoBehaviour
 {
-	public Material Material;
+	public Material Material = null;
 
 	public int Resolution = 128;
 
@@ -14,7 +14,7 @@ public abstract class Graph : MonoBehaviour
 
 	public Rect Area = new Rect(0f, 0f, 128f, 32f);
 
-	internal float CurrentValue;
+	internal float CurrentValue = 0f;
 
 	private int index;
 
@@ -28,7 +28,9 @@ public abstract class Graph : MonoBehaviour
 
 	protected Vector3 GetVertex(float x, float y)
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
 		return new Vector3(x, y, 0f);
 	}
 
@@ -48,13 +50,13 @@ public abstract class Graph : MonoBehaviour
 
 	protected void OnGUI()
 	{
-		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000b: Invalid comparison between Unknown and I4
-		//IL_011a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0132: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0147: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Invalid comparison between Unknown and I4
+		//IL_013a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0153: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0169: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0182: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019e: Unknown result type (might be due to invalid IL or missing references)
 		if ((int)Event.current.type == 7 && values != null && values.Length != 0)
 		{
 			float num = Mathf.Max(((Rect)(ref Area)).width, ScreenFill.x * (float)Screen.width);

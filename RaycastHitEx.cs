@@ -20,39 +20,23 @@ public static class RaycastHitEx
 
 	public static BaseEntity GetEntity(this RaycastHit hit)
 	{
-		if (!((Object)(object)((RaycastHit)(ref hit)).collider != (Object)null))
-		{
-			return null;
-		}
-		return ((RaycastHit)(ref hit)).collider.ToBaseEntity();
+		return ((Object)(object)((RaycastHit)(ref hit)).collider != (Object)null) ? ((RaycastHit)(ref hit)).collider.ToBaseEntity() : null;
 	}
 
 	public static bool IsOnLayer(this RaycastHit hit, Layer rustLayer)
 	{
-		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
-		if ((Object)(object)((RaycastHit)(ref hit)).collider != (Object)null)
-		{
-			return ((Component)((RaycastHit)(ref hit)).collider).gameObject.IsOnLayer(rustLayer);
-		}
-		return false;
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		return (Object)(object)((RaycastHit)(ref hit)).collider != (Object)null && ((Component)((RaycastHit)(ref hit)).collider).gameObject.IsOnLayer(rustLayer);
 	}
 
 	public static bool IsOnLayer(this RaycastHit hit, int layer)
 	{
-		if ((Object)(object)((RaycastHit)(ref hit)).collider != (Object)null)
-		{
-			return ((Component)((RaycastHit)(ref hit)).collider).gameObject.IsOnLayer(layer);
-		}
-		return false;
+		return (Object)(object)((RaycastHit)(ref hit)).collider != (Object)null && ((Component)((RaycastHit)(ref hit)).collider).gameObject.IsOnLayer(layer);
 	}
 
 	public static bool IsWaterHit(this RaycastHit hit)
 	{
-		if (!((Object)(object)((RaycastHit)(ref hit)).collider == (Object)null))
-		{
-			return ((Component)((RaycastHit)(ref hit)).collider).gameObject.IsOnLayer((Layer)4);
-		}
-		return true;
+		return (Object)(object)((RaycastHit)(ref hit)).collider == (Object)null || ((Component)((RaycastHit)(ref hit)).collider).gameObject.IsOnLayer((Layer)4);
 	}
 
 	public static WaterBody GetWaterBody(this RaycastHit hit)

@@ -22,7 +22,7 @@ public abstract class LODComponent : BaseMonoBehaviour, IClientComponent, ILOD
 		public bool forceVisible;
 	}
 
-	public LODDistanceMode DistanceMode;
+	public LODDistanceMode DistanceMode = LODDistanceMode.XYZ;
 
 	public OccludeeParameters OccludeeParams = new OccludeeParameters
 	{

@@ -46,7 +46,7 @@ public class TrainCarUnloadable : TrainCar
 	[SerializeField]
 	private ParticleSystem unloadingFX;
 
-	public WagonType wagonType;
+	public WagonType wagonType = WagonType.Ore;
 
 	private int lootTypeIndex = -1;
 
@@ -73,7 +73,7 @@ public class TrainCarUnloadable : TrainCar
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_Open "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_Open "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_Open", 0);
 				try
@@ -92,7 +92,7 @@ public class TrainCarUnloadable : TrainCar
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -104,7 +104,7 @@ public class TrainCarUnloadable : TrainCar
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -138,7 +138,7 @@ public class TrainCarUnloadable : TrainCar
 
 	protected override void OnChildAdded(BaseEntity child)
 	{
-		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
 		base.OnChildAdded(child);
 		if (IsDead() || base.IsDestroyed)
 		{
@@ -208,9 +208,9 @@ public class TrainCarUnloadable : TrainCar
 
 	public void SetVisualOreLevel(float percent)
 	{
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
 		if (!((Object)(object)orePlaneColliderDetailed == (Object)null))
 		{
 			_oreScale.y = Mathf.Clamp01(percent);
@@ -293,9 +293,9 @@ public class TrainCarUnloadable : TrainCar
 
 	public bool IsLinedUpToUnload(BoxCollider unloaderBounds)
 	{
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
 		BoxCollider[] array = unloadingAreas;
 		foreach (BoxCollider val in array)
 		{
@@ -407,14 +407,14 @@ public class TrainCarUnloadable : TrainCar
 
 	public float MinDistToUnloadingArea(Vector3 point)
 	{
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
 		float num = float.MaxValue;
 		point.y = 0f;
 		BoxCollider[] array = unloadingAreas;

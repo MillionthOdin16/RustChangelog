@@ -7,6 +7,7 @@ using ProtoBuf;
 using Rust;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.Profiling;
 
 public class IOEntity : DecayEntity
 {
@@ -90,9 +91,9 @@ public class IOEntity : DecayEntity
 
 		public Vector3 handleDirection;
 
-		public bool rootConnectionsOnly;
+		public bool rootConnectionsOnly = false;
 
-		public bool mainPowerSlot;
+		public bool mainPowerSlot = false;
 
 		public WireTool.WireColour wireColour;
 
@@ -171,23 +172,23 @@ public class IOEntity : DecayEntity
 
 	private static List<FrameTiming> timings = new List<FrameTiming>();
 
-	private int cachedOutputsUsed;
+	private int cachedOutputsUsed = 0;
 
-	protected int lastPassthroughEnergy;
+	protected int lastPassthroughEnergy = 0;
 
-	private int lastEnergy;
+	private int lastEnergy = 0;
 
-	protected int currentEnergy;
+	protected int currentEnergy = 0;
 
-	protected float lastUpdateTime;
+	protected float lastUpdateTime = 0f;
 
-	protected int lastUpdateBlockedFrame;
+	protected int lastUpdateBlockedFrame = 0;
 
-	protected bool ensureOutputsUpdated;
+	protected bool ensureOutputsUpdated = false;
 
 	public const int MaxContainerSourceCount = 32;
 
-	private List<Collider> spawnedColliders = new List<Collider>();
+	private List<BoxCollider> spawnedColliders = new List<BoxCollider>();
 
 	public virtual bool IsGravitySource => false;
 
@@ -209,7 +210,7 @@ public class IOEntity : DecayEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_RequestData "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_RequestData "));
 				}
 				TimeWarning val2 = TimeWarning.New("Server_RequestData", 0);
 				try
@@ -232,7 +233,7 @@ public class IOEntity : DecayEntity
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -244,7 +245,7 @@ public class IOEntity : DecayEntity
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -299,28 +300,30 @@ public class IOEntity : DecayEntity
 
 	public IOEntity FindGravitySource(ref Vector3 worldHandlePosition, int depth, bool ignoreSelf)
 	{
-		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00af: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ff: Unknown result type (might be due to invalid IL or missing references)
 		if (depth <= 0)
 		{
 			return null;
 		}
 		if (!ignoreSelf && IsGravitySource)
 		{
+			Profiler.BeginSample("Transform Point");
 			worldHandlePosition = ((Component)this).transform.TransformPoint(outputs[0].handlePosition);
+			Profiler.EndSample();
 			return this;
 		}
 		IOSlot[] array = inputs;
-		for (int i = 0; i < array.Length; i++)
+		foreach (IOSlot iOSlot in array)
 		{
-			IOEntity iOEntity = array[i].connectedTo.Get(base.isServer);
+			IOEntity iOEntity = iOSlot.connectedTo.Get(base.isServer);
 			if ((Object)(object)iOEntity != (Object)null)
 			{
 				if (iOEntity.IsGravitySource)
@@ -391,7 +394,8 @@ public class IOEntity : DecayEntity
 	{
 		if (depth > 0 && slot < inputs.Length)
 		{
-			IOEntity iOEntity = inputs[slot].connectedTo.Get();
+			IOSlot iOSlot = inputs[slot];
+			IOEntity iOEntity = iOSlot.connectedTo.Get();
 			if ((Object)(object)iOEntity != (Object)null)
 			{
 				if ((Object)(object)iOEntity == (Object)(object)entity)
@@ -518,8 +522,9 @@ public class IOEntity : DecayEntity
 
 	public static void ProcessQueue()
 	{
-		//IL_00d6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00dd: Expected O, but got Unknown
+		//IL_0133: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013a: Expected O, but got Unknown
+		Profiler.BeginSample("IOEntity.ProcessQueue");
 		float realtimeSinceStartup = Time.realtimeSinceStartup;
 		float num = framebudgetms / 1000f;
 		if (debugBudget)
@@ -532,7 +537,9 @@ public class IOEntity : DecayEntity
 			IOEntity iOEntity = _processQueue.Dequeue();
 			if (iOEntity.IsValid())
 			{
+				Profiler.BeginSample(iOEntity.ShortPrefabName);
 				iOEntity.UpdateOutputs();
+				Profiler.EndSample();
 			}
 			if (debugBudget)
 			{
@@ -543,6 +550,7 @@ public class IOEntity : DecayEntity
 				});
 			}
 		}
+		Profiler.EndSample();
 		if (!debugBudget)
 		{
 			return;
@@ -641,8 +649,8 @@ public class IOEntity : DecayEntity
 				iOEntity.SendNetworkUpdate();
 			}
 		}
-		array = outputs;
-		foreach (IOSlot iOSlot3 in array)
+		IOSlot[] array3 = outputs;
+		foreach (IOSlot iOSlot3 in array3)
 		{
 			if ((Object)(object)iOSlot3.connectedTo.Get() != (Object)null)
 			{
@@ -651,8 +659,8 @@ public class IOEntity : DecayEntity
 				{
 					list2.Add(list[list.Count - 1]);
 				}
-				IOSlot[] array2 = iOSlot3.connectedTo.Get().inputs;
-				foreach (IOSlot iOSlot4 in array2)
+				IOSlot[] array4 = iOSlot3.connectedTo.Get().inputs;
+				foreach (IOSlot iOSlot4 in array4)
 				{
 					if ((Object)(object)iOSlot4.connectedTo.Get() != (Object)null && iOSlot4.connectedTo.Get().EqualNetID((BaseNetworkable)this))
 					{
@@ -675,9 +683,9 @@ public class IOEntity : DecayEntity
 				item.SendNetworkUpdate();
 			}
 		}
-		for (int k = 0; k < inputs.Length; k++)
+		for (int m = 0; m < inputs.Length; m++)
 		{
-			UpdateFromInput(0, k);
+			UpdateFromInput(0, m);
 		}
 		foreach (IOEntity item2 in list2)
 		{
@@ -706,24 +714,28 @@ public class IOEntity : DecayEntity
 
 	public void UpdateUsedOutputs()
 	{
+		Profiler.BeginSample("IOEntity.UpdateUsedOutputs");
 		cachedOutputsUsed = 0;
 		IOSlot[] array = outputs;
-		for (int i = 0; i < array.Length; i++)
+		foreach (IOSlot iOSlot in array)
 		{
-			IOEntity iOEntity = array[i].connectedTo.Get();
+			IOEntity iOEntity = iOSlot.connectedTo.Get();
 			if ((Object)(object)iOEntity != (Object)null && !iOEntity.IsDestroyed)
 			{
 				cachedOutputsUsed++;
 			}
 		}
+		Profiler.EndSample();
 	}
 
 	public virtual void MarkDirty()
 	{
 		if (!base.isClient)
 		{
+			Profiler.BeginSample("IOEntity.MarkDirty");
 			UpdateUsedOutputs();
 			TouchIOState();
+			Profiler.EndSample();
 		}
 	}
 
@@ -765,9 +777,9 @@ public class IOEntity : DecayEntity
 	public void TouchInternal()
 	{
 		int passthroughAmount = GetPassthroughAmount();
-		bool num = lastPassthroughEnergy != passthroughAmount;
+		bool flag = lastPassthroughEnergy != passthroughAmount;
 		lastPassthroughEnergy = passthroughAmount;
-		if (num)
+		if (flag)
 		{
 			IOStateChanged(currentEnergy, 0);
 			ensureOutputsUpdated = true;
@@ -782,6 +794,7 @@ public class IOEntity : DecayEntity
 			IOStateChanged(inputAmount, inputSlot);
 			return;
 		}
+		Profiler.BeginSample("IOEntity.UpdateFromInput");
 		UpdateHasPower(inputAmount, inputSlot);
 		lastEnergy = currentEnergy;
 		currentEnergy = CalculateCurrentEnergy(inputAmount, inputSlot);
@@ -794,6 +807,7 @@ public class IOEntity : DecayEntity
 			ensureOutputsUpdated = true;
 		}
 		_processQueue.Enqueue(this);
+		Profiler.EndSample();
 	}
 
 	public virtual void TouchIOState()
@@ -823,9 +837,11 @@ public class IOEntity : DecayEntity
 
 	public virtual void SendChangedToRoot(bool forceUpdate)
 	{
+		Profiler.BeginSample("IOEntity.SendChangedToRoot");
 		List<IOEntity> existing = Pool.GetList<IOEntity>();
 		SendChangedToRootRecursive(forceUpdate, ref existing);
 		Pool.FreeList<IOEntity>(ref existing);
+		Profiler.EndSample();
 	}
 
 	public virtual void SendChangedToRootRecursive(bool forceUpdate, ref List<IOEntity> existing)
@@ -917,8 +933,8 @@ public class IOEntity : DecayEntity
 
 	public virtual void UpdateOutputs()
 	{
-		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
 		if (!ShouldUpdateOutputs() || !ensureOutputsUpdated)
 		{
 			return;
@@ -984,17 +1000,18 @@ public class IOEntity : DecayEntity
 
 	public override void Save(SaveInfo info)
 	{
-		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0107: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0160: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0165: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01aa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01af: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ba: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01bc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0123: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0177: Unknown result type (might be due to invalid IL or missing references)
+		//IL_017c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01cb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01db: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01dd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01e2: Unknown result type (might be due to invalid IL or missing references)
+		Profiler.BeginSample("IOEntity.Save");
 		base.Save(info);
 		info.msg.ioEntity = Pool.Get<IOEntity>();
 		info.msg.ioEntity.inputs = Pool.GetList<IOConnection>();
@@ -1012,8 +1029,8 @@ public class IOEntity : DecayEntity
 			val.lineThickness = iOSlot.lineThickness;
 			info.msg.ioEntity.inputs.Add(val);
 		}
-		array = outputs;
-		foreach (IOSlot iOSlot2 in array)
+		IOSlot[] array2 = outputs;
+		foreach (IOSlot iOSlot2 in array2)
 		{
 			IOConnection val2 = Pool.Get<IOConnection>();
 			val2.connectedID = iOSlot2.connectedTo.entityRef.uid;
@@ -1028,20 +1045,21 @@ public class IOEntity : DecayEntity
 			{
 				val2.linePointList = Pool.GetList<LineVec>();
 				val2.linePointList.Clear();
-				for (int j = 0; j < iOSlot2.linePoints.Length; j++)
+				for (int k = 0; k < iOSlot2.linePoints.Length; k++)
 				{
-					Vector3 val3 = iOSlot2.linePoints[j];
+					Vector3 val3 = iOSlot2.linePoints[k];
 					LineVec val4 = Pool.Get<LineVec>();
 					val4.vec = Vector4.op_Implicit(val3);
-					if (iOSlot2.slackLevels.Length > j)
+					if (iOSlot2.slackLevels.Length > k)
 					{
-						val4.vec.w = iOSlot2.slackLevels[j];
+						val4.vec.w = iOSlot2.slackLevels[k];
 					}
 					val2.linePointList.Add(val4);
 				}
 			}
 			info.msg.ioEntity.outputs.Add(val2);
 		}
+		Profiler.EndSample();
 	}
 
 	public virtual float IOInput(IOEntity from, IOType inputType, float inputAmount, int slot = 0)
@@ -1065,29 +1083,28 @@ public class IOEntity : DecayEntity
 		}
 		int num = 0;
 		int num2 = 1;
-		IOSlot[] array;
 		if (!input)
 		{
 			num2 = 0;
-			array = outputs;
-			for (int i = 0; i < array.Length; i++)
+			IOSlot[] array = outputs;
+			foreach (IOSlot iOSlot in array)
 			{
-				if (array[i].type == IOType.Industrial)
+				if (iOSlot.type == IOType.Industrial)
 				{
 					num2++;
 				}
 			}
 		}
 		List<int> list = Pool.GetList<int>();
-		array = (input ? inputs : outputs);
-		foreach (IOSlot iOSlot in array)
+		IOSlot[] array2 = (input ? inputs : outputs);
+		foreach (IOSlot iOSlot2 in array2)
 		{
 			num++;
-			if (iOSlot.type != IOType.Industrial)
+			if (iOSlot2.type != IOType.Industrial)
 			{
 				continue;
 			}
-			IOEntity iOEntity = iOSlot.connectedTo.Get(base.isServer);
+			IOEntity iOEntity = iOSlot2.connectedTo.Get(base.isServer);
 			if (!((Object)(object)iOEntity != (Object)null) || ignoreList.Contains(iOEntity))
 			{
 				continue;
@@ -1095,8 +1112,9 @@ public class IOEntity : DecayEntity
 			int num3 = -1;
 			if (iOEntity is IIndustrialStorage storage2)
 			{
-				num = iOSlot.connectedToSlot;
-				if (GetExistingCount(storage2) < 2)
+				num = iOSlot2.connectedToSlot;
+				int num4 = GetExistingCount(storage2);
+				if (num4 < 2)
 				{
 					found.Add(new ContainerInputOutput
 					{
@@ -1128,25 +1146,25 @@ public class IOEntity : DecayEntity
 		Pool.FreeList<int>(ref list);
 		int GetExistingCount(IIndustrialStorage storage)
 		{
-			int num4 = 0;
+			int num5 = 0;
 			foreach (ContainerInputOutput item2 in found)
 			{
 				if (item2.Storage == storage)
 				{
-					num4++;
+					num5++;
 				}
 			}
-			return num4;
+			return num5;
 		}
 	}
 
 	public virtual bool AllowLiquidPassthrough(IOEntity fromSource, Vector3 sourceWorldPosition, bool forPlacement = false)
 	{
-		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
 		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
 		if (fromSource.DisregardGravityRestrictionsOnLiquid || DisregardGravityRestrictionsOnLiquid)
 		{
 			return true;
@@ -1170,18 +1188,19 @@ public class IOEntity : DecayEntity
 
 	public override void Load(LoadInfo info)
 	{
-		//IL_00bc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0256: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02da: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02df: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03b9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03be: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03c3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02ef: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0379: Unknown result type (might be due to invalid IL or missing references)
+		//IL_037e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_047b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0480: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0485: Unknown result type (might be due to invalid IL or missing references)
 		base.Load(info);
 		if (info.msg.ioEntity == null)
 		{
 			return;
 		}
+		Profiler.BeginSample("IOEntity.Load");
 		if (!info.fromDisk && info.msg.ioEntity.inputs != null)
 		{
 			int count = info.msg.ioEntity.inputs.Count;
@@ -1268,15 +1287,16 @@ public class IOEntity : DecayEntity
 			}
 		}
 		RefreshIndustrialPreventBuilding();
+		Profiler.EndSample();
 	}
 
 	public int GetConnectedInputCount()
 	{
 		int num = 0;
 		IOSlot[] array = inputs;
-		for (int i = 0; i < array.Length; i++)
+		foreach (IOSlot iOSlot in array)
 		{
-			if ((Object)(object)array[i].connectedTo.Get(base.isServer) != (Object)null)
+			if ((Object)(object)iOSlot.connectedTo.Get(base.isServer) != (Object)null)
 			{
 				num++;
 			}
@@ -1288,9 +1308,9 @@ public class IOEntity : DecayEntity
 	{
 		int num = 0;
 		IOSlot[] array = outputs;
-		for (int i = 0; i < array.Length; i++)
+		foreach (IOSlot iOSlot in array)
 		{
-			if ((Object)(object)array[i].connectedTo.Get(base.isServer) != (Object)null)
+			if ((Object)(object)iOSlot.connectedTo.Get(base.isServer) != (Object)null)
 			{
 				num++;
 			}
@@ -1300,11 +1320,7 @@ public class IOEntity : DecayEntity
 
 	public bool HasConnections()
 	{
-		if (GetConnectedInputCount() <= 0)
-		{
-			return GetConnectedOutputCount() > 0;
-		}
-		return true;
+		return GetConnectedInputCount() > 0 || GetConnectedOutputCount() > 0;
 	}
 
 	public override void DestroyShared()
@@ -1315,68 +1331,74 @@ public class IOEntity : DecayEntity
 
 	public void RefreshIndustrialPreventBuilding()
 	{
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0095: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ba: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00be: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0112: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014f: Unknown result type (might be due to invalid IL or missing references)
+		Profiler.BeginSample("RefreshIndustrialPreventBuilding");
 		ClearIndustrialPreventBuilding();
 		Matrix4x4 localToWorldMatrix = ((Component)this).transform.localToWorldMatrix;
-		CapsuleCollider val4 = default(CapsuleCollider);
+		BoxCollider val5 = default(BoxCollider);
 		ColliderInfo_Pipe colliderInfo_Pipe = default(ColliderInfo_Pipe);
 		for (int i = 0; i < outputs.Length; i++)
 		{
 			IOSlot iOSlot = outputs[i];
-			if (iOSlot.type != IOType.Industrial || iOSlot.linePoints == null || iOSlot.linePoints.Length <= 1)
+			Profiler.BeginSample("CreateOutput");
+			if (iOSlot.type == IOType.Industrial && iOSlot.linePoints != null && iOSlot.linePoints.Length > 1)
 			{
-				continue;
-			}
-			Vector3 val = ((Matrix4x4)(ref localToWorldMatrix)).MultiplyPoint3x4(iOSlot.linePoints[0]);
-			for (int j = 1; j < iOSlot.linePoints.Length; j++)
-			{
-				Vector3 val2 = ((Matrix4x4)(ref localToWorldMatrix)).MultiplyPoint3x4(iOSlot.linePoints[j]);
-				Vector3 pos = Vector3.Lerp(val2, val, 0.5f);
-				float num = Vector3.Distance(val2, val);
-				Vector3 val3 = val2 - val;
-				Quaternion rot = Quaternion.LookRotation(((Vector3)(ref val3)).normalized);
-				GameObject obj = base.gameManager.CreatePrefab("assets/prefabs/misc/ioentitypreventbuilding.prefab", pos, rot);
-				obj.transform.SetParent(((Component)this).transform);
-				if (obj.TryGetComponent<CapsuleCollider>(ref val4))
+				Vector3 val = ((Matrix4x4)(ref localToWorldMatrix)).MultiplyPoint3x4(iOSlot.linePoints[0]);
+				for (int j = 1; j < iOSlot.linePoints.Length; j++)
 				{
-					val4.height = num + val4.radius;
-					spawnedColliders.Add((Collider)(object)val4);
+					Vector3 val2 = ((Matrix4x4)(ref localToWorldMatrix)).MultiplyPoint3x4(iOSlot.linePoints[j]);
+					Vector3 pos = Vector3.Lerp(val2, val, 0.5f);
+					float num = Vector3.Distance(val2, val);
+					Vector3 val3 = val2 - val;
+					Quaternion rot = Quaternion.LookRotation(((Vector3)(ref val3)).normalized);
+					GameObject val4 = base.gameManager.CreatePrefab("assets/prefabs/misc/ioentitypreventbuilding.prefab", pos, rot);
+					val4.transform.SetParent(((Component)this).transform);
+					if (val4.TryGetComponent<BoxCollider>(ref val5))
+					{
+						val5.size = new Vector3(0.1f, 0.1f, num);
+						spawnedColliders.Add(val5);
+					}
+					if (val4.TryGetComponent<ColliderInfo_Pipe>(ref colliderInfo_Pipe))
+					{
+						colliderInfo_Pipe.OutputSlotIndex = i;
+						colliderInfo_Pipe.ParentEntity = this;
+					}
+					val = val2;
 				}
-				if (obj.TryGetComponent<ColliderInfo_Pipe>(ref colliderInfo_Pipe))
-				{
-					colliderInfo_Pipe.OutputSlotIndex = i;
-					colliderInfo_Pipe.ParentEntity = this;
-				}
-				val = val2;
 			}
+			Profiler.EndSample();
 		}
+		Profiler.EndSample();
 	}
 
 	private void ClearIndustrialPreventBuilding()
 	{
-		foreach (Collider spawnedCollider in spawnedColliders)
+		foreach (BoxCollider spawnedCollider in spawnedColliders)
 		{
 			base.gameManager.Retire(((Component)spawnedCollider).gameObject);
 		}

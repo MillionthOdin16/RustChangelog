@@ -20,18 +20,20 @@ public class EnumListUI : MonoBehaviour
 
 	public void Show(List<object> values, Action<object> clicked)
 	{
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Expected O, but got Unknown
 		((Component)this).gameObject.SetActive(true);
 		clickedAction = clicked;
 		foreach (Transform item in Container)
 		{
-			Object.Destroy((Object)(object)((Component)item).gameObject);
+			Transform val = item;
+			Object.Destroy((Object)(object)((Component)val).gameObject);
 		}
 		foreach (object value in values)
 		{
-			Transform obj = Object.Instantiate<Transform>(PrefabItem);
-			obj.SetParent(Container, false);
-			((Component)obj).GetComponent<EnumListItemUI>().Init(value, value.ToString(), this);
+			Transform val2 = Object.Instantiate<Transform>(PrefabItem);
+			val2.SetParent(Container, false);
+			((Component)val2).GetComponent<EnumListItemUI>().Init(value, value.ToString(), this);
 		}
 	}
 

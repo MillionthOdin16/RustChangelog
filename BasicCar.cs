@@ -14,7 +14,7 @@ public class BasicCar : BaseVehicle
 
 		public Transform axle;
 
-		public bool steerWheel;
+		public bool steerWheel = false;
 
 		public bool brakeWheel = true;
 
@@ -23,11 +23,11 @@ public class BasicCar : BaseVehicle
 
 	public VehicleWheel[] wheels;
 
-	public float brakePedal;
+	public float brakePedal = 0f;
 
-	public float gasPedal;
+	public float gasPedal = 0f;
 
-	public float steering;
+	public float steering = 0f;
 
 	public Transform centerOfMass;
 
@@ -53,7 +53,7 @@ public class BasicCar : BaseVehicle
 
 	public SoundDefinition engineSoundDef;
 
-	private static bool chairtest;
+	private static bool chairtest = false;
 
 	private float throttle;
 
@@ -68,8 +68,11 @@ public class BasicCar : BaseVehicle
 
 	public override Vector3 EyePositionForPlayer(BasePlayer player, Quaternion viewRot)
 	{
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
 		if (PlayerIsMounted(player))
 		{
 			return ((Component)driverEye).transform.position;
@@ -79,7 +82,7 @@ public class BasicCar : BaseVehicle
 
 	public override void ServerInit()
 	{
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
 		if (!base.isClient)
 		{
 			base.ServerInit();
@@ -95,9 +98,9 @@ public class BasicCar : BaseVehicle
 
 	public void SpawnChairTest()
 	{
-		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
 		BaseEntity baseEntity = GameManager.server.CreateEntity(chairRef.resourcePath, ((Component)chairAnchorTest).transform.localPosition);
 		baseEntity.Spawn();
 		DestroyOnGroundMissing component = ((Component)baseEntity).GetComponent<DestroyOnGroundMissing>();
@@ -147,10 +150,10 @@ public class BasicCar : BaseVehicle
 
 	private void ApplyForceAtWheels()
 	{
-		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)rigidBody == (Object)null)
 		{
 			return;

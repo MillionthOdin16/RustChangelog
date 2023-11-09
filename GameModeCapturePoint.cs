@@ -15,7 +15,7 @@ public class GameModeCapturePoint : BaseEntity
 
 	public string scoreName = "score";
 
-	private float captureFraction;
+	private float captureFraction = 0f;
 
 	private int captureTeam = -1;
 
@@ -39,7 +39,7 @@ public class GameModeCapturePoint : BaseEntity
 
 	public Transform computerPoint;
 
-	private float nextBeepTime;
+	private float nextBeepTime = 0f;
 
 	public bool IsContested()
 	{
@@ -82,17 +82,17 @@ public class GameModeCapturePoint : BaseEntity
 
 	public void DoCaptureEffect()
 	{
-		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
 		Effect.server.Run(progressCompleteEffect.resourcePath, computerPoint.position);
 	}
 
 	public void DoProgressEffect()
 	{
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
 		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
 		if (!(Time.time < nextBeepTime))
 		{
 			Effect.server.Run(progressBeepEffect.resourcePath, computerPoint.position);
@@ -236,10 +236,10 @@ public class GameModeCapturePoint : BaseEntity
 
 	public override void Save(SaveInfo info)
 	{
-		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
 		base.Save(info);
 		info.msg.ioEntity = Pool.Get<IOEntity>();
 		info.msg.ioEntity.genericFloat1 = captureFraction;

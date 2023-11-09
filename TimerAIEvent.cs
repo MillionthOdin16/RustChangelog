@@ -5,7 +5,7 @@ public class TimerAIEvent : BaseAIEvent
 {
 	protected float currentDuration;
 
-	protected float elapsedDuration;
+	protected float elapsedDuration = 0f;
 
 	public float DurationMin { get; set; }
 
@@ -27,13 +27,13 @@ public class TimerAIEvent : BaseAIEvent
 
 	public override AIEventData ToProto()
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0011: Expected O, but got Unknown
-		AIEventData obj = base.ToProto();
-		obj.timerData = new TimerAIEventData();
-		obj.timerData.duration = DurationMin;
-		obj.timerData.durationMax = DurationMax;
-		return obj;
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Expected O, but got Unknown
+		AIEventData val = base.ToProto();
+		val.timerData = new TimerAIEventData();
+		val.timerData.duration = DurationMin;
+		val.timerData.durationMax = DurationMax;
+		return val;
 	}
 
 	public override void Reset()

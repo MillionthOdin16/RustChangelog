@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class EffectDictionary
 {
-	private static Dictionary<string, string[]> effectDictionary;
+	private static Dictionary<string, string[]> effectDictionary = null;
 
 	public static string GetParticle(string impactType, string materialName)
 	{

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using ConVar;
@@ -13,10 +12,7 @@ public class ItemCrafter : EntityComponent<BasePlayer>
 
 	public LinkedList<ItemCraftTask> queue = new LinkedList<ItemCraftTask>();
 
-	public int taskUID;
-
-	[NonSerialized]
-	public BasePlayer owner;
+	public int taskUID = 0;
 
 	public void AddContainer(ItemContainer container)
 	{
@@ -46,11 +42,11 @@ public class ItemCrafter : EntityComponent<BasePlayer>
 		ItemCraftTask value = queue.First.Value;
 		if (value.cancelled)
 		{
-			owner.Command("note.craft_done", value.taskUID, 0);
+			value.owner.Command("note.craft_done", value.taskUID, 0);
 			queue.RemoveFirst();
 			return;
 		}
-		float currentCraftLevel = owner.currentCraftLevel;
+		float currentCraftLevel = value.owner.currentCraftLevel;
 		if (value.endTime > Time.realtimeSinceStartup)
 		{
 			return;
@@ -59,11 +55,11 @@ public class ItemCrafter : EntityComponent<BasePlayer>
 		{
 			float scaledDuration = GetScaledDuration(value.blueprint, currentCraftLevel);
 			value.endTime = Time.realtimeSinceStartup + scaledDuration;
-			value.workbenchEntity = owner.GetCachedCraftLevelWorkbench();
-			if ((Object)(object)owner != (Object)null)
+			value.workbenchEntity = value.owner.GetCachedCraftLevelWorkbench();
+			if ((Object)(object)value.owner != (Object)null)
 			{
-				owner.Command("note.craft_start", value.taskUID, scaledDuration, value.amount);
-				if (owner.IsAdmin && Craft.instant)
+				value.owner.Command("note.craft_start", value.taskUID, scaledDuration, value.amount);
+				if (value.owner.IsAdmin && Craft.instant)
 				{
 					value.endTime = Time.realtimeSinceStartup + 1f;
 				}
@@ -102,19 +98,20 @@ public class ItemCrafter : EntityComponent<BasePlayer>
 		{
 			CollectIngredient(ingredient.itemid, (int)ingredient.amount * amount, list);
 		}
+		task.potentialOwners = new List<ulong>();
 		foreach (Item item in list)
 		{
 			item.CollectedForCrafting(player);
+			if (!task.potentialOwners.Contains(player.userID))
+			{
+				task.potentialOwners.Add(player.userID);
+			}
 		}
 		task.takenItems = list;
 	}
 
 	public bool CraftItem(ItemBlueprint bp, BasePlayer owner, InstanceData instanceData = null, int amount = 1, int skinID = 0, Item fromTempBlueprint = null, bool free = false)
 	{
-		if ((Object)(object)owner != (Object)null && owner.IsTransferring())
-		{
-			return false;
-		}
 		if (!CanCraft(bp, amount, free))
 		{
 			return false;
@@ -128,6 +125,7 @@ public class ItemCrafter : EntityComponent<BasePlayer>
 		}
 		itemCraftTask.endTime = 0f;
 		itemCraftTask.taskUID = taskUID;
+		itemCraftTask.owner = owner;
 		itemCraftTask.instanceData = instanceData;
 		if (itemCraftTask.instanceData != null)
 		{
@@ -142,27 +140,27 @@ public class ItemCrafter : EntityComponent<BasePlayer>
 			itemCraftTask.conditionScale = 0.5f;
 		}
 		queue.AddLast(itemCraftTask);
-		if ((Object)(object)owner != (Object)null)
+		if ((Object)(object)itemCraftTask.owner != (Object)null)
 		{
-			owner.Command("note.craft_add", itemCraftTask.taskUID, itemCraftTask.blueprint.targetItem.itemid, amount, itemCraftTask.skinID);
+			itemCraftTask.owner.Command("note.craft_add", itemCraftTask.taskUID, itemCraftTask.blueprint.targetItem.itemid, amount, itemCraftTask.skinID);
 		}
 		return true;
 	}
 
 	private void FinishCrafting(ItemCraftTask task)
 	{
-		//IL_0317: Unknown result type (might be due to invalid IL or missing references)
-		//IL_031e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0325: Unknown result type (might be due to invalid IL or missing references)
-		//IL_032b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_037a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0381: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0388: Unknown result type (might be due to invalid IL or missing references)
+		//IL_038e: Unknown result type (might be due to invalid IL or missing references)
 		task.amount--;
 		task.numCrafted++;
 		ulong skin = ItemDefinition.FindSkin(task.blueprint.targetItem.itemid, task.skinID);
 		Item item = ItemManager.CreateByItemID(task.blueprint.targetItem.itemid, 1, skin);
 		item.amount = task.blueprint.amountToCreate;
 		int amount = item.amount;
-		_ = owner.currentCraftLevel;
-		bool inSafezone = owner.InSafeZone();
+		int num = (int)task.owner.currentCraftLevel;
+		bool inSafezone = task.owner.InSafeZone();
 		if (item.hasCondition && task.conditionScale != 1f)
 		{
 			item.maxCondition *= task.conditionScale;
@@ -171,7 +169,7 @@ public class ItemCrafter : EntityComponent<BasePlayer>
 		item.OnVirginSpawn();
 		foreach (ItemAmount ingredient in task.blueprint.ingredients)
 		{
-			int num = (int)ingredient.amount;
+			int num2 = (int)ingredient.amount;
 			if (task.takenItems == null)
 			{
 				continue;
@@ -180,52 +178,51 @@ public class ItemCrafter : EntityComponent<BasePlayer>
 			{
 				if ((Object)(object)takenItem.info == (Object)(object)ingredient.itemDef)
 				{
-					int num2 = Mathf.Min(takenItem.amount, num);
-					Analytics.Azure.OnCraftMaterialConsumed(takenItem.info.shortname, num, base.baseEntity, task.workbenchEntity, inSafezone, item.info.shortname);
-					takenItem.UseItem(num);
-					num -= num2;
+					int amount2 = takenItem.amount;
+					int num3 = Mathf.Min(amount2, num2);
+					Analytics.Azure.OnCraftMaterialConsumed(takenItem.info.shortname, num2, base.baseEntity, task.workbenchEntity, inSafezone, item.info.shortname);
+					takenItem.UseItem(num2);
+					num2 -= num3;
 				}
-				_ = 0;
+				if (num2 > 0)
+				{
+				}
 			}
 		}
 		Analytics.Server.Crafting(task.blueprint.targetItem.shortname, task.skinID);
 		Analytics.Azure.OnCraftItem(item.info.shortname, item.amount, base.baseEntity, task.workbenchEntity, inSafezone);
-		owner.Command("note.craft_done", task.taskUID, 1, task.amount);
+		task.owner.Command("note.craft_done", task.taskUID, 1, task.amount);
 		if (task.instanceData != null)
 		{
 			item.instanceData = task.instanceData;
 		}
 		if (!string.IsNullOrEmpty(task.blueprint.UnlockAchievment))
 		{
-			owner.GiveAchievement(task.blueprint.UnlockAchievment);
+			task.owner.GiveAchievement(task.blueprint.UnlockAchievment);
 		}
-		if (owner.inventory.GiveItem(item))
+		if (task.owner.inventory.GiveItem(item))
 		{
-			owner.Command("note.inv", item.info.itemid, amount);
+			task.owner.Command("note.inv", item.info.itemid, amount);
 			return;
 		}
 		ItemContainer itemContainer = containers.First();
-		owner.Command("note.inv", item.info.itemid, amount);
-		owner.Command("note.inv", item.info.itemid, -item.amount);
+		task.owner.Command("note.inv", item.info.itemid, amount);
+		task.owner.Command("note.inv", item.info.itemid, -item.amount);
 		item.Drop(itemContainer.dropPosition, itemContainer.dropVelocity);
 	}
 
 	public bool CancelTask(int iID, bool ReturnItems)
 	{
-		//IL_014e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0158: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0162: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0167: Unknown result type (might be due to invalid IL or missing references)
-		//IL_016c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0181: Unknown result type (might be due to invalid IL or missing references)
+		//IL_017e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0188: Unknown result type (might be due to invalid IL or missing references)
-		//IL_018e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_018d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0192: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0197: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01be: Unknown result type (might be due to invalid IL or missing references)
 		if (queue.Count == 0)
-		{
-			return false;
-		}
-		if ((Object)(object)owner != (Object)null && owner.IsTransferring())
 		{
 			return false;
 		}
@@ -235,11 +232,11 @@ public class ItemCrafter : EntityComponent<BasePlayer>
 			return false;
 		}
 		itemCraftTask.cancelled = true;
-		if ((Object)(object)owner == (Object)null)
+		if ((Object)(object)itemCraftTask.owner == (Object)null)
 		{
 			return true;
 		}
-		owner.Command("note.craft_done", itemCraftTask.taskUID, 0);
+		itemCraftTask.owner.Command("note.craft_done", itemCraftTask.taskUID, 0);
 		if (itemCraftTask.takenItems != null && itemCraftTask.takenItems.Count > 0 && ReturnItems)
 		{
 			foreach (Item takenItem in itemCraftTask.takenItems)
@@ -250,10 +247,10 @@ public class ItemCrafter : EntityComponent<BasePlayer>
 					{
 						takenItem.UseItem(itemCraftTask.numCrafted);
 					}
-					if (takenItem.amount > 0 && !takenItem.MoveToContainer(owner.inventory.containerMain))
+					if (takenItem.amount > 0 && !takenItem.MoveToContainer(itemCraftTask.owner.inventory.containerMain))
 					{
-						takenItem.Drop(owner.inventory.containerMain.dropPosition + Random.value * Vector3.down + Random.insideUnitSphere, owner.inventory.containerMain.dropVelocity);
-						owner.Command("note.inv", takenItem.info.itemid, -takenItem.amount);
+						takenItem.Drop(itemCraftTask.owner.inventory.containerMain.dropPosition + Random.value * Vector3.down + Random.insideUnitSphere, itemCraftTask.owner.inventory.containerMain.dropVelocity);
+						itemCraftTask.owner.Command("note.inv", takenItem.info.itemid, -takenItem.amount);
 					}
 				}
 			}
@@ -264,10 +261,6 @@ public class ItemCrafter : EntityComponent<BasePlayer>
 	public bool CancelBlueprint(int itemid)
 	{
 		if (queue.Count == 0)
-		{
-			return false;
-		}
-		if ((Object)(object)owner != (Object)null && owner.IsTransferring())
 		{
 			return false;
 		}
@@ -341,10 +334,6 @@ public class ItemCrafter : EntityComponent<BasePlayer>
 		{
 			return false;
 		}
-		if ((Object)(object)owner != (Object)null && owner.IsTransferring())
-		{
-			return false;
-		}
 		ItemCraftTask value = queue.First.Value;
 		if (value == null)
 		{
@@ -362,109 +351,7 @@ public class ItemCrafter : EntityComponent<BasePlayer>
 		value.endTime = 0f;
 		queue.Remove(itemCraftTask);
 		queue.AddFirst(itemCraftTask);
-		owner.Command("note.craft_fasttracked", taskID);
+		itemCraftTask.owner.Command("note.craft_fasttracked", taskID);
 		return true;
-	}
-
-	public ItemCrafter Save()
-	{
-		//IL_0102: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ed: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0107: Unknown result type (might be due to invalid IL or missing references)
-		ItemCrafter val = Pool.Get<ItemCrafter>();
-		val.queue = Pool.GetList<Task>();
-		foreach (ItemCraftTask item in queue)
-		{
-			Task val2 = Pool.Get<Task>();
-			val2.itemID = item.blueprint.targetItem.itemid;
-			val2.remainingTime = ((item.endTime > 0f) ? (item.endTime - Time.realtimeSinceStartup) : 0f);
-			val2.taskUID = item.taskUID;
-			val2.cancelled = item.cancelled;
-			InstanceData instanceData = item.instanceData;
-			val2.instanceData = ((instanceData != null) ? instanceData.Copy() : null);
-			val2.amount = item.amount;
-			val2.skinID = item.skinID;
-			val2.takenItems = SaveItems(item.takenItems);
-			val2.numCrafted = item.numCrafted;
-			val2.conditionScale = item.conditionScale;
-			val2.workbenchEntity = (NetworkableId)(item.workbenchEntity.IsValid() ? item.workbenchEntity.net.ID : default(NetworkableId));
-			val.queue.Add(val2);
-		}
-		return val;
-		static List<Item> SaveItems(List<Item> items)
-		{
-			List<Item> list = Pool.GetList<Item>();
-			if (items != null)
-			{
-				foreach (Item item2 in items)
-				{
-					list.Add(item2.Save(bIncludeContainer: true));
-				}
-			}
-			return list;
-		}
-	}
-
-	public void Load(ItemCrafter proto)
-	{
-		//IL_012f: Unknown result type (might be due to invalid IL or missing references)
-		if (proto?.queue == null)
-		{
-			return;
-		}
-		queue.Clear();
-		ItemBlueprint blueprint = default(ItemBlueprint);
-		foreach (Task item in proto.queue)
-		{
-			ItemDefinition itemDefinition = ItemManager.FindItemDefinition(item.itemID);
-			if ((Object)(object)itemDefinition == (Object)null || !((Component)itemDefinition).TryGetComponent<ItemBlueprint>(ref blueprint))
-			{
-				Debug.LogWarning((object)$"ItemCrafter has queue task for item ID {item.itemID}, but it was not found or has no blueprint. Skipping it");
-				continue;
-			}
-			ItemCraftTask itemCraftTask = Pool.Get<ItemCraftTask>();
-			itemCraftTask.blueprint = blueprint;
-			itemCraftTask.endTime = ((item.remainingTime > 0f) ? (Time.realtimeSinceStartup + item.remainingTime) : 0f);
-			itemCraftTask.taskUID = item.taskUID;
-			itemCraftTask.cancelled = item.cancelled;
-			InstanceData instanceData = item.instanceData;
-			itemCraftTask.instanceData = ((instanceData != null) ? instanceData.Copy() : null);
-			itemCraftTask.amount = item.amount;
-			itemCraftTask.skinID = item.skinID;
-			itemCraftTask.takenItems = LoadItems(item.takenItems);
-			itemCraftTask.numCrafted = item.numCrafted;
-			itemCraftTask.conditionScale = item.conditionScale;
-			itemCraftTask.workbenchEntity = new EntityRef<BaseEntity>
-			{
-				uid = item.workbenchEntity
-			}.Get(serverside: true);
-			queue.AddLast(itemCraftTask);
-			taskUID = Mathf.Max(taskUID, itemCraftTask.taskUID);
-		}
-		static List<Item> LoadItems(List<Item> itemProtos)
-		{
-			List<Item> list = new List<Item>();
-			if (itemProtos != null)
-			{
-				foreach (Item itemProto in itemProtos)
-				{
-					list.Add(ItemManager.Load(itemProto, null, isServer: true));
-				}
-			}
-			return list;
-		}
-	}
-
-	public void SendToOwner()
-	{
-		if (!owner.IsValid() || !owner.IsConnected)
-		{
-			return;
-		}
-		foreach (ItemCraftTask item in queue)
-		{
-			owner.Command("note.craft_add", item.taskUID, item.blueprint.targetItem.itemid, item.amount, item.skinID);
-		}
 	}
 }

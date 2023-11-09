@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Profiling;
 
 public class BaseFishNPC : BaseNpc, IAIAttack, IAISenses, IThinker
 {
@@ -25,10 +26,12 @@ public class BaseFishNPC : BaseNpc, IAIAttack, IAISenses, IThinker
 
 	public virtual void TryThink()
 	{
+		Profiler.BeginSample("BaseFishNPC.TryThink");
 		if (brain.ShouldServerThink())
 		{
 			brain.DoThink();
 		}
+		Profiler.EndSample();
 	}
 
 	public bool CanAttack(BaseEntity entity)
@@ -60,21 +63,24 @@ public class BaseFishNPC : BaseNpc, IAIAttack, IAISenses, IThinker
 
 	public bool IsTargetInRange(BaseEntity entity, out float dist)
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
 		dist = Vector3.Distance(((Component)entity).transform.position, base.AttackPosition);
 		return dist <= EngagementRange();
 	}
 
 	public bool CanSeeTarget(BaseEntity entity)
 	{
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)entity == (Object)null)
 		{
 			return false;
 		}
-		return entity.IsVisible(GetEntity().CenterPoint(), entity.CenterPoint());
+		Profiler.BeginSample("BaseFishNPC.CanSeeTarget");
+		bool result = entity.IsVisible(GetEntity().CenterPoint(), entity.CenterPoint());
+		Profiler.EndSample();
+		return result;
 	}
 
 	public bool Reload()

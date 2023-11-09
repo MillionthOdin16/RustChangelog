@@ -20,9 +20,9 @@ public class MissionObjective_Harvest : MissionObjective
 			return;
 		}
 		string[] array = itemShortnames;
-		for (int i = 0; i < array.Length; i++)
+		foreach (string text in array)
 		{
-			if (array[i] == identifier)
+			if (text == identifier)
 			{
 				instance.objectiveStatuses[index].genericInt1 += (int)amount;
 				if (instance.objectiveStatuses[index].genericInt1 >= targetItemAmount)

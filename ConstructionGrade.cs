@@ -11,19 +11,9 @@ public class ConstructionGrade : PrefabAttribute
 
 	public GameObjectRef skinObject;
 
-	internal List<ItemAmount> _costToBuild;
+	internal List<ItemAmount> _costToBuild = null;
 
-	public float maxHealth
-	{
-		get
-		{
-			if (!Object.op_Implicit((Object)(object)gradeBase) || !construction)
-			{
-				return 0f;
-			}
-			return gradeBase.baseHealth * construction.healthMultiplier;
-		}
-	}
+	public float maxHealth => (Object.op_Implicit((Object)(object)gradeBase) && (bool)construction) ? (gradeBase.baseHealth * construction.healthMultiplier) : 0f;
 
 	public List<ItemAmount> CostToBuild(BuildingGrade.Enum fromGrade = BuildingGrade.Enum.None)
 	{

@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Profiling;
 
 public class TerrainCollisionTrigger : EnvironmentVolumeTrigger
 {
@@ -6,7 +7,9 @@ public class TerrainCollisionTrigger : EnvironmentVolumeTrigger
 	{
 		if (Object.op_Implicit((Object)(object)TerrainMeta.Collision) && !other.isTrigger)
 		{
+			Profiler.BeginSample("TerrainCollisionTrigger.OnTriggerEnter");
 			UpdateCollider(other, state: true);
+			Profiler.EndSample();
 		}
 	}
 
@@ -14,7 +17,9 @@ public class TerrainCollisionTrigger : EnvironmentVolumeTrigger
 	{
 		if (Object.op_Implicit((Object)(object)TerrainMeta.Collision) && !other.isTrigger)
 		{
+			Profiler.BeginSample("TerrainCollisionTrigger.OnTriggerExit");
 			UpdateCollider(other, state: false);
+			Profiler.EndSample();
 		}
 	}
 

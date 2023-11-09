@@ -14,7 +14,7 @@ public class FireworkShell : BaseMonoBehaviour, IClientComponent
 
 	public SoundPlayer explodeSound;
 
-	public float inaccuracyDegrees;
+	public float inaccuracyDegrees = 0f;
 
 	public LightEx explosionLight;
 

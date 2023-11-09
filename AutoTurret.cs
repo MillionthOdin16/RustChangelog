@@ -9,6 +9,7 @@ using ProtoBuf;
 using Rust;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.Profiling;
 
 public class AutoTurret : ContainerIOEntity, IRemoteControllable
 {
@@ -17,11 +18,11 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 		public const Flags Peacekeeper = Flags.Reserved1;
 	}
 
-	public class UpdateAutoTurretScanQueue : PersistentObjectWorkQueue<AutoTurret>
+	public class UpdateAutoTurretScanQueue : ObjectWorkQueue<AutoTurret>
 	{
 		protected override void RunJob(AutoTurret entity)
 		{
-			if (((PersistentObjectWorkQueue<AutoTurret>)this).ShouldAdd(entity))
+			if (((ObjectWorkQueue<AutoTurret>)this).ShouldAdd(entity))
 			{
 				entity.TargetScan();
 			}
@@ -29,11 +30,7 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 
 		protected override bool ShouldAdd(AutoTurret entity)
 		{
-			if (base.ShouldAdd(entity))
-			{
-				return entity.IsValid();
-			}
-			return false;
+			return base.ShouldAdd(entity) && entity.IsValid();
 		}
 	}
 
@@ -48,6 +45,69 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 	public GameObject assignDialog;
 
 	public LaserBeam laserBeam;
+
+	public static UpdateAutoTurretScanQueue updateAutoTurretScanQueue = new UpdateAutoTurretScanQueue();
+
+	[Header("RC")]
+	public float rcTurnSensitivity = 4f;
+
+	public Transform RCEyes;
+
+	public GameObjectRef IDPanelPrefab;
+
+	public RemoteControllableControls rcControls = RemoteControllableControls.None;
+
+	public string rcIdentifier = "";
+
+	public TargetTrigger targetTrigger;
+
+	public Transform socketTransform;
+
+	private float nextShotTime = 0f;
+
+	private float lastShotTime = 0f;
+
+	private float nextVisCheck = 0f;
+
+	private float lastTargetSeenTime = 0f;
+
+	private bool targetVisible = true;
+
+	private bool booting = false;
+
+	private float nextIdleAimTime = 0f;
+
+	private Vector3 targetAimDir = Vector3.forward;
+
+	private const float bulletDamage = 15f;
+
+	private RealTimeSinceEx timeSinceLastServerTick;
+
+	private float nextForcedAimTime = 0f;
+
+	private Vector3 lastSentAimDir = Vector3.zero;
+
+	private static float[] visibilityOffsets = new float[3] { 0f, 0.15f, -0.15f };
+
+	private int peekIndex = 0;
+
+	[NonSerialized]
+	private int numConsecutiveMisses = 0;
+
+	[NonSerialized]
+	private int totalAmmo = 0;
+
+	private float nextAmmoCheckTime = 0f;
+
+	private bool totalAmmoDirty = true;
+
+	private float currentAmmoGravity = 0f;
+
+	private float currentAmmoVelocity = 0f;
+
+	private HeldEntity AttachedWeapon = null;
+
+	public float attachedWeaponZOffsetScale = -0.5f;
 
 	public BaseCombatEntity target;
 
@@ -96,80 +156,6 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 	[NonSerialized]
 	public List<PlayerNameID> authorizedPlayers = new List<PlayerNameID>();
 
-	[ServerVar(Help = "How many milliseconds to spend on target scanning per frame")]
-	public static float auto_turret_budget_ms = 0.5f;
-
-	public static UpdateAutoTurretScanQueue updateAutoTurretScanQueue = new UpdateAutoTurretScanQueue();
-
-	[Header("RC")]
-	public float rcTurnSensitivity = 4f;
-
-	public Transform RCEyes;
-
-	public GameObjectRef IDPanelPrefab;
-
-	public RemoteControllableControls rcControls;
-
-	public string rcIdentifier = "";
-
-	public TargetTrigger targetTrigger;
-
-	public TriggerBase interferenceTrigger;
-
-	public float maxInterference = -1f;
-
-	public Transform socketTransform;
-
-	private bool authDirty;
-
-	private bool hasPotentialUnauthedTarget = true;
-
-	private float nextShotTime;
-
-	private float lastShotTime;
-
-	private float nextVisCheck;
-
-	private float lastTargetSeenTime;
-
-	private bool targetVisible = true;
-
-	private bool booting;
-
-	private float nextIdleAimTime;
-
-	private Vector3 targetAimDir = Vector3.forward;
-
-	private const float bulletDamage = 15f;
-
-	private RealTimeSinceEx timeSinceLastServerTick;
-
-	private float nextForcedAimTime;
-
-	private Vector3 lastSentAimDir = Vector3.zero;
-
-	private static float[] visibilityOffsets = new float[3] { 0f, 0.15f, -0.15f };
-
-	private int peekIndex;
-
-	[NonSerialized]
-	private int numConsecutiveMisses;
-
-	[NonSerialized]
-	private int totalAmmo;
-
-	private float nextAmmoCheckTime;
-
-	private bool totalAmmoDirty = true;
-
-	private float currentAmmoGravity;
-
-	private float currentAmmoVelocity;
-
-	private HeldEntity AttachedWeapon;
-
-	public float attachedWeaponZOffsetScale = -0.5f;
-
 	public bool CanPing => false;
 
 	public virtual bool RequiresMouse => true;
@@ -182,17 +168,7 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 
 	public CameraViewerId? ControllingViewerId { get; private set; }
 
-	public bool IsBeingControlled
-	{
-		get
-		{
-			if (ViewerCount > 0)
-			{
-				return ControllingViewerId.HasValue;
-			}
-			return false;
-		}
-	}
+	public bool IsBeingControlled => ViewerCount > 0 && ControllingViewerId.HasValue;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -204,7 +180,7 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - AddSelfAuthorize "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - AddSelfAuthorize "));
 				}
 				TimeWarning val2 = TimeWarning.New("AddSelfAuthorize", 0);
 				try
@@ -223,7 +199,7 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -235,7 +211,7 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -255,12 +231,12 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - AssignToFriend "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - AssignToFriend "));
 				}
-				TimeWarning val2 = TimeWarning.New("AssignToFriend", 0);
+				TimeWarning val5 = TimeWarning.New("AssignToFriend", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					TimeWarning val6 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsVisible.Test(3057055788u, "AssignToFriend", this, player, 3f))
@@ -270,11 +246,11 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val6)?.Dispose();
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val7 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -286,7 +262,7 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val7)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -297,7 +273,7 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val5)?.Dispose();
 				}
 				return true;
 			}
@@ -306,12 +282,12 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ClearList "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ClearList "));
 				}
-				TimeWarning val2 = TimeWarning.New("ClearList", 0);
+				TimeWarning val8 = TimeWarning.New("ClearList", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					TimeWarning val9 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsVisible.Test(253307592u, "ClearList", this, player, 3f))
@@ -321,11 +297,11 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val9)?.Dispose();
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val10 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -337,7 +313,7 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val10)?.Dispose();
 						}
 					}
 					catch (Exception ex3)
@@ -348,7 +324,7 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val8)?.Dispose();
 				}
 				return true;
 			}
@@ -357,12 +333,12 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - FlipAim "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - FlipAim "));
 				}
-				TimeWarning val2 = TimeWarning.New("FlipAim", 0);
+				TimeWarning val11 = TimeWarning.New("FlipAim", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					TimeWarning val12 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsVisible.Test(1500257773u, "FlipAim", this, player, 3f))
@@ -372,11 +348,11 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val12)?.Dispose();
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val13 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -388,7 +364,7 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val13)?.Dispose();
 						}
 					}
 					catch (Exception ex4)
@@ -399,7 +375,7 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val11)?.Dispose();
 				}
 				return true;
 			}
@@ -408,12 +384,12 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RemoveSelfAuthorize "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RemoveSelfAuthorize "));
 				}
-				TimeWarning val2 = TimeWarning.New("RemoveSelfAuthorize", 0);
+				TimeWarning val14 = TimeWarning.New("RemoveSelfAuthorize", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					TimeWarning val15 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsVisible.Test(3617985969u, "RemoveSelfAuthorize", this, player, 3f))
@@ -423,11 +399,11 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val15)?.Dispose();
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val16 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -439,7 +415,7 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val16)?.Dispose();
 						}
 					}
 					catch (Exception ex5)
@@ -450,7 +426,7 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val14)?.Dispose();
 				}
 				return true;
 			}
@@ -459,12 +435,12 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SERVER_AttackAll "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SERVER_AttackAll "));
 				}
-				TimeWarning val2 = TimeWarning.New("SERVER_AttackAll", 0);
+				TimeWarning val17 = TimeWarning.New("SERVER_AttackAll", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					TimeWarning val18 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsVisible.Test(1770263114u, "SERVER_AttackAll", this, player, 3f))
@@ -474,11 +450,11 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val18)?.Dispose();
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val19 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -490,7 +466,7 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val19)?.Dispose();
 						}
 					}
 					catch (Exception ex6)
@@ -501,7 +477,7 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val17)?.Dispose();
 				}
 				return true;
 			}
@@ -510,12 +486,12 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SERVER_Peacekeeper "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SERVER_Peacekeeper "));
 				}
-				TimeWarning val2 = TimeWarning.New("SERVER_Peacekeeper", 0);
+				TimeWarning val20 = TimeWarning.New("SERVER_Peacekeeper", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					TimeWarning val21 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsVisible.Test(3265538831u, "SERVER_Peacekeeper", this, player, 3f))
@@ -525,11 +501,11 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val21)?.Dispose();
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val22 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -541,7 +517,7 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val22)?.Dispose();
 						}
 					}
 					catch (Exception ex7)
@@ -552,7 +528,7 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val20)?.Dispose();
 				}
 				return true;
 			}
@@ -561,12 +537,12 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_SetID "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_SetID "));
 				}
-				TimeWarning val2 = TimeWarning.New("Server_SetID", 0);
+				TimeWarning val23 = TimeWarning.New("Server_SetID", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					TimeWarning val24 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.MaxDistance.Test(1053317251u, "Server_SetID", this, player, 3f))
@@ -576,11 +552,11 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val24)?.Dispose();
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val25 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -592,7 +568,7 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val25)?.Dispose();
 						}
 					}
 					catch (Exception ex8)
@@ -603,7 +579,7 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val23)?.Dispose();
 				}
 				return true;
 			}
@@ -613,241 +589,6 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 			((IDisposable)val)?.Dispose();
 		}
 		return base.OnRpcMessage(player, rpc, msg);
-	}
-
-	public bool IsOnline()
-	{
-		return IsOn();
-	}
-
-	public bool IsOffline()
-	{
-		return !IsOnline();
-	}
-
-	public override void ResetState()
-	{
-		base.ResetState();
-	}
-
-	public virtual Transform GetCenterMuzzle()
-	{
-		return gun_pitch;
-	}
-
-	public float AngleToTarget(BaseCombatEntity potentialtarget, bool use2D = false)
-	{
-		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
-		use2D = true;
-		Transform centerMuzzle = GetCenterMuzzle();
-		Vector3 position = centerMuzzle.position;
-		Vector3 val = AimOffset(potentialtarget);
-		Vector3 zero = Vector3.zero;
-		Vector3 val2;
-		if (use2D)
-		{
-			zero = Vector3Ex.Direction2D(val, position);
-		}
-		else
-		{
-			val2 = val - position;
-			zero = ((Vector3)(ref val2)).normalized;
-		}
-		Vector3 val3;
-		if (!use2D)
-		{
-			val3 = centerMuzzle.forward;
-		}
-		else
-		{
-			val2 = Vector3Ex.XZ3D(centerMuzzle.forward);
-			val3 = ((Vector3)(ref val2)).normalized;
-		}
-		return Vector3.Angle(val3, zero);
-	}
-
-	public virtual bool InFiringArc(BaseCombatEntity potentialtarget)
-	{
-		return Mathf.Abs(AngleToTarget(potentialtarget)) <= 90f;
-	}
-
-	public override bool CanPickup(BasePlayer player)
-	{
-		if (base.CanPickup(player) && IsOffline())
-		{
-			return IsAuthed(player);
-		}
-		return false;
-	}
-
-	public override bool CanUseNetworkCache(Connection connection)
-	{
-		return false;
-	}
-
-	public override void Save(SaveInfo info)
-	{
-		base.Save(info);
-		info.msg.autoturret = Pool.Get<AutoTurret>();
-		info.msg.autoturret.users = authorizedPlayers;
-		if (info.forDisk || ((Object)(object)info.forConnection?.player != (Object)null && CanChangeID(info.forConnection.player as BasePlayer)))
-		{
-			info.msg.rcEntity = Pool.Get<RCEntity>();
-			info.msg.rcEntity.identifier = GetIdentifier();
-		}
-	}
-
-	public override void PostSave(SaveInfo info)
-	{
-		base.PostSave(info);
-		info.msg.autoturret.users = null;
-	}
-
-	public override void Load(LoadInfo info)
-	{
-		base.Load(info);
-		if (info.msg.autoturret != null)
-		{
-			authorizedPlayers = info.msg.autoturret.users;
-			info.msg.autoturret.users = null;
-		}
-		if (info.msg.rcEntity != null)
-		{
-			UpdateIdentifier(info.msg.rcEntity.identifier);
-		}
-	}
-
-	public Vector3 AimOffset(BaseCombatEntity aimat)
-	{
-		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
-		BasePlayer basePlayer = aimat as BasePlayer;
-		if ((Object)(object)basePlayer != (Object)null)
-		{
-			if (basePlayer.IsSleeping())
-			{
-				return ((Component)basePlayer).transform.position + Vector3.up * 0.1f;
-			}
-			if (basePlayer.IsWounded())
-			{
-				return ((Component)basePlayer).transform.position + Vector3.up * 0.25f;
-			}
-			return basePlayer.eyes.position;
-		}
-		return aimat.CenterPoint();
-	}
-
-	public float GetAimSpeed()
-	{
-		if (HasTarget())
-		{
-			return 5f;
-		}
-		return 1f;
-	}
-
-	public void UpdateAiming(float dt)
-	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0093: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ce: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f9: Unknown result type (might be due to invalid IL or missing references)
-		if (!(aimDir == Vector3.zero))
-		{
-			float num = 5f;
-			if (base.isServer && !IsBeingControlled)
-			{
-				num = ((!HasTarget()) ? 15f : 35f);
-			}
-			Quaternion val = Quaternion.LookRotation(aimDir);
-			Quaternion val2 = Quaternion.Euler(0f, ((Quaternion)(ref val)).eulerAngles.y, 0f);
-			Quaternion val3 = Quaternion.Euler(((Quaternion)(ref val)).eulerAngles.x, 0f, 0f);
-			if (((Component)gun_yaw).transform.rotation != val2)
-			{
-				((Component)gun_yaw).transform.rotation = Mathx.Lerp(((Component)gun_yaw).transform.rotation, val2, num, dt);
-			}
-			if (((Component)gun_pitch).transform.localRotation != val3)
-			{
-				((Component)gun_pitch).transform.localRotation = Mathx.Lerp(((Component)gun_pitch).transform.localRotation, val3, num, dt);
-			}
-		}
-	}
-
-	public bool IsAuthed(ulong id)
-	{
-		foreach (PlayerNameID authorizedPlayer in authorizedPlayers)
-		{
-			if (authorizedPlayer.userid == id)
-			{
-				return true;
-			}
-		}
-		return false;
-	}
-
-	public bool IsAuthed(BasePlayer player)
-	{
-		return IsAuthed(player.userID);
-	}
-
-	public bool AnyAuthed()
-	{
-		return authorizedPlayers.Count > 0;
-	}
-
-	public virtual bool CanChangeSettings(BasePlayer player)
-	{
-		if (IsAuthed(player) && IsOffline())
-		{
-			return player.CanBuild();
-		}
-		return false;
 	}
 
 	public bool PeacekeeperMode()
@@ -876,11 +617,7 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 		{
 			return false;
 		}
-		if (IsPowered())
-		{
-			return !PeacekeeperMode();
-		}
-		return false;
+		return IsPowered() && !PeacekeeperMode();
 	}
 
 	public bool InitializeControl(CameraViewerId viewerID)
@@ -907,7 +644,7 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 
 	public void UserInput(InputState inputState, CameraViewerId viewerID)
 	{
-		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00be: Unknown result type (might be due to invalid IL or missing references)
 		CameraViewerId? controllingViewerId = ControllingViewerId;
 		if (viewerID != controllingViewerId)
 		{
@@ -957,34 +694,39 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 
 	private bool UpdateManualAim(InputState inputState)
 	{
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ce: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00de: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ea: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0102: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ea: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ef: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0123: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0151: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0153: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013c: Unknown result type (might be due to invalid IL or missing references)
 		float num = (0f - inputState.current.mouseDelta.y) * rcTurnSensitivity;
 		float num2 = inputState.current.mouseDelta.x * rcTurnSensitivity;
 		Quaternion val = Quaternion.LookRotation(aimDir, ((Component)this).transform.up);
-		Vector3 val2 = ((Quaternion)(ref val)).eulerAngles + new Vector3(num, num2, 0f);
+		Vector3 eulerAngles = ((Quaternion)(ref val)).eulerAngles;
+		Vector3 val2 = eulerAngles + new Vector3(num, num2, 0f);
 		if (val2.x >= 0f && val2.x <= 135f)
 		{
 			val2.x = Mathf.Clamp(val2.x, 0f, 45f);
@@ -993,9 +735,10 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 		{
 			val2.x = Mathf.Clamp(val2.x, 285f, 360f);
 		}
-		Vector3 val3 = Quaternion.Euler(val2) * Vector3.forward;
-		bool result = !Mathf.Approximately(aimDir.x, val3.x) || !Mathf.Approximately(aimDir.y, val3.y) || !Mathf.Approximately(aimDir.z, val3.z);
-		aimDir = val3;
+		Quaternion val3 = Quaternion.Euler(val2);
+		Vector3 val4 = val3 * Vector3.forward;
+		bool result = !Mathf.Approximately(aimDir.x, val4.x) || !Mathf.Approximately(aimDir.y, val4.y) || !Mathf.Approximately(aimDir.z, val4.z);
+		aimDir = val4;
 		return result;
 	}
 
@@ -1049,7 +792,7 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 
 	public void UpdateIdentifier(string newID, bool clientSend = false)
 	{
-		_ = rcIdentifier;
+		string text = rcIdentifier;
 		if (base.isServer)
 		{
 			if (!RemoteControlEntity.IDInUse(newID))
@@ -1082,18 +825,9 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 
 	public void SetIsOnline(bool online)
 	{
-		if (online != IsOn())
+		if (online != HasFlag(Flags.On))
 		{
 			SetFlag(Flags.On, online);
-			if (online)
-			{
-				UpdateInterference();
-			}
-			else
-			{
-				SetFlag(Flags.OnFire, b: false);
-			}
-			UpdateInterferenceOnOthers();
 			booting = false;
 			GetAttachedWeapon()?.SetLightsOn(online);
 			SendNetworkUpdate();
@@ -1105,37 +839,20 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 			else
 			{
 				isLootable = false;
-				authDirty = true;
 			}
 		}
 	}
 
 	public override int GetPassthroughAmount(int outputSlot = 0)
 	{
-		int result = Mathf.Min(1, GetCurrentEnergy());
-		switch (outputSlot)
+		int num = Mathf.Min(1, GetCurrentEnergy());
+		return outputSlot switch
 		{
-		case 0:
-			if (!HasTarget())
-			{
-				return 0;
-			}
-			return result;
-		case 1:
-			if (totalAmmo > 50)
-			{
-				return 0;
-			}
-			return result;
-		case 2:
-			if (totalAmmo != 0)
-			{
-				return 0;
-			}
-			return result;
-		default:
-			return 0;
-		}
+			0 => HasTarget() ? num : 0, 
+			1 => (totalAmmo <= 50) ? num : 0, 
+			2 => (totalAmmo == 0) ? num : 0, 
+			_ => 0, 
+		};
 	}
 
 	public override void IOStateChanged(int inputAmount, int inputSlot)
@@ -1153,8 +870,8 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 
 	public void InitiateShutdown()
 	{
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
 		if (!IsOffline() || booting)
 		{
 			((FacepunchBehaviour)this).CancelInvoke((Action)SetOnline);
@@ -1166,8 +883,8 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 
 	public void InitiateStartup()
 	{
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
 		if (!IsOnline() && !booting)
 		{
 			Effect.server.Run(onlineSound.resourcePath, this, 0u, Vector3.zero, Vector3.zero);
@@ -1178,9 +895,10 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 
 	public void SetPeacekeepermode(bool isOn)
 	{
-		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-		if (PeacekeeperMode() != isOn)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
+		bool flag = PeacekeeperMode();
+		if (flag != isOn)
 		{
 			SetFlag(Flags.Reserved1, isOn);
 			Effect.server.Run(peacekeeperToggleSound.resourcePath, this, 0u, Vector3.zero, Vector3.zero);
@@ -1254,10 +972,10 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 	[RPC_Server.IsVisible(3f)]
 	private void FlipAim(RPCMessage rpc)
 	{
-		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
 		if (!IsOnline() && IsAuthed(rpc.player) && !booting)
 		{
 			((Component)this).transform.rotation = Quaternion.LookRotation(-((Component)this).transform.forward, ((Component)this).transform.up);
@@ -1274,8 +992,8 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 
 	private void AddSelfAuthorize(BasePlayer player)
 	{
-		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004a: Expected O, but got Unknown
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005d: Expected O, but got Unknown
 		if (!IsOnline() && player.CanBuild() && !AtMaxAuthCapacity())
 		{
 			authorizedPlayers.RemoveAll((PlayerNameID x) => x.userid == player.userID);
@@ -1296,7 +1014,6 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 		if (!booting && !IsOnline() && IsAuthed(rpc.player))
 		{
 			authorizedPlayers.RemoveAll((PlayerNameID x) => x.userid == rpc.player.userID);
-			authDirty = true;
 			Analytics.Azure.OnEntityAuthChanged(this, rpc.player, authorizedPlayers.Select((PlayerNameID x) => x.userid), "removed", rpc.player.userID);
 			UpdateMaxAuthCapacity();
 			SendNetworkUpdate();
@@ -1310,7 +1027,6 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 		if (!booting && !IsOnline() && IsAuthed(rpc.player))
 		{
 			authorizedPlayers.Clear();
-			authDirty = true;
 			Analytics.Azure.OnEntityAuthChanged(this, rpc.player, authorizedPlayers.Select((PlayerNameID x) => x.userid), "clear", rpc.player.userID);
 			UpdateMaxAuthCapacity();
 			SendNetworkUpdate();
@@ -1321,8 +1037,8 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 	[RPC_Server.IsVisible(3f)]
 	public void AssignToFriend(RPCMessage msg)
 	{
-		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006b: Expected O, but got Unknown
+		//IL_0095: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009b: Expected O, but got Unknown
 		if (AtMaxAuthCapacity() || (Object)(object)msg.player == (Object)null || !msg.player.CanInteract() || !CanChangeSettings(msg.player))
 		{
 			return;
@@ -1371,33 +1087,17 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 		base.ServerInit();
 		ItemContainer itemContainer = base.inventory;
 		itemContainer.canAcceptItem = (Func<Item, int, bool>)Delegate.Combine(itemContainer.canAcceptItem, new Func<Item, int, bool>(CanAcceptItem));
-		TargetTrigger obj = targetTrigger;
-		obj.OnEntityEnterTrigger = (Action<BaseNetworkable>)Delegate.Combine(obj.OnEntityEnterTrigger, new Action<BaseNetworkable>(OnEntityEnterTrigger));
 		timeSinceLastServerTick = 0.0;
 		((FacepunchBehaviour)this).InvokeRepeating((Action)ServerTick, Random.Range(0f, 1f), 0.015f);
 		((FacepunchBehaviour)this).InvokeRandomized((Action)SendAimDir, Random.Range(0f, 1f), 0.2f, 0.05f);
-		((PersistentObjectWorkQueue<AutoTurret>)updateAutoTurretScanQueue).Add(this);
+		((FacepunchBehaviour)this).InvokeRandomized((Action)ScheduleForTargetScan, Random.Range(0f, 1f), TargetScanRate(), 0.2f);
 		((Component)targetTrigger).GetComponent<SphereCollider>().radius = sightRange;
-	}
-
-	internal override void DoServerDestroy()
-	{
-		base.DoServerDestroy();
-		((PersistentObjectWorkQueue<AutoTurret>)updateAutoTurretScanQueue).Remove(this);
-	}
-
-	private void OnEntityEnterTrigger(BaseNetworkable entity)
-	{
-		if (entity is BasePlayer player && !IsAuthed(player))
-		{
-			authDirty = true;
-		}
 	}
 
 	public void SendAimDir()
 	{
-		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
 		if (Time.realtimeSinceStartup > nextForcedAimTime || HasTarget() || Vector3.Angle(lastSentAimDir, aimDir) > 0.03f)
 		{
 			SendAimDirImmediate();
@@ -1406,9 +1106,9 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 
 	public void SendAimDirImmediate()
 	{
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
 		lastSentAimDir = aimDir;
 		ClientRPC<Vector3>(null, "CLIENT_ReceiveAimDir", aimDir);
 		nextForcedAimTime = Time.realtimeSinceStartup + 2f;
@@ -1416,14 +1116,13 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 
 	public void SetTarget(BaseCombatEntity targ)
 	{
-		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)targ != (Object)(object)target)
 		{
 			Effect.server.Run(((Object)(object)targ == (Object)null) ? targetLostEffect.resourcePath : targetAcquiredEffect.resourcePath, ((Component)this).transform.position, Vector3.up);
 			MarkDirtyForceUpdateOutputs();
 			nextShotTime += 0.1f;
-			authDirty = true;
 		}
 		target = targ;
 	}
@@ -1435,34 +1134,40 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 
 	public bool ObjectVisible(BaseCombatEntity obj)
 	{
-		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
 		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
 		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0089: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0093: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d6: Unknown result type (might be due to invalid IL or missing references)
 		List<RaycastHit> list = Pool.GetList<RaycastHit>();
 		Vector3 position = ((Component)eyePos).transform.position;
 		if (GamePhysics.CheckSphere(position, 0.1f, 2097152, (QueryTriggerInteraction)0))
@@ -1472,16 +1177,19 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 		Vector3 val = AimOffset(obj);
 		float num = Vector3.Distance(val, position);
 		Vector3 val2 = val - position;
-		Vector3 val3 = Vector3.Cross(((Vector3)(ref val2)).normalized, Vector3.up);
+		Vector3 normalized = ((Vector3)(ref val2)).normalized;
+		Vector3 val3 = Vector3.Cross(normalized, Vector3.up);
 		for (int i = 0; (float)i < (CheckPeekers() ? 3f : 1f); i++)
 		{
-			val2 = val + val3 * visibilityOffsets[i] - position;
-			Vector3 normalized = ((Vector3)(ref val2)).normalized;
+			Vector3 val4 = val + val3 * visibilityOffsets[i];
+			val2 = val4 - position;
+			Vector3 normalized2 = ((Vector3)(ref val2)).normalized;
 			list.Clear();
-			GamePhysics.TraceAll(new Ray(position, normalized), 0f, list, num * 1.1f, 1218652417, (QueryTriggerInteraction)0);
+			GamePhysics.TraceAll(new Ray(position, normalized2), 0f, list, num * 1.1f, 1218652417, (QueryTriggerInteraction)0);
 			for (int j = 0; j < list.Count; j++)
 			{
-				BaseEntity entity = list[j].GetEntity();
+				RaycastHit hit = list[j];
+				BaseEntity entity = hit.GetEntity();
 				if ((!((Object)(object)entity != (Object)null) || !entity.isClient) && (!((Object)(object)entity != (Object)null) || !((Object)(object)entity.ToPlayer() != (Object)null) || entity.EqualNetID((BaseNetworkable)obj)) && (!((Object)(object)entity != (Object)null) || !entity.EqualNetID((BaseNetworkable)this)))
 				{
 					if ((Object)(object)entity != (Object)null && ((Object)(object)entity == (Object)(object)obj || entity.EqualNetID((BaseNetworkable)obj)))
@@ -1512,43 +1220,43 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 
 	public virtual void FireGun(Vector3 targetPos, float aimCone, Transform muzzleToUse = null, BaseCombatEntity target = null)
 	{
-		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
 		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0126: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01fe: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0154: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0159: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0162: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0166: Unknown result type (might be due to invalid IL or missing references)
-		//IL_016b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ca: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01d0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01d5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01da: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ba: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0155: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0258: Unknown result type (might be due to invalid IL or missing references)
+		//IL_021d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0222: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0228: Unknown result type (might be due to invalid IL or missing references)
+		//IL_022d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0232: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0195: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ac: Unknown result type (might be due to invalid IL or missing references)
 		if (IsOffline())
 		{
 			return;
@@ -1609,12 +1317,12 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 
 	private void ApplyDamage(BaseCombatEntity entity, Vector3 point, Vector3 normal)
 	{
-		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ac: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ad: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
 		float num = 15f * Random.Range(0.9f, 1.1f);
 		if (entity is BasePlayer && (Object)(object)entity != (Object)(object)target)
 		{
@@ -1628,34 +1336,33 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 		entity.OnAttacked(info);
 		if (entity is BasePlayer || entity is BaseNpc)
 		{
-			Effect.server.ImpactEffect(new HitInfo
-			{
-				HitPositionWorld = point,
-				HitNormalWorld = -normal,
-				HitMaterial = StringPool.Get("Flesh")
-			});
+			HitInfo hitInfo = new HitInfo();
+			hitInfo.HitPositionWorld = point;
+			hitInfo.HitNormalWorld = -normal;
+			hitInfo.HitMaterial = StringPool.Get("Flesh");
+			Effect.server.ImpactEffect(hitInfo);
 		}
 	}
 
 	public void IdleTick(float dt)
 	{
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
 		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0097: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
 		if (Time.realtimeSinceStartup > nextIdleAimTime)
 		{
 			nextIdleAimTime = Time.realtimeSinceStartup + Random.Range(4f, 5f);
@@ -1686,11 +1393,13 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 
 	public int GetTotalAmmo()
 	{
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		Profiler.BeginSample("Autoturret.GetTotalAmmo");
 		int num = 0;
 		BaseProjectile attachedWeapon = GetAttachedWeapon();
 		if ((Object)(object)attachedWeapon == (Object)null)
 		{
+			Profiler.EndSample();
 			return num;
 		}
 		List<Item> list = Pool.GetList<Item>();
@@ -1700,12 +1409,16 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 			num += list[i].amount;
 		}
 		Pool.FreeList<Item>(ref list);
+		Profiler.EndSample();
 		return num;
 	}
 
 	public AmmoTypes GetValidAmmoTypes()
 	{
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
 		BaseProjectile attachedWeapon = GetAttachedWeapon();
 		if ((Object)(object)attachedWeapon == (Object)null)
 		{
@@ -1726,11 +1439,11 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 
 	public void Reload()
 	{
-		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0143: Unknown result type (might be due to invalid IL or missing references)
-		//IL_016b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0170: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0173: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a8: Unknown result type (might be due to invalid IL or missing references)
 		BaseProjectile attachedWeapon = GetAttachedWeapon();
 		if ((Object)(object)attachedWeapon == (Object)null)
 		{
@@ -1791,18 +1504,19 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 			GameObject val = component.projectileObject.Get();
 			if (Object.op_Implicit((Object)(object)val))
 			{
-				if (Object.op_Implicit((Object)(object)val.GetComponent<Projectile>()))
+				Projectile component2 = val.GetComponent<Projectile>();
+				if (Object.op_Implicit((Object)(object)component2))
 				{
 					currentAmmoGravity = 0f;
 					currentAmmoVelocity = component.GetMaxVelocity();
 				}
 				else
 				{
-					ServerProjectile component2 = val.GetComponent<ServerProjectile>();
-					if (Object.op_Implicit((Object)(object)component2))
+					ServerProjectile component3 = val.GetComponent<ServerProjectile>();
+					if (Object.op_Implicit((Object)(object)component3))
 					{
-						currentAmmoGravity = component2.gravityModifier;
-						currentAmmoVelocity = component2.speed;
+						currentAmmoGravity = component3.gravityModifier;
+						currentAmmoVelocity = component3.speed;
 					}
 				}
 			}
@@ -1872,66 +1586,41 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 
 	private bool HasGenericFireable()
 	{
-		if ((Object)(object)AttachedWeapon != (Object)null)
-		{
-			return AttachedWeapon.IsInstrument();
-		}
-		return false;
+		return (Object)(object)AttachedWeapon != (Object)null && AttachedWeapon.IsInstrument();
 	}
 
 	public void UpdateAttachedWeapon()
 	{
-		HeldEntity heldEntity = TryAddWeaponToTurret(base.inventory.GetSlot(0), socketTransform, this, attachedWeaponZOffsetScale);
-		bool flag = (Object)(object)heldEntity != (Object)null;
-		SetFlag(Flags.Reserved3, flag);
-		if (flag)
-		{
-			AttachedWeapon = heldEntity;
-			totalAmmoDirty = true;
-			Reload();
-			UpdateTotalAmmo();
-			return;
-		}
-		BaseProjectile attachedWeapon = GetAttachedWeapon();
-		if ((Object)(object)attachedWeapon != (Object)null)
-		{
-			attachedWeapon.SetGenericVisible(wantsVis: false);
-			attachedWeapon.SetLightsOn(isOn: false);
-		}
-		AttachedWeapon = null;
-	}
-
-	public static HeldEntity TryAddWeaponToTurret(Item weaponItem, Transform parent, BaseEntity entityParent, float zOffsetScale)
-	{
-		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0092: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00da: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00eb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ec: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0102: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0105: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0111: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0122: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0130: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0135: Unknown result type (might be due to invalid IL or missing references)
-		//IL_013c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0142: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0147: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0100: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0118: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0123: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0128: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0177: Unknown result type (might be due to invalid IL or missing references)
+		//IL_017c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_017e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0190: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0195: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01bb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ce: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01e0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01e5: Unknown result type (might be due to invalid IL or missing references)
+		Item slot = base.inventory.GetSlot(0);
 		HeldEntity heldEntity = null;
-		if (weaponItem != null && (weaponItem.info.category == ItemCategory.Weapon || weaponItem.info.category == ItemCategory.Fun))
+		if (slot != null && (slot.info.category == ItemCategory.Weapon || slot.info.category == ItemCategory.Fun))
 		{
-			BaseEntity heldEntity2 = weaponItem.GetHeldEntity();
+			BaseEntity heldEntity2 = slot.GetHeldEntity();
 			if ((Object)(object)heldEntity2 != (Object)null)
 			{
 				HeldEntity component = ((Component)heldEntity2).GetComponent<HeldEntity>();
@@ -1941,9 +1630,16 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 				}
 			}
 		}
+		SetFlag(Flags.Reserved3, (Object)(object)heldEntity != (Object)null);
 		if ((Object)(object)heldEntity == (Object)null)
 		{
-			return null;
+			if (Object.op_Implicit((Object)(object)GetAttachedWeapon()))
+			{
+				GetAttachedWeapon().SetGenericVisible(wantsVis: false);
+				GetAttachedWeapon().SetLightsOn(isOn: false);
+			}
+			AttachedWeapon = null;
+			return;
 		}
 		heldEntity.SetLightsOn(isOn: true);
 		Transform transform = ((Component)heldEntity).transform;
@@ -1954,16 +1650,19 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 		Quaternion val = transform.rotation * Quaternion.Inverse(muzzleTransform.rotation);
 		heldEntity.limitNetworking = false;
 		heldEntity.SetFlag(Flags.Disabled, b: false);
-		heldEntity.SetParent(entityParent, StringPool.Get(((Object)parent).name));
+		heldEntity.SetParent(this, StringPool.Get(((Object)socketTransform).name));
 		transform.localPosition = Vector3.zero;
 		transform.localRotation = Quaternion.identity;
 		transform.rotation *= val;
-		Vector3 val2 = parent.InverseTransformPoint(muzzleTransform.position);
+		Vector3 val2 = socketTransform.InverseTransformPoint(muzzleTransform.position);
 		transform.localPosition = Vector3.left * val2.x;
 		float num = Vector3.Distance(muzzleTransform.position, transform.position);
-		transform.localPosition += Vector3.forward * num * zOffsetScale;
+		transform.localPosition += Vector3.forward * num * attachedWeaponZOffsetScale;
 		heldEntity.SetGenericVisible(wantsVis: true);
-		return heldEntity;
+		AttachedWeapon = heldEntity;
+		totalAmmoDirty = true;
+		Reload();
+		UpdateTotalAmmo();
 	}
 
 	public override void OnKilled(HitInfo info)
@@ -2009,10 +1708,10 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 
 	public void TargetTick()
 	{
-		//IL_01d5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01e5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0140: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_020f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_021f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e6: Unknown result type (might be due to invalid IL or missing references)
 		if (Time.realtimeSinceStartup >= nextVisCheck)
 		{
 			nextVisCheck = Time.realtimeSinceStartup + Random.Range(0.2f, 0.3f);
@@ -2063,17 +1762,13 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 
 	public bool HasTarget()
 	{
-		if ((Object)(object)target != (Object)null)
-		{
-			return target.IsAlive();
-		}
-		return false;
+		return (Object)(object)target != (Object)null && target.IsAlive();
 	}
 
 	public void OfflineTick()
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
 		aimDir = Vector3.up;
 	}
 
@@ -2085,11 +1780,7 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 		}
 		if (ent is BasePet basePet && (Object)(object)basePet.Brain.OwningPlayer != (Object)null)
 		{
-			if (!basePet.Brain.OwningPlayer.IsHostile())
-			{
-				return ent.IsHostile();
-			}
-			return true;
+			return basePet.Brain.OwningPlayer.IsHostile() || ent.IsHostile();
 		}
 		return ent.IsHostile();
 	}
@@ -2113,72 +1804,16 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 
 	private void ScheduleForTargetScan()
 	{
-		((PersistentObjectWorkQueue<AutoTurret>)updateAutoTurretScanQueue).Add(this);
-	}
-
-	public bool HasInterference()
-	{
-		return IsOnFire();
-	}
-
-	private void UpdateInterference()
-	{
-		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
-		if (!IsOn())
-		{
-			return;
-		}
-		float num = 0f;
-		List<AutoTurret> list = Pool.GetList<AutoTurret>();
-		GetTurretsInInterferenceRange(list);
-		foreach (AutoTurret item in list.Distinct())
-		{
-			if (!item.isClient && item.IsValid() && ((Component)item).gameObject.activeSelf && !item.EqualNetID(net.ID) && item.IsOn() && !item.HasInterference())
-			{
-				num += 1f;
-			}
-		}
-		SetFlag(Flags.OnFire, num >= Sentry.maxinterference);
-		Pool.FreeList<AutoTurret>(ref list);
-	}
-
-	private void UpdateInterferenceOnOthers()
-	{
-		List<AutoTurret> list = Pool.GetList<AutoTurret>();
-		GetTurretsInInterferenceRange(list);
-		foreach (AutoTurret item in list)
-		{
-			item.UpdateInterference();
-		}
-		Pool.FreeList<AutoTurret>(ref list);
-	}
-
-	private void GetTurretsInInterferenceRange(List<AutoTurret> list)
-	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		Vis.Entities(((Component)this).transform.position, Sentry.interferenceradius, list, 256, (QueryTriggerInteraction)1);
+		((ObjectWorkQueue<AutoTurret>)updateAutoTurretScanQueue).Add(this);
 	}
 
 	public void TargetScan()
 	{
-		if (!authDirty && !hasPotentialUnauthedTarget)
-		{
-			return;
-		}
-		if (HasInterference())
-		{
-			if (HasTarget())
-			{
-				SetTarget(null);
-			}
-			return;
-		}
-		hasPotentialUnauthedTarget = false;
-		authDirty = false;
 		if (HasTarget() || IsOffline() || IsBeingControlled)
 		{
 			return;
 		}
+		Profiler.BeginSample("AutoTurret.TargetScan");
 		if (targetTrigger.entityContents != null)
 		{
 			foreach (BaseEntity entityContent in targetTrigger.entityContents)
@@ -2196,21 +1831,19 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 						continue;
 					}
 				}
-				if (!hasPotentialUnauthedTarget)
+				if ((PeacekeeperMode() && !IsEntityHostile(baseCombatEntity)) || !baseCombatEntity.IsAlive() || !ShouldTarget(baseCombatEntity) || !InFiringArc(baseCombatEntity) || !ObjectVisible(baseCombatEntity))
 				{
-					hasPotentialUnauthedTarget = true;
+					continue;
 				}
-				if ((!PeacekeeperMode() || IsEntityHostile(baseCombatEntity)) && baseCombatEntity.IsAlive() && ShouldTarget(baseCombatEntity) && InFiringArc(baseCombatEntity) && ObjectVisible(baseCombatEntity))
-				{
-					SetTarget(baseCombatEntity);
-					break;
-				}
+				SetTarget(baseCombatEntity);
+				break;
 			}
 		}
 		if (PeacekeeperMode() && (Object)(object)target == (Object)null)
 		{
 			nextShotTime = Time.time + 1f;
 		}
+		Profiler.EndSample();
 	}
 
 	protected virtual bool Ignore(BasePlayer player)
@@ -2224,6 +1857,7 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 		{
 			return;
 		}
+		Profiler.BeginSample("AutoTurret.ServerTick");
 		float dt = (float)(double)timeSinceLastServerTick;
 		timeSinceLastServerTick = 0.0;
 		if (!IsOnline())
@@ -2248,12 +1882,28 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 			totalAmmoDirty = false;
 			nextAmmoCheckTime = Time.time + 0.5f;
 		}
+		Profiler.EndSample();
 	}
 
 	public override void OnAttacked(HitInfo info)
 	{
 		base.OnAttacked(info);
-		if (((IsOnline() && !HasTarget()) || !targetVisible) && !((Object)(object)(info.Initiator as AutoTurret) != (Object)null) && !((Object)(object)(info.Initiator as SamSite) != (Object)null) && !((Object)(object)(info.Initiator as GunTrap) != (Object)null))
+		if ((!IsOnline() || HasTarget()) && targetVisible)
+		{
+			return;
+		}
+		AutoTurret autoTurret = info.Initiator as AutoTurret;
+		if ((Object)(object)autoTurret != (Object)null)
+		{
+			return;
+		}
+		SamSite samSite = info.Initiator as SamSite;
+		if ((Object)(object)samSite != (Object)null)
+		{
+			return;
+		}
+		GunTrap gunTrap = info.Initiator as GunTrap;
+		if (!((Object)(object)gunTrap != (Object)null))
 		{
 			BasePlayer basePlayer = info.Initiator as BasePlayer;
 			if (!Object.op_Implicit((Object)(object)basePlayer) || !IsAuthed(basePlayer))
@@ -2265,55 +1915,59 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 
 	public void UpdateFacingToTarget(float dt)
 	{
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0089: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0095: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00af: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
 		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
-		//IL_018a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_018b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ff: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0106: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0110: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0122: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0092: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0097: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01bf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0136: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0137: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0147: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0151: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0156: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0161: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0163: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0174: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0179: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0183: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0188: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0140: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0152: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0166: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0167: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0177: Unknown result type (might be due to invalid IL or missing references)
+		//IL_017c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0181: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0186: Unknown result type (might be due to invalid IL or missing references)
+		//IL_018a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_018f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0191: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0193: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ae: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ba: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01bc: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)target != (Object)null && targetVisible && !IsBeingControlled)
 		{
 			Vector3 val = AimOffset(target);
@@ -2321,29 +1975,31 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 			if (peekIndex != 0)
 			{
 				Vector3 position = ((Component)eyePos).transform.position;
-				Vector3.Distance(val, position);
+				float num = Vector3.Distance(val, position);
 				val2 = val - position;
-				Vector3 val3 = Vector3.Cross(((Vector3)(ref val2)).normalized, Vector3.up);
+				Vector3 normalized = ((Vector3)(ref val2)).normalized;
+				Vector3 val3 = Vector3.Cross(normalized, Vector3.up);
 				val += val3 * visibilityOffsets[peekIndex];
 			}
 			val2 = val - ((Component)eyePos).transform.position;
 			Vector3 val4 = ((Vector3)(ref val2)).normalized;
 			if (currentAmmoGravity != 0f)
 			{
-				float num = 0.2f;
+				float num2 = 0.2f;
 				if (target is BasePlayer)
 				{
-					float num2 = Mathf.Clamp01(target.WaterFactor()) * 1.8f;
-					if (num2 > num)
+					float num3 = Mathf.Clamp01(target.WaterFactor()) * 1.8f;
+					if (num3 > num2)
 					{
-						num = num2;
+						num2 = num3;
 					}
 				}
-				val = ((Component)target).transform.position + Vector3.up * num;
+				val = ((Component)target).transform.position + Vector3.up * num2;
 				float angle = GetAngle(((Component)eyePos).transform.position, val, currentAmmoVelocity, currentAmmoGravity);
 				Vector3 val5 = Vector3Ex.XZ3D(val) - Vector3Ex.XZ3D(((Component)eyePos).transform.position);
 				val5 = ((Vector3)(ref val5)).normalized;
-				val4 = Quaternion.LookRotation(val5) * Quaternion.Euler(angle, 0f, 0f) * Vector3.forward;
+				Vector3 val6 = Quaternion.LookRotation(val5) * Quaternion.Euler(angle, 0f, 0f) * Vector3.forward;
+				val4 = val6;
 			}
 			aimDir = val4;
 		}
@@ -2352,13 +2008,13 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 
 	private float GetAngle(Vector3 launchPosition, Vector3 targetPosition, float launchVelocity, float gravityScale)
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
 		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
 		float num = Physics.gravity.y * gravityScale;
 		float num2 = Vector3.Distance(Vector3Ex.XZ3D(launchPosition), Vector3Ex.XZ3D(targetPosition));
 		float num3 = launchPosition.y - targetPosition.y;
@@ -2374,11 +2030,7 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 		{
 			return num7;
 		}
-		if (!(num6 > num7))
-		{
-			return num7;
-		}
-		return num6;
+		return (num6 > num7) ? num6 : num7;
 	}
 
 	public override void OnDeployed(BaseEntity parent, BasePlayer deployedBy, Item fromItem)
@@ -2389,20 +2041,22 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 
 	public override ItemContainerId GetIdealContainer(BasePlayer player, Item item, bool altMove)
 	{
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
 		return default(ItemContainerId);
 	}
 
 	public override int GetIdealSlot(BasePlayer player, Item item)
 	{
-		bool num = item.info.category == ItemCategory.Weapon;
-		bool flag = item.info.category == ItemCategory.Ammunition;
-		if (num)
+		bool flag = item.info.category == ItemCategory.Weapon;
+		bool flag2 = item.info.category == ItemCategory.Ammunition;
+		if (flag)
 		{
 			return 0;
 		}
-		if (flag)
+		if (flag2)
 		{
 			for (int i = 1; i < base.inventory.capacity; i++)
 			{
@@ -2413,5 +2067,237 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 			}
 		}
 		return -1;
+	}
+
+	public bool IsOnline()
+	{
+		return IsOn();
+	}
+
+	public bool IsOffline()
+	{
+		return !IsOnline();
+	}
+
+	public override void ResetState()
+	{
+		base.ResetState();
+	}
+
+	public virtual Transform GetCenterMuzzle()
+	{
+		return gun_pitch;
+	}
+
+	public float AngleToTarget(BaseCombatEntity potentialtarget, bool use2D = false)
+	{
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
+		use2D = true;
+		Transform centerMuzzle = GetCenterMuzzle();
+		Vector3 position = centerMuzzle.position;
+		Vector3 val = AimOffset(potentialtarget);
+		Vector3 zero = Vector3.zero;
+		Vector3 val2;
+		if (use2D)
+		{
+			zero = Vector3Ex.Direction2D(val, position);
+		}
+		else
+		{
+			val2 = val - position;
+			zero = ((Vector3)(ref val2)).normalized;
+		}
+		Vector3 val3;
+		if (!use2D)
+		{
+			val3 = centerMuzzle.forward;
+		}
+		else
+		{
+			val2 = Vector3Ex.XZ3D(centerMuzzle.forward);
+			val3 = ((Vector3)(ref val2)).normalized;
+		}
+		return Vector3.Angle(val3, zero);
+	}
+
+	public virtual bool InFiringArc(BaseCombatEntity potentialtarget)
+	{
+		return Mathf.Abs(AngleToTarget(potentialtarget)) <= 90f;
+	}
+
+	public override bool CanPickup(BasePlayer player)
+	{
+		return base.CanPickup(player) && IsOffline() && IsAuthed(player);
+	}
+
+	public override bool CanUseNetworkCache(Connection connection)
+	{
+		return false;
+	}
+
+	public override void Save(SaveInfo info)
+	{
+		base.Save(info);
+		info.msg.autoturret = Pool.Get<AutoTurret>();
+		info.msg.autoturret.users = authorizedPlayers;
+		if (info.forDisk || ((Object)(object)info.forConnection?.player != (Object)null && CanChangeID(info.forConnection.player as BasePlayer)))
+		{
+			info.msg.rcEntity = Pool.Get<RCEntity>();
+			info.msg.rcEntity.identifier = GetIdentifier();
+		}
+	}
+
+	public override void PostSave(SaveInfo info)
+	{
+		base.PostSave(info);
+		info.msg.autoturret.users = null;
+	}
+
+	public override void Load(LoadInfo info)
+	{
+		base.Load(info);
+		if (info.msg.autoturret != null)
+		{
+			authorizedPlayers = info.msg.autoturret.users;
+			info.msg.autoturret.users = null;
+		}
+		if (info.msg.rcEntity != null)
+		{
+			UpdateIdentifier(info.msg.rcEntity.identifier);
+		}
+	}
+
+	public Vector3 AimOffset(BaseCombatEntity aimat)
+	{
+		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
+		BasePlayer basePlayer = aimat as BasePlayer;
+		if ((Object)(object)basePlayer != (Object)null)
+		{
+			if (basePlayer.IsSleeping())
+			{
+				return ((Component)basePlayer).transform.position + Vector3.up * 0.1f;
+			}
+			if (basePlayer.IsWounded())
+			{
+				return ((Component)basePlayer).transform.position + Vector3.up * 0.25f;
+			}
+			return basePlayer.eyes.position;
+		}
+		return aimat.CenterPoint();
+	}
+
+	public float GetAimSpeed()
+	{
+		if (HasTarget())
+		{
+			return 5f;
+		}
+		return 1f;
+	}
+
+	public void UpdateAiming(float dt)
+	{
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0097: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ad: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ef: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0117: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011f: Unknown result type (might be due to invalid IL or missing references)
+		if (!(aimDir == Vector3.zero))
+		{
+			float num = 5f;
+			if (base.isServer && !IsBeingControlled)
+			{
+				num = ((!HasTarget()) ? 15f : 35f);
+			}
+			Quaternion val = Quaternion.LookRotation(aimDir);
+			Quaternion val2 = Quaternion.Euler(0f, ((Quaternion)(ref val)).eulerAngles.y, 0f);
+			Quaternion val3 = Quaternion.Euler(((Quaternion)(ref val)).eulerAngles.x, 0f, 0f);
+			if (((Component)gun_yaw).transform.rotation != val2)
+			{
+				((Component)gun_yaw).transform.rotation = Mathx.Lerp(((Component)gun_yaw).transform.rotation, val2, num, dt);
+			}
+			if (((Component)gun_pitch).transform.localRotation != val3)
+			{
+				((Component)gun_pitch).transform.localRotation = Mathx.Lerp(((Component)gun_pitch).transform.localRotation, val3, num, dt);
+			}
+		}
+	}
+
+	public bool IsAuthed(ulong id)
+	{
+		foreach (PlayerNameID authorizedPlayer in authorizedPlayers)
+		{
+			if (authorizedPlayer.userid == id)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public bool IsAuthed(BasePlayer player)
+	{
+		return IsAuthed(player.userID);
+	}
+
+	public bool AnyAuthed()
+	{
+		return authorizedPlayers.Count > 0;
+	}
+
+	public virtual bool CanChangeSettings(BasePlayer player)
+	{
+		return IsAuthed(player) && IsOffline() && player.CanBuild();
 	}
 }

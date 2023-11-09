@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Profiling;
 
 public struct EntityRef
 {
@@ -10,9 +11,11 @@ public struct EntityRef
 	{
 		get
 		{
-			//IL_0024: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-			//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+			//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+			//IL_002f: Unknown result type (might be due to invalid IL or missing references)
 			if (ent_cached.IsValid())
 			{
 				id_cached = ent_cached.net.ID;
@@ -21,10 +24,10 @@ public struct EntityRef
 		}
 		set
 		{
-			//IL_0001: Unknown result type (might be due to invalid IL or missing references)
 			//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-			//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0003: Unknown result type (might be due to invalid IL or missing references)
+			//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0042: Unknown result type (might be due to invalid IL or missing references)
 			id_cached = value;
 			if (!((NetworkableId)(ref id_cached)).IsValid)
 			{
@@ -49,9 +52,9 @@ public struct EntityRef
 
 	public void Set(BaseEntity ent)
 	{
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
 		ent_cached = ent;
 		id_cached = default(NetworkableId);
 		if (ent_cached.IsValid())
@@ -62,7 +65,8 @@ public struct EntityRef
 
 	public BaseEntity Get(bool serverside)
 	{
-		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		Profiler.BeginSample("EntityRef.Get");
 		if ((Object)(object)ent_cached == (Object)null && ((NetworkableId)(ref id_cached)).IsValid)
 		{
 			if (serverside)
@@ -78,6 +82,7 @@ public struct EntityRef
 		{
 			ent_cached = null;
 		}
+		Profiler.EndSample();
 		return ent_cached;
 	}
 }

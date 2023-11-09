@@ -42,7 +42,7 @@ public class BasePortal : BaseCombatEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_UsePortal "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_UsePortal "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_UsePortal", 0);
 				try
@@ -65,7 +65,7 @@ public class BasePortal : BaseCombatEntity
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -77,7 +77,7 @@ public class BasePortal : BaseCombatEntity
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -102,8 +102,8 @@ public class BasePortal : BaseCombatEntity
 
 	public override void Save(SaveInfo info)
 	{
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
 		base.Save(info);
 		info.msg.ioEntity = Pool.Get<IOEntity>();
 		info.msg.ioEntity.genericEntRef1 = targetID;
@@ -111,8 +111,8 @@ public class BasePortal : BaseCombatEntity
 
 	public override void Load(LoadInfo info)
 	{
-		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
 		base.Load(info);
 		if (info.msg.ioEntity != null)
 		{
@@ -127,9 +127,9 @@ public class BasePortal : BaseCombatEntity
 
 	public void LinkPortal()
 	{
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)targetPortal != (Object)null)
 		{
 			targetID = targetPortal.net.ID;
@@ -153,23 +153,27 @@ public class BasePortal : BaseCombatEntity
 
 	public void SetDestination(Vector3 destPos, Quaternion destRot)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
 		destination_pos = destPos;
 		destination_rot = destRot;
 	}
 
 	public Vector3 GetLocalEntryExitPosition()
 	{
-		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
 		return ((Component)localEntryExitPos).transform.position;
 	}
 
 	public Quaternion GetLocalEntryExitRotation()
 	{
-		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
 		return ((Component)localEntryExitPos).transform.rotation;
 	}
 
@@ -181,36 +185,36 @@ public class BasePortal : BaseCombatEntity
 
 	public virtual void UsePortal(BasePlayer player)
 	{
-		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
 		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ba: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0095: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ac: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00dd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00de: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0119: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0130: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0102: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0103: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0163: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ca: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0089: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0153: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0120: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0121: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0187: Unknown result type (might be due to invalid IL or missing references)
+		//IL_018c: Unknown result type (might be due to invalid IL or missing references)
 		LinkPortal();
 		if ((Object)(object)targetPortal != (Object)null)
 		{

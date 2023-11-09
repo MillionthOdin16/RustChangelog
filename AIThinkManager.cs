@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 public class AIThinkManager : BaseMonoBehaviour, IServerComponent
 {
@@ -42,15 +43,25 @@ public class AIThinkManager : BaseMonoBehaviour, IServerComponent
 
 	public static void ProcessQueue(QueueType queueType)
 	{
-		if (queueType != 0)
+		switch (queueType)
 		{
-			_ = 2;
+		case QueueType.Human:
+			Profiler.BeginSample("AIThinkManager.ProcessHumanQueue");
+			break;
+		case QueueType.Pets:
+			Profiler.BeginSample("AIThinkManager.ProcessPetsQueue");
+			break;
+		default:
+			Profiler.BeginSample("AIThinkManager.ProcessAnimalQueue");
+			break;
 		}
 		switch (queueType)
 		{
 		case QueueType.Human:
 			DoRemoval(_removalQueue, _processQueue);
+			Profiler.BeginSample("AIInformationZone.BudgetedTick");
 			AIInformationZone.BudgetedTick();
+			Profiler.EndSample();
 			break;
 		case QueueType.Pets:
 			DoRemoval(_petRemovalQueue, _petProcessQueue);
@@ -71,34 +82,37 @@ public class AIThinkManager : BaseMonoBehaviour, IServerComponent
 			DoProcessing(_animalProcessQueue, animalframebudgetms / 1000f, ref lastAnimalIndex);
 			break;
 		}
+		Profiler.EndSample();
 	}
 
 	private static void DoRemoval(ListHashSet<IThinker> removal, ListHashSet<IThinker> process)
 	{
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-		if (removal.Count <= 0)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		Profiler.BeginSample("Removal");
+		if (removal.Count > 0)
 		{
-			return;
-		}
-		Enumerator<IThinker> enumerator = removal.GetEnumerator();
-		try
-		{
-			while (enumerator.MoveNext())
+			Enumerator<IThinker> enumerator = removal.GetEnumerator();
+			try
 			{
-				IThinker current = enumerator.Current;
-				process.Remove(current);
+				while (enumerator.MoveNext())
+				{
+					IThinker current = enumerator.Current;
+					process.Remove(current);
+				}
 			}
+			finally
+			{
+				((IDisposable)enumerator).Dispose();
+			}
+			removal.Clear();
 		}
-		finally
-		{
-			((IDisposable)enumerator).Dispose();
-		}
-		removal.Clear();
+		Profiler.EndSample();
 	}
 
 	private static void DoProcessing(ListHashSet<IThinker> process, float budgetSeconds, ref int last)
 	{
+		Profiler.BeginSample("Processing");
 		float realtimeSinceStartup = Time.realtimeSinceStartup;
 		while (last < process.Count && Time.realtimeSinceStartup < realtimeSinceStartup + budgetSeconds)
 		{
@@ -120,6 +134,7 @@ public class AIThinkManager : BaseMonoBehaviour, IServerComponent
 		{
 			last = 0;
 		}
+		Profiler.EndSample();
 	}
 
 	public static void Add(IThinker toAdd)

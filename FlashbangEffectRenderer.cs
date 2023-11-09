@@ -18,13 +18,13 @@ public class FlashbangEffectRenderer : PostProcessEffectRenderer<FlashbangEffect
 
 	public override void Render(PostProcessRenderContext context)
 	{
-		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0108: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0127: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012d: Unknown result type (might be due to invalid IL or missing references)
 		if (!Application.isPlaying)
 		{
 			context.command.BlitFullscreenTriangle(context.source, context.destination);
@@ -58,10 +58,10 @@ public class FlashbangEffectRenderer : PostProcessEffectRenderer<FlashbangEffect
 
 	private static void CheckCreateRenderTexture(ref RenderTexture rt, string name, int width, int height, RenderTextureFormat format)
 	{
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0038: Expected O, but got Unknown
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0046: Expected O, but got Unknown
 		if ((Object)(object)rt == (Object)null || ((Texture)rt).width != width || ((Texture)rt).height != height)
 		{
 			SafeDestroyRenderTexture(ref rt);

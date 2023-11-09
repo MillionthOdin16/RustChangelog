@@ -12,33 +12,11 @@ public class PhotoEntity : ImageStorageEntity, IUGCBrowserEntity
 
 	protected override uint CrcToLoad => ImageCrc;
 
-	public override bool ShouldTransferAssociatedFiles => true;
-
-	public uint[] GetContentCRCs
-	{
-		get
-		{
-			if (ImageCrc == 0)
-			{
-				return Array.Empty<uint>();
-			}
-			return new uint[1] { ImageCrc };
-		}
-	}
+	public uint[] GetContentCRCs => (ImageCrc == 0) ? Array.Empty<uint>() : new uint[1] { ImageCrc };
 
 	public UGCType ContentType => UGCType.ImageJpg;
 
-	public List<ulong> EditingHistory
-	{
-		get
-		{
-			if (PhotographerSteamId == 0)
-			{
-				return new List<ulong>();
-			}
-			return new List<ulong> { PhotographerSteamId };
-		}
-	}
+	public List<ulong> EditingHistory => (PhotographerSteamId != 0) ? new List<ulong> { PhotographerSteamId } : new List<ulong>();
 
 	public BaseNetworkable UgcEntity => this;
 
@@ -62,14 +40,14 @@ public class PhotoEntity : ImageStorageEntity, IUGCBrowserEntity
 
 	public void SetImageData(ulong steamId, byte[] data)
 	{
-		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
 		ImageCrc = FileStorage.server.Store(data, FileStorage.Type.jpg, net.ID);
 		PhotographerSteamId = steamId;
 	}
 
 	internal override void DoServerDestroy()
 	{
-		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
 		base.DoServerDestroy();
 		if (!Application.isQuitting && net != null)
 		{
