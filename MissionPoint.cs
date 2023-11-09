@@ -12,7 +12,8 @@ public class MissionPoint : MonoBehaviour
 		MediumMonument = 2,
 		HardMonument = 4,
 		Item_Hidespot = 8,
-		Underwater = 0x80
+		Underwater = 0x80,
+		Tutorial_Bear = 0x100
 	}
 
 	public bool dropToGround = true;
@@ -33,6 +34,8 @@ public class MissionPoint : MonoBehaviour
 
 	public const int UNDERWATER = 128;
 
+	public const int TUTORIAL_BEAR = 256;
+
 	public const int EASY_MONUMENT_IDX = 0;
 
 	public const int MED_MONUMENT_IDX = 1;
@@ -49,13 +52,16 @@ public class MissionPoint : MonoBehaviour
 
 	public const int UNDERWATER_IDX = 7;
 
+	public const int TUTORIAL_BEAR_IDX = 8;
+
 	private static Dictionary<int, int> type2index = new Dictionary<int, int>
 	{
 		{ 1, 0 },
 		{ 2, 1 },
 		{ 4, 2 },
 		{ 8, 3 },
-		{ 128, 7 }
+		{ 128, 7 },
+		{ 256, 8 }
 	};
 
 	public static List<MissionPoint> all = new List<MissionPoint>();
@@ -88,14 +94,17 @@ public class MissionPoint : MonoBehaviour
 
 	private void DropToGround()
 	{
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		if (Application.isLoading)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		if (Object.op_Implicit((Object)(object)this))
 		{
-			((FacepunchBehaviour)SingletonComponent<InvokeHandler>.Instance).Invoke((Action)DropToGround, 0.5f);
-			return;
+			if (Application.isLoading)
+			{
+				((FacepunchBehaviour)SingletonComponent<InvokeHandler>.Instance).Invoke((Action)DropToGround, 0.5f);
+				return;
+			}
+			_ = ((Component)this).transform.position;
+			((Component)this).transform.DropToGround();
 		}
-		_ = ((Component)this).transform.position;
-		((Component)this).transform.DropToGround();
 	}
 
 	public void OnDisable()

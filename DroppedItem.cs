@@ -1,7 +1,6 @@
 using System;
 using ConVar;
 using Facepunch.Rust;
-using Rust;
 using UnityEngine;
 
 public class DroppedItem : WorldItem
@@ -29,6 +28,14 @@ public class DroppedItem : WorldItem
 	[NonSerialized]
 	public ulong DroppedBy;
 
+	private bool hasLastPos;
+
+	private Vector3 lastGoodColliderCentre;
+
+	private Vector3 lastGoodPos;
+
+	private Quaternion lastGoodRot;
+
 	public override float GetNetworkTime()
 	{
 		return Time.fixedTime;
@@ -46,7 +53,7 @@ public class DroppedItem : WorldItem
 
 	public virtual float GetDespawnDuration()
 	{
-		return item?.GetDespawnDuration() ?? ConVar.Server.itemdespawn;
+		return item?.GetDespawnDuration() ?? Server.itemdespawn;
 	}
 
 	public void IdleDestroy()
@@ -58,15 +65,7 @@ public class DroppedItem : WorldItem
 
 	public override void OnCollision(Collision collision, BaseEntity hitEntity)
 	{
-		if (item == null)
-		{
-			return;
-		}
-		if (collision.collider.IsOnLayer((Layer)23))
-		{
-			((FacepunchBehaviour)this).Invoke((Action)FellThroughTerrainInvoke, 0.33f);
-		}
-		if (item.MaxStackable() > 1)
+		if (item != null && item.MaxStackable() > 1)
 		{
 			DroppedItem droppedItem = hitEntity as DroppedItem;
 			if (!((Object)(object)droppedItem == (Object)null) && droppedItem.item != null && !((Object)(object)droppedItem.item.info != (Object)(object)item.info))
@@ -74,47 +73,6 @@ public class DroppedItem : WorldItem
 				droppedItem.OnDroppedOn(this);
 			}
 		}
-	}
-
-	private void FellThroughTerrainInvoke()
-	{
-		if (!CheckFellThroughTerrain())
-		{
-			((FacepunchBehaviour)this).Invoke((Action)FellThroughTerrainInvoke2, 0.5f);
-		}
-	}
-
-	private void FellThroughTerrainInvoke2()
-	{
-		CheckFellThroughTerrain();
-	}
-
-	private bool CheckFellThroughTerrain()
-	{
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
-		if (base.IsDestroyed)
-		{
-			return false;
-		}
-		if (AntiHack.TestInsideTerrain(((Component)this).transform.position))
-		{
-			float num = TerrainMeta.Position.y + TerrainMeta.Terrain.SampleHeight(((Component)this).transform.position);
-			Vector3 position = ((Component)this).transform.position;
-			position.y = num + ((Bounds)(ref bounds)).size.y + 0.05f;
-			((Component)this).transform.position = position;
-			rB.velocity = Vector3.zero;
-			rB.angularVelocity = Vector3.zero;
-			return true;
-		}
-		return false;
 	}
 
 	public void OnDroppedOn(DroppedItem di)
@@ -239,6 +197,54 @@ public class DroppedItem : WorldItem
 			return !rB.IsSleeping();
 		}
 		return false;
+	}
+
+	public override void OnPositionalNetworkUpdate()
+	{
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
+		if ((Object)(object)rB != (Object)null && (Object)(object)childCollider != (Object)null)
+		{
+			Bounds val = childCollider.bounds;
+			Vector3 center = ((Bounds)(ref val)).center;
+			Vector3 val2 = center - lastGoodColliderCentre;
+			Ray ray = default(Ray);
+			((Ray)(ref ray))._002Ector(lastGoodColliderCentre, ((Vector3)(ref val2)).normalized);
+			if (hasLastPos && GamePhysics.Trace(ray, 0f, out var _, ((Vector3)(ref val2)).magnitude, 1084293377, (QueryTriggerInteraction)1, this))
+			{
+				((Component)this).transform.position = lastGoodPos;
+				((Component)this).transform.rotation = lastGoodRot;
+				rB.velocity = Vector3.zero;
+				rB.angularVelocity = Vector3.zero;
+				Physics.SyncTransforms();
+			}
+			else
+			{
+				lastGoodColliderCentre = center;
+				lastGoodPos = ((Component)this).transform.position;
+				lastGoodRot = ((Component)this).transform.rotation;
+				hasLastPos = true;
+			}
+		}
 	}
 
 	public override void PostInitShared()

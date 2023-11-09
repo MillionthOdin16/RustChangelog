@@ -515,9 +515,12 @@ public class BlackjackController : CardGameController
 		return winnings;
 	}
 
-	protected override void HandlePlayerLeavingDuringTheirTurn(CardPlayerData pData)
+	protected override void HandlePlayerLeavingTable(CardPlayerData pData)
 	{
-		ReceivedInputFromPlayer(pData, 128, countAsAction: true, 0, playerInitiated: false);
+		if (pData.HasUserInCurrentRound)
+		{
+			ReceivedInputFromPlayer(pData, 128, countAsAction: true, 0, playerInitiated: false);
+		}
 	}
 
 	protected override void SubReceivedInputFromPlayer(CardPlayerData pData, int input, int value, bool countAsAction)

@@ -221,6 +221,7 @@ public class MedicalTool : AttackEntity
 			if (effect.type == MetabolismAttribute.Type.Health)
 			{
 				player.health += effect.amount;
+				player.ProcessMissionEvent(BaseMission.MissionEventType.HEAL, prefabID, effect.amount);
 			}
 			else
 			{

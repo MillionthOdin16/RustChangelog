@@ -255,25 +255,38 @@ public class HuntingTrophy : StorageContainer
 
 	public bool CanSubmitHead(HeadEntity headEnt)
 	{
-		bool result = false;
-		bool num = CurrentTrophyData != null;
-		if (num && headEnt.CurrentTrophyData.entitySource == CurrentTrophyData.entitySource && headEnt.CurrentTrophyData.playerId == CurrentTrophyData.playerId && headEnt.CurrentTrophyData.horseBreed == CurrentTrophyData.horseBreed)
+		bool flag = false;
+		bool flag2 = CurrentTrophyData != null;
+		if (flag2 && headEnt.CurrentTrophyData.entitySource == CurrentTrophyData.entitySource && headEnt.CurrentTrophyData.playerId == CurrentTrophyData.playerId && headEnt.CurrentTrophyData.horseBreed == CurrentTrophyData.horseBreed)
 		{
-			result = true;
+			flag = true;
 		}
-		if (!num)
+		if (!flag && flag2)
+		{
+			GameObject headSource = headEnt.GetHeadSource();
+			BasePlayer basePlayer = default(BasePlayer);
+			if ((Object)(object)headSource != (Object)null && headSource.TryGetComponent<BasePlayer>(ref basePlayer) && (Object)(object)GetCurrentTrophyDataSource() == (Object)(object)headSource)
+			{
+				flag = true;
+			}
+		}
+		if (!flag2)
 		{
 			TrophyRoot[] trophies = Trophies;
 			foreach (TrophyRoot trophyRoot in trophies)
 			{
 				if (trophyRoot.Matches(headEnt))
 				{
-					result = true;
+					flag = true;
 					break;
 				}
 			}
 		}
-		return result;
+		return flag;
+		GameObject GetCurrentTrophyDataSource()
+		{
+			return GameManager.server.FindPrefab(CurrentTrophyData.entitySource);
+		}
 	}
 
 	public override void Load(LoadInfo info)

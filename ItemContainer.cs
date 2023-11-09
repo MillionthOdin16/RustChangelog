@@ -78,6 +78,8 @@ public sealed class ItemContainer : IAmmoContainer
 
 	public Action<Item, bool> onItemAddedRemoved;
 
+	public Action<Item, int> onItemAddedToStack;
+
 	public Action<Item> onPreItemRemove;
 
 	public bool HasLimitedAllowedItems
@@ -480,6 +482,22 @@ public sealed class ItemContainer : IAmmoContainer
 			if (!SlotTaken(item, i))
 			{
 				item.position = i;
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public bool HasItem(ItemDefinition searchFor)
+	{
+		if ((Object)(object)searchFor == (Object)null)
+		{
+			return false;
+		}
+		foreach (Item item in itemList)
+		{
+			if (item != null && (Object)(object)item.info == (Object)(object)searchFor)
+			{
 				return true;
 			}
 		}

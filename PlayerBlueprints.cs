@@ -61,6 +61,14 @@ public class PlayerBlueprints : EntityComponent<BasePlayer>
 
 	public bool HasUnlocked(ItemDefinition targetItem)
 	{
+		if (base.baseEntity.IsCraftingTutorialBlocked(targetItem, out var forceUnlock))
+		{
+			return false;
+		}
+		if (forceUnlock)
+		{
+			return true;
+		}
 		if (Object.op_Implicit((Object)(object)targetItem.Blueprint))
 		{
 			if (targetItem.Blueprint.NeedsSteamItem)

@@ -418,15 +418,23 @@ public class PathFinder
 		{
 			num = int.MaxValue;
 		}
-		if (num != int.MaxValue && PushMultiplier > 0)
+		if (num == int.MaxValue)
 		{
-			int num3 = Mathf.Max(0, Heuristic(a, PushPoint) - PushRadius);
+			return num;
+		}
+		if (PushMultiplier > 0)
+		{
+			int num3 = ((PushRadius > 0) ? Mathf.Max(0, Heuristic(a, PushPoint) - PushRadius) : (PushDistance * 2));
 			for (int i = 0; i < PushPointsAdditional.Count; i++)
 			{
 				num3 = Mathf.Min(num3, Heuristic(a, PushPointsAdditional[i]));
 			}
 			float num4 = Mathf.Max(0f, (float)(PushDistance - num3)) / (float)PushDistance;
-			num2 = Mathf.CeilToInt((float)PushMultiplier * num4);
+			num2 = ((PushMultiplier != int.MaxValue) ? Mathf.CeilToInt((float)PushMultiplier * num4) : ((num4 > 0f) ? int.MaxValue : 0));
+		}
+		if (num2 == int.MaxValue)
+		{
+			return num2;
 		}
 		return num + num2;
 	}

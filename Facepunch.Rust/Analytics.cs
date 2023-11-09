@@ -390,8 +390,8 @@ public static class Analytics
 					.AddField("ip_convar", Net.sv.ip)
 					.AddField("port_convar", Net.sv.port)
 					.AddField("net_protocol", Net.sv.ProtocolId)
-					.AddField("protocol_network", 2510)
-					.AddField("protocol_save", 242);
+					.AddField("protocol_network", 2511)
+					.AddField("protocol_save", 243);
 				BuildInfo current = BuildInfo.Current;
 				EventRecord eventRecord2 = eventRecord.AddField("changeset", ((current != null) ? current.Scm.ChangeId : null) ?? "0").AddField("unity_version", Application.unityVersion);
 				BuildInfo current2 = BuildInfo.Current;
@@ -679,14 +679,14 @@ public static class Analytics
 
 		private static void TryLogEntityKilled(BaseNetworkable entity)
 		{
-			//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+			//IL_001e: Unknown result type (might be due to invalid IL or missing references)
 			if (!Stats)
 			{
 				return;
 			}
 			try
 			{
-				if (trackedSpawnedIds.Contains(entity.net.ID))
+				if (entity.IsValid() && trackedSpawnedIds.Contains(entity.net.ID))
 				{
 					EventRecord.New("entity_killed").AddField("entity", Object.op_Implicit((Object)(object)entity)).Submit();
 				}

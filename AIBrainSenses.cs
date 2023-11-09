@@ -57,6 +57,8 @@ public class AIBrainSenses
 
 	private bool refreshKnownLOS;
 
+	public bool ignoreTutorialPlayers;
+
 	private EntityType senseTypes;
 
 	private IAIAttack ownerAttack;
@@ -187,11 +189,11 @@ public class AIBrainSenses
 
 	private bool AiCaresAbout(BaseEntity entity)
 	{
-		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0109: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0114: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0166: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0171: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0126: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0178: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0183: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)entity == (Object)null)
 		{
 			return false;
@@ -218,9 +220,16 @@ public class AIBrainSenses
 		}
 		BaseCombatEntity baseCombatEntity = entity as BaseCombatEntity;
 		BasePlayer basePlayer = entity as BasePlayer;
-		if ((Object)(object)basePlayer != (Object)null && basePlayer.IsDead())
+		if ((Object)(object)basePlayer != (Object)null)
 		{
-			return false;
+			if (basePlayer.IsDead())
+			{
+				return false;
+			}
+			if (ignoreTutorialPlayers && basePlayer.IsInTutorial)
+			{
+				return false;
+			}
 		}
 		if (ignoreSafeZonePlayers && (Object)(object)basePlayer != (Object)null && basePlayer.InSafeZone())
 		{

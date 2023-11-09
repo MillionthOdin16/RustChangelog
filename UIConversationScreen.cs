@@ -17,5 +17,7 @@ public class UIConversationScreen : SingletonComponent<UIConversationScreen>, IU
 
 	public RectTransform letterBoxBottom;
 
+	public GameObject cancelButton;
+
 	protected CanvasGroup canvasGroup;
 }

@@ -16,12 +16,15 @@ public class FoliageGridBatch : MeshBatch
 
 	private MeshGroup meshGroup;
 
+	private bool hasRunAwake;
+
 	public override int VertexCapacity => Batching.renderer_capacity;
 
 	public override int VertexCutoff => Batching.renderer_vertices;
 
 	protected void Awake()
 	{
+		hasRunAwake = true;
 		meshFilter = ((Component)this).GetComponent<MeshFilter>();
 		meshRenderer = ((Component)this).GetComponent<MeshRenderer>();
 		meshData = new FoliageGridMeshData();
@@ -30,14 +33,18 @@ public class FoliageGridBatch : MeshBatch
 
 	public void Setup(Vector3 position, Material material, ShadowCastingMode shadows, int layer)
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003c: Invalid comparison between Unknown and I4
+		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004a: Invalid comparison between Unknown and I4
+		if (!hasRunAwake)
+		{
+			Awake();
+		}
 		Vector3 val2 = (((Component)this).transform.position = position);
 		this.position = val2;
 		((Component)this).gameObject.layer = layer;

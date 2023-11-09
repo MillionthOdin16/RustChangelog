@@ -598,10 +598,10 @@ public class WireTool : HeldEntity
 		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
 		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00da: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ba: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01bf: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer player = msg.player;
 		if (!CanPlayerUseWires(player))
 		{
@@ -618,6 +618,10 @@ public class WireTool : HeldEntity
 		}
 		IOEntity.IOSlot iOSlot = (flag ? iOEntity.inputs : iOEntity.outputs)[num];
 		IOEntity iOEntity2 = iOSlot.connectedTo.Get();
+		if ((Object)(object)iOEntity2 == (Object)null)
+		{
+			return;
+		}
 		IOEntity.IOSlot iOSlot2 = (flag ? iOEntity2.outputs : iOEntity2.inputs)[iOSlot.connectedToSlot];
 		WireReconnectMessage val = Pool.Get<WireReconnectMessage>();
 		try
@@ -628,18 +632,22 @@ public class WireTool : HeldEntity
 			val.wireColor = 0;
 			val.linePoints = Pool.GetList<Vector3>();
 			IOEntity iOEntity3 = iOEntity;
-			Vector3[] linePoints = iOSlot.linePoints;
-			if (linePoints == null || linePoints.Length == 0)
+			Vector3[] array = iOSlot.linePoints;
+			if (array == null || array.Length == 0)
 			{
 				iOEntity3 = iOEntity2;
-				linePoints = iOSlot2.linePoints;
+				array = iOSlot2.linePoints;
+			}
+			if (array == null)
+			{
+				array = (Vector3[])(object)new Vector3[0];
 			}
 			bool flag3 = (Object)(object)iOEntity3 != (Object)(object)iOEntity;
 			if ((Object)(object)iOEntity == (Object)(object)iOEntity3 && flag)
 			{
 				flag3 = true;
 			}
-			val.linePoints.AddRange(linePoints);
+			val.linePoints.AddRange(array);
 			if (flag3)
 			{
 				val.linePoints.Reverse();

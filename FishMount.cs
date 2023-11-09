@@ -10,7 +10,7 @@ public class FishMount : StorageContainer
 {
 	public Animator[] FishRoots = (Animator[])(object)new Animator[0];
 
-	public GameObjectRef[] FishInteractSounds = new GameObjectRef[0];
+	public GameObjectRef FishInteractSound = new GameObjectRef();
 
 	public float UseCooldown = 3f;
 
@@ -130,14 +130,12 @@ public class FishMount : StorageContainer
 	[RPC_Server.IsVisible(3f)]
 	private void UseFish(RPCMessage msg)
 	{
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
 		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
 		if (HasFlag(Flags.Reserved1) && !IsBusy())
 		{
-			Effect.client.Run(FishInteractSounds[GetCurrentFishItemIndex].resourcePath, ((Component)this).transform.position);
+			Effect.server.Run(FishInteractSound.resourcePath, ((Component)this).transform.position);
 			SetFlag(Flags.Busy, b: true);
 			((FacepunchBehaviour)this).Invoke((Action)ClearBusy, UseCooldown);
 			ClientRPC(null, "PlayAnimation");

@@ -133,10 +133,10 @@ public class BaseCorpse : BaseCombatEntity
 
 	private Rigidbody SetupRigidBody()
 	{
-		//IL_0158: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0170: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0189: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0162: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0167: Unknown result type (might be due to invalid IL or missing references)
+		//IL_017a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0193: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00c1: Unknown result type (might be due to invalid IL or missing references)
@@ -181,7 +181,7 @@ public class BaseCorpse : BaseCombatEntity
 		val2.drag = 0.5f;
 		val2.angularDrag = 0.5f;
 		val2.collisionDetectionMode = (CollisionDetectionMode)0;
-		val2.sleepThreshold = 0.05f;
+		val2.sleepThreshold = Mathf.Max(0.05f, Physics.sleepThreshold);
 		if (base.isServer)
 		{
 			Buoyancy component3 = ((Component)this).GetComponent<Buoyancy>();

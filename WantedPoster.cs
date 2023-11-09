@@ -7,7 +7,6 @@ using ProtoBuf;
 using Rust.UI;
 using UnityEngine;
 using UnityEngine.Assertions;
-using UnityEngine.UI;
 
 public class WantedPoster : DecayEntity, ISignage, IUGCBrowserEntity, ILOD, IServerFileReceiver
 {
@@ -17,7 +16,7 @@ public class WantedPoster : DecayEntity, ISignage, IUGCBrowserEntity, ILOD, ISer
 
 	private string playerName;
 
-	public RawImage PhotoImage;
+	public MeshRenderer PhotoImage;
 
 	public RustText WantedName;
 

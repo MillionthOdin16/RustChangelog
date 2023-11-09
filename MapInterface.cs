@@ -19,6 +19,8 @@ public class MapInterface : SingletonComponent<MapInterface>
 
 	public ScrollRectEx scrollRect;
 
+	public ScrollRectZoom scrollRectZoom;
+
 	public RustButton showGridToggle;
 
 	public RustButton FocusButton;
@@ -46,6 +48,8 @@ public class MapInterface : SingletonComponent<MapInterface>
 	public bool DebugStayOpen;
 
 	public GameObject MarkerListSection;
+
+	public GameObject ControlsRoot;
 
 	public GameObjectRef MarkerListPrefab;
 

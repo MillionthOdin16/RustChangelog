@@ -234,11 +234,24 @@ public class PlayerInventory : EntityComponent<BasePlayer>, IAmmoContainer
 		containerWear.onDirty += OnContentsDirty;
 		containerBelt.onItemAddedRemoved = OnItemAddedOrRemoved;
 		containerMain.onItemAddedRemoved = OnMainInventoryItemAddedOrRemoved;
+		containerWear.onItemAddedRemoved = OnClothingItemAddedRemoved;
+		containerBelt.onItemAddedToStack = OnItemAddedToStack;
+		containerMain.onItemAddedToStack = OnItemAddedToStack;
+		containerWear.onItemAddedToStack = OnItemAddedToStack;
 	}
 
 	private void OnMainInventoryItemAddedOrRemoved(Item item, bool bAdded)
 	{
 		OnItemAddedOrRemoved(item, bAdded);
+	}
+
+	private void OnItemAddedToStack(Item item, int amountAdded)
+	{
+		BasePlayer basePlayer = base.baseEntity;
+		if ((Object)(object)basePlayer != (Object)null)
+		{
+			basePlayer.ProcessMissionEvent(BaseMission.MissionEventType.ACQUITE_ITEM_STACK, item.info.itemid, amountAdded);
+		}
 	}
 
 	public void OnItemAddedOrRemoved(Item item, bool bAdded)
@@ -256,9 +269,14 @@ public class PlayerInventory : EntityComponent<BasePlayer>, IAmmoContainer
 			}
 			if (bAdded)
 			{
-				basePlayer.ProcessMissionEvent(BaseMission.MissionEventType.ACQUIRE_ITEM, item.info.shortname, item.amount);
+				basePlayer.ProcessMissionEvent(BaseMission.MissionEventType.ACQUIRE_ITEM, item.info.itemid, item.amount);
 			}
 		}
+	}
+
+	private void OnClothingItemAddedRemoved(Item item, bool bAdded)
+	{
+		base.baseEntity.ProcessMissionEvent(BaseMission.MissionEventType.CLOTHINGCHANGED, 0, 0f);
 	}
 
 	public void UpdatedVisibleHolsteredItems()
@@ -1167,6 +1185,15 @@ public class PlayerInventory : EntityComponent<BasePlayer>, IAmmoContainer
 			amount -= num4;
 		}
 		return num;
+	}
+
+	public int GetAmount(ItemDefinition definition)
+	{
+		if (!((Object)(object)definition != (Object)null))
+		{
+			return 0;
+		}
+		return GetAmount(definition.itemid);
 	}
 
 	public int GetAmount(int itemid)

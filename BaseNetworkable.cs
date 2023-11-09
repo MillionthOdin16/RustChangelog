@@ -809,6 +809,7 @@ public abstract class BaseNetworkable : BaseMonoBehaviour, IEntity, NetworkHandl
 		ServerInit();
 		PostInitShared();
 		UpdateNetworkGroup();
+		ServerInitPostNetworkGroupAssign();
 		isSpawned = true;
 		SendNetworkUpdateImmediate(justCreated: true);
 		((FacepunchBehaviour)this).Invoke((Action)SendGlobalNetworkUpdate, 0f);
@@ -835,6 +836,10 @@ public abstract class BaseNetworkable : BaseMonoBehaviour, IEntity, NetworkHandl
 		{
 			net.handler = (NetworkHandler)(object)this;
 		}
+	}
+
+	public virtual void ServerInitPostNetworkGroupAssign()
+	{
 	}
 
 	protected List<Connection> GetSubscribers()

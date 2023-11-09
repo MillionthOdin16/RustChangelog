@@ -409,7 +409,7 @@ public class Player : ConsoleSystem
 			{
 				if (baseProjectile.primaryMagazine != null)
 				{
-					baseProjectile.primaryMagazine.contents = baseProjectile.primaryMagazine.capacity;
+					baseProjectile.SetAmmoCount(baseProjectile.primaryMagazine.capacity);
 					baseProjectile.SendNetworkUpdateImmediate();
 				}
 			}
@@ -438,6 +438,37 @@ public class Player : ConsoleSystem
 		item.name = HumanBodyResourceDispenser.CreateSkullName(text);
 		item.streamerName = item.name;
 		basePlayer.inventory.GiveItem(item);
+	}
+
+	[ServerVar]
+	public static string createTrophy(Arg arg)
+	{
+		//IL_00b8: Unknown result type (might be due to invalid IL or missing references)
+		BasePlayer basePlayer = arg.Player();
+		Entity.EntitySpawnRequest spawnEntityFromName = Entity.GetSpawnEntityFromName(arg.GetString(0, ""));
+		if (!spawnEntityFromName.Valid)
+		{
+			return spawnEntityFromName.Error;
+		}
+		BaseCombatEntity baseCombatEntity = default(BaseCombatEntity);
+		if (GameManager.server.FindPrefab(spawnEntityFromName.PrefabName).TryGetComponent<BaseCombatEntity>(ref baseCombatEntity))
+		{
+			Item item = ItemManager.CreateByName("head.bag", 1, 0uL);
+			HeadEntity associatedEntity = ItemModAssociatedEntity<HeadEntity>.GetAssociatedEntity(item);
+			if ((Object)(object)associatedEntity != (Object)null)
+			{
+				associatedEntity.SetupSourceId(baseCombatEntity.prefabID);
+			}
+			if (basePlayer.inventory.GiveItem(item))
+			{
+				basePlayer.Command("note.inv", item.info.itemid, 1);
+			}
+			else
+			{
+				item.DropAndTossUpwards(basePlayer.eyes.position);
+			}
+		}
+		return "Created head";
 	}
 
 	[ServerVar]

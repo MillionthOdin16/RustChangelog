@@ -120,5 +120,10 @@ public class TutorialNPC : NPCMissionProvider
 
 	public override void GreetPlayer(BasePlayer player)
 	{
+		base.GreetPlayer(player);
+	}
+
+	public override void Greeting()
+	{
 	}
 }

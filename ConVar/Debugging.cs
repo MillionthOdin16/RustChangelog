@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using Facepunch;
+using Facepunch.Extend;
 using Facepunch.Unity;
 using Rust;
 using UnityEngine;
@@ -134,6 +135,33 @@ public class Debugging : ConsoleSystem
 	}
 
 	[ServerVar]
+	public static string testTutorialCinematic(Arg arg)
+	{
+		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
+		BasePlayer basePlayer = arg.Player();
+		if ((Object)(object)basePlayer == (Object)null || !basePlayer.IsInTutorial)
+		{
+			return "Requires a player";
+		}
+		TutorialIsland currentTutorialIsland = basePlayer.GetCurrentTutorialIsland();
+		if ((Object)(object)currentTutorialIsland == (Object)null)
+		{
+			return "Invalid island";
+		}
+		Transform val = TransformEx.FindChildRecursive(((Component)currentTutorialIsland).transform, "KayakMissionPoint");
+		if ((Object)(object)val == (Object)null)
+		{
+			return "Can't find KayakMissionPoint on island";
+		}
+		Kayak obj = GameManager.server.CreateEntity("assets/content/vehicles/boats/kayak/kayak.prefab", val.position, val.rotation) as Kayak;
+		obj.Spawn();
+		obj.WantsMount(basePlayer);
+		currentTutorialIsland.StartEndingCinematic(basePlayer);
+		return "Playing cinematic";
+	}
+
+	[ServerVar]
 	public static void deleteEntitiesByShortname(Arg arg)
 	{
 		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
@@ -164,6 +192,27 @@ public class Debugging : ConsoleSystem
 			item.Kill();
 		}
 		Pool.FreeList<BaseNetworkable>(ref list);
+	}
+
+	[ServerVar]
+	public static void printgroups(Arg arg)
+	{
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		Debug.Log((object)"Server");
+		Enumerator<BaseNetworkable> enumerator = BaseNetworkable.serverEntities.GetEnumerator();
+		try
+		{
+			while (enumerator.MoveNext())
+			{
+				BaseNetworkable current = enumerator.Current;
+				Debug.Log((object)$"{current.PrefabName}:{current.net.group.ID}");
+			}
+		}
+		finally
+		{
+			((IDisposable)enumerator).Dispose();
+		}
 	}
 
 	[ServerVar(Help = "Takes you in and out of your current network group, causing you to delete and then download all entities in your PVS again")]
@@ -550,6 +599,77 @@ public class Debugging : ConsoleSystem
 			OutputIOEnt.SendNetworkUpdate();
 			InputIOEnt.SendNetworkUpdate();
 			OutputIOEnt.SendChangedToRoot(forceUpdate: true);
+		}
+	}
+
+	[ServerVar]
+	public static void completeMissionStage(Arg arg)
+	{
+		int @int = arg.GetInt(0, -1);
+		BasePlayer basePlayer = arg.Player();
+		if (!((Object)(object)basePlayer != (Object)null) || basePlayer.GetActiveMission() == -1)
+		{
+			return;
+		}
+		BaseMission.MissionInstance missionInstance = basePlayer.missions[basePlayer.GetActiveMission()];
+		if (missionInstance == null)
+		{
+			return;
+		}
+		for (int i = 0; i < missionInstance.objectiveStatuses.Length; i++)
+		{
+			if (!missionInstance.objectiveStatuses[i].completed && (i == @int || (@int == -1 && !missionInstance.objectiveStatuses[i].completed)))
+			{
+				missionInstance.GetMission().objectives[i].objective.ObjectiveStarted(basePlayer, i, missionInstance);
+				missionInstance.GetMission().objectives[i].objective.CompleteObjective(i, missionInstance, basePlayer);
+				break;
+			}
+		}
+	}
+
+	[ServerVar]
+	public static void completeMission(Arg arg)
+	{
+		BasePlayer basePlayer = arg.Player();
+		if (!((Object)(object)basePlayer != (Object)null) || basePlayer.GetActiveMission() == -1)
+		{
+			return;
+		}
+		BaseMission.MissionInstance missionInstance = basePlayer.missions[basePlayer.GetActiveMission()];
+		if (missionInstance == null)
+		{
+			return;
+		}
+		for (int i = 0; i < missionInstance.objectiveStatuses.Length; i++)
+		{
+			if (!missionInstance.objectiveStatuses[i].completed)
+			{
+				missionInstance.GetMission().objectives[i].objective.CompleteObjective(i, missionInstance, basePlayer);
+			}
+		}
+	}
+
+	[ServerVar]
+	public static void startTutorial(Arg arg)
+	{
+		BasePlayer basePlayer = arg.Player();
+		if ((Object)(object)basePlayer != (Object)null && !basePlayer.IsInTutorial)
+		{
+			basePlayer.StartTutorial();
+		}
+	}
+
+	[ServerVar]
+	public static void completeTutorial(Arg arg)
+	{
+		BasePlayer basePlayer = arg.Player();
+		if ((Object)(object)basePlayer != (Object)null && basePlayer.IsInTutorial)
+		{
+			TutorialIsland currentTutorialIsland = basePlayer.GetCurrentTutorialIsland();
+			if ((Object)(object)currentTutorialIsland != (Object)null)
+			{
+				currentTutorialIsland.OnPlayerCompletedTutorial(basePlayer);
+			}
 		}
 	}
 }

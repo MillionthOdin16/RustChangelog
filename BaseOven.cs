@@ -400,17 +400,28 @@ public class BaseOven : StorageContainer, ISplashable, IIndustrialStorage
 	[RPC_Server.MaxDistance(3f)]
 	protected virtual void SVSwitch(RPCMessage msg)
 	{
+		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
 		bool flag = msg.read.Bit();
-		if (flag != IsOn() && (!needsBuildingPrivilegeToUse || msg.player.CanBuild()))
+		if (flag == IsOn() || (needsBuildingPrivilegeToUse && !msg.player.CanBuild()))
 		{
-			if (flag)
+			return;
+		}
+		if (flag)
+		{
+			StartCooking();
+			if ((Object)(object)msg.player != (Object)null)
 			{
-				StartCooking();
+				msg.player.ProcessMissionEvent(BaseMission.MissionEventType.STARTOVEN, new BaseMission.MissionEventPayload
+				{
+					UintIdentifier = prefabID,
+					NetworkIdentifier = net.ID
+				}, 1f);
 			}
-			else
-			{
-				StopCooking();
-			}
+		}
+		else
+		{
+			StopCooking();
 		}
 	}
 

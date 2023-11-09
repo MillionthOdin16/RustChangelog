@@ -98,7 +98,7 @@ public class NPCShopKeeper : NPCPlayer
 		EndSleeping();
 	}
 
-	public void GreetPlayer(BasePlayer player)
+	public virtual void GreetPlayer(BasePlayer player)
 	{
 		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
 		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
@@ -116,7 +116,7 @@ public class NPCShopKeeper : NPCPlayer
 		}
 	}
 
-	public void Greeting()
+	public virtual void Greeting()
 	{
 		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0028: Unknown result type (might be due to invalid IL or missing references)

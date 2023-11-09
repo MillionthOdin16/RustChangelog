@@ -39,10 +39,11 @@ public class ItemModCookable : ItemMod
 
 	private void CycleCooking(Item item, float delta)
 	{
-		//IL_0183: Unknown result type (might be due to invalid IL or missing references)
-		//IL_018e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0195: Unknown result type (might be due to invalid IL or missing references)
-		//IL_019b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0192: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0211: Unknown result type (might be due to invalid IL or missing references)
+		//IL_021c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0223: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0229: Unknown result type (might be due to invalid IL or missing references)
 		if (!CanBeCookedByAtTemperature(item.temperature) || item.cookTimeLeft < 0f)
 		{
 			if (setCookingFlag && item.HasFlag(Item.Flag.Cooking))
@@ -84,6 +85,18 @@ public class ItemModCookable : ItemMod
 		}
 		Item item2 = ItemManager.Create(becomeOnCooked, amountOfBecome * num2, 0uL);
 		Analytics.Azure.AddPendingItems(baseOven, item2.info.shortname, item2.amount, "smelt", consumed: false);
+		if ((Object)(object)item.parent.entityOwner != (Object)null && item.parent.entityOwner.net.group.restricted)
+		{
+			TutorialIsland closestTutorialIsland = TutorialIsland.GetClosestTutorialIsland(((Component)item.parent.entityOwner).transform.position, 50f);
+			if ((Object)(object)closestTutorialIsland != (Object)null)
+			{
+				BasePlayer basePlayer = closestTutorialIsland.ForPlayer.Get(serverside: true);
+				if ((Object)(object)basePlayer != (Object)null)
+				{
+					basePlayer.ProcessMissionEvent(BaseMission.MissionEventType.COOK, item2.info.itemid, item2.amount);
+				}
+			}
+		}
 		if (item2 != null && !item2.MoveToContainer(item.parent) && !item2.MoveToContainer(item.parent))
 		{
 			item2.Drop(item.parent.dropPosition, item.parent.dropVelocity);

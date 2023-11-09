@@ -90,6 +90,8 @@ public class ResourceDispenser : EntityComponent<BaseEntity>, IServerComponent
 
 	public List<ItemAmount> finishBonus;
 
+	public bool forceFullFinishBonus;
+
 	public float fractionRemaining = 1f;
 
 	private float categoriesRemaining;
@@ -204,6 +206,10 @@ public class ResourceDispenser : EntityComponent<BaseEntity>, IServerComponent
 
 	public void AssignFinishBonus(BasePlayer player, float fraction, AttackEntity weapon)
 	{
+		if (forceFullFinishBonus)
+		{
+			fraction = 1f;
+		}
 		((Component)this).SendMessage("FinishBonusAssigned", (SendMessageOptions)1);
 		if (fraction <= 0f || finishBonus == null)
 		{
@@ -431,5 +437,21 @@ public class ResourceDispenser : EntityComponent<BaseEntity>, IServerComponent
 		{
 			fractionRemaining = num2 / num;
 		}
+	}
+
+	public bool HasItemToDispense(ItemDefinition def)
+	{
+		if ((Object)(object)def == (Object)null)
+		{
+			return false;
+		}
+		foreach (ItemAmount containedItem in containedItems)
+		{
+			if ((Object)(object)containedItem.itemDef == (Object)(object)def && containedItem.amount > 0f)
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 }

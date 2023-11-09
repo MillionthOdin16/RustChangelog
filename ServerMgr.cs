@@ -78,6 +78,7 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 		persistance = new UserPersistance(ConVar.Server.rootFolder);
 		playerStateManager = new PlayerStateManager(persistance);
 		SpawnMapEntities();
+		TutorialIsland.GenerateIslandSpawnPoints(loadingSave: true);
 		if (Object.op_Implicit((Object)(object)SingletonComponent<SpawnHandler>.Instance))
 		{
 			TimeWarning val = TimeWarning.New("SpawnHandler.UpdateDistributions", 0);
@@ -921,7 +922,7 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 				obj = "0";
 			}
 			string text7 = (string)obj;
-			SteamServer.GameTags = $"mp{ConVar.Server.maxplayers},cp{BasePlayer.activePlayerList.Count},pt{Net.sv.ProtocolId},qp{SingletonComponent<ServerMgr>.Instance.connectionQueue.Queued},v{2510}{text4}{text6},h{AssemblyHash},{text},{text2},{text3},cs{text7}";
+			SteamServer.GameTags = $"mp{ConVar.Server.maxplayers},cp{BasePlayer.activePlayerList.Count},pt{Net.sv.ProtocolId},qp{SingletonComponent<ServerMgr>.Instance.connectionQueue.Queued},v{2511}{text4}{text6},h{AssemblyHash},{text},{text2},{text3},cs{text7}";
 			if (ConVar.Server.description != null && ConVar.Server.description.Length > 100)
 			{
 				string[] array = StringEx.SplitToChunks(ConVar.Server.description, 100).ToArray();
@@ -1042,20 +1043,40 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 
 	public static BasePlayer.SpawnPoint FindSpawnPoint(BasePlayer forPlayer = null)
 	{
-		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0089: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00be: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ad: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0108: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0154: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0159: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0143: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0149: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00dd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0179: Unknown result type (might be due to invalid IL or missing references)
+		//IL_017e: Unknown result type (might be due to invalid IL or missing references)
 		bool flag = false;
+		if ((Object)(object)forPlayer != (Object)null && forPlayer.IsInTutorial)
+		{
+			TutorialIsland currentTutorialIsland = forPlayer.GetCurrentTutorialIsland();
+			if ((Object)(object)currentTutorialIsland != (Object)null)
+			{
+				return new BasePlayer.SpawnPoint
+				{
+					pos = currentTutorialIsland.InitialSpawnPoint.position,
+					rot = currentTutorialIsland.InitialSpawnPoint.rotation
+				};
+			}
+		}
 		BaseGameMode baseGameMode = Gamemode();
 		if (Object.op_Implicit((Object)(object)baseGameMode) && baseGameMode.useCustomSpawns)
 		{
@@ -1074,6 +1095,16 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 			}
 		}
 		BasePlayer.SpawnPoint spawnPoint2 = new BasePlayer.SpawnPoint();
+		if ((Object)(object)forPlayer != (Object)null && forPlayer.IsInTutorial)
+		{
+			TutorialIsland currentTutorialIsland2 = forPlayer.GetCurrentTutorialIsland();
+			if ((Object)(object)currentTutorialIsland2 != (Object)null)
+			{
+				spawnPoint2.pos = currentTutorialIsland2.InitialSpawnPoint.position;
+				spawnPoint2.rot = currentTutorialIsland2.InitialSpawnPoint.rotation;
+				return spawnPoint2;
+			}
+		}
 		GameObject[] array = GameObject.FindGameObjectsWithTag("spawnpoint");
 		if (array.Length != 0)
 		{
@@ -1785,14 +1816,14 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 			DebugEx.Log((object)("Kicking " + ((object)packet.connection)?.ToString() + " - their branch is '" + text + "' not '" + branch + "'"), (StackTraceLogType)0);
 			Net.sv.Kick(packet.connection, "Wrong Steam Beta: Requires '" + branch + "' branch!", false);
 		}
-		else if (packet.connection.protocol > 2510)
+		else if (packet.connection.protocol > 2511)
 		{
-			DebugEx.Log((object)("Kicking " + ((object)packet.connection)?.ToString() + " - their protocol is " + packet.connection.protocol + " not " + 2510), (StackTraceLogType)0);
+			DebugEx.Log((object)("Kicking " + ((object)packet.connection)?.ToString() + " - their protocol is " + packet.connection.protocol + " not " + 2511), (StackTraceLogType)0);
 			Net.sv.Kick(packet.connection, "Wrong Connection Protocol: Server update required!", false);
 		}
-		else if (packet.connection.protocol < 2510)
+		else if (packet.connection.protocol < 2511)
 		{
-			DebugEx.Log((object)("Kicking " + ((object)packet.connection)?.ToString() + " - their protocol is " + packet.connection.protocol + " not " + 2510), (StackTraceLogType)0);
+			DebugEx.Log((object)("Kicking " + ((object)packet.connection)?.ToString() + " - their protocol is " + packet.connection.protocol + " not " + 2511), (StackTraceLogType)0);
 			Net.sv.Kick(packet.connection, "Wrong Connection Protocol: Client update required!", false);
 		}
 		else

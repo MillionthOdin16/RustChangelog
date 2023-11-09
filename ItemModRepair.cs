@@ -9,6 +9,8 @@ public class ItemModRepair : ItemMod
 
 	public int workbenchLvlRequired;
 
+	public bool canUseRepairBench;
+
 	public bool HasCraftLevel(BasePlayer player = null)
 	{
 		if ((Object)(object)player != (Object)null && player.isServer)

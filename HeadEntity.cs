@@ -22,6 +22,10 @@ public class HeadEntity : BaseEntity
 	{
 		InitTrophyData();
 		CurrentTrophyData.entitySource = sourceID;
+		CurrentTrophyData.horseBreed = 0;
+		CurrentTrophyData.playerId = 0uL;
+		CurrentTrophyData.playerName = string.Empty;
+		CurrentTrophyData.clothing?.Clear();
 	}
 
 	public void SetupPlayerId(string playerName, ulong playerId)

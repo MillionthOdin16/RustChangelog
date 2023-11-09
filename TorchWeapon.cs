@@ -19,6 +19,8 @@ public class TorchWeapon : BaseMelee
 
 	public GameObjectRef litStrikeFX;
 
+	public const Flags IsInHolder = Flags.Reserved1;
+
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
 		TimeWarning val = TimeWarning.New("TorchWeapon.OnRpcMessage", 0);

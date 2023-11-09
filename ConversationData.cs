@@ -9,18 +9,20 @@ public class ConversationData : ScriptableObject
 	{
 		public enum ConditionType
 		{
-			NONE,
-			HASHEALTH,
-			HASSCRAP,
-			PROVIDERBUSY,
-			MISSIONCOMPLETE,
-			MISSIONATTEMPTED,
-			CANACCEPT
+			None,
+			HasHealth,
+			HasScrap,
+			ProviderBusy,
+			MissionComplete,
+			MissionAttempted,
+			CanAccept
 		}
 
 		public ConditionType conditionType;
 
 		public uint conditionAmount;
+
+		public BaseMission conditionMission;
 
 		public bool inverse;
 
@@ -29,29 +31,29 @@ public class ConversationData : ScriptableObject
 		public bool Passes(BasePlayer player, IConversationProvider provider)
 		{
 			bool flag = false;
-			if (conditionType == ConditionType.HASSCRAP)
+			if (conditionType == ConditionType.HasScrap)
 			{
 				flag = player.inventory.GetAmount(ItemManager.FindItemDefinition("scrap").itemid) >= conditionAmount;
 			}
-			else if (conditionType == ConditionType.HASHEALTH)
+			else if (conditionType == ConditionType.HasHealth)
 			{
 				flag = player.health >= (float)conditionAmount;
 			}
-			else if (conditionType == ConditionType.PROVIDERBUSY)
+			else if (conditionType == ConditionType.ProviderBusy)
 			{
 				flag = provider.ProviderBusy();
 			}
-			else if (conditionType == ConditionType.MISSIONCOMPLETE)
+			else if (conditionType == ConditionType.MissionComplete)
 			{
-				flag = player.HasCompletedMission(conditionAmount);
+				flag = player.HasCompletedMission(MissionID());
 			}
-			else if (conditionType == ConditionType.MISSIONATTEMPTED)
+			else if (conditionType == ConditionType.MissionAttempted)
 			{
-				flag = player.HasAttemptedMission(conditionAmount);
+				flag = player.HasAttemptedMission(MissionID());
 			}
-			else if (conditionType == ConditionType.CANACCEPT)
+			else if (conditionType == ConditionType.CanAccept)
 			{
-				flag = player.CanAcceptMission(conditionAmount);
+				flag = player.CanAcceptMission(MissionID());
 			}
 			if (!inverse)
 			{
@@ -59,16 +61,36 @@ public class ConversationData : ScriptableObject
 			}
 			return !flag;
 		}
+
+		private uint MissionID()
+		{
+			if (!(conditionMission != null))
+			{
+				return conditionAmount;
+			}
+			return conditionMission.id;
+		}
 	}
 
 	[Serializable]
 	public class ResponseNode
 	{
+		public enum ActionType
+		{
+			Custom,
+			None,
+			AssignMission
+		}
+
 		public Phrase responseTextLocalized;
 
 		public ConversationCondition[] conditions;
 
+		public ActionType actionType;
+
 		public string actionString;
+
+		public BaseMission actionMission;
 
 		public string resultingSpeechNode;
 
@@ -99,6 +121,26 @@ public class ConversationData : ScriptableObject
 			}
 			return "";
 		}
+
+		public string GetActionString()
+		{
+			switch (actionType)
+			{
+			case ActionType.None:
+				return "";
+			case ActionType.Custom:
+				return actionString ?? "";
+			case ActionType.AssignMission:
+				if (!(actionMission != null) || string.IsNullOrWhiteSpace(actionMission.shortname))
+				{
+					return "";
+				}
+				return "assignmission " + actionMission.shortname;
+			default:
+				Debug.LogWarning((object)$"Cannot get conversation action string! Unhandled action type: {actionType}");
+				return "";
+			}
+		}
 	}
 
 	[Serializable]
@@ -118,6 +160,8 @@ public class ConversationData : ScriptableObject
 	public string shortname;
 
 	public Phrase providerNameTranslated;
+
+	public bool canBeCancelled = true;
 
 	public SpeechNode[] speeches;
 

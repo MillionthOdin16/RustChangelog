@@ -44,6 +44,8 @@ public class TokenisedPhrase : Phrase
 		str = str.Replace("[+ping]", string.Format("[{0}]", Input.GetButtonWithBind("+ping")).ToUpper());
 		str = str.Replace("[clan.toggleclan]", string.Format("[{0}]", Input.GetButtonWithBind("clan.toggleclan")).ToUpper());
 		str = str.Replace("[+jump]", string.Format("[{0}]", Input.GetButtonWithBind("+jump")).ToUpper());
+		str = str.Replace("[movement]", ("[" + TranslateMouseButton(Input.GetButtonWithBind("+forward")) + TranslateMouseButton(Input.GetButtonWithBind("+left")) + TranslateMouseButton(Input.GetButtonWithBind("+backward")) + TranslateMouseButton(Input.GetButtonWithBind("+right")) + "]").ToUpper());
+		str = str.Replace("[+help]", string.Format("[{0}]", Input.GetButtonWithBind("+opentutorialhelp")).ToUpper());
 		return str;
 	}
 

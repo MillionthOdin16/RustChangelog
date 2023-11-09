@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class ReflectionPlane : BaseEntity
+public class ReflectionPlane : DecayEntity
 {
 	private static int _ColorTexID = Shader.PropertyToID("_ColorTex");
 

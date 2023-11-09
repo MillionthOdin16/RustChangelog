@@ -21,9 +21,22 @@ public class RockingChair : BaseChair
 	[Range(0f, 2f)]
 	public float WeaponFireImpact = 3f;
 
-	private Vector3 initEuler = Vector3.zero;
+	[Header("Audio")]
+	public SoundDefinition creakForwardSoundDef;
 
-	private float initY;
+	public SoundDefinition creakBackwardSoundDef;
+
+	public float creakForwardAngle = 0.1f;
+
+	public float creakBackwardAngle = -0.1f;
+
+	public float creakVelocityThreshold = 0.02f;
+
+	public AnimationCurve creakGainCurve;
+
+	private float initLocalY;
+
+	private Vector3 initLocalRot;
 
 	private float velocity;
 
@@ -33,7 +46,7 @@ public class RockingChair : BaseChair
 
 	private float sineTime;
 
-	private float timeUntilStartSine = 0.7f;
+	private float timeUntilStartSine = 0.4f;
 
 	private float t;
 
@@ -45,31 +58,40 @@ public class RockingChair : BaseChair
 
 	public override void ServerInit()
 	{
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		base.ServerInit();
+		SaveBaseLocalPos();
+		ResetChair();
+	}
+
+	public override void OnParentChanging(BaseEntity oldParent, BaseEntity newParent)
+	{
+		((FacepunchBehaviour)this).Invoke((Action)SaveBaseLocalPos, 0f);
+	}
+
+	private void SaveBaseLocalPos()
+	{
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
 		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
 		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
-		base.ServerInit();
-		Quaternion rotation = ((Component)this).transform.rotation;
-		initEuler = ((Quaternion)(ref rotation)).eulerAngles;
-		initEuler.x = 0f;
-		initY = ((Component)this).transform.position.y;
-		max = Quaternion.Euler(initEuler) * Quaternion.AngleAxis(MaxRockingAngle, Vector3.right);
-		min = Quaternion.Euler(initEuler) * Quaternion.AngleAxis(0f - MaxRockingAngle, Vector3.right);
-		ResetChair();
+		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
+		Quaternion localRotation = ((Component)this).transform.localRotation;
+		initLocalRot = ((Quaternion)(ref localRotation)).eulerAngles;
+		initLocalY = ((Component)this).transform.localPosition.y;
+		max = Quaternion.Euler(initLocalRot) * Quaternion.AngleAxis(MaxRockingAngle, Vector3.right);
+		min = Quaternion.Euler(initLocalRot) * Quaternion.AngleAxis(0f - MaxRockingAngle, Vector3.right);
 	}
 
 	public override void Save(SaveInfo info)
@@ -78,8 +100,8 @@ public class RockingChair : BaseChair
 		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
 		base.Save(info);
 		info.msg.rockingChair = Pool.Get<RockingChair>();
-		info.msg.rockingChair.initEuler = initEuler;
-		info.msg.rockingChair.initY = initY;
+		info.msg.rockingChair.initEuler = initLocalRot;
+		info.msg.rockingChair.initY = initLocalY;
 	}
 
 	public override void Load(LoadInfo info)
@@ -92,12 +114,12 @@ public class RockingChair : BaseChair
 		base.Load(info);
 		if (info.msg.rockingChair != null && base.isServer)
 		{
-			initEuler = info.msg.rockingChair.initEuler;
-			((Component)this).transform.rotation = Quaternion.Euler(initEuler);
-			initY = info.msg.rockingChair.initY;
-			if (initY == 0f)
+			initLocalRot = info.msg.rockingChair.initEuler;
+			((Component)this).transform.localRotation = Quaternion.Euler(initLocalRot);
+			initLocalY = info.msg.rockingChair.initY;
+			if (initLocalY == 0f)
 			{
-				initY = ((Component)this).transform.position.y;
+				initLocalY = ((Component)this).transform.localPosition.y;
 			}
 		}
 	}
@@ -131,9 +153,9 @@ public class RockingChair : BaseChair
 
 	public override void OnWeaponFired(BaseProjectile weapon)
 	{
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
-		if ((Object)(object)weapon != (Object)null)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		if (!((Object)(object)weapon == (Object)null))
 		{
 			velocity += weapon.recoil.recoilPitchMax * WeaponFireImpact;
 			timeSinceInput = TimeSince.op_Implicit(0f);
@@ -161,15 +183,15 @@ public class RockingChair : BaseChair
 		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
 		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
-		float num = initY + 0.065f;
+		float num = initLocalY + 0.06f;
 		float num2 = Mathx.RemapValClamped(Mathf.Abs(angle), 0f, MaxRockingAngle, 0f, 1f);
 		if (num2 > 0.7f)
 		{
-			((Component)this).transform.position = Mathx.Lerp(new Vector3(((Component)this).transform.position.x, initY, ((Component)this).transform.position.z), new Vector3(((Component)this).transform.position.x, num, ((Component)this).transform.position.z), 1.5f, num2);
+			((Component)this).transform.localPosition = Mathx.Lerp(new Vector3(((Component)this).transform.localPosition.x, initLocalY, ((Component)this).transform.localPosition.z), new Vector3(((Component)this).transform.localPosition.x, num, ((Component)this).transform.localPosition.z), 1.5f, num2);
 		}
 		else
 		{
-			((Component)this).transform.position = Mathx.Lerp(((Component)this).transform.position, new Vector3(((Component)this).transform.position.x, initY, ((Component)this).transform.position.z), 1.5f, Time.deltaTime);
+			((Component)this).transform.localPosition = Mathx.Lerp(((Component)this).transform.localPosition, new Vector3(((Component)this).transform.localPosition.x, initLocalY, ((Component)this).transform.localPosition.z), 1.5f, Time.deltaTime);
 		}
 	}
 
@@ -190,45 +212,45 @@ public class RockingChair : BaseChair
 
 	private void ApplyVelocity(float delta, bool hasInput)
 	{
-		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00af: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ba: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c6: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00cb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ed: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ef: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0101: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ec: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0104: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0106: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0118: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0125: Unknown result type (might be due to invalid IL or missing references)
 		t = Mathf.Sin(sineTime * ((float)Math.PI / 180f));
 		t = Mathx.RemapValClamped(t, -1f, 1f, 0f, 1f);
+		t = EaseOutCubicOvershoot(t, 0.2f);
 		t = Mathf.Lerp(t, 0.5f, Mathf.Clamp01(TimeSince.op_Implicit(timeSinceInput) / 10f));
 		angle += velocity;
 		angle = Mathf.Clamp(angle, 0f - MaxRockingAngle, MaxRockingAngle);
-		Quaternion val = Quaternion.Euler(initEuler) * Quaternion.AngleAxis(angle, Vector3.right);
-		Quaternion val2 = Quaternion.Lerp(min, max, t);
+		Quaternion val = Quaternion.Euler(initLocalRot) * Quaternion.AngleAxis(angle, Vector3.right);
+		Quaternion val2 = Quaternion.Slerp(min, max, t);
 		float num = ((!hasInput && TimeSince.op_Implicit(timeSinceInput) > timeUntilStartSine) ? 1 : 0);
 		Quaternion val3 = Quaternion.Slerp(val, val2, num);
-		((Component)this).transform.rotation = Quaternion.Slerp(((Component)this).transform.rotation, val3, delta * 3f);
+		((Component)this).transform.localRotation = Quaternion.Slerp(((Component)this).transform.localRotation, val3, delta * 3f);
 	}
 
 	private void ResetChair()
 	{
-		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
-		initEuler.x = 0f;
-		((Component)this).transform.rotation = Quaternion.Euler(initEuler);
-		((Component)this).transform.position = new Vector3(((Component)this).transform.position.x, initY, ((Component)this).transform.position.z);
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+		((Component)this).transform.localRotation = Quaternion.Euler(initLocalRot);
+		((Component)this).transform.localPosition = new Vector3(((Component)this).transform.localPosition.x, initLocalY, ((Component)this).transform.localPosition.z);
 	}
 
 	private Vector2 GetInputVector(InputState inputState)
@@ -271,5 +293,15 @@ public class RockingChair : BaseChair
 			zero.x = -1f;
 		}
 		return zero;
+	}
+
+	private float EaseOutCubic(float value)
+	{
+		return 1f - Mathf.Pow(1f - Mathf.Clamp01(value), 3f);
+	}
+
+	private float EaseOutCubicOvershoot(float value, float overshoot)
+	{
+		return 1f - Mathf.Pow(1f - Mathf.Clamp01(value), 3f) * (1f + overshoot * (Mathf.Clamp01(value) - 1f));
 	}
 }

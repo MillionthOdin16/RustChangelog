@@ -43,7 +43,7 @@ public class Render : ConsoleSystem
 	[ClientVar(Saved = true, Help = "Max distance for instanced rendering, can be higher than normal render distance")]
 	public static float instancing_render_distance = 1000f;
 
-	public static bool IsInstancingDisabled => use_normal_rendering;
+	public static bool IsInstancingDisabled => true;
 
 	public static bool IsInstancingEnabled => !IsInstancingDisabled;
 

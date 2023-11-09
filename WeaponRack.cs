@@ -1060,7 +1060,7 @@ public class WeaponRack : StorageContainer
 			if (num != component.primaryMagazine.ammoType.itemid && component.primaryMagazine.contents > 0)
 			{
 				player.GiveItem(ItemManager.CreateByItemID(component.primaryMagazine.ammoType.itemid, component.primaryMagazine.contents, 0uL));
-				component.primaryMagazine.contents = 0;
+				component.SetAmmoCount(0);
 			}
 			component.primaryMagazine.ammoType = itemDefinition;
 			component.TryReloadMagazine(player.inventory);

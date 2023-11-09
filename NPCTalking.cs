@@ -340,18 +340,32 @@ public class NPCTalking : NPCShopKeeper, IConversationProvider
 	public void Server_BeginTalking(RPCMessage msg)
 	{
 		BasePlayer player = msg.player;
+		Server_BeginTalking(player);
+	}
+
+	protected virtual bool CanTalkTo(BasePlayer bp)
+	{
+		return true;
+	}
+
+	public void Server_BeginTalking(BasePlayer ply)
+	{
+		if (!CanTalkTo(ply))
+		{
+			return;
+		}
 		CleanupConversingPlayers();
-		ConversationData conversationFor = GetConversationFor(player);
+		OnConversationStarted(ply);
+		ConversationData conversationFor = GetConversationFor(ply);
 		if ((Object)(object)conversationFor != (Object)null)
 		{
-			if (conversingPlayers.Contains(player))
+			if (conversingPlayers.Contains(ply))
 			{
-				OnConversationEnded(player);
+				OnConversationEnded(ply);
 			}
-			conversingPlayers.Add(player);
+			conversingPlayers.Add(ply);
 			UpdateFlags();
-			OnConversationStarted(player);
-			ClientRPCPlayer(null, player, "Client_StartConversation", GetConversationIndex(conversationFor.shortname), GetConversationStartSpeech(player));
+			ClientRPCPlayer(null, ply, "Client_StartConversation", GetConversationIndex(conversationFor.shortname), GetConversationStartSpeech(ply));
 		}
 	}
 
@@ -410,26 +424,31 @@ public class NPCTalking : NPCShopKeeper, IConversationProvider
 			return;
 		}
 		ConversationData.ResponseNode responseNode = conversationFor.speeches[num].responses[num2];
-		if (responseNode != null)
+		if (responseNode == null)
 		{
-			if (responseNode.conditions.Length != 0)
+			return;
+		}
+		if (responseNode.conditions.Length != 0)
+		{
+			UpdateFlags();
+		}
+		bool flag = responseNode.PassesConditions(player, this);
+		if (flag)
+		{
+			string actionString = responseNode.GetActionString();
+			if (!string.IsNullOrEmpty(actionString))
 			{
-				UpdateFlags();
+				OnConversationAction(player, actionString);
 			}
-			bool flag = responseNode.PassesConditions(player, this);
-			if (flag && !string.IsNullOrEmpty(responseNode.actionString))
-			{
-				OnConversationAction(player, responseNode.actionString);
-			}
-			int speechNodeIndex = conversationFor.GetSpeechNodeIndex(flag ? responseNode.resultingSpeechNode : responseNode.GetFailedSpeechNode(player, this));
-			if (speechNodeIndex == -1)
-			{
-				ForceEndConversation(player);
-			}
-			else
-			{
-				ForceSpeechNode(player, speechNodeIndex);
-			}
+		}
+		int speechNodeIndex = conversationFor.GetSpeechNodeIndex(flag ? responseNode.resultingSpeechNode : responseNode.GetFailedSpeechNode(player, this));
+		if (speechNodeIndex == -1)
+		{
+			ForceEndConversation(player);
+		}
+		else
+		{
+			ForceSpeechNode(player, speechNodeIndex);
 		}
 	}
 
