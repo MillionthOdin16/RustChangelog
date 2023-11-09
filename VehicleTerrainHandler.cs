@@ -14,7 +14,7 @@ public class VehicleTerrainHandler
 
 	public string CurGroundPhysicsMatName;
 
-	public Surface OnSurface = Surface.Default;
+	public Surface OnSurface;
 
 	public bool IsGrounded;
 
@@ -24,21 +24,30 @@ public class VehicleTerrainHandler
 
 	private const float SECONDS_BETWEEN_TERRAIN_SAMPLE = 0.25f;
 
-	private TimeSince timeSinceTerrainCheck = default(TimeSince);
+	private TimeSince timeSinceTerrainCheck;
 
 	private readonly BaseVehicle vehicle;
 
-	public bool IsOnSnowOrIce => OnSurface == Surface.Snow || OnSurface == Surface.Ice;
+	public bool IsOnSnowOrIce
+	{
+		get
+		{
+			if (OnSurface != Surface.Snow)
+			{
+				return OnSurface == Surface.Ice;
+			}
+			return true;
+		}
+	}
 
 	public VehicleTerrainHandler(BaseVehicle vehicle)
 	{
-		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
 		this.vehicle = vehicle;
 	}
 
 	public void FixedUpdate()
 	{
-		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
 		if (!vehicle.IsStationary() && TimeSince.op_Implicit(timeSinceTerrainCheck) > 0.25f)
 		{
 			DoTerrainCheck();
@@ -47,15 +56,15 @@ public class VehicleTerrainHandler
 
 	private void DoTerrainCheck()
 	{
-		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
 		timeSinceTerrainCheck = TimeSince.op_Implicit(Random.Range(-0.025f, 0.025f));
 		Transform transform = ((Component)vehicle).transform;
 		RaycastHit val = default(RaycastHit);

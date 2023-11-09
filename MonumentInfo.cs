@@ -8,32 +8,32 @@ public class MonumentInfo : LandmarkInfo, IPrefabPreProcess
 	[InspectorFlags]
 	public MonumentTier Tier = (MonumentTier)(-1);
 
-	public int MinWorldSize = 0;
+	public int MinWorldSize;
 
 	public Bounds Bounds = new Bounds(Vector3.zero, Vector3.zero);
 
-	public bool HasNavmesh = false;
+	public bool HasNavmesh;
 
-	public bool IsSafeZone = false;
-
-	[HideInInspector]
-	public bool WantsDungeonLink = false;
+	public bool IsSafeZone;
 
 	[HideInInspector]
-	public bool HasDungeonLink = false;
+	public bool WantsDungeonLink;
 
 	[HideInInspector]
-	public DungeonGridInfo DungeonEntrance = null;
+	public bool HasDungeonLink;
+
+	[HideInInspector]
+	public DungeonGridInfo DungeonEntrance;
 
 	private OBB obbBounds;
 
 	protected override void Awake()
 	{
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
 		base.Awake();
 		obbBounds = new OBB(((Component)this).transform.position, ((Component)this).transform.rotation, Bounds);
 		if (Object.op_Implicit((Object)(object)TerrainMeta.Path))
@@ -44,22 +44,22 @@ public class MonumentInfo : LandmarkInfo, IPrefabPreProcess
 
 	public bool CheckPlacement(Vector3 pos, Quaternion rot, Vector3 scale)
 	{
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0004: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
 		OBB val = default(OBB);
 		((OBB)(ref val))._002Ector(pos, scale, rot, Bounds);
 		Vector3 point = ((OBB)(ref val)).GetPoint(-1f, 0f, -1f);
@@ -93,49 +93,45 @@ public class MonumentInfo : LandmarkInfo, IPrefabPreProcess
 
 	public float Distance(Vector3 position)
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
 		return ((OBB)(ref obbBounds)).Distance(position);
 	}
 
 	public float SqrDistance(Vector3 position)
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
 		return ((OBB)(ref obbBounds)).SqrDistance(position);
 	}
 
 	public float Distance(OBB obb)
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
 		return ((OBB)(ref obbBounds)).Distance(obb);
 	}
 
 	public float SqrDistance(OBB obb)
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
 		return ((OBB)(ref obbBounds)).SqrDistance(obb);
 	}
 
 	public bool IsInBounds(Vector3 position)
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
 		return ((OBB)(ref obbBounds)).Contains(position);
 	}
 
 	public Vector3 ClosestPointOnBounds(Vector3 position)
 	{
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
 		return ((OBB)(ref obbBounds)).ClosestPoint(position);
 	}
 
 	public PathFinder.Point GetPathFinderPoint(int res)
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 position = ((Component)this).transform.position;
 		float num = TerrainMeta.NormalizeX(position.x);
 		float num2 = TerrainMeta.NormalizeZ(position.z);
@@ -147,10 +143,10 @@ public class MonumentInfo : LandmarkInfo, IPrefabPreProcess
 
 	public int GetPathFinderRadius(int res)
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
 		float num = ((Bounds)(ref Bounds)).extents.x * TerrainMeta.OneOverSize.x;
 		float num2 = ((Bounds)(ref Bounds)).extents.z * TerrainMeta.OneOverSize.z;
 		return Mathf.CeilToInt(Mathf.Max(num, num2) * (float)res);
@@ -158,13 +154,13 @@ public class MonumentInfo : LandmarkInfo, IPrefabPreProcess
 
 	protected void OnDrawGizmosSelected()
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
 		Gizmos.matrix = ((Component)this).transform.localToWorldMatrix;
 		Gizmos.color = new Color(0f, 0.7f, 1f, 0.1f);
 		Gizmos.DrawCube(((Bounds)(ref Bounds)).center, ((Bounds)(ref Bounds)).size);

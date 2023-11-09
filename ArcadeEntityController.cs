@@ -12,15 +12,13 @@ public class ArcadeEntityController : BaseMonoBehaviour
 	{
 		get
 		{
-			//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-			//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-			//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0006: Unknown result type (might be due to invalid IL or missing references)
 			return arcadeEntity.heading;
 		}
 		set
 		{
+			//IL_0006: Unknown result type (might be due to invalid IL or missing references)
 			//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0008: Unknown result type (might be due to invalid IL or missing references)
 			arcadeEntity.heading = value;
 		}
 	}
@@ -29,14 +27,12 @@ public class ArcadeEntityController : BaseMonoBehaviour
 	{
 		get
 		{
-			//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+			//IL_000b: Unknown result type (might be due to invalid IL or missing references)
 			return ((Component)arcadeEntity).transform.localPosition;
 		}
 		set
 		{
-			//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_000b: Unknown result type (might be due to invalid IL or missing references)
 			((Component)arcadeEntity).transform.localPosition = value;
 		}
 	}
@@ -45,14 +41,12 @@ public class ArcadeEntityController : BaseMonoBehaviour
 	{
 		get
 		{
-			//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+			//IL_000b: Unknown result type (might be due to invalid IL or missing references)
 			return ((Component)arcadeEntity).transform.position;
 		}
 		set
 		{
-			//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_000b: Unknown result type (might be due to invalid IL or missing references)
 			((Component)arcadeEntity).transform.position = value;
 		}
 	}

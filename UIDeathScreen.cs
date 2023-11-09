@@ -27,13 +27,15 @@ public class UIDeathScreen : SingletonComponent<UIDeathScreen>, IUIScreen
 
 	public List<SleepingBagButton> sleepingBagButtons = new List<SleepingBagButton>();
 
+	public GameObject loadingIndicator;
+
 	public RespawnColourScheme[] RespawnColourSchemes;
 
-	public GameObject RespawnScrollGradient = null;
+	public GameObject RespawnScrollGradient;
 
-	public ScrollRect RespawnScrollRect = null;
+	public ScrollRect RespawnScrollRect;
 
 	public ExpandedLifeStats ExpandedStats;
 
-	public CanvasGroup StreamerModeContainer = null;
+	public CanvasGroup StreamerModeContainer;
 }

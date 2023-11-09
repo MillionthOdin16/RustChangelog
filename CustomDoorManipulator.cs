@@ -16,7 +16,7 @@ public class CustomDoorManipulator : DoorManipulator
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - DoPair "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - DoPair "));
 				}
 				TimeWarning val2 = TimeWarning.New("DoPair", 0);
 				try
@@ -35,7 +35,7 @@ public class CustomDoorManipulator : DoorManipulator
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -47,7 +47,7 @@ public class CustomDoorManipulator : DoorManipulator
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -67,12 +67,12 @@ public class CustomDoorManipulator : DoorManipulator
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ServerActionChange "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ServerActionChange "));
 				}
-				TimeWarning val5 = TimeWarning.New("ServerActionChange", 0);
+				TimeWarning val2 = TimeWarning.New("ServerActionChange", 0);
 				try
 				{
-					TimeWarning val6 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsVisible.Test(3800726972u, "ServerActionChange", this, player, 3f))
@@ -82,11 +82,11 @@ public class CustomDoorManipulator : DoorManipulator
 					}
 					finally
 					{
-						((IDisposable)val6)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val7 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -98,7 +98,7 @@ public class CustomDoorManipulator : DoorManipulator
 						}
 						finally
 						{
-							((IDisposable)val7)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -109,7 +109,7 @@ public class CustomDoorManipulator : DoorManipulator
 				}
 				finally
 				{
-					((IDisposable)val5)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -128,7 +128,11 @@ public class CustomDoorManipulator : DoorManipulator
 
 	public bool CanPlayerAdmin(BasePlayer player)
 	{
-		return (Object)(object)player != (Object)null && player.CanBuild() && !IsOn();
+		if ((Object)(object)player != (Object)null && player.CanBuild())
+		{
+			return !IsOn();
+		}
+		return false;
 	}
 
 	public bool IsPaired()

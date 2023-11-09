@@ -11,9 +11,9 @@ public class AlignedLineDrawer : MonoBehaviour, IClientComponent
 		public Vector3 WorldNormal;
 	}
 
-	public MeshFilter Filter = null;
+	public MeshFilter Filter;
 
-	public MeshRenderer Renderer = null;
+	public MeshRenderer Renderer;
 
 	public float LineWidth = 1f;
 
@@ -23,11 +23,11 @@ public class AlignedLineDrawer : MonoBehaviour, IClientComponent
 
 	public float uvTilingFactor = 1f;
 
-	public bool DrawEndCaps = false;
+	public bool DrawEndCaps;
 
-	public bool DrawSideMesh = false;
+	public bool DrawSideMesh;
 
-	public bool DrawBackMesh = false;
+	public bool DrawBackMesh;
 
-	public SprayCanSpray_Freehand Spray = null;
+	public SprayCanSpray_Freehand Spray;
 }

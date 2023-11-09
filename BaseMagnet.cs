@@ -18,34 +18,35 @@ public class BaseMagnet : MonoBehaviour
 
 	public GameObjectRef attachEffect;
 
-	public bool isMagnetOn = false;
+	public bool isMagnetOn;
 
 	public GameObject colliderSource;
 
-	private BasePlayer associatedPlayer = null;
+	private BasePlayer associatedPlayer;
 
 	public bool HasConnectedObject()
 	{
-		return (Object)(object)((Joint)fixedJoint).connectedBody != (Object)null && isMagnetOn;
+		if ((Object)(object)((Joint)fixedJoint).connectedBody != (Object)null)
+		{
+			return isMagnetOn;
+		}
+		return false;
 	}
 
 	public OBB GetConnectedOBB(float scale = 1f)
 	{
-		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
 		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)((Joint)fixedJoint).connectedBody == (Object)null)
 		{
 			Debug.LogError((object)"BaseMagnet returning fake OBB because no connected body!");
@@ -115,26 +116,26 @@ public class BaseMagnet : MonoBehaviour
 
 	public void MagnetThink(float delta)
 	{
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00de: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0190: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0195: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0197: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0199: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01d0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0134: Unknown result type (might be due to invalid IL or missing references)
-		//IL_013f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0144: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0154: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0159: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0165: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0166: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0168: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0184: Unknown result type (might be due to invalid IL or missing references)
+		//IL_018c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0193: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0104: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0114: Unknown result type (might be due to invalid IL or missing references)
 		if (!isMagnetOn)
 		{
 			return;
@@ -147,7 +148,7 @@ public class BaseMagnet : MonoBehaviour
 		OBB val = default(OBB);
 		foreach (BaseEntity entityContent in magnetTrigger.entityContents)
 		{
-			if (!entityContent.syncPosition)
+			if ((Object)(object)entityContent == (Object)null || !entityContent.syncPosition)
 			{
 				continue;
 			}
@@ -160,13 +161,16 @@ public class BaseMagnet : MonoBehaviour
 			if (((OBB)(ref val)).Contains(attachDepthPoint.position))
 			{
 				MagnetLiftable component2 = ((Component)entityContent).GetComponent<MagnetLiftable>();
-				component2.SetMagnetized(wantsOn: true, this, associatedPlayer);
-				if ((Object)(object)((Joint)fixedJoint).connectedBody == (Object)null)
+				if ((Object)(object)component2 != (Object)null)
 				{
-					Effect.server.Run(attachEffect.resourcePath, attachDepthPoint.position, -attachDepthPoint.up);
-					((Joint)fixedJoint).connectedBody = component;
-					SetCollisionsEnabled(((Component)component).gameObject, wants: false);
-					continue;
+					component2.SetMagnetized(wantsOn: true, this, associatedPlayer);
+					if ((Object)(object)((Joint)fixedJoint).connectedBody == (Object)null)
+					{
+						Effect.server.Run(attachEffect.resourcePath, attachDepthPoint.position, -attachDepthPoint.up);
+						((Joint)fixedJoint).connectedBody = component;
+						SetCollisionsEnabled(((Component)component).gameObject, wants: false);
+						continue;
+					}
 				}
 			}
 			if ((Object)(object)((Joint)fixedJoint).connectedBody == (Object)null)

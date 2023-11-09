@@ -1,8 +1,8 @@
 public class MobileInventoryEntity : BaseEntity
 {
-	public SoundDefinition ringingLoop = null;
+	public SoundDefinition ringingLoop;
 
-	public SoundDefinition silentLoop = null;
+	public SoundDefinition silentLoop;
 
 	public const Flags Ringing = Flags.Reserved1;
 

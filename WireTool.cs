@@ -54,11 +54,11 @@ public class WireTool : HeldEntity
 
 	public GameObjectRef ioLine;
 
-	public IOEntity.IOType wireType = IOEntity.IOType.Electric;
+	public IOEntity.IOType wireType;
 
 	public float RadialMenuHoldTime = 0.25f;
 
-	private const float IndustrialWallOffset = 0.03f;
+	private const float IndustrialWallOffset = 0.04f;
 
 	public static Phrase Default = new Phrase("wiretoolcolour.default", "Default");
 
@@ -104,7 +104,17 @@ public class WireTool : HeldEntity
 
 	private const float IndustrialThickness = 0.01f;
 
-	public bool CanChangeColours => wireType == IOEntity.IOType.Electric || wireType == IOEntity.IOType.Fluidic || wireType == IOEntity.IOType.Industrial;
+	public bool CanChangeColours
+	{
+		get
+		{
+			if (wireType != 0 && wireType != IOEntity.IOType.Fluidic)
+			{
+				return wireType == IOEntity.IOType.Industrial;
+			}
+			return true;
+		}
+	}
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -116,7 +126,7 @@ public class WireTool : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - MakeConnection "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - MakeConnection "));
 				}
 				TimeWarning val2 = TimeWarning.New("MakeConnection", 0);
 				try
@@ -139,7 +149,7 @@ public class WireTool : HeldEntity
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -151,7 +161,7 @@ public class WireTool : HeldEntity
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -171,12 +181,12 @@ public class WireTool : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RequestChangeColor "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RequestChangeColor "));
 				}
-				TimeWarning val5 = TimeWarning.New("RequestChangeColor", 0);
+				TimeWarning val2 = TimeWarning.New("RequestChangeColor", 0);
 				try
 				{
-					TimeWarning val6 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.FromOwner.Test(121409151u, "RequestChangeColor", this, player))
@@ -190,11 +200,11 @@ public class WireTool : HeldEntity
 					}
 					finally
 					{
-						((IDisposable)val6)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val7 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -206,7 +216,7 @@ public class WireTool : HeldEntity
 						}
 						finally
 						{
-							((IDisposable)val7)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -217,7 +227,7 @@ public class WireTool : HeldEntity
 				}
 				finally
 				{
-					((IDisposable)val5)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -226,12 +236,12 @@ public class WireTool : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RequestClear "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RequestClear "));
 				}
-				TimeWarning val8 = TimeWarning.New("RequestClear", 0);
+				TimeWarning val2 = TimeWarning.New("RequestClear", 0);
 				try
 				{
-					TimeWarning val9 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.FromOwner.Test(2469840259u, "RequestClear", this, player))
@@ -245,11 +255,11 @@ public class WireTool : HeldEntity
 					}
 					finally
 					{
-						((IDisposable)val9)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val10 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -261,7 +271,7 @@ public class WireTool : HeldEntity
 						}
 						finally
 						{
-							((IDisposable)val10)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex3)
@@ -272,7 +282,7 @@ public class WireTool : HeldEntity
 				}
 				finally
 				{
-					((IDisposable)val8)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -281,12 +291,12 @@ public class WireTool : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SetPlugged "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SetPlugged "));
 				}
-				TimeWarning val11 = TimeWarning.New("SetPlugged", 0);
+				TimeWarning val2 = TimeWarning.New("SetPlugged", 0);
 				try
 				{
-					TimeWarning val12 = TimeWarning.New("Call", 0);
+					TimeWarning val3 = TimeWarning.New("Call", 0);
 					try
 					{
 						RPCMessage rPCMessage = default(RPCMessage);
@@ -298,7 +308,7 @@ public class WireTool : HeldEntity
 					}
 					finally
 					{
-						((IDisposable)val12)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 				}
 				catch (Exception ex4)
@@ -308,7 +318,7 @@ public class WireTool : HeldEntity
 				}
 				finally
 				{
-					((IDisposable)val11)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -317,12 +327,12 @@ public class WireTool : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - TryClear "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - TryClear "));
 				}
-				TimeWarning val13 = TimeWarning.New("TryClear", 0);
+				TimeWarning val2 = TimeWarning.New("TryClear", 0);
 				try
 				{
-					TimeWarning val14 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.FromOwner.Test(210386477u, "TryClear", this, player))
@@ -336,11 +346,11 @@ public class WireTool : HeldEntity
 					}
 					finally
 					{
-						((IDisposable)val14)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val15 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -352,7 +362,7 @@ public class WireTool : HeldEntity
 						}
 						finally
 						{
-							((IDisposable)val15)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex5)
@@ -363,7 +373,7 @@ public class WireTool : HeldEntity
 				}
 				finally
 				{
-					((IDisposable)val13)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -383,35 +393,55 @@ public class WireTool : HeldEntity
 
 	public bool HasPendingPlug()
 	{
-		return (Object)(object)pending.ent != (Object)null && pending.index != -1;
+		if ((Object)(object)pending.ent != (Object)null)
+		{
+			return pending.index != -1;
+		}
+		return false;
 	}
 
 	public bool PendingPlugIsInput()
 	{
-		return (Object)(object)pending.ent != (Object)null && pending.index != -1 && pending.input;
+		if ((Object)(object)pending.ent != (Object)null && pending.index != -1)
+		{
+			return pending.input;
+		}
+		return false;
 	}
 
 	public bool PendingPlugIsType(IOEntity.IOType type)
 	{
-		return (Object)(object)pending.ent != (Object)null && pending.index != -1 && ((pending.input && pending.ent.inputs[pending.index].type == type) || (!pending.input && pending.ent.outputs[pending.index].type == type));
+		if ((Object)(object)pending.ent != (Object)null && pending.index != -1)
+		{
+			if (!pending.input || pending.ent.inputs[pending.index].type != type)
+			{
+				if (!pending.input)
+				{
+					return pending.ent.outputs[pending.index].type == type;
+				}
+				return false;
+			}
+			return true;
+		}
+		return false;
 	}
 
 	public bool PendingPlugIsOutput()
 	{
-		return (Object)(object)pending.ent != (Object)null && pending.index != -1 && !pending.input;
+		if ((Object)(object)pending.ent != (Object)null && pending.index != -1)
+		{
+			return !pending.input;
+		}
+		return false;
 	}
 
 	public Vector3 PendingPlugWorldPos()
 	{
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ad: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0097: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)pending.ent == (Object)null || pending.index == -1)
 		{
 			return Vector3.zero;
@@ -425,7 +455,7 @@ public class WireTool : HeldEntity
 
 	public static bool CanPlayerUseWires(BasePlayer player)
 	{
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
 		if (!player.CanBuild())
 		{
 			return false;
@@ -439,15 +469,23 @@ public class WireTool : HeldEntity
 
 	public static bool CanModifyEntity(BasePlayer player, IOEntity ent)
 	{
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		return player.CanBuild(((Component)ent).transform.position, ((Component)ent).transform.rotation, ent.bounds) && ent.AllowWireConnections();
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		if (player.CanBuild(((Component)ent).transform.position, ((Component)ent).transform.rotation, ent.bounds))
+		{
+			return ent.AllowWireConnections();
+		}
+		return false;
 	}
 
 	public bool PendingPlugRoot()
 	{
-		return (Object)(object)pending.ent != (Object)null && pending.ent.IsRootEntity();
+		if ((Object)(object)pending.ent != (Object)null)
+		{
+			return pending.ent.IsRootEntity();
+		}
+		return false;
 	}
 
 	[RPC_Server]
@@ -455,9 +493,9 @@ public class WireTool : HeldEntity
 	[RPC_Server.FromOwner]
 	public void TryClear(RPCMessage msg)
 	{
-		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer player = msg.player;
 		NetworkableId uid = msg.read.EntityID();
 		BaseNetworkable baseNetworkable = BaseNetworkable.serverEntities.Find(uid);
@@ -474,20 +512,20 @@ public class WireTool : HeldEntity
 	[RPC_Server.FromOwner]
 	public void MakeConnection(RPCMessage msg)
 	{
-		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ed: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0143: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_030e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0313: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0318: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0108: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0114: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0277: Unknown result type (might be due to invalid IL or missing references)
+		//IL_027c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0281: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer player = msg.player;
 		if (!CanPlayerUseWires(player))
 		{
@@ -552,17 +590,16 @@ public class WireTool : HeldEntity
 	[RPC_Server.FromOwner]
 	public void RequestClear(RPCMessage msg)
 	{
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer player = msg.player;
 		if (CanPlayerUseWires(player))
 		{
 			NetworkableId uid = msg.read.EntityID();
 			int clearIndex = msg.read.Int32();
 			bool isInput = msg.read.Bit();
-			BaseNetworkable clearEnt = BaseNetworkable.serverEntities.Find(uid);
-			AttemptClearSlot(clearEnt, player, clearIndex, isInput);
+			AttemptClearSlot(BaseNetworkable.serverEntities.Find(uid), player, clearIndex, isInput);
 		}
 	}
 
@@ -579,7 +616,7 @@ public class WireTool : HeldEntity
 			return;
 		}
 		IOEntity iOEntity2 = iOSlot.connectedTo.Get();
-		IOEntity.IOSlot iOSlot2 = (isInput ? iOEntity2.outputs[iOSlot.connectedToSlot] : iOEntity2.inputs[iOSlot.connectedToSlot]);
+		IOEntity.IOSlot obj = (isInput ? iOEntity2.outputs[iOSlot.connectedToSlot] : iOEntity2.inputs[iOSlot.connectedToSlot]);
 		if (isInput)
 		{
 			iOEntity.UpdateFromInput(0, clearIndex);
@@ -589,7 +626,7 @@ public class WireTool : HeldEntity
 			iOEntity2.UpdateFromInput(0, iOSlot.connectedToSlot);
 		}
 		iOSlot.Clear();
-		iOSlot2.Clear();
+		obj.Clear();
 		iOEntity.MarkDirtyForceUpdateOutputs();
 		iOEntity.SendNetworkUpdate();
 		iOEntity.RefreshIndustrialPreventBuilding();
@@ -604,11 +641,11 @@ public class WireTool : HeldEntity
 		else if (!isInput)
 		{
 			IOEntity.IOSlot[] inputs = iOEntity.inputs;
-			foreach (IOEntity.IOSlot iOSlot3 in inputs)
+			foreach (IOEntity.IOSlot iOSlot2 in inputs)
 			{
-				if (iOSlot3.mainPowerSlot && Object.op_Implicit((Object)(object)iOSlot3.connectedTo.Get()))
+				if (iOSlot2.mainPowerSlot && Object.op_Implicit((Object)(object)iOSlot2.connectedTo.Get()))
 				{
-					iOSlot3.connectedTo.Get().SendChangedToRoot(forceUpdate: true);
+					iOSlot2.connectedTo.Get().SendChangedToRoot(forceUpdate: true);
 				}
 			}
 		}
@@ -628,11 +665,10 @@ public class WireTool : HeldEntity
 	[RPC_Server.FromOwner]
 	public void RequestChangeColor(RPCMessage msg)
 	{
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
-		BasePlayer player = msg.player;
-		if (!CanPlayerUseWires(player))
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		if (!CanPlayerUseWires(msg.player))
 		{
 			return;
 		}
@@ -651,10 +687,10 @@ public class WireTool : HeldEntity
 			IOEntity iOEntity2 = iOSlot.connectedTo.Get();
 			if (!((Object)(object)iOEntity2 == (Object)null))
 			{
-				IOEntity.IOSlot iOSlot2 = (flag ? iOEntity2.outputs : iOEntity2.inputs)[iOSlot.connectedToSlot];
+				IOEntity.IOSlot obj = (flag ? iOEntity2.outputs : iOEntity2.inputs)[iOSlot.connectedToSlot];
 				iOSlot.wireColour = wireColour;
 				iOEntity.SendNetworkUpdate();
-				iOSlot2.wireColour = wireColour;
+				obj.wireColour = wireColour;
 				iOEntity2.SendNetworkUpdate();
 			}
 		}
@@ -680,34 +716,34 @@ public class WireTool : HeldEntity
 
 	private bool ValidateLine(List<Vector3> lineList, IOEntity inputEntity, IOEntity outputEntity, BasePlayer byPlayer, int outputIndex)
 	{
-		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
 		//IL_009d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00da: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00df: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ee: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0106: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0143: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0148: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0151: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0161: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ac: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ed: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0145: Unknown result type (might be due to invalid IL or missing references)
 		if (lineList.Count < 2)
 		{
 			return false;
@@ -762,16 +798,16 @@ public class WireTool : HeldEntity
 
 	private bool VerifyLineOfSight(List<Vector3> positions, Matrix4x4 localToWorldSpace)
 	{
-		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0004: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 worldSpaceA = ((Matrix4x4)(ref localToWorldSpace)).MultiplyPoint3x4(positions[0]);
 		for (int i = 1; i < positions.Count; i++)
 		{
@@ -787,21 +823,21 @@ public class WireTool : HeldEntity
 
 	private bool VerifyLineOfSight(Vector3 worldSpaceA, Vector3 worldSpaceB)
 	{
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
 		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
 		float maxDistance = Vector3.Distance(worldSpaceA, worldSpaceB);
 		Vector3 val = worldSpaceA - worldSpaceB;
 		Vector3 normalized = ((Vector3)(ref val)).normalized;

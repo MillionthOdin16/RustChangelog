@@ -4,7 +4,7 @@ using UnityEngine;
 public class JunkpileNPCSpawner : NPCSpawner
 {
 	[Header("Junkpile NPC Spawner")]
-	public bool UseSpawnChance = false;
+	public bool UseSpawnChance;
 
 	protected override void Spawn(int numToSpawn)
 	{

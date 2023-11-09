@@ -1,8 +1,8 @@
 using System;
 using ConVar;
 using ProtoBuf;
+using Rust;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 public class ScarecrowNPC : NPCPlayer, IAISenses, IAIAttack, IThinker
 {
@@ -11,11 +11,17 @@ public class ScarecrowNPC : NPCPlayer, IAISenses, IAIAttack, IThinker
 	[Header("Loot")]
 	public LootContainer.LootSpawnSlot[] LootSpawnSlots;
 
+	public LootContainer.LootSpawnSlot[] bonusLootSlots;
+
 	public static float NextBeanCanAllowedTime;
 
 	public bool BlockClothingOnCorpse;
 
-	public bool RoamAroundHomePoint = false;
+	public bool RoamAroundHomePoint;
+
+	public GameObjectRef soulReleaseEffect;
+
+	public bool wasSoulReleased;
 
 	public ScarecrowBrain Brain { get; protected set; }
 
@@ -43,6 +49,7 @@ public class ScarecrowNPC : NPCPlayer, IAISenses, IAIAttack, IThinker
 		if (!base.isClient)
 		{
 			AIThinkManager.Add(this);
+			wasSoulReleased = false;
 		}
 	}
 
@@ -54,9 +61,7 @@ public class ScarecrowNPC : NPCPlayer, IAISenses, IAIAttack, IThinker
 
 	public virtual void TryThink()
 	{
-		Profiler.BeginSample("ScarecrowNPC.TryThink");
 		ServerThink_Internal();
-		Profiler.EndSample();
 	}
 
 	public override void ServerThink(float delta)
@@ -100,7 +105,11 @@ public class ScarecrowNPC : NPCPlayer, IAISenses, IAIAttack, IThinker
 
 	public bool IsTarget(BaseEntity entity)
 	{
-		return entity is BasePlayer && !entity.IsNpc;
+		if (entity is BasePlayer)
+		{
+			return !entity.IsNpc;
+		}
+		return false;
 	}
 
 	public bool IsFriendly(BaseEntity entity)
@@ -139,24 +148,21 @@ public class ScarecrowNPC : NPCPlayer, IAISenses, IAIAttack, IThinker
 
 	public bool IsTargetInRange(BaseEntity entity, out float dist)
 	{
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
 		dist = Vector3.Distance(((Component)entity).transform.position, ((Component)this).transform.position);
 		return dist <= EngagementRange();
 	}
 
 	public bool CanSeeTarget(BaseEntity entity)
 	{
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)entity == (Object)null)
 		{
 			return false;
 		}
-		Profiler.BeginSample("ScarecrowNPC.CanSeeTarget");
-		bool result = entity.IsVisible(GetEntity().CenterPoint(), entity.CenterPoint());
-		Profiler.EndSample();
-		return result;
+		return entity.IsVisible(GetEntity().CenterPoint(), entity.CenterPoint());
 	}
 
 	public bool NeedsToReload()
@@ -197,17 +203,16 @@ public class ScarecrowNPC : NPCPlayer, IAISenses, IAIAttack, IThinker
 
 	private void Attack(BaseCombatEntity target)
 	{
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
 		if (!((Object)(object)target == (Object)null))
 		{
 			Vector3 val = target.ServerPosition - ServerPosition;
-			float magnitude = ((Vector3)(ref val)).magnitude;
-			if (magnitude > 0.001f)
+			if (((Vector3)(ref val)).magnitude > 0.001f)
 			{
 				ServerRotation = Quaternion.LookRotation(((Vector3)(ref val)).normalized);
 			}
@@ -230,8 +235,6 @@ public class ScarecrowNPC : NPCPlayer, IAISenses, IAIAttack, IThinker
 
 	public BaseEntity GetBestTarget()
 	{
-		Profiler.BeginSample("ScarecrowNPC.GetBestTarget");
-		Profiler.EndSample();
 		return null;
 	}
 
@@ -246,10 +249,10 @@ public class ScarecrowNPC : NPCPlayer, IAISenses, IAIAttack, IThinker
 
 	public override BaseCorpse CreateCorpse()
 	{
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
 		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
 		TimeWarning val = TimeWarning.New("Create corpse", 0);
 		try
 		{
@@ -266,22 +269,36 @@ public class ScarecrowNPC : NPCPlayer, IAISenses, IAIAttack, IThinker
 				nPCPlayerCorpse.playerSteamID = userID;
 				nPCPlayerCorpse.Spawn();
 				ItemContainer[] containers = nPCPlayerCorpse.containers;
-				foreach (ItemContainer itemContainer in containers)
+				for (int i = 0; i < containers.Length; i++)
 				{
-					itemContainer.Clear();
+					containers[i].Clear();
 				}
 				if (LootSpawnSlots.Length != 0)
 				{
 					LootContainer.LootSpawnSlot[] lootSpawnSlots = LootSpawnSlots;
-					for (int j = 0; j < lootSpawnSlots.Length; j++)
+					for (int i = 0; i < lootSpawnSlots.Length; i++)
 					{
-						LootContainer.LootSpawnSlot lootSpawnSlot = lootSpawnSlots[j];
-						for (int k = 0; k < lootSpawnSlot.numberToSpawn; k++)
+						LootContainer.LootSpawnSlot lootSpawnSlot = lootSpawnSlots[i];
+						for (int j = 0; j < lootSpawnSlot.numberToSpawn; j++)
 						{
-							float num = Random.Range(0f, 1f);
-							if (num <= lootSpawnSlot.probability)
+							if (Random.Range(0f, 1f) <= lootSpawnSlot.probability)
 							{
 								lootSpawnSlot.definition.SpawnIntoContainer(nPCPlayerCorpse.containers[0]);
+							}
+						}
+					}
+				}
+				if (wasSoulReleased)
+				{
+					LootContainer.LootSpawnSlot[] lootSpawnSlots = bonusLootSlots;
+					for (int i = 0; i < lootSpawnSlots.Length; i++)
+					{
+						LootContainer.LootSpawnSlot lootSpawnSlot2 = lootSpawnSlots[i];
+						for (int k = 0; k < lootSpawnSlot2.numberToSpawn; k++)
+						{
+							if (Random.Range(0f, 1f) <= lootSpawnSlot2.probability)
+							{
+								lootSpawnSlot2.definition.SpawnIntoContainer(nPCPlayerCorpse.containers[0]);
 							}
 						}
 					}
@@ -297,7 +314,27 @@ public class ScarecrowNPC : NPCPlayer, IAISenses, IAIAttack, IThinker
 
 	public override void Hurt(HitInfo info)
 	{
-		if (!info.isHeadshot)
+		//IL_00c7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
+		bool flag = info.damageTypes.Has(DamageType.Slash) && info.damageTypes.Has(DamageType.Stab) && info.damageTypes.Has(DamageType.Generic) && info.damageTypes.Get(DamageType.Generic) <= 0.1f;
+		if (flag)
+		{
+			if ((Object)(object)info.ProjectilePrefab != (Object)null && !((Object)info.ProjectilePrefab).name.Contains("vamp"))
+			{
+				flag = false;
+			}
+			if ((Object)(object)info.WeaponPrefab != (Object)null && !((Object)info.WeaponPrefab).name.Contains("vamp"))
+			{
+				flag = false;
+			}
+		}
+		if (flag)
+		{
+			wasSoulReleased = true;
+			info.damageTypes.ScaleAll(1000f);
+			Effect.server.Run(soulReleaseEffect.resourcePath, this, StringPool.Get("spine3"), Vector3.zero, Vector3.forward);
+		}
+		else if (!info.isHeadshot)
 		{
 			if (((Object)(object)info.InitiatorPlayer != (Object)null && !info.InitiatorPlayer.IsNpc) || ((Object)(object)info.InitiatorPlayer == (Object)null && (Object)(object)info.Initiator != (Object)null && info.Initiator.IsNpc))
 			{

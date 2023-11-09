@@ -42,6 +42,8 @@ public class PieMenu : UIBehaviour
 
 		public bool showOverlay;
 
+		public float time;
+
 		[NonSerialized]
 		public Action<BasePlayer> action;
 
@@ -98,7 +100,7 @@ public class PieMenu : UIBehaviour
 	public float iconSize = 0.8f;
 
 	[Range(0f, 360f)]
-	public float startRadius = 0f;
+	public float startRadius;
 
 	[Range(0f, 360f)]
 	public float radiusSize = 360f;
@@ -129,7 +131,7 @@ public class PieMenu : UIBehaviour
 
 	public MenuOption defaultOption;
 
-	private bool isClosing = false;
+	private bool isClosing;
 
 	private CanvasGroup canvasGroup;
 
@@ -140,6 +142,8 @@ public class PieMenu : UIBehaviour
 	private static Color pieSelectionColor = new Color(0.804f, 0.255f, 0.169f, 1f);
 
 	private static Color middleImageColor = new Color(0.804f, 0.255f, 0.169f, 0.784f);
+
+	private MenuOption longHoldOption;
 
 	private static AnimationCurve easePunch = new AnimationCurve((Keyframe[])(object)new Keyframe[9]
 	{
@@ -183,9 +187,10 @@ public class PieMenu : UIBehaviour
 
 	public void FinishAndOpen()
 	{
-		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
+		longHoldOption = null;
 		IsOpen = true;
 		isClosing = false;
 		SetDefaultOption();
@@ -237,10 +242,14 @@ public class PieMenu : UIBehaviour
 
 	public void Close(bool success = false)
 	{
-		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
 		if (!isClosing)
 		{
+			if (!success)
+			{
+				longHoldOption = null;
+			}
 			isClosing = true;
 			NeedsCursor component = ((Component)this).GetComponent<NeedsCursor>();
 			if ((Object)(object)component != (Object)null)
@@ -331,35 +340,33 @@ public class PieMenu : UIBehaviour
 
 	public void UpdateInteraction(bool allowLerp = true)
 	{
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
 		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-		//IL_06fd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_067d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_06c0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0321: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0332: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0732: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0751: Unknown result type (might be due to invalid IL or missing references)
-		//IL_028e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0293: Unknown result type (might be due to invalid IL or missing references)
-		//IL_029b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02ba: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02ed: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02fe: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03cb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03d1: Invalid comparison between Unknown and I4
-		//IL_03f7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_043c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0442: Invalid comparison between Unknown and I4
-		//IL_0468: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0507: Unknown result type (might be due to invalid IL or missing references)
-		//IL_055e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_056f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0579: Unknown result type (might be due to invalid IL or missing references)
+		//IL_061b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_05ac: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0647: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0664: Unknown result type (might be due to invalid IL or missing references)
+		//IL_05e4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02d5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02e5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0253: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0258: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0260: Unknown result type (might be due to invalid IL or missing references)
+		//IL_027e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02a7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02b7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0373: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0393: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03d2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03f2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0478: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04b7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04c7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04d1: Unknown result type (might be due to invalid IL or missing references)
 		if (isClosing)
 		{
 			return;
@@ -414,7 +421,7 @@ public class PieMenu : UIBehaviour
 				((TMP_Text)middleDesc).text = options[i].desc;
 				((TMP_Text)middleRequired).text = "";
 				Button buttonObjectWithBind = Input.GetButtonObjectWithBind("+prevskin");
-				if (options[i].actionPrev != null && buttonObjectWithBind != null && (int)buttonObjectWithBind.Code > 0)
+				if (options[i].actionPrev != null && buttonObjectWithBind != null && (int)buttonObjectWithBind.Code != 0)
 				{
 					arrowLeft.SetActive(true);
 					((TMP_Text)arrowLeft.GetComponentInChildren<TextMeshProUGUI>()).text = KeyCodeEx.ToShortname(buttonObjectWithBind.Code, true);
@@ -424,7 +431,7 @@ public class PieMenu : UIBehaviour
 					arrowLeft.SetActive(false);
 				}
 				Button buttonObjectWithBind2 = Input.GetButtonObjectWithBind("+nextskin");
-				if (options[i].actionNext != null && buttonObjectWithBind2 != null && (int)buttonObjectWithBind2.Code > 0)
+				if (options[i].actionNext != null && buttonObjectWithBind2 != null && (int)buttonObjectWithBind2.Code != 0)
 				{
 					arrowRight.SetActive(true);
 					((TMP_Text)arrowRight.GetComponentInChildren<TextMeshProUGUI>()).text = KeyCodeEx.ToShortname(buttonObjectWithBind2.Code, true);
@@ -493,6 +500,15 @@ public class PieMenu : UIBehaviour
 	public bool DoSelect()
 	{
 		return true;
+	}
+
+	public void RunLongHoldAction(BasePlayer player)
+	{
+		if (longHoldOption != null)
+		{
+			longHoldOption.action(player);
+			longHoldOption = null;
+		}
 	}
 
 	public void DoPrev()

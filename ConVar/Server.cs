@@ -66,6 +66,9 @@ public class Server : ConsoleSystem
 	public static string anticheatkey = "OWUDFZmi9VNL/7VhGVSSmCWALKTltKw8ISepa0VXs60";
 
 	[ServerVar]
+	public static bool anticheattoken = true;
+
+	[ServerVar]
 	public static int tickrate = 10;
 
 	[ServerVar]
@@ -365,8 +368,13 @@ public class Server : ConsoleSystem
 	[ServerVar(Help = "How long a ping should last", Saved = true, ShowInAdminUI = true)]
 	public static float pingDuration = 10f;
 
-	[ServerVar(Help = "Whether emoji ownership is checked server side. Could be performance draining in high chat volumes")]
-	public static bool emojiOwnershipCheck = true;
+	[ServerVar(Help = "Allows backpack equipping while not grounded", Saved = true, ShowInAdminUI = true)]
+	public static bool canEquipBackpacksInAir = false;
+
+	[ReplicatedVar(Help = "How long it takes to pick up a used parachute in seconds", Saved = true, ShowInAdminUI = true)]
+	public static float parachuteRepackTime = 8f;
+
+	public static bool emojiOwnershipCheck = false;
 
 	[ServerVar(Saved = true)]
 	public static bool showHolsteredItems = true;
@@ -387,6 +395,12 @@ public class Server : ConsoleSystem
 	public static int maxpacketsize_command = 100000;
 
 	[ServerVar]
+	public static int maxpacketsize_globaltrees = 100;
+
+	[ServerVar]
+	public static int maxpacketsize_globalentities = 1000;
+
+	[ServerVar]
 	public static int maxpacketspersecond_tick = 300;
 
 	[ServerVar]
@@ -403,13 +417,13 @@ public class Server : ConsoleSystem
 	{
 		get
 		{
-			//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0007: Expected I4, but got Unknown
+			//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0006: Expected I4, but got Unknown
 			return (int)EOS.LogLevel;
 		}
 		set
 		{
-			//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0001: Unknown result type (might be due to invalid IL or missing references)
 			EOS.LogLevel = (LogLevel)value;
 		}
 	}
@@ -653,36 +667,34 @@ public class Server : ConsoleSystem
 	[ServerVar(Help = "Show holstered items on player bodies")]
 	public static void setshowholstereditems(Arg arg)
 	{
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
 		showHolsteredItems = arg.GetBool(0, showHolsteredItems);
 		Enumerator<BasePlayer> enumerator = BasePlayer.activePlayerList.GetEnumerator();
 		try
 		{
 			while (enumerator.MoveNext())
 			{
-				BasePlayer current = enumerator.Current;
-				current.inventory.UpdatedVisibleHolsteredItems();
+				enumerator.Current.inventory.UpdatedVisibleHolsteredItems();
 			}
 		}
 		finally
 		{
 			((IDisposable)enumerator).Dispose();
 		}
-		Enumerator<BasePlayer> enumerator2 = BasePlayer.sleepingPlayerList.GetEnumerator();
+		enumerator = BasePlayer.sleepingPlayerList.GetEnumerator();
 		try
 		{
-			while (enumerator2.MoveNext())
+			while (enumerator.MoveNext())
 			{
-				BasePlayer current2 = enumerator2.Current;
-				current2.inventory.UpdatedVisibleHolsteredItems();
+				enumerator.Current.inventory.UpdatedVisibleHolsteredItems();
 			}
 		}
 		finally
 		{
-			((IDisposable)enumerator2).Dispose();
+			((IDisposable)enumerator).Dispose();
 		}
 	}
 
@@ -707,11 +719,11 @@ public class Server : ConsoleSystem
 	[ServerVar]
 	public static string packetlog(Arg arg)
 	{
-		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0082: Expected O, but got Unknown
-		//IL_00e8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ed: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006f: Expected O, but got Unknown
+		//IL_00c9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ce: Unknown result type (might be due to invalid IL or missing references)
 		if (!packetlog_enabled)
 		{
 			return "Packet log is not enabled.";
@@ -726,7 +738,7 @@ public class Server : ConsoleSystem
 		val.AddColumn("calls");
 		foreach (Tuple<Type, ulong> item3 in list.OrderByDescending((Tuple<Type, ulong> entry) => entry.Item2))
 		{
-			if (item3.Item2 == 0)
+			if (item3.Item2 == 0L)
 			{
 				break;
 			}
@@ -735,14 +747,18 @@ public class Server : ConsoleSystem
 			string text2 = item3.Item2.ToString();
 			val.AddRow(new string[2] { text, text2 });
 		}
-		return arg.HasArg("--json") ? val.ToJson() : ((object)val).ToString();
+		if (!arg.HasArg("--json"))
+		{
+			return ((object)val).ToString();
+		}
+		return val.ToJson();
 	}
 
 	[ServerVar]
 	public static string rpclog(Arg arg)
 	{
-		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0082: Expected O, but got Unknown
+		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006f: Expected O, but got Unknown
 		if (!rpclog_enabled)
 		{
 			return "RPC log is not enabled.";
@@ -758,7 +774,7 @@ public class Server : ConsoleSystem
 		val.AddColumn("calls");
 		foreach (Tuple<uint, ulong> item2 in list.OrderByDescending((Tuple<uint, ulong> entry) => entry.Item2))
 		{
-			if (item2.Item2 == 0)
+			if (item2.Item2 == 0L)
 			{
 				break;
 			}
@@ -828,8 +844,7 @@ public class Server : ConsoleSystem
 	public static void writecfg(Arg arg)
 	{
 		string contents = ConsoleSystem.SaveToConfigString(true);
-		string serverFolder = GetServerFolder("cfg");
-		File.WriteAllText(serverFolder + "/serverauto.cfg", contents);
+		File.WriteAllText(GetServerFolder("cfg") + "/serverauto.cfg", contents);
 		ServerUsers.Save();
 		arg.ReplyWith("Config Saved");
 	}
@@ -855,12 +870,12 @@ public class Server : ConsoleSystem
 	[ServerVar]
 	public static string readcfg(Arg arg)
 	{
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
 		string serverFolder = GetServerFolder("cfg");
 		Option server;
 		if (File.Exists(serverFolder + "/serverauto.cfg"))
@@ -896,7 +911,7 @@ public class Server : ConsoleSystem
 		{
 			string text = arg.GetUInt64(0, 0uL).ToString();
 			string @string = arg.GetString(1, "");
-			Debug.LogWarning((object)string.Concat(basePlayer, " reported ", text, ": ", StringEx.ToPrintable(@string, 140)));
+			Debug.LogWarning((object)(((object)basePlayer)?.ToString() + " reported " + text + ": " + StringEx.ToPrintable(@string, 140)));
 			EACServer.SendPlayerBehaviorReport(basePlayer, (PlayerReportsCategory)1, text, @string);
 		}
 	}
@@ -904,8 +919,8 @@ public class Server : ConsoleSystem
 	[ServerAllVar(Help = "Get the player combat log")]
 	public static string combatlog(Arg arg)
 	{
-		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer basePlayer = arg.Player();
 		if (arg.HasArgs(1) && arg.IsAdmin)
 		{
@@ -915,13 +930,18 @@ public class Server : ConsoleSystem
 		{
 			return "invalid player";
 		}
-		return basePlayer.stats.combat.Get(combatlogsize, default(NetworkableId), arg.HasArg("--json"), arg.IsAdmin, arg.Connection?.userid ?? 0);
+		CombatLog combat = basePlayer.stats.combat;
+		int count = combatlogsize;
+		bool json = arg.HasArg("--json");
+		bool isAdmin = arg.IsAdmin;
+		ulong requestingUser = arg.Connection?.userid ?? 0;
+		return combat.Get(count, default(NetworkableId), json, isAdmin, requestingUser);
 	}
 
 	[ServerAllVar(Help = "Get the player combat log, only showing outgoing damage")]
 	public static string combatlog_outgoing(Arg arg)
 	{
-		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer basePlayer = arg.Player();
 		if (arg.HasArgs(1) && arg.IsAdmin)
 		{
@@ -937,76 +957,61 @@ public class Server : ConsoleSystem
 	[ServerVar(Help = "Print the current player position.")]
 	public static string printpos(Arg arg)
 	{
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
 		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer basePlayer = arg.Player();
 		if (arg.HasArgs(1))
 		{
 			basePlayer = arg.GetPlayerOrSleeper(0);
 		}
-		object result;
 		if (!((Object)(object)basePlayer == (Object)null))
 		{
 			Vector3 position = ((Component)basePlayer).transform.position;
-			result = ((object)(Vector3)(ref position)).ToString();
+			return ((object)(Vector3)(ref position)).ToString();
 		}
-		else
-		{
-			result = "invalid player";
-		}
-		return (string)result;
+		return "invalid player";
 	}
 
 	[ServerVar(Help = "Print the current player rotation.")]
 	public static string printrot(Arg arg)
 	{
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
 		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer basePlayer = arg.Player();
 		if (arg.HasArgs(1))
 		{
 			basePlayer = arg.GetPlayerOrSleeper(0);
 		}
-		object result;
 		if (!((Object)(object)basePlayer == (Object)null))
 		{
 			Quaternion rotation = ((Component)basePlayer).transform.rotation;
 			Vector3 eulerAngles = ((Quaternion)(ref rotation)).eulerAngles;
-			result = ((object)(Vector3)(ref eulerAngles)).ToString();
+			return ((object)(Vector3)(ref eulerAngles)).ToString();
 		}
-		else
-		{
-			result = "invalid player";
-		}
-		return (string)result;
+		return "invalid player";
 	}
 
 	[ServerVar(Help = "Print the current player eyes.")]
 	public static string printeyes(Arg arg)
 	{
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
 		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer basePlayer = arg.Player();
 		if (arg.HasArgs(1))
 		{
 			basePlayer = arg.GetPlayerOrSleeper(0);
 		}
-		object result;
 		if (!((Object)(object)basePlayer == (Object)null))
 		{
 			Quaternion rotation = basePlayer.eyes.rotation;
 			Vector3 eulerAngles = ((Quaternion)(ref rotation)).eulerAngles;
-			result = ((object)(Vector3)(ref eulerAngles)).ToString();
+			return ((object)(Vector3)(ref eulerAngles)).ToString();
 		}
-		else
-		{
-			result = "invalid player";
-		}
-		return (string)result;
+		return "invalid player";
 	}
 
 	[ServerVar(ServerAdmin = true, Help = "This sends a snapshot of all the entities in the client's pvs. This is mostly redundant, but we request this when the client starts recording a demo.. so they get all the information.")]
@@ -1015,7 +1020,7 @@ public class Server : ConsoleSystem
 		BasePlayer basePlayer = arg.Player();
 		if (!((Object)(object)basePlayer == (Object)null))
 		{
-			Debug.Log((object)("Sending full snapshot to " + basePlayer));
+			Debug.Log((object)("Sending full snapshot to " + (object)basePlayer));
 			basePlayer.SendNetworkUpdateImmediate();
 			basePlayer.SendGlobalSnapshot();
 			basePlayer.SendFullSnapshot();
@@ -1028,15 +1033,14 @@ public class Server : ConsoleSystem
 	[ServerVar(Help = "Send network update for all players")]
 	public static void sendnetworkupdate(Arg arg)
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
 		Enumerator<BasePlayer> enumerator = BasePlayer.activePlayerList.GetEnumerator();
 		try
 		{
 			while (enumerator.MoveNext())
 			{
-				BasePlayer current = enumerator.Current;
-				current.SendNetworkUpdate();
+				enumerator.Current.SendNetworkUpdate();
 			}
 		}
 		finally
@@ -1048,14 +1052,14 @@ public class Server : ConsoleSystem
 	[ServerVar(Help = "Prints the position of all players on the server")]
 	public static void playerlistpos(Arg arg)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0007: Expected O, but got Unknown
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0092: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Expected O, but got Unknown
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0089: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
 		TextTable val = new TextTable();
 		val.AddColumns(new string[4] { "SteamID", "DisplayName", "POS", "ROT" });
 		Enumerator<BasePlayer> enumerator = BasePlayer.activePlayerList.GetEnumerator();
@@ -1088,10 +1092,10 @@ public class Server : ConsoleSystem
 	[ServerVar(Help = "Prints all the vending machines on the server")]
 	public static void listvendingmachines(Arg arg)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0007: Expected O, but got Unknown
-		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Expected O, but got Unknown
+		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
 		TextTable val = new TextTable();
 		val.AddColumns(new string[3] { "EntityId", "Position", "Name" });
 		foreach (VendingMachine item in BaseNetworkable.serverEntities.OfType<VendingMachine>())
@@ -1113,10 +1117,10 @@ public class Server : ConsoleSystem
 	[ServerVar(Help = "Prints all the Tool Cupboards on the server")]
 	public static void listtoolcupboards(Arg arg)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0007: Expected O, but got Unknown
-		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Expected O, but got Unknown
+		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
 		TextTable val = new TextTable();
 		val.AddColumns(new string[3] { "EntityId", "Position", "Authed" });
 		foreach (BuildingPrivlidge item in BaseNetworkable.serverEntities.OfType<BuildingPrivlidge>())
@@ -1138,8 +1142,8 @@ public class Server : ConsoleSystem
 	[ServerVar]
 	public static void BroadcastPlayVideo(Arg arg)
 	{
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
 		string @string = arg.GetString(0, "");
 		if (string.IsNullOrWhiteSpace(@string))
 		{
@@ -1151,8 +1155,7 @@ public class Server : ConsoleSystem
 		{
 			while (enumerator.MoveNext())
 			{
-				BasePlayer current = enumerator.Current;
-				current.Command("client.playvideo", @string);
+				enumerator.Current.Command("client.playvideo", @string);
 			}
 		}
 		finally

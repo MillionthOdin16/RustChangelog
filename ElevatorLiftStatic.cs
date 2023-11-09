@@ -6,7 +6,7 @@ public class ElevatorLiftStatic : ElevatorLift
 
 	public Transform ElevatorDoorLocation;
 
-	public bool BlockPerFloorMovement = false;
+	public bool BlockPerFloorMovement;
 
 	private const Flags CanGoUp = Flags.Reserved3;
 
@@ -14,8 +14,8 @@ public class ElevatorLiftStatic : ElevatorLift
 
 	public override void ServerInit()
 	{
-		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
 		base.ServerInit();
 		if (!ElevatorDoorRef.isValid || !((Object)(object)ElevatorDoorLocation != (Object)null))
 		{

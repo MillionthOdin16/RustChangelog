@@ -5,8 +5,7 @@ public class ItemModPager : ItemModRFListener
 	public override void ServerCommand(Item item, string command, BasePlayer player)
 	{
 		base.ServerCommand(item, command, player);
-		BaseEntity associatedEntity = ItemModAssociatedEntity<BaseEntity>.GetAssociatedEntity(item);
-		PagerEntity component = ((Component)associatedEntity).GetComponent<PagerEntity>();
+		PagerEntity component = ((Component)ItemModAssociatedEntity<BaseEntity>.GetAssociatedEntity(item)).GetComponent<PagerEntity>();
 		if (Object.op_Implicit((Object)(object)component))
 		{
 			switch (command)

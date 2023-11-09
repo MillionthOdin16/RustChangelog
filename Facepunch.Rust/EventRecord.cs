@@ -151,7 +151,7 @@ public class EventRecord : IPooled
 
 	public EventRecord AddField(string key, Vector3 value)
 	{
-		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
 		Data.Add(new EventRecordField(key)
 		{
 			Vector = value
@@ -161,10 +161,10 @@ public class EventRecord : IPooled
 
 	public EventRecord AddField(string key, BaseEntity entity)
 	{
-		//IL_0258: Unknown result type (might be due to invalid IL or missing references)
-		//IL_028a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_028f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0293: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0204: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0235: Unknown result type (might be due to invalid IL or missing references)
+		//IL_023a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_023e: Unknown result type (might be due to invalid IL or missing references)
 		if (entity?.net == null)
 		{
 			return this;
@@ -191,7 +191,7 @@ public class EventRecord : IPooled
 		if (entity is BaseProjectile baseProjectile)
 		{
 			Item item = baseProjectile.GetItem();
-			if (item != null && (item.contents?.itemList?.Count ?? 0) > 0)
+			if (item != null && (item.contents?.itemList?.Count).GetValueOrDefault() > 0)
 			{
 				List<string> list = Pool.GetList<string>();
 				foreach (Item item3 in item.contents.itemList)

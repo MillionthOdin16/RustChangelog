@@ -10,13 +10,13 @@ internal class ExplosionsSpriteSheetAnimation : MonoBehaviour
 
 	public float AnimationFPS = 30f;
 
-	public bool IsInterpolateFrames = false;
+	public bool IsInterpolateFrames;
 
-	public int StartFrameOffset = 0;
+	public int StartFrameOffset;
 
 	public bool IsLoop = true;
 
-	public float StartDelay = 0f;
+	public float StartDelay;
 
 	public AnimationCurve FrameOverTime = AnimationCurve.Linear(0f, 1f, 1f, 1f);
 
@@ -55,11 +55,11 @@ internal class ExplosionsSpriteSheetAnimation : MonoBehaviour
 
 	private void InitDefaultVariables()
 	{
-		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0108: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010c: Unknown result type (might be due to invalid IL or missing references)
 		currentRenderer = ((Component)this).GetComponent<Renderer>();
 		if ((Object)(object)currentRenderer == (Object)null)
 		{
@@ -135,9 +135,9 @@ internal class ExplosionsSpriteSheetAnimation : MonoBehaviour
 			{
 				break;
 			}
-			float frameTime = (Time.time - animationStartTime) / animationLifeTime;
-			float currentSpeedFps = FrameOverTime.Evaluate(Mathf.Clamp01(frameTime));
-			yield return (object)new WaitForSeconds(1f / (AnimationFPS * currentSpeedFps));
+			float num = (Time.time - animationStartTime) / animationLifeTime;
+			float num2 = FrameOverTime.Evaluate(Mathf.Clamp01(num));
+			yield return (object)new WaitForSeconds(1f / (AnimationFPS * num2));
 		}
 		isCorutineStarted = false;
 		currentRenderer.enabled = false;
@@ -145,7 +145,7 @@ internal class ExplosionsSpriteSheetAnimation : MonoBehaviour
 
 	private void UpdateFrame()
 	{
-		//IL_00c2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
 		allCount++;
 		index++;
 		if (index >= count)
@@ -172,7 +172,7 @@ internal class ExplosionsSpriteSheetAnimation : MonoBehaviour
 
 	private void Update()
 	{
-		//IL_00ac: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
 		if (IsInterpolateFrames)
 		{
 			currentInterpolatedTime += Time.deltaTime;

@@ -23,7 +23,7 @@ public class EffectRecycle : BaseMonoBehaviour, IClientComponent, IRagdollInhert
 	[ReadOnly]
 	public float recycleTime;
 
-	public PlayMode playMode = PlayMode.Once;
+	public PlayMode playMode;
 
-	public ParentDestroyBehaviour onParentDestroyed = ParentDestroyBehaviour.Detach;
+	public ParentDestroyBehaviour onParentDestroyed;
 }

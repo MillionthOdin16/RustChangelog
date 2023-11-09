@@ -3,12 +3,12 @@ using UnityEngine;
 
 public class TerrainDistanceMap : TerrainMap<byte>
 {
-	public Texture2D DistanceTexture = null;
+	public Texture2D DistanceTexture;
 
 	public override void Setup()
 	{
-		//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0092: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0097: Unknown result type (might be due to invalid IL or missing references)
 		res = terrain.terrainData.heightmapResolution;
 		src = (dst = new byte[4 * res * res]);
 		if (!((Object)(object)DistanceTexture != (Object)null))
@@ -39,17 +39,17 @@ public class TerrainDistanceMap : TerrainMap<byte>
 
 	public void GenerateTextures()
 	{
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0028: Expected O, but got Unknown
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Expected O, but got Unknown
 		DistanceTexture = new Texture2D(res, res, (TextureFormat)4, true, true);
 		((Object)DistanceTexture).name = "DistanceTexture";
 		((Texture)DistanceTexture).wrapMode = (TextureWrapMode)1;
 		Color32[] cols = (Color32[])(object)new Color32[res * res];
 		Parallel.For(0, res, (Action<int>)delegate(int z)
 		{
-			//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0028: Unknown result type (might be due to invalid IL or missing references)
-			//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+			//IL_002b: Unknown result type (might be due to invalid IL or missing references)
 			for (int i = 0; i < res; i++)
 			{
 				cols[z * res + i] = BitUtility.EncodeVector2i(GetDistance(i, z));
@@ -65,11 +65,9 @@ public class TerrainDistanceMap : TerrainMap<byte>
 
 	public Vector2i GetDistance(Vector3 worldPos)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
 		float normX = TerrainMeta.NormalizeX(worldPos.x);
 		float normZ = TerrainMeta.NormalizeZ(worldPos.z);
 		return GetDistance(normX, normZ);
@@ -77,9 +75,7 @@ public class TerrainDistanceMap : TerrainMap<byte>
 
 	public Vector2i GetDistance(float normX, float normZ)
 	{
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
 		int num = res - 1;
 		int x = Mathf.Clamp(Mathf.RoundToInt(normX * (float)num), 0, num);
 		int z = Mathf.Clamp(Mathf.RoundToInt(normZ * (float)num), 0, num);
@@ -88,11 +84,8 @@ public class TerrainDistanceMap : TerrainMap<byte>
 
 	public Vector2i GetDistance(int x, int z)
 	{
-		//IL_00ad: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
 		byte[] array = src;
 		_ = res;
 		byte b = array[(0 + z) * res + x];
@@ -108,10 +101,10 @@ public class TerrainDistanceMap : TerrainMap<byte>
 
 	public void SetDistance(int x, int z, Vector2i v)
 	{
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
 		byte[] array = dst;
 		_ = res;
 		array[(0 + z) * res + x] = (byte)Mathf.Clamp(v.x, 0, 255);

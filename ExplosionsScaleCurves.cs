@@ -37,7 +37,7 @@ public class ExplosionsScaleCurves : MonoBehaviour
 
 	private void Update()
 	{
-		//IL_00e9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cd: Unknown result type (might be due to invalid IL or missing references)
 		float num = Time.time - startTime;
 		if (num <= GraphTimeMultiplier.x)
 		{

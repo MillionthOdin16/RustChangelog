@@ -5,13 +5,13 @@ using UnityEngine.UI;
 
 public class SleepingBagClusterMapMarker : MonoBehaviour
 {
-	public TextMeshProUGUI CountText = null;
+	public TextMeshProUGUI CountText;
 
 	public List<SleepingBagButton> SleepingBagButtons;
 
-	public GameObject OpenRoot = null;
+	public GameObject OpenRoot;
 
-	public Tooltip SummaryTooltip = null;
+	public Tooltip SummaryTooltip;
 
-	public Image RimImage = null;
+	public Image RimImage;
 }

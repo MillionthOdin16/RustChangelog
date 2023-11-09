@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using Facepunch;
 using Rust;
 using Rust.Registry;
-using UnityEngine.Profiling;
 
 namespace UnityEngine;
 
@@ -20,28 +19,28 @@ public static class GameObjectEx
 
 	public static BaseEntity ToBaseEntity(this Transform transform)
 	{
-		Profiler.BeginSample("GetEntityFromRegistry");
 		IEntity val = GetEntityFromRegistry(transform);
-		Profiler.EndSample();
 		if (val == null && !((Component)transform).gameObject.activeInHierarchy)
 		{
-			Profiler.BeginSample("GetEntityFromComponent");
 			val = GetEntityFromComponent(transform);
-			Profiler.EndSample();
 		}
 		return val as BaseEntity;
 	}
 
 	public static bool IsOnLayer(this GameObject go, Layer rustLayer)
 	{
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Expected I4, but got Unknown
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Expected I4, but got Unknown
 		return go.IsOnLayer((int)rustLayer);
 	}
 
 	public static bool IsOnLayer(this GameObject go, int layer)
 	{
-		return (Object)(object)go != (Object)null && go.layer == layer;
+		if ((Object)(object)go != (Object)null)
+		{
+			return go.layer == layer;
+		}
+		return false;
 	}
 
 	private static IEntity GetEntityFromRegistry(Transform transform)
@@ -53,7 +52,11 @@ public static class GameObjectEx
 			val = val.parent;
 			val2 = Entity.Get(val);
 		}
-		return (val2 == null || val2.IsDestroyed) ? null : val2;
+		if (val2 != null && !val2.IsDestroyed)
+		{
+			return val2;
+		}
+		return null;
 	}
 
 	private static IEntity GetEntityFromComponent(Transform transform)
@@ -65,7 +68,11 @@ public static class GameObjectEx
 			val = val.parent;
 			component = ((Component)val).GetComponent<IEntity>();
 		}
-		return (component == null || component.IsDestroyed) ? null : component;
+		if (component != null && !component.IsDestroyed)
+		{
+			return component;
+		}
+		return null;
 	}
 
 	public static void SetHierarchyGroup(this GameObject obj, string strRoot, bool groupActive = true, bool persistant = false)

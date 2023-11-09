@@ -9,9 +9,9 @@ public class WaterBaseNavGenTest : MonoBehaviour
 	[ContextMenu("Nav Gen")]
 	public void NavGen()
 	{
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
 		DungeonNavmesh dungeonNavmesh = ((Component)this).gameObject.AddComponent<DungeonNavmesh>();
 		dungeonNavmesh.NavmeshResolutionModifier = 0.3f;
 		dungeonNavmesh.NavMeshCollectGeometry = (NavMeshCollectGeometry)1;
