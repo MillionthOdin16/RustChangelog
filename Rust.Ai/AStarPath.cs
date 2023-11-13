@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 namespace Rust.AI;
 
@@ -7,18 +8,20 @@ public static class AStarPath
 {
 	private static float Heuristic(IAIPathNode from, IAIPathNode to)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
 		return Vector3.Distance(from.Position, to.Position);
 	}
 
 	public static bool FindPath(IAIPathNode start, IAIPathNode goal, out Stack<IAIPathNode> path, out float pathCost)
 	{
+		Profiler.BeginSample("AStarPath.FindPath");
 		path = null;
 		pathCost = -1f;
 		bool result = false;
 		if (start == goal)
 		{
+			Profiler.EndSample();
 			return false;
 		}
 		AStarNodeList aStarNodeList = new AStarNodeList();
@@ -67,6 +70,7 @@ public static class AStarPath
 				}
 			}
 		}
+		Profiler.EndSample();
 		return result;
 	}
 }

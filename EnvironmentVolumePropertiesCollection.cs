@@ -21,7 +21,7 @@ public class EnvironmentVolumePropertiesCollection : ScriptableObject
 		public float DirectionalLightMultiplier = 0.25f;
 
 		[Range(0f, 1f)]
-		public float AmbientLightMultiplier;
+		public float AmbientLightMultiplier = 0f;
 
 		[Range(0f, 1f)]
 		public float ReflectionMultiplier = 1f;

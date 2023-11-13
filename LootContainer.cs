@@ -41,9 +41,9 @@ public class LootContainer : StorageContainer
 
 	public float xpDestroyedScale = 1f;
 
-	public bool BlockPlayerItemInput;
+	public bool BlockPlayerItemInput = false;
 
-	public int scrapAmount;
+	public int scrapAmount = 0;
 
 	public string deathStat = "";
 
@@ -53,19 +53,9 @@ public class LootContainer : StorageContainer
 
 	public bool FirstLooted;
 
-	private static ItemDefinition scrapDef;
+	private static ItemDefinition scrapDef = null;
 
-	public bool shouldRefreshContents
-	{
-		get
-		{
-			if (minSecondsBetweenRefresh > 0f)
-			{
-				return maxSecondsBetweenRefresh > 0f;
-			}
-			return false;
-		}
-	}
+	public bool shouldRefreshContents => minSecondsBetweenRefresh > 0f && maxSecondsBetweenRefresh > 0f;
 
 	public override void ResetState()
 	{
@@ -114,9 +104,11 @@ public class LootContainer : StorageContainer
 
 	public int ScoreForRarity(Rarity rarity)
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0018: Expected I4, but got Unknown
+		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Expected I4, but got Unknown
 		return (rarity - 1) switch
 		{
 			0 => 1, 
@@ -137,7 +129,8 @@ public class LootContainer : StorageContainer
 				LootSpawnSlot lootSpawnSlot = lootSpawnSlots[i];
 				for (int j = 0; j < lootSpawnSlot.numberToSpawn; j++)
 				{
-					if (Random.Range(0f, 1f) <= lootSpawnSlot.probability)
+					float num = Random.Range(0f, 1f);
+					if (num <= lootSpawnSlot.probability)
 					{
 						lootSpawnSlot.definition.SpawnIntoContainer(base.inventory);
 					}
@@ -166,10 +159,10 @@ public class LootContainer : StorageContainer
 
 	public void GenerateScrap()
 	{
-		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
 		if (scrapAmount <= 0)
 		{
 			return;
@@ -191,12 +184,12 @@ public class LootContainer : StorageContainer
 
 	public override void DropBonusItems(BaseEntity initiator, ItemContainer container)
 	{
-		//IL_00ea: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fe: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0103: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0109: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0110: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0116: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0130: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0144: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0149: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0156: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015c: Unknown result type (might be due to invalid IL or missing references)
 		base.DropBonusItems(initiator, container);
 		if ((Object)(object)initiator == (Object)null || container == null)
 		{
@@ -227,7 +220,8 @@ public class LootContainer : StorageContainer
 			Item item = ItemManager.Create(scrapDef, num3, 0uL);
 			if (item != null)
 			{
-				(item.Drop(GetDropPosition() + new Vector3(0f, 0.5f, 0f), GetInheritedDropVelocity()) as DroppedItem).DropReason = DroppedItem.DropReasonEnum.Loot;
+				DroppedItem droppedItem = item.Drop(GetDropPosition() + new Vector3(0f, 0.5f, 0f), GetInheritedDropVelocity()) as DroppedItem;
+				droppedItem.DropReason = DroppedItem.DropReasonEnum.Loot;
 			}
 		}
 	}

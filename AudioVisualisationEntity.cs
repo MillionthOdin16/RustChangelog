@@ -5,6 +5,7 @@ using Network;
 using ProtoBuf;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.Profiling;
 
 public class AudioVisualisationEntity : IOEntity
 {
@@ -31,11 +32,12 @@ public class AudioVisualisationEntity : IOEntity
 		High
 	}
 
-	private EntityRef<BaseEntity> connectedTo;
+	private EntityRef<BaseEntity> connectedTo = default(EntityRef<BaseEntity>);
 
 	public GameObjectRef SettingsDialog;
 
-	public LightColour currentColour { get; private set; }
+	public LightColour currentColour { get; private set; } = LightColour.Red;
+
 
 	public VolumeSensitivity currentVolumeSensitivity { get; private set; } = VolumeSensitivity.Medium;
 
@@ -43,7 +45,8 @@ public class AudioVisualisationEntity : IOEntity
 	public Speed currentSpeed { get; private set; } = Speed.Medium;
 
 
-	public int currentGradient { get; private set; }
+	public int currentGradient { get; private set; } = 0;
+
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -55,7 +58,7 @@ public class AudioVisualisationEntity : IOEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ServerUpdateSettings "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ServerUpdateSettings "));
 				}
 				TimeWarning val2 = TimeWarning.New("ServerUpdateSettings", 0);
 				try
@@ -78,7 +81,7 @@ public class AudioVisualisationEntity : IOEntity
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -90,7 +93,7 @@ public class AudioVisualisationEntity : IOEntity
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -115,12 +118,14 @@ public class AudioVisualisationEntity : IOEntity
 
 	public override void OnFlagsChanged(Flags old, Flags next)
 	{
-		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
 		base.OnFlagsChanged(old, next);
 		if (base.isServer && old.HasFlag(Flags.Reserved8) != next.HasFlag(Flags.Reserved8) && next.HasFlag(Flags.Reserved8))
 		{
+			Profiler.BeginSample("GetBoombox");
 			int depth = BoomBox.BacktrackLength * 4;
 			IOEntity audioSource = GetAudioSource(this, ref depth);
+			Profiler.EndSample();
 			if ((Object)(object)audioSource != (Object)null)
 			{
 				ClientRPC<NetworkableId>(null, "Client_PlayAudioFrom", audioSource.net.ID);
@@ -139,9 +144,9 @@ public class AudioVisualisationEntity : IOEntity
 		IAudioConnectionSource audioConnectionSource = default(IAudioConnectionSource);
 		AudioVisualisationEntity audioVisualisationEntity = default(AudioVisualisationEntity);
 		IAudioConnectionSource audioConnectionSource2 = default(IAudioConnectionSource);
-		for (int i = 0; i < array.Length; i++)
+		foreach (IOSlot iOSlot in array)
 		{
-			IOEntity iOEntity = array[i].connectedTo.Get(base.isServer);
+			IOEntity iOEntity = iOSlot.connectedTo.Get(base.isServer);
 			if ((Object)(object)iOEntity == (Object)(object)this)
 			{
 				return null;
@@ -169,8 +174,8 @@ public class AudioVisualisationEntity : IOEntity
 
 	public override void Save(SaveInfo info)
 	{
-		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
 		base.Save(info);
 		if (info.msg.connectedSpeaker == null)
 		{
@@ -209,7 +214,7 @@ public class AudioVisualisationEntity : IOEntity
 
 	public override void Load(LoadInfo info)
 	{
-		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009d: Unknown result type (might be due to invalid IL or missing references)
 		base.Load(info);
 		if (info.msg.audioEntity != null)
 		{

@@ -19,11 +19,7 @@ public class VehicleVendor : NPCTalking
 
 	public VehicleSpawner GetVehicleSpawner()
 	{
-		if (!spawnerRef.IsValid(base.isServer))
-		{
-			return null;
-		}
-		return ((Component)spawnerRef.Get(base.isServer)).GetComponent<VehicleSpawner>();
+		return spawnerRef.IsValid(base.isServer) ? ((Component)spawnerRef.Get(base.isServer)).GetComponent<VehicleSpawner>() : null;
 	}
 
 	public override void UpdateFlags()
@@ -49,8 +45,8 @@ public class VehicleVendor : NPCTalking
 
 	public override void Save(SaveInfo info)
 	{
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
 		base.Save(info);
 		info.msg.vehicleVendor = Pool.Get<VehicleVendor>();
 		info.msg.vehicleVendor.spawnerRef = spawnerRef.uid;
@@ -58,8 +54,8 @@ public class VehicleVendor : NPCTalking
 
 	public override void Load(LoadInfo info)
 	{
-		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
 		base.Load(info);
 		if (info.msg.vehicleVendor != null)
 		{

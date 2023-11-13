@@ -20,11 +20,7 @@ public class DummySwitch : IOEntity
 
 	public override int GetPassthroughAmount(int outputSlot = 0)
 	{
-		if (!IsOn())
-		{
-			return 0;
-		}
-		return GetCurrentEnergy();
+		return IsOn() ? GetCurrentEnergy() : 0;
 	}
 
 	public void SetOn(bool wantsOn)

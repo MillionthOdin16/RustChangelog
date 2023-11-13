@@ -40,9 +40,9 @@ public class GhostSheetSystemSpaceUpdater : MonoBehaviour, IClientComponent
 	{
 		for (int i = 0; i < ezSoftBones.Length; i++)
 		{
-			EZSoftBone obj = ezSoftBones[i];
-			obj.simulateSpace = transform;
-			obj.collisionEnabled = collisionEnabled;
+			EZSoftBone val = ezSoftBones[i];
+			val.simulateSpace = transform;
+			val.collisionEnabled = collisionEnabled;
 		}
 	}
 }

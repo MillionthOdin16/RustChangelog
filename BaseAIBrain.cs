@@ -9,87 +9,10 @@ using ProtoBuf;
 using Rust;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.Profiling;
 
-public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign, IAIGroupable, IAIEventListener, IPet
+public class BaseAIBrain : EntityComponent<BaseEntity>, IPet, IAISleepable, IAIDesign, IAIGroupable, IAIEventListener
 {
-	public class BasicAIState
-	{
-		public BaseAIBrain brain;
-
-		protected float _lastStateExitTime;
-
-		public AIState StateType { get; private set; }
-
-		public float TimeInState { get; private set; }
-
-		public bool AgrresiveState { get; protected set; }
-
-		public virtual void StateEnter(BaseAIBrain brain, BaseEntity entity)
-		{
-			TimeInState = 0f;
-		}
-
-		public virtual StateStatus StateThink(float delta, BaseAIBrain brain, BaseEntity entity)
-		{
-			TimeInState += delta;
-			return StateStatus.Running;
-		}
-
-		public virtual void StateLeave(BaseAIBrain brain, BaseEntity entity)
-		{
-			TimeInState = 0f;
-			_lastStateExitTime = Time.time;
-		}
-
-		public virtual bool CanInterrupt()
-		{
-			return true;
-		}
-
-		public virtual bool CanEnter()
-		{
-			return true;
-		}
-
-		public virtual bool CanLeave()
-		{
-			return CanInterrupt();
-		}
-
-		public virtual float GetWeight()
-		{
-			return 0f;
-		}
-
-		public float TimeSinceState()
-		{
-			return Time.time - _lastStateExitTime;
-		}
-
-		public BasicAIState(AIState state)
-		{
-			StateType = state;
-		}
-
-		public void Reset()
-		{
-			TimeInState = 0f;
-		}
-
-		public bool IsInState()
-		{
-			if ((Object)(object)brain != (Object)null && brain.CurrentState != null)
-			{
-				return brain.CurrentState == this;
-			}
-			return false;
-		}
-
-		public virtual void DrawGizmos()
-		{
-		}
-	}
-
 	public class BaseAttackState : BasicAIState
 	{
 		private IAIAttack attack;
@@ -102,12 +25,12 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 
 		public override void StateEnter(BaseAIBrain brain, BaseEntity entity)
 		{
-			//IL_0049: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0054: Unknown result type (might be due to invalid IL or missing references)
+			//IL_004e: Unknown result type (might be due to invalid IL or missing references)
 			//IL_0059: Unknown result type (might be due to invalid IL or missing references)
 			//IL_005e: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0065: Unknown result type (might be due to invalid IL or missing references)
-			//IL_008c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0063: Unknown result type (might be due to invalid IL or missing references)
+			//IL_006a: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0097: Unknown result type (might be due to invalid IL or missing references)
 			base.StateEnter(brain, entity);
 			attack = entity as IAIAttack;
 			BaseEntity baseEntity = brain.Events.Memory.Entity.Get(brain.Events.CurrentInputMemorySlot);
@@ -138,22 +61,25 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 
 		public override StateStatus StateThink(float delta, BaseAIBrain brain, BaseEntity entity)
 		{
-			//IL_0084: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00b8: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00bd: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00c4: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00c9: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00f7: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0102: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0107: Unknown result type (might be due to invalid IL or missing references)
+			//IL_010c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0113: Unknown result type (might be due to invalid IL or missing references)
 			base.StateThink(delta, brain, entity);
+			Profiler.BeginSample("BaseAIBrain.States.BaseAttack.StateThink");
 			BaseEntity baseEntity = brain.Events.Memory.Entity.Get(brain.Events.CurrentInputMemorySlot);
 			if (attack == null)
 			{
+				Profiler.EndSample();
 				return StateStatus.Error;
 			}
 			if ((Object)(object)baseEntity == (Object)null)
 			{
 				brain.Navigator.ClearFacingDirectionOverride();
 				StopAttacking();
+				Profiler.EndSample();
 				return StateStatus.Finished;
 			}
 			if (brain.Senses.ignoreSafeZonePlayers)
@@ -178,14 +104,17 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 			{
 				StopAttacking();
 			}
+			Profiler.EndSample();
 			return StateStatus.Running;
 		}
 
 		private static Vector3 GetAimDirection(Vector3 from, Vector3 target)
 		{
-			//IL_0000: Unknown result type (might be due to invalid IL or missing references)
 			//IL_0001: Unknown result type (might be due to invalid IL or missing references)
 			//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0003: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+			//IL_000b: Unknown result type (might be due to invalid IL or missing references)
 			return Vector3Ex.Direction2D(target, from);
 		}
 
@@ -213,7 +142,7 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 
 		public override void StateEnter(BaseAIBrain brain, BaseEntity entity)
 		{
-			//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0043: Unknown result type (might be due to invalid IL or missing references)
 			base.StateEnter(brain, entity);
 			BaseEntity baseEntity = brain.Events.Memory.Entity.Get(brain.Events.CurrentInputMemorySlot);
 			if ((Object)(object)baseEntity != (Object)null)
@@ -235,7 +164,7 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 
 		public override StateStatus StateThink(float delta, BaseAIBrain brain, BaseEntity entity)
 		{
-			//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+			//IL_004f: Unknown result type (might be due to invalid IL or missing references)
 			base.StateThink(delta, brain, entity);
 			BaseEntity baseEntity = brain.Events.Memory.Entity.Get(brain.Events.CurrentInputMemorySlot);
 			if ((Object)(object)baseEntity == (Object)null)
@@ -247,11 +176,7 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 			{
 				return StateStatus.Error;
 			}
-			if (!brain.Navigator.Moving)
-			{
-				return StateStatus.Finished;
-			}
-			return StateStatus.Running;
+			return (!brain.Navigator.Moving) ? StateStatus.Finished : StateStatus.Running;
 		}
 	}
 
@@ -284,8 +209,8 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 
 		public override void StateEnter(BaseAIBrain brain, BaseEntity entity)
 		{
-			//IL_004d: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0058: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0052: Unknown result type (might be due to invalid IL or missing references)
+			//IL_005d: Unknown result type (might be due to invalid IL or missing references)
 			base.StateEnter(brain, entity);
 			BaseEntity baseEntity = brain.Events.Memory.Entity.Get(brain.Events.CurrentInputMemorySlot);
 			if ((Object)(object)baseEntity != (Object)null)
@@ -308,9 +233,10 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 
 		public override StateStatus StateThink(float delta, BaseAIBrain brain, BaseEntity entity)
 		{
-			//IL_0041: Unknown result type (might be due to invalid IL or missing references)
-			//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0054: Unknown result type (might be due to invalid IL or missing references)
+			//IL_005f: Unknown result type (might be due to invalid IL or missing references)
 			base.StateThink(delta, brain, entity);
+			Profiler.BeginSample("BaseAIBrain.States.Flee.StateThink");
 			BaseEntity baseEntity = brain.Events.Memory.Entity.Get(brain.Events.CurrentInputMemorySlot);
 			if ((Object)(object)baseEntity == (Object)null)
 			{
@@ -322,30 +248,39 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 			}
 			if ((brain.Navigator.UpdateIntervalElapsed(nextInterval) || !brain.Navigator.Moving) && !FleeFrom(baseEntity, entity))
 			{
+				Profiler.EndSample();
 				return StateStatus.Error;
 			}
+			Profiler.EndSample();
 			return StateStatus.Running;
 		}
 
 		private bool FleeFrom(BaseEntity fleeFromEntity, BaseEntity thisEntity)
 		{
-			//IL_0061: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0086: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0083: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00c1: Unknown result type (might be due to invalid IL or missing references)
 			if ((Object)(object)thisEntity == (Object)null || (Object)(object)fleeFromEntity == (Object)null)
 			{
 				return false;
 			}
+			Profiler.BeginSample("BaseAIBrain.States.Flee.StateThink");
 			nextInterval = Random.Range(3f, 6f);
-			if (!brain.PathFinder.GetBestFleePosition(brain.Navigator, brain.Senses, fleeFromEntity, brain.Events.Memory.Position.Get(4), 50f, 100f, out var result))
+			Profiler.BeginSample("BaseAIBrain.State.Flee.GetBestFleePosition");
+			Vector3 result;
+			bool bestFleePosition = brain.PathFinder.GetBestFleePosition(brain.Navigator, brain.Senses, fleeFromEntity, brain.Events.Memory.Position.Get(4), 50f, 100f, out result);
+			Profiler.EndSample();
+			if (!bestFleePosition)
 			{
+				Profiler.EndSample();
 				return false;
 			}
-			bool num = brain.Navigator.SetDestination(result, BaseNavigator.NavigationSpeed.Fast);
-			if (!num)
+			bool flag = brain.Navigator.SetDestination(result, BaseNavigator.NavigationSpeed.Fast);
+			if (!flag)
 			{
 				Stop();
 			}
-			return num;
+			Profiler.EndSample();
+			return flag;
 		}
 	}
 
@@ -357,11 +292,11 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 
 		private AIMovePoint currentTargetPoint;
 
-		private float currentWaitTime;
+		private float currentWaitTime = 0f;
 
-		private AIMovePointPath.PathDirection pathDirection;
+		private AIMovePointPath.PathDirection pathDirection = AIMovePointPath.PathDirection.Forwards;
 
-		private int currentNodeIndex;
+		private int currentNodeIndex = 0;
 
 		public BaseFollowPathState()
 			: base(AIState.FollowPath)
@@ -370,11 +305,11 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 
 		public override void StateEnter(BaseAIBrain brain, BaseEntity entity)
 		{
-			//IL_007a: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0091: Unknown result type (might be due to invalid IL or missing references)
-			//IL_003b: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00d2: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0054: Unknown result type (might be due to invalid IL or missing references)
+			//IL_008a: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00e7: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0060: Unknown result type (might be due to invalid IL or missing references)
 			base.StateEnter(brain, entity);
 			status = StateStatus.Error;
 			brain.Navigator.SetBrakingEnabled(flag: false);
@@ -411,11 +346,11 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 
 		public override StateStatus StateThink(float delta, BaseAIBrain brain, BaseEntity entity)
 		{
-			//IL_0181: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0065: Unknown result type (might be due to invalid IL or missing references)
-			//IL_006b: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0070: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0149: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01e0: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0083: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0089: Unknown result type (might be due to invalid IL or missing references)
+			//IL_008e: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0190: Unknown result type (might be due to invalid IL or missing references)
 			base.StateThink(delta, brain, entity);
 			if (status == StateStatus.Error)
 			{
@@ -498,7 +433,7 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 
 		public override StateStatus StateThink(float delta, BaseAIBrain brain, BaseEntity entity)
 		{
-			//IL_004e: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0056: Unknown result type (might be due to invalid IL or missing references)
 			base.StateThink(delta, brain, entity);
 			BaseEntity baseEntity = brain.Events.Memory.Entity.Get(brain.Events.CurrentInputMemorySlot);
 			if ((Object)(object)baseEntity == (Object)null)
@@ -511,28 +446,27 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 			{
 				return StateStatus.Error;
 			}
-			if (!brain.Navigator.Moving)
-			{
-				return StateStatus.Finished;
-			}
-			return StateStatus.Running;
+			return (!brain.Navigator.Moving) ? StateStatus.Finished : StateStatus.Running;
 		}
 
 		private void FaceTarget()
 		{
-			//IL_005e: Unknown result type (might be due to invalid IL or missing references)
-			//IL_006e: Unknown result type (might be due to invalid IL or missing references)
-			if (brain.Navigator.FaceMoveTowardsTarget)
+			//IL_006d: Unknown result type (might be due to invalid IL or missing references)
+			//IL_007d: Unknown result type (might be due to invalid IL or missing references)
+			if (!brain.Navigator.FaceMoveTowardsTarget)
 			{
-				BaseEntity baseEntity = brain.Events.Memory.Entity.Get(brain.Events.CurrentInputMemorySlot);
-				if ((Object)(object)baseEntity == (Object)null)
-				{
-					brain.Navigator.ClearFacingDirectionOverride();
-				}
-				else if (Vector3.Distance(((Component)baseEntity).transform.position, ((Component)brain).transform.position) <= 1.5f)
-				{
-					brain.Navigator.SetFacingDirectionEntity(baseEntity);
-				}
+				return;
+			}
+			BaseEntity baseEntity = brain.Events.Memory.Entity.Get(brain.Events.CurrentInputMemorySlot);
+			if ((Object)(object)baseEntity == (Object)null)
+			{
+				brain.Navigator.ClearFacingDirectionOverride();
+				return;
+			}
+			float num = Vector3.Distance(((Component)baseEntity).transform.position, ((Component)brain).transform.position);
+			if (num <= 1.5f)
+			{
+				brain.Navigator.SetFacingDirectionEntity(baseEntity);
 			}
 		}
 	}
@@ -548,9 +482,9 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 
 		public override void StateEnter(BaseAIBrain brain, BaseEntity entity)
 		{
-			//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-			//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-			//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+			//IL_002e: Unknown result type (might be due to invalid IL or missing references)
 			base.StateEnter(brain, entity);
 			Vector3 pos = brain.Events.Memory.Position.Get(4);
 			status = StateStatus.Running;
@@ -578,11 +512,7 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 			{
 				return status;
 			}
-			if (!brain.Navigator.Moving)
-			{
-				return StateStatus.Finished;
-			}
-			return StateStatus.Running;
+			return (!brain.Navigator.Moving) ? StateStatus.Finished : StateStatus.Running;
 		}
 	}
 
@@ -598,7 +528,7 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 	{
 		private float nextRoamPositionTime = -1f;
 
-		private float lastDestinationTime;
+		private float lastDestinationTime = 0f;
 
 		public BaseRoamState()
 			: base(AIState.Roam)
@@ -619,13 +549,17 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 
 		public virtual Vector3 GetDestination()
 		{
-			//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0009: Unknown result type (might be due to invalid IL or missing references)
 			return Vector3.zero;
 		}
 
 		public virtual Vector3 GetForwardDirection()
 		{
-			//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0009: Unknown result type (might be due to invalid IL or missing references)
 			return Vector3.forward;
 		}
 
@@ -641,8 +575,11 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 
 		public virtual Vector3 GetRoamAnchorPosition()
 		{
-			//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-			//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+			//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0051: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0033: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0054: Unknown result type (might be due to invalid IL or missing references)
 			if (brain.Navigator.MaxRoamDistanceFromHome > -1f)
 			{
 				return brain.Events.Memory.Position.Get(4);
@@ -652,22 +589,22 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 
 		public override StateStatus StateThink(float delta, BaseAIBrain brain, BaseEntity entity)
 		{
-			//IL_001f: Unknown result type (might be due to invalid IL or missing references)
-			//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-			//IL_008e: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0094: Unknown result type (might be due to invalid IL or missing references)
-			//IL_009a: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0100: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0105: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00c9: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00d4: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0146: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0128: Unknown result type (might be due to invalid IL or missing references)
-			//IL_012d: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0134: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0139: Unknown result type (might be due to invalid IL or missing references)
-			//IL_014b: Unknown result type (might be due to invalid IL or missing references)
-			//IL_014d: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+			//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0126: Unknown result type (might be due to invalid IL or missing references)
+			//IL_012b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00e8: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00f3: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0172: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0152: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0157: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0160: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0165: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0177: Unknown result type (might be due to invalid IL or missing references)
+			//IL_017a: Unknown result type (might be due to invalid IL or missing references)
 			base.StateThink(delta, brain, entity);
 			bool flag = Time.time - lastDestinationTime > 25f;
 			if ((Vector3.Distance(GetDestination(), ((Component)entity).transform.position) < 2f || flag) && nextRoamPositionTime == -1f)
@@ -679,8 +616,9 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 				AIMovePoint bestRoamPoint = brain.PathFinder.GetBestRoamPoint(GetRoamAnchorPosition(), entity.ServerPosition, GetForwardDirection(), brain.Navigator.MaxRoamDistanceFromHome, brain.Navigator.BestRoamPointMaxDistance);
 				if (Object.op_Implicit((Object)(object)bestRoamPoint))
 				{
-					float num = Vector3.Distance(((Component)bestRoamPoint).transform.position, ((Component)entity).transform.position) / 1.5f;
-					bestRoamPoint.SetUsedBy(entity, num + 11f);
+					float num = Vector3.Distance(((Component)bestRoamPoint).transform.position, ((Component)entity).transform.position);
+					float num2 = num / 1.5f;
+					bestRoamPoint.SetUsedBy(entity, num2 + 11f);
 				}
 				lastDestinationTime = Time.time;
 				Vector3 insideUnitSphere = Random.insideUnitSphere;
@@ -730,9 +668,83 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 		}
 	}
 
-	public bool SendClientCurrentState;
+	public class BasicAIState
+	{
+		public BaseAIBrain brain;
 
-	public bool UseQueuedMovementUpdates;
+		protected float _lastStateExitTime = 0f;
+
+		public AIState StateType { get; private set; }
+
+		public float TimeInState { get; private set; }
+
+		public bool AgrresiveState { get; protected set; }
+
+		public virtual void StateEnter(BaseAIBrain brain, BaseEntity entity)
+		{
+			TimeInState = 0f;
+		}
+
+		public virtual StateStatus StateThink(float delta, BaseAIBrain brain, BaseEntity entity)
+		{
+			TimeInState += delta;
+			return StateStatus.Running;
+		}
+
+		public virtual void StateLeave(BaseAIBrain brain, BaseEntity entity)
+		{
+			TimeInState = 0f;
+			_lastStateExitTime = Time.time;
+		}
+
+		public virtual bool CanInterrupt()
+		{
+			return true;
+		}
+
+		public virtual bool CanEnter()
+		{
+			return true;
+		}
+
+		public virtual bool CanLeave()
+		{
+			return CanInterrupt();
+		}
+
+		public virtual float GetWeight()
+		{
+			return 0f;
+		}
+
+		public float TimeSinceState()
+		{
+			return Time.time - _lastStateExitTime;
+		}
+
+		public BasicAIState(AIState state)
+		{
+			StateType = state;
+		}
+
+		public void Reset()
+		{
+			TimeInState = 0f;
+		}
+
+		public bool IsInState()
+		{
+			return (Object)(object)brain != (Object)null && brain.CurrentState != null && brain.CurrentState == this;
+		}
+
+		public virtual void DrawGizmos()
+		{
+		}
+	}
+
+	public bool SendClientCurrentState = false;
+
+	public bool UseQueuedMovementUpdates = false;
 
 	public bool AllowedToSleep = true;
 
@@ -750,9 +762,9 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 
 	public float VisionCone = -0.8f;
 
-	public bool CheckVisionCone;
+	public bool CheckVisionCone = false;
 
-	public bool CheckLOS;
+	public bool CheckLOS = false;
 
 	public bool IgnoreNonVisionSneakers = true;
 
@@ -760,19 +772,19 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 
 	public float IgnoreNonVisionMaxDistance = 15f;
 
-	public float ListenRange;
+	public float ListenRange = 0f;
 
 	public EntityType SenseTypes;
 
-	public bool HostileTargetsOnly;
+	public bool HostileTargetsOnly = false;
 
-	public bool IgnoreSafeZonePlayers;
+	public bool IgnoreSafeZonePlayers = false;
 
-	public int MaxGroupSize;
+	public int MaxGroupSize = 0;
 
 	public float MemoryDuration = 10f;
 
-	public bool RefreshKnownLOS;
+	public bool RefreshKnownLOS = false;
 
 	public bool CanBeBlinded = true;
 
@@ -782,36 +794,36 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 
 	public Vector3 mainInterestPoint;
 
-	public bool UseAIDesign;
+	public bool UseAIDesign = false;
 
 	public bool Pet;
 
 	private List<IAIGroupable> groupMembers = new List<IAIGroupable>();
 
 	[Header("Healing")]
-	public bool CanUseHealingItems;
+	public bool CanUseHealingItems = false;
 
 	public float HealChance = 0.5f;
 
 	public float HealBelowHealthFraction = 0.5f;
 
-	protected int loadedDesignIndex;
+	protected int loadedDesignIndex = 0;
 
 	private int currentStateContainerID = -1;
 
-	private float lastMovementTickTime;
+	private float lastMovementTickTime = 0f;
 
-	private bool sleeping;
+	private bool sleeping = false;
 
-	private bool disabled;
+	private bool disabled = false;
 
 	protected Dictionary<AIState, BasicAIState> states;
 
 	protected float thinkRate = 0.25f;
 
-	protected float lastThinkTime;
+	protected float lastThinkTime = 0f;
 
-	protected float unblindTime;
+	protected float unblindTime = 0f;
 
 	public BasicAIState CurrentState { get; private set; }
 
@@ -851,7 +863,7 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RequestAIDesign "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RequestAIDesign "));
 				}
 				TimeWarning val2 = TimeWarning.New("RequestAIDesign", 0);
 				try
@@ -887,12 +899,12 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - StopAIDesign "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - StopAIDesign "));
 				}
-				TimeWarning val2 = TimeWarning.New("StopAIDesign", 0);
+				TimeWarning val4 = TimeWarning.New("StopAIDesign", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Call", 0);
+					TimeWarning val5 = TimeWarning.New("Call", 0);
 					try
 					{
 						BaseEntity.RPCMessage rPCMessage = default(BaseEntity.RPCMessage);
@@ -904,7 +916,7 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val5)?.Dispose();
 					}
 				}
 				catch (Exception ex2)
@@ -914,7 +926,7 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val4)?.Dispose();
 				}
 				return true;
 			}
@@ -923,12 +935,12 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SubmitAIDesign "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SubmitAIDesign "));
 				}
-				TimeWarning val2 = TimeWarning.New("SubmitAIDesign", 0);
+				TimeWarning val6 = TimeWarning.New("SubmitAIDesign", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Call", 0);
+					TimeWarning val7 = TimeWarning.New("Call", 0);
 					try
 					{
 						BaseEntity.RPCMessage rPCMessage = default(BaseEntity.RPCMessage);
@@ -940,7 +952,7 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val7)?.Dispose();
 					}
 				}
 				catch (Exception ex3)
@@ -950,7 +962,7 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val6)?.Dispose();
 				}
 				return true;
 			}
@@ -960,6 +972,79 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 			((IDisposable)val)?.Dispose();
 		}
 		return base.OnRpcMessage(player, rpc, msg);
+	}
+
+	public bool IsPet()
+	{
+		return Pet;
+	}
+
+	public void SetPetOwner(BasePlayer player)
+	{
+		BaseEntity baseEntity = (player.PetEntity = GetBaseEntity());
+		baseEntity.OwnerID = player.userID;
+		BasePet.ActivePetByOwnerID[player.userID] = baseEntity as BasePet;
+	}
+
+	public bool IsOwnedBy(BasePlayer player)
+	{
+		if ((Object)(object)OwningPlayer == (Object)null)
+		{
+			return false;
+		}
+		if ((Object)(object)player == (Object)null)
+		{
+			return false;
+		}
+		if (this == null)
+		{
+			return false;
+		}
+		return (Object)(object)OwningPlayer == (Object)(object)player;
+	}
+
+	public bool IssuePetCommand(PetCommandType cmd, int param, Ray? ray)
+	{
+		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		if (ray.HasValue)
+		{
+			int num = 10551296;
+			RaycastHit val = default(RaycastHit);
+			if (Physics.Raycast(ray.Value, ref val, 75f, num))
+			{
+				Events.Memory.Position.Set(((RaycastHit)(ref val)).point, 6);
+			}
+			else
+			{
+				Events.Memory.Position.Set(((Component)this).transform.position, 6);
+			}
+		}
+		switch (cmd)
+		{
+		case PetCommandType.LoadDesign:
+			if (param < 0 || param >= Designs.Count)
+			{
+				return false;
+			}
+			LoadAIDesign(AIDesigns.GetByNameOrInstance(Designs[param].Filename, InstanceSpecificDesign), null, param);
+			return true;
+		case PetCommandType.SetState:
+		{
+			AIStateContainer stateContainerByID = AIDesign.GetStateContainerByID(param);
+			if (stateContainerByID == null)
+			{
+				return false;
+			}
+			return SwitchToState(stateContainerByID.State, param);
+		}
+		case PetCommandType.Destroy:
+			GetBaseEntity().Kill();
+			return true;
+		default:
+			return false;
+		}
 	}
 
 	public void ForceSetAge(float age)
@@ -1028,7 +1113,8 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 			return;
 		}
 		SaveDesign();
-		if (val.scope == 2)
+		AIDesignScope scope = (AIDesignScope)val.scope;
+		if (scope == AIDesignScope.EntityInstance)
 		{
 			return;
 		}
@@ -1051,9 +1137,9 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 				continue;
 			}
 			EntityComponentBase[] array3 = components;
-			for (int j = 0; j < array3.Length; j++)
+			foreach (EntityComponentBase entityComponentBase in array3)
 			{
-				if (array3[j] is IAIDesign iAIDesign)
+				if (entityComponentBase is IAIDesign iAIDesign)
 				{
 					iAIDesign.LoadAIDesign(val, null);
 					break;
@@ -1199,10 +1285,11 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 	{
 		OwningPlayer = owner;
 		Events.Memory.Entity.Set(OwningPlayer, 5);
-		if (this != null && ((IPet)this).IsPet())
+		IPet pet;
+		if ((pet = this) != null && pet.IsPet())
 		{
-			((IPet)this).SetPetOwner(owner);
-			owner.Pet = this;
+			pet.SetPetOwner(owner);
+			owner.Pet = pet;
 		}
 	}
 
@@ -1262,8 +1349,8 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 
 	public virtual void InitializeAI()
 	{
-		//IL_0105: Unknown result type (might be due to invalid IL or missing references)
-		//IL_016a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0127: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0197: Unknown result type (might be due to invalid IL or missing references)
 		BaseEntity baseEntity = GetBaseEntity();
 		baseEntity.HasBrain = true;
 		Navigator = ((Component)this).GetComponent<BaseNavigator>();
@@ -1295,7 +1382,9 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 				forPoint.RegisterSleepableEntity(this);
 			}
 		}
+		Profiler.BeginSample("Query.Server.AddBrain");
 		BaseEntity.Query.Server.AddBrain(baseEntity);
+		Profiler.EndSample();
 		StartMovementTick();
 	}
 
@@ -1306,10 +1395,12 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 
 	public virtual void OnDestroy()
 	{
-		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
 		if (!Application.isQuitting)
 		{
+			Profiler.BeginSample("Query.Server.RemoveBrain");
 			BaseEntity.Query.Server.RemoveBrain(GetBaseEntity());
+			Profiler.EndSample();
 			AIInformationZone aIInformationZone = null;
 			HumanNPC humanNPC = GetBaseEntity() as HumanNPC;
 			if ((Object)(object)humanNPC != (Object)null)
@@ -1394,12 +1485,12 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 		{
 			return false;
 		}
-		bool num = SwitchToState(states[newState], stateContainerID);
-		if (num)
+		bool flag = SwitchToState(states[newState], stateContainerID);
+		if (flag)
 		{
 			OnStateChanged();
 		}
-		return num;
+		return flag;
 	}
 
 	private bool SwitchToState(BasicAIState newState, int stateContainerID = -1)
@@ -1453,9 +1544,11 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 		{
 			return;
 		}
+		Profiler.BeginSample("BaseAIBrain.AIThink");
 		lastThinkTime = Time.time;
 		if (sleeping || disabled)
 		{
+			Profiler.EndSample();
 			return;
 		}
 		Age += delta;
@@ -1473,28 +1566,30 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 				Events.Tick(delta, stateStatus);
 			}
 		}
-		if (UseAIDesign || (CurrentState != null && !CurrentState.CanLeave()))
+		if (!UseAIDesign && (CurrentState == null || CurrentState.CanLeave()))
 		{
-			return;
-		}
-		float num = 0f;
-		BasicAIState basicAIState = null;
-		foreach (BasicAIState value in states.Values)
-		{
-			if (value != null && value.CanEnter())
+			float num = 0f;
+			BasicAIState basicAIState = null;
+			foreach (BasicAIState value in states.Values)
 			{
-				float weight = value.GetWeight();
-				if (weight > num)
+				if (value != null && value.CanEnter())
 				{
-					num = weight;
-					basicAIState = value;
+					Profiler.BeginSample("BaseAIBrain.StateGetWeight");
+					float weight = value.GetWeight();
+					Profiler.EndSample();
+					if (weight > num)
+					{
+						num = weight;
+						basicAIState = value;
+					}
 				}
 			}
+			if (basicAIState != CurrentState)
+			{
+				SwitchToState(basicAIState);
+			}
 		}
-		if (basicAIState != CurrentState)
-		{
-			SwitchToState(basicAIState);
-		}
+		Profiler.EndSample();
 	}
 
 	private void UpdateAgressionTimer(float delta)
@@ -1614,8 +1709,8 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 
 	public void SetGroupRoamRootPosition(Vector3 rootPos)
 	{
-		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
 		if (IsGroupLeader)
 		{
 			foreach (IAIGroupable groupMember in groupMembers)
@@ -1717,79 +1812,6 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 			int previousStateID = currentStateContainerID;
 			SwitchToState(stateContainerByID.State, newStateContainerID);
 			SendStateChangeEvent(previousStateID, currentStateContainerID, sourceEventID);
-		}
-	}
-
-	public bool IsPet()
-	{
-		return Pet;
-	}
-
-	public void SetPetOwner(BasePlayer player)
-	{
-		BaseEntity baseEntity = (player.PetEntity = GetBaseEntity());
-		baseEntity.OwnerID = player.userID;
-		BasePet.ActivePetByOwnerID[player.userID] = baseEntity as BasePet;
-	}
-
-	public bool IsOwnedBy(BasePlayer player)
-	{
-		if ((Object)(object)OwningPlayer == (Object)null)
-		{
-			return false;
-		}
-		if ((Object)(object)player == (Object)null)
-		{
-			return false;
-		}
-		if (this == null)
-		{
-			return false;
-		}
-		return (Object)(object)OwningPlayer == (Object)(object)player;
-	}
-
-	public bool IssuePetCommand(PetCommandType cmd, int param, Ray? ray)
-	{
-		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
-		if (ray.HasValue)
-		{
-			int num = 10551296;
-			RaycastHit val = default(RaycastHit);
-			if (Physics.Raycast(ray.Value, ref val, 75f, num))
-			{
-				Events.Memory.Position.Set(((RaycastHit)(ref val)).point, 6);
-			}
-			else
-			{
-				Events.Memory.Position.Set(((Component)this).transform.position, 6);
-			}
-		}
-		switch (cmd)
-		{
-		case PetCommandType.LoadDesign:
-			if (param < 0 || param >= Designs.Count)
-			{
-				return false;
-			}
-			LoadAIDesign(AIDesigns.GetByNameOrInstance(Designs[param].Filename, InstanceSpecificDesign), null, param);
-			return true;
-		case PetCommandType.SetState:
-		{
-			AIStateContainer stateContainerByID = AIDesign.GetStateContainerByID(param);
-			if (stateContainerByID == null)
-			{
-				return false;
-			}
-			return SwitchToState(stateContainerByID.State, param);
-		}
-		case PetCommandType.Destroy:
-			GetBaseEntity().Kill();
-			return true;
-		default:
-			return false;
 		}
 	}
 }

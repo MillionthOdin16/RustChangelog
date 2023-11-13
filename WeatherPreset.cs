@@ -61,10 +61,10 @@ public class WeatherPreset : ScriptableObject
 
 	public void Reset()
 	{
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0037: Expected O, but got Unknown
-		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a2: Expected O, but got Unknown
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0038: Expected O, but got Unknown
+		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a3: Expected O, but got Unknown
 		Wind = -1f;
 		Rain = -1f;
 		Thunder = -1f;

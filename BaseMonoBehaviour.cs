@@ -26,7 +26,8 @@ public abstract class BaseMonoBehaviour : FacepunchBehaviour
 		if (IsDebugging() || Global.developer >= level)
 		{
 			string text = string.Format(str, arg1);
-			Debug.Log((object)string.Format("<color=white>{0}</color>[<color={3}>{1}</color>] {2}", log.ToString().PadRight(10), ((object)this).ToString(), text, GetLogColor()), (Object)(object)((Component)this).gameObject);
+			string text2 = string.Format("<color=white>{0}</color>[<color={3}>{1}</color>] {2}", log.ToString().PadRight(10), ((object)this).ToString(), text, GetLogColor());
+			Debug.Log((object)text2, (Object)(object)((Component)this).gameObject);
 		}
 	}
 
@@ -35,7 +36,8 @@ public abstract class BaseMonoBehaviour : FacepunchBehaviour
 		if (IsDebugging() || Global.developer >= level)
 		{
 			string text = string.Format(str, arg1, arg2);
-			Debug.Log((object)string.Format("<color=white>{0}</color>[<color={3}>{1}</color>] {2}", log.ToString().PadRight(10), ((object)this).ToString(), text, GetLogColor()), (Object)(object)((Component)this).gameObject);
+			string text2 = string.Format("<color=white>{0}</color>[<color={3}>{1}</color>] {2}", log.ToString().PadRight(10), ((object)this).ToString(), text, GetLogColor());
+			Debug.Log((object)text2, (Object)(object)((Component)this).gameObject);
 		}
 	}
 
@@ -43,7 +45,8 @@ public abstract class BaseMonoBehaviour : FacepunchBehaviour
 	{
 		if (IsDebugging() || Global.developer >= level)
 		{
-			Debug.Log((object)string.Format("<color=white>{0}</color>[<color={3}>{1}</color>] {2}", log.ToString().PadRight(10), ((object)this).ToString(), str, GetLogColor()), (Object)(object)((Component)this).gameObject);
+			string text = string.Format("<color=white>{0}</color>[<color={3}>{1}</color>] {2}", log.ToString().PadRight(10), ((object)this).ToString(), str, GetLogColor());
+			Debug.Log((object)text, (Object)(object)((Component)this).gameObject);
 		}
 	}
 }

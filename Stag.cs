@@ -23,9 +23,9 @@ public class Stag : BaseAnimalNPC
 		if ((Object)(object)collectibleEntity != (Object)null)
 		{
 			ItemAmount[] itemList = collectibleEntity.itemList;
-			for (int i = 0; i < itemList.Length; i++)
+			foreach (ItemAmount itemAmount in itemList)
 			{
-				if (itemList[i].itemDef.category == ItemCategory.Food)
+				if (itemAmount.itemDef.category == ItemCategory.Food)
 				{
 					return true;
 				}

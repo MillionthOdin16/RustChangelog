@@ -53,20 +53,12 @@ public class PathFinder
 
 		public override bool Equals(object other)
 		{
-			if (!(other is Point))
-			{
-				return false;
-			}
-			return Equals((Point)other);
+			return other is Point && Equals((Point)other);
 		}
 
 		public bool Equals(Point other)
 		{
-			if (x == other.x)
-			{
-				return y == other.y;
-			}
-			return false;
+			return x == other.x && y == other.y;
 		}
 	}
 
@@ -148,7 +140,7 @@ public class PathFinder
 
 	private Node FindPathReversed(Point start, Point end, int depth = int.MaxValue)
 	{
-		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
 		if (visited == null)
 		{
 			visited = new int[costmap.GetLength(0), costmap.GetLength(1)];
@@ -225,7 +217,7 @@ public class PathFinder
 
 	private Node FindPathReversed(List<Point> startList, List<Point> endList, int depth = int.MaxValue)
 	{
-		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
 		if (visited == null)
 		{
 			visited = new int[costmap.GetLength(0), costmap.GetLength(1)];
@@ -283,7 +275,7 @@ public class PathFinder
 
 	public Node FindClosestWalkable(Point start, int depth = int.MaxValue)
 	{
-		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d1: Unknown result type (might be due to invalid IL or missing references)
 		if (visited == null)
 		{
 			visited = new int[costmap.GetLength(0), costmap.GetLength(1)];
@@ -423,11 +415,7 @@ public class PathFinder
 
 	public int Heuristic(Point a)
 	{
-		if (costmap[a.x, a.y] != int.MaxValue)
-		{
-			return 0;
-		}
-		return 1;
+		return (costmap[a.x, a.y] == int.MaxValue) ? 1 : 0;
 	}
 
 	public int Heuristic(Point a, Point b)

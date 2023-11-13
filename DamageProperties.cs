@@ -12,7 +12,7 @@ public class DamageProperties : ScriptableObject
 		public float damage = 1f;
 	}
 
-	public DamageProperties fallback;
+	public DamageProperties fallback = null;
 
 	[Horizontal(1, 0)]
 	public HitAreaProperty[] bones;
@@ -27,11 +27,7 @@ public class DamageProperties : ScriptableObject
 				return hitAreaProperty.damage;
 			}
 		}
-		if (!Object.op_Implicit((Object)(object)fallback))
-		{
-			return 1f;
-		}
-		return fallback.GetMultiplier(area);
+		return Object.op_Implicit((Object)(object)fallback) ? fallback.GetMultiplier(area) : 1f;
 	}
 
 	public void ScaleDamage(HitInfo info)

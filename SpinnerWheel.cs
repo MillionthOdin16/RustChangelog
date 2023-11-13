@@ -41,7 +41,7 @@ public class SpinnerWheel : Signage
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_AnyoneSpin "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_AnyoneSpin "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_AnyoneSpin", 0);
 				try
@@ -60,7 +60,7 @@ public class SpinnerWheel : Signage
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -72,7 +72,7 @@ public class SpinnerWheel : Signage
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -92,12 +92,12 @@ public class SpinnerWheel : Signage
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_Spin "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_Spin "));
 				}
-				TimeWarning val2 = TimeWarning.New("RPC_Spin", 0);
+				TimeWarning val5 = TimeWarning.New("RPC_Spin", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					TimeWarning val6 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.MaxDistance.Test(1455840454u, "RPC_Spin", this, player, 3f))
@@ -107,11 +107,11 @@ public class SpinnerWheel : Signage
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val6)?.Dispose();
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val7 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -123,7 +123,7 @@ public class SpinnerWheel : Signage
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val7)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -134,7 +134,7 @@ public class SpinnerWheel : Signage
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val5)?.Dispose();
 				}
 				return true;
 			}
@@ -153,36 +153,30 @@ public class SpinnerWheel : Signage
 
 	public override void Save(SaveInfo info)
 	{
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
 		base.Save(info);
 		info.msg.spinnerWheel = Pool.Get<SpinnerWheel>();
 		SpinnerWheel spinnerWheel = info.msg.spinnerWheel;
-		Quaternion localRotation = wheel.localRotation;
-		spinnerWheel.spin = ((Quaternion)(ref localRotation)).eulerAngles;
+		Quaternion rotation = wheel.rotation;
+		spinnerWheel.spin = ((Quaternion)(ref rotation)).eulerAngles;
 	}
 
 	public override void Load(LoadInfo info)
 	{
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
 		base.Load(info);
 		if (info.msg.spinnerWheel != null)
 		{
-			Quaternion localRotation = Quaternion.Euler(info.msg.spinnerWheel.spin);
-			if (base.isServer && info.fromDisk)
-			{
-				localRotation = Quaternion.identity;
-			}
+			Quaternion rotation = Quaternion.Euler(info.msg.spinnerWheel.spin);
 			if (base.isServer)
 			{
-				((Component)wheel).transform.localRotation = localRotation;
+				((Component)wheel).transform.rotation = rotation;
 			}
 		}
 	}
@@ -194,7 +188,7 @@ public class SpinnerWheel : Signage
 
 	public virtual void Update_Server()
 	{
-		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
 		if (velocity > 0f)
 		{
 			float num = Mathf.Clamp(GetMaxSpinSpeed() * velocity, 0f, GetMaxSpinSpeed());

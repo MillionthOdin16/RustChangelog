@@ -7,7 +7,7 @@ public class PowerBar : MonoBehaviour
 
 	public Image powerInner;
 
-	public float fullSize;
+	public float fullSize = 0f;
 
 	public CanvasGroup group;
 }

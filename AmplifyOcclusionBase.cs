@@ -28,7 +28,7 @@ public class AmplifyOcclusionBase : MonoBehaviour
 	}
 
 	[Header("Ambient Occlusion")]
-	public ApplicationMethod ApplyMethod;
+	public ApplicationMethod ApplyMethod = ApplicationMethod.PostEffect;
 
 	[Tooltip("Number of samples per pass.")]
 	public SampleCountLevel SampleCount = SampleCountLevel.Medium;
@@ -72,7 +72,7 @@ public class AmplifyOcclusionBase : MonoBehaviour
 
 	[Header("Distance Fade")]
 	[Tooltip("Control parameters at faraway.")]
-	public bool FadeEnabled;
+	public bool FadeEnabled = false;
 
 	[Tooltip("Distance in Unity unities that start to fade.")]
 	public float FadeStart = 100f;
@@ -82,7 +82,7 @@ public class AmplifyOcclusionBase : MonoBehaviour
 
 	[Tooltip("Final Intensity parameter.")]
 	[Range(0f, 1f)]
-	public float FadeToIntensity;
+	public float FadeToIntensity = 0f;
 
 	public Color FadeToTint = Color.black;
 
@@ -135,7 +135,7 @@ public class AmplifyOcclusionBase : MonoBehaviour
 
 	[NonSerialized]
 	[Tooltip("Reduces ghosting effect near the objects's edges while moving.")]
-	public bool TemporalDilation;
+	public bool TemporalDilation = false;
 
 	[NonSerialized]
 	[Tooltip("Uses the object movement information for calc new areas of occlusion.")]

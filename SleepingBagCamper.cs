@@ -20,7 +20,7 @@ public class SleepingBagCamper : SleepingBag
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ServerClearBed "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ServerClearBed "));
 				}
 				TimeWarning val2 = TimeWarning.New("ServerClearBed", 0);
 				try
@@ -39,7 +39,7 @@ public class SleepingBagCamper : SleepingBag
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -51,7 +51,7 @@ public class SleepingBagCamper : SleepingBag
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -86,10 +86,7 @@ public class SleepingBagCamper : SleepingBag
 		BaseVehicleSeat baseVehicleSeat = AssociatedSeat.Get(base.isServer);
 		if ((Object)(object)baseVehicleSeat != (Object)null)
 		{
-			if (p.IsConnected)
-			{
-				p.EndSleeping();
-			}
+			p.EndSleeping();
 			baseVehicleSeat.MountPlayer(p);
 		}
 	}
@@ -105,8 +102,8 @@ public class SleepingBagCamper : SleepingBag
 
 	public override void Save(SaveInfo info)
 	{
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
 		base.Save(info);
 		if (!info.forDisk)
 		{
@@ -115,27 +112,13 @@ public class SleepingBagCamper : SleepingBag
 		}
 	}
 
-	public override RespawnState GetRespawnState(ulong userID)
+	public override bool IsOccupied()
 	{
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000a: Invalid comparison between Unknown and I4
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		RespawnState respawnState = base.GetRespawnState(userID);
-		if ((int)respawnState != 1)
+		if (base.IsOccupied())
 		{
-			return respawnState;
+			return true;
 		}
-		if (AssociatedSeat.IsValid(base.isServer))
-		{
-			BasePlayer mounted = AssociatedSeat.Get(base.isServer).GetMounted();
-			if ((Object)(object)mounted != (Object)null && mounted.userID != userID)
-			{
-				return (RespawnState)2;
-			}
-		}
-		return (RespawnState)1;
+		return AssociatedSeat.IsValid(base.isServer) && AssociatedSeat.Get(base.isServer).AnyMounted();
 	}
 
 	[RPC_Server]

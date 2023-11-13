@@ -8,9 +8,9 @@ public class ModelConditionTest_WallCornerLeft : ModelConditionTest
 
 	public override bool DoTest(BaseEntity ent)
 	{
-		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008b: Unknown result type (might be due to invalid IL or missing references)
 		EntityLink entityLink = ent.FindLink(sockets);
 		if (entityLink == null)
 		{

@@ -39,14 +39,14 @@ public class DynamicDungeon : BaseEntity, IMissionEntityListener
 
 	public static void AddDungeon(DynamicDungeon newDungeon)
 	{
-		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
 		_dungeons.Add(newDungeon);
 		Vector3 position = ((Component)newDungeon).transform.position;
 		if (position.y >= nextDungeonPos.y)
@@ -57,8 +57,10 @@ public class DynamicDungeon : BaseEntity, IMissionEntityListener
 
 	public static void RemoveDungeon(DynamicDungeon dungeon)
 	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 position = ((Component)dungeon).transform.position;
 		if (_dungeons.Contains(dungeon))
 		{
@@ -69,12 +71,14 @@ public class DynamicDungeon : BaseEntity, IMissionEntityListener
 
 	public static Vector3 GetNextDungeonPoint()
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
 		if (nextDungeonPos == Vector3.zero)
 		{
 			nextDungeonPos = Vector3.one * 700f;
@@ -94,9 +98,9 @@ public class DynamicDungeon : BaseEntity, IMissionEntityListener
 		if (base.isServer)
 		{
 			SpawnGroup[] array = spawnGroups;
-			for (int i = 0; i < array.Length; i++)
+			foreach (SpawnGroup spawnGroup in array)
 			{
-				array[i].Clear();
+				spawnGroup.Clear();
 			}
 			if ((Object)(object)exitPortal != (Object)null)
 			{
@@ -109,10 +113,10 @@ public class DynamicDungeon : BaseEntity, IMissionEntityListener
 
 	public override void ServerInit()
 	{
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
 		base.ServerInit();
 		AddDungeon(this);
 		if (portalPrefab.isValid)
@@ -133,9 +137,9 @@ public class DynamicDungeon : BaseEntity, IMissionEntityListener
 
 	private void MergeAIZones()
 	{
-		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004e: Expected O, but got Unknown
-		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0062: Expected O, but got Unknown
+		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
 		if (!AutoMergeAIZones)
 		{
 			return;
@@ -147,7 +151,8 @@ public class DynamicDungeon : BaseEntity, IMissionEntityListener
 		}
 		GameObject val = new GameObject("AIZ");
 		val.transform.position = ((Component)this).transform.position;
-		AIInformationZone.Merge(list, val).ShouldSleepAI = false;
+		AIInformationZone aIInformationZone = AIInformationZone.Merge(list, val);
+		aIInformationZone.ShouldSleepAI = false;
 		val.transform.SetParent(((Component)this).transform);
 	}
 

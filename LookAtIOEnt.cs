@@ -46,17 +46,17 @@ public class LookAtIOEnt : MonoBehaviour
 
 	public Color NoPowerColor;
 
-	public GameObject GravityWarning;
+	public GameObject GravityWarning = null;
 
-	public GameObject DistanceWarning;
+	public GameObject DistanceWarning = null;
 
-	public GameObject LineOfSightWarning;
+	public GameObject LineOfSightWarning = null;
 
-	public GameObject TooManyInputsWarning;
+	public GameObject TooManyInputsWarning = null;
 
-	public GameObject TooManyOutputsWarning;
+	public GameObject TooManyOutputsWarning = null;
 
-	public GameObject BuildPrivilegeWarning;
+	public GameObject BuildPrivilegeWarning = null;
 
 	public CanvasGroup group;
 

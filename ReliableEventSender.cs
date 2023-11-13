@@ -9,5 +9,5 @@ public class ReliableEventSender : StateMachineBehaviour
 	public string MidStateEvent;
 
 	[Range(0f, 1f)]
-	public float TargetEventTime;
+	public float TargetEventTime = 0f;
 }

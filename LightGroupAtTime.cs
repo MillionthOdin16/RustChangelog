@@ -34,8 +34,8 @@ public class LightGroupAtTime : FacepunchBehaviour
 		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ac: Unknown result type (might be due to invalid IL or missing references)
 		AnimationCurve val = new AnimationCurve();
 		val.keys = (Keyframe[])(object)new Keyframe[5]
 		{
@@ -46,6 +46,8 @@ public class LightGroupAtTime : FacepunchBehaviour
 			new Keyframe(24f, 1f)
 		};
 		IntensityScaleOverTime = val;
+		SearchRoot = null;
+		requiresPower = false;
 		checkLayers = LayerMask.op_Implicit(1235288065);
 		timeBetweenPowerLookup = 10f;
 		((FacepunchBehaviour)this)._002Ector();

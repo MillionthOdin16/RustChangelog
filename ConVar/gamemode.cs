@@ -29,8 +29,8 @@ public class gamemode : ConsoleSystem
 	[ServerVar]
 	public static void set(Arg arg)
 	{
-		//IL_0190: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0195: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01bf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c4: Unknown result type (might be due to invalid IL or missing references)
 		string @string = arg.GetString(0, "");
 		if (string.IsNullOrEmpty(@string))
 		{

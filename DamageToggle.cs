@@ -4,7 +4,7 @@ using UnityEngine.UI;
 [RequireComponent(typeof(Toggle))]
 public class DamageToggle : MonoBehaviour
 {
-	public Toggle toggle;
+	public Toggle toggle = null;
 
 	private void Reset()
 	{

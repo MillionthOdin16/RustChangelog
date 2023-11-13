@@ -2,5 +2,5 @@ using UnityEngine;
 
 public class ViewmodelMountedAnchor : MonoBehaviour
 {
-	public ViewmodelIk IkController;
+	public ViewmodelIk IkController = null;
 }

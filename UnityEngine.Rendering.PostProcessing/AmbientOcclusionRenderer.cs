@@ -21,14 +21,10 @@ internal sealed class AmbientOcclusionRenderer : PostProcessEffectRenderer<Ambie
 
 	public bool IsAmbientOnly(PostProcessRenderContext context)
 	{
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0020: Invalid comparison between Unknown and I4
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Invalid comparison between Unknown and I4
 		Camera camera = context.camera;
-		if (base.settings.ambientOnly.value && (int)camera.actualRenderingPath == 3)
-		{
-			return camera.allowHDR;
-		}
-		return false;
+		return base.settings.ambientOnly.value && (int)camera.actualRenderingPath == 3 && camera.allowHDR;
 	}
 
 	public IAmbientOcclusionMethod Get()
@@ -38,16 +34,18 @@ internal sealed class AmbientOcclusionRenderer : PostProcessEffectRenderer<Ambie
 
 	public override DepthTextureMode GetCameraFlags()
 	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
 		return Get().GetCameraFlags();
 	}
 
 	public override void Release()
 	{
 		IAmbientOcclusionMethod[] methods = m_Methods;
-		for (int i = 0; i < methods.Length; i++)
+		foreach (IAmbientOcclusionMethod ambientOcclusionMethod in methods)
 		{
-			methods[i].Release();
+			ambientOcclusionMethod.Release();
 		}
 	}
 

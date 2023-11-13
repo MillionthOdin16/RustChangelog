@@ -24,13 +24,13 @@ public abstract class ItemModAssociatedEntity<T> : ItemMod where T : BaseEntity
 
 	public T CreateAssociatedEntity(Item item)
 	{
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0056: Expected O, but got Unknown
-		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0062: Expected O, but got Unknown
+		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
 		if (item.instanceData != null)
 		{
 			return null;
@@ -137,7 +137,7 @@ public abstract class ItemModAssociatedEntity<T> : ItemMod where T : BaseEntity
 
 	public static T GetAssociatedEntity(Item item, bool isServer = true)
 	{
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
 		if (item?.instanceData == null)
 		{
 			return null;

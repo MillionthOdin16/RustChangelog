@@ -4,11 +4,12 @@ using ConVar;
 using Network;
 using Rust;
 using UnityEngine;
+using UnityEngine.Profiling;
 using UnityEngine.SceneManagement;
 
 public class GameSetup : MonoBehaviour
 {
-	public static bool RunOnce;
+	public static bool RunOnce = false;
 
 	public bool startServer = true;
 
@@ -16,43 +17,43 @@ public class GameSetup : MonoBehaviour
 
 	public bool loadMenu = true;
 
-	public bool loadLevel;
+	public bool loadLevel = false;
 
 	public string loadLevelScene = "";
 
-	public bool loadSave;
+	public bool loadSave = false;
 
 	public string loadSaveFile = "";
 
 	public string initializationCommands = "";
 
-	public bool normalRendering;
-
 	protected void Awake()
 	{
-		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
 		if (RunOnce)
 		{
 			GameManager.Destroy(((Component)this).gameObject);
 			return;
 		}
-		Render.use_normal_rendering = normalRendering;
 		GameManifest.Load();
 		GameManifest.LoadAssets();
 		RunOnce = true;
+		Profiler.BeginSample("Bootstrap.Initialization");
 		if (Bootstrap.needsSetup)
 		{
 			Bootstrap.Init_Tier0();
-			if (initializationCommands.Length > 0)
-			{
-				string[] array = initializationCommands.Split(';', StringSplitOptions.None);
-				foreach (string text in array)
-				{
-					ConsoleSystem.Run(Option.Server, text.Trim(), Array.Empty<object>());
-				}
-			}
 			Bootstrap.Init_Systems();
 			Bootstrap.Init_Config();
+		}
+		Profiler.EndSample();
+		if (initializationCommands.Length > 0)
+		{
+			string[] array = initializationCommands.Split(';');
+			string[] array2 = array;
+			foreach (string text in array2)
+			{
+				ConsoleSystem.Run(Option.Server, text.Trim(), Array.Empty<object>());
+			}
 		}
 		((MonoBehaviour)this).StartCoroutine(DoGameSetup());
 	}
@@ -64,16 +65,14 @@ public class GameSetup : MonoBehaviour
 		ItemManager.Initialize();
 		Scene activeScene = SceneManager.GetActiveScene();
 		LevelManager.CurrentLevelName = ((Scene)(ref activeScene)).name;
-		if (startServer)
-		{
-			yield return ((MonoBehaviour)this).StartCoroutine(Bootstrap.StartNexusServer());
-		}
 		if (loadLevel && !string.IsNullOrEmpty(loadLevelScene))
 		{
 			Net.sv.Reset();
 			ConVar.Server.level = loadLevelScene;
 			LoadingScreen.Update("LOADING SCENE");
+			Profiler.BeginSample("DoGameSetup.loadLevelScene");
 			Application.LoadLevelAdditive(loadLevelScene);
+			Profiler.EndSample();
 			LoadingScreen.Update(loadLevelScene.ToUpper() + " LOADED");
 		}
 		if (startServer)
@@ -86,8 +85,10 @@ public class GameSetup : MonoBehaviour
 
 	private IEnumerator StartServer()
 	{
+		Profiler.BeginSample("DoGameSetup.StartServer.GarbageCollect.collect");
 		ConVar.GC.collect();
 		ConVar.GC.unload();
+		Profiler.EndSample();
 		yield return CoroutineEx.waitForEndOfFrame;
 		yield return CoroutineEx.waitForEndOfFrame;
 		yield return ((MonoBehaviour)this).StartCoroutine(Bootstrap.StartServer(loadSave, loadSaveFile, allowOutOfDateSaves: true));

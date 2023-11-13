@@ -61,9 +61,9 @@ public class Performance : SingletonComponent<Performance>
 
 	private static int[] frameTimes = new int[1000];
 
-	private int frames;
+	private int frames = 0;
 
-	private float time;
+	private float time = 0f;
 
 	private void Update()
 	{

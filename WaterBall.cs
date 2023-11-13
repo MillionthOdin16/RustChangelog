@@ -7,7 +7,7 @@ public class WaterBall : BaseEntity
 {
 	public ItemDefinition liquidType;
 
-	public int waterAmount;
+	public int waterAmount = 0;
 
 	public GameObjectRef waterExplosion;
 
@@ -32,7 +32,7 @@ public class WaterBall : BaseEntity
 
 	public void FixedUpdate()
 	{
-		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
 		if (base.isServer)
 		{
 			((Component)this).GetComponent<Rigidbody>().AddForce(Physics.gravity, (ForceMode)5);
@@ -41,7 +41,7 @@ public class WaterBall : BaseEntity
 
 	public static bool DoSplash(Vector3 position, float radius, ItemDefinition liquidDef, int amount)
 	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
 		List<BaseEntity> list = Pool.GetList<BaseEntity>();
 		Vis.Entities(position, radius, list, 1220225811, (QueryTriggerInteraction)2);
 		int num = 0;
@@ -79,13 +79,13 @@ public class WaterBall : BaseEntity
 
 	private void OnCollisionEnter(Collision collision)
 	{
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0092: Unknown result type (might be due to invalid IL or missing references)
 		if (!base.isClient && !myRigidBody.isKinematic)
 		{
 			float num = 2.5f;

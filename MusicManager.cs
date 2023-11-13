@@ -12,15 +12,15 @@ public class MusicManager : SingletonComponent<MusicManager>, IClientComponent
 
 		public MusicTheme.PositionedClip positionedClip;
 
-		public bool isActive;
+		public bool isActive = false;
 
-		public bool fadingIn;
+		public bool fadingIn = false;
 
-		public bool fadingOut;
+		public bool fadingOut = false;
 
-		public double fadeStarted;
+		public double fadeStarted = 0.0;
 
-		public bool needsSync;
+		public bool needsSync = false;
 	}
 
 	public AudioMixerGroup mixerGroup;
@@ -31,36 +31,36 @@ public class MusicManager : SingletonComponent<MusicManager>, IClientComponent
 
 	public List<AudioSource> sources = new List<AudioSource>();
 
-	public double nextMusic;
+	public double nextMusic = 0.0;
 
-	public double nextMusicFromIntensityRaise;
+	public double nextMusicFromIntensityRaise = 0.0;
 
 	[Range(0f, 1f)]
-	public float intensity;
+	public float intensity = 0f;
 
 	public Dictionary<MusicTheme.PositionedClip, ClipPlaybackData> clipPlaybackData = new Dictionary<MusicTheme.PositionedClip, ClipPlaybackData>();
 
-	public int holdIntensityUntilBar;
+	public int holdIntensityUntilBar = 0;
 
-	public bool musicPlaying;
+	public bool musicPlaying = false;
 
-	public bool loadingFirstClips;
+	public bool loadingFirstClips = false;
 
-	public MusicTheme nextTheme;
+	public MusicTheme nextTheme = null;
 
-	public double lastClipUpdate;
+	public double lastClipUpdate = 0.0;
 
 	public float clipUpdateInterval = 0.1f;
 
-	public double themeStartTime;
+	public double themeStartTime = 0.0;
 
 	public int lastActiveClipRefresh = -10;
 
 	public int activeClipRefreshInterval = 1;
 
-	public bool forceThemeChange;
+	public bool forceThemeChange = false;
 
-	public float randomIntensityJumpChance;
+	public float randomIntensityJumpChance = 0f;
 
 	public int clipScheduleBarsEarly = 1;
 
@@ -72,9 +72,9 @@ public class MusicManager : SingletonComponent<MusicManager>, IClientComponent
 
 	public List<MusicZone> currentMusicZones = new List<MusicZone>();
 
-	public int currentBar;
+	public int currentBar = 0;
 
-	public int barOffset;
+	public int barOffset = 0;
 
 	public double currentThemeTime => AudioSettings.dspTime - themeStartTime;
 
