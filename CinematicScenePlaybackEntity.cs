@@ -9,6 +9,10 @@ public class CinematicScenePlaybackEntity : BaseEntity
 
 	public float Duration = 10f;
 
+	public GameObject DebugRoot;
+
+	public bool ShowDebugRoot;
+
 	private BasePlayer currentPlayer;
 
 	public void SignalKillPlayer()

@@ -201,6 +201,33 @@ public class TerrainMeta : MonoBehaviour
 		return Mathf.Min(new float[4] { num5, num6, num7, num8 });
 	}
 
+	public static bool IsPointWithinTutorialBounds(Vector3 worldPos)
+	{
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
+		float num = Position.x - Size.x - TutorialIsland.TutorialBoundsSize;
+		float num2 = Position.x + Size.x + Size.x - TutorialIsland.TutorialBoundsSize;
+		float num3 = Position.z - Size.z - TutorialIsland.TutorialBoundsSize;
+		float num4 = Position.z + Size.z + Size.z - TutorialIsland.TutorialBoundsSize;
+		if (!(worldPos.x < num) && !(worldPos.x > num2) && !(worldPos.z < num3))
+		{
+			return worldPos.z > num4;
+		}
+		return true;
+	}
+
 	public static Vector3 RandomPointOffshore()
 	{
 		//IL_0022: Unknown result type (might be due to invalid IL or missing references)

@@ -679,6 +679,9 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 	[NonSerialized]
 	private float lastInputTime;
 
+	[NonSerialized]
+	private float tutorialKickTime;
+
 	private PlayerTick lastReceivedTick = new PlayerTick();
 
 	private float tickDeltaTime;
@@ -10172,6 +10175,36 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			{
 				ProcessMissionEvent(BaseMission.MissionEventType.PLAYER_TICK, net.ID, 0f);
 			}
+		}
+		if (!TutorialIsland.EnforceTrespassChecks || IsAdmin || IsNpc || net == null || net.group == null || !net.group.restricted)
+		{
+			return;
+		}
+		bool flag = false;
+		if (!IsInTutorial)
+		{
+			flag = true;
+		}
+		else
+		{
+			TutorialIsland currentTutorialIsland = GetCurrentTutorialIsland();
+			if ((Object)(object)currentTutorialIsland == (Object)null || currentTutorialIsland.net.group != net.group)
+			{
+				flag = true;
+			}
+		}
+		if (flag)
+		{
+			tutorialKickTime += Time.deltaTime;
+			if (tutorialKickTime > 3f)
+			{
+				Hurt(999f);
+				tutorialKickTime = 0f;
+			}
+		}
+		else
+		{
+			tutorialKickTime = 0f;
 		}
 	}
 

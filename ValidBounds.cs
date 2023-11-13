@@ -62,6 +62,14 @@ public class ValidBounds : SingletonComponent<ValidBounds>
 		return true;
 	}
 
+	public static float GetMaximumPointTutorial()
+	{
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		return Mathf.Min(TerrainMeta.Position.x + TerrainMeta.Size.x * 2f - TutorialIsland.TutorialBoundsSize, ((Bounds)(ref SingletonComponent<ValidBounds>.Instance.worldBounds)).size.x * 0.5f);
+	}
+
 	public static float GetMaximumPoint()
 	{
 		//IL_001d: Unknown result type (might be due to invalid IL or missing references)

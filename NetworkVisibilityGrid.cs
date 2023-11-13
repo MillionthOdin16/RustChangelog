@@ -107,8 +107,9 @@ public class NetworkVisibilityGrid : MonoBehaviour, Provider
 		return (float)value * cellSize - halfGridSize;
 	}
 
-	private int PositionToLayer(float x, float y)
+	private int PositionToLayer(float x, float y, float z)
 	{
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
 		if (y < tunnelsThreshold)
 		{
 			return 2;
@@ -121,7 +122,7 @@ public class NetworkVisibilityGrid : MonoBehaviour, Provider
 		{
 			return 10 + Mathf.FloorToInt((y - dynamicDungeonsThreshold) / dynamicDungeonsInterval);
 		}
-		if (Mathf.Abs(x) >= TutorialIsland.TutorialWorldNetworkThreshold)
+		if (TerrainMeta.IsPointWithinTutorialBounds(new Vector3(x, 0f, z)))
 		{
 			return 3;
 		}
@@ -139,14 +140,15 @@ public class NetworkVisibilityGrid : MonoBehaviour, Provider
 		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
 		int num = PositionToGrid(vPos.x);
 		int num2 = PositionToGrid(vPos.z);
-		int num3 = PositionToLayer(vPos.x, vPos.y);
+		int num3 = PositionToLayer(vPos.x, vPos.y, vPos.z);
 		float tutorialWorldNetworkThreshold = TutorialIsland.TutorialWorldNetworkThreshold;
 		if (Mathf.Abs(vPos.x) >= tutorialWorldNetworkThreshold || Mathf.Abs(vPos.z) >= tutorialWorldNetworkThreshold)
 		{

@@ -2129,35 +2129,37 @@ public class ConsoleGen
 		//IL_1a82f: Expected O, but got Unknown
 		//IL_1a899: Unknown result type (might be due to invalid IL or missing references)
 		//IL_1a89f: Expected O, but got Unknown
-		//IL_1a902: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1a908: Expected O, but got Unknown
-		//IL_1a96b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1a971: Expected O, but got Unknown
-		//IL_1a9be: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1a9c4: Expected O, but got Unknown
-		//IL_1aa11: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1aa17: Expected O, but got Unknown
-		//IL_1aa85: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1aa8b: Expected O, but got Unknown
-		//IL_1aaf9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1aaff: Expected O, but got Unknown
-		//IL_1ab6d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1ab73: Expected O, but got Unknown
-		//IL_1abe1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1abe7: Expected O, but got Unknown
-		//IL_1ac55: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1ac5b: Expected O, but got Unknown
-		//IL_1acd0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1acd6: Expected O, but got Unknown
-		//IL_1ad4b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1ad51: Expected O, but got Unknown
-		//IL_1adc6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1adcc: Expected O, but got Unknown
-		//IL_1ae41: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1ae47: Expected O, but got Unknown
-		//IL_1ae94: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1ae9a: Expected O, but got Unknown
-		Command[] array = new Command[1071];
+		//IL_1a909: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1a90f: Expected O, but got Unknown
+		//IL_1a972: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1a978: Expected O, but got Unknown
+		//IL_1a9db: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1a9e1: Expected O, but got Unknown
+		//IL_1aa2e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1aa34: Expected O, but got Unknown
+		//IL_1aa81: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1aa87: Expected O, but got Unknown
+		//IL_1aaf5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1aafb: Expected O, but got Unknown
+		//IL_1ab69: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1ab6f: Expected O, but got Unknown
+		//IL_1abdd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1abe3: Expected O, but got Unknown
+		//IL_1ac51: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1ac57: Expected O, but got Unknown
+		//IL_1acc5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1accb: Expected O, but got Unknown
+		//IL_1ad40: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1ad46: Expected O, but got Unknown
+		//IL_1adbb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1adc1: Expected O, but got Unknown
+		//IL_1ae36: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1ae3c: Expected O, but got Unknown
+		//IL_1aeb1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1aeb7: Expected O, but got Unknown
+		//IL_1af04: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1af0a: Expected O, but got Unknown
+		Command[] array = new Command[1072];
 		Command val = new Command();
 		val.Name = "humanknownplayerslosupdateinterval";
 		val.Parent = "aibrainsenses";
@@ -15152,6 +15154,19 @@ public class ConsoleGen
 		};
 		array[1054] = val;
 		val = new Command();
+		val.Name = "enforcetrespasschecks";
+		val.Parent = "tutorialisland";
+		val.FullName = "tutorialisland.enforcetrespasschecks";
+		val.ServerAdmin = true;
+		val.Saved = true;
+		val.Variable = true;
+		val.GetOveride = () => TutorialIsland.EnforceTrespassChecks.ToString();
+		val.SetOveride = delegate(string str)
+		{
+			TutorialIsland.EnforceTrespassChecks = StringExtensions.ToBool(str);
+		};
+		array[1055] = val;
+		val = new Command();
 		val.Name = "spawntutorialislandfornewplayer";
 		val.Parent = "tutorialisland";
 		val.FullName = "tutorialisland.spawntutorialislandfornewplayer";
@@ -15163,7 +15178,7 @@ public class ConsoleGen
 		{
 			TutorialIsland.SpawnTutorialIslandForNewPlayer = StringExtensions.ToBool(str);
 		};
-		array[1055] = val;
+		array[1056] = val;
 		val = new Command();
 		val.Name = "days_to_add_test";
 		val.Parent = "wipetimer";
@@ -15175,7 +15190,7 @@ public class ConsoleGen
 		{
 			WipeTimer.daysToAddTest = StringExtensions.ToInt(str, 0);
 		};
-		array[1056] = val;
+		array[1057] = val;
 		val = new Command();
 		val.Name = "hours_to_add_test";
 		val.Parent = "wipetimer";
@@ -15187,7 +15202,7 @@ public class ConsoleGen
 		{
 			WipeTimer.hoursToAddTest = StringExtensions.ToFloat(str, 0f);
 		};
-		array[1057] = val;
+		array[1058] = val;
 		val = new Command();
 		val.Name = "printtimezones";
 		val.Parent = "wipetimer";
@@ -15198,7 +15213,7 @@ public class ConsoleGen
 		{
 			WipeTimer.PrintTimeZones(arg);
 		};
-		array[1058] = val;
+		array[1059] = val;
 		val = new Command();
 		val.Name = "printwipe";
 		val.Parent = "wipetimer";
@@ -15209,7 +15224,7 @@ public class ConsoleGen
 		{
 			WipeTimer.PrintWipe(arg);
 		};
-		array[1059] = val;
+		array[1060] = val;
 		val = new Command();
 		val.Name = "wipecronoverride";
 		val.Parent = "wipetimer";
@@ -15222,7 +15237,7 @@ public class ConsoleGen
 		{
 			WipeTimer.wipeCronOverride = str;
 		};
-		array[1060] = val;
+		array[1061] = val;
 		val = new Command();
 		val.Name = "wipedayofweek";
 		val.Parent = "wipetimer";
@@ -15235,7 +15250,7 @@ public class ConsoleGen
 		{
 			WipeTimer.wipeDayOfWeek = StringExtensions.ToInt(str, 0);
 		};
-		array[1061] = val;
+		array[1062] = val;
 		val = new Command();
 		val.Name = "wipehourofday";
 		val.Parent = "wipetimer";
@@ -15248,7 +15263,7 @@ public class ConsoleGen
 		{
 			WipeTimer.wipeHourOfDay = StringExtensions.ToFloat(str, 0f);
 		};
-		array[1062] = val;
+		array[1063] = val;
 		val = new Command();
 		val.Name = "wipetimezone";
 		val.Parent = "wipetimer";
@@ -15261,7 +15276,7 @@ public class ConsoleGen
 		{
 			WipeTimer.wipeTimezone = str;
 		};
-		array[1063] = val;
+		array[1064] = val;
 		val = new Command();
 		val.Name = "wipeunixtimestampoverride";
 		val.Parent = "wipetimer";
@@ -15274,7 +15289,7 @@ public class ConsoleGen
 		{
 			WipeTimer.wipeUnixTimestampOverride = StringExtensions.ToLong(str, 0L);
 		};
-		array[1064] = val;
+		array[1065] = val;
 		val = new Command();
 		val.Name = "population";
 		val.Parent = "wolf";
@@ -15288,7 +15303,7 @@ public class ConsoleGen
 		{
 			Wolf.Population = StringExtensions.ToFloat(str, 0f);
 		};
-		array[1065] = val;
+		array[1066] = val;
 		val = new Command();
 		val.Name = "playerdetectrange";
 		val.Parent = "xmasdungeon";
@@ -15302,7 +15317,7 @@ public class ConsoleGen
 		{
 			XmasDungeon.playerdetectrange = StringExtensions.ToFloat(str, 0f);
 		};
-		array[1066] = val;
+		array[1067] = val;
 		val = new Command();
 		val.Name = "xmaslifetime";
 		val.Parent = "xmasdungeon";
@@ -15316,7 +15331,7 @@ public class ConsoleGen
 		{
 			XmasDungeon.xmaslifetime = StringExtensions.ToFloat(str, 0f);
 		};
-		array[1067] = val;
+		array[1068] = val;
 		val = new Command();
 		val.Name = "xmaspopulation";
 		val.Parent = "xmasdungeon";
@@ -15330,7 +15345,7 @@ public class ConsoleGen
 		{
 			XmasDungeon.xmaspopulation = StringExtensions.ToFloat(str, 0f);
 		};
-		array[1068] = val;
+		array[1069] = val;
 		val = new Command();
 		val.Name = "report";
 		val.Parent = "ziplinelaunchpoint";
@@ -15341,7 +15356,7 @@ public class ConsoleGen
 		{
 			ZiplineLaunchPoint.report(arg);
 		};
-		array[1069] = val;
+		array[1070] = val;
 		val = new Command();
 		val.Name = "population";
 		val.Parent = "zombie";
@@ -15355,7 +15370,7 @@ public class ConsoleGen
 		{
 			Zombie.Population = StringExtensions.ToFloat(str, 0f);
 		};
-		array[1070] = val;
+		array[1071] = val;
 		All = (Command[])(object)array;
 	}
 }

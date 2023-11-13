@@ -50,12 +50,19 @@ public class TutorialIsland : BaseEntity, IEntityPingSource
 
 	public static ListHashSet<IslandBounds> BoundsListServer = new ListHashSet<IslandBounds>(8);
 
+	public static float TutorialBoundsSize = 400f;
+
 	[ServerVar(Saved = true)]
 	public static bool SpawnTutorialIslandForNewPlayer = true;
 
 	private static ListHashSet<TutorialIsland> ActiveIslandsServer = new ListHashSet<TutorialIsland>(8);
 
+	[ServerVar(Saved = true)]
+	public static bool EnforceTrespassChecks = true;
+
 	private const string TutorialIslandAssetPath = "assets/prefabs/missions/tutorialisland/tutorialisland.prefab";
+
+	private static float _tutorialWorldStart = 0f;
 
 	public static Bounds WorldBoundsMinusTutorialIslands;
 
@@ -71,9 +78,19 @@ public class TutorialIsland : BaseEntity, IEntityPingSource
 
 	public float CurrentIslandTime { get; set; }
 
-	public static float TutorialWorldStart => ValidBounds.GetMaximumPoint() - 200f;
+	public static float TutorialWorldStart
+	{
+		get
+		{
+			if (_tutorialWorldStart <= 0f)
+			{
+				_tutorialWorldStart = ValidBounds.GetMaximumPoint() - TutorialBoundsSize;
+			}
+			return _tutorialWorldStart;
+		}
+	}
 
-	public static float TutorialWorldNetworkThreshold => TutorialWorldStart - 400f;
+	public static float TutorialWorldNetworkThreshold => TutorialWorldStart - TutorialBoundsSize;
 
 	public float DisconnectTimeOutDuration
 	{
@@ -124,9 +141,9 @@ public class TutorialIsland : BaseEntity, IEntityPingSource
 		if (islandSpawnLocations == null || islandSpawnLocations.Count <= 0)
 		{
 			Vector3 val = default(Vector3);
-			((Vector3)(ref val))._002Ector(0f - ValidBounds.GetMaximumPoint(), 0f, 0f - ValidBounds.GetMaximumPoint());
+			((Vector3)(ref val))._002Ector(0f - ValidBounds.GetMaximumPointTutorial(), 0f, 0f - ValidBounds.GetMaximumPointTutorial());
 			Vector3 val2 = default(Vector3);
-			((Vector3)(ref val2))._002Ector(ValidBounds.GetMaximumPoint(), 0f, ValidBounds.GetMaximumPoint());
+			((Vector3)(ref val2))._002Ector(ValidBounds.GetMaximumPointTutorial(), 0f, ValidBounds.GetMaximumPointTutorial());
 			Vector3 cellSize = default(Vector3);
 			((Vector3)(ref cellSize))._002Ector(200f, 0f, 200f);
 			islandSpawnLocations = TutorialIslandSpawner.GetEdgeSpawnPoints(val, val2 - val, cellSize, 1, out WorldBoundsMinusTutorialIslands);

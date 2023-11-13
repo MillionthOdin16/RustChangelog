@@ -60,7 +60,8 @@ public class BaseMission : BaseScriptableObject
 		CONSUME,
 		ACQUITE_ITEM_STACK,
 		OPEN_STORAGE,
-		COOK
+		COOK,
+		ENTER_TRIGGER
 	}
 
 	[Serializable]
