@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class ChippyMainCharacter : SpriteArcadeEntity
 {
-	public float speed = 0f;
+	public float speed;
 
 	public float maxSpeed = 0.25f;
 

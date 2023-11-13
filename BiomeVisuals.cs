@@ -2,17 +2,17 @@ using UnityEngine;
 
 public class BiomeVisuals : MonoBehaviour
 {
-	public GameObject Arid = null;
+	public GameObject Arid;
 
-	public GameObject Temperate = null;
+	public GameObject Temperate;
 
-	public GameObject Tundra = null;
+	public GameObject Tundra;
 
-	public GameObject Arctic = null;
+	public GameObject Arctic;
 
 	protected void Start()
 	{
-		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
 		switch (((Object)(object)TerrainMeta.BiomeMap != (Object)null) ? TerrainMeta.BiomeMap.GetBiomeMaxType(((Component)this).transform.position) : 2)
 		{
 		case 1:

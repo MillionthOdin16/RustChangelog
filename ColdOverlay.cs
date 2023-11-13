@@ -7,5 +7,5 @@ public class ColdOverlay : MonoBehaviour
 
 	public float smoothTime = 1f;
 
-	public bool preventInstantiation = false;
+	public bool preventInstantiation;
 }

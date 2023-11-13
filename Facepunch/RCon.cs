@@ -10,7 +10,6 @@ using Facepunch.Rcon;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 namespace Facepunch;
 
@@ -62,15 +61,15 @@ public class RCon
 	{
 		private Socket socket;
 
-		private bool isAuthorised = false;
+		private bool isAuthorised;
 
 		private string connectionName;
 
 		private int lastMessageID = -1;
 
-		private bool runningConsoleCommand = false;
+		private bool runningConsoleCommand;
 
-		private bool utf8Mode = false;
+		private bool utf8Mode;
 
 		internal RConClient(Socket cl)
 		{
@@ -130,7 +129,7 @@ public class RCon
 
 		internal bool HandleMessage(int type, string msg)
 		{
-			//IL_0067: Unknown result type (might be due to invalid IL or missing references)
+			//IL_004c: Unknown result type (might be due to invalid IL or missing references)
 			if (!isAuthorised)
 			{
 				return HandleMessage_UnAuthed(type, msg);
@@ -162,8 +161,7 @@ public class RCon
 		{
 			if (type != SERVERDATA_AUTH)
 			{
-				IPEndPoint iPEndPoint = socket.RemoteEndPoint as IPEndPoint;
-				BanIP(iPEndPoint.Address, 60f);
+				BanIP((socket.RemoteEndPoint as IPEndPoint).Address, 60f);
 				Close("Invalid Command - Not Authed");
 				return false;
 			}
@@ -172,8 +170,7 @@ public class RCon
 			if (!isAuthorised)
 			{
 				Reply(-1, SERVERDATA_AUTH_RESPONSE, "");
-				IPEndPoint iPEndPoint2 = socket.RemoteEndPoint as IPEndPoint;
-				BanIP(iPEndPoint2.Address, 60f);
+				BanIP((socket.RemoteEndPoint as IPEndPoint).Address, 60f);
 				Close("Invalid Password");
 				return true;
 			}
@@ -187,13 +184,11 @@ public class RCon
 		{
 			if (isAuthorised && IsValid())
 			{
-				Profiler.BeginSample("RConClient.Reply");
 				if (lastMessageID != -1 && runningConsoleCommand)
 				{
 					Reply(lastMessageID, SERVERDATA_RESPONSE_VALUE, message);
 				}
 				Reply(0, SERVERDATA_CONSOLE_LOG, message);
-				Profiler.EndSample();
 			}
 		}
 
@@ -391,8 +386,8 @@ public class RCon
 
 	public static void Initialize()
 	{
-		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008e: Expected O, but got Unknown
+		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0078: Expected O, but got Unknown
 		if (Port == 0)
 		{
 			Port = Server.port;
@@ -479,16 +474,13 @@ public class RCon
 
 	public static void Update()
 	{
-		Profiler.BeginSample("Facepunch.RCon.Commands");
 		lock (Commands)
 		{
 			while (Commands.Count > 0)
 			{
-				Command cmd = Commands.Dequeue();
-				OnCommand(cmd);
+				OnCommand(Commands.Dequeue());
 			}
 		}
-		Profiler.EndSample();
 		if (listener == null || lastRunTime + 0.02f >= Time.realtimeSinceStartup)
 		{
 			return;
@@ -496,10 +488,8 @@ public class RCon
 		lastRunTime = Time.realtimeSinceStartup;
 		try
 		{
-			Profiler.BeginSample("Facepunch.RCon.Update");
 			bannedAddresses.RemoveAll((BannedAddresses x) => x.banTime < Time.realtimeSinceStartup);
 			listener.Cycle();
-			Profiler.EndSample();
 		}
 		catch (Exception ex)
 		{
@@ -523,9 +513,9 @@ public class RCon
 
 	private static void OnCommand(Command cmd)
 	{
-		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
 		try
 		{
 			responseIdentifier = cmd.Identifier;
@@ -533,7 +523,7 @@ public class RCon
 			isInput = true;
 			if (Print)
 			{
-				Debug.Log((object)string.Concat("[rcon] ", cmd.Ip, ": ", cmd.Message));
+				Debug.Log((object)("[rcon] " + cmd.Ip?.ToString() + ": " + cmd.Message));
 			}
 			isInput = false;
 			Option server = Option.Server;
@@ -552,13 +542,13 @@ public class RCon
 
 	private static void OnMessage(string message, string stacktrace, LogType type)
 	{
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0050: Invalid comparison between Unknown and I4
-		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0063: Invalid comparison between Unknown and I4
-		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0067: Invalid comparison between Unknown and I4
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Invalid comparison between Unknown and I4
+		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004f: Invalid comparison between Unknown and I4
+		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0053: Invalid comparison between Unknown and I4
 		if (!isInput && listenerNew != null)
 		{
 			Response response = default(Response);

@@ -4,13 +4,23 @@ public class TriggerNotify : TriggerBase, IPrefabPreProcess
 {
 	public GameObject notifyTarget;
 
-	private INotifyTrigger toNotify = null;
+	private INotifyTrigger toNotify;
 
 	public bool runClientside = true;
 
 	public bool runServerside = true;
 
-	public bool HasContents => contents != null && contents.Count > 0;
+	public bool HasContents
+	{
+		get
+		{
+			if (contents != null)
+			{
+				return contents.Count > 0;
+			}
+			return false;
+		}
+	}
 
 	internal override void OnObjects()
 	{

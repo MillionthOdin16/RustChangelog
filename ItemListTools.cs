@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Linq;
 using Rust.UI;
 using TMPro;
@@ -49,8 +48,8 @@ public class ItemListTools : MonoBehaviour
 
 	private void RebuildCategories()
 	{
-		//IL_016d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0177: Expected O, but got Unknown
+		//IL_014f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0159: Expected O, but got Unknown
 		for (int i = 0; i < categoryButton.transform.parent.childCount; i++)
 		{
 			Transform child = categoryButton.transform.parent.GetChild(i);
@@ -60,14 +59,14 @@ public class ItemListTools : MonoBehaviour
 			}
 		}
 		categoryButton.SetActive(true);
-		IEnumerable<IGrouping<ItemCategory, ItemDefinition>> source = from x in ItemManager.GetItemDefinitions()
-			group x by x.category;
-		foreach (IGrouping<ItemCategory, ItemDefinition> item in source.OrderBy((IGrouping<ItemCategory, ItemDefinition> x) => x.First().category))
+		foreach (IGrouping<ItemCategory, ItemDefinition> item in from x in ItemManager.GetItemDefinitions()
+			group x by x.category into x
+			orderby x.First().category
+			select x)
 		{
 			GameObject val = Object.Instantiate<GameObject>(categoryButton);
 			val.transform.SetParent(categoryButton.transform.parent, false);
-			TextMeshProUGUI componentInChildren = val.GetComponentInChildren<TextMeshProUGUI>();
-			((TMP_Text)componentInChildren).text = item.First().category.ToString();
+			((TMP_Text)val.GetComponentInChildren<TextMeshProUGUI>()).text = item.First().category.ToString();
 			Button btn = val.GetComponentInChildren<Button>();
 			ItemDefinition[] itemArray = item.ToArray();
 			((UnityEvent)btn.onClick).AddListener((UnityAction)delegate
@@ -114,18 +113,17 @@ public class ItemListTools : MonoBehaviour
 		itemButton.SetActive(true);
 		bool flag = !string.IsNullOrEmpty(searchText);
 		string value = (flag ? searchText.ToLower() : null);
-		IOrderedEnumerable<ItemDefinition> orderedEnumerable = (flag ? allItems : currentItems);
+		IOrderedEnumerable<ItemDefinition> obj = (flag ? allItems : currentItems);
 		int num = 0;
-		foreach (ItemDefinition item in orderedEnumerable)
+		foreach (ItemDefinition item in obj)
 		{
 			if (!item.hidden && (!flag || item.displayName.translated.ToLower().Contains(value)))
 			{
-				GameObject val = Object.Instantiate<GameObject>(itemButton);
-				val.transform.SetParent(itemButton.transform.parent, false);
-				TextMeshProUGUI componentInChildren = val.GetComponentInChildren<TextMeshProUGUI>();
-				((TMP_Text)componentInChildren).text = item.displayName.translated;
-				val.GetComponentInChildren<ItemButtonTools>().itemDef = item;
-				val.GetComponentInChildren<ItemButtonTools>().image.sprite = item.iconSprite;
+				GameObject obj2 = Object.Instantiate<GameObject>(itemButton);
+				obj2.transform.SetParent(itemButton.transform.parent, false);
+				((TMP_Text)obj2.GetComponentInChildren<TextMeshProUGUI>()).text = item.displayName.translated;
+				obj2.GetComponentInChildren<ItemButtonTools>().itemDef = item;
+				obj2.GetComponentInChildren<ItemButtonTools>().image.sprite = item.iconSprite;
 				num++;
 				if (num >= 160)
 				{

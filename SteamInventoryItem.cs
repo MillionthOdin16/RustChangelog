@@ -53,10 +53,10 @@ public class SteamInventoryItem : ScriptableObject
 
 	public ulong workshopID;
 
-	public SteamDLCItem DlcItem = null;
+	public SteamDLCItem DlcItem;
 
 	[Tooltip("Does nothing currently")]
-	public bool forceCraftableItemDesc = false;
+	public bool forceCraftableItemDesc;
 
 	public ItemDefinition itemDefinition => ItemManager.FindItemDefinition(itemname);
 

@@ -1,6 +1,6 @@
 public class RendererGrid : SingletonComponent<RendererGrid>, IClientComponent
 {
-	public static bool Paused = false;
+	public static bool Paused;
 
 	public GameObjectRef BatchPrefab;
 

@@ -8,9 +8,9 @@ public class UIFadeOut : MonoBehaviour
 
 	public CanvasGroup targetGroup;
 
-	public float fadeDelay = 0f;
+	public float fadeDelay;
 
-	private float timeStarted = 0f;
+	private float timeStarted;
 
 	private void Start()
 	{

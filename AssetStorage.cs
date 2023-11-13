@@ -4,9 +4,7 @@ public static class AssetStorage
 {
 	public static void Save<T>(ref T asset, string path) where T : Object
 	{
-		if (Object.op_Implicit((Object)(object)asset))
-		{
-		}
+		Object.op_Implicit((Object)(object)asset);
 	}
 
 	public static void Save(ref Texture2D asset)
@@ -15,9 +13,7 @@ public static class AssetStorage
 
 	public static void Save(ref Texture2D asset, string path, bool linear, bool compress)
 	{
-		if (Object.op_Implicit((Object)(object)asset))
-		{
-		}
+		Object.op_Implicit((Object)(object)asset);
 	}
 
 	public static void Load<T>(ref T asset, string path) where T : Object

@@ -6,9 +6,9 @@ public class EntityItem_RotateWhenOn : EntityComponent<BaseEntity>
 	[Serializable]
 	public class State
 	{
-		public Vector3 rotation = default(Vector3);
+		public Vector3 rotation;
 
-		public float initialDelay = 0f;
+		public float initialDelay;
 
 		public float timeToTake = 2f;
 
@@ -35,9 +35,9 @@ public class EntityItem_RotateWhenOn : EntityComponent<BaseEntity>
 
 	public State off;
 
-	internal bool currentlyOn = false;
+	internal bool currentlyOn;
 
-	internal bool stateInitialized = false;
+	internal bool stateInitialized;
 
 	public BaseEntity.Flags targetFlag = BaseEntity.Flags.On;
 }

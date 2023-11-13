@@ -15,28 +15,27 @@ public class ItemModProjectileRadialDamage : ItemModProjectileMod
 
 	public override void ServerProjectileHit(HitInfo info)
 	{
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ce: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0109: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00eb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fe: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0103: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0106: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0110: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0114: Unknown result type (might be due to invalid IL or missing references)
 		//IL_011e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0123: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0140: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0145: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0148: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0152: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0156: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0160: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0165: Unknown result type (might be due to invalid IL or missing references)
 		if (effect.isValid)
 		{
 			Effect.server.Run(effect.resourcePath, info.HitPositionWorld, info.HitNormalWorld);
@@ -50,23 +49,22 @@ public class ItemModProjectileRadialDamage : ItemModProjectileMod
 			{
 				continue;
 			}
-			Vector3 val = item.CenterPoint();
-			Vector3 val2 = item.ClosestPoint(info.HitPositionWorld);
-			float num = Vector3.Distance(val2, info.HitPositionWorld);
-			float num2 = num / radius;
-			if (num2 > 1f)
+			item.CenterPoint();
+			Vector3 val = item.ClosestPoint(info.HitPositionWorld);
+			float num = Vector3.Distance(val, info.HitPositionWorld) / radius;
+			if (num > 1f)
 			{
 				continue;
 			}
-			float num3 = 1f - num2;
+			float num2 = 1f - num;
 			if (item.IsVisibleAndCanSee(info.HitPositionWorld - ((Vector3)(ref info.ProjectileVelocity)).normalized * 0.1f))
 			{
 				Vector3 hitPositionWorld = info.HitPositionWorld;
-				Vector3 val3 = val2 - info.HitPositionWorld;
-				if (item.IsVisibleAndCanSee(hitPositionWorld - ((Vector3)(ref val3)).normalized * 0.1f))
+				Vector3 val2 = val - info.HitPositionWorld;
+				if (item.IsVisibleAndCanSee(hitPositionWorld - ((Vector3)(ref val2)).normalized * 0.1f))
 				{
 					list.Add(item);
-					item.OnAttacked(new HitInfo(info.Initiator, item, damage.type, damage.amount * num3));
+					item.OnAttacked(new HitInfo(info.Initiator, item, damage.type, damage.amount * num2));
 				}
 			}
 		}

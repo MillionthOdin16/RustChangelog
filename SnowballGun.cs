@@ -2,24 +2,35 @@ using UnityEngine;
 
 public class SnowballGun : BaseProjectile
 {
-	public ItemDefinition OverrideProjectile = null;
+	public ItemDefinition OverrideProjectile;
 
-	protected override ItemDefinition PrimaryMagazineAmmo => ((Object)(object)OverrideProjectile != (Object)null) ? OverrideProjectile : base.PrimaryMagazineAmmo;
+	protected override ItemDefinition PrimaryMagazineAmmo
+	{
+		get
+		{
+			if (!((Object)(object)OverrideProjectile != (Object)null))
+			{
+				return base.PrimaryMagazineAmmo;
+			}
+			return OverrideProjectile;
+		}
+	}
 
 	protected override bool CanRefundAmmo => false;
 
-	protected override void ReloadMagazine(int desiredAmount = -1)
+	public override bool TryReloadMagazine(IAmmoContainer ammoSource, int desiredAmount = -1)
 	{
+		desiredAmount = 1;
+		primaryMagazine.TryReload(ammoSource, desiredAmount, CanRefundAmmo);
+		primaryMagazine.contents = primaryMagazine.capacity;
+		primaryMagazine.ammoType = OverrideProjectile;
+		SendNetworkUpdateImmediate();
+		ItemManager.DoRemoves();
 		BasePlayer ownerPlayer = GetOwnerPlayer();
-		if (Object.op_Implicit((Object)(object)ownerPlayer))
+		if ((Object)(object)ownerPlayer != (Object)null)
 		{
-			desiredAmount = 1;
-			primaryMagazine.Reload(ownerPlayer, desiredAmount, CanRefundAmmo);
-			primaryMagazine.contents = primaryMagazine.capacity;
-			primaryMagazine.ammoType = OverrideProjectile;
-			SendNetworkUpdateImmediate();
-			ItemManager.DoRemoves();
 			ownerPlayer.inventory.ServerUpdate(0f);
 		}
+		return true;
 	}
 }

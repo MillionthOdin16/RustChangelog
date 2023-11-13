@@ -3,19 +3,19 @@ using UnityEngine;
 
 public class VoicemailDialog : MonoBehaviour
 {
-	public GameObject RecordingRoot = null;
+	public GameObject RecordingRoot;
 
-	public RustSlider RecordingProgress = null;
+	public RustSlider RecordingProgress;
 
-	public GameObject BrowsingRoot = null;
+	public GameObject BrowsingRoot;
 
-	public PhoneDialler ParentDialler = null;
+	public PhoneDialler ParentDialler;
 
-	public GameObjectRef VoicemailEntry = null;
+	public GameObjectRef VoicemailEntry;
 
-	public Transform VoicemailEntriesRoot = null;
+	public Transform VoicemailEntriesRoot;
 
-	public GameObject NoVoicemailRoot = null;
+	public GameObject NoVoicemailRoot;
 
-	public GameObject NoCassetteRoot = null;
+	public GameObject NoCassetteRoot;
 }

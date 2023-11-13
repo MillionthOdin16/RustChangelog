@@ -42,7 +42,7 @@ public class GestureConfig : ScriptableObject
 	}
 
 	[ReadOnly]
-	public uint gestureId = 0u;
+	public uint gestureId;
 
 	public string gestureCommand;
 
@@ -61,28 +61,32 @@ public class GestureConfig : ScriptableObject
 	[Header("Player model setup")]
 	public PlayerModelLayer playerModelLayer = PlayerModelLayer.UpperBody;
 
-	public GestureType gestureType = GestureType.Player;
+	public GestureType gestureType;
 
 	public bool hideHeldEntity = true;
 
-	public bool canDuckDuringGesture = false;
+	public bool canDuckDuringGesture;
 
-	public MovementCapabilities movementMode = MovementCapabilities.FullMovement;
+	public bool hideInWheel;
 
-	public AnimationType animationType = AnimationType.OneShot;
+	public bool hasViewmodelAnimation = true;
 
-	public BasePlayer.CameraMode viewMode = BasePlayer.CameraMode.FirstPerson;
+	public MovementCapabilities movementMode;
 
-	public bool useRootMotion = false;
+	public AnimationType animationType;
+
+	public BasePlayer.CameraMode viewMode;
+
+	public bool useRootMotion;
 
 	[Header("Ownership")]
-	public GestureActionType actionType = GestureActionType.None;
+	public GestureActionType actionType;
 
-	public bool forceUnlock = false;
+	public bool forceUnlock;
 
-	public SteamDLCItem dlcItem = null;
+	public SteamDLCItem dlcItem;
 
-	public SteamInventoryItem inventoryItem = null;
+	public SteamInventoryItem inventoryItem;
 
 	public bool IsOwnedBy(BasePlayer player)
 	{

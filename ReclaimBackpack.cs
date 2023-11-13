@@ -15,7 +15,7 @@ public class ReclaimBackpack : StorageContainer
 
 	public GameObject art;
 
-	private bool isBeingLooted = false;
+	private bool isBeingLooted;
 
 	public void InitForPlayer(ulong playerID, int newID)
 	{
@@ -38,8 +38,7 @@ public class ReclaimBackpack : StorageContainer
 
 	public void CheckEmpty()
 	{
-		ReclaimManager.PlayerReclaimEntry reclaimForPlayer = ReclaimManager.instance.GetReclaimForPlayer(playerSteamID, reclaimID);
-		if (reclaimForPlayer == null && !isBeingLooted)
+		if (ReclaimManager.instance.GetReclaimForPlayer(playerSteamID, reclaimID) == null && !isBeingLooted)
 		{
 			Kill();
 		}
@@ -47,7 +46,7 @@ public class ReclaimBackpack : StorageContainer
 
 	public override bool OnStartBeingLooted(BasePlayer baseEntity)
 	{
-		if (baseEntity.InSafeZone() && baseEntity.userID != playerSteamID)
+		if ((baseEntity.InSafeZone() || InSafeZone()) && baseEntity.userID != playerSteamID)
 		{
 			return false;
 		}
@@ -60,8 +59,7 @@ public class ReclaimBackpack : StorageContainer
 		{
 			for (int num = reclaimForPlayer.inventory.itemList.Count - 1; num >= 0; num--)
 			{
-				Item item = reclaimForPlayer.inventory.itemList[num];
-				item.MoveToContainer(base.inventory);
+				reclaimForPlayer.inventory.itemList[num].MoveToContainer(base.inventory);
 			}
 			ReclaimManager.instance.RemoveEntry(reclaimForPlayer);
 		}
@@ -75,7 +73,7 @@ public class ReclaimBackpack : StorageContainer
 		isBeingLooted = false;
 		if (base.inventory.itemList.Count > 0)
 		{
-			int num = ReclaimManager.instance.AddPlayerReclaim(playerSteamID, base.inventory.itemList, 0uL, "", reclaimID);
+			ReclaimManager.instance.AddPlayerReclaim(playerSteamID, base.inventory.itemList, 0uL, "", reclaimID);
 		}
 	}
 

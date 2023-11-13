@@ -10,9 +10,9 @@ public class RandomParameterNumber : StateMachineBehaviour
 
 	public bool preventRepetition;
 
-	public bool isFloat = false;
+	public bool isFloat;
 
-	private int last = 0;
+	private int last;
 
 	public override void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
 	{

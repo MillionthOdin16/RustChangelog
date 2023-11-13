@@ -9,7 +9,7 @@ public class RepeatingFirework : BaseFirework
 
 	public SoundPlayer launchSound;
 
-	private int numFired = 0;
+	private int numFired;
 
 	public override void Begin()
 	{

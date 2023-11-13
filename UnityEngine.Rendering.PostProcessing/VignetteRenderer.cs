@@ -7,10 +7,10 @@ internal sealed class VignetteRenderer : PostProcessEffectRenderer<Vignette>
 {
 	public override void Render(PostProcessRenderContext context)
 	{
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0110: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0105: Unknown result type (might be due to invalid IL or missing references)
 		PropertySheet uberSheet = context.uberSheet;
 		uberSheet.EnableKeyword("VIGNETTE");
 		uberSheet.properties.SetColor(ShaderIDs.Vignette_Color, base.settings.color.value);

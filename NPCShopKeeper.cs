@@ -18,17 +18,21 @@ public class NPCShopKeeper : NPCPlayer
 
 	public InvisibleVendingMachine GetVendingMachine()
 	{
-		return invisibleVendingMachineRef.IsValid(base.isServer) ? ((Component)invisibleVendingMachineRef.Get(base.isServer)).GetComponent<InvisibleVendingMachine>() : null;
+		if (!invisibleVendingMachineRef.IsValid(base.isServer))
+		{
+			return null;
+		}
+		return ((Component)invisibleVendingMachineRef.Get(base.isServer)).GetComponent<InvisibleVendingMachine>();
 	}
 
 	public void OnDrawGizmos()
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
 		Gizmos.color = Color.green;
 		Gizmos.DrawCube(((Component)this).transform.position + Vector3.up * 1f, new Vector3(0.5f, 1f, 0.5f));
 	}
@@ -43,13 +47,13 @@ public class NPCShopKeeper : NPCPlayer
 
 	public override void ServerInit()
 	{
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
 		base.ServerInit();
 		initialFacingDir = ((Component)this).transform.rotation * Vector3.forward;
 		((FacepunchBehaviour)this).Invoke((Action)DelayedSleepEnd, 3f);
@@ -67,8 +71,8 @@ public class NPCShopKeeper : NPCPlayer
 
 	public override void Save(SaveInfo info)
 	{
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
 		base.Save(info);
 		info.msg.shopKeeper = Pool.Get<ShopKeeper>();
 		info.msg.shopKeeper.vendingRef = invisibleVendingMachineRef.uid;
@@ -76,7 +80,7 @@ public class NPCShopKeeper : NPCPlayer
 
 	public override void Load(LoadInfo info)
 	{
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
 		base.Load(info);
 		if (info.msg.shopKeeper != null)
 		{
@@ -96,10 +100,10 @@ public class NPCShopKeeper : NPCPlayer
 
 	public void GreetPlayer(BasePlayer player)
 	{
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
 		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)player != (Object)null)
 		{
 			SignalBroadcast(Signal.Gesture, "wave");
@@ -114,30 +118,28 @@ public class NPCShopKeeper : NPCPlayer
 
 	public void Greeting()
 	{
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0180: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0158: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0163: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0168: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0109: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0114: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0119: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
 		List<BasePlayer> list = Pool.GetList<BasePlayer>();
 		Vis.Entities(((Component)this).transform.position, 10f, list, 131072, (QueryTriggerInteraction)2);
-		Vector3 position = ((Component)this).transform.position;
+		_ = ((Component)this).transform.position;
 		BasePlayer basePlayer = null;
 		foreach (BasePlayer item in list)
 		{
-			if (item.isClient || item.IsNpc || (Object)(object)item == (Object)(object)this || !item.IsVisible(eyes.position) || (Object)(object)item == (Object)(object)lastWavedAtPlayer || Vector3.Dot(Vector3Ex.Direction2D(item.eyes.position, eyes.position), initialFacingDir) < 0.2f)
+			if (!item.isClient && !item.IsNpc && !((Object)(object)item == (Object)(object)this) && item.IsVisible(eyes.position) && !((Object)(object)item == (Object)(object)lastWavedAtPlayer) && !(Vector3.Dot(Vector3Ex.Direction2D(item.eyes.position, eyes.position), initialFacingDir) < 0.2f))
 			{
-				continue;
+				basePlayer = item;
+				break;
 			}
-			basePlayer = item;
-			break;
 		}
 		if ((Object)(object)basePlayer == (Object)null && !list.Contains(lastWavedAtPlayer))
 		{

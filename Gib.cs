@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class Gib : ListComponent<Gib>
 {
-	public static int gibCount = 0;
+	public static int gibCount;
 
 	public MeshFilter _meshFilter;
 

@@ -36,17 +36,15 @@ public class GameModeSoftcore : GameModeVanilla
 		}
 		fraction = Mathf.Clamp01(fraction);
 		int count = from.itemList.Count;
-		float num = (float)count * fraction;
-		float num2 = Mathf.Ceil(num);
-		if (count == 1 && num2 == 1f && !takeLastItem)
+		float num = Mathf.Ceil((float)count * fraction);
+		if (count == 1 && num == 1f && !takeLastItem)
 		{
 			return;
 		}
 		List<int> list = Pool.GetList<int>();
 		for (int i = 0; i < from.capacity; i++)
 		{
-			Item slot = from.GetSlot(i);
-			if (slot != null)
+			if (from.GetSlot(i) != null)
 			{
 				list.Add(i);
 			}
@@ -56,7 +54,7 @@ public class GameModeSoftcore : GameModeVanilla
 			Pool.FreeList<int>(ref list);
 			return;
 		}
-		for (int j = 0; (float)j < num2; j++)
+		for (int j = 0; (float)j < num; j++)
 		{
 			int index = Random.Range(0, list.Count);
 			Item item = from.GetSlot(list[index]);
@@ -113,16 +111,16 @@ public class GameModeSoftcore : GameModeVanilla
 
 	public override void OnPlayerDeath(BasePlayer instigator, BasePlayer victim, HitInfo deathInfo = null)
 	{
+		//IL_0109: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0118: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0122: Unknown result type (might be due to invalid IL or missing references)
 		//IL_012e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0133: Unknown result type (might be due to invalid IL or missing references)
 		//IL_013d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0142: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0147: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0154: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0163: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0168: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0155: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)victim != (Object)null && !victim.IsNpc)
 		{
 			SetInventoryLocked(victim, wantsLocked: false);
@@ -168,7 +166,7 @@ public class GameModeSoftcore : GameModeVanilla
 
 	public override float CorpseRemovalTime(BaseCorpse corpse)
 	{
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
 		foreach (MonumentInfo monument in TerrainMeta.Path.Monuments)
 		{
 			if ((Object)(object)monument != (Object)null && monument.IsSafeZone && ((Bounds)(ref monument.Bounds)).Contains(((Component)corpse).transform.position))

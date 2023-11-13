@@ -51,11 +51,11 @@ public abstract class BaseCardGameEntity : BaseVehicle
 
 	private CardGameController _gameCont;
 
-	public CardGameOption gameOption = CardGameOption.TexasHoldEm;
+	public CardGameOption gameOption;
 
 	public EntityRef PotInstance;
 
-	private bool storageLinked = false;
+	private bool storageLinked;
 
 	public int ScrapItemID => scrapItemDef.itemid;
 
@@ -85,7 +85,7 @@ public abstract class BaseCardGameEntity : BaseVehicle
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_Editor_MakeRandomMove "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_Editor_MakeRandomMove "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_Editor_MakeRandomMove", 0);
 				try
@@ -104,7 +104,7 @@ public abstract class BaseCardGameEntity : BaseVehicle
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -116,7 +116,7 @@ public abstract class BaseCardGameEntity : BaseVehicle
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -136,12 +136,12 @@ public abstract class BaseCardGameEntity : BaseVehicle
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_Editor_SpawnTestPlayer "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_Editor_SpawnTestPlayer "));
 				}
-				TimeWarning val5 = TimeWarning.New("RPC_Editor_SpawnTestPlayer", 0);
+				TimeWarning val2 = TimeWarning.New("RPC_Editor_SpawnTestPlayer", 0);
 				try
 				{
-					TimeWarning val6 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsVisible.Test(1608700874u, "RPC_Editor_SpawnTestPlayer", this, player, 3f))
@@ -151,11 +151,11 @@ public abstract class BaseCardGameEntity : BaseVehicle
 					}
 					finally
 					{
-						((IDisposable)val6)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val7 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -167,7 +167,7 @@ public abstract class BaseCardGameEntity : BaseVehicle
 						}
 						finally
 						{
-							((IDisposable)val7)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -178,7 +178,7 @@ public abstract class BaseCardGameEntity : BaseVehicle
 				}
 				finally
 				{
-					((IDisposable)val5)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -187,12 +187,12 @@ public abstract class BaseCardGameEntity : BaseVehicle
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_LeaveTable "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_LeaveTable "));
 				}
-				TimeWarning val8 = TimeWarning.New("RPC_LeaveTable", 0);
+				TimeWarning val2 = TimeWarning.New("RPC_LeaveTable", 0);
 				try
 				{
-					TimeWarning val9 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsVisible.Test(1499640189u, "RPC_LeaveTable", this, player, 3f))
@@ -202,11 +202,11 @@ public abstract class BaseCardGameEntity : BaseVehicle
 					}
 					finally
 					{
-						((IDisposable)val9)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val10 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -218,7 +218,7 @@ public abstract class BaseCardGameEntity : BaseVehicle
 						}
 						finally
 						{
-							((IDisposable)val10)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex3)
@@ -229,7 +229,7 @@ public abstract class BaseCardGameEntity : BaseVehicle
 				}
 				finally
 				{
-					((IDisposable)val8)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -238,12 +238,12 @@ public abstract class BaseCardGameEntity : BaseVehicle
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_OpenLoot "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_OpenLoot "));
 				}
-				TimeWarning val11 = TimeWarning.New("RPC_OpenLoot", 0);
+				TimeWarning val2 = TimeWarning.New("RPC_OpenLoot", 0);
 				try
 				{
-					TimeWarning val12 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsVisible.Test(331989034u, "RPC_OpenLoot", this, player, 3f))
@@ -253,11 +253,11 @@ public abstract class BaseCardGameEntity : BaseVehicle
 					}
 					finally
 					{
-						((IDisposable)val12)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val13 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -269,7 +269,7 @@ public abstract class BaseCardGameEntity : BaseVehicle
 						}
 						finally
 						{
-							((IDisposable)val13)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex4)
@@ -280,7 +280,7 @@ public abstract class BaseCardGameEntity : BaseVehicle
 				}
 				finally
 				{
-					((IDisposable)val11)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -289,12 +289,12 @@ public abstract class BaseCardGameEntity : BaseVehicle
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_Play "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_Play "));
 				}
-				TimeWarning val14 = TimeWarning.New("RPC_Play", 0);
+				TimeWarning val2 = TimeWarning.New("RPC_Play", 0);
 				try
 				{
-					TimeWarning val15 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsVisible.Test(2847205856u, "RPC_Play", this, player, 3f))
@@ -304,11 +304,11 @@ public abstract class BaseCardGameEntity : BaseVehicle
 					}
 					finally
 					{
-						((IDisposable)val15)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val16 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -320,7 +320,7 @@ public abstract class BaseCardGameEntity : BaseVehicle
 						}
 						finally
 						{
-							((IDisposable)val16)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex5)
@@ -331,7 +331,7 @@ public abstract class BaseCardGameEntity : BaseVehicle
 				}
 				finally
 				{
-					((IDisposable)val14)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -340,12 +340,12 @@ public abstract class BaseCardGameEntity : BaseVehicle
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_PlayerInput "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_PlayerInput "));
 				}
-				TimeWarning val17 = TimeWarning.New("RPC_PlayerInput", 0);
+				TimeWarning val2 = TimeWarning.New("RPC_PlayerInput", 0);
 				try
 				{
-					TimeWarning val18 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsVisible.Test(2495306863u, "RPC_PlayerInput", this, player, 3f))
@@ -355,11 +355,11 @@ public abstract class BaseCardGameEntity : BaseVehicle
 					}
 					finally
 					{
-						((IDisposable)val18)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val19 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -371,7 +371,7 @@ public abstract class BaseCardGameEntity : BaseVehicle
 						}
 						finally
 						{
-							((IDisposable)val19)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex6)
@@ -382,7 +382,7 @@ public abstract class BaseCardGameEntity : BaseVehicle
 				}
 				finally
 				{
-					((IDisposable)val17)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -396,7 +396,7 @@ public abstract class BaseCardGameEntity : BaseVehicle
 
 	public override void Load(LoadInfo info)
 	{
-		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
 		base.Load(info);
 		if (base.isServer)
 		{
@@ -422,8 +422,8 @@ public abstract class BaseCardGameEntity : BaseVehicle
 
 	public override void Save(SaveInfo info)
 	{
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
 		base.Save(info);
 		info.msg.cardGame = Pool.Get<CardGame>();
 		info.msg.cardGame.potRef = PotInstance.uid;
@@ -462,16 +462,15 @@ public abstract class BaseCardGameEntity : BaseVehicle
 			int num3 = ((num2 > 0) ? num2 : playerStoragePoints.Length);
 			int iAmount = Mathf.CeilToInt((float)(pot.inventory.GetAmount(ScrapItemID, onlyUsableAmounts: true) / num3));
 			PlayerStorageInfo[] array = playerStoragePoints;
-			foreach (PlayerStorageInfo playerStorageInfo in array)
+			for (int i = 0; i < array.Length; i++)
 			{
-				CardGamePlayerStorage cardGamePlayerStorage2 = playerStorageInfo.storageInstance.Get(base.isServer) as CardGamePlayerStorage;
+				CardGamePlayerStorage cardGamePlayerStorage2 = array[i].storageInstance.Get(base.isServer) as CardGamePlayerStorage;
 				if (!cardGamePlayerStorage2.IsValid() || (cardGamePlayerStorage2.inventory.IsEmpty() && num2 != 0))
 				{
 					continue;
 				}
 				List<Item> list = Pool.GetList<Item>();
-				int num4 = pot.inventory.Take(list, ScrapItemID, iAmount);
-				if (num4 > 0)
+				if (pot.inventory.Take(list, ScrapItemID, iAmount) > 0)
 				{
 					foreach (Item item in list)
 					{
@@ -486,10 +485,10 @@ public abstract class BaseCardGameEntity : BaseVehicle
 		}
 		if (flag)
 		{
-			PlayerStorageInfo[] array2 = playerStoragePoints;
-			foreach (PlayerStorageInfo playerStorageInfo2 in array2)
+			PlayerStorageInfo[] array = playerStoragePoints;
+			for (int i = 0; i < array.Length; i++)
 			{
-				if (!playerStorageInfo2.storageInstance.IsValid(base.isServer))
+				if (!array[i].storageInstance.IsValid(base.isServer))
 				{
 					flag = false;
 					break;
@@ -515,9 +514,9 @@ public abstract class BaseCardGameEntity : BaseVehicle
 	{
 		GameController?.OnTableDestroyed();
 		PlayerStorageInfo[] array = playerStoragePoints;
-		foreach (PlayerStorageInfo playerStorageInfo in array)
+		for (int i = 0; i < array.Length; i++)
 		{
-			CardGamePlayerStorage storage = playerStorageInfo.GetStorage();
+			CardGamePlayerStorage storage = array[i].GetStorage();
 			if ((Object)(object)storage != (Object)null)
 			{
 				storage.DropItems();
@@ -616,10 +615,10 @@ public abstract class BaseCardGameEntity : BaseVehicle
 
 	public override void SpawnSubEntities()
 	{
-		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ad: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0092: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009e: Unknown result type (might be due to invalid IL or missing references)
 		BaseEntity baseEntity = GameManager.server.CreateEntity(potPrefab.resourcePath, Vector3.zero, Quaternion.identity);
 		StorageContainer storageContainer = baseEntity as StorageContainer;
 		if ((Object)(object)storageContainer != (Object)null)
@@ -674,8 +673,7 @@ public abstract class BaseCardGameEntity : BaseVehicle
 		BasePlayer player = msg.player;
 		if ((Object)(object)player != (Object)null && PlayerIsMounted(player))
 		{
-			CardGamePlayerStorage playerStorage = GetPlayerStorage(player.userID);
-			playerStorage.PlayerOpenLoot(player);
+			GetPlayerStorage(player.userID).PlayerOpenLoot(player);
 		}
 	}
 
@@ -683,8 +681,8 @@ public abstract class BaseCardGameEntity : BaseVehicle
 	[RPC_Server.IsVisible(3f)]
 	public void RPC_Editor_SpawnTestPlayer(RPCMessage msg)
 	{
-		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
 		if (!Application.isEditor)
 		{
 			return;

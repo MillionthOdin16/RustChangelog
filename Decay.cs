@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using ConVar;
 using Facepunch;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 public abstract class Decay : PrefabAttribute, IServerComponent
 {
@@ -65,12 +64,11 @@ public abstract class Decay : PrefabAttribute, IServerComponent
 
 	public static void BuildingDecayTouch(BuildingBlock buildingBlock)
 	{
-		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
 		if (ConVar.Decay.upkeep)
 		{
 			return;
 		}
-		Profiler.BeginSample("BuildingDecayTouch");
 		List<DecayEntity> list = Pool.GetList<DecayEntity>();
 		Vis.Entities(((Component)buildingBlock).transform.position, 40f, list, 2097408, (QueryTriggerInteraction)2);
 		for (int i = 0; i < list.Count; i++)
@@ -83,28 +81,24 @@ public abstract class Decay : PrefabAttribute, IServerComponent
 			}
 		}
 		Pool.FreeList<DecayEntity>(ref list);
-		Profiler.EndSample();
 	}
 
 	public static void EntityLinkDecayTouch(BaseEntity ent)
 	{
 		if (!ConVar.Decay.upkeep)
 		{
-			Profiler.BeginSample("EntityLinkDecayTouch");
 			ent.EntityLinkBroadcast(delegate(DecayEntity decayEnt)
 			{
 				decayEnt.DecayTouch();
 			});
-			Profiler.EndSample();
 		}
 	}
 
 	public static void RadialDecayTouch(Vector3 pos, float radius, int mask)
 	{
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
 		if (!ConVar.Decay.upkeep)
 		{
-			Profiler.BeginSample("RadialDecayTouch");
 			List<DecayEntity> list = Pool.GetList<DecayEntity>();
 			Vis.Entities(pos, radius, list, mask, (QueryTriggerInteraction)2);
 			for (int i = 0; i < list.Count; i++)
@@ -112,7 +106,6 @@ public abstract class Decay : PrefabAttribute, IServerComponent
 				list[i].DecayTouch();
 			}
 			Pool.FreeList<DecayEntity>(ref list);
-			Profiler.EndSample();
 		}
 	}
 

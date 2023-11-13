@@ -40,7 +40,7 @@ public class SEScreenSpaceShadows : MonoBehaviour
 
 	public bool stochasticSampling = true;
 
-	public bool leverageTemporalAA = false;
+	public bool leverageTemporalAA;
 
 	public bool bilateralBlur = true;
 

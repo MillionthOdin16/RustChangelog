@@ -30,7 +30,7 @@ public class ImageStorageEntity : BaseEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ImageRequested "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ImageRequested "));
 				}
 				TimeWarning val2 = TimeWarning.New("ImageRequested", 0);
 				try
@@ -49,7 +49,7 @@ public class ImageStorageEntity : BaseEntity
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -61,7 +61,7 @@ public class ImageStorageEntity : BaseEntity
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -88,11 +88,11 @@ public class ImageStorageEntity : BaseEntity
 	[RPC_Server.CallsPerSecond(3uL)]
 	private void ImageRequested(RPCMessage msg)
 	{
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
 		if (!((Object)(object)msg.player == (Object)null))
 		{
 			byte[] array = FileStorage.server.Get(CrcToLoad, StorageType, net.ID);

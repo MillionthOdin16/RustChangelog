@@ -22,7 +22,11 @@ public static class ItemSearchUtils
 		{
 			return false;
 		}
-		return StringEx.Contains(target.shortname, search, CompareOptions.IgnoreCase) || StringEx.Contains(target.displayName.translated, search, CompareOptions.IgnoreCase) || StringEx.Contains(target.displayDescription.translated, search, CompareOptions.IgnoreCase);
+		if (!StringEx.Contains(target.shortname, search, CompareOptions.IgnoreCase) && !StringEx.Contains(target.displayName.translated, search, CompareOptions.IgnoreCase))
+		{
+			return StringEx.Contains(target.displayDescription.translated, search, CompareOptions.IgnoreCase);
+		}
+		return true;
 	}
 
 	private static float ScoreSearchResult(string search, ItemDefinition target)

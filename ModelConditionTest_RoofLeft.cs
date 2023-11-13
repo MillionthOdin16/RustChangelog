@@ -42,10 +42,10 @@ public class ModelConditionTest_RoofLeft : ModelConditionTest
 
 	protected void OnDrawGizmosSelected()
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
 		Gizmos.matrix = ((Component)this).transform.localToWorldMatrix;
 		Gizmos.color = Color.gray;
 		Gizmos.DrawWireCube(new Vector3(3f, 1.5f, 0f), new Vector3(3f, 3f, 3f));
@@ -53,9 +53,9 @@ public class ModelConditionTest_RoofLeft : ModelConditionTest
 
 	public override bool DoTest(BaseEntity ent)
 	{
-		//IL_018c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0198: Unknown result type (might be due to invalid IL or missing references)
-		//IL_019d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0117: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011c: Unknown result type (might be due to invalid IL or missing references)
 		BuildingBlock buildingBlock = ent as BuildingBlock;
 		if ((Object)(object)buildingBlock == (Object)null)
 		{
@@ -70,8 +70,7 @@ public class ModelConditionTest_RoofLeft : ModelConditionTest
 		{
 			for (int i = 0; i < entityLink.connections.Count; i++)
 			{
-				EntityLink entityLink2 = entityLink.connections[i];
-				if (entityLink2.name.EndsWith("sockets/neighbour/3"))
+				if (entityLink.connections[i].name.EndsWith("sockets/neighbour/3"))
 				{
 					return false;
 				}
@@ -85,12 +84,12 @@ public class ModelConditionTest_RoofLeft : ModelConditionTest
 		bool result = false;
 		for (int j = 0; j < entityLink.connections.Count; j++)
 		{
-			EntityLink entityLink3 = entityLink.connections[j];
-			if (!entityLink3.name.EndsWith("sockets/neighbour/3") || (shape == ShapeType.Square && !entityLink3.name.StartsWith("roof/")) || (shape == ShapeType.Triangle && !entityLink3.name.StartsWith("roof.triangle/")))
+			EntityLink entityLink2 = entityLink.connections[j];
+			if (!entityLink2.name.EndsWith("sockets/neighbour/3") || (shape == ShapeType.Square && !entityLink2.name.StartsWith("roof/")) || (shape == ShapeType.Triangle && !entityLink2.name.StartsWith("roof.triangle/")))
 			{
 				continue;
 			}
-			BuildingBlock buildingBlock2 = entityLink3.owner as BuildingBlock;
+			BuildingBlock buildingBlock2 = entityLink2.owner as BuildingBlock;
 			if ((Object)(object)buildingBlock2 == (Object)null || buildingBlock2.grade != buildingBlock.grade)
 			{
 				continue;

@@ -13,25 +13,25 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 
 	public bool canTakeLock = true;
 
-	public bool hasHatch = false;
+	public bool hasHatch;
 
-	public bool canTakeCloser = false;
+	public bool canTakeCloser;
 
-	public bool canTakeKnocker = false;
+	public bool canTakeKnocker;
 
 	public bool canNpcOpen = true;
 
 	public bool canHandOpen = true;
 
-	public bool isSecurityDoor = false;
+	public bool isSecurityDoor;
 
 	public TriggerNotify[] vehiclePhysBoxes;
 
-	public bool checkPhysBoxesOnOpen = false;
+	public bool checkPhysBoxesOnOpen;
 
-	public SoundDefinition vehicleCollisionSfx = null;
+	public SoundDefinition vehicleCollisionSfx;
 
-	public GameObject[] ClosedColliderRoots = null;
+	public GameObject[] ClosedColliderRoots;
 
 	[SerializeField]
 	[ReadOnly]
@@ -67,7 +67,17 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 
 	private static int closeHash = Animator.StringToHash("close");
 
-	private bool HasVehiclePushBoxes => vehiclePhysBoxes != null && vehiclePhysBoxes.Length != 0;
+	private bool HasVehiclePushBoxes
+	{
+		get
+		{
+			if (vehiclePhysBoxes != null)
+			{
+				return vehiclePhysBoxes.Length != 0;
+			}
+			return false;
+		}
+	}
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -79,7 +89,7 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_CloseDoor "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_CloseDoor "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_CloseDoor", 0);
 				try
@@ -98,7 +108,7 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -110,7 +120,7 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -130,12 +140,12 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_KnockDoor "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_KnockDoor "));
 				}
-				TimeWarning val5 = TimeWarning.New("RPC_KnockDoor", 0);
+				TimeWarning val2 = TimeWarning.New("RPC_KnockDoor", 0);
 				try
 				{
-					TimeWarning val6 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.MaxDistance.Test(1487779344u, "RPC_KnockDoor", this, player, 3f))
@@ -145,11 +155,11 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 					}
 					finally
 					{
-						((IDisposable)val6)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val7 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -161,7 +171,7 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 						}
 						finally
 						{
-							((IDisposable)val7)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -172,7 +182,7 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 				}
 				finally
 				{
-					((IDisposable)val5)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -181,12 +191,12 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_OpenDoor "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_OpenDoor "));
 				}
-				TimeWarning val8 = TimeWarning.New("RPC_OpenDoor", 0);
+				TimeWarning val2 = TimeWarning.New("RPC_OpenDoor", 0);
 				try
 				{
-					TimeWarning val9 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.MaxDistance.Test(3314360565u, "RPC_OpenDoor", this, player, 3f))
@@ -196,11 +206,11 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 					}
 					finally
 					{
-						((IDisposable)val9)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val10 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -212,7 +222,7 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 						}
 						finally
 						{
-							((IDisposable)val10)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex3)
@@ -223,7 +233,7 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 				}
 				finally
 				{
-					((IDisposable)val8)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -232,12 +242,12 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_ToggleHatch "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_ToggleHatch "));
 				}
-				TimeWarning val11 = TimeWarning.New("RPC_ToggleHatch", 0);
+				TimeWarning val2 = TimeWarning.New("RPC_ToggleHatch", 0);
 				try
 				{
-					TimeWarning val12 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.MaxDistance.Test(3000490601u, "RPC_ToggleHatch", this, player, 3f))
@@ -247,11 +257,11 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 					}
 					finally
 					{
-						((IDisposable)val12)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val13 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -263,7 +273,7 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 						}
 						finally
 						{
-							((IDisposable)val13)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex4)
@@ -274,7 +284,7 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 				}
 				finally
 				{
-					((IDisposable)val11)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -283,12 +293,12 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_NotifyWoundedClose "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_NotifyWoundedClose "));
 				}
-				TimeWarning val14 = TimeWarning.New("Server_NotifyWoundedClose", 0);
+				TimeWarning val2 = TimeWarning.New("Server_NotifyWoundedClose", 0);
 				try
 				{
-					TimeWarning val15 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsVisible.Test(3672787865u, "Server_NotifyWoundedClose", this, player, 3f))
@@ -298,11 +308,11 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 					}
 					finally
 					{
-						((IDisposable)val15)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val16 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -314,7 +324,7 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 						}
 						finally
 						{
-							((IDisposable)val16)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex5)
@@ -325,7 +335,7 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 				}
 				finally
 				{
-					((IDisposable)val14)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -334,12 +344,12 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_NotifyWoundedOpen "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_NotifyWoundedOpen "));
 				}
-				TimeWarning val17 = TimeWarning.New("Server_NotifyWoundedOpen", 0);
+				TimeWarning val2 = TimeWarning.New("Server_NotifyWoundedOpen", 0);
 				try
 				{
-					TimeWarning val18 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsVisible.Test(3730851545u, "Server_NotifyWoundedOpen", this, player, 3f))
@@ -349,11 +359,11 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 					}
 					finally
 					{
-						((IDisposable)val18)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val19 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -365,7 +375,7 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 						}
 						finally
 						{
-							((IDisposable)val19)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex6)
@@ -376,7 +386,7 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 				}
 				finally
 				{
-					((IDisposable)val17)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -405,23 +415,23 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 
 	public override void ServerInit()
 	{
-		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0092: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01fe: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ed: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_018f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0179: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0115: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0125: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0134: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0139: Unknown result type (might be due to invalid IL or missing references)
 		//IL_01db: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0147: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0158: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0162: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0167: Unknown result type (might be due to invalid IL or missing references)
-		//IL_016c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0231: Unknown result type (might be due to invalid IL or missing references)
 		base.ServerInit();
 		if (nonWalkableArea < 0)
 		{
@@ -465,11 +475,11 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 		{
 			if (isSecurityDoor)
 			{
-				NavMeshObstacle val = ((Component)this).gameObject.AddComponent<NavMeshObstacle>();
-				val.carving = true;
-				val.center = Vector3.zero;
-				val.size = Vector3.one;
-				val.shape = (NavMeshObstacleShape)1;
+				NavMeshObstacle obj = ((Component)this).gameObject.AddComponent<NavMeshObstacle>();
+				obj.carving = true;
+				obj.center = Vector3.zero;
+				obj.size = Vector3.one;
+				obj.shape = (NavMeshObstacleShape)1;
 			}
 			NpcTriggerBox = new GameObject("NpcTriggerBox").AddComponent<NPCDoorTriggerBox>();
 			NpcTriggerBox.Setup(this);
@@ -587,8 +597,8 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 	[RPC_Server.MaxDistance(3f)]
 	private void RPC_OpenDoor(RPCMessage rpc)
 	{
-		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0149: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e2: Unknown result type (might be due to invalid IL or missing references)
 		if (!rpc.player.CanInteract(usableWhileCrawling: true) || !canHandOpen || IsOpen() || IsBusy() || IsLocked())
 		{
 			return;
@@ -657,7 +667,7 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 	[RPC_Server.MaxDistance(3f)]
 	private void RPC_CloseDoor(RPCMessage rpc)
 	{
-		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
 		if (!rpc.player.CanInteract(usableWhileCrawling: true) || !canHandOpen || !IsOpen() || IsBusy() || IsLocked())
 		{
 			return;
@@ -687,8 +697,8 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 	[RPC_Server.MaxDistance(3f)]
 	private void RPC_KnockDoor(RPCMessage rpc)
 	{
-		//IL_009e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
 		if (!rpc.player.CanInteract(usableWhileCrawling: true) || !knockEffect.isValid || Time.realtimeSinceStartup < nextKnockTime)
 		{
 			return;
@@ -751,9 +761,9 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 	[RPC_Server.IsVisible(3f)]
 	private void Server_NotifyWoundedOpen(RPCMessage msg)
 	{
-		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer player = msg.player;
 		if (player.IsWounded())
 		{
@@ -774,7 +784,7 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 
 	private void CheckTimedOutPlayers(Dictionary<BasePlayer, TimeSince> dictionary)
 	{
-		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
 		List<BasePlayer> list = Pool.GetList<BasePlayer>();
 		foreach (KeyValuePair<BasePlayer, TimeSince> item in dictionary)
 		{
@@ -797,9 +807,9 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 	[RPC_Server.IsVisible(3f)]
 	private void Server_NotifyWoundedClose(RPCMessage msg)
 	{
-		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer player = msg.player;
 		if (player.IsWounded())
 		{
@@ -820,8 +830,8 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 
 	private void ReverseDoorAnimation(bool wasOpening)
 	{
-		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
 		if (!((Object)(object)model == (Object)null) && !((Object)(object)model.animator == (Object)null))
 		{
 			AnimatorStateInfo currentAnimatorStateInfo = model.animator.GetCurrentAnimatorStateInfo(0);

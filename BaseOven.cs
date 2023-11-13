@@ -8,7 +8,6 @@ using Network;
 using ProtoBuf;
 using UnityEngine;
 using UnityEngine.Assertions;
-using UnityEngine.Profiling;
 
 public class BaseOven : StorageContainer, ISplashable, IIndustrialStorage
 {
@@ -62,9 +61,9 @@ public class BaseOven : StorageContainer, ISplashable, IIndustrialStorage
 
 	public bool allowByproductCreation = true;
 
-	public ItemDefinition fuelType = null;
+	public ItemDefinition fuelType;
 
-	public bool canModFire = false;
+	public bool canModFire;
 
 	public bool disabledBySplash = true;
 
@@ -111,7 +110,7 @@ public class BaseOven : StorageContainer, ISplashable, IIndustrialStorage
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SVSwitch "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SVSwitch "));
 				}
 				TimeWarning val2 = TimeWarning.New("SVSwitch", 0);
 				try
@@ -130,7 +129,7 @@ public class BaseOven : StorageContainer, ISplashable, IIndustrialStorage
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -142,7 +141,7 @@ public class BaseOven : StorageContainer, ISplashable, IIndustrialStorage
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -206,8 +205,7 @@ public class BaseOven : StorageContainer, ISplashable, IIndustrialStorage
 			ItemAmount[] array = startupContents;
 			foreach (ItemAmount itemAmount in array)
 			{
-				Item item = ItemManager.Create(itemAmount.itemDef, (int)itemAmount.amount, 0uL);
-				item.MoveToContainer(container);
+				ItemManager.Create(itemAmount.itemDef, (int)itemAmount.amount, 0uL).MoveToContainer(container);
 			}
 		}
 	}
@@ -258,7 +256,11 @@ public class BaseOven : StorageContainer, ISplashable, IIndustrialStorage
 		{
 			return false;
 		}
-		return targetSlot >= allowedSlots.Value.Min && targetSlot <= allowedSlots.Value.Max;
+		if (targetSlot >= allowedSlots.Value.Min)
+		{
+			return targetSlot <= allowedSlots.Value.Max;
+		}
+		return false;
 	}
 
 	private MinMax? GetAllowedSlots(Item item)
@@ -326,14 +328,10 @@ public class BaseOven : StorageContainer, ISplashable, IIndustrialStorage
 
 	public void Cook()
 	{
-		Profiler.BeginSample("FindBurnable");
 		Item item = FindBurnable();
-		Profiler.EndSample();
 		if (item == null && !CanRunWithNoFuel)
 		{
-			Profiler.BeginSample("StopCooking");
 			StopCooking();
-			Profiler.EndSample();
 			return;
 		}
 		foreach (Item item2 in base.inventory.itemList)
@@ -361,9 +359,7 @@ public class BaseOven : StorageContainer, ISplashable, IIndustrialStorage
 			}
 			if (item.fuel <= 0f)
 			{
-				Profiler.BeginSample("ConsumeFuel");
 				ConsumeFuel(item, component);
-				Profiler.EndSample();
 			}
 		}
 		OnCooked();
@@ -375,10 +371,10 @@ public class BaseOven : StorageContainer, ISplashable, IIndustrialStorage
 
 	private void ConsumeFuel(Item fuel, ItemModBurnable burnable)
 	{
-		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
 		if (allowByproductCreation && (Object)(object)burnable.byproductItem != (Object)null && Random.Range(0f, 1f) > burnable.byproductChance)
 		{
 			Item item = ItemManager.Create(burnable.byproductItem, burnable.byproductAmount * GetCharcoalRate(), 0uL);
@@ -438,8 +434,7 @@ public class BaseOven : StorageContainer, ISplashable, IIndustrialStorage
 
 	public virtual void StartCooking()
 	{
-		Item item = FindBurnable();
-		if (item != null || CanRunWithNoFuel)
+		if (FindBurnable() != null || CanRunWithNoFuel)
 		{
 			base.inventory.temperature = cookingTemperature;
 			UpdateAttachmentTemperature();
@@ -474,7 +469,11 @@ public class BaseOven : StorageContainer, ISplashable, IIndustrialStorage
 
 	public bool WantsSplash(ItemDefinition splashType, int amount)
 	{
-		return !base.IsDestroyed && IsOn() && disabledBySplash;
+		if (!base.IsDestroyed && IsOn())
+		{
+			return disabledBySplash;
+		}
+		return false;
 	}
 
 	public int DoSplash(ItemDefinition splashType, int amount)
@@ -519,15 +518,10 @@ public class BaseOven : StorageContainer, ISplashable, IIndustrialStorage
 
 	public Vector2i InputSlotRange(int slotIndex)
 	{
-		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
 		if (IndustrialMode == IndustrialSlotMode.LargeFurnace)
 		{
 			return new Vector2i(0, 6);
@@ -545,15 +539,10 @@ public class BaseOven : StorageContainer, ISplashable, IIndustrialStorage
 
 	public Vector2i OutputSlotRange(int slotIndex)
 	{
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
 		if (IndustrialMode == IndustrialSlotMode.LargeFurnace)
 		{
 			return new Vector2i(7, 16);
@@ -588,8 +577,7 @@ public class BaseOven : StorageContainer, ISplashable, IIndustrialStorage
 
 	private bool IsBurnableItem(Item item)
 	{
-		ItemModBurnable component = ((Component)item.info).GetComponent<ItemModBurnable>();
-		if (Object.op_Implicit((Object)(object)component) && ((Object)(object)fuelType == (Object)null || (Object)(object)item.info == (Object)(object)fuelType))
+		if (Object.op_Implicit((Object)(object)((Component)item.info).GetComponent<ItemModBurnable>()) && ((Object)(object)fuelType == (Object)null || (Object)(object)item.info == (Object)(object)fuelType))
 		{
 			return true;
 		}
@@ -633,19 +621,21 @@ public class BaseOven : StorageContainer, ISplashable, IIndustrialStorage
 
 	private bool IsOutputItem(Item item)
 	{
-		return IsMaterialOutput(item) || IsBurnableByproduct(item);
+		if (!IsMaterialOutput(item))
+		{
+			return IsBurnableByproduct(item);
+		}
+		return true;
 	}
 
 	private void BuildMaterialOutputCache()
 	{
 		_materialOutputCache = new Dictionary<float, HashSet<ItemDefinition>>();
-		Dictionary<string, GameObject>.ValueCollection values = GameManager.server.preProcessed.prefabList.Values;
-		float[] array = (from x in values
+		float[] array = (from x in GameManager.server.preProcessed.prefabList.Values
 			select x.GetComponent<BaseOven>() into x
 			where (Object)(object)x != (Object)null
 			select x.cookingTemperature).Distinct().ToArray();
-		float[] array2 = array;
-		foreach (float key in array2)
+		foreach (float key in array)
 		{
 			HashSet<ItemDefinition> hashSet = new HashSet<ItemDefinition>();
 			_materialOutputCache[key] = hashSet;
@@ -676,7 +666,11 @@ public class BaseOven : StorageContainer, ISplashable, IIndustrialStorage
 
 	public override bool CanPickup(BasePlayer player)
 	{
-		return base.CanPickup(player) && CanPickupOven();
+		if (base.CanPickup(player))
+		{
+			return CanPickupOven();
+		}
+		return false;
 	}
 
 	protected virtual bool CanPickupOven()

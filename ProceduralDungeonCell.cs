@@ -10,9 +10,9 @@ public class ProceduralDungeonCell : BaseMonoBehaviour
 
 	public bool west;
 
-	public bool entrance = false;
+	public bool entrance;
 
-	public bool hasSpawn = false;
+	public bool hasSpawn;
 
 	public Transform exitPointHack;
 
