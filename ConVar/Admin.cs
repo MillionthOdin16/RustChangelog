@@ -162,7 +162,7 @@ public class Admin : ConsoleSystem
 		if (!flag && @string.Length == 0)
 		{
 			text = text + "hostname: " + Server.hostname + "\n";
-			text = text + "version : " + 2511 + " secure (secure mode enabled, connected to Steam3)\n";
+			text = text + "version : " + 2512 + " secure (secure mode enabled, connected to Steam3)\n";
 			text = text + "map     : " + Server.level + "\n";
 			text += $"players : {((IEnumerable<BasePlayer>)BasePlayer.activePlayerList).Count()} ({Server.maxplayers} max) ({SingletonComponent<ServerMgr>.Instance.connectionQueue.Queued} queued) ({SingletonComponent<ServerMgr>.Instance.connectionQueue.Joining} joining)\n\n";
 		}
@@ -363,7 +363,7 @@ public class Admin : ConsoleSystem
 
 	private static void SkinRadiusInternal(Arg arg, bool changeAnyGrade)
 	{
-		//IL_048a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0535: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer basePlayer = arg.Player();
 		if ((Object)(object)basePlayer == (Object)null)
 		{
@@ -410,8 +410,14 @@ public class Admin : ConsoleSystem
 		case "brick":
 			buildingGrade = source.FirstOrDefault((BuildingGrade x) => ((Object)x).name == "brick");
 			break;
+		case "frontier":
+			buildingGrade = source.FirstOrDefault((BuildingGrade x) => ((Object)x).name == "frontier");
+			break;
+		case "gingerbread":
+			buildingGrade = source.FirstOrDefault((BuildingGrade x) => ((Object)x).name == "gingerbread");
+			break;
 		default:
-			arg.ReplyWith("Valid skins are: twig, wood, stone, metal, hqm, adobe, shipping, brutalist, brick");
+			arg.ReplyWith("Valid skins are: twig, wood, stone, metal, hqm, adobe, shipping, brutalist, brick, frontier, gingerbread");
 			return;
 		}
 		if ((Object)(object)buildingGrade == (Object)null)
@@ -1635,7 +1641,7 @@ public class Admin : ConsoleSystem
 		result.NetworkOut = (int)((Net.sv != null) ? ((BaseNetwork)Net.sv).GetStat((Connection)null, (StatTypeLong)1) : 0);
 		result.Restarting = SingletonComponent<ServerMgr>.Instance.Restarting;
 		result.SaveCreatedTime = SaveRestore.SaveCreatedTime.ToString();
-		result.Version = 2511;
+		result.Version = 2512;
 		result.Protocol = Protocol.printable;
 		return result;
 	}

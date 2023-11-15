@@ -442,26 +442,6 @@ public class AIInformationZone : BaseMonoBehaviour, IServerComponent
 		return ((OBB)(ref areaBox)).ClosestPoint(target);
 	}
 
-	public void OnDrawGizmos()
-	{
-	}
-
-	public void OnDrawGizmosSelected()
-	{
-		DrawBounds();
-	}
-
-	private void DrawBounds()
-	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
-		Gizmos.matrix = ((Component)this).transform.localToWorldMatrix;
-		Gizmos.color = new Color(1f, 0f, 0f, 0.5f);
-		Gizmos.DrawCube(((Bounds)(ref bounds)).center, ((Bounds)(ref bounds)).size);
-	}
-
 	public void AddInitialPoints()
 	{
 		AICoverPoint[] componentsInChildren = ((Component)((Component)this).transform).GetComponentsInChildren<AICoverPoint>();

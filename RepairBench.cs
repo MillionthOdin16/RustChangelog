@@ -210,7 +210,7 @@ public class RepairBench : StorageContainer
 		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
 		//IL_04f9: Unknown result type (might be due to invalid IL or missing references)
 		//IL_04fe: Unknown result type (might be due to invalid IL or missing references)
-		bool flag = Time.realtimeSinceStartup < nextSkinChangeTime;
+		bool flag = Time.realtimeSinceStartup > nextSkinChangeTime;
 		BasePlayer player = msg.player;
 		int num = msg.read.Int32();
 		ItemId val = default(ItemId);

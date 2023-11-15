@@ -153,11 +153,14 @@ public class RockingChair : BaseChair
 
 	public override void OnWeaponFired(BaseProjectile weapon)
 	{
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
 		if (!((Object)(object)weapon == (Object)null))
 		{
-			velocity += weapon.recoil.recoilPitchMax * WeaponFireImpact;
+			if ((Object)(object)weapon.recoil != (Object)null)
+			{
+				velocity += weapon.recoil.recoilPitchMax * WeaponFireImpact;
+			}
 			timeSinceInput = TimeSince.op_Implicit(0f);
 			sineTime = 0f;
 		}
