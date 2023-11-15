@@ -64,6 +64,12 @@ public class Graphics : ConsoleSystem
 	public static float dof_focus_time = 0.2f;
 
 	[ClientVar(Saved = true, ClientAdmin = true)]
+	public static float dof_squeeze = 0f;
+
+	[ClientVar(Saved = true, ClientAdmin = true)]
+	public static float dof_barrel = 0f;
+
+	[ClientVar(Saved = true, ClientAdmin = true)]
 	public static bool dof_debug = false;
 
 	[ClientVar(Saved = true, Help = "Goes from 0 - 3, higher = more dof samples but slower perf")]
@@ -135,8 +141,8 @@ public class Graphics : ConsoleSystem
 		}
 		set
 		{
-			//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0021: Invalid comparison between Unknown and I4
+			//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0020: Invalid comparison between Unknown and I4
 			_shadowquality = Mathf.Clamp(value, 0, 3);
 			shadowmode = _shadowquality + 1;
 			bool flag = (int)SystemInfo.graphicsDeviceType == 17;

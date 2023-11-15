@@ -6,7 +6,7 @@ public class ElectricalHeater : IOEntity
 
 	public Light sourceLight;
 
-	public GrowableHeatSource growableHeatSource = null;
+	public GrowableHeatSource growableHeatSource;
 
 	public override int ConsumptionAmount()
 	{

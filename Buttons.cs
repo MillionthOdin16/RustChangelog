@@ -4,13 +4,33 @@ public class Buttons
 {
 	public class ConButton : IConsoleButton
 	{
-		private int frame = 0;
+		private int frame;
 
 		public bool IsDown { get; set; }
 
-		public bool JustPressed => IsDown && frame == Time.frameCount;
+		public bool JustPressed
+		{
+			get
+			{
+				if (IsDown)
+				{
+					return frame == Time.frameCount;
+				}
+				return false;
+			}
+		}
 
-		public bool JustReleased => !IsDown && frame == Time.frameCount;
+		public bool JustReleased
+		{
+			get
+			{
+				if (!IsDown)
+				{
+					return frame == Time.frameCount;
+				}
+				return false;
+			}
+		}
 
 		public bool IsPressed
 		{

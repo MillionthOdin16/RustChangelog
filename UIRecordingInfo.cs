@@ -4,19 +4,19 @@ using UnityEngine.UI;
 
 public class UIRecordingInfo : SingletonComponent<UIRecordingInfo>
 {
-	public RustText CountdownText = null;
+	public RustText CountdownText;
 
-	public Slider TapeProgressSlider = null;
+	public Slider TapeProgressSlider;
 
 	public GameObject CountdownRoot;
 
 	public GameObject RecordingRoot;
 
-	public Transform Spinner = null;
+	public Transform Spinner;
 
 	public float SpinSpeed = 180f;
 
-	public Image CassetteImage = null;
+	public Image CassetteImage;
 
 	private void Start()
 	{

@@ -2,9 +2,9 @@ using UnityEngine;
 
 public class InstrumentToolGuitar : InstrumentTool
 {
-	public Transform InUseAligner = null;
+	public Transform InUseAligner;
 
-	public Transform DeployAligner = null;
+	public Transform DeployAligner;
 
 	public string DeployBone;
 }

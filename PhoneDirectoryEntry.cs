@@ -3,9 +3,9 @@ using UnityEngine;
 
 public class PhoneDirectoryEntry : MonoBehaviour
 {
-	public RustText PhoneNumber = null;
+	public RustText PhoneNumber;
 
-	public RustText PhoneName = null;
+	public RustText PhoneName;
 
 	public GameObject DeleteIcon;
 

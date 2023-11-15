@@ -14,7 +14,7 @@ public class ModularCarSeat : MouseSteerableSeat
 	[SerializeField]
 	private Vector3 rightHandIKPos;
 
-	public float providesComfort = 0f;
+	public float providesComfort;
 
 	public VehicleModuleSeating associatedSeatingModule;
 

@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 public class RFManager
 {
@@ -25,7 +24,6 @@ public class RFManager
 
 	public static List<IRFObject> GetListenList(int frequency)
 	{
-		Profiler.BeginSample("RFManager.GetListenList");
 		frequency = ClampFrequency(frequency);
 		List<IRFObject> value = null;
 		if (!_listeners.TryGetValue(frequency, out value))
@@ -33,13 +31,11 @@ public class RFManager
 			value = new List<IRFObject>();
 			_listeners.Add(frequency, value);
 		}
-		Profiler.EndSample();
 		return value;
 	}
 
 	public static List<IRFObject> GetBroadcasterList(int frequency)
 	{
-		Profiler.BeginSample("RFManager.GetBroadcasterList");
 		frequency = ClampFrequency(frequency);
 		List<IRFObject> value = null;
 		if (!_broadcasters.TryGetValue(frequency, out value))
@@ -47,7 +43,6 @@ public class RFManager
 			value = new List<IRFObject>();
 			_broadcasters.Add(frequency, value);
 		}
-		Profiler.EndSample();
 		return value;
 	}
 
@@ -134,10 +129,9 @@ public class RFManager
 
 	public static void MarkFrequencyDirty(int frequency)
 	{
-		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
 		frequency = ClampFrequency(frequency);
-		Profiler.BeginSample("RFManager.MarkFrequencyDirty");
 		List<IRFObject> broadcasterList = GetBroadcasterList(frequency);
 		List<IRFObject> listenList = GetListenList(frequency);
 		bool flag = broadcasterList.Count > 0;
@@ -182,17 +176,17 @@ public class RFManager
 				}
 			}
 		}
-		if (flag3)
+		if (!flag3)
 		{
-			Debug.LogWarning((object)("Found null entries in the RF broadcaster list for frequency " + frequency + "... cleaning up."));
-			for (int num3 = broadcasterList.Count - 1; num3 >= 0; num3--)
+			return;
+		}
+		Debug.LogWarning((object)("Found null entries in the RF broadcaster list for frequency " + frequency + "... cleaning up."));
+		for (int num3 = broadcasterList.Count - 1; num3 >= 0; num3--)
+		{
+			if (broadcasterList[num3] == null)
 			{
-				if (broadcasterList[num3] == null)
-				{
-					broadcasterList.RemoveAt(num3);
-				}
+				broadcasterList.RemoveAt(num3);
 			}
 		}
-		Profiler.EndSample();
 	}
 }

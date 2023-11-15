@@ -2,7 +2,6 @@ using System;
 using Rust.UI;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.Profiling;
 
 public class DynamicMouseCursor : MonoBehaviour
 {
@@ -18,20 +17,19 @@ public class DynamicMouseCursor : MonoBehaviour
 
 	private void LateUpdate()
 	{
-		//IL_0132: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fe: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00de: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
 		if (!Cursor.visible)
 		{
 			return;
 		}
-		Profiler.BeginSample("GetHoveredItem");
 		GameObject val = CurrentlyHoveredItem();
-		Profiler.EndSample();
+		TimeWarning val2;
 		if ((Object)(object)val != (Object)null)
 		{
-			TimeWarning val2 = TimeWarning.New("RustControl", 0);
+			val2 = TimeWarning.New("RustControl", 0);
 			try
 			{
 				RustControl componentInParent = val.GetComponentInParent<RustControl>();
@@ -45,7 +43,7 @@ public class DynamicMouseCursor : MonoBehaviour
 			{
 				((IDisposable)val2)?.Dispose();
 			}
-			TimeWarning val3 = TimeWarning.New("ISubmitHandler", 0);
+			val2 = TimeWarning.New("ISubmitHandler", 0);
 			try
 			{
 				if (val.GetComponentInParent<ISubmitHandler>() != null)
@@ -56,9 +54,9 @@ public class DynamicMouseCursor : MonoBehaviour
 			}
 			finally
 			{
-				((IDisposable)val3)?.Dispose();
+				((IDisposable)val2)?.Dispose();
 			}
-			TimeWarning val4 = TimeWarning.New("IPointerDownHandler", 0);
+			val2 = TimeWarning.New("IPointerDownHandler", 0);
 			try
 			{
 				if (val.GetComponentInParent<IPointerDownHandler>() != null)
@@ -69,23 +67,23 @@ public class DynamicMouseCursor : MonoBehaviour
 			}
 			finally
 			{
-				((IDisposable)val4)?.Dispose();
+				((IDisposable)val2)?.Dispose();
 			}
 		}
-		TimeWarning val5 = TimeWarning.New("UpdateCursor", 0);
+		val2 = TimeWarning.New("UpdateCursor", 0);
 		try
 		{
 			UpdateCursor(RegularCursor, RegularCursorPos);
 		}
 		finally
 		{
-			((IDisposable)val5)?.Dispose();
+			((IDisposable)val2)?.Dispose();
 		}
 	}
 
 	private void UpdateCursor(Texture2D cursor, Vector2 offs)
 	{
-		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
 		if (!((Object)(object)current == (Object)(object)cursor))
 		{
 			current = cursor;
@@ -95,19 +93,14 @@ public class DynamicMouseCursor : MonoBehaviour
 
 	private GameObject CurrentlyHoveredItem()
 	{
-		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
 		FpStandaloneInputModule obj = EventSystem.current.currentInputModule as FpStandaloneInputModule;
-		object result;
 		if (obj == null)
 		{
-			result = null;
+			return null;
 		}
-		else
-		{
-			RaycastResult pointerCurrentRaycast = obj.CurrentData.pointerCurrentRaycast;
-			result = ((RaycastResult)(ref pointerCurrentRaycast)).gameObject;
-		}
-		return (GameObject)result;
+		RaycastResult pointerCurrentRaycast = obj.CurrentData.pointerCurrentRaycast;
+		return ((RaycastResult)(ref pointerCurrentRaycast)).gameObject;
 	}
 }

@@ -18,7 +18,7 @@ public class ItemModConsumable : MonoBehaviour
 
 	public int amountToConsume = 1;
 
-	public float conditionFractionToLose = 0f;
+	public float conditionFractionToLose;
 
 	public string achievementWhenEaten;
 

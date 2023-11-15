@@ -4,25 +4,25 @@ public class BlendedLoopEngineSound : MonoBehaviour, IClientComponent
 {
 	public class EngineLoop
 	{
-		public BlendedEngineLoopDefinition.EngineLoopDefinition definition = null;
+		public BlendedEngineLoopDefinition.EngineLoopDefinition definition;
 
-		public BlendedLoopEngineSound parent = null;
+		public BlendedLoopEngineSound parent;
 
-		public Sound sound = null;
+		public Sound sound;
 
-		public SoundModulation.Modulator gainMod = null;
+		public SoundModulation.Modulator gainMod;
 
-		public SoundModulation.Modulator pitchMod = null;
+		public SoundModulation.Modulator pitchMod;
 	}
 
 	public BlendedEngineLoopDefinition loopDefinition;
 
-	public bool engineOn = false;
+	public bool engineOn;
 
 	[Range(0f, 1f)]
 	public float RPMControl;
 
-	public float smoothedRPMControl = 0f;
+	public float smoothedRPMControl;
 
 	private EngineLoop[] engineLoops;
 

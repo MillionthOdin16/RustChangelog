@@ -20,9 +20,9 @@ public class ConversationData : ScriptableObject
 
 		public ConditionType conditionType;
 
-		public uint conditionAmount = 0u;
+		public uint conditionAmount;
 
-		public bool inverse = false;
+		public bool inverse;
 
 		public string failedSpeechNode;
 
@@ -53,7 +53,11 @@ public class ConversationData : ScriptableObject
 			{
 				flag = player.CanAcceptMission(conditionAmount);
 			}
-			return inverse ? (!flag) : flag;
+			if (!inverse)
+			{
+				return flag;
+			}
+			return !flag;
 		}
 	}
 
@@ -73,9 +77,9 @@ public class ConversationData : ScriptableObject
 		public bool PassesConditions(BasePlayer player, IConversationProvider provider)
 		{
 			ConversationCondition[] array = conditions;
-			foreach (ConversationCondition conversationCondition in array)
+			for (int i = 0; i < array.Length; i++)
 			{
-				if (!conversationCondition.Passes(player, provider))
+				if (!array[i].Passes(player, provider))
 				{
 					return false;
 				}

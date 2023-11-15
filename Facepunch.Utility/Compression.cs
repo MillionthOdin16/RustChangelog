@@ -1,6 +1,5 @@
 using System;
 using Ionic.Zlib;
-using UnityEngine.Profiling;
 
 namespace Facepunch.Utility;
 
@@ -10,10 +9,7 @@ public class Compression
 	{
 		try
 		{
-			Profiler.BeginSample("Compress");
-			byte[] result = GZipStream.CompressBuffer(data);
-			Profiler.EndSample();
-			return result;
+			return GZipStream.CompressBuffer(data);
 		}
 		catch (Exception)
 		{
@@ -23,9 +19,6 @@ public class Compression
 
 	public static byte[] Uncompress(byte[] data)
 	{
-		Profiler.BeginSample("Uncompress");
-		byte[] result = GZipStream.UncompressBuffer(data);
-		Profiler.EndSample();
-		return result;
+		return GZipStream.UncompressBuffer(data);
 	}
 }

@@ -12,7 +12,7 @@ public class PostProcessRenderContext
 		SinglePassMultiview
 	}
 
-	public bool dlssEnabled = false;
+	public bool dlssEnabled;
 
 	private Camera m_Camera;
 
@@ -108,10 +108,10 @@ public class PostProcessRenderContext
 
 	public void Reset()
 	{
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
 		m_Camera = null;
 		width = 0;
 		height = 0;
@@ -147,7 +147,11 @@ public class PostProcessRenderContext
 
 	public bool IsTemporalAntialiasingActive()
 	{
-		return antialiasing == PostProcessLayer.Antialiasing.TemporalAntialiasing && !isSceneView && temporalAntialiasing.IsSupported();
+		if (antialiasing == PostProcessLayer.Antialiasing.TemporalAntialiasing && !isSceneView)
+		{
+			return temporalAntialiasing.IsSupported();
+		}
+		return false;
 	}
 
 	public bool IsDebugOverlayEnabled(DebugOverlay overlay)
@@ -157,31 +161,28 @@ public class PostProcessRenderContext
 
 	public void PushDebugOverlay(CommandBuffer cmd, RenderTargetIdentifier source, PropertySheet sheet, int pass)
 	{
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
 		debugLayer.PushDebugOverlay(cmd, source, sheet, pass);
 	}
 
 	private RenderTextureDescriptor GetDescriptor(int depthBufferBits = 0, RenderTextureFormat colorFormat = 7, RenderTextureReadWrite readWrite = 0)
 	{
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ca: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d7: Invalid comparison between Unknown and I4
-		//IL_00e9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00eb: Invalid comparison between Unknown and I4
-		//IL_00e2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cd: Invalid comparison between Unknown and I4
+		//IL_00d7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d9: Invalid comparison between Unknown and I4
+		//IL_00d1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e7: Invalid comparison between Unknown and I4
+		//IL_00f3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0105: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f8: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00fe: Invalid comparison between Unknown and I4
-		//IL_010f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0111: Invalid comparison between Unknown and I4
-		//IL_0129: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0121: Invalid comparison between Unknown and I4
-		//IL_012e: Unknown result type (might be due to invalid IL or missing references)
 		RenderTextureDescriptor result = default(RenderTextureDescriptor);
 		((RenderTextureDescriptor)(ref result))._002Ector(((RenderTextureDescriptor)(ref m_sourceDescriptor)).width, ((RenderTextureDescriptor)(ref m_sourceDescriptor)).height, ((RenderTextureDescriptor)(ref m_sourceDescriptor)).colorFormat, depthBufferBits);
 		((RenderTextureDescriptor)(ref result)).dimension = ((RenderTextureDescriptor)(ref m_sourceDescriptor)).dimension;
@@ -214,14 +215,14 @@ public class PostProcessRenderContext
 
 	public void GetScreenSpaceTemporaryRT(CommandBuffer cmd, int nameID, int depthBufferBits = 0, RenderTextureFormat colorFormat = 7, RenderTextureReadWrite readWrite = 0, FilterMode filter = 1, int widthOverride = 0, int heightOverride = 0)
 	{
-		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0043: Invalid comparison between Unknown and I4
-		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0004: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0038: Invalid comparison between Unknown and I4
 		RenderTextureDescriptor descriptor = GetDescriptor(depthBufferBits, colorFormat, readWrite);
 		if (widthOverride > 0)
 		{
@@ -240,11 +241,11 @@ public class PostProcessRenderContext
 
 	public RenderTexture GetScreenSpaceTemporaryRT(int depthBufferBits = 0, RenderTextureFormat colorFormat = 7, RenderTextureReadWrite readWrite = 0, int widthOverride = 0, int heightOverride = 0)
 	{
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0004: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
 		RenderTextureDescriptor descriptor = GetDescriptor(depthBufferBits, colorFormat, readWrite);
 		if (widthOverride > 0)
 		{

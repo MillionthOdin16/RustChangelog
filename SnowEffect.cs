@@ -6,5 +6,5 @@ public class SnowEffect : WeatherEffect
 
 	public int FadeFalloff = 3;
 
-	public bool Stormy = false;
+	public bool Stormy;
 }

@@ -34,7 +34,7 @@ public class AmbienceDefinition : ScriptableObject
 
 	public EnvironmentType environmentType = EnvironmentType.Underground;
 
-	public bool useEnvironmentType = false;
+	public bool useEnvironmentType;
 
 	public AnimationCurve time = AnimationCurve.Linear(0f, 0f, 24f, 0f);
 

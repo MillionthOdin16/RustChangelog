@@ -18,10 +18,10 @@ public class ItemModEntity : ItemMod
 
 	public override void OnItemCreated(Item item)
 	{
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)item.GetHeldEntity() == (Object)null)
 		{
 			BaseEntity baseEntity = GameManager.server.CreateEntity(entityPrefab.resourcePath);

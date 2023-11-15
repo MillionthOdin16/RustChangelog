@@ -10,7 +10,7 @@ public class PipeMeshTester : MonoBehaviour
 
 	public Vector3 endDir;
 
-	public Transform startGuide = null;
+	public Transform startGuide;
 
-	public Transform endGuide = null;
+	public Transform endGuide;
 }

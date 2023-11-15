@@ -36,27 +36,27 @@ public class PreloadedCassetteContent : ScriptableObject
 	{
 		uint num = 0u;
 		SoundDefinition[] shortTapeContent = ShortTapeContent;
-		foreach (SoundDefinition soundDefinition in shortTapeContent)
+		for (int i = 0; i < shortTapeContent.Length; i++)
 		{
-			if ((Object)(object)soundDefinition == (Object)(object)def)
+			if ((Object)(object)shortTapeContent[i] == (Object)(object)def)
 			{
 				return num;
 			}
 			num++;
 		}
-		SoundDefinition[] mediumTapeContent = MediumTapeContent;
-		foreach (SoundDefinition soundDefinition2 in mediumTapeContent)
+		shortTapeContent = MediumTapeContent;
+		for (int i = 0; i < shortTapeContent.Length; i++)
 		{
-			if ((Object)(object)soundDefinition2 == (Object)(object)def)
+			if ((Object)(object)shortTapeContent[i] == (Object)(object)def)
 			{
 				return num;
 			}
 			num++;
 		}
-		SoundDefinition[] longTapeContent = LongTapeContent;
-		foreach (SoundDefinition soundDefinition3 in longTapeContent)
+		shortTapeContent = LongTapeContent;
+		for (int i = 0; i < shortTapeContent.Length; i++)
 		{
-			if ((Object)(object)soundDefinition3 == (Object)(object)def)
+			if ((Object)(object)shortTapeContent[i] == (Object)(object)def)
 			{
 				return num;
 			}
@@ -76,16 +76,16 @@ public class PreloadedCassetteContent : ScriptableObject
 				return result;
 			}
 		}
-		SoundDefinition[] mediumTapeContent = MediumTapeContent;
-		foreach (SoundDefinition result2 in mediumTapeContent)
+		shortTapeContent = MediumTapeContent;
+		foreach (SoundDefinition result2 in shortTapeContent)
 		{
 			if (num++ == id)
 			{
 				return result2;
 			}
 		}
-		SoundDefinition[] longTapeContent = LongTapeContent;
-		foreach (SoundDefinition result3 in longTapeContent)
+		shortTapeContent = LongTapeContent;
+		foreach (SoundDefinition result3 in shortTapeContent)
 		{
 			if (num++ == id)
 			{

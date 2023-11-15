@@ -2,11 +2,11 @@ using UnityEngine;
 
 public class DecorSpawn : MonoBehaviour, IClientComponent
 {
-	public SpawnFilter Filter = null;
+	public SpawnFilter Filter;
 
 	public string ResourceFolder = string.Empty;
 
-	public uint Seed = 0u;
+	public uint Seed;
 
 	public float ObjectCutoff = 0.2f;
 

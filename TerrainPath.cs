@@ -19,15 +19,17 @@ public class TerrainPath : TerrainExtension
 
 	internal List<LakeInfo> LakeObjs = new List<LakeInfo>();
 
-	internal GameObject DungeonGridRoot = null;
+	internal GameObject DungeonGridRoot;
 
 	internal List<DungeonGridInfo> DungeonGridEntrances = new List<DungeonGridInfo>();
 
 	internal List<DungeonGridCell> DungeonGridCells = new List<DungeonGridCell>();
 
-	internal GameObject DungeonBaseRoot = null;
+	internal GameObject DungeonBaseRoot;
 
 	internal List<DungeonBaseInfo> DungeonBaseEntrances = new List<DungeonBaseInfo>();
+
+	internal List<DungeonBaseLink> DungeonBaseLinks = new List<DungeonBaseLink>();
 
 	internal List<Vector3> OceanPatrolClose = new List<Vector3>();
 
@@ -69,8 +71,8 @@ public class TerrainPath : TerrainExtension
 
 	public T FindClosest<T>(List<T> list, Vector3 pos) where T : MonoBehaviour
 	{
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
 		T result = default(T);
 		float num = float.MaxValue;
 		foreach (T item in list)
@@ -213,9 +215,7 @@ public class TerrainPath : TerrainExtension
 			{
 				float normX = ((float)j + 0.5f) / (float)res;
 				float height = heightMap.GetHeight(normX, normZ);
-				float height2 = waterMap.GetHeight(normX, normZ);
-				float num = height2 - height;
-				if (num < depth)
+				if (waterMap.GetHeight(normX, normZ) - height < depth)
 				{
 					array[j, i] = int.MaxValue;
 				}
@@ -240,10 +240,10 @@ public class TerrainPath : TerrainExtension
 
 	public void CreateWires()
 	{
-		//IL_00d0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00dc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d2: Unknown result type (might be due to invalid IL or missing references)
 		List<GameObject> list = new List<GameObject>();
 		int num = 0;
 		GameObjectRef gameObjectRef = null;
@@ -269,14 +269,14 @@ public class TerrainPath : TerrainExtension
 						Vector3 val2 = val.transform.position - ((Component)item).transform.position;
 						if (!(((Vector3)(ref val2)).sqrMagnitude > item.MaxDistance * item.MaxDistance))
 						{
-							goto IL_0123;
+							goto IL_0101;
 						}
 					}
 					CreateWire(wire.Key, list, gameObjectRef);
 					list.Clear();
 				}
-				goto IL_0123;
-				IL_0123:
+				goto IL_0101;
+				IL_0101:
 				list.Add(((Component)item).gameObject);
 			}
 			CreateWire(wire.Key, list, gameObjectRef);
@@ -299,7 +299,7 @@ public class TerrainPath : TerrainExtension
 
 	public MonumentInfo FindMonumentWithBoundsOverlap(Vector3 position)
 	{
-		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
 		if (TerrainMeta.Path.Monuments == null)
 		{
 			return null;

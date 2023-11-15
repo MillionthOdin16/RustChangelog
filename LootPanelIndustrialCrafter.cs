@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class LootPanelIndustrialCrafter : LootPanel
 {
-	public GameObject CraftingRoot = null;
+	public GameObject CraftingRoot;
 
 	public RustSlider ProgressSlider;
 
@@ -11,5 +11,5 @@ public class LootPanelIndustrialCrafter : LootPanel
 
 	public float SpinSpeed = 90f;
 
-	public GameObject WorkbenchLevelRoot = null;
+	public GameObject WorkbenchLevelRoot;
 }

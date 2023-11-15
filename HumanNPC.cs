@@ -1,14 +1,12 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using ProtoBuf;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 public class HumanNPC : NPCPlayer, IAISenses, IAIAttack, IThinker
 {
 	[Header("LOS")]
-	public int AdditionalLosBlockingLayer = 0;
+	public int AdditionalLosBlockingLayer;
 
 	[Header("Loot")]
 	public LootContainer.LootSpawnSlot[] LootSpawnSlots;
@@ -16,18 +14,18 @@ public class HumanNPC : NPCPlayer, IAISenses, IAIAttack, IThinker
 	[Header("Damage")]
 	public float aimConeScale = 2f;
 
-	public float lastDismountTime = 0f;
+	public float lastDismountTime;
 
 	[NonSerialized]
-	protected bool lightsOn = false;
+	protected bool lightsOn;
 
-	private float nextZoneSearchTime = 0f;
+	private float nextZoneSearchTime;
 
-	private AIInformationZone cachedInfoZone = null;
+	private AIInformationZone cachedInfoZone;
 
-	private float targetAimedDuration = 0f;
+	private float targetAimedDuration;
 
-	private float lastAimSetTime = 0f;
+	private float lastAimSetTime;
 
 	private Vector3 aimOverridePosition = Vector3.zero;
 
@@ -106,7 +104,7 @@ public class HumanNPC : NPCPlayer, IAISenses, IAIAttack, IThinker
 
 	public AIInformationZone GetInformationZone(Vector3 pos)
 	{
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)VirtualInfoZone != (Object)null)
 		{
 			return VirtualInfoZone;
@@ -137,9 +135,7 @@ public class HumanNPC : NPCPlayer, IAISenses, IAIAttack, IThinker
 
 	public virtual void TryThink()
 	{
-		Profiler.BeginSample("HumanNPCNew.TryThink");
 		ServerThink_Internal();
-		Profiler.EndSample();
 	}
 
 	public override void ServerThink(float delta)
@@ -153,14 +149,14 @@ public class HumanNPC : NPCPlayer, IAISenses, IAIAttack, IThinker
 
 	public void TickAttack(float delta, BaseCombatEntity target, bool targetIsLOS)
 	{
-		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0101: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ca: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d5: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)target == (Object)null)
 		{
 			return;
@@ -232,11 +228,8 @@ public class HumanNPC : NPCPlayer, IAISenses, IAIAttack, IThinker
 
 	public override Vector3 GetAimDirection()
 	{
-		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)Brain != (Object)null && (Object)(object)Brain.Navigator != (Object)null && Brain.Navigator.IsOverridingFacingDirection)
 		{
 			return Brain.Navigator.FacingDirectionOverride;
@@ -246,83 +239,77 @@ public class HumanNPC : NPCPlayer, IAISenses, IAIAttack, IThinker
 
 	public override void SetAimDirection(Vector3 newAim)
 	{
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
 		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ad: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00af: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0089: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0095: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00b7: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00bc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ca: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ce: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0124: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0129: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00be: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0102: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0108: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0115: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0117: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0121: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0131: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0133: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0138: Unknown result type (might be due to invalid IL or missing references)
-		//IL_013d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0142: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0136: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0144: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0151: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0156: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0161: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0163: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0168: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0191: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0192: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0197: Unknown result type (might be due to invalid IL or missing references)
-		//IL_019b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01bf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0166: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0167: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0170: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0176: Unknown result type (might be due to invalid IL or missing references)
+		//IL_017d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0194: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0199: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b3: Unknown result type (might be due to invalid IL or missing references)
 		//IL_01c4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c9: Unknown result type (might be due to invalid IL or missing references)
 		//IL_01cd: Unknown result type (might be due to invalid IL or missing references)
 		//IL_01d2: Unknown result type (might be due to invalid IL or missing references)
 		//IL_01de: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01f0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01f5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01f9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01fe: Unknown result type (might be due to invalid IL or missing references)
-		//IL_020a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0259: Unknown result type (might be due to invalid IL or missing references)
-		//IL_025e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_025f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_026b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_022f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0234: Unknown result type (might be due to invalid IL or missing references)
-		//IL_023b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0240: Unknown result type (might be due to invalid IL or missing references)
-		//IL_024c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_027d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0282: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0286: Unknown result type (might be due to invalid IL or missing references)
-		//IL_028b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0297: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0227: Unknown result type (might be due to invalid IL or missing references)
+		//IL_022c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_022d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0239: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01fd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0202: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0209: Unknown result type (might be due to invalid IL or missing references)
+		//IL_020e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_021a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_024a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_024f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0253: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0258: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0264: Unknown result type (might be due to invalid IL or missing references)
 		if (newAim == Vector3.zero)
 		{
 			return;
@@ -341,25 +328,22 @@ public class HumanNPC : NPCPlayer, IAISenses, IAIAttack, IThinker
 			Vector3 eulerAngles = ((Component)baseMountable).transform.eulerAngles;
 			val = Quaternion.LookRotation(newAim, ((Component)baseMountable).transform.up);
 			Quaternion val2 = Quaternion.Euler(((Quaternion)(ref val)).eulerAngles);
-			Vector3 val3 = ((Component)this).transform.InverseTransformDirection(val2 * Vector3.forward);
-			Quaternion val4 = Quaternion.LookRotation(val3, ((Component)this).transform.up);
-			Vector3 eulerAngles2 = ((Quaternion)(ref val4)).eulerAngles;
+			Quaternion val3 = Quaternion.LookRotation(((Component)this).transform.InverseTransformDirection(val2 * Vector3.forward), ((Component)this).transform.up);
+			Vector3 eulerAngles2 = ((Quaternion)(ref val3)).eulerAngles;
 			eulerAngles2 = BaseMountable.ConvertVector(eulerAngles2);
-			Quaternion val5 = Quaternion.Euler(Mathf.Clamp(eulerAngles2.x, baseMountable.pitchClamp.x, baseMountable.pitchClamp.y), Mathf.Clamp(eulerAngles2.y, baseMountable.yawClamp.x, baseMountable.yawClamp.y), eulerAngles.z);
-			Vector3 val6 = ((Component)this).transform.TransformDirection(val5 * Vector3.forward);
-			Quaternion val7 = Quaternion.LookRotation(val6, ((Component)this).transform.up);
-			Vector3 eulerAngles3 = ((Quaternion)(ref val7)).eulerAngles;
-			newAim = BaseMountable.ConvertVector(eulerAngles3);
+			Quaternion val4 = Quaternion.Euler(Mathf.Clamp(eulerAngles2.x, baseMountable.pitchClamp.x, baseMountable.pitchClamp.y), Mathf.Clamp(eulerAngles2.y, baseMountable.yawClamp.x, baseMountable.yawClamp.y), eulerAngles.z);
+			Quaternion val5 = Quaternion.LookRotation(((Component)this).transform.TransformDirection(val4 * Vector3.forward), ((Component)this).transform.up);
+			newAim = BaseMountable.ConvertVector(((Quaternion)(ref val5)).eulerAngles);
 		}
 		else
 		{
 			BaseEntity baseEntity = GetParentEntity();
 			if (Object.op_Implicit((Object)(object)baseEntity))
 			{
-				Vector3 val8 = ((Component)baseEntity).transform.InverseTransformDirection(newAim);
-				Vector3 val9 = default(Vector3);
-				((Vector3)(ref val9))._002Ector(newAim.x, val8.y, newAim.z);
-				eyes.rotation = Quaternion.Lerp(eyes.rotation, Quaternion.LookRotation(val9, ((Component)baseEntity).transform.up), num * 25f);
+				Vector3 val6 = ((Component)baseEntity).transform.InverseTransformDirection(newAim);
+				Vector3 val7 = default(Vector3);
+				((Vector3)(ref val7))._002Ector(newAim.x, val6.y, newAim.z);
+				eyes.rotation = Quaternion.Lerp(eyes.rotation, Quaternion.LookRotation(val7, ((Component)baseEntity).transform.up), num * 25f);
 				val = eyes.bodyRotation;
 				viewAngles = ((Quaternion)(ref val)).eulerAngles;
 				ServerRotation = eyes.bodyRotation;
@@ -374,15 +358,15 @@ public class HumanNPC : NPCPlayer, IAISenses, IAIAttack, IThinker
 
 	public void SetStationaryAimPoint(Vector3 aimAt)
 	{
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
 		aimOverridePosition = aimAt;
 	}
 
 	public void ClearStationaryAimPoint()
 	{
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
 		aimOverridePosition = Vector3.zero;
 	}
 
@@ -393,10 +377,10 @@ public class HumanNPC : NPCPlayer, IAISenses, IAIAttack, IThinker
 
 	public override BaseCorpse CreateCorpse()
 	{
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
 		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
 		TimeWarning val = TimeWarning.New("Create corpse", 0);
 		try
 		{
@@ -428,8 +412,7 @@ public class HumanNPC : NPCPlayer, IAISenses, IAIAttack, IThinker
 						LootContainer.LootSpawnSlot lootSpawnSlot = lootSpawnSlots[j];
 						for (int k = 0; k < lootSpawnSlot.numberToSpawn; k++)
 						{
-							float num = Random.Range(0f, 1f);
-							if (num <= lootSpawnSlot.probability)
+							if (Random.Range(0f, 1f) <= lootSpawnSlot.probability)
 							{
 								lootSpawnSlot.definition.SpawnIntoContainer(nPCPlayerCorpse.containers[0]);
 							}
@@ -495,8 +478,8 @@ public class HumanNPC : NPCPlayer, IAISenses, IAIAttack, IThinker
 
 	public bool IsTargetInRange(BaseEntity entity, out float dist)
 	{
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
 		dist = Vector3.Distance(((Component)entity).transform.position, ((Component)this).transform.position);
 		return dist <= EngagementRange();
 	}
@@ -551,36 +534,33 @@ public class HumanNPC : NPCPlayer, IAISenses, IAIAttack, IThinker
 
 	public BaseEntity GetBestTarget()
 	{
-		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00af: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ba: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d3: Unknown result type (might be due to invalid IL or missing references)
-		Profiler.BeginSample("HumanNPC.GetBestTarget");
+		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0089: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ad: Unknown result type (might be due to invalid IL or missing references)
 		BaseEntity result = null;
 		float num = -1f;
-		List<BaseEntity> players = Brain.Senses.Players;
-		foreach (BaseEntity item in players)
+		foreach (BaseEntity player in Brain.Senses.Players)
 		{
-			if (!((Object)(object)item == (Object)null) && !(item.Health() <= 0f))
+			if (!((Object)(object)player == (Object)null) && !(player.Health() <= 0f))
 			{
-				float num2 = Vector3.Distance(((Component)item).transform.position, ((Component)this).transform.position);
+				float num2 = Vector3.Distance(((Component)player).transform.position, ((Component)this).transform.position);
 				float num3 = 1f - Mathf.InverseLerp(1f, Brain.SenseRange, num2);
-				Vector3 val = ((Component)item).transform.position - eyes.position;
+				Vector3 val = ((Component)player).transform.position - eyes.position;
 				float num4 = Vector3.Dot(((Vector3)(ref val)).normalized, eyes.BodyForward());
 				num3 += Mathf.InverseLerp(Brain.VisionCone, 1f, num4) / 2f;
-				num3 += (Brain.Senses.Memory.IsLOS(item) ? 2f : 0f);
+				num3 += (Brain.Senses.Memory.IsLOS(player) ? 2f : 0f);
 				if (num3 > num)
 				{
-					result = item;
+					result = player;
 					num = num3;
 				}
 			}
 		}
-		Profiler.EndSample();
 		return result;
 	}
 
@@ -627,13 +607,9 @@ public class HumanNPC : NPCPlayer, IAISenses, IAIAttack, IThinker
 		for (int i = 0; i < inventory.containerBelt.capacity; i++)
 		{
 			Item slot = inventory.containerBelt.GetSlot(i);
-			if (slot != null && slot.amount > 1)
+			if (slot != null && slot.amount > 1 && (Object)(object)(slot.GetHeldEntity() as MedicalTool) != (Object)null)
 			{
-				MedicalTool medicalTool = slot.GetHeldEntity() as MedicalTool;
-				if ((Object)(object)medicalTool != (Object)null)
-				{
-					return slot;
-				}
+				return slot;
 			}
 		}
 		return null;

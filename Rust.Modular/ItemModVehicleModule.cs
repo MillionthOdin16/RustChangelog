@@ -15,8 +15,8 @@ public class ItemModVehicleModule : ItemMod, VehicleModuleInformationPanel.IVehi
 
 	public BaseVehicleModule CreateModuleEntity(BaseEntity parent, Vector3 position, Quaternion rotation)
 	{
-		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
 		if (!entityPrefab.isValid)
 		{
 			Debug.LogError((object)"Invalid entity prefab for module");

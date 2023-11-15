@@ -9,12 +9,12 @@ public class CarSettings
 	public float rollingResistance = 0.05f;
 
 	[Range(0f, 1f)]
-	public float antiRoll = 0f;
+	public float antiRoll;
 
 	public bool canSleep = true;
 
 	[Header("Wheels")]
-	public bool tankSteering = false;
+	public bool tankSteering;
 
 	[Range(0f, 50f)]
 	public float maxSteerAngle = 35f;
@@ -24,7 +24,7 @@ public class CarSettings
 	[Range(0f, 1f)]
 	public float steeringAssistRatio = 0.5f;
 
-	public bool steeringLimit = false;
+	public bool steeringLimit;
 
 	[Range(0f, 50f)]
 	public float minSteerLimitAngle = 6f;

@@ -6,7 +6,6 @@ using Network;
 using ProtoBuf;
 using UnityEngine;
 using UnityEngine.Assertions;
-using UnityEngine.Profiling;
 
 public class LootableCorpse : BaseCorpse, LootPanel.IHasLootPanel
 {
@@ -54,7 +53,7 @@ public class LootableCorpse : BaseCorpse, LootPanel.IHasLootPanel
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_LootCorpse "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_LootCorpse "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_LootCorpse", 0);
 				try
@@ -73,7 +72,7 @@ public class LootableCorpse : BaseCorpse, LootPanel.IHasLootPanel
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -85,7 +84,7 @@ public class LootableCorpse : BaseCorpse, LootPanel.IHasLootPanel
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -131,9 +130,9 @@ public class LootableCorpse : BaseCorpse, LootPanel.IHasLootPanel
 		if (containers != null)
 		{
 			ItemContainer[] array = containers;
-			foreach (ItemContainer itemContainer in array)
+			for (int i = 0; i < array.Length; i++)
 			{
-				itemContainer.Kill();
+				array[i].Kill();
 			}
 		}
 		containers = null;
@@ -141,7 +140,7 @@ public class LootableCorpse : BaseCorpse, LootPanel.IHasLootPanel
 
 	public void TakeFrom(params ItemContainer[] source)
 	{
-		//IL_00c2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
 		Assert.IsTrue(containers == null, "Initializing Twice");
 		TimeWarning val = TimeWarning.New("Corpse.TakeFrom", 0);
 		try
@@ -153,7 +152,6 @@ public class LootableCorpse : BaseCorpse, LootPanel.IHasLootPanel
 				containers[i].ServerInitialize(null, source[i].capacity);
 				containers[i].GiveUID();
 				containers[i].entityOwner = this;
-				Profiler.BeginSample("LootableCorpse.TakeFromIter");
 				Item[] array = source[i].itemList.ToArray();
 				foreach (Item item in array)
 				{
@@ -162,7 +160,6 @@ public class LootableCorpse : BaseCorpse, LootPanel.IHasLootPanel
 						item.DropAndTossUpwards(((Component)this).transform.position);
 					}
 				}
-				Profiler.EndSample();
 			}
 			ResetRemovalTime();
 		}
@@ -236,8 +233,8 @@ public class LootableCorpse : BaseCorpse, LootPanel.IHasLootPanel
 
 	public void DropItems()
 	{
-		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
 		if (!Global.disableBagDropping && containers != null)
 		{
 			DroppedItemContainer droppedItemContainer = ItemContainer.Drop("assets/prefabs/misc/item drop/item_drop_backpack.prefab", ((Component)this).transform.position, Quaternion.identity, containers);

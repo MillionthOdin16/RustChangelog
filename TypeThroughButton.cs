@@ -12,10 +12,10 @@ public class TypeThroughButton : Button, IUpdateSelectedHandler, IEventSystemHan
 
 	public void OnUpdateSelected(BaseEventData eventData)
 	{
-		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0022: Invalid comparison between Unknown and I4
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0046: Expected O, but got Unknown
+		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Invalid comparison between Unknown and I4
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Expected O, but got Unknown
 		if ((Object)(object)typingTarget == (Object)null)
 		{
 			return;

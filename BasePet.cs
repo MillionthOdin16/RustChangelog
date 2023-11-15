@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using Rust;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 public class BasePet : NPCPlayer, IThinker
 {
@@ -28,7 +27,7 @@ public class BasePet : NPCPlayer, IThinker
 	private BaseEntity _mapMarkerInstance;
 
 	[HideInInspector]
-	public bool inQueue = false;
+	public bool inQueue;
 
 	public static Queue<BasePet> _movementProcessQueue = new Queue<BasePet>();
 
@@ -89,8 +88,8 @@ public class BasePet : NPCPlayer, IThinker
 
 	public void CreateMapMarker()
 	{
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)_mapMarkerInstance != (Object)null)
 		{
 			_mapMarkerInstance.Kill();
@@ -114,9 +113,7 @@ public class BasePet : NPCPlayer, IThinker
 
 	public virtual void TryThink()
 	{
-		Profiler.BeginSample("BasePet.TryThink");
 		ServerThink_Internal();
-		Profiler.EndSample();
 	}
 
 	public override void ServerThink(float delta)

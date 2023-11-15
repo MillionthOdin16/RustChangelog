@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 public class GenerateRoadMeshes : ProceduralComponent
@@ -7,44 +6,49 @@ public class GenerateRoadMeshes : ProceduralComponent
 
 	public const bool SnapToTerrain = true;
 
-	public Mesh RoadMesh = null;
+	public Mesh RoadMesh;
 
-	public Mesh[] RoadMeshes = null;
+	public Mesh[] RoadMeshes;
 
-	public Material RoadMaterial = null;
+	public Material RoadMaterial;
 
-	public Material RoadRingMaterial = null;
+	public Material RoadRingMaterial;
 
-	public PhysicMaterial RoadPhysicMaterial = null;
+	public PhysicMaterial RoadPhysicMaterial;
 
 	public override bool RunOnCache => true;
 
 	public override void Process(uint seed)
 	{
-		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b8: Expected O, but got Unknown
-		//IL_00c1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0092: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0097: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00be: Expected O, but got Unknown
+		//IL_00be: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e4: Unknown result type (might be due to invalid IL or missing references)
 		if (RoadMeshes == null || RoadMeshes.Length == 0)
 		{
 			RoadMeshes = (Mesh[])(object)new Mesh[1] { RoadMesh };
 		}
-		List<PathList> roads = TerrainMeta.Path.Roads;
-		foreach (PathList item in roads)
+		foreach (PathList road in TerrainMeta.Path.Roads)
 		{
-			if (item.Hierarchy >= 2)
+			if (road.Hierarchy >= 2)
 			{
 				continue;
 			}
-			foreach (PathList.MeshObject item2 in item.CreateMesh(RoadMeshes, 0f, snapToTerrain: true, !item.Path.Circular, !item.Path.Circular))
+			foreach (PathList.MeshObject item in road.CreateMesh(RoadMeshes, 0f, snapToTerrain: true, !road.Path.Circular, !road.Path.Circular))
 			{
 				GameObject val = new GameObject("Road Mesh");
-				val.transform.position = item2.Position;
+				val.transform.position = item.Position;
 				val.layer = 16;
-				val.SetHierarchyGroup(item.Name);
+				GameObjectEx.SetHierarchyGroup(val, road.Name);
 				val.SetActive(false);
-				MeshCollider val2 = val.AddComponent<MeshCollider>();
-				((Collider)val2).sharedMaterial = RoadPhysicMaterial;
-				val2.sharedMesh = item2.Meshes[0];
+				MeshCollider obj = val.AddComponent<MeshCollider>();
+				((Collider)obj).sharedMaterial = RoadPhysicMaterial;
+				obj.sharedMesh = item.Meshes[0];
 				val.AddComponent<AddToHeightMap>();
 				val.SetActive(true);
 			}

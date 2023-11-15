@@ -11,8 +11,7 @@ public static class SelfCheck
 		{
 			return Failed("Asset Bundle Error: " + FileSystem.Backend.loadingError);
 		}
-		GameManifest gameManifest = FileSystem.Load<GameManifest>("Assets/manifest.asset", true);
-		if ((Object)(object)gameManifest == (Object)null)
+		if ((Object)(object)FileSystem.Load<GameManifest>("Assets/manifest.asset", true) == (Object)null)
 		{
 			return Failed("Couldn't load game manifest - verify your game content!");
 		}

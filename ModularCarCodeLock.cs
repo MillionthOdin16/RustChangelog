@@ -22,7 +22,7 @@ public class ModularCarCodeLock
 
 	public const float LOCK_DESTROY_HEALTH = 0.2f;
 
-	private int wrongCodes = 0;
+	private int wrongCodes;
 
 	private float lastWrongTime = float.NegativeInfinity;
 
@@ -38,7 +38,17 @@ public class ModularCarCodeLock
 		}
 	}
 
-	public bool CentralLockingIsOn => (Object)(object)owner != (Object)null && owner.HasFlag(BaseEntity.Flags.Reserved2);
+	public bool CentralLockingIsOn
+	{
+		get
+		{
+			if ((Object)(object)owner != (Object)null)
+			{
+				return owner.HasFlag(BaseEntity.Flags.Reserved2);
+			}
+			return false;
+		}
+	}
 
 	public List<ulong> WhitelistPlayers { get; private set; } = new List<ulong>();
 
@@ -67,11 +77,19 @@ public class ModularCarCodeLock
 
 	public bool CodeEntryBlocked(BasePlayer player)
 	{
+		if (!HasALock)
+		{
+			return true;
+		}
 		if (HasLockPermission(player))
 		{
 			return false;
 		}
-		return (Object)(object)owner != (Object)null && owner.HasFlag(BaseEntity.Flags.Reserved10);
+		if ((Object)(object)owner != (Object)null)
+		{
+			return owner.HasFlag(BaseEntity.Flags.Reserved10);
+		}
+		return false;
 	}
 
 	public void Load(BaseNetworkable.LoadInfo info)
@@ -115,7 +133,11 @@ public class ModularCarCodeLock
 
 	public bool CanHaveALock()
 	{
-		return !owner.IsDead() && owner.HasDriverMountPoints();
+		if (!owner.IsDead())
+		{
+			return owner.HasDriverMountPoints();
+		}
+		return false;
 	}
 
 	public bool TryAddALock(string code, ulong userID)
@@ -134,7 +156,11 @@ public class ModularCarCodeLock
 
 	public bool IsValidLockCode(string code)
 	{
-		return code != null && code.Length == 4 && StringEx.IsNumeric(code);
+		if (code != null && code.Length == 4)
+		{
+			return StringEx.IsNumeric(code);
+		}
+		return false;
 	}
 
 	public bool TrySetNewCode(string newCode, ulong userID)

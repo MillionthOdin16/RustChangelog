@@ -30,13 +30,13 @@ public class NaturalBloomAndDirtyLens : MonoBehaviour
 
 	public float[] mipWeights = new float[6] { 0.5f, 0.6f, 0.6f, 0.45f, 0.35f, 0.23f };
 
-	public bool highPrecision = false;
+	public bool highPrecision;
 
-	public bool downscaleSource = false;
+	public bool downscaleSource;
 
-	public bool debug = false;
+	public bool debug;
 
-	public bool temporalFilter = false;
+	public bool temporalFilter;
 
 	[Range(0.01f, 1f)]
 	public float temporalFilterWeight = 0.75f;

@@ -9,9 +9,9 @@ public class VertexColorAnimator : MonoBehaviour
 
 	public float timeScale = 2f;
 
-	public int mode = 0;
+	public int mode;
 
-	private float elapsedTime = 0f;
+	private float elapsedTime;
 
 	public void initLists()
 	{
@@ -45,10 +45,10 @@ public class VertexColorAnimator : MonoBehaviour
 
 	public void scrobble(float scrobblePos)
 	{
-		//IL_00fa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0114: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0120: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ee: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f3: Unknown result type (might be due to invalid IL or missing references)
 		if (animationMeshes.Count == 0)
 		{
 			return;
@@ -79,10 +79,10 @@ public class VertexColorAnimator : MonoBehaviour
 
 	private void Update()
 	{
-		//IL_01a7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01cd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0179: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0180: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0185: Unknown result type (might be due to invalid IL or missing references)
 		if (mode == 0)
 		{
 			elapsedTime += Time.fixedDeltaTime / timeScale;
