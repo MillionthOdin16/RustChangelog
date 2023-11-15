@@ -198,16 +198,23 @@ public class TutorialIsland : BaseEntity, IEntityPingSource
 
 	public static TutorialIsland RestoreOrCreateIslandForPlayer(BasePlayer player)
 	{
-		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00af: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ec: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f1: Unknown result type (might be due to invalid IL or missing references)
 		if (player.IsNpc || player.IsBot)
 		{
 			return null;
 		}
 		bool flag = !player.HasPlayerFlag(BasePlayer.PlayerFlags.IsInTutorial);
 		TutorialIsland tutorialIsland = (flag ? CreateIslandForPlayer(player) : player.GetCurrentTutorialIsland());
+		if (!flag && (Object)(object)tutorialIsland != (Object)null)
+		{
+			Debug.Log((object)"Setup island group on load");
+			SetupGroup(tutorialIsland.SpawnLocationIndex, ((Component)tutorialIsland).transform.position, ((Component)tutorialIsland).transform.rotation);
+		}
 		if ((Object)(object)tutorialIsland == (Object)null)
 		{
 			Debug.Log((object)"Null tutorial island. Do something to handle this.");
@@ -261,18 +268,11 @@ public class TutorialIsland : BaseEntity, IEntityPingSource
 
 	private static TutorialIsland CreateIslandForPlayer(BasePlayer player)
 	{
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0097: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 worldPos;
 		Quaternion worldRot;
 		int unusedTutorialIslandLocationRotation = GetUnusedTutorialIslandLocationRotation(out worldPos, out worldRot);
@@ -280,18 +280,33 @@ public class TutorialIsland : BaseEntity, IEntityPingSource
 		{
 			return null;
 		}
-		Group tutorialGroup = GetTutorialGroup(unusedTutorialIslandLocationRotation);
-		OBB val = new OBB(worldPos, worldRot, new Bounds(new Vector3(0f, 25f, 0f), new Vector3(400f, 80f, 400f)));
-		tutorialGroup.bounds = ((OBB)(ref val)).ToBounds();
-		tutorialGroup.restricted = true;
+		Group val = SetupGroup(unusedTutorialIslandLocationRotation, worldPos, worldRot);
 		TutorialIsland tutorialIsland = GameManager.server.CreateEntity("assets/prefabs/missions/tutorialisland/tutorialisland.prefab", worldPos, worldRot) as TutorialIsland;
 		tutorialIsland.SpawnLocationIndex = unusedTutorialIslandLocationRotation;
 		tutorialIsland.GenerateNavMesh();
 		ActiveIslandsServer.Add(tutorialIsland);
-		AddIslandBounds(tutorialIsland.WorldSpaceBounds(), tutorialGroup.ID, isServer: true);
+		AddIslandBounds(tutorialIsland.WorldSpaceBounds(), val.ID, isServer: true);
 		tutorialIsland.ForPlayer.Set(player);
 		tutorialIsland.Spawn();
 		return tutorialIsland;
+	}
+
+	private static Group SetupGroup(int spawnLocationIndex, Vector3 worldPos, Quaternion worldRot)
+	{
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		Group tutorialGroup = GetTutorialGroup(spawnLocationIndex);
+		OBB val = new OBB(worldPos, worldRot, new Bounds(new Vector3(0f, 25f, 0f), new Vector3(400f, 80f, 400f)));
+		tutorialGroup.bounds = ((OBB)(ref val)).ToBounds();
+		tutorialGroup.restricted = true;
+		return tutorialGroup;
 	}
 
 	private static int GetUnusedTutorialIslandLocationRotation(out Vector3 worldPos, out Quaternion worldRot)

@@ -26,7 +26,7 @@ public class HitNumber : MonoBehaviour
 		};
 	}
 
-	public void OnDrawGizmos()
+	public void OnDrawGizmosSelected()
 	{
 		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0010: Unknown result type (might be due to invalid IL or missing references)

@@ -8,7 +8,7 @@ public class DecorSocketFemale : PrefabAttribute
 		return typeof(DecorSocketFemale);
 	}
 
-	protected void OnDrawGizmos()
+	protected void OnDrawGizmosSelected()
 	{
 		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0024: Unknown result type (might be due to invalid IL or missing references)

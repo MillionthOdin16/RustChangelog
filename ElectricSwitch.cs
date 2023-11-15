@@ -104,7 +104,7 @@ public class ElectricSwitch : IOEntity
 	{
 		if (inputSlot != 0)
 		{
-			return GetCurrentEnergy();
+			return currentEnergy;
 		}
 		return base.CalculateCurrentEnergy(inputAmount, inputSlot);
 	}

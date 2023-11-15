@@ -10543,13 +10543,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 	public void ClearTutorial()
 	{
 		SetPlayerFlag(PlayerFlags.IsInTutorial, b: false);
-		List<SleepingBag> list = Pool.GetList<SleepingBag>();
-		SleepingBag.FindForPlayer(userID, ignoreTimers: true, list);
-		foreach (SleepingBag item in list)
-		{
-			SleepingBag.RemoveBagForPlayer(item, userID);
-		}
-		Pool.FreeList<SleepingBag>(ref list);
+		SleepingBag.ClearBagsForPlayer(userID);
 		ClearAllPings();
 		WipeMissions();
 	}

@@ -55,6 +55,8 @@ public class LiquidWeapon : BaseLiquidVessel
 
 	private float cooldownTime;
 
+	public bool HoldFireInput;
+
 	private int pressure;
 
 	public const string RadiationFightAchievement = "SUMMER_RADICAL";
@@ -257,8 +259,8 @@ public class LiquidWeapon : BaseLiquidVessel
 		}
 		if (CanFire(player))
 		{
-			((MonoBehaviour)this).CancelInvoke("FireTick");
-			((MonoBehaviour)this).InvokeRepeating("FireTick", 0f, FireRate);
+			((FacepunchBehaviour)this).CancelInvoke((Action)FireTick);
+			((FacepunchBehaviour)this).InvokeRepeating((Action)FireTick, 0f, FireRate);
 			SetFlag(Flags.On, b: true);
 			StartCooldown(FireRate);
 			if (base.isServer)
@@ -272,7 +274,7 @@ public class LiquidWeapon : BaseLiquidVessel
 	[RPC_Server.IsActiveItem]
 	private void StopFiring()
 	{
-		((MonoBehaviour)this).CancelInvoke("FireTick");
+		((FacepunchBehaviour)this).CancelInvoke((Action)FireTick);
 		if (!RequiresPumping)
 		{
 			pressure = MaxPressure;

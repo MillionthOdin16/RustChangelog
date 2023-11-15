@@ -25,18 +25,6 @@ public class NPCShopKeeper : NPCPlayer
 		return ((Component)invisibleVendingMachineRef.Get(base.isServer)).GetComponent<InvisibleVendingMachine>();
 	}
 
-	public void OnDrawGizmos()
-	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
-		Gizmos.color = Color.green;
-		Gizmos.DrawCube(((Component)this).transform.position + Vector3.up * 1f, new Vector3(0.5f, 1f, 0.5f));
-	}
-
 	public override void UpdateProtectionFromClothing()
 	{
 	}
