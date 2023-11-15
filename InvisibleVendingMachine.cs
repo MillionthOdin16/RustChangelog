@@ -10,7 +10,7 @@ public class InvisibleVendingMachine : NPCVendingMachine
 
 	public NPCShopKeeper GetNPCShopKeeper()
 	{
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
 		List<NPCShopKeeper> list = Pool.GetList<NPCShopKeeper>();
 		Vis.Entities(((Component)this).transform.position, 2f, list, 131072, (QueryTriggerInteraction)2);
 		NPCShopKeeper result = null;
@@ -24,9 +24,9 @@ public class InvisibleVendingMachine : NPCVendingMachine
 
 	public void KeeperLookAt(Vector3 pos)
 	{
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
 		NPCShopKeeper nPCShopKeeper = GetNPCShopKeeper();
 		if (!((Object)(object)nPCShopKeeper == (Object)null))
 		{
@@ -46,11 +46,11 @@ public class InvisibleVendingMachine : NPCVendingMachine
 
 	public override void CompletePendingOrder()
 	{
-		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
 		Effect.server.Run(buyEffect.resourcePath, ((Component)this).transform.position, Vector3.up);
 		NPCShopKeeper nPCShopKeeper = GetNPCShopKeeper();
 		if (Object.op_Implicit((Object)(object)nPCShopKeeper))
@@ -66,7 +66,7 @@ public class InvisibleVendingMachine : NPCVendingMachine
 
 	public override bool PlayerOpenLoot(BasePlayer player, string panelToOpen = "", bool doPositionChecks = true)
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
 		KeeperLookAt(((Component)player).transform.position);
 		return base.PlayerOpenLoot(player, panelToOpen);
 	}
@@ -83,7 +83,8 @@ public class InvisibleVendingMachine : NPCVendingMachine
 	public override void ServerInit()
 	{
 		base.ServerInit();
-		if (vmoManifest.GetIndex(vendingOrders) == -1)
+		int index = vmoManifest.GetIndex(vendingOrders);
+		if (index == -1)
 		{
 			Debug.LogError((object)"VENDING ORDERS NOT FOUND! Did you forget to add these orders to the VMOManifest?");
 		}
@@ -91,8 +92,8 @@ public class InvisibleVendingMachine : NPCVendingMachine
 
 	public override void Load(LoadInfo info)
 	{
-		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0097: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
 		base.Load(info);
 		if (!info.fromDisk || !((Object)(object)vmoManifest != (Object)null) || info.msg.vendingMachine == null)
 		{

@@ -27,22 +27,4 @@ public class TriggerWorkbench : TriggerBase
 	{
 		return parentBench.Workbenchlevel;
 	}
-
-	internal override void OnEntityEnter(BaseEntity ent)
-	{
-		base.OnEntityEnter(ent);
-		if (ent is BasePlayer basePlayer)
-		{
-			basePlayer.metabolism.ForceUpdateWorkbenchFlags();
-		}
-	}
-
-	internal override void OnEntityLeave(BaseEntity ent)
-	{
-		base.OnEntityLeave(ent);
-		if (ent is BasePlayer basePlayer)
-		{
-			basePlayer.metabolism.ForceUpdateWorkbenchFlags();
-		}
-	}
 }

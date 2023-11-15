@@ -39,7 +39,7 @@ public class ToggleHUDLayer : MonoBehaviour, IClientComponent
 
 	public void OnToggleChanged()
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
 		ConsoleSystem.Run(Option.Client, "global.hudcomponent", new object[2] { hudComponentName, toggleControl.isOn });
 	}
 }

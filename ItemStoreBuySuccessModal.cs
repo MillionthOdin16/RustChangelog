@@ -9,7 +9,9 @@ public class ItemStoreBuySuccessModal : MonoBehaviour
 		((Component)this).gameObject.SetActive(true);
 		((Component)this).GetComponent<CanvasGroup>().alpha = 0f;
 		LeanTween.alphaCanvas(((Component)this).GetComponent<CanvasGroup>(), 1f, 0.1f);
-		_ = (Object)(object)SingletonComponent<SteamInventoryManager>.Instance != (Object)null;
+		if (!((Object)(object)SingletonComponent<SteamInventoryManager>.Instance != (Object)null))
+		{
+		}
 	}
 
 	public void Hide()

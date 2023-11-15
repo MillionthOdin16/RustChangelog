@@ -3,9 +3,9 @@ using UnityEngine.UI;
 
 public class MissionMapMarker : MonoBehaviour
 {
-	public Image Icon;
+	public Image Icon = null;
 
-	public Tooltip TooltipComponent;
+	public Tooltip TooltipComponent = null;
 
 	public void Populate(BaseMission.MissionInstance mission)
 	{

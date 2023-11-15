@@ -16,5 +16,5 @@ public class IndustrialFilterItemIcon : MonoBehaviour
 
 	public GameObject BlueprintIcon;
 
-	public GameObject InverseModeBlocker;
+	public GameObject InverseModeBlocker = null;
 }

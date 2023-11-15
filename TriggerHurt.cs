@@ -9,7 +9,7 @@ public class TriggerHurt : TriggerBase, IServerComponent, IHurtTrigger
 
 	public float DamageTickRate = 4f;
 
-	public DamageType damageType;
+	public DamageType damageType = DamageType.Generic;
 
 	internal override GameObject InterestedInObject(GameObject obj)
 	{

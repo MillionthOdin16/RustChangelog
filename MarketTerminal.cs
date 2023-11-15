@@ -13,6 +13,18 @@ using UnityEngine.Assertions;
 
 public class MarketTerminal : StorageContainer
 {
+	private Action<BasePlayer, Item> _onCurrencyRemovedCached;
+
+	private Action<BasePlayer, Item> _onItemPurchasedCached;
+
+	private Action _checkForExpiredOrdersCached;
+
+	private bool _transactionActive;
+
+	private static readonly List<NetworkableId> _deliveryEligible = new List<NetworkableId>(128);
+
+	private static RealTimeSince _deliveryEligibleLastCalculated;
+
 	public const Flags Flag_HasItems = Flags.Reserved1;
 
 	public const Flags Flag_InventoryFull = Flags.Reserved2;
@@ -42,18 +54,6 @@ public class MarketTerminal : StorageContainer
 
 	public List<PendingOrder> pendingOrders;
 
-	private Action<BasePlayer, Item> _onCurrencyRemovedCached;
-
-	private Action<BasePlayer, Item> _onItemPurchasedCached;
-
-	private Action _checkForExpiredOrdersCached;
-
-	private bool _transactionActive;
-
-	private static readonly List<NetworkableId> _deliveryEligible = new List<NetworkableId>(128);
-
-	private static RealTimeSince _deliveryEligibleLastCalculated;
-
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
 		TimeWarning val = TimeWarning.New("MarketTerminal.OnRpcMessage", 0);
@@ -64,7 +64,7 @@ public class MarketTerminal : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_Purchase "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_Purchase "));
 				}
 				TimeWarning val2 = TimeWarning.New("Server_Purchase", 0);
 				try
@@ -87,7 +87,7 @@ public class MarketTerminal : StorageContainer
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -99,7 +99,7 @@ public class MarketTerminal : StorageContainer
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -119,12 +119,12 @@ public class MarketTerminal : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_TryOpenMarket "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_TryOpenMarket "));
 				}
-				TimeWarning val2 = TimeWarning.New("Server_TryOpenMarket", 0);
+				TimeWarning val5 = TimeWarning.New("Server_TryOpenMarket", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					TimeWarning val6 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.CallsPerSecond.Test(1382511247u, "Server_TryOpenMarket", this, player, 3uL))
@@ -138,11 +138,11 @@ public class MarketTerminal : StorageContainer
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val6)?.Dispose();
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val7 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -154,7 +154,7 @@ public class MarketTerminal : StorageContainer
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val7)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -165,7 +165,7 @@ public class MarketTerminal : StorageContainer
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val5)?.Dispose();
 				}
 				return true;
 			}
@@ -177,83 +177,9 @@ public class MarketTerminal : StorageContainer
 		return base.OnRpcMessage(player, rpc, msg);
 	}
 
-	public bool CanPlayerAffordOrderAndDeliveryFee(BasePlayer player, SellOrder sellOrder, int numberOfTransactions)
-	{
-		int num = player.inventory.FindItemsByItemID(deliveryFeeCurrency.itemid).Sum((Item i) => i.amount);
-		int num2 = deliveryFeeAmount;
-		if (num < num2)
-		{
-			return false;
-		}
-		if (sellOrder != null)
-		{
-			int num3 = sellOrder.currencyAmountPerItem * numberOfTransactions;
-			if (sellOrder.currencyID == deliveryFeeCurrency.itemid && !sellOrder.currencyIsBP && num < num2 + num3)
-			{
-				return false;
-			}
-		}
-		return true;
-	}
-
-	public bool HasPendingOrderFor(NetworkableId vendingMachineId)
-	{
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		List<PendingOrder> list = pendingOrders;
-		return ((list != null) ? List.FindWith<PendingOrder, NetworkableId>((IReadOnlyCollection<PendingOrder>)list, (Func<PendingOrder, NetworkableId>)((PendingOrder o) => o.vendingMachineId), vendingMachineId, (IEqualityComparer<NetworkableId>)null) : null) != null;
-	}
-
-	public bool CanPlayerInteract(BasePlayer player)
-	{
-		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
-		if ((Object)(object)player == (Object)null)
-		{
-			return false;
-		}
-		if (_customerSteamId == 0L || TimeUntil.op_Implicit(_timeUntilCustomerExpiry) <= 0f)
-		{
-			return true;
-		}
-		return player.userID == _customerSteamId;
-	}
-
-	public override void Load(LoadInfo info)
-	{
-		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
-		base.Load(info);
-		if (info.msg.marketTerminal == null)
-		{
-			return;
-		}
-		_customerSteamId = info.msg.marketTerminal.customerSteamId;
-		_customerName = info.msg.marketTerminal.customerName;
-		_timeUntilCustomerExpiry = info.msg.marketTerminal.timeUntilExpiry;
-		_marketplace = new EntityRef<Marketplace>(info.msg.marketTerminal.marketplaceId);
-		if (pendingOrders == null)
-		{
-			pendingOrders = Pool.GetList<PendingOrder>();
-		}
-		if (pendingOrders.Count > 0)
-		{
-			foreach (PendingOrder pendingOrder in pendingOrders)
-			{
-				PendingOrder current = pendingOrder;
-				Pool.Free<PendingOrder>(ref current);
-			}
-			pendingOrders.Clear();
-		}
-		foreach (PendingOrder order in info.msg.marketTerminal.orders)
-		{
-			PendingOrder item = order.Copy();
-			pendingOrders.Add(item);
-		}
-	}
-
 	public void Setup(Marketplace marketplace)
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
 		_marketplace = new EntityRef<Marketplace>(marketplace.net.ID);
 	}
 
@@ -267,15 +193,15 @@ public class MarketTerminal : StorageContainer
 
 	private void RegisterOrder(BasePlayer player, VendingMachine vendingMachine)
 	{
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0093: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
 		if (pendingOrders == null)
 		{
 			pendingOrders = Pool.GetList<PendingOrder>();
@@ -307,10 +233,10 @@ public class MarketTerminal : StorageContainer
 
 	public void CompleteOrder(NetworkableId vendingMachineId)
 	{
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
 		if (pendingOrders != null)
 		{
-			int num = List.FindIndexWith<PendingOrder, NetworkableId>((IReadOnlyList<PendingOrder>)pendingOrders, (Func<PendingOrder, NetworkableId>)((PendingOrder o) => o.vendingMachineId), vendingMachineId, (IEqualityComparer<NetworkableId>)null);
+			int num = List.FindIndexWith<PendingOrder, NetworkableId>((IReadOnlyList<PendingOrder>)pendingOrders, (Func<PendingOrder, NetworkableId>)((PendingOrder o) => o.vendingMachineId), vendingMachineId);
 			if (num < 0)
 			{
 				Debug.LogError((object)"Completed market order that doesn't exist?");
@@ -326,10 +252,10 @@ public class MarketTerminal : StorageContainer
 
 	private void CheckForExpiredOrders()
 	{
-		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e5: Unknown result type (might be due to invalid IL or missing references)
 		if (pendingOrders != null && pendingOrders.Count > 0)
 		{
 			bool flag = false;
@@ -375,17 +301,17 @@ public class MarketTerminal : StorageContainer
 
 	private void RestrictToPlayer(BasePlayer player)
 	{
-		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
 		if (_customerSteamId == player.userID)
 		{
 			_timeUntilCustomerExpiry = TimeUntil.op_Implicit((float)lockToCustomerDuration);
 			SendNetworkUpdate();
 			return;
 		}
-		if (_customerSteamId != 0L)
+		if (_customerSteamId != 0)
 		{
 			Debug.LogError((object)"Overwriting player restriction! It should be cleared first.", (Object)(object)this);
 		}
@@ -403,9 +329,9 @@ public class MarketTerminal : StorageContainer
 
 	private void ClearRestriction()
 	{
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		if (_customerSteamId != 0L)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		if (_customerSteamId != 0)
 		{
 			_customerSteamId = 0uL;
 			_customerName = null;
@@ -446,14 +372,14 @@ public class MarketTerminal : StorageContainer
 	[RPC_Server.CallsPerSecond(10uL)]
 	public void Server_Purchase(RPCMessage msg)
 	{
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01cd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01d3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_020e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0223: Unknown result type (might be due to invalid IL or missing references)
+		//IL_022a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0230: Unknown result type (might be due to invalid IL or missing references)
 		if (!CanPlayerInteract(msg.player))
 		{
 			return;
@@ -544,10 +470,10 @@ public class MarketTerminal : StorageContainer
 
 	public override void Save(SaveInfo info)
 	{
-		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
 		base.Save(info);
 		info.msg.marketTerminal = Pool.Get<MarketTerminal>();
 		info.msg.marketTerminal.customerSteamId = _customerSteamId;
@@ -590,17 +516,13 @@ public class MarketTerminal : StorageContainer
 
 	public override bool CanOpenLootPanel(BasePlayer player, string panelName)
 	{
-		if (CanPlayerInteract(player) && HasFlag(Flags.Reserved1))
-		{
-			return base.CanOpenLootPanel(player, panelName);
-		}
-		return false;
+		return CanPlayerInteract(player) && HasFlag(Flags.Reserved1) && base.CanOpenLootPanel(player, panelName);
 	}
 
 	private void RemoveAnyLooters()
 	{
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
 		ItemContainer item = base.inventory;
 		Enumerator<BasePlayer> enumerator = BasePlayer.activePlayerList.GetEnumerator();
 		try
@@ -622,21 +544,21 @@ public class MarketTerminal : StorageContainer
 
 	public void GetDeliveryEligibleVendingMachines(List<NetworkableId> vendingMachineIds)
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ac: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00dc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0132: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0135: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0111: Unknown result type (might be due to invalid IL or missing references)
+		//IL_017c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0181: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0185: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0137: Unknown result type (might be due to invalid IL or missing references)
 		if (RealTimeSince.op_Implicit(_deliveryEligibleLastCalculated) < 5f)
 		{
 			if (vendingMachineIds == null)
@@ -674,7 +596,7 @@ public class MarketTerminal : StorageContainer
 		}
 		bool IsEligible(VendingMachine vendingMachine, Vector3 offset, int n)
 		{
-			//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_002e: Unknown result type (might be due to invalid IL or missing references)
 			if (vendingMachine is NPCVendingMachine)
 			{
 				return true;
@@ -688,6 +610,81 @@ public class MarketTerminal : StorageContainer
 				return false;
 			}
 			return true;
+		}
+	}
+
+	public bool CanPlayerAffordOrderAndDeliveryFee(BasePlayer player, SellOrder sellOrder, int numberOfTransactions)
+	{
+		List<Item> source = player.inventory.FindItemIDs(deliveryFeeCurrency.itemid);
+		int num = source.Sum((Item i) => i.amount);
+		int num2 = deliveryFeeAmount;
+		if (num < num2)
+		{
+			return false;
+		}
+		if (sellOrder != null)
+		{
+			int num3 = sellOrder.currencyAmountPerItem * numberOfTransactions;
+			if (sellOrder.currencyID == deliveryFeeCurrency.itemid && !sellOrder.currencyIsBP && num < num2 + num3)
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+
+	public bool HasPendingOrderFor(NetworkableId vendingMachineId)
+	{
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		List<PendingOrder> list = pendingOrders;
+		return ((list != null) ? List.FindWith<PendingOrder, NetworkableId>((IReadOnlyCollection<PendingOrder>)list, (Func<PendingOrder, NetworkableId>)((PendingOrder o) => o.vendingMachineId), vendingMachineId, (IEqualityComparer<NetworkableId>)null) : null) != null;
+	}
+
+	public bool CanPlayerInteract(BasePlayer player)
+	{
+		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		if ((Object)(object)player == (Object)null)
+		{
+			return false;
+		}
+		if (_customerSteamId == 0L || TimeUntil.op_Implicit(_timeUntilCustomerExpiry) <= 0f)
+		{
+			return true;
+		}
+		return player.userID == _customerSteamId;
+	}
+
+	public override void Load(LoadInfo info)
+	{
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
+		base.Load(info);
+		if (info.msg.marketTerminal == null)
+		{
+			return;
+		}
+		_customerSteamId = info.msg.marketTerminal.customerSteamId;
+		_customerName = info.msg.marketTerminal.customerName;
+		_timeUntilCustomerExpiry = info.msg.marketTerminal.timeUntilExpiry;
+		_marketplace = new EntityRef<Marketplace>(info.msg.marketTerminal.marketplaceId);
+		if (pendingOrders == null)
+		{
+			pendingOrders = Pool.GetList<PendingOrder>();
+		}
+		if (pendingOrders.Count > 0)
+		{
+			foreach (PendingOrder pendingOrder in pendingOrders)
+			{
+				PendingOrder val = pendingOrder;
+				Pool.Free<PendingOrder>(ref val);
+			}
+			pendingOrders.Clear();
+		}
+		foreach (PendingOrder order in info.msg.marketTerminal.orders)
+		{
+			PendingOrder item = order.Copy();
+			pendingOrders.Add(item);
 		}
 	}
 }

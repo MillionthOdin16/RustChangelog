@@ -2,24 +2,27 @@ using UnityEngine;
 
 public class ImpostorInstanceData
 {
-	public ImpostorBatch Batch;
+	public ImpostorBatch Batch = null;
 
-	public int BatchIndex;
+	public int BatchIndex = 0;
 
-	private int hash;
+	private int hash = 0;
 
 	private Vector4 positionAndScale = Vector4.zero;
 
-	public Renderer Renderer { get; private set; }
+	public Renderer Renderer { get; private set; } = null;
 
-	public Mesh Mesh { get; private set; }
 
-	public Material Material { get; private set; }
+	public Mesh Mesh { get; private set; } = null;
+
+
+	public Material Material { get; private set; } = null;
+
 
 	public ImpostorInstanceData(Renderer renderer, Mesh mesh, Material material)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
 		Renderer = renderer;
 		Mesh = mesh;
 		Material = material;
@@ -29,14 +32,14 @@ public class ImpostorInstanceData
 
 	public ImpostorInstanceData(Vector3 position, Vector3 scale, Mesh mesh, Material material)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
 		positionAndScale = new Vector4(position.x, position.y, position.z, scale.x);
 		Mesh = mesh;
 		Material = material;
@@ -46,17 +49,15 @@ public class ImpostorInstanceData
 
 	private int GenerateHashCode()
 	{
-		return (17 * 31 + ((object)Material).GetHashCode()) * 31 + ((object)Mesh).GetHashCode();
+		int num = 17;
+		num = num * 31 + ((object)Material).GetHashCode();
+		return num * 31 + ((object)Mesh).GetHashCode();
 	}
 
 	public override bool Equals(object obj)
 	{
 		ImpostorInstanceData impostorInstanceData = obj as ImpostorInstanceData;
-		if ((Object)(object)impostorInstanceData.Material == (Object)(object)Material)
-		{
-			return (Object)(object)impostorInstanceData.Mesh == (Object)(object)Mesh;
-		}
-		return false;
+		return (Object)(object)impostorInstanceData.Material == (Object)(object)Material && (Object)(object)impostorInstanceData.Mesh == (Object)(object)Mesh;
 	}
 
 	public override int GetHashCode()
@@ -66,18 +67,20 @@ public class ImpostorInstanceData
 
 	public Vector4 PositionAndScale()
 	{
-		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
 		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)Renderer != (Object)null)
 		{
 			Transform transform = ((Component)Renderer).transform;
@@ -91,7 +94,7 @@ public class ImpostorInstanceData
 
 	public void Update()
 	{
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
 		if (Batch != null)
 		{
 			Batch.Positions[BatchIndex] = PositionAndScale();

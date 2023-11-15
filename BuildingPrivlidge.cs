@@ -8,6 +8,7 @@ using Network;
 using ProtoBuf;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.Profiling;
 
 public class BuildingPrivlidge : StorageContainer
 {
@@ -27,15 +28,9 @@ public class BuildingPrivlidge : StorageContainer
 		}
 	}
 
-	public List<PlayerNameID> authorizedPlayers = new List<PlayerNameID>();
-
-	public const Flags Flag_MaxAuths = Flags.Reserved5;
-
-	public List<ItemDefinition> allowedConstructionItems = new List<ItemDefinition>();
-
 	private float cachedProtectedMinutes;
 
-	private float nextProtectedCalcTime;
+	private float nextProtectedCalcTime = 0f;
 
 	private static UpkeepBracket[] upkeepBrackets = new UpkeepBracket[4]
 	{
@@ -47,6 +42,12 @@ public class BuildingPrivlidge : StorageContainer
 
 	private List<ItemAmount> upkeepBuffer = new List<ItemAmount>();
 
+	public List<PlayerNameID> authorizedPlayers = new List<PlayerNameID>();
+
+	public const Flags Flag_MaxAuths = Flags.Reserved5;
+
+	public List<ItemDefinition> allowedConstructionItems = new List<ItemDefinition>();
+
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
 		TimeWarning val = TimeWarning.New("BuildingPrivlidge.OnRpcMessage", 0);
@@ -57,7 +58,7 @@ public class BuildingPrivlidge : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - AddSelfAuthorize "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - AddSelfAuthorize "));
 				}
 				TimeWarning val2 = TimeWarning.New("AddSelfAuthorize", 0);
 				try
@@ -76,7 +77,7 @@ public class BuildingPrivlidge : StorageContainer
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -88,7 +89,7 @@ public class BuildingPrivlidge : StorageContainer
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -108,12 +109,12 @@ public class BuildingPrivlidge : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ClearList "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ClearList "));
 				}
-				TimeWarning val2 = TimeWarning.New("ClearList", 0);
+				TimeWarning val5 = TimeWarning.New("ClearList", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					TimeWarning val6 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsVisible.Test(253307592u, "ClearList", this, player, 3f))
@@ -123,11 +124,11 @@ public class BuildingPrivlidge : StorageContainer
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val6)?.Dispose();
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val7 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -139,7 +140,7 @@ public class BuildingPrivlidge : StorageContainer
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val7)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -150,7 +151,7 @@ public class BuildingPrivlidge : StorageContainer
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val5)?.Dispose();
 				}
 				return true;
 			}
@@ -159,12 +160,12 @@ public class BuildingPrivlidge : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RemoveSelfAuthorize "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RemoveSelfAuthorize "));
 				}
-				TimeWarning val2 = TimeWarning.New("RemoveSelfAuthorize", 0);
+				TimeWarning val8 = TimeWarning.New("RemoveSelfAuthorize", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					TimeWarning val9 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsVisible.Test(3617985969u, "RemoveSelfAuthorize", this, player, 3f))
@@ -174,11 +175,11 @@ public class BuildingPrivlidge : StorageContainer
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val9)?.Dispose();
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val10 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -190,7 +191,7 @@ public class BuildingPrivlidge : StorageContainer
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val10)?.Dispose();
 						}
 					}
 					catch (Exception ex3)
@@ -201,7 +202,7 @@ public class BuildingPrivlidge : StorageContainer
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val8)?.Dispose();
 				}
 				return true;
 			}
@@ -210,12 +211,12 @@ public class BuildingPrivlidge : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_Rotate "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_Rotate "));
 				}
-				TimeWarning val2 = TimeWarning.New("RPC_Rotate", 0);
+				TimeWarning val11 = TimeWarning.New("RPC_Rotate", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					TimeWarning val12 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsVisible.Test(2051750736u, "RPC_Rotate", this, player, 3f))
@@ -225,11 +226,11 @@ public class BuildingPrivlidge : StorageContainer
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val12)?.Dispose();
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val13 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -241,7 +242,7 @@ public class BuildingPrivlidge : StorageContainer
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val13)?.Dispose();
 						}
 					}
 					catch (Exception ex4)
@@ -252,7 +253,7 @@ public class BuildingPrivlidge : StorageContainer
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val11)?.Dispose();
 				}
 				return true;
 			}
@@ -262,6 +263,301 @@ public class BuildingPrivlidge : StorageContainer
 			((IDisposable)val)?.Dispose();
 		}
 		return base.OnRpcMessage(player, rpc, msg);
+	}
+
+	public float CalculateUpkeepPeriodMinutes()
+	{
+		if (base.isServer)
+		{
+			return ConVar.Decay.upkeep_period_minutes;
+		}
+		return 0f;
+	}
+
+	public float CalculateUpkeepCostFraction()
+	{
+		if (base.isServer)
+		{
+			return CalculateBuildingTaxRate();
+		}
+		return 0f;
+	}
+
+	public void CalculateUpkeepCostAmounts(List<ItemAmount> itemAmounts)
+	{
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		BuildingManager.Building building = GetBuilding();
+		if (building == null || !building.HasDecayEntities())
+		{
+			return;
+		}
+		float multiplier = CalculateUpkeepCostFraction();
+		Enumerator<DecayEntity> enumerator = building.decayEntities.GetEnumerator();
+		try
+		{
+			while (enumerator.MoveNext())
+			{
+				DecayEntity current = enumerator.Current;
+				current.CalculateUpkeepCostAmounts(itemAmounts, multiplier);
+			}
+		}
+		finally
+		{
+			((IDisposable)enumerator).Dispose();
+		}
+	}
+
+	public float GetProtectedMinutes(bool force = false)
+	{
+		if (base.isServer)
+		{
+			if (!force && Time.realtimeSinceStartup < nextProtectedCalcTime)
+			{
+				return cachedProtectedMinutes;
+			}
+			nextProtectedCalcTime = Time.realtimeSinceStartup + 60f;
+			List<ItemAmount> list = Pool.GetList<ItemAmount>();
+			CalculateUpkeepCostAmounts(list);
+			float num = CalculateUpkeepPeriodMinutes();
+			float num2 = -1f;
+			if (base.inventory != null)
+			{
+				foreach (ItemAmount item in list)
+				{
+					List<Item> source = base.inventory.FindItemsByItemID(item.itemid);
+					int num3 = source.Sum((Item x) => x.amount);
+					if (num3 > 0 && item.amount > 0f)
+					{
+						float num4 = (float)num3 / item.amount * num;
+						if (num2 == -1f || num4 < num2)
+						{
+							num2 = num4;
+						}
+					}
+					else
+					{
+						num2 = 0f;
+					}
+				}
+				if (num2 == -1f)
+				{
+					num2 = 0f;
+				}
+			}
+			Pool.FreeList<ItemAmount>(ref list);
+			cachedProtectedMinutes = num2;
+			return cachedProtectedMinutes;
+		}
+		return 0f;
+	}
+
+	public override void OnKilled(HitInfo info)
+	{
+		if (ConVar.Decay.upkeep_grief_protection > 0f)
+		{
+			PurchaseUpkeepTime(ConVar.Decay.upkeep_grief_protection * 60f);
+		}
+		base.OnKilled(info);
+	}
+
+	public override void DecayTick()
+	{
+		if (EnsurePrimary())
+		{
+			base.DecayTick();
+		}
+	}
+
+	private bool EnsurePrimary()
+	{
+		BuildingManager.Building building = GetBuilding();
+		if (building != null)
+		{
+			BuildingPrivlidge dominatingBuildingPrivilege = building.GetDominatingBuildingPrivilege();
+			if ((Object)(object)dominatingBuildingPrivilege != (Object)null && (Object)(object)dominatingBuildingPrivilege != (Object)(object)this)
+			{
+				Kill(DestroyMode.Gib);
+				return false;
+			}
+		}
+		return true;
+	}
+
+	public void MarkProtectedMinutesDirty(float delay = 0f)
+	{
+		nextProtectedCalcTime = Time.realtimeSinceStartup + delay;
+	}
+
+	private float CalculateBuildingTaxRate()
+	{
+		BuildingManager.Building building = GetBuilding();
+		if (building == null)
+		{
+			return ConVar.Decay.bracket_0_costfraction;
+		}
+		if (!building.HasBuildingBlocks())
+		{
+			return ConVar.Decay.bracket_0_costfraction;
+		}
+		int count = building.buildingBlocks.Count;
+		int num = count;
+		for (int i = 0; i < upkeepBrackets.Length; i++)
+		{
+			UpkeepBracket upkeepBracket = upkeepBrackets[i];
+			upkeepBracket.blocksTaxPaid = 0f;
+			if (num > 0)
+			{
+				int num2 = 0;
+				num2 = ((i != upkeepBrackets.Length - 1) ? Mathf.Min(num, upkeepBrackets[i].objectsUpTo) : num);
+				num -= num2;
+				upkeepBracket.blocksTaxPaid = (float)num2 * upkeepBracket.fraction;
+			}
+		}
+		float num3 = 0f;
+		for (int j = 0; j < upkeepBrackets.Length; j++)
+		{
+			UpkeepBracket upkeepBracket2 = upkeepBrackets[j];
+			if (upkeepBracket2.blocksTaxPaid > 0f)
+			{
+				num3 += upkeepBracket2.blocksTaxPaid;
+				continue;
+			}
+			break;
+		}
+		return num3 / (float)count;
+	}
+
+	private void ApplyUpkeepPayment()
+	{
+		List<Item> list = Pool.GetList<Item>();
+		for (int i = 0; i < upkeepBuffer.Count; i++)
+		{
+			ItemAmount itemAmount = upkeepBuffer[i];
+			int num = (int)itemAmount.amount;
+			if (num < 1)
+			{
+				continue;
+			}
+			base.inventory.Take(list, itemAmount.itemid, num);
+			Analytics.Azure.AddPendingItems(this, itemAmount.itemDef.shortname, num, "upkeep", consumed: true, perEntity: true);
+			foreach (Item item in list)
+			{
+				if (IsDebugging())
+				{
+					Debug.Log((object)(((object)this).ToString() + ": Using " + item.amount + " of " + item.info.shortname));
+				}
+				item.UseItem(item.amount);
+			}
+			list.Clear();
+			itemAmount.amount -= num;
+			upkeepBuffer[i] = itemAmount;
+		}
+		Pool.FreeList<Item>(ref list);
+	}
+
+	private void QueueUpkeepPayment(List<ItemAmount> itemAmounts)
+	{
+		for (int i = 0; i < itemAmounts.Count; i++)
+		{
+			ItemAmount itemAmount = itemAmounts[i];
+			bool flag = false;
+			foreach (ItemAmount item in upkeepBuffer)
+			{
+				if ((Object)(object)item.itemDef == (Object)(object)itemAmount.itemDef)
+				{
+					item.amount += itemAmount.amount;
+					if (IsDebugging())
+					{
+						Debug.Log((object)(((object)this).ToString() + ": Adding " + itemAmount.amount + " of " + itemAmount.itemDef.shortname + " to " + item.amount));
+					}
+					flag = true;
+					break;
+				}
+			}
+			if (!flag)
+			{
+				if (IsDebugging())
+				{
+					Debug.Log((object)(((object)this).ToString() + ": Adding " + itemAmount.amount + " of " + itemAmount.itemDef.shortname));
+				}
+				upkeepBuffer.Add(new ItemAmount(itemAmount.itemDef, itemAmount.amount));
+			}
+		}
+	}
+
+	private bool CanAffordUpkeepPayment(List<ItemAmount> itemAmounts)
+	{
+		for (int i = 0; i < itemAmounts.Count; i++)
+		{
+			ItemAmount itemAmount = itemAmounts[i];
+			int amount = base.inventory.GetAmount(itemAmount.itemid, onlyUsableAmounts: true);
+			if ((float)amount < itemAmount.amount)
+			{
+				if (IsDebugging())
+				{
+					Debug.Log((object)(((object)this).ToString() + ": Can't afford " + itemAmount.amount + " of " + itemAmount.itemDef.shortname));
+				}
+				return false;
+			}
+		}
+		return true;
+	}
+
+	public float PurchaseUpkeepTime(DecayEntity entity, float deltaTime)
+	{
+		Profiler.BeginSample("BuildingPrivlidge.PurchaseUpkeepTime");
+		float num = CalculateUpkeepCostFraction();
+		float num2 = CalculateUpkeepPeriodMinutes() * 60f;
+		float multiplier = num * deltaTime / num2;
+		List<ItemAmount> list = Pool.GetList<ItemAmount>();
+		entity.CalculateUpkeepCostAmounts(list, multiplier);
+		bool flag = CanAffordUpkeepPayment(list);
+		QueueUpkeepPayment(list);
+		Pool.FreeList<ItemAmount>(ref list);
+		ApplyUpkeepPayment();
+		Profiler.EndSample();
+		return flag ? deltaTime : 0f;
+	}
+
+	public void PurchaseUpkeepTime(float deltaTime)
+	{
+		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
+		Profiler.BeginSample("BuildingPrivlidge.PurchaseUpkeepTime");
+		BuildingManager.Building building = GetBuilding();
+		if (building == null || !building.HasDecayEntities())
+		{
+			return;
+		}
+		float num = GetProtectedMinutes(force: true) * 60f;
+		float num2 = Mathf.Min(num, deltaTime);
+		if (!(num2 > 0f))
+		{
+			return;
+		}
+		Enumerator<DecayEntity> enumerator = building.decayEntities.GetEnumerator();
+		try
+		{
+			while (enumerator.MoveNext())
+			{
+				DecayEntity current = enumerator.Current;
+				float protectedSeconds = current.GetProtectedSeconds();
+				if (num2 > protectedSeconds)
+				{
+					float num3 = PurchaseUpkeepTime(current, num2 - protectedSeconds);
+					current.AddUpkeepTime(num3);
+					if (IsDebugging())
+					{
+						Debug.Log((object)(((object)this).ToString() + " purchased upkeep time for " + ((object)current).ToString() + ": " + protectedSeconds + " + " + num3 + " = " + current.GetProtectedSeconds()));
+					}
+				}
+			}
+		}
+		finally
+		{
+			((IDisposable)enumerator).Dispose();
+		}
 	}
 
 	public override void ResetState()
@@ -303,7 +599,7 @@ public class BuildingPrivlidge : StorageContainer
 				return false;
 			}
 		}
-		if (targetSlot >= 24 && targetSlot <= 28)
+		if (targetSlot >= 24 && targetSlot <= 27)
 		{
 			return flag;
 		}
@@ -313,6 +609,7 @@ public class BuildingPrivlidge : StorageContainer
 	public override void Save(SaveInfo info)
 	{
 		base.Save(info);
+		Profiler.BeginSample("BuildingPrivlidge.Save");
 		info.msg.buildingPrivilege = Pool.Get<BuildingPrivilege>();
 		info.msg.buildingPrivilege.users = authorizedPlayers;
 		if (!info.forDisk)
@@ -321,6 +618,7 @@ public class BuildingPrivlidge : StorageContainer
 			info.msg.buildingPrivilege.costFraction = CalculateUpkeepCostFraction();
 			info.msg.buildingPrivilege.protectedMinutes = GetProtectedMinutes();
 		}
+		Profiler.EndSample();
 	}
 
 	public override void PostSave(SaveInfo info)
@@ -415,8 +713,8 @@ public class BuildingPrivlidge : StorageContainer
 
 	public void AddPlayer(BasePlayer player)
 	{
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0034: Expected O, but got Unknown
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Expected O, but got Unknown
 		if (!AtMaxAuthCapacity())
 		{
 			authorizedPlayers.RemoveAll((PlayerNameID x) => x.userid == player.userID);
@@ -458,12 +756,12 @@ public class BuildingPrivlidge : StorageContainer
 	[RPC_Server.IsVisible(3f)]
 	public void RPC_Rotate(RPCMessage msg)
 	{
-		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cd: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer player = msg.player;
 		if (player.CanBuild() && Object.op_Implicit((Object)(object)player.GetHeldEntity()) && (Object)(object)((Component)player.GetHeldEntity()).GetComponent<Hammer>() != (Object)null && ((Object)(object)GetSlot(Slot.Lock) == (Object)null || !GetSlot(Slot.Lock).IsLocked()) && !HasAttachedStorageAdaptor())
 		{
@@ -509,296 +807,5 @@ public class BuildingPrivlidge : StorageContainer
 	public override bool SupportsChildDeployables()
 	{
 		return true;
-	}
-
-	public float CalculateUpkeepPeriodMinutes()
-	{
-		if (base.isServer)
-		{
-			return ConVar.Decay.upkeep_period_minutes;
-		}
-		return 0f;
-	}
-
-	public float CalculateUpkeepCostFraction()
-	{
-		if (base.isServer)
-		{
-			return CalculateBuildingTaxRate();
-		}
-		return 0f;
-	}
-
-	public void CalculateUpkeepCostAmounts(List<ItemAmount> itemAmounts)
-	{
-		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
-		BuildingManager.Building building = GetBuilding();
-		if (building == null || !building.HasDecayEntities())
-		{
-			return;
-		}
-		float multiplier = CalculateUpkeepCostFraction();
-		Enumerator<DecayEntity> enumerator = building.decayEntities.GetEnumerator();
-		try
-		{
-			while (enumerator.MoveNext())
-			{
-				enumerator.Current.CalculateUpkeepCostAmounts(itemAmounts, multiplier);
-			}
-		}
-		finally
-		{
-			((IDisposable)enumerator).Dispose();
-		}
-	}
-
-	public float GetProtectedMinutes(bool force = false)
-	{
-		if (base.isServer)
-		{
-			if (!force && Time.realtimeSinceStartup < nextProtectedCalcTime)
-			{
-				return cachedProtectedMinutes;
-			}
-			nextProtectedCalcTime = Time.realtimeSinceStartup + 60f;
-			List<ItemAmount> list = Pool.GetList<ItemAmount>();
-			CalculateUpkeepCostAmounts(list);
-			float num = CalculateUpkeepPeriodMinutes();
-			float num2 = -1f;
-			if (base.inventory != null)
-			{
-				foreach (ItemAmount item in list)
-				{
-					int num3 = base.inventory.FindItemsByItemID(item.itemid).Sum((Item x) => x.amount);
-					if (num3 > 0 && item.amount > 0f)
-					{
-						float num4 = (float)num3 / item.amount * num;
-						if (num2 == -1f || num4 < num2)
-						{
-							num2 = num4;
-						}
-					}
-					else
-					{
-						num2 = 0f;
-					}
-				}
-				if (num2 == -1f)
-				{
-					num2 = 0f;
-				}
-			}
-			Pool.FreeList<ItemAmount>(ref list);
-			cachedProtectedMinutes = num2;
-			return cachedProtectedMinutes;
-		}
-		return 0f;
-	}
-
-	public override void OnKilled(HitInfo info)
-	{
-		if (ConVar.Decay.upkeep_grief_protection > 0f)
-		{
-			PurchaseUpkeepTime(ConVar.Decay.upkeep_grief_protection * 60f);
-		}
-		base.OnKilled(info);
-	}
-
-	public override void DecayTick()
-	{
-		if (EnsurePrimary())
-		{
-			base.DecayTick();
-		}
-	}
-
-	private bool EnsurePrimary()
-	{
-		BuildingManager.Building building = GetBuilding();
-		if (building != null)
-		{
-			BuildingPrivlidge dominatingBuildingPrivilege = building.GetDominatingBuildingPrivilege();
-			if ((Object)(object)dominatingBuildingPrivilege != (Object)null && (Object)(object)dominatingBuildingPrivilege != (Object)(object)this)
-			{
-				Kill(DestroyMode.Gib);
-				return false;
-			}
-		}
-		return true;
-	}
-
-	public void MarkProtectedMinutesDirty(float delay = 0f)
-	{
-		nextProtectedCalcTime = Time.realtimeSinceStartup + delay;
-	}
-
-	private float CalculateBuildingTaxRate()
-	{
-		BuildingManager.Building building = GetBuilding();
-		if (building == null)
-		{
-			return ConVar.Decay.bracket_0_costfraction;
-		}
-		if (!building.HasBuildingBlocks())
-		{
-			return ConVar.Decay.bracket_0_costfraction;
-		}
-		int count = building.buildingBlocks.Count;
-		int num = count;
-		for (int i = 0; i < upkeepBrackets.Length; i++)
-		{
-			UpkeepBracket upkeepBracket = upkeepBrackets[i];
-			upkeepBracket.blocksTaxPaid = 0f;
-			if (num > 0)
-			{
-				int num2 = 0;
-				num2 = ((i != upkeepBrackets.Length - 1) ? Mathf.Min(num, upkeepBrackets[i].objectsUpTo) : num);
-				num -= num2;
-				upkeepBracket.blocksTaxPaid = (float)num2 * upkeepBracket.fraction;
-			}
-		}
-		float num3 = 0f;
-		for (int j = 0; j < upkeepBrackets.Length; j++)
-		{
-			UpkeepBracket upkeepBracket2 = upkeepBrackets[j];
-			if (!(upkeepBracket2.blocksTaxPaid > 0f))
-			{
-				break;
-			}
-			num3 += upkeepBracket2.blocksTaxPaid;
-		}
-		return num3 / (float)count;
-	}
-
-	private void ApplyUpkeepPayment()
-	{
-		List<Item> list = Pool.GetList<Item>();
-		for (int i = 0; i < upkeepBuffer.Count; i++)
-		{
-			ItemAmount itemAmount = upkeepBuffer[i];
-			int num = (int)itemAmount.amount;
-			if (num < 1)
-			{
-				continue;
-			}
-			base.inventory.Take(list, itemAmount.itemid, num);
-			Analytics.Azure.AddPendingItems(this, itemAmount.itemDef.shortname, num, "upkeep", consumed: true, perEntity: true);
-			foreach (Item item in list)
-			{
-				if (IsDebugging())
-				{
-					Debug.Log((object)(((object)this).ToString() + ": Using " + item.amount + " of " + item.info.shortname));
-				}
-				item.UseItem(item.amount);
-			}
-			list.Clear();
-			itemAmount.amount -= num;
-			upkeepBuffer[i] = itemAmount;
-		}
-		Pool.FreeList<Item>(ref list);
-	}
-
-	private void QueueUpkeepPayment(List<ItemAmount> itemAmounts)
-	{
-		for (int i = 0; i < itemAmounts.Count; i++)
-		{
-			ItemAmount itemAmount = itemAmounts[i];
-			bool flag = false;
-			foreach (ItemAmount item in upkeepBuffer)
-			{
-				if ((Object)(object)item.itemDef == (Object)(object)itemAmount.itemDef)
-				{
-					item.amount += itemAmount.amount;
-					if (IsDebugging())
-					{
-						Debug.Log((object)(((object)this).ToString() + ": Adding " + itemAmount.amount + " of " + itemAmount.itemDef.shortname + " to " + item.amount));
-					}
-					flag = true;
-					break;
-				}
-			}
-			if (!flag)
-			{
-				if (IsDebugging())
-				{
-					Debug.Log((object)(((object)this).ToString() + ": Adding " + itemAmount.amount + " of " + itemAmount.itemDef.shortname));
-				}
-				upkeepBuffer.Add(new ItemAmount(itemAmount.itemDef, itemAmount.amount));
-			}
-		}
-	}
-
-	private bool CanAffordUpkeepPayment(List<ItemAmount> itemAmounts)
-	{
-		for (int i = 0; i < itemAmounts.Count; i++)
-		{
-			ItemAmount itemAmount = itemAmounts[i];
-			if ((float)base.inventory.GetAmount(itemAmount.itemid, onlyUsableAmounts: true) < itemAmount.amount)
-			{
-				if (IsDebugging())
-				{
-					Debug.Log((object)(((object)this).ToString() + ": Can't afford " + itemAmount.amount + " of " + itemAmount.itemDef.shortname));
-				}
-				return false;
-			}
-		}
-		return true;
-	}
-
-	public float PurchaseUpkeepTime(DecayEntity entity, float deltaTime)
-	{
-		float num = CalculateUpkeepCostFraction();
-		float num2 = CalculateUpkeepPeriodMinutes() * 60f;
-		float multiplier = num * deltaTime / num2;
-		List<ItemAmount> list = Pool.GetList<ItemAmount>();
-		entity.CalculateUpkeepCostAmounts(list, multiplier);
-		bool num3 = CanAffordUpkeepPayment(list);
-		QueueUpkeepPayment(list);
-		Pool.FreeList<ItemAmount>(ref list);
-		ApplyUpkeepPayment();
-		if (!num3)
-		{
-			return 0f;
-		}
-		return deltaTime;
-	}
-
-	public void PurchaseUpkeepTime(float deltaTime)
-	{
-		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
-		BuildingManager.Building building = GetBuilding();
-		if (building == null || !building.HasDecayEntities())
-		{
-			return;
-		}
-		float num = Mathf.Min(GetProtectedMinutes(force: true) * 60f, deltaTime);
-		if (!(num > 0f))
-		{
-			return;
-		}
-		Enumerator<DecayEntity> enumerator = building.decayEntities.GetEnumerator();
-		try
-		{
-			while (enumerator.MoveNext())
-			{
-				DecayEntity current = enumerator.Current;
-				float protectedSeconds = current.GetProtectedSeconds();
-				if (num > protectedSeconds)
-				{
-					float time = PurchaseUpkeepTime(current, num - protectedSeconds);
-					current.AddUpkeepTime(time);
-					if (IsDebugging())
-					{
-						Debug.Log((object)(((object)this).ToString() + " purchased upkeep time for " + ((object)current).ToString() + ": " + protectedSeconds + " + " + time + " = " + current.GetProtectedSeconds()));
-					}
-				}
-			}
-		}
-		finally
-		{
-			((IDisposable)enumerator).Dispose();
-		}
 	}
 }

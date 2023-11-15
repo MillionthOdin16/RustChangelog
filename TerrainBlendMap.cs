@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class TerrainBlendMap : TerrainMap<byte>
 {
-	public Texture2D BlendTexture;
+	public Texture2D BlendTexture = null;
 
 	public override void Setup()
 	{
@@ -46,16 +46,16 @@ public class TerrainBlendMap : TerrainMap<byte>
 
 	public void GenerateTextures()
 	{
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0027: Expected O, but got Unknown
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Expected O, but got Unknown
 		BlendTexture = new Texture2D(res, res, (TextureFormat)1, true, true);
 		((Object)BlendTexture).name = "BlendTexture";
 		((Texture)BlendTexture).wrapMode = (TextureWrapMode)1;
 		Color32[] col = (Color32[])(object)new Color32[res * res];
 		Parallel.For(0, res, (Action<int>)delegate(int z)
 		{
-			//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-			//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+			//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0040: Unknown result type (might be due to invalid IL or missing references)
 			for (int i = 0; i < res; i++)
 			{
 				byte b = src[z * res + i];
@@ -74,8 +74,8 @@ public class TerrainBlendMap : TerrainMap<byte>
 
 	public float GetAlpha(Vector3 worldPos)
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
 		float normX = TerrainMeta.NormalizeX(worldPos.x);
 		float normZ = TerrainMeta.NormalizeZ(worldPos.z);
 		return GetAlpha(normX, normZ);
@@ -102,8 +102,8 @@ public class TerrainBlendMap : TerrainMap<byte>
 
 	public void SetAlpha(Vector3 worldPos, float a)
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
 		float normX = TerrainMeta.NormalizeX(worldPos.x);
 		float normZ = TerrainMeta.NormalizeZ(worldPos.z);
 		SetAlpha(normX, normZ, a);
@@ -128,8 +128,8 @@ public class TerrainBlendMap : TerrainMap<byte>
 
 	public void SetAlpha(Vector3 worldPos, float a, float opacity, float radius, float fade = 0f)
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
 		float normX = TerrainMeta.NormalizeX(worldPos.x);
 		float normZ = TerrainMeta.NormalizeZ(worldPos.z);
 		SetAlpha(normX, normZ, a, opacity, radius, fade);

@@ -3,5 +3,5 @@ using UnityEngine.Playables;
 
 public class DemoTimelineController : MonoBehaviour
 {
-	public PlayableDirector Director;
+	public PlayableDirector Director = null;
 }

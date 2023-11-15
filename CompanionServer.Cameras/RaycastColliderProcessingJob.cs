@@ -63,13 +63,13 @@ public struct RaycastColliderProcessingJob : IJob
 				int num6 = colliders[i];
 				int num8 = (colliders[num3] = num5);
 				num8 = (reference[num4] = num6);
-				num4 = i;
+				num6 = i;
 				reference = ref counts;
-				num3 = num;
-				num6 = counts[num];
-				num5 = counts[i];
-				num8 = (counts[num4] = num6);
-				num8 = (reference[num3] = num5);
+				num5 = num;
+				num4 = counts[num];
+				num3 = counts[i];
+				num8 = (counts[num6] = num4);
+				num8 = (reference[num5] = num3);
 				i++;
 				num--;
 			}

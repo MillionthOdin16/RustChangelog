@@ -4,7 +4,7 @@ using ProtoBuf;
 
 namespace CompanionServer.Handlers;
 
-public class TeamChat : BasePlayerHandler<AppEmpty>
+public class TeamChat : BaseHandler<AppEmpty>
 {
 	public override void Execute()
 	{
@@ -16,13 +16,13 @@ public class TeamChat : BasePlayerHandler<AppEmpty>
 		}
 		AppResponse val = Pool.Get<AppResponse>();
 		val.teamChat = Pool.Get<AppTeamChat>();
-		val.teamChat.messages = Pool.GetList<AppTeamMessage>();
+		val.teamChat.messages = Pool.GetList<AppChatMessage>();
 		IReadOnlyList<ChatLog.Entry> history = Server.TeamChat.GetHistory(playerTeam.teamID);
 		if (history != null)
 		{
 			foreach (ChatLog.Entry item in history)
 			{
-				AppTeamMessage val2 = Pool.Get<AppTeamMessage>();
+				AppChatMessage val2 = Pool.Get<AppChatMessage>();
 				val2.steamId = item.SteamId;
 				val2.name = item.Name;
 				val2.message = item.Message;

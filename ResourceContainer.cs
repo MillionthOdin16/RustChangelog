@@ -26,7 +26,7 @@ public class ResourceContainer : EntityComponent<BaseEntity>
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - StartLootingContainer "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - StartLootingContainer "));
 				}
 				TimeWarning val2 = TimeWarning.New("StartLootingContainer", 0);
 				try
@@ -45,7 +45,7 @@ public class ResourceContainer : EntityComponent<BaseEntity>
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							BaseEntity.RPCMessage rPCMessage = default(BaseEntity.RPCMessage);
@@ -57,7 +57,7 @@ public class ResourceContainer : EntityComponent<BaseEntity>
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)

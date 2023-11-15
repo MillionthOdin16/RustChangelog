@@ -25,7 +25,7 @@ public class BuildingGrade : ScriptableObject
 
 	public List<ItemAmount> baseCost;
 
-	public PhysicMaterial physicMaterial;
+	public PhysicMaterial physicMaterial = null;
 
 	public ProtectionProperties damageProtecton;
 

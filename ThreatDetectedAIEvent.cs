@@ -20,12 +20,12 @@ public class ThreatDetectedAIEvent : BaseAIEvent
 
 	public override AIEventData ToProto()
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0011: Expected O, but got Unknown
-		AIEventData obj = base.ToProto();
-		obj.threatDetectedData = new ThreatDetectedAIEventData();
-		obj.threatDetectedData.range = Range;
-		return obj;
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Expected O, but got Unknown
+		AIEventData val = base.ToProto();
+		val.threatDetectedData = new ThreatDetectedAIEventData();
+		val.threatDetectedData.range = Range;
+		return val;
 	}
 
 	public override void Execute(AIMemory memory, AIBrainSenses senses, StateStatus stateStatus)

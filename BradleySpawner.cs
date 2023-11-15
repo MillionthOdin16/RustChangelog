@@ -20,7 +20,7 @@ public class BradleySpawner : MonoBehaviour, IServerComponent
 
 	public static BradleySpawner singleton;
 
-	private bool pendingRespawn;
+	private bool pendingRespawn = false;
 
 	public void Start()
 	{
@@ -63,13 +63,12 @@ public class BradleySpawner : MonoBehaviour, IServerComponent
 
 	public void SpawnBradley()
 	{
-		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)spawned != (Object)null)
 		{
 			Debug.LogWarning((object)"Bradley attempting to spawn but one already exists!");
@@ -88,8 +87,7 @@ public class BradleySpawner : MonoBehaviour, IServerComponent
 			{
 				baseEntity.Kill();
 			}
-			Vector3 val = position;
-			Debug.Log((object)("BradleyAPC Spawned at :" + ((object)(Vector3)(ref val)).ToString()));
+			Debug.Log((object)("BradleyAPC Spawned at :" + position));
 			spawned = component;
 		}
 	}

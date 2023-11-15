@@ -29,10 +29,10 @@ public class LootSpawn : ScriptableObject
 
 	public void SpawnIntoContainer(ItemContainer container)
 	{
-		//IL_00be: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0114: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0126: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012c: Unknown result type (might be due to invalid IL or missing references)
 		if (subSpawn != null && subSpawn.Length != 0)
 		{
 			SubCategoryIntoContainer(container);

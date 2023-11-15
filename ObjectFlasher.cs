@@ -8,7 +8,7 @@ public class ObjectFlasher : BaseMonoBehaviour
 
 	public float toggleLength = 1f;
 
-	public float timeOffset;
+	public float timeOffset = 0f;
 
-	public float randomOffset;
+	public float randomOffset = 0f;
 }

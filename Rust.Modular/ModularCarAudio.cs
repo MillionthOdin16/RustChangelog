@@ -4,7 +4,7 @@ namespace Rust.Modular;
 
 public class ModularCarAudio : GroundVehicleAudio
 {
-	public bool showDebug;
+	public bool showDebug = false;
 
 	[Header("Skid")]
 	[SerializeField]

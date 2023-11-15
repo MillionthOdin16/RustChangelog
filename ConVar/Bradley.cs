@@ -17,7 +17,8 @@ public class Bradley : ConsoleSystem
 	[ServerVar]
 	public static void quickrespawn(Arg arg)
 	{
-		if (!Object.op_Implicit((Object)(object)arg.Player()))
+		BasePlayer basePlayer = arg.Player();
+		if (!Object.op_Implicit((Object)(object)basePlayer))
 		{
 			return;
 		}

@@ -10,7 +10,7 @@ public class Scoreboard : MonoBehaviour, IClientComponent
 		public GameObject[] activeColumns;
 	}
 
-	public static Scoreboard instance;
+	public static Scoreboard instance = null;
 
 	public RustText scoreboardTitle;
 

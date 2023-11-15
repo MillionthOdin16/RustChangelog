@@ -16,55 +16,55 @@ public abstract class TerrainPlacement : PrefabAttribute
 
 	public bool AlphaMap = true;
 
-	public bool WaterMap;
+	public bool WaterMap = false;
 
 	[InspectorFlags]
-	public Enum SplatMask;
+	public Enum SplatMask = (Enum)0;
 
 	[InspectorFlags]
-	public Enum BiomeMask;
+	public Enum BiomeMask = (Enum)0;
 
 	[InspectorFlags]
-	public Enum TopologyMask;
+	public Enum TopologyMask = (Enum)0;
 
 	[HideInInspector]
-	public Texture2DRef heightmap;
+	public Texture2DRef heightmap = null;
 
 	[HideInInspector]
-	public Texture2DRef splatmap0;
+	public Texture2DRef splatmap0 = null;
 
 	[HideInInspector]
-	public Texture2DRef splatmap1;
+	public Texture2DRef splatmap1 = null;
 
 	[HideInInspector]
-	public Texture2DRef alphamap;
+	public Texture2DRef alphamap = null;
 
 	[HideInInspector]
-	public Texture2DRef biomemap;
+	public Texture2DRef biomemap = null;
 
 	[HideInInspector]
-	public Texture2DRef topologymap;
+	public Texture2DRef topologymap = null;
 
 	[HideInInspector]
-	public Texture2DRef watermap;
+	public Texture2DRef watermap = null;
 
 	[HideInInspector]
-	public Texture2DRef blendmap;
+	public Texture2DRef blendmap = null;
 
 	public void Apply(Matrix4x4 localToWorld, Matrix4x4 worldToLocal)
 	{
-		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
 		if (ShouldHeight())
 		{
 			ApplyHeight(localToWorld, worldToLocal);
@@ -93,65 +93,41 @@ public abstract class TerrainPlacement : PrefabAttribute
 
 	protected bool ShouldHeight()
 	{
-		if (heightmap.isValid)
-		{
-			return HeightMap;
-		}
-		return false;
+		return heightmap.isValid && HeightMap;
 	}
 
 	protected bool ShouldSplat(int id = -1)
 	{
-		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0023: Invalid comparison between Unknown and I4
-		if (splatmap0.isValid && splatmap1.isValid)
-		{
-			return (SplatMask & id) > 0;
-		}
-		return false;
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0024: Invalid comparison between Unknown and I4
+		return splatmap0.isValid && splatmap1.isValid && (SplatMask & id) > 0;
 	}
 
 	protected bool ShouldAlpha()
 	{
-		if (alphamap.isValid)
-		{
-			return AlphaMap;
-		}
-		return false;
+		return alphamap.isValid && AlphaMap;
 	}
 
 	protected bool ShouldBiome(int id = -1)
 	{
-		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0016: Invalid comparison between Unknown and I4
-		if (biomemap.isValid)
-		{
-			return (BiomeMask & id) > 0;
-		}
-		return false;
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Invalid comparison between Unknown and I4
+		return biomemap.isValid && (BiomeMask & id) > 0;
 	}
 
 	protected bool ShouldTopology(int id = -1)
 	{
-		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0016: Invalid comparison between Unknown and I4
-		if (topologymap.isValid)
-		{
-			return (TopologyMask & id) > 0;
-		}
-		return false;
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Invalid comparison between Unknown and I4
+		return topologymap.isValid && (TopologyMask & id) > 0;
 	}
 
 	protected bool ShouldWater()
 	{
-		if (watermap.isValid)
-		{
-			return WaterMap;
-		}
-		return false;
+		return watermap.isValid && WaterMap;
 	}
 
 	protected abstract void ApplyHeight(Matrix4x4 localToWorld, Matrix4x4 worldToLocal);

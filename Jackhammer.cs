@@ -18,7 +18,7 @@ public class Jackhammer : BaseMelee
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_SetEngineStatus "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_SetEngineStatus "));
 				}
 				TimeWarning val2 = TimeWarning.New("Server_SetEngineStatus", 0);
 				try

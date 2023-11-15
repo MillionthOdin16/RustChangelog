@@ -22,5 +22,5 @@ public class UIChat : PriorityListComponent<UIChat>
 
 	public EmojiGallery emojiGallery;
 
-	public static bool isOpen;
+	public static bool isOpen = false;
 }

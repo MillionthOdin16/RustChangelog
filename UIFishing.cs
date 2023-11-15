@@ -5,7 +5,7 @@ public class UIFishing : SingletonComponent<UIFishing>
 {
 	public Slider TensionLine;
 
-	public Image FillImage;
+	public Image FillImage = null;
 
 	public Gradient FillGradient;
 

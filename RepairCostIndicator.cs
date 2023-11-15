@@ -4,5 +4,5 @@ public class RepairCostIndicator : SingletonComponent<RepairCostIndicator>, ICli
 {
 	public RepairCostIndicatorRow[] Rows;
 
-	public CanvasGroup Fader;
+	public CanvasGroup Fader = null;
 }

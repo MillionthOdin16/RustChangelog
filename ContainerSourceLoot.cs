@@ -1,6 +1,6 @@
 public class ContainerSourceLoot : ItemContainerSource
 {
-	public int container;
+	public int container = 0;
 
 	public override ItemContainer GetItemContainer()
 	{

@@ -2,10 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ConVar;
-using Facepunch;
 using Facepunch.Sqlite;
 using Ionic.Crc;
-using ProtoBuf;
 using UnityEngine.Assertions;
 
 public class FileStorage : IDisposable
@@ -26,48 +24,30 @@ public class FileStorage : IDisposable
 		ogg
 	}
 
-	private class FileDatabase : Database
-	{
-		public IEnumerable<AssociatedFile> QueryAll(NetworkableId entityID)
-		{
-			//IL_000e: Unknown result type (might be due to invalid IL or missing references)
-			IntPtr intPtr = ((Database)this).Prepare("SELECT filetype, crc, part, data FROM data WHERE entid = ?");
-			Database.Bind<ulong>(intPtr, 1, entityID.Value);
-			return ((Database)this).ExecuteAndReadQueryResults<AssociatedFile>(intPtr, (Func<IntPtr, AssociatedFile>)ReadAssociatedFileRow, true);
-		}
-
-		private static AssociatedFile ReadAssociatedFileRow(IntPtr stmHandle)
-		{
-			AssociatedFile obj = Pool.Get<AssociatedFile>();
-			obj.type = Database.GetColumnValue<int>(stmHandle, 0);
-			obj.crc = (uint)Database.GetColumnValue<int>(stmHandle, 1);
-			obj.numID = (uint)Database.GetColumnValue<int>(stmHandle, 2);
-			obj.data = Database.GetColumnValue<byte[]>(stmHandle, 3);
-			return obj;
-		}
-	}
-
-	private FileDatabase db;
+	private Database db;
 
 	private CRC32 crc = new CRC32();
 
 	private MruDictionary<uint, CacheData> _cache = new MruDictionary<uint, CacheData>(1000, (Action<uint, CacheData>)null);
 
-	public static FileStorage server = new FileStorage("sv.files." + 242, server: true);
+	public static FileStorage server = new FileStorage("sv.files." + 239, server: true);
 
 	protected FileStorage(string name, bool server)
 	{
 		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
 		//IL_000b: Expected O, but got Unknown
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004d: Expected O, but got Unknown
 		if (server)
 		{
-			string text = Server.rootFolder + "/" + name + ".db";
-			db = new FileDatabase();
-			((Database)db).Open(text, true);
-			if (!((Database)db).TableExists("data"))
+			string rootFolder = Server.rootFolder;
+			string text = rootFolder + "/" + name + ".db";
+			db = new Database();
+			db.Open(text, true);
+			if (!db.TableExists("data"))
 			{
-				((Database)db).Execute("CREATE TABLE data ( crc INTEGER PRIMARY KEY, data BLOB, updated INTEGER, entid INTEGER, filetype INTEGER, part INTEGER )");
-				((Database)db).Execute("CREATE INDEX IF NOT EXISTS entindex ON data ( entid )");
+				db.Execute("CREATE TABLE data ( crc INTEGER PRIMARY KEY, data BLOB, updated INTEGER, entid INTEGER, filetype INTEGER, part INTEGER )");
+				db.Execute("CREATE INDEX IF NOT EXISTS entindex ON data ( entid )");
 			}
 		}
 	}
@@ -81,7 +61,7 @@ public class FileStorage : IDisposable
 	{
 		if (db != null)
 		{
-			((Database)db).Close();
+			db.Close();
 			db = null;
 		}
 	}
@@ -104,16 +84,16 @@ public class FileStorage : IDisposable
 
 	public uint Store(byte[] data, Type type, NetworkableId entityID, uint numID = 0u)
 	{
-		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
 		TimeWarning val = TimeWarning.New("FileStorage.Store", 0);
 		try
 		{
 			uint cRC = GetCRC(data, type);
 			if (db != null)
 			{
-				((Database)db).Execute<int, byte[], long, int, int>("INSERT OR REPLACE INTO data ( crc, data, entid, filetype, part ) VALUES ( ?, ?, ?, ?, ? )", (int)cRC, data, (long)entityID.Value, (int)type, (int)numID);
+				db.Execute<int, byte[], long, int, int>("INSERT OR REPLACE INTO data ( crc, data, entid, filetype, part ) VALUES ( ?, ?, ?, ?, ? )", (int)cRC, data, (long)entityID.Value, (int)type, (int)numID);
 			}
 			_cache.Remove(cRC);
 			_cache.Add(cRC, new CacheData
@@ -132,9 +112,9 @@ public class FileStorage : IDisposable
 
 	public byte[] Get(uint crc, Type type, NetworkableId entityID, uint numID = 0u)
 	{
-		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
 		TimeWarning val = TimeWarning.New("FileStorage.Get", 0);
 		try
 		{
@@ -148,7 +128,7 @@ public class FileStorage : IDisposable
 			{
 				return null;
 			}
-			byte[] array = ((Database)db).Query<byte[], int, int, int, int>("SELECT data FROM data WHERE crc = ? AND filetype = ? AND entid = ? AND part = ? LIMIT 1", (int)crc, (int)type, (int)entityID.Value, (int)numID);
+			byte[] array = db.QueryBlob<int, int, long, int>("SELECT data FROM data WHERE crc = ? AND filetype = ? AND entid = ? AND part = ? LIMIT 1", (int)crc, (int)type, (long)entityID.Value, (int)numID);
 			if (array == null)
 			{
 				return null;
@@ -170,13 +150,13 @@ public class FileStorage : IDisposable
 
 	public void Remove(uint crc, Type type, NetworkableId entityID)
 	{
-		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
 		TimeWarning val = TimeWarning.New("FileStorage.Remove", 0);
 		try
 		{
 			if (db != null)
 			{
-				((Database)db).Execute<int, int, long>("DELETE FROM data WHERE crc = ? AND filetype = ? AND entid = ?", (int)crc, (int)type, (long)entityID.Value);
+				db.Execute<int, int, long>("DELETE FROM data WHERE crc = ? AND filetype = ? AND entid = ?", (int)crc, (int)type, (long)entityID.Value);
 			}
 			_cache.Remove(crc);
 		}
@@ -188,13 +168,13 @@ public class FileStorage : IDisposable
 
 	public void RemoveExact(uint crc, Type type, NetworkableId entityID, uint numid)
 	{
-		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
 		TimeWarning val = TimeWarning.New("FileStorage.RemoveExact", 0);
 		try
 		{
 			if (db != null)
 			{
-				((Database)db).Execute<int, int, long, int>("DELETE FROM data WHERE crc = ? AND filetype = ? AND entid = ? AND part = ?", (int)crc, (int)type, (long)entityID.Value, (int)numid);
+				db.Execute<int, int, long, int>("DELETE FROM data WHERE crc = ? AND filetype = ? AND entid = ? AND part = ?", (int)crc, (int)type, (long)entityID.Value, (int)numid);
 			}
 			_cache.Remove(crc);
 		}
@@ -213,7 +193,7 @@ public class FileStorage : IDisposable
 		{
 			if (db != null)
 			{
-				((Database)db).Execute<long, int>("DELETE FROM data WHERE entid = ? AND part = ?", (long)entityid.Value, (int)numid);
+				db.Execute<long, int>("DELETE FROM data WHERE entid = ? AND part = ?", (long)entityid.Value, (int)numid);
 			}
 			uint[] array = (from x in (IEnumerable<KeyValuePair<uint, CacheData>>)_cache
 				where x.Value.entityID == entityid && x.Value.numID == numid
@@ -231,13 +211,13 @@ public class FileStorage : IDisposable
 
 	internal void RemoveAllByEntity(NetworkableId entityid)
 	{
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
 		TimeWarning val = TimeWarning.New("FileStorage.RemoveAllByEntity", 0);
 		try
 		{
 			if (db != null)
 			{
-				((Database)db).Execute<long>("DELETE FROM data WHERE entid = ?", (long)entityid.Value);
+				db.Execute<long>("DELETE FROM data WHERE entid = ?", (long)entityid.Value);
 			}
 		}
 		finally
@@ -248,25 +228,19 @@ public class FileStorage : IDisposable
 
 	public void ReassignEntityId(NetworkableId oldId, NetworkableId newId)
 	{
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
 		TimeWarning val = TimeWarning.New("FileStorage.ReassignEntityId", 0);
 		try
 		{
 			if (db != null)
 			{
-				((Database)db).Execute<long, long>("UPDATE data SET entid = ? WHERE entid = ?", (long)newId.Value, (long)oldId.Value);
+				db.Execute<long, long>("UPDATE data SET entid = ? WHERE entid = ?", (long)newId.Value, (long)oldId.Value);
 			}
 		}
 		finally
 		{
 			((IDisposable)val)?.Dispose();
 		}
-	}
-
-	public IEnumerable<AssociatedFile> QueryAllByEntity(NetworkableId entityID)
-	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		return db.QueryAll(entityID);
 	}
 }

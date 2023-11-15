@@ -1,6 +1,6 @@
 public class ItemModXPWhenUsed : ItemMod
 {
-	public float xpPerUnit;
+	public float xpPerUnit = 0f;
 
 	public int unitSize = 1;
 

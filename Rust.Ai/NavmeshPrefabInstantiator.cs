@@ -10,7 +10,8 @@ public class NavmeshPrefabInstantiator : MonoBehaviour
 	{
 		if (NavmeshPrefab != null)
 		{
-			NavmeshPrefab.Instantiate(((Component)this).transform).SetActive(true);
+			GameObject val = NavmeshPrefab.Instantiate(((Component)this).transform);
+			val.SetActive(true);
 			Object.Destroy((Object)(object)this);
 		}
 	}

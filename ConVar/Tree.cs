@@ -4,5 +4,5 @@ namespace ConVar;
 public class Tree : ConsoleSystem
 {
 	[ServerVar]
-	public static bool global_broadcast;
+	public static bool global_broadcast = false;
 }

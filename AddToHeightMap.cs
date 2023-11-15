@@ -2,22 +2,22 @@ using UnityEngine;
 
 public class AddToHeightMap : ProceduralObject
 {
-	public bool DestroyGameObject;
+	public bool DestroyGameObject = false;
 
 	public void Apply()
 	{
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ce: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00df: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0102: Unknown result type (might be due to invalid IL or missing references)
 		Collider component = ((Component)this).GetComponent<Collider>();
 		Bounds bounds = component.bounds;
 		int num = TerrainMeta.HeightMap.Index(TerrainMeta.NormalizeX(((Bounds)(ref bounds)).min.x));
@@ -37,7 +37,8 @@ public class AddToHeightMap : ProceduralObject
 				((Ray)(ref val2))._002Ector(val, Vector3.down);
 				if (component.Raycast(val2, ref val3, ((Bounds)(ref bounds)).size.y))
 				{
-					float num5 = TerrainMeta.NormalizeY(((RaycastHit)(ref val3)).point.y);
+					float y = ((RaycastHit)(ref val3)).point.y;
+					float num5 = TerrainMeta.NormalizeY(y);
 					float height = TerrainMeta.HeightMap.GetHeight01(j, i);
 					if (num5 > height)
 					{

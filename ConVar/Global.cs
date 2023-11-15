@@ -4,11 +4,9 @@ using System.Diagnostics;
 using System.Linq;
 using Facepunch;
 using Facepunch.Extend;
-using Facepunch.Nexus.Models;
 using Network;
 using Network.Visibility;
 using ProtoBuf;
-using ProtoBuf.Nexus;
 using Rust;
 using UnityEngine;
 using UnityEngine.Profiling;
@@ -60,6 +58,9 @@ public class Global : ConsoleSystem
 	[ClientVar(ClientInfo = true, Saved = true, Help = "If you're an admin this will enable god mode")]
 	public static bool god = false;
 
+	[ClientVar(ClientInfo = true, Saved = true, Help = "If enabled you will be networked when you're spectating. This means that you will hear audio chat, but also means that cheaters will potentially be able to detect you watching them.")]
+	public static bool specnet = false;
+
 	[ClientVar]
 	[ServerVar(ClientAdmin = true, ServerAdmin = true, Help = "When enabled a player wearing a gingerbread suit will gib like the gingerbread NPC's")]
 	public static bool cinematicGingerbreadCorpses = false;
@@ -84,11 +85,7 @@ public class Global : ConsoleSystem
 	[ClientVar(Saved = true, Help = "Blocks any emoji from appearing")]
 	public static bool blockEmoji = false;
 
-	[ClientVar(Saved = true, Help = "Blocks emoji provided by servers from appearing")]
-	public static bool blockServerEmoji = false;
-
-	[ClientVar(Saved = true, Help = "Displays any emoji rendering errors in the console")]
-	public static bool showEmojiErrors = false;
+	public static bool showEmojiErrors = true;
 
 	[ServerVar]
 	[ClientVar]
@@ -112,6 +109,8 @@ public class Global : ConsoleSystem
 		}
 		switch (asyncLoadingPreset)
 		{
+		case 0:
+			break;
 		case 1:
 			if (warmupConcurrency <= 1)
 			{
@@ -136,8 +135,6 @@ public class Global : ConsoleSystem
 			break;
 		default:
 			Debug.LogWarning((object)$"There is no asyncLoading preset number {asyncLoadingPreset}");
-			break;
-		case 0:
 			break;
 		}
 	}
@@ -195,13 +192,14 @@ public class Global : ConsoleSystem
 				dictionary2.Add(((object)val).GetType(), runtimeMemorySize);
 			}
 		}
-		foreach (KeyValuePair<Type, long> item in dictionary2.OrderByDescending(delegate(KeyValuePair<Type, long> x)
+		IOrderedEnumerable<KeyValuePair<Type, long>> orderedEnumerable = dictionary2.OrderByDescending(delegate(KeyValuePair<Type, long> x)
 		{
 			KeyValuePair<Type, long> keyValuePair = x;
 			return keyValuePair.Value;
-		}))
+		});
+		foreach (KeyValuePair<Type, long> item in orderedEnumerable)
 		{
-			text = text + dictionary[item.Key].ToString().PadLeft(10) + " " + NumberExtensions.FormatBytes<long>(item.Value, false).PadLeft(15) + "\t" + item.Key?.ToString() + "\n";
+			text = string.Concat(text, dictionary[item.Key].ToString().PadLeft(10), " ", NumberExtensions.FormatBytes<long>(item.Value, false).PadLeft(15), "\t", item.Key, "\n");
 		}
 		args.ReplyWith(text);
 	}
@@ -239,8 +237,9 @@ public class Global : ConsoleSystem
 	[ClientVar]
 	public static void error(Arg args)
 	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		((GameObject)null).transform.position = Vector3.zero;
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		GameObject val = null;
+		val.transform.position = Vector3.zero;
 	}
 
 	[ServerVar]
@@ -308,7 +307,7 @@ public class Global : ConsoleSystem
 		{
 			if (developer > 0)
 			{
-				Debug.LogWarning((object)(((object)basePlayer)?.ToString() + " wanted to respawn but isn't dead or spectating"));
+				Debug.LogWarning((object)string.Concat(basePlayer, " wanted to respawn but isn't dead or spectating"));
 			}
 			basePlayer.SendNetworkUpdate();
 		}
@@ -407,12 +406,11 @@ public class Global : ConsoleSystem
 	[ServerUserVar]
 	public static void respawn_sleepingbag(Arg args)
 	{
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer basePlayer = args.Player();
 		if (!Object.op_Implicit((Object)(object)basePlayer) || !basePlayer.IsDead())
 		{
@@ -422,140 +420,43 @@ public class Global : ConsoleSystem
 		if (!((NetworkableId)(ref entityID)).IsValid)
 		{
 			args.ReplyWith("Missing sleeping bag ID");
-			return;
 		}
-		string @string = args.GetString(1, "");
-		string errorMessage;
-		if (NexusServer.Started && !string.IsNullOrWhiteSpace(@string))
+		else if (basePlayer.CanRespawn())
 		{
-			if (!ZoneController.Instance.CanRespawnAcrossZones(basePlayer))
+			if (SleepingBag.SpawnPlayer(basePlayer, entityID))
 			{
-				args.ReplyWith("You cannot respawn to a different zone");
-				return;
-			}
-			NexusZoneDetails val = NexusServer.FindZone(@string);
-			if (val == null)
-			{
-				args.ReplyWith("Zone was not found");
-			}
-			else if (!basePlayer.CanRespawn())
-			{
-				args.ReplyWith("You can't respawn again so quickly, wait a while");
+				basePlayer.MarkRespawn();
 			}
 			else
 			{
-				NexusRespawn(basePlayer, val, entityID);
+				args.ReplyWith("Couldn't spawn in sleeping bag!");
 			}
 		}
-		else if (!SleepingBag.TrySpawnPlayer(basePlayer, entityID, out errorMessage))
+		else
 		{
-			args.ReplyWith(errorMessage);
-		}
-		static async void NexusRespawn(BasePlayer player, NexusZoneDetails toZone, NetworkableId sleepingBag)
-		{
-			//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-			//IL_001f: Unknown result type (might be due to invalid IL or missing references)
-			_ = 1;
-			try
-			{
-				player.nextRespawnTime = float.PositiveInfinity;
-				Request val2 = Pool.Get<Request>();
-				val2.respawnAtBag = Pool.Get<SleepingBagRespawnRequest>();
-				val2.respawnAtBag.userId = player.userID;
-				val2.respawnAtBag.sleepingBagId = sleepingBag;
-				val2.respawnAtBag.secondaryData = player.SaveSecondaryData();
-				Response val3 = await NexusServer.ZoneRpc(toZone.Key, val2);
-				try
-				{
-					if (!val3.status.success)
-					{
-						if (player.IsConnected)
-						{
-							player.ConsoleMessage("RespawnAtBag failed: " + val3.status.errorMessage);
-						}
-						return;
-					}
-				}
-				finally
-				{
-					((IDisposable)val3)?.Dispose();
-				}
-				await NexusServer.ZoneClient.Assign(player.UserIDString, toZone.Key);
-				if (player.IsConnected)
-				{
-					ConsoleNetwork.SendClientCommandImmediate(player.net.connection, "nexus.redirect", toZone.IpAddress, toZone.GamePort, toZone.ConnectionProtocol());
-					player.Kick("Redirecting to another zone...");
-				}
-			}
-			catch (Exception ex)
-			{
-				if (player.IsConnected)
-				{
-					player.ConsoleMessage(ex.ToString());
-				}
-			}
-			finally
-			{
-				player.MarkRespawn();
-			}
+			basePlayer.ConsoleMessage("You can't respawn again so quickly, wait a while");
 		}
 	}
 
 	[ServerUserVar]
 	public static void respawn_sleepingbag_remove(Arg args)
 	{
-		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer basePlayer = args.Player();
-		if (!Object.op_Implicit((Object)(object)basePlayer))
+		if (Object.op_Implicit((Object)(object)basePlayer))
 		{
-			return;
-		}
-		NetworkableId entityID = args.GetEntityID(0);
-		if (!((NetworkableId)(ref entityID)).IsValid)
-		{
-			args.ReplyWith("Missing sleeping bag ID");
-			return;
-		}
-		string @string = args.GetString(1, "");
-		if (NexusServer.Started && !string.IsNullOrWhiteSpace(@string))
-		{
-			NexusZoneDetails val = NexusServer.FindZone(@string);
-			if (val == null)
+			NetworkableId entityID = args.GetEntityID(0);
+			if (!((NetworkableId)(ref entityID)).IsValid)
 			{
-				args.ReplyWith("Zone was not found");
+				args.ReplyWith("Missing sleeping bag ID");
 			}
-			else if (ZoneController.Instance.CanRespawnAcrossZones(basePlayer))
+			else
 			{
-				NexusRemoveBag(basePlayer, val.Key, entityID);
-			}
-		}
-		else
-		{
-			SleepingBag.DestroyBag(basePlayer.userID, entityID);
-		}
-		static async void NexusRemoveBag(BasePlayer player, string zoneKey, NetworkableId sleepingBag)
-		{
-			//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-			//IL_001f: Unknown result type (might be due to invalid IL or missing references)
-			try
-			{
-				Request val2 = Pool.Get<Request>();
-				val2.destroyBag = Pool.Get<SleepingBagDestroyRequest>();
-				val2.destroyBag.userId = player.userID;
-				val2.destroyBag.sleepingBagId = sleepingBag;
-				(await NexusServer.ZoneRpc(zoneKey, val2)).Dispose();
-			}
-			catch (Exception ex)
-			{
-				if (player.IsConnected)
-				{
-					player.ConsoleMessage(ex.ToString());
-				}
+				SleepingBag.DestroyBag(basePlayer, entityID);
 			}
 		}
 	}
@@ -624,23 +525,6 @@ public class Global : ConsoleSystem
 	}
 
 	[ServerVar]
-	public static void teleporteveryone2me(Arg args)
-	{
-		BasePlayer basePlayer = args.Player();
-		if (!Object.op_Implicit((Object)(object)basePlayer) || !basePlayer.IsAlive())
-		{
-			return;
-		}
-		foreach (BasePlayer allPlayer in BasePlayer.allPlayerList)
-		{
-			if (allPlayer.IsAlive() && !((Object)(object)allPlayer == (Object)(object)basePlayer))
-			{
-				allPlayer.Teleport(basePlayer);
-			}
-		}
-	}
-
-	[ServerVar]
 	public static void teleportany(Arg args)
 	{
 		BasePlayer basePlayer = args.Player();
@@ -653,8 +537,8 @@ public class Global : ConsoleSystem
 	[ServerVar]
 	public static void teleportpos(Arg args)
 	{
-		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer basePlayer = args.Player();
 		if (Object.op_Implicit((Object)(object)basePlayer) && basePlayer.IsAlive())
 		{
@@ -665,14 +549,14 @@ public class Global : ConsoleSystem
 	[ServerVar]
 	public static void teleportlos(Arg args)
 	{
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer basePlayer = args.Player();
 		if (Object.op_Implicit((Object)(object)basePlayer) && basePlayer.IsAlive())
 		{
@@ -693,8 +577,8 @@ public class Global : ConsoleSystem
 	[ServerVar]
 	public static void teleport2owneditem(Arg arg)
 	{
-		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ad: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cd: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer basePlayer = arg.Player();
 		BasePlayer playerOrSleeper = arg.GetPlayerOrSleeper(0);
 		ulong result;
@@ -722,8 +606,8 @@ public class Global : ConsoleSystem
 	[ServerVar]
 	public static void teleport2autheditem(Arg arg)
 	{
-		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ad: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cd: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer basePlayer = arg.Player();
 		BasePlayer playerOrSleeper = arg.GetPlayerOrSleeper(0);
 		ulong result;
@@ -790,11 +674,11 @@ public class Global : ConsoleSystem
 
 	private static void TeleportToMarker(MapNote marker, BasePlayer player)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 worldPosition = marker.worldPosition;
 		float height = TerrainMeta.HeightMap.GetHeight(worldPosition);
 		float height2 = TerrainMeta.WaterMap.GetHeight(worldPosition);
@@ -805,14 +689,13 @@ public class Global : ConsoleSystem
 	[ServerVar]
 	public static void teleport2death(Arg arg)
 	{
-		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer basePlayer = arg.Player();
 		if (basePlayer.ServerCurrentDeathNote == null)
 		{
 			arg.ReplyWith("You don't have a current death note!");
-			return;
 		}
 		Vector3 worldPosition = basePlayer.ServerCurrentDeathNote.worldPosition;
 		basePlayer.Teleport(worldPosition);
@@ -879,10 +762,10 @@ public class Global : ConsoleSystem
 	[ClientVar]
 	public static void subscriptions(Arg arg)
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0006: Expected O, but got Unknown
-		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Expected O, but got Unknown
+		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
 		TextTable val = new TextTable();
 		val.AddColumn("realm");
 		val.AddColumn("group");
@@ -922,8 +805,8 @@ public class Global : ConsoleSystem
 	[ServerVar]
 	public static void ClearAllSprays()
 	{
-		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
 		List<SprayCanSpray> list = Pool.GetList<SprayCanSpray>();
 		Enumerator<SprayCanSpray> enumerator = SprayCanSpray.AllSprays.GetEnumerator();
 		try
@@ -948,8 +831,8 @@ public class Global : ConsoleSystem
 	[ServerVar]
 	public static void ClearAllSpraysByPlayer(Arg arg)
 	{
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
 		if (!arg.HasArgs(1))
 		{
 			return;
@@ -984,21 +867,24 @@ public class Global : ConsoleSystem
 	[ServerVar]
 	public static void ClearSpraysInRadius(Arg arg)
 	{
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer basePlayer = arg.Player();
 		if (!((Object)(object)basePlayer == (Object)null))
 		{
 			float @float = arg.GetFloat(0, 16f);
-			int num = ClearSpraysInRadius(((Component)basePlayer).transform.position, @float);
+			Vector3 position = ((Component)basePlayer).transform.position;
+			int num = ClearSpraysInRadius(position, @float);
 			arg.ReplyWith($"Deleted {num} sprays within {@float} of {basePlayer.displayName}");
 		}
 	}
 
 	private static int ClearSpraysInRadius(Vector3 position, float radius)
 	{
-		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
 		List<SprayCanSpray> list = Pool.GetList<SprayCanSpray>();
 		Enumerator<SprayCanSpray> enumerator = SprayCanSpray.AllSprays.GetEnumerator();
 		try
@@ -1028,12 +914,12 @@ public class Global : ConsoleSystem
 	[ServerVar]
 	public static void ClearSpraysAtPositionInRadius(Arg arg)
 	{
-		//IL_0004: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
 		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 vector = arg.GetVector3(0, default(Vector3));
 		float @float = arg.GetFloat(1, 0f);
 		if (@float != 0f)
@@ -1046,23 +932,13 @@ public class Global : ConsoleSystem
 	[ServerVar]
 	public static void ClearDroppedItems()
 	{
-		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
 		List<DroppedItem> list = Pool.GetList<DroppedItem>();
-		Enumerator<BaseNetworkable> enumerator = BaseNetworkable.serverEntities.GetEnumerator();
-		try
+		foreach (BaseNetworkable serverEntity in BaseNetworkable.serverEntities)
 		{
-			while (enumerator.MoveNext())
+			if (serverEntity is DroppedItem item)
 			{
-				if (enumerator.Current is DroppedItem item)
-				{
-					list.Add(item);
-				}
+				list.Add(item);
 			}
-		}
-		finally
-		{
-			((IDisposable)enumerator).Dispose();
 		}
 		foreach (DroppedItem item2 in list)
 		{

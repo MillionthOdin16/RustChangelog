@@ -27,5 +27,5 @@ public class UIAIDesignerScreen : SingletonComponent<UIAIDesignerScreen>, IUIScr
 
 	protected CanvasGroup canvasGroup;
 
-	public GameObject RootPanel;
+	public GameObject RootPanel = null;
 }

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Facepunch;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 public class NPCDwelling : BaseEntity
 {
@@ -23,9 +24,9 @@ public class NPCDwelling : BaseEntity
 			npcSpawner.SpawnInitial();
 		}
 		SpawnGroup[] array = spawnGroups;
-		for (int i = 0; i < array.Length; i++)
+		foreach (SpawnGroup spawnGroup in array)
 		{
-			array[i].SpawnInitial();
+			spawnGroup.SpawnInitial();
 		}
 	}
 
@@ -44,10 +45,10 @@ public class NPCDwelling : BaseEntity
 
 	public bool ValidateAIPoint(Vector3 pos)
 	{
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
 		((Component)this).gameObject.SetActive(false);
 		bool result = !GamePhysics.CheckSphere(pos + Vector3.up * 0.6f, 0.5f, 65537, (QueryTriggerInteraction)0);
 		((Component)this).gameObject.SetActive(true);
@@ -56,7 +57,8 @@ public class NPCDwelling : BaseEntity
 
 	public void UpdateInformationZone(bool remove)
 	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		Profiler.BeginSample("NPCDwelling.UpdateInformationZone");
 		AIInformationZone forPoint = AIInformationZone.GetForPoint(((Component)this).transform.position);
 		if (!((Object)(object)forPoint == (Object)null))
 		{
@@ -68,6 +70,7 @@ public class NPCDwelling : BaseEntity
 			{
 				forPoint.AddDynamicAIPoints(movePoints, coverPoints, ValidateAIPoint);
 			}
+			Profiler.EndSample();
 		}
 	}
 
@@ -85,9 +88,9 @@ public class NPCDwelling : BaseEntity
 		if (spawnGroups != null)
 		{
 			SpawnGroup[] array = spawnGroups;
-			for (int i = 0; i < array.Length; i++)
+			foreach (SpawnGroup spawnGroup in array)
 			{
-				array[i].Clear();
+				spawnGroup.Clear();
 			}
 		}
 		if (Object.op_Implicit((Object)(object)npcSpawner))
@@ -98,7 +101,7 @@ public class NPCDwelling : BaseEntity
 
 	public bool PlayersNearby()
 	{
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
 		List<BasePlayer> list = Pool.GetList<BasePlayer>();
 		Vis.Entities(((Component)this).transform.position, TimeoutPlayerCheckRadius(), list, 131072, (QueryTriggerInteraction)2);
 		bool result = false;

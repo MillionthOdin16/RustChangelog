@@ -3,5 +3,5 @@ using UnityEngine.UI;
 
 public class ButtonIcon : RustButton
 {
-	public Image Image;
+	public Image Image = null;
 }

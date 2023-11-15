@@ -4,5 +4,5 @@ public class TugboatInteriorSoundTrigger : MonoBehaviour, IClientComponent
 {
 	public TugboatSounds tugboatSounds;
 
-	public bool bridge;
+	public bool bridge = false;
 }
