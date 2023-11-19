@@ -16,7 +16,8 @@ public class VitalInfo : MonoBehaviour, IClientComponent, IVitalNotice
 		Decaying,
 		SafeZone,
 		Buffed,
-		Pet
+		Pet,
+		ModifyClan
 	}
 
 	public HudElement Element;

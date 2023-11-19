@@ -54,22 +54,22 @@ public static class Auth_Steam
 			}
 			else
 			{
-				string playerListName = (Server.censorplayerlist ? RandomUsernames.Get(connection.userid + (ulong)Random.Range(0, 100000)) : connection.username);
-				PlatformService.Instance.UpdatePlayerSession(connection.userid, playerListName);
+				string text = (Server.censorplayerlist ? RandomUsernames.Get(connection.userid + (ulong)Random.Range(0, 100000)) : connection.username);
+				PlatformService.Instance.UpdatePlayerSession(connection.userid, text);
 			}
 		}
 	}
 
 	public static bool ValidateConnecting(ulong steamid, ulong ownerSteamID, AuthResponse response)
 	{
-		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006b: Invalid comparison between Unknown and I4
-		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0085: Invalid comparison between Unknown and I4
-		//IL_009d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009f: Invalid comparison between Unknown and I4
-		//IL_00b7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b9: Invalid comparison between Unknown and I4
+		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0056: Invalid comparison between Unknown and I4
+		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0067: Invalid comparison between Unknown and I4
+		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0078: Invalid comparison between Unknown and I4
+		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0089: Invalid comparison between Unknown and I4
 		Connection val = waitingList.Find((Connection x) => x.userid == steamid);
 		if (val == null)
 		{

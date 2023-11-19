@@ -20,10 +20,10 @@ public class ModelConditionTest_RoofTop : ModelConditionTest
 
 	protected void OnDrawGizmosSelected()
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
 		Gizmos.matrix = ((Component)this).transform.localToWorldMatrix;
 		Gizmos.color = Color.gray;
 		Gizmos.DrawWireCube(new Vector3(0f, -1.5f, 3f), new Vector3(3f, 3f, 3f));
@@ -40,22 +40,20 @@ public class ModelConditionTest_RoofTop : ModelConditionTest
 		}
 		for (int i = 0; i < entityLink.connections.Count; i++)
 		{
-			EntityLink entityLink2 = entityLink.connections[i];
-			if (entityLink2.name.EndsWith("sockets/neighbour/3"))
+			if (entityLink.connections[i].name.EndsWith("sockets/neighbour/3"))
 			{
 				flag = true;
 				break;
 			}
 		}
-		EntityLink entityLink3 = ent.FindLink(sockets_top_left);
-		if (entityLink3 == null)
+		EntityLink entityLink2 = ent.FindLink(sockets_top_left);
+		if (entityLink2 == null)
 		{
 			return false;
 		}
-		for (int j = 0; j < entityLink3.connections.Count; j++)
+		for (int j = 0; j < entityLink2.connections.Count; j++)
 		{
-			EntityLink entityLink4 = entityLink3.connections[j];
-			if (entityLink4.name.EndsWith("sockets/neighbour/4"))
+			if (entityLink2.connections[j].name.EndsWith("sockets/neighbour/4"))
 			{
 				flag2 = true;
 				break;

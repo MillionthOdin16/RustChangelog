@@ -6,9 +6,9 @@ public class IndustrialStorageAdaptor : IndustrialEntity, IIndustrialStorage
 
 	public GameObject RedLight;
 
-	private BaseEntity _cachedParent = null;
+	private BaseEntity _cachedParent;
 
-	private ItemContainer cachedContainer = null;
+	private ItemContainer cachedContainer;
 
 	public BaseEntity cachedParent
 	{
@@ -45,18 +45,13 @@ public class IndustrialStorageAdaptor : IndustrialEntity, IIndustrialStorage
 
 	public Vector2i InputSlotRange(int slotIndex)
 	{
-		//IL_008b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
 		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)cachedParent != (Object)null)
 		{
 			if (cachedParent is IIndustrialStorage industrialStorage)
@@ -78,20 +73,14 @@ public class IndustrialStorageAdaptor : IndustrialEntity, IIndustrialStorage
 
 	public Vector2i OutputSlotRange(int slotIndex)
 	{
-		//IL_00c8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)cachedParent != (Object)null)
 		{
 			if (cachedParent is DropBox && Container != null)
@@ -117,17 +106,31 @@ public class IndustrialStorageAdaptor : IndustrialEntity, IIndustrialStorage
 
 	public void OnStorageItemTransferBegin()
 	{
-		if ((Object)(object)cachedParent != (Object)null && cachedParent is VendingMachine vendingMachine)
+		if ((Object)(object)cachedParent != (Object)null)
 		{
-			vendingMachine.OnIndustrialItemTransferBegins();
+			if (cachedParent is VendingMachine vendingMachine)
+			{
+				vendingMachine.OnIndustrialItemTransferBegins();
+			}
+			else if (cachedParent is Locker locker)
+			{
+				locker.OnIndustrialItemTransferBegin();
+			}
 		}
 	}
 
 	public void OnStorageItemTransferEnd()
 	{
-		if ((Object)(object)cachedParent != (Object)null && cachedParent is VendingMachine vendingMachine)
+		if ((Object)(object)cachedParent != (Object)null)
 		{
-			vendingMachine.OnIndustrialItemTransferEnds();
+			if (cachedParent is VendingMachine vendingMachine)
+			{
+				vendingMachine.OnIndustrialItemTransferEnds();
+			}
+			else if (cachedParent is Locker locker)
+			{
+				locker.OnIndustrialItemTransferEnd();
+			}
 		}
 	}
 

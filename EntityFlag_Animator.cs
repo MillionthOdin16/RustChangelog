@@ -10,11 +10,11 @@ public class EntityFlag_Animator : EntityFlag_Toggle
 		Integer
 	}
 
-	public Animator TargetAnimator = null;
+	public Animator TargetAnimator;
 
 	public string ParamName = string.Empty;
 
-	public AnimatorMode AnimationMode = AnimatorMode.Bool;
+	public AnimatorMode AnimationMode;
 
 	public float FloatOnState;
 

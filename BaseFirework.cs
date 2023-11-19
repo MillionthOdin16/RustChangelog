@@ -13,7 +13,7 @@ public class BaseFirework : BaseCombatEntity, IIgniteable
 
 	public float corpseDuration = 15f;
 
-	public bool limitActiveCount = false;
+	public bool limitActiveCount;
 
 	[ServerVar]
 	public static int maxActiveFireworks = 25;
@@ -113,11 +113,19 @@ public class BaseFirework : BaseCombatEntity, IIgniteable
 
 	public bool CanIgnite()
 	{
-		return !IsExhausted() && !IsLit();
+		if (!IsExhausted())
+		{
+			return !IsLit();
+		}
+		return false;
 	}
 
 	public override bool CanPickup(BasePlayer player)
 	{
-		return !IsExhausted() && base.CanPickup(player) && !IsLit();
+		if (!IsExhausted() && base.CanPickup(player))
+		{
+			return !IsLit();
+		}
+		return false;
 	}
 }

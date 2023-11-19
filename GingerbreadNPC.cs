@@ -11,7 +11,7 @@ public class GingerbreadNPC : HumanNPC, IClientBrainStateListener
 
 	public PhysicMaterial HitMaterial;
 
-	public bool RoamAroundHomePoint = false;
+	public bool RoamAroundHomePoint;
 
 	protected string CorpseResourcePath
 	{
@@ -29,9 +29,9 @@ public class GingerbreadNPC : HumanNPC, IClientBrainStateListener
 			return "assets/prefabs/npc/murderer/murderer_corpse.prefab";
 			static float GetFloatBasedOnUserID(ulong steamid, ulong seed)
 			{
-				//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-				//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-				//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+				//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+				//IL_0005: Unknown result type (might be due to invalid IL or missing references)
+				//IL_001e: Unknown result type (might be due to invalid IL or missing references)
 				State state = Random.state;
 				Random.InitState((int)(seed + steamid));
 				float result = Random.Range(0f, 1f);
@@ -59,10 +59,10 @@ public class GingerbreadNPC : HumanNPC, IClientBrainStateListener
 
 	public override BaseCorpse CreateCorpse()
 	{
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
 		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
 		TimeWarning val = TimeWarning.New("Create corpse", 0);
 		try
 		{
@@ -79,20 +79,19 @@ public class GingerbreadNPC : HumanNPC, IClientBrainStateListener
 				nPCPlayerCorpse.playerSteamID = userID;
 				nPCPlayerCorpse.Spawn();
 				ItemContainer[] containers = nPCPlayerCorpse.containers;
-				foreach (ItemContainer itemContainer in containers)
+				for (int i = 0; i < containers.Length; i++)
 				{
-					itemContainer.Clear();
+					containers[i].Clear();
 				}
 				if (LootSpawnSlots.Length != 0)
 				{
 					LootContainer.LootSpawnSlot[] lootSpawnSlots = LootSpawnSlots;
-					for (int j = 0; j < lootSpawnSlots.Length; j++)
+					for (int i = 0; i < lootSpawnSlots.Length; i++)
 					{
-						LootContainer.LootSpawnSlot lootSpawnSlot = lootSpawnSlots[j];
-						for (int k = 0; k < lootSpawnSlot.numberToSpawn; k++)
+						LootContainer.LootSpawnSlot lootSpawnSlot = lootSpawnSlots[i];
+						for (int j = 0; j < lootSpawnSlot.numberToSpawn; j++)
 						{
-							float num = Random.Range(0f, 1f);
-							if (num <= lootSpawnSlot.probability)
+							if (Random.Range(0f, 1f) <= lootSpawnSlot.probability)
 							{
 								lootSpawnSlot.definition.SpawnIntoContainer(nPCPlayerCorpse.containers[0]);
 							}

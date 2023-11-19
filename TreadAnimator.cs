@@ -22,9 +22,9 @@ public class TreadAnimator : MonoBehaviour, IClientComponent
 
 	public float heightFudge = 0.13f;
 
-	public bool useWheelYOrigin = false;
+	public bool useWheelYOrigin;
 
 	public Vector2 treadTextureDirection = new Vector2(1f, 0f);
 
-	public bool isMetallic = false;
+	public bool isMetallic;
 }

@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class TerrainGenerator : SingletonComponent<TerrainGenerator>
 {
-	public TerrainConfig config = null;
+	public TerrainConfig config;
 
 	private const float HeightMapRes = 1f;
 
@@ -32,18 +32,23 @@ public class TerrainGenerator : SingletonComponent<TerrainGenerator>
 
 	public GameObject CreateTerrain(int heightmapResolution, int alphamapResolution)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0007: Expected O, but got Unknown
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
-		TerrainData val = new TerrainData();
-		val.baseMapResolution = GetBaseMapRes();
-		val.heightmapResolution = heightmapResolution;
-		val.alphamapResolution = alphamapResolution;
-		val.size = new Vector3((float)World.Size, 1000f, (float)World.Size);
-		Terrain component = Terrain.CreateTerrainGameObject(val).GetComponent<Terrain>();
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0041: Expected O, but got Unknown
+		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
+		Terrain component = Terrain.CreateTerrainGameObject(new TerrainData
+		{
+			baseMapResolution = GetBaseMapRes(),
+			heightmapResolution = heightmapResolution,
+			alphamapResolution = alphamapResolution,
+			size = new Vector3((float)World.Size, 1000f, (float)World.Size)
+		}).GetComponent<Terrain>();
 		((Component)component).transform.position = ((Component)this).transform.position + new Vector3((float)(0L - (long)World.Size) * 0.5f, 0f, (float)(0L - (long)World.Size) * 0.5f);
 		component.drawInstanced = false;
 		component.castShadows = config.CastShadows;
@@ -51,8 +56,7 @@ public class TerrainGenerator : SingletonComponent<TerrainGenerator>
 		component.materialTemplate = config.Material;
 		((Component)component).gameObject.tag = ((Component)this).gameObject.tag;
 		((Component)component).gameObject.layer = ((Component)this).gameObject.layer;
-		TerrainCollider component2 = ((Component)component).gameObject.GetComponent<TerrainCollider>();
-		((Collider)component2).sharedMaterial = config.GenericMaterial;
+		((Collider)((Component)component).gameObject.GetComponent<TerrainCollider>()).sharedMaterial = config.GenericMaterial;
 		TerrainMeta terrainMeta = ((Component)component).gameObject.AddComponent<TerrainMeta>();
 		((Component)component).gameObject.AddComponent<TerrainPhysics>();
 		((Component)component).gameObject.AddComponent<TerrainColors>();

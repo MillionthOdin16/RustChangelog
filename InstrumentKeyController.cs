@@ -5,11 +5,6 @@ using UnityEngine;
 
 public class InstrumentKeyController : MonoBehaviour
 {
-	[StructLayout(LayoutKind.Sequential, Size = 1)]
-	public struct NoteBinding
-	{
-	}
-
 	public enum IKType
 	{
 		LeftHand,
@@ -71,6 +66,11 @@ public class InstrumentKeyController : MonoBehaviour
 		public int IkIndex;
 	}
 
+	[StructLayout(LayoutKind.Sequential, Size = 1)]
+	public struct NoteBinding
+	{
+	}
+
 	public const float DEFAULT_NOTE_VELOCITY = 1f;
 
 	public NoteBindingCollection Bindings;
@@ -89,7 +89,7 @@ public class InstrumentKeyController : MonoBehaviour
 
 	public BaseEntity RPCHandler;
 
-	public uint overrideAchievementId = 0u;
+	public uint overrideAchievementId;
 
 	private const string ALL_NOTES_STATNAME = "played_notes";
 

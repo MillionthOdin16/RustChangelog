@@ -61,9 +61,9 @@ public class DoorManipulator : IOEntity
 
 	public Door FindDoor(bool allowLocked = true)
 	{
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0093: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
 		List<Door> list = Pool.GetList<Door>();
 		Vis.Entities(((Component)this).transform.position, 1f, list, 2097152, (QueryTriggerInteraction)1);
 		Door result = null;
@@ -82,11 +82,14 @@ public class DoorManipulator : IOEntity
 					continue;
 				}
 			}
-			float num2 = Vector3.Distance(((Component)item).transform.position, ((Component)this).transform.position);
-			if (num2 < num)
+			if (!item.IsOnMovingObject())
 			{
-				result = item;
-				num = num2;
+				float num2 = Vector3.Distance(((Component)item).transform.position, ((Component)this).transform.position);
+				if (num2 < num)
+				{
+					result = item;
+					num = num2;
+				}
 			}
 		}
 		Pool.FreeList<Door>(ref list);
@@ -163,8 +166,8 @@ public class DoorManipulator : IOEntity
 
 	public override void Save(SaveInfo info)
 	{
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
 		base.Save(info);
 		info.msg.ioEntity.genericEntRef1 = entityRef.uid;
 		info.msg.ioEntity.genericInt1 = (int)powerAction;
@@ -172,7 +175,7 @@ public class DoorManipulator : IOEntity
 
 	public override void Load(LoadInfo info)
 	{
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
 		base.Load(info);
 		if (info.msg.ioEntity != null)
 		{

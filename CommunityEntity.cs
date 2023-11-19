@@ -3,9 +3,9 @@ using Network;
 
 public class CommunityEntity : PointEntity
 {
-	public static CommunityEntity ServerInstance = null;
+	public static CommunityEntity ServerInstance;
 
-	public static CommunityEntity ClientInstance = null;
+	public static CommunityEntity ClientInstance;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{

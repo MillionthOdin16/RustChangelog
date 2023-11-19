@@ -11,7 +11,7 @@ public class BurstClothHitBoxCollision : BurstCloth, IClientComponent, IPrefabPr
 
 	public float DefaultLength = 1f;
 
-	public float MountedLengthMultiplier = 0f;
+	public float MountedLengthMultiplier;
 
 	public float DuckedLengthMultiplier = 0.5f;
 

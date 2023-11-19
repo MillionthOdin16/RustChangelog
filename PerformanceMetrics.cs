@@ -39,9 +39,9 @@ public static class PerformanceMetrics
 
 	public static void Setup()
 	{
-		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0020: Expected O, but got Unknown
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Expected O, but got Unknown
 		object obj = _003C_003Ec._003C_003E9__3_0;
 		if (obj == null)
 		{
@@ -65,8 +65,8 @@ public static class PerformanceMetrics
 	private static void AddCPUTimeStopwatch()
 	{
 		Stopwatch watch = new Stopwatch();
-		int lastFrame = 0;
 		TimeSpan lastTime = default(TimeSpan);
+		int lastFrame = 0;
 		StartOfFrameHook.OnStartOfFrame = (Action)Delegate.Combine(StartOfFrameHook.OnStartOfFrame, (Action)delegate
 		{
 			current.TotalCPU += lastTime;

@@ -9,13 +9,13 @@ public class ItemButtonTools : MonoBehaviour
 
 	public void GiveSelf(int amount)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
 		ConsoleSystem.Run(Option.Client, "inventory.giveid", new object[2] { itemDef.itemid, amount });
 	}
 
 	public void GiveArmed()
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
 		ConsoleSystem.Run(Option.Client, "inventory.givearm", new object[1] { itemDef.itemid });
 	}
 

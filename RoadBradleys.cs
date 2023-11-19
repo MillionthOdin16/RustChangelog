@@ -20,8 +20,7 @@ public class RoadBradleys : TriggeredEvent
 	{
 		for (int num = spawnedAPCs.Count - 1; num >= 0; num--)
 		{
-			BradleyAPC bradleyAPC = spawnedAPCs[num];
-			if ((Object)(object)bradleyAPC == (Object)null)
+			if ((Object)(object)spawnedAPCs[num] == (Object)null)
 			{
 				spawnedAPCs.RemoveAt(num);
 			}
@@ -30,13 +29,14 @@ public class RoadBradleys : TriggeredEvent
 
 	private void RunEvent()
 	{
-		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d3: Unknown result type (might be due to invalid IL or missing references)
 		int numBradleys = GetNumBradleys();
 		int num = GetDesiredNumber() - numBradleys;
 		if (num <= 0 || (Object)(object)TerrainMeta.Path == (Object)null || TerrainMeta.Path.Roads.Count == 0)
@@ -53,11 +53,10 @@ public class RoadBradleys : TriggeredEvent
 			if (Object.op_Implicit((Object)(object)bradleyAPC))
 			{
 				spawnedAPCs.Add(bradleyAPC);
+				continue;
 			}
-			else
-			{
-				Debug.Log((object)("Failed to spawn bradley at: " + zero));
-			}
+			Vector3 val = zero;
+			Debug.Log((object)("Failed to spawn bradley at: " + ((object)(Vector3)(ref val)).ToString()));
 		}
 	}
 }

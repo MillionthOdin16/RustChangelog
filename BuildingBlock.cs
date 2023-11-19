@@ -8,7 +8,6 @@ using ProtoBuf;
 using Rust;
 using UnityEngine;
 using UnityEngine.Assertions;
-using UnityEngine.Profiling;
 
 public class BuildingBlock : StabilityEntity
 {
@@ -35,19 +34,22 @@ public class BuildingBlock : StabilityEntity
 		}
 	}
 
-	private bool forceSkinRefresh = false;
+	[NonSerialized]
+	public Construction blockDefinition;
 
-	private ulong lastSkinID = 0uL;
+	private static Vector3[] outsideLookupOffsets;
 
-	private int modelState = 0;
+	private bool forceSkinRefresh;
 
-	private int lastModelState = 0;
+	private ulong lastSkinID;
 
-	private uint lastCustomColour = 0u;
+	private int lastModelState;
 
-	private uint playerCustomColourToApply = 0u;
+	private uint lastCustomColour;
 
-	public BuildingGrade.Enum grade = BuildingGrade.Enum.Twigs;
+	private uint playerCustomColourToApply;
+
+	public BuildingGrade.Enum grade;
 
 	private BuildingGrade.Enum lastGrade = BuildingGrade.Enum.None;
 
@@ -55,25 +57,42 @@ public class BuildingBlock : StabilityEntity
 
 	private DeferredAction skinChange;
 
-	private MeshRenderer placeholderRenderer = null;
+	private MeshRenderer placeholderRenderer;
 
-	private MeshCollider placeholderCollider = null;
+	private MeshCollider placeholderCollider;
 
-	public static UpdateSkinWorkQueue updateSkinQueueServer = new UpdateSkinWorkQueue();
+	public static UpdateSkinWorkQueue updateSkinQueueServer;
 
-	public bool CullBushes = false;
+	private bool globalNetworkCooldown;
+
+	public bool CullBushes;
 
 	public bool CheckForPipesOnModelChange;
 
-	[NonSerialized]
-	public Construction blockDefinition = null;
+	public OBBComponent AlternativePipeBounds;
 
-	private static Vector3[] outsideLookupOffsets;
+	public int modelState { get; private set; }
 
-	public uint customColour { get; private set; } = 0u;
+	public uint customColour { get; private set; }
 
-
-	public ConstructionGrade currentGrade => blockDefinition.GetGrade(grade, skinID);
+	public ConstructionGrade currentGrade
+	{
+		get
+		{
+			if (blockDefinition == null)
+			{
+				Debug.LogWarning((object)$"blockDefinition is null for {base.ShortPrefabName} {grade} {skinID}");
+				return null;
+			}
+			ConstructionGrade constructionGrade = blockDefinition.GetGrade(grade, skinID);
+			if (constructionGrade == null)
+			{
+				Debug.LogWarning((object)$"currentGrade is null for {base.ShortPrefabName} {grade} {skinID}");
+				return null;
+			}
+			return constructionGrade;
+		}
+	}
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -85,7 +104,7 @@ public class BuildingBlock : StabilityEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - DoDemolish "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - DoDemolish "));
 				}
 				TimeWarning val2 = TimeWarning.New("DoDemolish", 0);
 				try
@@ -104,7 +123,7 @@ public class BuildingBlock : StabilityEntity
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -116,7 +135,7 @@ public class BuildingBlock : StabilityEntity
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -136,12 +155,12 @@ public class BuildingBlock : StabilityEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - DoImmediateDemolish "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - DoImmediateDemolish "));
 				}
-				TimeWarning val5 = TimeWarning.New("DoImmediateDemolish", 0);
+				TimeWarning val2 = TimeWarning.New("DoImmediateDemolish", 0);
 				try
 				{
-					TimeWarning val6 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.MaxDistance.Test(216608990u, "DoImmediateDemolish", this, player, 3f))
@@ -151,11 +170,11 @@ public class BuildingBlock : StabilityEntity
 					}
 					finally
 					{
-						((IDisposable)val6)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val7 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -167,7 +186,7 @@ public class BuildingBlock : StabilityEntity
 						}
 						finally
 						{
-							((IDisposable)val7)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -178,7 +197,7 @@ public class BuildingBlock : StabilityEntity
 				}
 				finally
 				{
-					((IDisposable)val5)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -187,12 +206,12 @@ public class BuildingBlock : StabilityEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - DoRotation "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - DoRotation "));
 				}
-				TimeWarning val8 = TimeWarning.New("DoRotation", 0);
+				TimeWarning val2 = TimeWarning.New("DoRotation", 0);
 				try
 				{
-					TimeWarning val9 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.MaxDistance.Test(1956645865u, "DoRotation", this, player, 3f))
@@ -202,11 +221,11 @@ public class BuildingBlock : StabilityEntity
 					}
 					finally
 					{
-						((IDisposable)val9)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val10 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -218,7 +237,7 @@ public class BuildingBlock : StabilityEntity
 						}
 						finally
 						{
-							((IDisposable)val10)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex3)
@@ -229,7 +248,7 @@ public class BuildingBlock : StabilityEntity
 				}
 				finally
 				{
-					((IDisposable)val8)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -238,12 +257,12 @@ public class BuildingBlock : StabilityEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - DoUpgradeToGrade "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - DoUpgradeToGrade "));
 				}
-				TimeWarning val11 = TimeWarning.New("DoUpgradeToGrade", 0);
+				TimeWarning val2 = TimeWarning.New("DoUpgradeToGrade", 0);
 				try
 				{
-					TimeWarning val12 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.MaxDistance.Test(3746288057u, "DoUpgradeToGrade", this, player, 3f))
@@ -253,11 +272,11 @@ public class BuildingBlock : StabilityEntity
 					}
 					finally
 					{
-						((IDisposable)val12)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val13 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -269,7 +288,7 @@ public class BuildingBlock : StabilityEntity
 						}
 						finally
 						{
-							((IDisposable)val13)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex4)
@@ -280,7 +299,7 @@ public class BuildingBlock : StabilityEntity
 				}
 				finally
 				{
-					((IDisposable)val11)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -289,12 +308,12 @@ public class BuildingBlock : StabilityEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - DoUpgradeToGrade_Delayed "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - DoUpgradeToGrade_Delayed "));
 				}
-				TimeWarning val14 = TimeWarning.New("DoUpgradeToGrade_Delayed", 0);
+				TimeWarning val2 = TimeWarning.New("DoUpgradeToGrade_Delayed", 0);
 				try
 				{
-					TimeWarning val15 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.MaxDistance.Test(4081052216u, "DoUpgradeToGrade_Delayed", this, player, 3f))
@@ -304,11 +323,11 @@ public class BuildingBlock : StabilityEntity
 					}
 					finally
 					{
-						((IDisposable)val15)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val16 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -320,7 +339,7 @@ public class BuildingBlock : StabilityEntity
 						}
 						finally
 						{
-							((IDisposable)val16)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex5)
@@ -331,7 +350,7 @@ public class BuildingBlock : StabilityEntity
 				}
 				finally
 				{
-					((IDisposable)val14)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -343,9 +362,93 @@ public class BuildingBlock : StabilityEntity
 		return base.OnRpcMessage(player, rpc, msg);
 	}
 
+	public override void ResetState()
+	{
+		base.ResetState();
+		blockDefinition = null;
+		forceSkinRefresh = false;
+		modelState = 0;
+		lastModelState = 0;
+		grade = BuildingGrade.Enum.Twigs;
+		lastGrade = BuildingGrade.Enum.None;
+		DestroySkin();
+		UpdatePlaceholder(state: true);
+	}
+
+	public override void InitShared()
+	{
+		base.InitShared();
+		placeholderRenderer = ((Component)this).GetComponent<MeshRenderer>();
+		placeholderCollider = ((Component)this).GetComponent<MeshCollider>();
+	}
+
+	public override void PostInitShared()
+	{
+		baseProtection = currentGrade.gradeBase.damageProtecton;
+		grade = currentGrade.gradeBase.type;
+		base.PostInitShared();
+	}
+
+	public override void DestroyShared()
+	{
+		if (base.isServer)
+		{
+			RefreshNeighbours(linkToNeighbours: false);
+		}
+		base.DestroyShared();
+	}
+
+	public override string Categorize()
+	{
+		return "building";
+	}
+
+	public override float BoundsPadding()
+	{
+		return 1f;
+	}
+
+	public override bool IsOutside()
+	{
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		float outside_test_range = ConVar.Decay.outside_test_range;
+		Vector3 val = PivotPoint();
+		for (int i = 0; i < outsideLookupOffsets.Length; i++)
+		{
+			Vector3 val2 = outsideLookupOffsets[i];
+			Vector3 val3 = val + val2 * outside_test_range;
+			if (!Physics.Raycast(new Ray(val3, -val2), outside_test_range - 0.5f, 2097152))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public override bool SupportsChildDeployables()
+	{
+		return true;
+	}
+
 	private bool CanDemolish(BasePlayer player)
 	{
-		return IsDemolishable() && HasDemolishPrivilege(player);
+		if (IsDemolishable())
+		{
+			return HasDemolishPrivilege(player);
+		}
+		return false;
 	}
 
 	private bool IsDemolishable()
@@ -359,9 +462,9 @@ public class BuildingBlock : StabilityEntity
 
 	private bool HasDemolishPrivilege(BasePlayer player)
 	{
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
 		return player.IsBuildingAuthed(((Component)this).transform.position, ((Component)this).transform.rotation, bounds);
 	}
 
@@ -401,7 +504,14 @@ public class BuildingBlock : StabilityEntity
 
 	public void SetConditionalModel(int state)
 	{
-		modelState = state;
+		if (state != modelState)
+		{
+			modelState = state;
+			if (base.isServer)
+			{
+				GlobalNetworkHandler.server?.TrySendNetworkUpdate(this);
+			}
+		}
 	}
 
 	public bool GetConditionalModel(int index)
@@ -411,14 +521,18 @@ public class BuildingBlock : StabilityEntity
 
 	private bool CanChangeToGrade(BuildingGrade.Enum iGrade, ulong iSkin, BasePlayer player)
 	{
-		return HasUpgradePrivilege(iGrade, iSkin, player) && !IsUpgradeBlocked();
+		if (HasUpgradePrivilege(iGrade, iSkin, player))
+		{
+			return !IsUpgradeBlocked();
+		}
+		return false;
 	}
 
 	private bool HasUpgradePrivilege(BuildingGrade.Enum iGrade, ulong iSkin, BasePlayer player)
 	{
-		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
 		if (iGrade < grade)
 		{
 			return false;
@@ -440,8 +554,8 @@ public class BuildingBlock : StabilityEntity
 
 	private bool IsUpgradeBlocked()
 	{
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
 		if (!blockDefinition.checkVolumeOnUpgrade)
 		{
 			return false;
@@ -452,8 +566,7 @@ public class BuildingBlock : StabilityEntity
 
 	private bool CanAffordUpgrade(BuildingGrade.Enum iGrade, ulong iSkin, BasePlayer player)
 	{
-		ConstructionGrade constructionGrade = blockDefinition.GetGrade(iGrade, iSkin);
-		foreach (ItemAmount item in constructionGrade.CostToBuild(grade))
+		foreach (ItemAmount item in blockDefinition.GetGrade(iGrade, iSkin).CostToBuild(grade))
 		{
 			if ((float)player.inventory.GetAmount(item.itemid) < item.amount)
 			{
@@ -516,7 +629,7 @@ public class BuildingBlock : StabilityEntity
 				playerCustomColourToApply = msg.player.LastBlockColourChangeId;
 			}
 			ClientRPC(null, "DoUpgradeEffect", (int)@enum, num);
-			Analytics.Azure.OnBuildingBlockUpgraded(msg.player, this, @enum, playerCustomColourToApply);
+			Analytics.Azure.OnBuildingBlockUpgraded(msg.player, this, @enum, playerCustomColourToApply, num);
 			OnSkinChanged(skinID, num);
 			ChangeGrade(@enum, playEffect: true);
 		}
@@ -530,20 +643,18 @@ public class BuildingBlock : StabilityEntity
 		{
 			return;
 		}
-		BuildingGrade.Enum @enum = (BuildingGrade.Enum)msg.read.Int32();
-		ulong num = msg.read.UInt64();
-		ConstructionGrade constructionGrade = blockDefinition.GetGrade(@enum, num);
-		if (!(constructionGrade == null) && CanChangeToGrade(@enum, num, msg.player) && CanAffordUpgrade(@enum, num, msg.player) && !(base.SecondsSinceAttacked < 30f) && (num == 0L || msg.player.blueprints.steamInventory.HasItem((int)num)))
+		ConstructionGrade constructionGrade = blockDefinition.GetGrade((BuildingGrade.Enum)msg.read.Int32(), msg.read.UInt64());
+		if (!(constructionGrade == null) && CanChangeToGrade(constructionGrade.gradeBase.type, constructionGrade.gradeBase.skin, msg.player) && CanAffordUpgrade(constructionGrade.gradeBase.type, constructionGrade.gradeBase.skin, msg.player) && !(base.SecondsSinceAttacked < 30f) && (constructionGrade.gradeBase.skin == 0L || msg.player.blueprints.steamInventory.HasItem((int)constructionGrade.gradeBase.skin)))
 		{
 			PayForUpgrade(constructionGrade, msg.player);
 			if ((Object)(object)msg.player != (Object)null)
 			{
 				playerCustomColourToApply = msg.player.LastBlockColourChangeId;
 			}
-			ClientRPC(null, "DoUpgradeEffect", (int)@enum, num);
-			Analytics.Azure.OnBuildingBlockUpgraded(msg.player, this, @enum, playerCustomColourToApply);
-			OnSkinChanged(skinID, num);
-			ChangeGrade(@enum, playEffect: true);
+			ClientRPC(null, "DoUpgradeEffect", (int)constructionGrade.gradeBase.type, constructionGrade.gradeBase.skin);
+			Analytics.Azure.OnBuildingBlockUpgraded(msg.player, this, constructionGrade.gradeBase.type, playerCustomColourToApply, constructionGrade.gradeBase.skin);
+			OnSkinChanged(skinID, constructionGrade.gradeBase.skin);
+			ChangeGrade(constructionGrade.gradeBase.type, playEffect: true);
 		}
 	}
 
@@ -568,10 +679,8 @@ public class BuildingBlock : StabilityEntity
 		SendNetworkUpdate();
 		ResetUpkeepTime();
 		UpdateSurroundingEntities();
+		GlobalNetworkHandler.server.TrySendNetworkUpdate(this);
 		BuildingManager.server.GetBuilding(buildingID)?.Dirty();
-		if (!playEffect)
-		{
-		}
 	}
 
 	private void PayForUpgrade(ConstructionGrade g, BasePlayer player)
@@ -597,12 +706,17 @@ public class BuildingBlock : StabilityEntity
 			customColour = newColour;
 			SendNetworkUpdateImmediate();
 			ClientRPC(null, "RefreshSkin");
+			GlobalNetworkHandler.server.TrySendNetworkUpdate(this);
 		}
 	}
 
 	private bool NeedsSkinChange()
 	{
-		return (Object)(object)currentSkin == (Object)null || forceSkinRefresh || lastGrade != grade || lastModelState != modelState || lastSkinID != skinID;
+		if (!((Object)(object)currentSkin == (Object)null) && !forceSkinRefresh && lastGrade == grade && lastModelState == modelState)
+		{
+			return lastSkinID != skinID;
+		}
+		return true;
 	}
 
 	public void UpdateSkin(bool force = false)
@@ -682,6 +796,11 @@ public class BuildingBlock : StabilityEntity
 			return;
 		}
 		ConstructionGrade constructionGrade = currentGrade;
+		if (currentGrade == null)
+		{
+			Debug.LogWarning((object)"CurrentGrade is null!");
+			return;
+		}
 		if (constructionGrade.skinObject.isValid)
 		{
 			ChangeSkin(constructionGrade.skinObject);
@@ -694,13 +813,12 @@ public class BuildingBlock : StabilityEntity
 		}
 		else
 		{
-			Debug.LogWarning((object)("No skins found for " + ((Component)this).gameObject));
+			Debug.LogWarning((object)("No skins found for " + (object)((Component)this).gameObject));
 		}
 	}
 
 	private void ChangeSkin(GameObjectRef prefab)
 	{
-		Profiler.BeginSample("ChangeSkin");
 		bool flag = lastGrade != grade || lastSkinID != skinID;
 		lastGrade = grade;
 		lastSkinID = skinID;
@@ -726,7 +844,7 @@ public class BuildingBlock : StabilityEntity
 		}
 		if (base.isServer)
 		{
-			modelState = currentSkin.DetermineConditionalModelState(this);
+			SetConditionalModel(currentSkin.DetermineConditionalModelState(this));
 		}
 		bool flag2 = lastModelState != modelState;
 		lastModelState = modelState;
@@ -752,7 +870,6 @@ public class BuildingBlock : StabilityEntity
 				SendNetworkUpdate();
 			}
 		}
-		Profiler.EndSample();
 	}
 
 	public override bool ShouldBlockProjectiles()
@@ -760,18 +877,24 @@ public class BuildingBlock : StabilityEntity
 		return grade != BuildingGrade.Enum.Twigs;
 	}
 
+	[ContextMenu("Check for pipes")]
 	public void CheckForPipes()
 	{
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
 		if (!CheckForPipesOnModelChange || !ConVar.Server.enforcePipeChecksOnBuildingBlockChanges || Application.isLoading)
 		{
 			return;
 		}
 		List<ColliderInfo_Pipe> list = Pool.GetList<ColliderInfo_Pipe>();
-		OBB val = default(OBB);
-		((OBB)(ref val))._002Ector(((Component)this).transform, bounds);
-		Vis.Components<ColliderInfo_Pipe>(val, list, 536870912, (QueryTriggerInteraction)2);
+		Bounds val = bounds;
+		((Bounds)(ref val)).extents = ((Bounds)(ref val)).extents * 0.97f;
+		Vis.Components<ColliderInfo_Pipe>((OBB)(((Object)(object)AlternativePipeBounds != (Object)null) ? AlternativePipeBounds.GetObb() : new OBB(((Component)this).transform, val)), list, 536870912, (QueryTriggerInteraction)2);
 		foreach (ColliderInfo_Pipe item in list)
 		{
 			if (!((Object)(object)item == (Object)null) && ((Component)item).gameObject.activeInHierarchy && item.HasFlag(ColliderInfo.Flags.OnlyBlockBuildingBlock) && (Object)(object)item.ParentEntity != (Object)null && item.ParentEntity.isServer)
@@ -812,7 +935,11 @@ public class BuildingBlock : StabilityEntity
 
 	private bool CanRotate(BasePlayer player)
 	{
-		return IsRotatable() && HasRotationPrivilege(player) && !IsRotationBlocked();
+		if (IsRotatable() && HasRotationPrivilege(player))
+		{
+			return !IsRotationBlocked();
+		}
+		return false;
 	}
 
 	private bool IsRotatable()
@@ -834,8 +961,8 @@ public class BuildingBlock : StabilityEntity
 
 	private bool IsRotationBlocked()
 	{
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
 		if (!blockDefinition.checkVolumeOnRotate)
 		{
 			return false;
@@ -846,9 +973,9 @@ public class BuildingBlock : StabilityEntity
 
 	private bool HasRotationPrivilege(BasePlayer player)
 	{
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
 		return !player.IsBuildingBlocked(((Component)this).transform.position, ((Component)this).transform.rotation, bounds);
 	}
 
@@ -856,10 +983,10 @@ public class BuildingBlock : StabilityEntity
 	[RPC_Server.MaxDistance(3f)]
 	private void DoRotation(RPCMessage msg)
 	{
-		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
 		if (msg.player.CanInteract() && CanRotate(msg.player) && blockDefinition.canRotateAfterPlacement)
 		{
 			Transform transform = ((Component)this).transform;
@@ -870,7 +997,20 @@ public class BuildingBlock : StabilityEntity
 			RefreshNeighbours(linkToNeighbours: false);
 			SendNetworkUpdateImmediate();
 			ClientRPC(null, "RefreshSkin");
+			if (!globalNetworkCooldown)
+			{
+				globalNetworkCooldown = true;
+				GlobalNetworkHandler.server.TrySendNetworkUpdate(this);
+				((FacepunchBehaviour)this).CancelInvoke((Action)ResetGlobalNetworkCooldown);
+				((FacepunchBehaviour)this).Invoke((Action)ResetGlobalNetworkCooldown, 15f);
+			}
 		}
+	}
+
+	private void ResetGlobalNetworkCooldown()
+	{
+		globalNetworkCooldown = false;
+		GlobalNetworkHandler.server.TrySendNetworkUpdate(this);
 	}
 
 	private void StopBeingRotatable()
@@ -891,7 +1031,6 @@ public class BuildingBlock : StabilityEntity
 	public override void Save(SaveInfo info)
 	{
 		base.Save(info);
-		Profiler.BeginSample("BuildingBlock.Save");
 		info.msg.buildingBlock = Pool.Get<BuildingBlock>();
 		info.msg.buildingBlock.model = modelState;
 		info.msg.buildingBlock.grade = (int)grade;
@@ -900,7 +1039,6 @@ public class BuildingBlock : StabilityEntity
 			info.msg.simpleUint = Pool.Get<SimpleUInt>();
 			info.msg.simpleUint.value = customColour;
 		}
-		Profiler.EndSample();
 	}
 
 	public override void Load(LoadInfo info)
@@ -939,7 +1077,7 @@ public class BuildingBlock : StabilityEntity
 
 	public override void ServerInit()
 	{
-		//IL_00b7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0095: Unknown result type (might be due to invalid IL or missing references)
 		blockDefinition = PrefabAttribute.server.Find<Construction>(prefabID);
 		if (blockDefinition == null)
 		{
@@ -975,8 +1113,7 @@ public class BuildingBlock : StabilityEntity
 	{
 		if (ConVar.Server.pve && Object.op_Implicit((Object)(object)info.Initiator) && info.Initiator is BasePlayer)
 		{
-			BasePlayer basePlayer = info.Initiator as BasePlayer;
-			basePlayer.Hurt(info.damageTypes.Total(), DamageType.Generic);
+			(info.Initiator as BasePlayer).Hurt(info.damageTypes.Total(), DamageType.Generic);
 		}
 		else
 		{
@@ -984,112 +1121,28 @@ public class BuildingBlock : StabilityEntity
 		}
 	}
 
-	public override void ResetState()
-	{
-		base.ResetState();
-		blockDefinition = null;
-		forceSkinRefresh = false;
-		modelState = 0;
-		lastModelState = 0;
-		grade = BuildingGrade.Enum.Twigs;
-		lastGrade = BuildingGrade.Enum.None;
-		DestroySkin();
-		UpdatePlaceholder(state: true);
-	}
-
-	public override void InitShared()
-	{
-		base.InitShared();
-		Profiler.BeginSample("GetComponent");
-		placeholderRenderer = ((Component)this).GetComponent<MeshRenderer>();
-		placeholderCollider = ((Component)this).GetComponent<MeshCollider>();
-		Profiler.EndSample();
-	}
-
-	public override void PostInitShared()
-	{
-		baseProtection = currentGrade.gradeBase.damageProtecton;
-		grade = currentGrade.gradeBase.type;
-		base.PostInitShared();
-	}
-
-	public override void DestroyShared()
-	{
-		if (base.isServer)
-		{
-			RefreshNeighbours(linkToNeighbours: false);
-		}
-		base.DestroyShared();
-	}
-
-	public override string Categorize()
-	{
-		return "building";
-	}
-
-	public override float BoundsPadding()
-	{
-		return 1f;
-	}
-
-	public override bool IsOutside()
-	{
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
-		float outside_test_range = ConVar.Decay.outside_test_range;
-		Vector3 val = PivotPoint();
-		Ray val4 = default(Ray);
-		for (int i = 0; i < outsideLookupOffsets.Length; i++)
-		{
-			Vector3 val2 = outsideLookupOffsets[i];
-			Vector3 val3 = val + val2 * outside_test_range;
-			((Ray)(ref val4))._002Ector(val3, -val2);
-			if (!Physics.Raycast(val4, outside_test_range - 0.5f, 2097152))
-			{
-				return true;
-			}
-		}
-		return false;
-	}
-
-	public override bool SupportsChildDeployables()
-	{
-		return true;
-	}
-
 	static BuildingBlock()
 	{
-		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0092: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0097: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ad: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ba: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b0: Unknown result type (might be due to invalid IL or missing references)
 		Vector3[] array = new Vector3[5];
 		Vector3 val = new Vector3(0f, 1f, 0f);
 		array[0] = ((Vector3)(ref val)).normalized;
@@ -1102,5 +1155,6 @@ public class BuildingBlock : StabilityEntity
 		val = new Vector3(0f, 1f, -1f);
 		array[4] = ((Vector3)(ref val)).normalized;
 		outsideLookupOffsets = (Vector3[])(object)array;
+		updateSkinQueueServer = new UpdateSkinWorkQueue();
 	}
 }

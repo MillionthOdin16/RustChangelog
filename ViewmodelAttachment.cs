@@ -4,5 +4,5 @@ public class ViewmodelAttachment : EntityComponent<BaseEntity>, IClientComponent
 
 	public string targetBone;
 
-	public bool hideViewModelIronSights = false;
+	public bool hideViewModelIronSights;
 }

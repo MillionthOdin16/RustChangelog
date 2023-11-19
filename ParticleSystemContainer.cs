@@ -12,10 +12,17 @@ public class ParticleSystemContainer : MonoBehaviour, IPrefabPreProcess
 		public LODComponentParticleSystem[] lodComponents;
 	}
 
-	public bool precached = false;
+	public bool precached;
 
+	public bool includeLights;
+
+	[SerializeField]
 	[HideInInspector]
-	public ParticleSystemGroup[] particleGroups = null;
+	private ParticleSystemGroup[] particleGroups;
+
+	[SerializeField]
+	[HideInInspector]
+	private Light[] lights;
 
 	public void Play()
 	{
@@ -33,14 +40,23 @@ public class ParticleSystemContainer : MonoBehaviour, IPrefabPreProcess
 	{
 	}
 
+	private void SetLights(bool on)
+	{
+		Light[] array = ((!precached) ? ((Component)this).GetComponentsInChildren<Light>() : lights);
+		Light[] array2 = array;
+		for (int i = 0; i < array2.Length; i++)
+		{
+			((Behaviour)array2[i]).enabled = on;
+		}
+	}
+
 	public void PreProcess(IPrefabProcessor preProcess, GameObject rootObj, string name, bool serverside, bool clientside, bool bundling)
 	{
 		if (precached && clientside)
 		{
 			List<ParticleSystemGroup> list = new List<ParticleSystemGroup>();
 			ParticleSystem[] componentsInChildren = ((Component)this).GetComponentsInChildren<ParticleSystem>();
-			ParticleSystem[] array = componentsInChildren;
-			foreach (ParticleSystem val in array)
+			foreach (ParticleSystem val in componentsInChildren)
 			{
 				LODComponentParticleSystem[] components = ((Component)val).GetComponents<LODComponentParticleSystem>();
 				ParticleSystemGroup particleSystemGroup = default(ParticleSystemGroup);
@@ -50,6 +66,10 @@ public class ParticleSystemContainer : MonoBehaviour, IPrefabPreProcess
 				list.Add(item);
 			}
 			particleGroups = list.ToArray();
+			if (includeLights)
+			{
+				lights = ((Component)this).GetComponentsInChildren<Light>();
+			}
 		}
 	}
 }

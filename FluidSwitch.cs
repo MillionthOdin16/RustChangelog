@@ -5,11 +5,11 @@ public class FluidSwitch : ElectricSwitch
 {
 	private Flags Flag_PumpPowered = Flags.Reserved6;
 
-	public Animator PumpAnimator = null;
+	public Animator PumpAnimator;
 
-	private bool pumpEnabled = false;
+	private bool pumpEnabled;
 
-	private int lastToggleInput = 0;
+	private int lastToggleInput;
 
 	public override bool IsGravitySource => true;
 
@@ -29,9 +29,9 @@ public class FluidSwitch : ElectricSwitch
 		}
 		if (inputSlot == 2)
 		{
-			bool flag = pumpEnabled;
+			bool num = pumpEnabled;
 			pumpEnabled = inputAmount > 0;
-			if (flag != pumpEnabled)
+			if (num != pumpEnabled)
 			{
 				lastPassthroughEnergy = -1;
 				SetFlag(Flag_PumpPowered, pumpEnabled);
@@ -55,7 +55,11 @@ public class FluidSwitch : ElectricSwitch
 	{
 		if (outputSlot == 0)
 		{
-			return IsOn() ? GetCurrentEnergy() : 0;
+			if (!IsOn())
+			{
+				return 0;
+			}
+			return GetCurrentEnergy();
 		}
 		return 0;
 	}
@@ -67,7 +71,7 @@ public class FluidSwitch : ElectricSwitch
 
 	public override bool AllowLiquidPassthrough(IOEntity fromSource, Vector3 sourceWorldPosition, bool forPlacement = false)
 	{
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
 		if (!forPlacement && !IsOn())
 		{
 			return false;

@@ -5,14 +5,13 @@ public class ItemModDeployable : MonoBehaviour
 	public GameObjectRef entityPrefab = new GameObjectRef();
 
 	[Header("Tooltips")]
-	public bool showCrosshair = false;
+	public bool showCrosshair;
 
 	public string UnlockAchievement;
 
 	public Deployable GetDeployable(BaseEntity entity)
 	{
-		GameObject val = entity.gameManager.FindPrefab(entityPrefab.resourcePath);
-		if ((Object)(object)val == (Object)null)
+		if ((Object)(object)entity.gameManager.FindPrefab(entityPrefab.resourcePath) == (Object)null)
 		{
 			return null;
 		}

@@ -66,27 +66,27 @@ public class Gibbable : PrefabAttribute, IClientComponent
 	public bool spawnFxPrefab = true;
 
 	[Tooltip("If enabled, gibs will spawn even though we've hit a gib limit")]
-	public bool important = false;
+	public bool important;
 
-	public bool useContinuousCollision = false;
+	public bool useContinuousCollision;
 
-	public float explodeScale = 0f;
+	public float explodeScale;
 
 	public float scaleOverride = 1f;
 
 	[ReadOnly]
-	public int uniqueId = 0;
+	public int uniqueId;
 
-	public BoundsEffectType boundsEffectType = BoundsEffectType.None;
+	public BoundsEffectType boundsEffectType;
 
-	public bool isConditional = false;
+	public bool isConditional;
 
 	[ReadOnly]
 	public Bounds effectBounds;
 
 	public List<OverrideMesh> MeshOverrides = new List<OverrideMesh>();
 
-	public bool UsePerGibWaterCheck = false;
+	public bool UsePerGibWaterCheck;
 
 	protected override Type GetIndexedType()
 	{

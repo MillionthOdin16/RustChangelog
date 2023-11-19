@@ -4,7 +4,6 @@ using Facepunch;
 using Network;
 using ProtoBuf;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 public class ElectricBattery : IOEntity, IInstanceDataReceiver
 {
@@ -14,7 +13,7 @@ public class ElectricBattery : IOEntity, IInstanceDataReceiver
 
 	public float rustWattSeconds;
 
-	private int activeDrain = 0;
+	private int activeDrain;
 
 	public bool rechargable;
 
@@ -29,7 +28,7 @@ public class ElectricBattery : IOEntity, IInstanceDataReceiver
 
 	public const Flags Flag_VeryFull = Flags.Reserved6;
 
-	private bool wasLoaded = false;
+	private bool wasLoaded;
 
 	private HashSet<IOEntity> connectedList = new HashSet<IOEntity>();
 
@@ -50,7 +49,11 @@ public class ElectricBattery : IOEntity, IInstanceDataReceiver
 
 	public int GetActiveDrain()
 	{
-		return IsOn() ? activeDrain : 0;
+		if (!IsOn())
+		{
+			return 0;
+		}
+		return activeDrain;
 	}
 
 	public void ReceiveInstanceData(InstanceData data)
@@ -66,8 +69,8 @@ public class ElectricBattery : IOEntity, IInstanceDataReceiver
 
 	public override void OnPickedUp(Item createdItem, BasePlayer player)
 	{
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0023: Expected O, but got Unknown
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Expected O, but got Unknown
 		base.OnPickedUp(createdItem, player);
 		if (createdItem.instanceData == null)
 		{
@@ -110,46 +113,44 @@ public class ElectricBattery : IOEntity, IInstanceDataReceiver
 
 	public void AddConnectedRecursive(IOEntity root, ref HashSet<IOEntity> listToUse)
 	{
-		Profiler.BeginSample("AddConnectedRecursive");
 		listToUse.Add(root);
-		if (root.WantsPassthroughPower())
+		if (!root.WantsPassthroughPower())
 		{
-			for (int i = 0; i < root.outputs.Length; i++)
+			return;
+		}
+		for (int i = 0; i < root.outputs.Length; i++)
+		{
+			if (!root.AllowDrainFrom(i))
 			{
-				if (!root.AllowDrainFrom(i))
+				continue;
+			}
+			IOSlot iOSlot = root.outputs[i];
+			if (iOSlot.type != 0)
+			{
+				continue;
+			}
+			IOEntity iOEntity = iOSlot.connectedTo.Get();
+			if (!((Object)(object)iOEntity != (Object)null))
+			{
+				continue;
+			}
+			bool flag = iOEntity.WantsPower();
+			if (!listToUse.Contains(iOEntity))
+			{
+				if (flag)
 				{
-					continue;
+					AddConnectedRecursive(iOEntity, ref listToUse);
 				}
-				IOSlot iOSlot = root.outputs[i];
-				if (iOSlot.type != 0)
+				else
 				{
-					continue;
-				}
-				IOEntity iOEntity = iOSlot.connectedTo.Get();
-				if (!((Object)(object)iOEntity != (Object)null))
-				{
-					continue;
-				}
-				bool flag = iOEntity.WantsPower();
-				if (!listToUse.Contains(iOEntity))
-				{
-					if (flag)
-					{
-						AddConnectedRecursive(iOEntity, ref listToUse);
-					}
-					else
-					{
-						listToUse.Add(iOEntity);
-					}
+					listToUse.Add(iOEntity);
 				}
 			}
 		}
-		Profiler.EndSample();
 	}
 
 	public int GetDrain()
 	{
-		Profiler.BeginSample("GetDrain");
 		connectedList.Clear();
 		IOEntity iOEntity = outputs[0].connectedTo.Get();
 		if (Object.op_Implicit((Object)(object)iOEntity))
@@ -169,7 +170,6 @@ public class ElectricBattery : IOEntity, IInstanceDataReceiver
 				}
 			}
 		}
-		Profiler.EndSample();
 		return num;
 	}
 
@@ -187,7 +187,6 @@ public class ElectricBattery : IOEntity, IInstanceDataReceiver
 			SetDischarging(wantsOn: false);
 			return;
 		}
-		Profiler.BeginSample("ElectricBattery.CheckDischarge");
 		IOEntity iOEntity = outputs[0].connectedTo.Get();
 		int drain = GetDrain();
 		activeDrain = drain;
@@ -199,7 +198,6 @@ public class ElectricBattery : IOEntity, IInstanceDataReceiver
 		{
 			SetDischarging(wantsOn: false);
 		}
-		Profiler.EndSample();
 	}
 
 	public void SetDischarging(bool wantsOn)
@@ -244,30 +242,28 @@ public class ElectricBattery : IOEntity, IInstanceDataReceiver
 	public void TickUsage()
 	{
 		float oldCharge = rustWattSeconds;
-		Profiler.BeginSample("ElectricBattery.TickUsage");
-		bool flag = rustWattSeconds > 0f;
+		bool num = rustWattSeconds > 0f;
 		if (rustWattSeconds >= 1f)
 		{
-			float num = 1f * (float)activeDrain;
-			rustWattSeconds -= num;
+			float num2 = 1f * (float)activeDrain;
+			rustWattSeconds -= num2;
 		}
 		if (rustWattSeconds <= 0f)
 		{
 			rustWattSeconds = 0f;
 		}
-		bool flag2 = rustWattSeconds > 0f;
+		bool flag = rustWattSeconds > 0f;
 		ChargeChanged(oldCharge);
-		if (flag != flag2)
+		if (num != flag)
 		{
 			MarkDirty();
 			SendNetworkUpdate();
 		}
-		Profiler.EndSample();
 	}
 
 	public virtual void ChargeChanged(float oldCharge)
 	{
-		float num = rustWattSeconds;
+		_ = rustWattSeconds;
 		bool flag = rustWattSeconds > maxCapactiySeconds * 0.25f;
 		bool flag2 = rustWattSeconds > maxCapactiySeconds * 0.75f;
 		if (HasFlag(Flags.Reserved5) != flag || HasFlag(Flags.Reserved6) != flag2)
@@ -280,14 +276,11 @@ public class ElectricBattery : IOEntity, IInstanceDataReceiver
 
 	public void AddCharge()
 	{
-		Profiler.BeginSample("ElectricBattery.TickUsage");
 		float oldCharge = rustWattSeconds;
-		int num = Mathf.Min(currentEnergy, DesiredPower());
-		float num2 = (float)num * 1f * chargeRatio;
-		rustWattSeconds += num2;
+		float num = (float)Mathf.Min(currentEnergy, DesiredPower()) * 1f * chargeRatio;
+		rustWattSeconds += num;
 		rustWattSeconds = Mathf.Clamp(rustWattSeconds, 0f, maxCapactiySeconds);
 		ChargeChanged(oldCharge);
-		Profiler.EndSample();
 	}
 
 	public void SetPassthroughOn(bool wantsOn)
@@ -297,7 +290,6 @@ public class ElectricBattery : IOEntity, IInstanceDataReceiver
 			return;
 		}
 		wasLoaded = false;
-		Profiler.BeginSample("ElectricBattery.SetPassthroughOn");
 		SetFlag(Flags.On, wantsOn);
 		if (IsOn())
 		{
@@ -311,7 +303,6 @@ public class ElectricBattery : IOEntity, IInstanceDataReceiver
 			((FacepunchBehaviour)this).CancelInvoke((Action)TickUsage);
 		}
 		MarkDirty();
-		Profiler.EndSample();
 	}
 
 	public void Unbusy()

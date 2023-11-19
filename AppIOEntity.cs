@@ -38,7 +38,7 @@ public abstract class AppIOEntity : IOEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - PairWithApp "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - PairWithApp "));
 				}
 				TimeWarning val2 = TimeWarning.New("PairWithApp", 0);
 				try
@@ -61,7 +61,7 @@ public abstract class AppIOEntity : IOEntity
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -73,7 +73,7 @@ public abstract class AppIOEntity : IOEntity
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -98,8 +98,8 @@ public abstract class AppIOEntity : IOEntity
 
 	protected void BroadcastValueChange()
 	{
-		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
 		if (this.IsValid())
 		{
 			EntityTarget target = GetTarget();
@@ -139,18 +139,18 @@ public abstract class AppIOEntity : IOEntity
 	public async void PairWithApp(RPCMessage msg)
 	{
 		BasePlayer player = msg.player;
-		Dictionary<string, string> data = CompanionServer.Util.GetPlayerPairingData(player);
-		data.Add("entityId", net.ID.Value.ToString("G", CultureInfo.InvariantCulture));
-		data.Add("entityType", ((int)Type).ToString("G", CultureInfo.InvariantCulture));
-		data.Add("entityName", GetDisplayName());
-		NotificationSendResult result = await CompanionServer.Util.SendPairNotification("entity", player, GetDisplayName(), "Tap to pair with this device.", data);
-		if (result == NotificationSendResult.Sent)
+		Dictionary<string, string> playerPairingData = CompanionServer.Util.GetPlayerPairingData(player);
+		playerPairingData.Add("entityId", net.ID.Value.ToString("G", CultureInfo.InvariantCulture));
+		playerPairingData.Add("entityType", ((int)Type).ToString("G", CultureInfo.InvariantCulture));
+		playerPairingData.Add("entityName", GetDisplayName());
+		NotificationSendResult notificationSendResult = await CompanionServer.Util.SendPairNotification("entity", player, GetDisplayName(), "Tap to pair with this device.", playerPairingData);
+		if (notificationSendResult == NotificationSendResult.Sent)
 		{
 			OnPairedWithPlayer(msg.player);
 		}
 		else
 		{
-			player.ClientRPCPlayer(null, player, "HandleCompanionPairingResult", (int)result);
+			player.ClientRPCPlayer(null, player, "HandleCompanionPairingResult", (int)notificationSendResult);
 		}
 	}
 

@@ -10,7 +10,7 @@ public class PowerLineWireConnectionDef
 
 	public float radius = 0.01f;
 
-	public bool hidden = false;
+	public bool hidden;
 
 	public PowerLineWireConnectionDef()
 	{
@@ -26,10 +26,10 @@ public class PowerLineWireConnectionDef
 		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
 		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
 		inOffset = src.inOffset;
 		outOffset = src.outOffset;
 		radius = src.radius;

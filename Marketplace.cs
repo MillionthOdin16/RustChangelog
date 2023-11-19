@@ -20,17 +20,13 @@ public class Marketplace : BaseEntity
 
 	public NetworkableId SendDrone(BasePlayer player, MarketTerminal sourceTerminal, VendingMachine vendingMachine)
 	{
-		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ad: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)sourceTerminal == (Object)null || (Object)(object)vendingMachine == (Object)null)
 		{
 			return default(NetworkableId);
@@ -49,7 +45,7 @@ public class Marketplace : BaseEntity
 
 	public void ReturnDrone(DeliveryDrone deliveryDrone)
 	{
-		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
 		if (deliveryDrone.sourceTerminal.TryGet(serverside: true, out var entity))
 		{
 			entity.CompleteOrder(deliveryDrone.targetVendingMachine.uid);
@@ -68,8 +64,8 @@ public class Marketplace : BaseEntity
 
 	private void SpawnSubEntities()
 	{
-		//IL_00e1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
 		if (!base.isServer)
 		{
 			return;
@@ -109,7 +105,7 @@ public class Marketplace : BaseEntity
 
 	public override void Load(LoadInfo info)
 	{
-		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
 		base.Load(info);
 		if (info.msg.subEntityList != null)
 		{
@@ -125,7 +121,7 @@ public class Marketplace : BaseEntity
 
 	public override void Save(SaveInfo info)
 	{
-		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
 		base.Save(info);
 		info.msg.subEntityList = Pool.Get<SubEntityList>();
 		info.msg.subEntityList.subEntityIds = Pool.GetList<NetworkableId>();

@@ -31,10 +31,10 @@ public class TriggerForce : TriggerBase, IServerComponent
 
 	internal override void OnEntityEnter(BaseEntity ent)
 	{
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
 		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
 		base.OnEntityEnter(ent);
 		Vector3 val = ((Component)this).transform.TransformDirection(velocity);
 		ent.ApplyInheritedVelocity(val);
@@ -42,17 +42,17 @@ public class TriggerForce : TriggerBase, IServerComponent
 
 	internal override void OnEntityLeave(BaseEntity ent)
 	{
-		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
 		base.OnEntityLeave(ent);
 		ent.ApplyInheritedVelocity(Vector3.zero);
 	}
 
 	protected void FixedUpdate()
 	{
-		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
 		if (entityContents == null)
 		{
 			return;

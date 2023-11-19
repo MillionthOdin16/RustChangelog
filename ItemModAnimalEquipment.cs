@@ -12,7 +12,7 @@ public class ItemModAnimalEquipment : ItemMod
 
 	public BaseEntity.Flags WearableFlag;
 
-	public bool hideHair = false;
+	public bool hideHair;
 
 	public ProtectionProperties animalProtection;
 

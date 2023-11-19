@@ -4,13 +4,23 @@ public class TriggerNotifyEntity : TriggerBase, IPrefabPreProcess
 {
 	public GameObject notifyTarget;
 
-	private INotifyEntityTrigger toNotify = null;
+	private INotifyEntityTrigger toNotify;
 
 	public bool runClientside = true;
 
 	public bool runServerside = true;
 
-	public bool HasContents => contents != null && contents.Count > 0;
+	public bool HasContents
+	{
+		get
+		{
+			if (contents != null)
+			{
+				return contents.Count > 0;
+			}
+			return false;
+		}
+	}
 
 	internal override void OnEntityEnter(BaseEntity ent)
 	{

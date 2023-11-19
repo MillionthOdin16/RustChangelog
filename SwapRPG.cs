@@ -19,9 +19,9 @@ public class SwapRPG : MonoBehaviour
 	public void SelectRPGType(int iType)
 	{
 		GameObject[] array = rpgModels;
-		foreach (GameObject val in array)
+		for (int i = 0; i < array.Length; i++)
 		{
-			val.SetActive(false);
+			array[i].SetActive(false);
 		}
 		rpgModels[iType].SetActive(true);
 	}

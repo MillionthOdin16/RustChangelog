@@ -13,11 +13,11 @@ public class WorldNetworking
 
 	public static void OnMessageReceived(Message message)
 	{
-		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
 		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002f: Expected I4, but got Unknown
+		//IL_002d: Expected I4, but got Unknown
 		WorldSerialization serialization = World.Serialization;
 		WorldMessage val = WorldMessage.Deserialize((Stream)(object)message.read);
 		try
@@ -48,9 +48,9 @@ public class WorldNetworking
 
 	private static void SendWorldData(Connection connection)
 	{
-		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
 		if (connection.hasRequestedWorld)
 		{
 			DebugEx.LogWarning((object)$"{connection} requested world data more than once", (StackTraceLogType)0);
@@ -96,7 +96,7 @@ public class WorldNetworking
 
 	private static void SendWorldData(Connection connection, ref WorldMessage data)
 	{
-		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
 		NetWrite val = ((BaseNetwork)Net.sv).StartWrite();
 		val.PacketID((Type)24);
 		data.ToProto((Stream)(object)val);

@@ -13,7 +13,7 @@ public class CommandBufferDesc
 
 	public CommandBufferDesc(CameraEvent cameraEvent, int orderId, FillCommandBuffer fill)
 	{
-		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
 		CameraEvent = cameraEvent;
 		OrderId = orderId;
 		FillDelegate = fill.Invoke;
