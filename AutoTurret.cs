@@ -1215,6 +1215,9 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 
 	public bool CanAcceptItem(Item item, int targetSlot)
 	{
+		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
 		Item slot = base.inventory.GetSlot(0);
 		if (IsValidWeapon(item) && targetSlot == 0)
 		{
@@ -1222,7 +1225,13 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 		}
 		if (item.info.category == ItemCategory.Ammunition)
 		{
-			if (slot == null || !Object.op_Implicit((Object)(object)GetAttachedWeapon()))
+			ItemModProjectile component = ((Component)item.info).GetComponent<ItemModProjectile>();
+			BaseProjectile attachedWeapon = GetAttachedWeapon();
+			if (slot == null || (Object)(object)attachedWeapon == (Object)null || (Object)(object)component == (Object)null)
+			{
+				return false;
+			}
+			if ((attachedWeapon.primaryMagazine.definition.ammoTypes & component.ammoType) == 0)
 			{
 				return false;
 			}

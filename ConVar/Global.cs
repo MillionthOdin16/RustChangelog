@@ -53,6 +53,9 @@ public class Global : ConsoleSystem
 	[ClientVar(Saved = true, Help = "Experimental faster loading, requires game restart (0 = off, 1 = partial, 2 = full)")]
 	public static int asyncLoadingPreset = 0;
 
+	[ServerVar]
+	public static bool updateNetworkPositionWithDebugCameraWhileSpectating = false;
+
 	[ServerVar(Saved = true)]
 	[ClientVar(Saved = true)]
 	public static int perf = 0;
@@ -627,15 +630,43 @@ public class Global : ConsoleSystem
 	public static void teleporteveryone2me(Arg args)
 	{
 		BasePlayer basePlayer = args.Player();
-		if (!Object.op_Implicit((Object)(object)basePlayer) || !basePlayer.IsAlive())
+		if (Object.op_Implicit((Object)(object)basePlayer))
+		{
+			TeleportPlayersToMe(basePlayer, includeSleepers: true, includeNonSleepers: true);
+		}
+	}
+
+	[ServerVar]
+	public static void teleportsleepers2me(Arg args)
+	{
+		BasePlayer basePlayer = args.Player();
+		if (Object.op_Implicit((Object)(object)basePlayer))
+		{
+			TeleportPlayersToMe(basePlayer, includeSleepers: true, includeNonSleepers: false);
+		}
+	}
+
+	[ServerVar]
+	public static void teleportnonsleepers2me(Arg args)
+	{
+		BasePlayer basePlayer = args.Player();
+		if (Object.op_Implicit((Object)(object)basePlayer))
+		{
+			TeleportPlayersToMe(basePlayer, includeSleepers: false, includeNonSleepers: true);
+		}
+	}
+
+	private static void TeleportPlayersToMe(BasePlayer player, bool includeSleepers, bool includeNonSleepers)
+	{
+		if ((Object)(object)player == (Object)null || !Object.op_Implicit((Object)(object)player) || !player.IsAlive())
 		{
 			return;
 		}
 		foreach (BasePlayer allPlayer in BasePlayer.allPlayerList)
 		{
-			if (allPlayer.IsAlive() && !((Object)(object)allPlayer == (Object)(object)basePlayer))
+			if (allPlayer.IsAlive() && !((Object)(object)allPlayer == (Object)(object)player) && (!allPlayer.IsSleeping() || includeSleepers) && (allPlayer.IsSleeping() || includeNonSleepers))
 			{
-				allPlayer.Teleport(basePlayer);
+				allPlayer.Teleport(player);
 			}
 		}
 	}

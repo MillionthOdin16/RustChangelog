@@ -341,17 +341,17 @@ public class LiquidWeapon : BaseLiquidVessel
 
 	private void FireTick()
 	{
-		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0089: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ad: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bb: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer ownerPlayer = GetOwnerPlayer();
 		if (!CanFire(ownerPlayer))
 		{
@@ -364,7 +364,6 @@ public class LiquidWeapon : BaseLiquidVessel
 			StopFiring();
 			return;
 		}
-		LoseWater(num);
 		float currentRange = CurrentRange;
 		pressure -= PressureLossPerTick;
 		if (pressure <= 0)
@@ -378,6 +377,7 @@ public class LiquidWeapon : BaseLiquidVessel
 		{
 			DoSplash(ownerPlayer, ((RaycastHit)(ref val2)).point, ((Ray)(ref val)).direction, num);
 		}
+		LoseWater(num);
 		SendNetworkUpdate();
 	}
 

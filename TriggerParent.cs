@@ -228,23 +228,17 @@ public class TriggerParent : TriggerBase, IServerComponent
 		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
 		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 val = ent.PivotPoint() + ((Component)ent).transform.up * 0.1f;
 		float maxDistance = triggerHeight + 0.1f;
-		Ray ray = default(Ray);
-		((Ray)(ref ray))._002Ector(val, -((Component)this).transform.up);
-		Debug.DrawRay(((Ray)(ref ray)).origin, ((Ray)(ref ray)).direction, Color.blue, 1f);
-		if (GamePhysics.Trace(ray, 0f, out var hitInfo, maxDistance, 429990145, (QueryTriggerInteraction)1, ent) && (Object)(object)((RaycastHit)(ref hitInfo)).collider != (Object)null)
+		if (GamePhysics.Trace(new Ray(val, -((Component)this).transform.up), 0f, out var hitInfo, maxDistance, 429990145, (QueryTriggerInteraction)1, ent) && (Object)(object)((RaycastHit)(ref hitInfo)).collider != (Object)null)
 		{
-			BaseEntity other = ((Component)this).gameObject.ToBaseEntity();
+			BaseEntity toFind = ((Component)this).gameObject.ToBaseEntity();
 			BaseEntity baseEntity = ((RaycastHit)(ref hitInfo)).collider.ToBaseEntity();
-			if ((Object)(object)baseEntity == (Object)null || !baseEntity.EqualNetID((BaseNetworkable)other))
+			if ((Object)(object)baseEntity == (Object)null || !baseEntity.HasEntityInParents(toFind))
 			{
 				return true;
 			}

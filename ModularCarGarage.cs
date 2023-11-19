@@ -953,6 +953,15 @@ public class ModularCarGarage : ContainerIOEntity
 		info.msg.vehicleLift.occupantLockState = (int)OccupantLockState;
 	}
 
+	public override bool CanPickup(BasePlayer player)
+	{
+		if (base.CanPickup(player))
+		{
+			return !PlatformIsOccupied;
+		}
+		return false;
+	}
+
 	public override ItemContainerId GetIdealContainer(BasePlayer player, Item item, bool altMove)
 	{
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)

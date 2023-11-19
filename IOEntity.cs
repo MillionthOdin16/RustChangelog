@@ -19,6 +19,16 @@ public class IOEntity : DecayEntity
 		Industrial
 	}
 
+	public enum QueueType
+	{
+		ElectricLowPriority,
+		ElectricHighPriority,
+		Fluidic,
+		Kinetic,
+		Generic,
+		Industrial
+	}
+
 	[Serializable]
 	public class IORef
 	{
@@ -142,8 +152,28 @@ public class IOEntity : DecayEntity
 	public int lastResetIndex;
 
 	[ServerVar]
-	[Help("How many miliseconds to budget for processing io entities per server frame")]
-	public static float framebudgetms = 1f;
+	[Help("How many milliseconds to budget for processing high priority electric io entities per server frame (monuments)")]
+	public static float frameBudgetElectricHighPriorityMs = 1f;
+
+	[ServerVar]
+	[Help("How many milliseconds to budget for processing low priority io entities per server frame (player placed)")]
+	public static float frameBudgetElectricLowPriorityMs = 0.5f;
+
+	[ServerVar]
+	[Help("How many milliseconds to budget for processing fluid io entities per server frame")]
+	public static float frameBudgetFluidMs = 0.25f;
+
+	[ServerVar]
+	[Help("How many milliseconds to budget for processing kinetic io entities per server frame (monuments)")]
+	public static float frameBudgetKineticMs = 1f;
+
+	[ServerVar]
+	[Help("How many milliseconds to budget for processing generic io entities per server frame (unused for now)")]
+	public static float frameBudgetGenericMs = 1f;
+
+	[ServerVar]
+	[Help("How many milliseconds to budget for processing industrial entities per server frame")]
+	public static float frameBudgetIndustrialMs = 0.25f;
 
 	[ServerVar]
 	public static float responsetime = 0.1f;
@@ -167,7 +197,61 @@ public class IOEntity : DecayEntity
 
 	public IOType ioType;
 
-	public static Queue<IOEntity> _processQueue = new Queue<IOEntity>();
+	private static Dictionary<QueueType, Queue<IOEntity>> _processQueues = new Dictionary<QueueType, Queue<IOEntity>>
+	{
+		{
+			QueueType.ElectricHighPriority,
+			new Queue<IOEntity>()
+		},
+		{
+			QueueType.ElectricLowPriority,
+			new Queue<IOEntity>()
+		},
+		{
+			QueueType.Fluidic,
+			new Queue<IOEntity>()
+		},
+		{
+			QueueType.Kinetic,
+			new Queue<IOEntity>()
+		},
+		{
+			QueueType.Generic,
+			new Queue<IOEntity>()
+		},
+		{
+			QueueType.Industrial,
+			new Queue<IOEntity>()
+		}
+	};
+
+	private static Dictionary<QueueType, string> _processQueueProfilerString = new Dictionary<QueueType, string>
+	{
+		{
+			QueueType.ElectricHighPriority,
+			"HighPriorityElectric"
+		},
+		{
+			QueueType.ElectricLowPriority,
+			"LowPriorityElectric"
+		},
+		{
+			QueueType.Fluidic,
+			"Fluid"
+		},
+		{
+			QueueType.Kinetic,
+			"Kinetic"
+		},
+		{
+			QueueType.Generic,
+			"Generic"
+		},
+		{
+			QueueType.Industrial,
+			"Industrial"
+		}
+	};
 
 	private static List<FrameTiming> timings = new List<FrameTiming>();
 
@@ -382,6 +466,43 @@ public class IOEntity : DecayEntity
 		return true;
 	}
 
+	public QueueType GetQueueType()
+	{
+		switch (ioType)
+		{
+		case IOType.Electric:
+			if ((Object)(object)sourceItem == (Object)null)
+			{
+				return QueueType.ElectricHighPriority;
+			}
+			return QueueType.ElectricLowPriority;
+		case IOType.Fluidic:
+			return QueueType.Fluidic;
+		case IOType.Kinetic:
+			return QueueType.Kinetic;
+		case IOType.Generic:
+			return QueueType.Generic;
+		case IOType.Industrial:
+			return QueueType.Industrial;
+		default:
+			return QueueType.ElectricLowPriority;
+		}
+	}
+
+	public static float GetFrameBudgetForQueue(QueueType type)
+	{
+		return type switch
+		{
+			QueueType.ElectricLowPriority => frameBudgetElectricLowPriorityMs, 
+			QueueType.ElectricHighPriority => frameBudgetElectricHighPriorityMs, 
+			QueueType.Fluidic => frameBudgetFluidMs, 
+			QueueType.Kinetic => frameBudgetKineticMs, 
+			QueueType.Generic => frameBudgetGenericMs, 
+			QueueType.Industrial => frameBudgetIndustrialMs, 
+			_ => frameBudgetElectricLowPriorityMs, 
+		};
+	}
+
 	public virtual bool IsPowered()
 	{
 		return HasFlag(Flags.Reserved8);
@@ -518,29 +639,33 @@ public class IOEntity : DecayEntity
 
 	public static void ProcessQueue()
 	{
-		//IL_00d6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00dd: Expected O, but got Unknown
-		float realtimeSinceStartup = Time.realtimeSinceStartup;
-		float num = framebudgetms / 1000f;
+		//IL_0128: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012f: Expected O, but got Unknown
 		if (debugBudget)
 		{
 			timings.Clear();
 		}
-		while (_processQueue.Count > 0 && Time.realtimeSinceStartup < realtimeSinceStartup + num && !_processQueue.Peek().HasBlockedUpdatedOutputsThisFrame)
+		float realtimeSinceStartup = Time.realtimeSinceStartup;
+		foreach (KeyValuePair<QueueType, Queue<IOEntity>> processQueue in _processQueues)
 		{
 			float realtimeSinceStartup2 = Time.realtimeSinceStartup;
-			IOEntity iOEntity = _processQueue.Dequeue();
-			if (iOEntity.IsValid())
+			float num = GetFrameBudgetForQueue(processQueue.Key) / 1000f;
+			while (processQueue.Value.Count > 0 && Time.realtimeSinceStartup < realtimeSinceStartup2 + num && !processQueue.Value.Peek().HasBlockedUpdatedOutputsThisFrame)
 			{
-				iOEntity.UpdateOutputs();
-			}
-			if (debugBudget)
-			{
-				timings.Add(new FrameTiming
+				float realtimeSinceStartup3 = Time.realtimeSinceStartup;
+				IOEntity iOEntity = processQueue.Value.Dequeue();
+				if (iOEntity.IsValid())
 				{
-					PrefabName = iOEntity.ShortPrefabName,
-					Time = (Time.realtimeSinceStartup - realtimeSinceStartup2) * 1000f
-				});
+					iOEntity.UpdateOutputs();
+				}
+				if (debugBudget)
+				{
+					timings.Add(new FrameTiming
+					{
+						PrefabName = iOEntity.ShortPrefabName,
+						Time = (Time.realtimeSinceStartup - realtimeSinceStartup3) * 1000f
+					});
+				}
 			}
 		}
 		if (!debugBudget)
@@ -772,7 +897,7 @@ public class IOEntity : DecayEntity
 			IOStateChanged(currentEnergy, 0);
 			ensureOutputsUpdated = true;
 		}
-		_processQueue.Enqueue(this);
+		_processQueues[GetQueueType()].Enqueue(this);
 	}
 
 	public virtual void UpdateFromInput(int inputAmount, int inputSlot)
@@ -793,7 +918,7 @@ public class IOEntity : DecayEntity
 			IOStateChanged(inputAmount, inputSlot);
 			ensureOutputsUpdated = true;
 		}
-		_processQueue.Enqueue(this);
+		_processQueues[GetQueueType()].Enqueue(this);
 	}
 
 	public virtual void TouchIOState()
@@ -902,7 +1027,7 @@ public class IOEntity : DecayEntity
 		if (Time.realtimeSinceStartup - lastUpdateTime < responsetime)
 		{
 			lastUpdateBlockedFrame = Time.frameCount;
-			_processQueue.Enqueue(this);
+			_processQueues[GetQueueType()].Enqueue(this);
 			return false;
 		}
 		lastUpdateTime = Time.realtimeSinceStartup;

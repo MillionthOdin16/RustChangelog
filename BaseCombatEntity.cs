@@ -482,7 +482,7 @@ public class BaseCombatEntity : BaseEntity
 		List<ItemAmount> list2 = new List<ItemAmount>();
 		foreach (ItemAmount item in list)
 		{
-			list2.Add(new ItemAmount(item.itemDef, Mathf.RoundToInt(item.amount * RepairCostFraction() * healthMissingFraction)));
+			list2.Add(new ItemAmount(item.itemDef, Mathf.Max(Mathf.RoundToInt(item.amount * RepairCostFraction() * healthMissingFraction), 1)));
 		}
 		RepairBench.StripComponentRepairCost(list2);
 		return list2;

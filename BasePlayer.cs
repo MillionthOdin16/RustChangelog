@@ -1392,6 +1392,42 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				}
 				return true;
 			}
+			if (rpc == 495414158 && (Object)(object)player != (Object)null)
+			{
+				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
+				if (Global.developer > 2)
+				{
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - NotifyDebugCameraEnded "));
+				}
+				TimeWarning val2 = TimeWarning.New("NotifyDebugCameraEnded", 0);
+				try
+				{
+					TimeWarning val3 = TimeWarning.New("Call", 0);
+					try
+					{
+						RPCMessage rPCMessage = default(RPCMessage);
+						rPCMessage.connection = msg.connection;
+						rPCMessage.player = player;
+						rPCMessage.read = msg.read;
+						RPCMessage msg6 = rPCMessage;
+						NotifyDebugCameraEnded(msg6);
+					}
+					finally
+					{
+						((IDisposable)val3)?.Dispose();
+					}
+				}
+				catch (Exception ex5)
+				{
+					Debug.LogException(ex5);
+					player.Kick("RPC Error in NotifyDebugCameraEnded");
+				}
+				finally
+				{
+					((IDisposable)val2)?.Dispose();
+				}
+				return true;
+			}
 			if (rpc == 3441821928u && (Object)(object)player != (Object)null)
 			{
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
@@ -1423,17 +1459,17 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg6 = rPCMessage;
-							OnFeedbackReport(msg6);
+							RPCMessage msg7 = rPCMessage;
+							OnFeedbackReport(msg7);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex5)
+					catch (Exception ex6)
 					{
-						Debug.LogException(ex5);
+						Debug.LogException(ex6);
 						player.Kick("RPC Error in OnFeedbackReport");
 					}
 				}
@@ -1474,17 +1510,17 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg7 = rPCMessage;
-							OnPlayerLanded(msg7);
+							RPCMessage msg8 = rPCMessage;
+							OnPlayerLanded(msg8);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex6)
+					catch (Exception ex7)
 					{
-						Debug.LogException(ex6);
+						Debug.LogException(ex7);
 						player.Kick("RPC Error in OnPlayerLanded");
 					}
 				}
@@ -1525,17 +1561,17 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg8 = rPCMessage;
-							OnPlayerReported(msg8);
+							RPCMessage msg9 = rPCMessage;
+							OnPlayerReported(msg9);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex7)
+					catch (Exception ex8)
 					{
-						Debug.LogException(ex7);
+						Debug.LogException(ex8);
 						player.Kick("RPC Error in OnPlayerReported");
 					}
 				}
@@ -1576,17 +1612,17 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg9 = rPCMessage;
-							OnProjectileAttack(msg9);
+							RPCMessage msg10 = rPCMessage;
+							OnProjectileAttack(msg10);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex8)
+					catch (Exception ex9)
 					{
-						Debug.LogException(ex8);
+						Debug.LogException(ex9);
 						player.Kick("RPC Error in OnProjectileAttack");
 					}
 				}
@@ -1627,17 +1663,17 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg10 = rPCMessage;
-							OnProjectileRicochet(msg10);
+							RPCMessage msg11 = rPCMessage;
+							OnProjectileRicochet(msg11);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex9)
+					catch (Exception ex10)
 					{
-						Debug.LogException(ex9);
+						Debug.LogException(ex10);
 						player.Kick("RPC Error in OnProjectileRicochet");
 					}
 				}
@@ -1678,17 +1714,17 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg11 = rPCMessage;
-							OnProjectileUpdate(msg11);
+							RPCMessage msg12 = rPCMessage;
+							OnProjectileUpdate(msg12);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex10)
+					catch (Exception ex11)
 					{
-						Debug.LogException(ex10);
+						Debug.LogException(ex11);
 						player.Kick("RPC Error in OnProjectileUpdate");
 					}
 				}
@@ -1729,17 +1765,17 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg12 = rPCMessage;
-							PerformanceReport(msg12);
+							RPCMessage msg13 = rPCMessage;
+							PerformanceReport(msg13);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex11)
+					catch (Exception ex12)
 					{
-						Debug.LogException(ex11);
+						Debug.LogException(ex12);
 						player.Kick("RPC Error in PerformanceReport");
 					}
 				}
@@ -1780,17 +1816,17 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg13 = rPCMessage;
-							PerformanceReport_Frametime(msg13);
+							RPCMessage msg14 = rPCMessage;
+							PerformanceReport_Frametime(msg14);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex12)
+					catch (Exception ex13)
 					{
-						Debug.LogException(ex12);
+						Debug.LogException(ex13);
 						player.Kick("RPC Error in PerformanceReport_Frametime");
 					}
 				}
@@ -1835,17 +1871,17 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg14 = rPCMessage;
-							RequestParachuteDeploy(msg14);
+							RPCMessage msg15 = rPCMessage;
+							RequestParachuteDeploy(msg15);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex13)
+					catch (Exception ex14)
 					{
-						Debug.LogException(ex13);
+						Debug.LogException(ex14);
 						player.Kick("RPC Error in RequestParachuteDeploy");
 					}
 				}
@@ -1890,17 +1926,17 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg15 = rPCMessage;
-							RequestRespawnInformation(msg15);
+							RPCMessage msg16 = rPCMessage;
+							RequestRespawnInformation(msg16);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex14)
+					catch (Exception ex15)
 					{
-						Debug.LogException(ex14);
+						Debug.LogException(ex15);
 						player.Kick("RPC Error in RequestRespawnInformation");
 					}
 				}
@@ -1944,9 +1980,9 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex15)
+					catch (Exception ex16)
 					{
-						Debug.LogException(ex15);
+						Debug.LogException(ex16);
 						player.Kick("RPC Error in RequestServerEmoji");
 					}
 				}
@@ -1987,17 +2023,17 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg16 = rPCMessage;
-							RPC_Assist(msg16);
+							RPCMessage msg17 = rPCMessage;
+							RPC_Assist(msg17);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex16)
+					catch (Exception ex17)
 					{
-						Debug.LogException(ex16);
+						Debug.LogException(ex17);
 						player.Kick("RPC Error in RPC_Assist");
 					}
 				}
@@ -2038,17 +2074,17 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg17 = rPCMessage;
-							RPC_KeepAlive(msg17);
+							RPCMessage msg18 = rPCMessage;
+							RPC_KeepAlive(msg18);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex17)
+					catch (Exception ex18)
 					{
-						Debug.LogException(ex17);
+						Debug.LogException(ex18);
 						player.Kick("RPC Error in RPC_KeepAlive");
 					}
 				}
@@ -2089,17 +2125,17 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg18 = rPCMessage;
-							RPC_LootPlayer(msg18);
+							RPCMessage msg19 = rPCMessage;
+							RPC_LootPlayer(msg19);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex18)
+					catch (Exception ex19)
 					{
-						Debug.LogException(ex18);
+						Debug.LogException(ex19);
 						player.Kick("RPC Error in RPC_LootPlayer");
 					}
 				}
@@ -2126,17 +2162,17 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 						rPCMessage.connection = msg.connection;
 						rPCMessage.player = player;
 						rPCMessage.read = msg.read;
-						RPCMessage msg19 = rPCMessage;
-						RPC_StartClimb(msg19);
+						RPCMessage msg20 = rPCMessage;
+						RPC_StartClimb(msg20);
 					}
 					finally
 					{
 						((IDisposable)val3)?.Dispose();
 					}
 				}
-				catch (Exception ex19)
+				catch (Exception ex20)
 				{
-					Debug.LogException(ex19);
+					Debug.LogException(ex20);
 					player.Kick("RPC Error in RPC_StartClimb");
 				}
 				finally
@@ -2180,17 +2216,17 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg20 = rPCMessage;
-							Server_AddMarker(msg20);
+							RPCMessage msg21 = rPCMessage;
+							Server_AddMarker(msg21);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex20)
+					catch (Exception ex21)
 					{
-						Debug.LogException(ex20);
+						Debug.LogException(ex21);
 						player.Kick("RPC Error in Server_AddMarker");
 					}
 				}
@@ -2235,17 +2271,17 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg21 = rPCMessage;
-							Server_AddPing(msg21);
+							RPCMessage msg22 = rPCMessage;
+							Server_AddPing(msg22);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex21)
+					catch (Exception ex22)
 					{
-						Debug.LogException(ex21);
+						Debug.LogException(ex22);
 						player.Kick("RPC Error in Server_AddPing");
 					}
 				}
@@ -2293,9 +2329,9 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex22)
+					catch (Exception ex23)
 					{
-						Debug.LogException(ex22);
+						Debug.LogException(ex23);
 						player.Kick("RPC Error in Server_CancelGesture");
 					}
 				}
@@ -2340,17 +2376,17 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg22 = rPCMessage;
-							Server_ClearMapMarkers(msg22);
+							RPCMessage msg23 = rPCMessage;
+							Server_ClearMapMarkers(msg23);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex23)
+					catch (Exception ex24)
 					{
-						Debug.LogException(ex23);
+						Debug.LogException(ex24);
 						player.Kick("RPC Error in Server_ClearMapMarkers");
 					}
 				}
@@ -2395,17 +2431,17 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg23 = rPCMessage;
-							Server_RemovePing(msg23);
+							RPCMessage msg24 = rPCMessage;
+							Server_RemovePing(msg24);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex24)
+					catch (Exception ex25)
 					{
-						Debug.LogException(ex24);
+						Debug.LogException(ex25);
 						player.Kick("RPC Error in Server_RemovePing");
 					}
 				}
@@ -2450,17 +2486,17 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg24 = rPCMessage;
-							Server_RemovePointOfInterest(msg24);
+							RPCMessage msg25 = rPCMessage;
+							Server_RemovePointOfInterest(msg25);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex25)
+					catch (Exception ex26)
 					{
-						Debug.LogException(ex25);
+						Debug.LogException(ex26);
 						player.Kick("RPC Error in Server_RemovePointOfInterest");
 					}
 				}
@@ -2505,17 +2541,17 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg25 = rPCMessage;
-							Server_RequestMarkers(msg25);
+							RPCMessage msg26 = rPCMessage;
+							Server_RequestMarkers(msg26);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex26)
+					catch (Exception ex27)
 					{
-						Debug.LogException(ex26);
+						Debug.LogException(ex27);
 						player.Kick("RPC Error in Server_RequestMarkers");
 					}
 				}
@@ -2560,17 +2596,17 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg26 = rPCMessage;
-							Server_StartGesture(msg26);
+							RPCMessage msg27 = rPCMessage;
+							Server_StartGesture(msg27);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex27)
+					catch (Exception ex28)
 					{
-						Debug.LogException(ex27);
+						Debug.LogException(ex28);
 						player.Kick("RPC Error in Server_StartGesture");
 					}
 				}
@@ -2615,17 +2651,17 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg27 = rPCMessage;
-							Server_UpdateMarker(msg27);
+							RPCMessage msg28 = rPCMessage;
+							Server_UpdateMarker(msg28);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex28)
+					catch (Exception ex29)
 					{
-						Debug.LogException(ex28);
+						Debug.LogException(ex29);
 						player.Kick("RPC Error in Server_UpdateMarker");
 					}
 				}
@@ -2666,17 +2702,17 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg28 = rPCMessage;
-							ServerRequestEmojiData(msg28);
+							RPCMessage msg29 = rPCMessage;
+							ServerRequestEmojiData(msg29);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex29)
+					catch (Exception ex30)
 					{
-						Debug.LogException(ex29);
+						Debug.LogException(ex30);
 						player.Kick("RPC Error in ServerRequestEmojiData");
 					}
 				}
@@ -2703,17 +2739,17 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 						rPCMessage.connection = msg.connection;
 						rPCMessage.player = player;
 						rPCMessage.read = msg.read;
-						RPCMessage msg29 = rPCMessage;
-						ServerRPC_UnderwearChange(msg29);
+						RPCMessage msg30 = rPCMessage;
+						ServerRPC_UnderwearChange(msg30);
 					}
 					finally
 					{
 						((IDisposable)val3)?.Dispose();
 					}
 				}
-				catch (Exception ex30)
+				catch (Exception ex31)
 				{
-					Debug.LogException(ex30);
+					Debug.LogException(ex31);
 					player.Kick("RPC Error in ServerRPC_UnderwearChange");
 				}
 				finally
@@ -2739,18 +2775,73 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 						rPCMessage.connection = msg.connection;
 						rPCMessage.player = player;
 						rPCMessage.read = msg.read;
-						RPCMessage msg30 = rPCMessage;
-						SV_Drink(msg30);
+						RPCMessage msg31 = rPCMessage;
+						SV_Drink(msg31);
 					}
 					finally
 					{
 						((IDisposable)val3)?.Dispose();
 					}
 				}
-				catch (Exception ex31)
+				catch (Exception ex32)
 				{
-					Debug.LogException(ex31);
+					Debug.LogException(ex32);
 					player.Kick("RPC Error in SV_Drink");
+				}
+				finally
+				{
+					((IDisposable)val2)?.Dispose();
+				}
+				return true;
+			}
+			if (rpc == 1361044246 && (Object)(object)player != (Object)null)
+			{
+				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
+				if (Global.developer > 2)
+				{
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - UpdateSpectatePositionFromDebugCamera "));
+				}
+				TimeWarning val2 = TimeWarning.New("UpdateSpectatePositionFromDebugCamera", 0);
+				try
+				{
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					try
+					{
+						if (!RPC_Server.CallsPerSecond.Test(1361044246u, "UpdateSpectatePositionFromDebugCamera", this, player, 10uL))
+						{
+							return true;
+						}
+						if (!RPC_Server.FromOwner.Test(1361044246u, "UpdateSpectatePositionFromDebugCamera", this, player))
+						{
+							return true;
+						}
+					}
+					finally
+					{
+						((IDisposable)val3)?.Dispose();
+					}
+					try
+					{
+						val3 = TimeWarning.New("Call", 0);
+						try
+						{
+							RPCMessage rPCMessage = default(RPCMessage);
+							rPCMessage.connection = msg.connection;
+							rPCMessage.player = player;
+							rPCMessage.read = msg.read;
+							RPCMessage msg32 = rPCMessage;
+							UpdateSpectatePositionFromDebugCamera(msg32);
+						}
+						finally
+						{
+							((IDisposable)val3)?.Dispose();
+						}
+					}
+					catch (Exception ex33)
+					{
+						Debug.LogException(ex33);
+						player.Kick("RPC Error in UpdateSpectatePositionFromDebugCamera");
+					}
 				}
 				finally
 				{
@@ -7034,6 +7125,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 
 	private void EnterGame()
 	{
+		//IL_0173: Unknown result type (might be due to invalid IL or missing references)
 		SetPlayerFlag(PlayerFlags.ReceivingSnapshot, b: false);
 		bool flag = false;
 		if (IsTransferProtected())
@@ -7082,6 +7174,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			StartDemoRecording();
 		}
 		SendClientPetLink();
+		ClientRPCPlayer<Vector3>(null, this, "ForceViewAnglesTo", ((Component)this).transform.forward);
 	}
 
 	[RPC_Server]
@@ -9490,6 +9583,31 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			{
 				IsBeingSpectated = true;
 			}
+		}
+	}
+
+	[RPC_Server]
+	[RPC_Server.FromOwner]
+	[RPC_Server.CallsPerSecond(10uL)]
+	private void UpdateSpectatePositionFromDebugCamera(RPCMessage msg)
+	{
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
+		if (IsSpectating() && Global.updateNetworkPositionWithDebugCameraWhileSpectating)
+		{
+			Vector3 position = msg.read.Vector3();
+			((Component)this).transform.position = position;
+			SetParent(null);
+		}
+	}
+
+	[RPC_Server]
+	private void NotifyDebugCameraEnded(RPCMessage msg)
+	{
+		if (IsSpectating() && Global.updateNetworkPositionWithDebugCameraWhileSpectating)
+		{
+			UpdateSpectateTarget(spectateFilter);
 		}
 	}
 
