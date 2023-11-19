@@ -12,7 +12,7 @@ public class Elevator : IOEntity, IFlagNotify
 		Down
 	}
 
-	public Transform LiftRoot;
+	public Transform LiftRoot = null;
 
 	public GameObjectRef LiftEntityPrefab;
 
@@ -20,13 +20,13 @@ public class Elevator : IOEntity, IFlagNotify
 
 	public Transform IoEntitySpawnPoint;
 
-	public GameObject FloorBlockerVolume;
+	public GameObject FloorBlockerVolume = null;
 
 	public float LiftSpeedPerMetre = 1f;
 
 	public GameObject[] PoweredObjects;
 
-	public MeshRenderer PoweredMesh;
+	public MeshRenderer PoweredMesh = null;
 
 	[ColorUsage(true, true)]
 	public Color PoweredLightColour;
@@ -36,25 +36,26 @@ public class Elevator : IOEntity, IFlagNotify
 
 	public SkinnedMeshRenderer[] CableRenderers;
 
-	public LODGroup CableLod;
+	public LODGroup CableLod = null;
 
-	public Transform CableRoot;
+	public Transform CableRoot = null;
 
-	public float LiftMoveDelay;
+	public float LiftMoveDelay = 0f;
 
 	protected const Flags TopFloorFlag = Flags.Reserved1;
 
 	public const Flags ElevatorPowered = Flags.Reserved2;
 
-	private ElevatorLift liftEntity;
+	private ElevatorLift liftEntity = null;
 
-	private IOEntity ioEntity;
+	private IOEntity ioEntity = null;
 
 	private int[] previousPowerAmount = new int[2];
 
 	protected virtual bool IsStatic => false;
 
-	public int Floor { get; set; }
+	public int Floor { get; set; } = 0;
+
 
 	protected bool IsTop => HasFlag(Flags.Reserved1);
 
@@ -125,16 +126,16 @@ public class Elevator : IOEntity, IFlagNotify
 
 	protected bool RequestMoveLiftTo(int targetFloor, out float timeToTravel, Elevator fromElevator)
 	{
-		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00df: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ba: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0114: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0131: Unknown result type (might be due to invalid IL or missing references)
 		timeToTravel = 0f;
 		if (IsBusy())
 		{
@@ -201,12 +202,14 @@ public class Elevator : IOEntity, IFlagNotify
 
 	protected virtual Vector3 GetWorldSpaceFloorPosition(int targetFloor)
 	{
-		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
 		int num = Floor - targetFloor;
 		Vector3 val = Vector3.up * ((float)num * FloorHeight);
 		val.y -= 1f;
@@ -229,11 +232,7 @@ public class Elevator : IOEntity, IFlagNotify
 
 	protected virtual bool IsValidFloor(int targetFloor)
 	{
-		if (targetFloor <= Floor)
-		{
-			return targetFloor >= 0;
-		}
-		return false;
+		return targetFloor <= Floor && targetFloor >= 0;
 	}
 
 	private Elevator GetElevatorInDirection(Direction dir)
@@ -252,10 +251,10 @@ public class Elevator : IOEntity, IFlagNotify
 
 	public void UpdateChildEntities(bool isTop)
 	{
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00db: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e6: Unknown result type (might be due to invalid IL or missing references)
 		if (isTop)
 		{
 			if ((Object)(object)liftEntity == (Object)null)
@@ -316,16 +315,19 @@ public class Elevator : IOEntity, IFlagNotify
 
 	protected int LiftPositionToFloor()
 	{
-		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 position = ((Component)liftEntity).transform.position;
 		int result = -1;
 		float num = float.MaxValue;
 		for (int i = 0; i <= Floor; i++)
 		{
-			float num2 = Vector3.Distance(GetWorldSpaceFloorPosition(i), position);
+			Vector3 worldSpaceFloorPosition = GetWorldSpaceFloorPosition(i);
+			float num2 = Vector3.Distance(worldSpaceFloorPosition, position);
 			if (num2 < num)
 			{
 				num = num2;

@@ -21,7 +21,7 @@ public class Candle : BaseCombatEntity, ISplashable, IIgniteable
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SetWantsOn "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SetWantsOn "));
 				}
 				TimeWarning val2 = TimeWarning.New("SetWantsOn", 0);
 				try
@@ -40,7 +40,7 @@ public class Candle : BaseCombatEntity, ISplashable, IIgniteable
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -52,7 +52,7 @@ public class Candle : BaseCombatEntity, ISplashable, IIgniteable
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -120,11 +120,7 @@ public class Candle : BaseCombatEntity, ISplashable, IIgniteable
 
 	public bool WantsSplash(ItemDefinition splashType, int amount)
 	{
-		if (!base.IsDestroyed && amount > 1)
-		{
-			return IsOn();
-		}
-		return false;
+		return !base.IsDestroyed && amount > 1 && IsOn();
 	}
 
 	public int DoSplash(ItemDefinition splashType, int amount)

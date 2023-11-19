@@ -11,9 +11,9 @@ public class EventSchedule : BaseMonoBehaviour
 	[Tooltip("The maximum amount of hours between events")]
 	public float maxmumHoursBetween = 24f;
 
-	private float hoursRemaining;
+	private float hoursRemaining = 0f;
 
-	private long lastRun;
+	private long lastRun = 0L;
 
 	private void OnEnable()
 	{
@@ -59,7 +59,7 @@ public class EventSchedule : BaseMonoBehaviour
 	{
 		if (Object.op_Implicit((Object)(object)TOD_Sky.Instance))
 		{
-			if (lastRun != 0L)
+			if (lastRun != 0)
 			{
 				hoursRemaining -= (float)TOD_Sky.Instance.Cycle.DateTime.Subtract(DateTime.FromBinary(lastRun)).TotalSeconds / 60f / 60f;
 			}

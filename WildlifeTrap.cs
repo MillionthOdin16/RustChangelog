@@ -6,17 +6,17 @@ using UnityEngine;
 
 public class WildlifeTrap : StorageContainer
 {
+	public static class WildlifeTrapFlags
+	{
+		public const Flags Occupied = Flags.Reserved1;
+	}
+
 	[Serializable]
 	public class WildlifeWeight
 	{
 		public TrappableWildlife wildlife;
 
 		public int weight;
-	}
-
-	public static class WildlifeTrapFlags
-	{
-		public const Flags Occupied = Flags.Reserved1;
 	}
 
 	public float tickRate = 60f;
@@ -30,6 +30,16 @@ public class WildlifeTrap : StorageContainer
 	public List<ItemDefinition> ignoreBait;
 
 	public List<WildlifeWeight> targetWildlife;
+
+	public bool HasCatch()
+	{
+		return HasFlag(Flags.Reserved1);
+	}
+
+	public bool IsTrapActive()
+	{
+		return HasFlag(Flags.On);
+	}
 
 	public override void ResetState()
 	{
@@ -82,10 +92,14 @@ public class WildlifeTrap : StorageContainer
 				num2 -= count;
 			}
 			Item item = base.inventory.itemList[num2];
-			if (item != null && !((Object)(object)((Component)item.info).GetComponent<ItemModConsumable>() == (Object)null))
+			if (item != null)
 			{
-				item.UseItem();
-				break;
+				ItemModConsumable component = ((Component)item.info).GetComponent<ItemModConsumable>();
+				if (!((Object)(object)component == (Object)null))
+				{
+					item.UseItem();
+					break;
+				}
 			}
 		}
 	}
@@ -193,15 +207,5 @@ public class WildlifeTrap : StorageContainer
 			}
 		}
 		return null;
-	}
-
-	public bool HasCatch()
-	{
-		return HasFlag(Flags.Reserved1);
-	}
-
-	public bool IsTrapActive()
-	{
-		return HasFlag(Flags.On);
 	}
 }

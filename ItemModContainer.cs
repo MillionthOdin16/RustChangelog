@@ -4,7 +4,7 @@ public class ItemModContainer : ItemMod
 {
 	public int capacity = 6;
 
-	public int maxStackSize;
+	public int maxStackSize = 0;
 
 	[InspectorFlags]
 	public ItemContainer.Flag containerFlags;
@@ -61,9 +61,9 @@ public class ItemModContainer : ItemMod
 	protected virtual bool CanAcceptItem(Item item, int count)
 	{
 		ItemDefinition[] array = validItemWhitelist;
-		for (int i = 0; i < array.Length; i++)
+		foreach (ItemDefinition itemDefinition in array)
 		{
-			if (array[i].itemid == item.info.itemid)
+			if (itemDefinition.itemid == item.info.itemid)
 			{
 				return true;
 			}
@@ -82,10 +82,10 @@ public class ItemModContainer : ItemMod
 
 	public override void CollectedForCrafting(Item item, BasePlayer crafter)
 	{
-		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
 		if (item.contents == null)
 		{
 			return;

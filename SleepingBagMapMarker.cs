@@ -19,11 +19,11 @@ public class SleepingBagMapMarker : MonoBehaviour
 
 	public Tooltip MarkerTooltip;
 
-	public GameObject LockRoot;
+	public GameObject LockRoot = null;
 
 	public TextMeshProUGUI LockTime;
 
-	public GameObject OccupiedRoot;
+	public GameObject OccupiedRoot = null;
 
 	public Image CircleRim;
 
@@ -31,5 +31,5 @@ public class SleepingBagMapMarker : MonoBehaviour
 
 	public RustButton DeleteButton;
 
-	public Image ConfirmSlider;
+	public Image ConfirmSlider = null;
 }

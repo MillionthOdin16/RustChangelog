@@ -65,10 +65,10 @@ public abstract class GroundVehicle : BaseVehicle, IEngineControllerUser, IEntit
 		}
 	}
 
-	public override float GetSpeed()
+	public float GetSpeed()
 	{
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
 		if (IsStationary())
 		{
 			return 0f;
@@ -97,9 +97,9 @@ public abstract class GroundVehicle : BaseVehicle, IEngineControllerUser, IEntit
 
 	public override void ServerInit()
 	{
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
 		base.ServerInit();
 		timeSinceDragModSet = default(TimeSince);
 		timeSinceDragModSet = TimeSince.op_Implicit(float.MaxValue);
@@ -123,8 +123,8 @@ public abstract class GroundVehicle : BaseVehicle, IEngineControllerUser, IEntit
 
 	public override void VehicleFixedUpdate()
 	{
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
 		base.VehicleFixedUpdate();
 		if (base.IsMovingOrOn)
 		{
@@ -165,19 +165,19 @@ public abstract class GroundVehicle : BaseVehicle, IEngineControllerUser, IEntit
 
 	public void OnHurtTriggerOccupant(BaseEntity hurtEntity, DamageType damageType, float damageTotal)
 	{
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
 		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
 		if (!base.isClient && !hurtEntity.IsDestroyed)
 		{
 			Vector3 val = hurtEntity.GetLocalVelocity() - Velocity;
@@ -217,10 +217,10 @@ public abstract class GroundVehicle : BaseVehicle, IEngineControllerUser, IEntit
 
 	private void ProcessCollision(Collision collision)
 	{
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
 		if (base.isClient || collision == null || (Object)(object)collision.gameObject == (Object)null || (Object)(object)collision.gameObject == (Object)null)
 		{
 			return;
@@ -239,7 +239,8 @@ public abstract class GroundVehicle : BaseVehicle, IEngineControllerUser, IEntit
 		{
 			Vector3 impulse = collision.impulse;
 			float forceMagnitude = ((Vector3)(ref impulse)).magnitude / Time.fixedDeltaTime;
-			if (QueueCollisionDamage(baseEntity, forceMagnitude) > 0f)
+			float num = QueueCollisionDamage(baseEntity, forceMagnitude);
+			if (num > 0f)
 			{
 				TryShowCollisionFX(collision, collisionEffect);
 			}
@@ -248,8 +249,9 @@ public abstract class GroundVehicle : BaseVehicle, IEngineControllerUser, IEntit
 
 	public virtual float GetModifiedDrag()
 	{
-		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-		return (1f - Mathf.InverseLerp(0f, dragModDuration, TimeSince.op_Implicit(timeSinceDragModSet))) * dragMod;
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		float num = 1f - Mathf.InverseLerp(0f, dragModDuration, TimeSince.op_Implicit(timeSinceDragModSet));
+		return num * dragMod;
 	}
 
 	public override EntityFuelSystem GetFuelSystem()
@@ -268,8 +270,8 @@ public abstract class GroundVehicle : BaseVehicle, IEngineControllerUser, IEntit
 
 	private void SetTempDrag(float drag, float duration)
 	{
-		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
 		dragMod = Mathf.Clamp(drag, 0f, 1000f);
 		timeSinceDragModSet = TimeSince.op_Implicit(0f);
 		dragModDuration = duration;

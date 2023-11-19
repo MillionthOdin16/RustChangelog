@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Facepunch;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 [CreateAssetMenu(menuName = "Rust/Hair Set")]
 public class HairSet : ScriptableObject
@@ -30,23 +31,30 @@ public class HairSet : ScriptableObject
 		((Component)playerModelHair).gameObject.GetComponentsInChildren<SkinnedMeshRenderer>(true, list);
 		foreach (SkinnedMeshRenderer item in list)
 		{
-			if (!((Object)(object)item.sharedMesh == (Object)null) && !((Object)(object)((Renderer)item).sharedMaterial == (Object)null))
+			if ((Object)(object)item.sharedMesh == (Object)null || (Object)(object)((Renderer)item).sharedMaterial == (Object)null)
 			{
-				string name = ((Object)item.sharedMesh).name;
-				_ = ((Object)((Renderer)item).sharedMaterial).name;
-				if (!((Component)item).gameObject.activeSelf)
-				{
-					((Component)item).gameObject.SetActive(true);
-				}
-				for (int i = 0; i < MeshReplacements.Length; i++)
-				{
-					MeshReplacements[i].Test(name);
-				}
-				if (dye != null && ((Component)item).gameObject.activeSelf)
-				{
-					dye.Apply(dyeCollection, block);
-				}
+				continue;
 			}
+			string name = ((Object)item.sharedMesh).name;
+			string name2 = ((Object)((Renderer)item).sharedMaterial).name;
+			if (!((Component)item).gameObject.activeSelf)
+			{
+				((Component)item).gameObject.SetActive(true);
+			}
+			for (int i = 0; i < MeshReplacements.Length; i++)
+			{
+				Profiler.BeginSample("MeshReplace");
+				if (MeshReplacements[i].Test(name))
+				{
+				}
+				Profiler.EndSample();
+			}
+			Profiler.BeginSample("ApplyHairDye");
+			if (dye != null && ((Component)item).gameObject.activeSelf)
+			{
+				dye.Apply(dyeCollection, block);
+			}
+			Profiler.EndSample();
 		}
 		Pool.FreeList<SkinnedMeshRenderer>(ref list);
 	}

@@ -6,7 +6,8 @@ public class ChristmasTree : StorageContainer
 
 	public override bool ItemFilter(Item item, int targetSlot)
 	{
-		if ((Object)(object)((Component)item.info).GetComponent<ItemModXMasTreeDecoration>() == (Object)null)
+		ItemModXMasTreeDecoration component = ((Component)item.info).GetComponent<ItemModXMasTreeDecoration>();
+		if ((Object)(object)component == (Object)null)
 		{
 			return false;
 		}

@@ -89,11 +89,7 @@ public class StorageMonitor : AppIOEntity
 
 	public override int GetPassthroughAmount(int outputSlot = 0)
 	{
-		if (!IsOn())
-		{
-			return 0;
-		}
-		return GetCurrentEnergy();
+		return IsOn() ? GetCurrentEnergy() : 0;
 	}
 
 	public override void UpdateHasPower(int inputAmount, int inputSlot)
@@ -102,9 +98,9 @@ public class StorageMonitor : AppIOEntity
 		base.UpdateHasPower(inputAmount, inputSlot);
 		if (inputSlot == 0)
 		{
-			bool num = inputAmount >= ConsumptionAmount();
+			bool flag2 = inputAmount >= ConsumptionAmount();
 			double realtimeSinceStartup = TimeEx.realtimeSinceStartup;
-			if (num && !flag && _lastPowerOnUpdate < realtimeSinceStartup - 1.0)
+			if (flag2 && !flag && _lastPowerOnUpdate < realtimeSinceStartup - 1.0)
 			{
 				_lastPowerOnUpdate = realtimeSinceStartup;
 				BroadcastValueChange();

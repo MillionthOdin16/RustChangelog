@@ -8,8 +8,8 @@ public class FXAAPostEffectsBase : MonoBehaviour
 
 	public Material CheckShaderAndCreateMaterial(Shader s, Material m2Create)
 	{
-		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0098: Expected O, but got Unknown
+		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b8: Expected O, but got Unknown
 		if (!Object.op_Implicit((Object)(object)s))
 		{
 			Debug.Log((object)("Missing shader in " + ((object)this).ToString()));
@@ -37,8 +37,8 @@ public class FXAAPostEffectsBase : MonoBehaviour
 
 	private Material CreateMaterial(Shader s, Material m2Create)
 	{
-		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0051: Expected O, but got Unknown
+		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006b: Expected O, but got Unknown
 		if (!Object.op_Implicit((Object)(object)s))
 		{
 			Debug.Log((object)("Missing shader in " + ((object)this).ToString()));
@@ -84,8 +84,8 @@ public class FXAAPostEffectsBase : MonoBehaviour
 
 	public bool CheckSupport(bool needDepth)
 	{
-		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
 		isSupported = true;
 		supportHDRTextures = SystemInfo.SupportsRenderTextureFormat((RenderTextureFormat)2);
 		if (!SystemInfo.supportsImageEffects || !SystemInfo.supportsRenderTextures)
@@ -163,52 +163,55 @@ public class FXAAPostEffectsBase : MonoBehaviour
 				num = 0f;
 				num2 = 1f;
 			}
-			float num3 = 0f + 1f / ((float)((Texture)dest).width * 1f);
-			float num4 = 0f;
-			float num5 = 1f;
+			float num3 = 0f;
+			float num4 = 0f + 1f / ((float)((Texture)dest).width * 1f);
+			float num5 = 0f;
+			float num6 = 1f;
 			GL.Begin(7);
 			GL.TexCoord2(0f, num);
-			GL.Vertex3(0f, num4, 0.1f);
-			GL.TexCoord2(1f, num);
-			GL.Vertex3(num3, num4, 0.1f);
-			GL.TexCoord2(1f, num2);
 			GL.Vertex3(num3, num5, 0.1f);
+			GL.TexCoord2(1f, num);
+			GL.Vertex3(num4, num5, 0.1f);
+			GL.TexCoord2(1f, num2);
+			GL.Vertex3(num4, num6, 0.1f);
 			GL.TexCoord2(0f, num2);
-			GL.Vertex3(0f, num5, 0.1f);
-			float num6 = 1f - 1f / ((float)((Texture)dest).width * 1f);
-			num3 = 1f;
-			num4 = 0f;
-			num5 = 1f;
+			GL.Vertex3(num3, num6, 0.1f);
+			num3 = 1f - 1f / ((float)((Texture)dest).width * 1f);
+			num4 = 1f;
+			num5 = 0f;
+			num6 = 1f;
 			GL.TexCoord2(0f, num);
-			GL.Vertex3(num6, num4, 0.1f);
-			GL.TexCoord2(1f, num);
-			GL.Vertex3(num3, num4, 0.1f);
-			GL.TexCoord2(1f, num2);
 			GL.Vertex3(num3, num5, 0.1f);
+			GL.TexCoord2(1f, num);
+			GL.Vertex3(num4, num5, 0.1f);
+			GL.TexCoord2(1f, num2);
+			GL.Vertex3(num4, num6, 0.1f);
 			GL.TexCoord2(0f, num2);
-			GL.Vertex3(num6, num5, 0.1f);
-			num3 = 1f;
-			num4 = 0f;
-			num5 = 0f + 1f / ((float)((Texture)dest).height * 1f);
+			GL.Vertex3(num3, num6, 0.1f);
+			num3 = 0f;
+			num4 = 1f;
+			num5 = 0f;
+			num6 = 0f + 1f / ((float)((Texture)dest).height * 1f);
 			GL.TexCoord2(0f, num);
-			GL.Vertex3(0f, num4, 0.1f);
-			GL.TexCoord2(1f, num);
-			GL.Vertex3(num3, num4, 0.1f);
-			GL.TexCoord2(1f, num2);
 			GL.Vertex3(num3, num5, 0.1f);
+			GL.TexCoord2(1f, num);
+			GL.Vertex3(num4, num5, 0.1f);
+			GL.TexCoord2(1f, num2);
+			GL.Vertex3(num4, num6, 0.1f);
 			GL.TexCoord2(0f, num2);
-			GL.Vertex3(0f, num5, 0.1f);
-			num3 = 1f;
-			num4 = 1f - 1f / ((float)((Texture)dest).height * 1f);
-			num5 = 1f;
+			GL.Vertex3(num3, num6, 0.1f);
+			num3 = 0f;
+			num4 = 1f;
+			num5 = 1f - 1f / ((float)((Texture)dest).height * 1f);
+			num6 = 1f;
 			GL.TexCoord2(0f, num);
-			GL.Vertex3(0f, num4, 0.1f);
-			GL.TexCoord2(1f, num);
-			GL.Vertex3(num3, num4, 0.1f);
-			GL.TexCoord2(1f, num2);
 			GL.Vertex3(num3, num5, 0.1f);
+			GL.TexCoord2(1f, num);
+			GL.Vertex3(num4, num5, 0.1f);
+			GL.TexCoord2(1f, num2);
+			GL.Vertex3(num4, num6, 0.1f);
 			GL.TexCoord2(0f, num2);
-			GL.Vertex3(0f, num5, 0.1f);
+			GL.Vertex3(num3, num6, 0.1f);
 			GL.End();
 		}
 		GL.PopMatrix();

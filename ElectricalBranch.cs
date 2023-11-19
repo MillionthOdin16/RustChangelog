@@ -10,7 +10,7 @@ public class ElectricalBranch : IOEntity
 
 	public GameObjectRef branchPanelPrefab;
 
-	private float nextChangeTime;
+	private float nextChangeTime = 0f;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -22,7 +22,7 @@ public class ElectricalBranch : IOEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SetBranchOffPower "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SetBranchOffPower "));
 				}
 				TimeWarning val2 = TimeWarning.New("SetBranchOffPower", 0);
 				try
@@ -41,7 +41,7 @@ public class ElectricalBranch : IOEntity
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -53,7 +53,7 @@ public class ElectricalBranch : IOEntity
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)

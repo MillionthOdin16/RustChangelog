@@ -19,8 +19,8 @@ public class ToolsHUDUI : MonoBehaviour
 
 	private void Init()
 	{
-		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0078: Expected O, but got Unknown
+		//IL_0097: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009e: Expected O, but got Unknown
 		if (initialised)
 		{
 			return;
@@ -32,7 +32,8 @@ public class ToolsHUDUI : MonoBehaviour
 		}
 		initialised = true;
 		Transform[] componentsInChildren = ((Component)instance).GetComponentsInChildren<Transform>();
-		foreach (Transform val in componentsInChildren)
+		Transform[] array = componentsInChildren;
+		foreach (Transform val in array)
 		{
 			string name = ((Object)val).name;
 			if (!name.ToLower().StartsWith("gameui.hud."))
@@ -53,11 +54,11 @@ public class ToolsHUDUI : MonoBehaviour
 
 	private void AddToggleObj(string trName, string labelText)
 	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
-		GameObject obj = Object.Instantiate<GameObject>(prefab, Vector3.zero, Quaternion.identity, parent);
-		((Object)obj).name = trName;
-		ToggleHUDLayer component = obj.GetComponent<ToggleHUDLayer>();
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		GameObject val = Object.Instantiate<GameObject>(prefab, Vector3.zero, Quaternion.identity, parent);
+		((Object)val).name = trName;
+		ToggleHUDLayer component = val.GetComponent<ToggleHUDLayer>();
 		component.hudComponentName = trName;
 		((TMP_Text)component.textControl).text = labelText;
 	}
@@ -65,18 +66,20 @@ public class ToolsHUDUI : MonoBehaviour
 	public void SelectAll()
 	{
 		Toggle[] componentsInChildren = ((Component)parent).GetComponentsInChildren<Toggle>();
-		for (int i = 0; i < componentsInChildren.Length; i++)
+		Toggle[] array = componentsInChildren;
+		foreach (Toggle val in array)
 		{
-			componentsInChildren[i].isOn = true;
+			val.isOn = true;
 		}
 	}
 
 	public void SelectNone()
 	{
 		Toggle[] componentsInChildren = ((Component)parent).GetComponentsInChildren<Toggle>();
-		for (int i = 0; i < componentsInChildren.Length; i++)
+		Toggle[] array = componentsInChildren;
+		foreach (Toggle val in array)
 		{
-			componentsInChildren[i].isOn = false;
+			val.isOn = false;
 		}
 	}
 }

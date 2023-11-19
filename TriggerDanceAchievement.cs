@@ -46,8 +46,8 @@ public class TriggerDanceAchievement : TriggerBase
 
 	public void NotifyDanceStarted()
 	{
-		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0104: Unknown result type (might be due to invalid IL or missing references)
 		if (entityContents == null)
 		{
 			return;

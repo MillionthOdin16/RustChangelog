@@ -2,7 +2,7 @@ using System;
 
 public class NPCPlayerCorpse : PlayerCorpse
 {
-	private bool lootEnabled;
+	private bool lootEnabled = false;
 
 	public override float GetRemovalTime()
 	{

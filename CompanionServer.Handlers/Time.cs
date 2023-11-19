@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace CompanionServer.Handlers;
 
-public class Time : BasePlayerHandler<AppEmpty>
+public class Time : BaseHandler<AppEmpty>
 {
 	public override void Execute()
 	{

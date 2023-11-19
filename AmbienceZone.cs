@@ -6,9 +6,9 @@ public class AmbienceZone : TriggerBase, IClientComponentEx
 
 	public AmbienceDefinitionList stings;
 
-	public float priority;
+	public float priority = 0f;
 
-	public bool overrideCrossfadeTime;
+	public bool overrideCrossfadeTime = false;
 
 	public float crossfadeTime = 1f;
 

@@ -34,7 +34,7 @@ public class SmartSwitch : AppIOEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ToggleSwitch "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ToggleSwitch "));
 				}
 				TimeWarning val2 = TimeWarning.New("ToggleSwitch", 0);
 				try
@@ -57,7 +57,7 @@ public class SmartSwitch : AppIOEntity
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -69,7 +69,7 @@ public class SmartSwitch : AppIOEntity
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -105,11 +105,7 @@ public class SmartSwitch : AppIOEntity
 
 	public override int ConsumptionAmount()
 	{
-		if (!IsOn())
-		{
-			return 0;
-		}
-		return 1;
+		return IsOn() ? 1 : 0;
 	}
 
 	public override void ResetIOState()
@@ -119,11 +115,7 @@ public class SmartSwitch : AppIOEntity
 
 	public override int GetPassthroughAmount(int outputSlot = 0)
 	{
-		if (!IsOn())
-		{
-			return 0;
-		}
-		return GetCurrentEnergy();
+		return IsOn() ? GetCurrentEnergy() : 0;
 	}
 
 	public override void IOStateChanged(int inputAmount, int inputSlot)
@@ -170,10 +162,6 @@ public class SmartSwitch : AppIOEntity
 
 	private static bool PlayerCanToggle(BasePlayer player)
 	{
-		if ((Object)(object)player != (Object)null)
-		{
-			return player.CanBuild();
-		}
-		return false;
+		return (Object)(object)player != (Object)null && player.CanBuild();
 	}
 }

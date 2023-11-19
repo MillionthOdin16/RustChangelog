@@ -19,9 +19,9 @@ public class WaterBody : MonoBehaviour
 
 	public Collider[] Triggers;
 
-	public bool IsOcean;
+	public bool IsOcean = false;
 
-	public FishingTag FishingType;
+	public FishingTag FishingType = (FishingTag)0;
 
 	public Transform Transform { get; private set; }
 
@@ -42,9 +42,9 @@ public class WaterBody : MonoBehaviour
 
 	public void OnOceanLevelChanged(float newLevel)
 	{
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
 		if (!IsOcean || Triggers == null)
 		{
 			return;

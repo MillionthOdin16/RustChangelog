@@ -7,9 +7,13 @@ public class EventScheduleWipeOffset : EventSchedule
 
 	public override void RunSchedule()
 	{
-		if (!((Object)(object)WipeTimer.serverinstance == (Object)null) && !(WipeTimer.serverinstance.GetTimeSpanUntilWipe().TotalHours > (double)hoursBeforeWipeRealtime))
+		if (!((Object)(object)WipeTimer.serverinstance == (Object)null))
 		{
-			base.RunSchedule();
+			double totalHours = WipeTimer.serverinstance.GetTimeSpanUntilWipe().TotalHours;
+			if (!(totalHours > (double)hoursBeforeWipeRealtime))
+			{
+				base.RunSchedule();
+			}
 		}
 	}
 }

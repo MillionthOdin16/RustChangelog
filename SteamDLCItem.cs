@@ -9,7 +9,7 @@ public class SteamDLCItem : ScriptableObject
 
 	public int dlcAppID;
 
-	public bool bypassLicenseCheck;
+	public bool bypassLicenseCheck = false;
 
 	public bool HasLicense(ulong steamid)
 	{
@@ -28,11 +28,7 @@ public class SteamDLCItem : ScriptableObject
 	{
 		if (player.isServer)
 		{
-			if (!HasLicense(player.userID))
-			{
-				return player.userID < 10000000;
-			}
-			return true;
+			return HasLicense(player.userID) || player.userID < 10000000;
 		}
 		return false;
 	}
