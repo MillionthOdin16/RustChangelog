@@ -475,7 +475,7 @@ public static class EACServer
 			}
 			RegisterClientOptions val = default(RegisterClientOptions);
 			((RegisterClientOptions)(ref val)).ClientHandle = intPtr;
-			((RegisterClientOptions)(ref val)).AccountId = Utf8String.op_Implicit(connection.userid.ToString());
+			((RegisterClientOptions)(ref val)).UserId = ProductUserId.FromString(Utf8String.op_Implicit(connection.anticheatId));
 			((RegisterClientOptions)(ref val)).IpAddress = Utf8String.op_Implicit(connection.IPAddressWithoutPort());
 			((RegisterClientOptions)(ref val)).ClientType = (AntiCheatCommonClientType)(connection.IsDevelopmentBuild() ? 1 : 0);
 			((RegisterClientOptions)(ref val)).ClientPlatform = (AntiCheatCommonClientPlatform)((connection.os == "windows") ? 1 : ((connection.os == "linux") ? 3 : ((connection.os == "mac") ? 2 : 0)));

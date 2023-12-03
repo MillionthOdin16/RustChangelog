@@ -107,7 +107,7 @@ public class BoomBox : EntityComponent<BaseEntity>, INotifyLOD
 
 	public void ServerTogglePlay(bool play)
 	{
-		if (!((Object)(object)base.baseEntity == (Object)null))
+		if (!((Object)(object)base.baseEntity == (Object)null) && HasFlag(BaseEntity.Flags.On) != play)
 		{
 			SetFlag(BaseEntity.Flags.On, play);
 			if (base.baseEntity is IOEntity iOEntity)
