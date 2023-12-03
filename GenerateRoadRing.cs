@@ -43,16 +43,16 @@ public class GenerateRoadRing : ProceduralComponent
 
 	private const int MaxDepth = 250000;
 
-	public int MinWorldSize = 0;
+	public int MinWorldSize;
 
 	public override void Process(uint seed)
 	{
-		//IL_0387: Unknown result type (might be due to invalid IL or missing references)
-		//IL_038c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_08c7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_09ea: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0a0e: Unknown result type (might be due to invalid IL or missing references)
-		if (World.Networked || World.Size < MinWorldSize)
+		//IL_0339: Unknown result type (might be due to invalid IL or missing references)
+		//IL_033e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0770: Unknown result type (might be due to invalid IL or missing references)
+		//IL_087d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_08a0: Unknown result type (might be due to invalid IL or missing references)
+		if (World.Networked || World.Size < MinWorldSize || !World.Config.MainRoads)
 		{
 			return;
 		}
@@ -258,8 +258,7 @@ public class GenerateRoadRing : ProceduralComponent
 		}
 		if (list2.Count >= 2)
 		{
-			int count = TerrainMeta.Path.Roads.Count;
-			PathList pathList = new PathList("Road " + count, list2.ToArray());
+			PathList pathList = new PathList("Road " + TerrainMeta.Path.Roads.Count, list2.ToArray());
 			pathList.Spline = true;
 			pathList.Width = 12f;
 			pathList.InnerPadding = 1f;

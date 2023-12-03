@@ -204,8 +204,7 @@ public class EngineStorage : StorageContainer
 		}
 		for (int j = 0; j < base.inventory.capacity; j++)
 		{
-			Item slot2 = base.inventory.GetSlot(j);
-			if (slot2 == null && allEngineItems.TryGetItem(tier, slotTypes[j], out var output))
+			if (base.inventory.GetSlot(j) == null && allEngineItems.TryGetItem(tier, slotTypes[j], out var output))
 			{
 				ItemDefinition component = ((Component)output).GetComponent<ItemDefinition>();
 				Item item = ItemManager.Create(component, 1, 0uL);

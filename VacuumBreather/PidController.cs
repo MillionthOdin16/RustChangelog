@@ -92,7 +92,6 @@ public class PidController
 		_integral += error * deltaTime;
 		_integral = Mathf.Clamp(_integral, 0f - _integralMax, _integralMax);
 		float num = delta / deltaTime;
-		float num2 = Kp * error + Ki * _integral + Kd * num;
-		return Mathf.Clamp(num2, -1000f, 1000f);
+		return Mathf.Clamp(Kp * error + Ki * _integral + Kd * num, -1000f, 1000f);
 	}
 }

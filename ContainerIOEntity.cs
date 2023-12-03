@@ -20,15 +20,15 @@ public class ContainerIOEntity : IOEntity, IItemContainerEntity, IIdealSlotEntit
 
 	public Phrase panelTitle = new Phrase("loot", "Loot");
 
-	public bool needsBuildingPrivilegeToUse = false;
+	public bool needsBuildingPrivilegeToUse;
 
 	public bool isLootable = true;
 
-	public bool dropsLoot = false;
+	public bool dropsLoot;
 
-	public bool dropFloats = false;
+	public bool dropFloats;
 
-	public bool onlyOneUser = false;
+	public bool onlyOneUser;
 
 	public SoundDefinition openSound;
 
@@ -58,7 +58,7 @@ public class ContainerIOEntity : IOEntity, IItemContainerEntity, IIdealSlotEntit
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_OpenLoot "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_OpenLoot "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_OpenLoot", 0);
 				try
@@ -77,7 +77,7 @@ public class ContainerIOEntity : IOEntity, IItemContainerEntity, IIdealSlotEntit
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -89,7 +89,7 @@ public class ContainerIOEntity : IOEntity, IItemContainerEntity, IIdealSlotEntit
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -114,7 +114,11 @@ public class ContainerIOEntity : IOEntity, IItemContainerEntity, IIdealSlotEntit
 
 	public override bool CanPickup(BasePlayer player)
 	{
-		return (!pickup.requireEmptyInv || inventory == null || inventory.itemList.Count == 0) && base.CanPickup(player);
+		if (!pickup.requireEmptyInv || inventory == null || inventory.itemList.Count == 0)
+		{
+			return base.CanPickup(player);
+		}
+		return false;
 	}
 
 	public override void ServerInit()
@@ -219,9 +223,9 @@ public class ContainerIOEntity : IOEntity, IItemContainerEntity, IIdealSlotEntit
 		{
 			return false;
 		}
-		if (onlyOneUser && IsOpen())
+		if ((onlyOneUser && IsOpen()) || IsTransferring())
 		{
-			player.ChatMessage("Already in use");
+			player.ShowToast(GameTip.Styles.Red_Normal, StorageContainer.LockedMessage);
 			return false;
 		}
 		if (panelToOpen == "")
@@ -258,10 +262,8 @@ public class ContainerIOEntity : IOEntity, IItemContainerEntity, IIdealSlotEntit
 
 	public virtual ItemContainerId GetIdealContainer(BasePlayer player, Item item, bool altMove)
 	{
-		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
 		return default(ItemContainerId);
 	}
 
@@ -275,7 +277,11 @@ public class ContainerIOEntity : IOEntity, IItemContainerEntity, IIdealSlotEntit
 		{
 			return true;
 		}
-		return !onlyOneUser || !IsOpen();
+		if (onlyOneUser)
+		{
+			return !IsOpen();
+		}
+		return true;
 	}
 
 	public override void Load(LoadInfo info)

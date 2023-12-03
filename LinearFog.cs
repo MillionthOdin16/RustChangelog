@@ -7,17 +7,17 @@ public class LinearFog : MonoBehaviour
 
 	public Color fogColor = Color.white;
 
-	public float fogStart = 0f;
+	public float fogStart;
 
 	public float fogRange = 1f;
 
 	public float fogDensity = 1f;
 
-	public bool fogSky = false;
+	public bool fogSky;
 
 	private void OnRenderImage(RenderTexture source, RenderTexture destination)
 	{
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
 		if (!Object.op_Implicit((Object)(object)fogMaterial))
 		{
 			Graphics.Blit((Texture)(object)source, destination);

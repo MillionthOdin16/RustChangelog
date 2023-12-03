@@ -6,9 +6,9 @@ public class ForceChildSingletonSetup : MonoBehaviour
 	private void Awake()
 	{
 		SingletonComponent[] componentsInChildren = ((Component)this).GetComponentsInChildren<SingletonComponent>(true);
-		foreach (SingletonComponent val in componentsInChildren)
+		for (int i = 0; i < componentsInChildren.Length; i++)
 		{
-			val.SingletonSetup();
+			componentsInChildren[i].SingletonSetup();
 		}
 	}
 }

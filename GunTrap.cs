@@ -4,13 +4,32 @@ using Facepunch;
 using Network;
 using Rust;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 public class GunTrap : StorageContainer
 {
 	public static class GunTrapFlags
 	{
 		public const Flags Triggered = Flags.Reserved1;
+	}
+
+	public class GunTrapScanWorkQueue : PersistentObjectWorkQueue<GunTrap>
+	{
+		protected override void RunJob(GunTrap entity)
+		{
+			if (((PersistentObjectWorkQueue<GunTrap>)this).ShouldAdd(entity))
+			{
+				entity.TriggerCheck();
+			}
+		}
+
+		protected override bool ShouldAdd(GunTrap entity)
+		{
+			if (base.ShouldAdd(entity))
+			{
+				return entity.IsValid();
+			}
+			return false;
+		}
 	}
 
 	public GameObjectRef gun_fire_effect;
@@ -32,6 +51,17 @@ public class GunTrap : StorageContainer
 	public ItemDefinition ammoType;
 
 	public TargetTrigger trigger;
+
+	private float triggerCooldown;
+
+	private BuildingPrivlidge _cachedTc;
+
+	private float _cacheTimeout;
+
+	[ServerVar(Help = "How many milliseconds to spend on target scanning per frame")]
+	public static float gun_trap_budget_ms = 0.5f;
+
+	public static GunTrapScanWorkQueue updateGunTrapWorkQueue = new GunTrapScanWorkQueue();
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -66,8 +96,8 @@ public class GunTrap : StorageContainer
 
 	public void FireWeapon()
 	{
-		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
 		if (UseAmmo())
 		{
 			Effect.server.Run(gun_fire_effect.resourcePath, this, StringPool.Get(((Object)((Component)muzzlePos).gameObject).name), Vector3.zero, Vector3.zero);
@@ -80,45 +110,42 @@ public class GunTrap : StorageContainer
 
 	public void FireBullet()
 	{
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
 		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ac: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0109: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0147: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0155: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ef: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0164: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0169: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0123: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0130: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0135: Unknown result type (might be due to invalid IL or missing references)
 		float damageAmount = 10f;
 		Vector3 val = ((Component)muzzlePos).transform.position - muzzlePos.forward * 0.25f;
-		Vector3 forward = ((Component)muzzlePos).transform.forward;
-		Vector3 modifiedAimConeDirection = AimConeUtil.GetModifiedAimConeDirection(aimCone, forward);
-		Vector3 arg = val + modifiedAimConeDirection * 300f;
+		Vector3 val2 = AimConeUtil.GetModifiedAimConeDirection(inputVec: ((Component)muzzlePos).transform.forward, aimCone: aimCone);
+		Vector3 arg = val + val2 * 300f;
 		ClientRPC<Vector3>(null, "CLIENT_FireGun", arg);
 		List<RaycastHit> list = Pool.GetList<RaycastHit>();
 		int layerMask = 1220225793;
-		GamePhysics.TraceAll(new Ray(val, modifiedAimConeDirection), 0.1f, list, 300f, layerMask, (QueryTriggerInteraction)0);
+		GamePhysics.TraceAll(new Ray(val, val2), 0.1f, list, 300f, layerMask, (QueryTriggerInteraction)0);
 		for (int i = 0; i < list.Count; i++)
 		{
 			RaycastHit hit = list[i];
@@ -127,18 +154,18 @@ public class GunTrap : StorageContainer
 			{
 				continue;
 			}
-			BaseCombatEntity baseCombatEntity = entity as BaseCombatEntity;
-			if ((Object)(object)baseCombatEntity != (Object)null)
+			if ((Object)(object)(entity as BaseCombatEntity) != (Object)null)
 			{
 				HitInfo info = new HitInfo(this, entity, DamageType.Bullet, damageAmount, ((RaycastHit)(ref hit)).point);
 				entity.OnAttacked(info);
 				if (entity is BasePlayer || entity is BaseNpc)
 				{
-					HitInfo hitInfo = new HitInfo();
-					hitInfo.HitPositionWorld = ((RaycastHit)(ref hit)).point;
-					hitInfo.HitNormalWorld = -((RaycastHit)(ref hit)).normal;
-					hitInfo.HitMaterial = StringPool.Get("Flesh");
-					Effect.server.ImpactEffect(hitInfo);
+					Effect.server.ImpactEffect(new HitInfo
+					{
+						HitPositionWorld = ((RaycastHit)(ref hit)).point,
+						HitNormalWorld = -((RaycastHit)(ref hit)).normal,
+						HitMaterial = StringPool.Get("Flesh")
+					});
 				}
 			}
 			if (!((Object)(object)entity != (Object)null) || entity.ShouldBlockProjectiles())
@@ -152,68 +179,86 @@ public class GunTrap : StorageContainer
 	public override void ServerInit()
 	{
 		base.ServerInit();
-		((FacepunchBehaviour)this).InvokeRandomized((Action)TriggerCheck, Random.Range(0f, 1f), 0.5f, 0.1f);
+		((PersistentObjectWorkQueue<GunTrap>)updateGunTrapWorkQueue).Add(this);
+	}
+
+	internal override void DoServerDestroy()
+	{
+		base.DoServerDestroy();
+		((PersistentObjectWorkQueue<GunTrap>)updateGunTrapWorkQueue).Remove(this);
 	}
 
 	public void TriggerCheck()
 	{
-		if (CheckTrigger())
+		if (!(triggerCooldown > Time.realtimeSinceStartup) && CheckTrigger())
 		{
 			FireWeapon();
+			triggerCooldown = Time.realtimeSinceStartup + 0.5f;
 		}
+	}
+
+	private BuildingPrivlidge GetCachedTc()
+	{
+		if ((Object)(object)_cachedTc == (Object)null || Time.realtimeSinceStartup > _cacheTimeout)
+		{
+			_cachedTc = GetBuildingPrivilege();
+			_cacheTimeout = Time.realtimeSinceStartup + 3f;
+		}
+		if ((Object)(object)_cachedTc != (Object)null && _cachedTc.IsDestroyed)
+		{
+			_cachedTc = null;
+		}
+		return _cachedTc;
 	}
 
 	public bool CheckTrigger()
 	{
+		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d6: Unknown result type (might be due to invalid IL or missing references)
-		Profiler.BeginSample("GunTrap.CheckTrigger");
-		List<RaycastHit> list = Pool.GetList<RaycastHit>();
+		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0095: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c7: Unknown result type (might be due to invalid IL or missing references)
 		HashSet<BaseEntity> entityContents = trigger.entityContents;
-		bool flag = false;
-		if (entityContents != null)
+		if (entityContents == null || entityContents.Count == 0)
 		{
-			foreach (BaseEntity item in entityContents)
+			return false;
+		}
+		List<RaycastHit> list = Pool.GetList<RaycastHit>();
+		BuildingPrivlidge cachedTc = GetCachedTc();
+		bool flag = false;
+		foreach (BaseEntity item in entityContents)
+		{
+			BasePlayer component = ((Component)item).GetComponent<BasePlayer>();
+			if (component.IsSleeping() || !component.IsAlive() || (!((Object)(object)cachedTc == (Object)null) && cachedTc.IsAuthed(component)))
 			{
-				BasePlayer component = ((Component)item).GetComponent<BasePlayer>();
-				if (component.IsSleeping() || !component.IsAlive() || component.IsBuildingAuthed())
+				continue;
+			}
+			list.Clear();
+			Vector3 position = component.eyes.position;
+			Vector3 val = GetEyePosition() - component.eyes.position;
+			GamePhysics.TraceAll(new Ray(position, ((Vector3)(ref val)).normalized), 0f, list, 9f, 1218519297, (QueryTriggerInteraction)0);
+			for (int i = 0; i < list.Count; i++)
+			{
+				BaseEntity entity = list[i].GetEntity();
+				if ((Object)(object)entity != (Object)null && ((Object)(object)entity == (Object)(object)this || entity.EqualNetID((BaseNetworkable)this)))
 				{
-					continue;
+					flag = true;
+					break;
 				}
-				list.Clear();
-				Vector3 position = component.eyes.position;
-				Vector3 val = GetEyePosition() - component.eyes.position;
-				GamePhysics.TraceAll(new Ray(position, ((Vector3)(ref val)).normalized), 0f, list, 9f, 1218519297, (QueryTriggerInteraction)0);
-				for (int i = 0; i < list.Count; i++)
-				{
-					RaycastHit hit = list[i];
-					BaseEntity entity = hit.GetEntity();
-					if ((Object)(object)entity != (Object)null && ((Object)(object)entity == (Object)(object)this || entity.EqualNetID((BaseNetworkable)this)))
-					{
-						flag = true;
-						break;
-					}
-					if (!((Object)(object)entity != (Object)null) || entity.ShouldBlockProjectiles())
-					{
-						break;
-					}
-				}
-				if (flag)
+				if (!((Object)(object)entity != (Object)null) || entity.ShouldBlockProjectiles())
 				{
 					break;
 				}
 			}
+			if (flag)
+			{
+				break;
+			}
 		}
 		Pool.FreeList<RaycastHit>(ref list);
-		Profiler.EndSample();
 		return flag;
 	}
 
@@ -224,9 +269,7 @@ public class GunTrap : StorageContainer
 
 	public Vector3 GetEyePosition()
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
 		return eyeTransform.position;
 	}
 }

@@ -16,11 +16,11 @@ public class EngineItemInformationPanel : ItemInformationPanel
 	private Phrase high;
 
 	[SerializeField]
-	private GameObject accelerationRoot = null;
+	private GameObject accelerationRoot;
 
 	[SerializeField]
-	private GameObject topSpeedRoot = null;
+	private GameObject topSpeedRoot;
 
 	[SerializeField]
-	private GameObject fuelEconomyRoot = null;
+	private GameObject fuelEconomyRoot;
 }

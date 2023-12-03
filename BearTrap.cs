@@ -11,7 +11,7 @@ public class BearTrap : BaseTrap
 {
 	protected Animator animator;
 
-	private GameObject hurtTarget = null;
+	private GameObject hurtTarget;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -23,7 +23,7 @@ public class BearTrap : BaseTrap
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_Arm "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_Arm "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_Arm", 0);
 				try
@@ -42,7 +42,7 @@ public class BearTrap : BaseTrap
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -54,7 +54,7 @@ public class BearTrap : BaseTrap
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -90,7 +90,11 @@ public class BearTrap : BaseTrap
 
 	public override bool CanPickup(BasePlayer player)
 	{
-		return base.CanPickup(player) && !Armed() && player.CanBuild();
+		if (base.CanPickup(player) && !Armed())
+		{
+			return player.CanBuild();
+		}
+		return false;
 	}
 
 	public override void ServerInit()
@@ -122,7 +126,7 @@ public class BearTrap : BaseTrap
 
 	public void DelayedFire()
 	{
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
 		if (Object.op_Implicit((Object)(object)hurtTarget))
 		{
 			BaseEntity baseEntity = hurtTarget.ToBaseEntity();
@@ -141,7 +145,7 @@ public class BearTrap : BaseTrap
 
 	public void RadialResetCorpses(float duration)
 	{
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
 		List<BaseCorpse> list = Pool.GetList<BaseCorpse>();
 		Vis.Entities(((Component)this).transform.position, 5f, list, 512, (QueryTriggerInteraction)2);
 		foreach (BaseCorpse item in list)

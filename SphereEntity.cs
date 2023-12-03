@@ -38,7 +38,7 @@ public class SphereEntity : BaseEntity
 
 	protected void UpdateScale()
 	{
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
 		((Component)this).transform.localScale = new Vector3(currentRadius, currentRadius, currentRadius);
 	}
 

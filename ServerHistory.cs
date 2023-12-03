@@ -6,5 +6,5 @@ public class ServerHistory : MonoBehaviour
 
 	public GameObject panelList;
 
-	internal IServerQuery Request = null;
+	internal IServerQuery Request;
 }

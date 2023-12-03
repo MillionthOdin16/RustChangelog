@@ -11,7 +11,7 @@ public class DungeonBaseLandmarkInfo : LandmarkInfo
 	{
 		get
 		{
-			//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0033: Unknown result type (might be due to invalid IL or missing references)
 			if (layer.HasValue)
 			{
 				return layer.Value;

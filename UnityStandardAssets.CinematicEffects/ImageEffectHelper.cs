@@ -4,7 +4,17 @@ namespace UnityStandardAssets.CinematicEffects;
 
 public static class ImageEffectHelper
 {
-	public static bool supportsDX11 => SystemInfo.graphicsShaderLevel >= 50 && SystemInfo.supportsComputeShaders;
+	public static bool supportsDX11
+	{
+		get
+		{
+			if (SystemInfo.graphicsShaderLevel >= 50)
+			{
+				return SystemInfo.supportsComputeShaders;
+			}
+			return false;
+		}
+	}
 
 	public static bool IsSupported(Shader s, bool needDepth, bool needHdr, MonoBehaviour effect)
 	{
@@ -33,14 +43,16 @@ public static class ImageEffectHelper
 
 	public static Material CheckShaderAndCreateMaterial(Shader s)
 	{
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0025: Expected O, but got Unknown
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0022: Expected O, but got Unknown
 		if ((Object)(object)s == (Object)null || !s.isSupported)
 		{
 			return null;
 		}
-		Material val = new Material(s);
-		((Object)val).hideFlags = (HideFlags)52;
-		return val;
+		return new Material(s)
+		{
+			hideFlags = (HideFlags)52
+		};
 	}
 }

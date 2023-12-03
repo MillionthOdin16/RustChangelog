@@ -8,9 +8,9 @@ public class PlayerInventoryProperties : ScriptableObject
 	[Serializable]
 	public class ItemAmountSkinned : ItemAmount
 	{
-		public ulong skinOverride = 0uL;
+		public ulong skinOverride;
 
-		public bool blueprint = false;
+		public bool blueprint;
 	}
 
 	public string niceName;
@@ -25,7 +25,7 @@ public class PlayerInventoryProperties : ScriptableObject
 
 	public PlayerInventoryProperties giveBase;
 
-	private static PlayerInventoryProperties[] allInventories = null;
+	private static PlayerInventoryProperties[] allInventories;
 
 	public void GiveToPlayer(BasePlayer player)
 	{

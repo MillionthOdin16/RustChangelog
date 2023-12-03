@@ -16,13 +16,13 @@ public class DungeonBaseLink : MonoBehaviour
 	[Tooltip("If set to a positive number, all segments with the same MaxCountIdentifier are counted towards MaxCountLocal and MaxCountGlobal")]
 	public int MaxCountIdentifier = -1;
 
-	internal DungeonBaseInfo Dungeon = null;
+	internal DungeonBaseInfo Dungeon;
 
 	public MeshRenderer[] MapRenderers;
 
-	private List<DungeonBaseSocket> sockets = null;
+	private List<DungeonBaseSocket> sockets;
 
-	private List<DungeonVolume> volumes = null;
+	private List<DungeonVolume> volumes;
 
 	internal List<DungeonBaseSocket> Sockets
 	{
@@ -50,9 +50,17 @@ public class DungeonBaseLink : MonoBehaviour
 		}
 	}
 
-	protected void Start()
+	protected void Awake()
 	{
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		if (Object.op_Implicit((Object)(object)TerrainMeta.Path))
+		{
+			TerrainMeta.Path.DungeonBaseLinks.Add(this);
+		}
+	}
+
+	internal void Initialize()
+	{
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
 		if (!((Object)(object)TerrainMeta.Path == (Object)null))
 		{
 			Dungeon = TerrainMeta.Path.FindClosest(TerrainMeta.Path.DungeonBaseEntrances, ((Component)this).transform.position);

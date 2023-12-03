@@ -203,8 +203,8 @@ public sealed class Encoder
 			}
 			bool forceTypeHint3 = false;
 			bool flag2 = includePublicPropertiesEnabled;
-			object[] customAttributes2 = item2.GetCustomAttributes(inherit: true);
-			foreach (object o2 in customAttributes2)
+			object[] customAttributes = item2.GetCustomAttributes(inherit: true);
+			foreach (object o2 in customAttributes)
 			{
 				if (excludeAttrType.IsInstanceOfType(o2))
 				{
@@ -348,8 +348,7 @@ public sealed class Encoder
 	{
 		builder.Append('"');
 		char[] array = value.ToCharArray();
-		char[] array2 = array;
-		foreach (char c in array2)
+		foreach (char c in array)
 		{
 			switch (c)
 			{

@@ -4,7 +4,6 @@ using ConVar;
 using Facepunch;
 using Rust;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 public class PuzzleReset : FacepunchBehaviour
 {
@@ -14,9 +13,9 @@ public class PuzzleReset : FacepunchBehaviour
 
 	public GameObject[] resetObjects;
 
-	public bool playersBlockReset = false;
+	public bool playersBlockReset;
 
-	public bool CheckSleepingAIZForPlayers = false;
+	public bool CheckSleepingAIZForPlayers;
 
 	public float playerDetectionRadius;
 
@@ -26,18 +25,18 @@ public class PuzzleReset : FacepunchBehaviour
 
 	public float timeBetweenResets = 30f;
 
-	public bool scaleWithServerPopulation = false;
+	public bool scaleWithServerPopulation;
 
 	[HideInInspector]
 	public Vector3[] resetPositions;
 
-	public bool broadcastResetMessage = false;
+	public bool broadcastResetMessage;
 
 	public Phrase resetPhrase;
 
-	private AIInformationZone zone = null;
+	private AIInformationZone zone;
 
-	private float resetTimeElapsed = 0f;
+	private float resetTimeElapsed;
 
 	private float resetTickTime = 10f;
 
@@ -76,10 +75,9 @@ public class PuzzleReset : FacepunchBehaviour
 
 	private bool AIZSleeping()
 	{
-		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
-		Profiler.BeginSample("PuzzleReset.AIZSleeping");
+		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)zone != (Object)null)
 		{
 			if (!zone.PointInside(((Component)this).transform.position))
@@ -91,7 +89,6 @@ public class PuzzleReset : FacepunchBehaviour
 		{
 			zone = AIInformationZone.GetForPoint(((Component)this).transform.position);
 		}
-		Profiler.EndSample();
 		if ((Object)(object)zone == (Object)null)
 		{
 			return false;
@@ -106,25 +103,19 @@ public class PuzzleReset : FacepunchBehaviour
 
 	public static bool AnyPlayersWithinDistance(Transform origin, float radius)
 	{
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
-		Profiler.BeginSample("PuzzleReset.PlayersWithinDistance");
+		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
 		Enumerator<BasePlayer> enumerator = BasePlayer.activePlayerList.GetEnumerator();
 		try
 		{
 			while (enumerator.MoveNext())
 			{
 				BasePlayer current = enumerator.Current;
-				if (!current.IsSleeping() && current.IsAlive())
+				if (!current.IsSleeping() && current.IsAlive() && Vector3.Distance(((Component)current).transform.position, origin.position) < radius)
 				{
-					float num = Vector3.Distance(((Component)current).transform.position, origin.position);
-					if (num < radius)
-					{
-						Profiler.EndSample();
-						return true;
-					}
+					return true;
 				}
 			}
 		}
@@ -132,13 +123,11 @@ public class PuzzleReset : FacepunchBehaviour
 		{
 			((IDisposable)enumerator).Dispose();
 		}
-		Profiler.EndSample();
 		return false;
 	}
 
 	public void ResetTick()
 	{
-		Profiler.BeginSample("PuzzleReset.ResetTick");
 		if (PassesResetCheck())
 		{
 			resetTimeElapsed += resetTickTime;
@@ -148,13 +137,12 @@ public class PuzzleReset : FacepunchBehaviour
 			resetTimeElapsed = 0f;
 			DoReset();
 		}
-		Profiler.EndSample();
 	}
 
 	public void CleanupSleepers()
 	{
-		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)playerDetectionOrigin == (Object)null || BasePlayer.sleepingPlayerList == null)
 		{
 			return;
@@ -162,29 +150,22 @@ public class PuzzleReset : FacepunchBehaviour
 		for (int num = BasePlayer.sleepingPlayerList.Count - 1; num >= 0; num--)
 		{
 			BasePlayer basePlayer = BasePlayer.sleepingPlayerList[num];
-			if (!((Object)(object)basePlayer == (Object)null) && basePlayer.IsSleeping())
+			if (!((Object)(object)basePlayer == (Object)null) && basePlayer.IsSleeping() && Vector3.Distance(((Component)basePlayer).transform.position, playerDetectionOrigin.position) <= playerDetectionRadius)
 			{
-				float num2 = Vector3.Distance(((Component)basePlayer).transform.position, playerDetectionOrigin.position);
-				if (num2 <= playerDetectionRadius)
-				{
-					basePlayer.Hurt(1000f, DamageType.Suicide, basePlayer, useProtection: false);
-				}
+				basePlayer.Hurt(1000f, DamageType.Suicide, basePlayer, useProtection: false);
 			}
 		}
 	}
 
 	public void DoReset()
 	{
-		//IL_0122: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01e5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ea: Unknown result type (might be due to invalid IL or missing references)
-		Profiler.BeginSample("PuzzleReset.DoReset");
+		//IL_00e6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0188: Unknown result type (might be due to invalid IL or missing references)
+		//IL_018d: Unknown result type (might be due to invalid IL or missing references)
 		CleanupSleepers();
 		IOEntity component = ((Component)this).GetComponent<IOEntity>();
 		if ((Object)(object)component != (Object)null)
@@ -230,26 +211,26 @@ public class PuzzleReset : FacepunchBehaviour
 				val2.SendMessage("OnPuzzleReset", (SendMessageOptions)1);
 			}
 		}
-		if (broadcastResetMessage)
+		if (!broadcastResetMessage)
 		{
-			Enumerator<BasePlayer> enumerator3 = BasePlayer.activePlayerList.GetEnumerator();
-			try
+			return;
+		}
+		Enumerator<BasePlayer> enumerator3 = BasePlayer.activePlayerList.GetEnumerator();
+		try
+		{
+			while (enumerator3.MoveNext())
 			{
-				while (enumerator3.MoveNext())
+				BasePlayer current3 = enumerator3.Current;
+				if (!current3.IsNpc && current3.IsConnected)
 				{
-					BasePlayer current3 = enumerator3.Current;
-					if (!current3.IsNpc && current3.IsConnected)
-					{
-						current3.ShowToast(GameTip.Styles.Server_Event, resetPhrase);
-					}
+					current3.ShowToast(GameTip.Styles.Server_Event, resetPhrase);
 				}
 			}
-			finally
-			{
-				((IDisposable)enumerator3).Dispose();
-			}
 		}
-		Profiler.EndSample();
+		finally
+		{
+			((IDisposable)enumerator3).Dispose();
+		}
 	}
 
 	public static void ResetIOEntRecursive(IOEntity target, int resetIndex)

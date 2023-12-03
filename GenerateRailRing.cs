@@ -43,15 +43,15 @@ public class GenerateRailRing : ProceduralComponent
 
 	private const int MaxDepth = 250000;
 
-	public int MinWorldSize = 0;
+	public int MinWorldSize;
 
 	public override void Process(uint seed)
 	{
-		//IL_03b2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03b7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_08f2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0a16: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0a3a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0361: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0366: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0798: Unknown result type (might be due to invalid IL or missing references)
+		//IL_08a6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_08c9: Unknown result type (might be due to invalid IL or missing references)
 		if (World.Networked)
 		{
 			TerrainMeta.Path.Rails.Clear();
@@ -59,7 +59,7 @@ public class GenerateRailRing : ProceduralComponent
 		}
 		else
 		{
-			if (World.Size < MinWorldSize)
+			if (World.Size < MinWorldSize || !World.Config.AboveGroundRails)
 			{
 				return;
 			}
@@ -265,8 +265,7 @@ public class GenerateRailRing : ProceduralComponent
 			}
 			if (list2.Count >= 2)
 			{
-				int count = TerrainMeta.Path.Rails.Count;
-				PathList pathList = new PathList("Rail " + count, list2.ToArray());
+				PathList pathList = new PathList("Rail " + TerrainMeta.Path.Rails.Count, list2.ToArray());
 				pathList.Spline = true;
 				pathList.Width = 4f;
 				pathList.InnerPadding = 1f;

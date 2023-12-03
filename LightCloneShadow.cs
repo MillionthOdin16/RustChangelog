@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class LightCloneShadow : MonoBehaviour
 {
-	public bool cloneShadowMap = false;
+	public bool cloneShadowMap;
 
 	public string shaderPropNameMap = "_MainLightShadowMap";
 

@@ -83,8 +83,8 @@ public class ConnectionLimiter
 
 	public override string ToString()
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0007: Expected O, but got Unknown
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Expected O, but got Unknown
 		TextTable val = new TextTable();
 		val.AddColumns(new string[2] { "IP", "connections" });
 		lock (_sync)

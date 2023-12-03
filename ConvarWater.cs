@@ -4,5 +4,5 @@ using UnityEngine.Serialization;
 public class ConvarWater : MonoBehaviour
 {
 	[FormerlySerializedAs("waterEx")]
-	public WaterSystem water = null;
+	public WaterSystem water;
 }

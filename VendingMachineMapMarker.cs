@@ -15,7 +15,7 @@ public class VendingMachineMapMarker : MapMarker
 	[NonSerialized]
 	public NetworkableId client_vendingMachineNetworkID;
 
-	public GameObjectRef clusterMarkerObj = null;
+	public GameObjectRef clusterMarkerObj;
 
 	public void SetVendingMachine(VendingMachine vm, string shopName)
 	{
@@ -29,7 +29,7 @@ public class VendingMachineMapMarker : MapMarker
 
 	private void TryUpdatePosition()
 	{
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)server_vendingMachine != (Object)null && (Object)(object)server_vendingMachine.GetParentEntity() != (Object)null)
 		{
 			((Component)this).transform.position = ((Component)server_vendingMachine).transform.position;
@@ -47,14 +47,14 @@ public class VendingMachineMapMarker : MapMarker
 
 	public override void Save(SaveInfo info)
 	{
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0019: Expected O, but got Unknown
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Expected O, but got Unknown
+		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0078: Expected O, but got Unknown
-		//IL_00ca: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d0: Expected O, but got Unknown
+		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0073: Expected O, but got Unknown
+		//IL_00c2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c8: Expected O, but got Unknown
 		base.Save(info);
 		info.msg.vendingMachine = new VendingMachine();
 		info.msg.vendingMachine.shopName = markerShopName;

@@ -15,7 +15,7 @@ public class TorchWeapon : BaseMelee
 
 	public bool ExtinguishUnderwater = true;
 
-	public bool UseTurnOnOffAnimations = false;
+	public bool UseTurnOnOffAnimations;
 
 	public GameObjectRef litStrikeFX;
 
@@ -29,7 +29,7 @@ public class TorchWeapon : BaseMelee
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Extinguish "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Extinguish "));
 				}
 				TimeWarning val2 = TimeWarning.New("Extinguish", 0);
 				try
@@ -48,7 +48,7 @@ public class TorchWeapon : BaseMelee
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -60,7 +60,7 @@ public class TorchWeapon : BaseMelee
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -80,12 +80,12 @@ public class TorchWeapon : BaseMelee
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Ignite "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Ignite "));
 				}
-				TimeWarning val5 = TimeWarning.New("Ignite", 0);
+				TimeWarning val2 = TimeWarning.New("Ignite", 0);
 				try
 				{
-					TimeWarning val6 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsActiveItem.Test(3010584743u, "Ignite", this, player))
@@ -95,11 +95,11 @@ public class TorchWeapon : BaseMelee
 					}
 					finally
 					{
-						((IDisposable)val6)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val7 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -111,7 +111,7 @@ public class TorchWeapon : BaseMelee
 						}
 						finally
 						{
-							((IDisposable)val7)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -122,7 +122,7 @@ public class TorchWeapon : BaseMelee
 				}
 				finally
 				{
-					((IDisposable)val5)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}

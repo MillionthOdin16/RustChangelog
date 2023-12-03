@@ -4,7 +4,7 @@ public class TerrainAnchorGenerator : MonoBehaviour, IEditorComponent
 {
 	public float PlacementRadius = 32f;
 
-	public float PlacementPadding = 0f;
+	public float PlacementPadding;
 
 	public float PlacementFade = 16f;
 
@@ -14,7 +14,7 @@ public class TerrainAnchorGenerator : MonoBehaviour, IEditorComponent
 
 	public float AnchorExtentsMax = 16f;
 
-	public float AnchorOffsetMin = 0f;
+	public float AnchorOffsetMin;
 
-	public float AnchorOffsetMax = 0f;
+	public float AnchorOffsetMax;
 }

@@ -18,7 +18,7 @@ public class ScientistNPC : HumanNPC, IAIMounted
 
 	public Vector2 IdleChatterRepeatRange = new Vector2(10f, 15f);
 
-	public RadioChatterType radioChatterType = RadioChatterType.NONE;
+	public RadioChatterType radioChatterType;
 
 	protected float lastAlertedTime = -100f;
 
@@ -84,8 +84,8 @@ public class ScientistNPC : HumanNPC, IAIMounted
 
 	public override void OnKilled(HitInfo info)
 	{
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
 		base.OnKilled(info);
 		SetChatterType(RadioChatterType.NONE);
 		if (DeathEffects.Length != 0)
@@ -100,8 +100,8 @@ public class ScientistNPC : HumanNPC, IAIMounted
 
 	public void PlayRadioChatter()
 	{
-		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
 		if (RadioChatterEffects.Length != 0)
 		{
 			if (base.IsDestroyed || (Object)(object)((Component)this).transform == (Object)null)

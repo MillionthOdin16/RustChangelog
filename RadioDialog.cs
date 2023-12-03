@@ -3,13 +3,13 @@ using UnityEngine;
 
 public class RadioDialog : UIDialog
 {
-	public RustInput IpInput = null;
+	public RustInput IpInput;
 
-	public GameObjectRef FavouritePrefab = null;
+	public GameObjectRef FavouritePrefab;
 
-	public Transform FavouritesContainer = null;
+	public Transform FavouritesContainer;
 
-	public GameObject HasCassetteRoot = null;
+	public GameObject HasCassetteRoot;
 
-	public static RadioDialog Instance = null;
+	public static RadioDialog Instance;
 }
