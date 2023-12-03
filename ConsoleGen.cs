@@ -1947,201 +1947,211 @@ public class ConsoleGen
 		//IL_18234: Expected O, but got Unknown
 		//IL_18297: Unknown result type (might be due to invalid IL or missing references)
 		//IL_1829d: Expected O, but got Unknown
-		//IL_18320: Unknown result type (might be due to invalid IL or missing references)
-		//IL_18326: Expected O, but got Unknown
-		//IL_18385: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1838b: Expected O, but got Unknown
-		//IL_18400: Unknown result type (might be due to invalid IL or missing references)
-		//IL_18406: Expected O, but got Unknown
-		//IL_18474: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1847a: Expected O, but got Unknown
-		//IL_184e8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_184ee: Expected O, but got Unknown
-		//IL_18563: Unknown result type (might be due to invalid IL or missing references)
-		//IL_18569: Expected O, but got Unknown
-		//IL_185cc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_185d2: Expected O, but got Unknown
-		//IL_18640: Unknown result type (might be due to invalid IL or missing references)
-		//IL_18646: Expected O, but got Unknown
-		//IL_186b4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_186ba: Expected O, but got Unknown
-		//IL_18728: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1872e: Expected O, but got Unknown
-		//IL_187a3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_187a9: Expected O, but got Unknown
-		//IL_187f6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_187fc: Expected O, but got Unknown
-		//IL_1886a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_18870: Expected O, but got Unknown
-		//IL_188da: Unknown result type (might be due to invalid IL or missing references)
-		//IL_188e0: Expected O, but got Unknown
-		//IL_1894a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_18950: Expected O, but got Unknown
-		//IL_189d3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_189d9: Expected O, but got Unknown
-		//IL_18a3c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_18a42: Expected O, but got Unknown
-		//IL_18aa5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_18aab: Expected O, but got Unknown
-		//IL_18b0e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_18b14: Expected O, but got Unknown
-		//IL_18b77: Unknown result type (might be due to invalid IL or missing references)
-		//IL_18b7d: Expected O, but got Unknown
-		//IL_18beb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_18bf1: Expected O, but got Unknown
-		//IL_18c5f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_18c65: Expected O, but got Unknown
-		//IL_18cc8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_18cce: Expected O, but got Unknown
-		//IL_18d43: Unknown result type (might be due to invalid IL or missing references)
-		//IL_18d49: Expected O, but got Unknown
-		//IL_18dac: Unknown result type (might be due to invalid IL or missing references)
-		//IL_18db2: Expected O, but got Unknown
-		//IL_18dff: Unknown result type (might be due to invalid IL or missing references)
-		//IL_18e05: Expected O, but got Unknown
-		//IL_18e52: Unknown result type (might be due to invalid IL or missing references)
-		//IL_18e58: Expected O, but got Unknown
-		//IL_18edb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_18ee1: Expected O, but got Unknown
-		//IL_18f2e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_18f34: Expected O, but got Unknown
-		//IL_18f97: Unknown result type (might be due to invalid IL or missing references)
-		//IL_18f9d: Expected O, but got Unknown
-		//IL_18fea: Unknown result type (might be due to invalid IL or missing references)
-		//IL_18ff0: Expected O, but got Unknown
-		//IL_1903d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_19043: Expected O, but got Unknown
-		//IL_190a6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_190ac: Expected O, but got Unknown
-		//IL_1910f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_19115: Expected O, but got Unknown
-		//IL_19178: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1917e: Expected O, but got Unknown
-		//IL_191cb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_191d1: Expected O, but got Unknown
-		//IL_1921e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_19224: Expected O, but got Unknown
-		//IL_19287: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1928d: Expected O, but got Unknown
-		//IL_192da: Unknown result type (might be due to invalid IL or missing references)
-		//IL_192e0: Expected O, but got Unknown
-		//IL_1932d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_19333: Expected O, but got Unknown
-		//IL_19380: Unknown result type (might be due to invalid IL or missing references)
-		//IL_19386: Expected O, but got Unknown
-		//IL_193d3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_193d9: Expected O, but got Unknown
-		//IL_19426: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1942c: Expected O, but got Unknown
-		//IL_194a1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_194a7: Expected O, but got Unknown
-		//IL_1951c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_19522: Expected O, but got Unknown
-		//IL_1956f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_19575: Expected O, but got Unknown
-		//IL_195e3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_195e9: Expected O, but got Unknown
-		//IL_19657: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1965d: Expected O, but got Unknown
-		//IL_196cb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_196d1: Expected O, but got Unknown
-		//IL_1973f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_19745: Expected O, but got Unknown
-		//IL_197b3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_197b9: Expected O, but got Unknown
-		//IL_19827: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1982d: Expected O, but got Unknown
-		//IL_1989b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_198a1: Expected O, but got Unknown
-		//IL_1990f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_19915: Expected O, but got Unknown
-		//IL_19983: Unknown result type (might be due to invalid IL or missing references)
-		//IL_19989: Expected O, but got Unknown
-		//IL_199f7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_199fd: Expected O, but got Unknown
-		//IL_19a6b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_19a71: Expected O, but got Unknown
-		//IL_19adf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_19ae5: Expected O, but got Unknown
-		//IL_19b53: Unknown result type (might be due to invalid IL or missing references)
-		//IL_19b59: Expected O, but got Unknown
-		//IL_19bc7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_19bcd: Expected O, but got Unknown
-		//IL_19c3b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_19c41: Expected O, but got Unknown
-		//IL_19ca4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_19caa: Expected O, but got Unknown
-		//IL_19d0d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_19d13: Expected O, but got Unknown
+		//IL_18300: Unknown result type (might be due to invalid IL or missing references)
+		//IL_18306: Expected O, but got Unknown
+		//IL_18369: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1836f: Expected O, but got Unknown
+		//IL_183d2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_183d8: Expected O, but got Unknown
+		//IL_1843b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_18441: Expected O, but got Unknown
+		//IL_184a4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_184aa: Expected O, but got Unknown
+		//IL_1852d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_18533: Expected O, but got Unknown
+		//IL_18592: Unknown result type (might be due to invalid IL or missing references)
+		//IL_18598: Expected O, but got Unknown
+		//IL_1860d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_18613: Expected O, but got Unknown
+		//IL_18681: Unknown result type (might be due to invalid IL or missing references)
+		//IL_18687: Expected O, but got Unknown
+		//IL_186f5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_186fb: Expected O, but got Unknown
+		//IL_18770: Unknown result type (might be due to invalid IL or missing references)
+		//IL_18776: Expected O, but got Unknown
+		//IL_187d9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_187df: Expected O, but got Unknown
+		//IL_1884d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_18853: Expected O, but got Unknown
+		//IL_188c1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_188c7: Expected O, but got Unknown
+		//IL_18935: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1893b: Expected O, but got Unknown
+		//IL_189b0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_189b6: Expected O, but got Unknown
+		//IL_18a03: Unknown result type (might be due to invalid IL or missing references)
+		//IL_18a09: Expected O, but got Unknown
+		//IL_18a77: Unknown result type (might be due to invalid IL or missing references)
+		//IL_18a7d: Expected O, but got Unknown
+		//IL_18ae7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_18aed: Expected O, but got Unknown
+		//IL_18b57: Unknown result type (might be due to invalid IL or missing references)
+		//IL_18b5d: Expected O, but got Unknown
+		//IL_18be0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_18be6: Expected O, but got Unknown
+		//IL_18c49: Unknown result type (might be due to invalid IL or missing references)
+		//IL_18c4f: Expected O, but got Unknown
+		//IL_18cb2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_18cb8: Expected O, but got Unknown
+		//IL_18d1b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_18d21: Expected O, but got Unknown
+		//IL_18d84: Unknown result type (might be due to invalid IL or missing references)
+		//IL_18d8a: Expected O, but got Unknown
+		//IL_18df8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_18dfe: Expected O, but got Unknown
+		//IL_18e6c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_18e72: Expected O, but got Unknown
+		//IL_18ed5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_18edb: Expected O, but got Unknown
+		//IL_18f50: Unknown result type (might be due to invalid IL or missing references)
+		//IL_18f56: Expected O, but got Unknown
+		//IL_18fb9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_18fbf: Expected O, but got Unknown
+		//IL_1900c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_19012: Expected O, but got Unknown
+		//IL_1905f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_19065: Expected O, but got Unknown
+		//IL_190e8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_190ee: Expected O, but got Unknown
+		//IL_1913b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_19141: Expected O, but got Unknown
+		//IL_191a4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_191aa: Expected O, but got Unknown
+		//IL_191f7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_191fd: Expected O, but got Unknown
+		//IL_1924a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_19250: Expected O, but got Unknown
+		//IL_192b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_192b9: Expected O, but got Unknown
+		//IL_1931c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_19322: Expected O, but got Unknown
+		//IL_19385: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1938b: Expected O, but got Unknown
+		//IL_193d8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_193de: Expected O, but got Unknown
+		//IL_1942b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_19431: Expected O, but got Unknown
+		//IL_19494: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1949a: Expected O, but got Unknown
+		//IL_194e7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_194ed: Expected O, but got Unknown
+		//IL_1953a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_19540: Expected O, but got Unknown
+		//IL_1958d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_19593: Expected O, but got Unknown
+		//IL_195e0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_195e6: Expected O, but got Unknown
+		//IL_19633: Unknown result type (might be due to invalid IL or missing references)
+		//IL_19639: Expected O, but got Unknown
+		//IL_196ae: Unknown result type (might be due to invalid IL or missing references)
+		//IL_196b4: Expected O, but got Unknown
+		//IL_19729: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1972f: Expected O, but got Unknown
+		//IL_1977c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_19782: Expected O, but got Unknown
+		//IL_197f0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_197f6: Expected O, but got Unknown
+		//IL_19864: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1986a: Expected O, but got Unknown
+		//IL_198d8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_198de: Expected O, but got Unknown
+		//IL_1994c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_19952: Expected O, but got Unknown
+		//IL_199c0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_199c6: Expected O, but got Unknown
+		//IL_19a34: Unknown result type (might be due to invalid IL or missing references)
+		//IL_19a3a: Expected O, but got Unknown
+		//IL_19aa8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_19aae: Expected O, but got Unknown
+		//IL_19b1c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_19b22: Expected O, but got Unknown
+		//IL_19b90: Unknown result type (might be due to invalid IL or missing references)
+		//IL_19b96: Expected O, but got Unknown
+		//IL_19c04: Unknown result type (might be due to invalid IL or missing references)
+		//IL_19c0a: Expected O, but got Unknown
+		//IL_19c78: Unknown result type (might be due to invalid IL or missing references)
+		//IL_19c7e: Expected O, but got Unknown
+		//IL_19cec: Unknown result type (might be due to invalid IL or missing references)
+		//IL_19cf2: Expected O, but got Unknown
 		//IL_19d60: Unknown result type (might be due to invalid IL or missing references)
 		//IL_19d66: Expected O, but got Unknown
-		//IL_19ddb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_19de1: Expected O, but got Unknown
-		//IL_19e44: Unknown result type (might be due to invalid IL or missing references)
-		//IL_19e4a: Expected O, but got Unknown
-		//IL_19ead: Unknown result type (might be due to invalid IL or missing references)
-		//IL_19eb3: Expected O, but got Unknown
-		//IL_19f16: Unknown result type (might be due to invalid IL or missing references)
-		//IL_19f1c: Expected O, but got Unknown
-		//IL_19f8a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_19f90: Expected O, but got Unknown
-		//IL_19ffe: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1a004: Expected O, but got Unknown
-		//IL_1a072: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1a078: Expected O, but got Unknown
-		//IL_1a0ed: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1a0f3: Expected O, but got Unknown
-		//IL_1a156: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1a15c: Expected O, but got Unknown
-		//IL_1a1bf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1a1c5: Expected O, but got Unknown
-		//IL_1a212: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1a218: Expected O, but got Unknown
-		//IL_1a286: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1a28c: Expected O, but got Unknown
-		//IL_1a301: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1a307: Expected O, but got Unknown
-		//IL_1a375: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1a37b: Expected O, but got Unknown
-		//IL_1a3e9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1a3ef: Expected O, but got Unknown
-		//IL_1a45d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1a463: Expected O, but got Unknown
-		//IL_1a4c6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1a4cc: Expected O, but got Unknown
-		//IL_1a53a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1a540: Expected O, but got Unknown
-		//IL_1a5ae: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1a5b4: Expected O, but got Unknown
-		//IL_1a617: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1a61d: Expected O, but got Unknown
-		//IL_1a680: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1a686: Expected O, but got Unknown
+		//IL_19dd4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_19dda: Expected O, but got Unknown
+		//IL_19e48: Unknown result type (might be due to invalid IL or missing references)
+		//IL_19e4e: Expected O, but got Unknown
+		//IL_19eb1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_19eb7: Expected O, but got Unknown
+		//IL_19f1a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_19f20: Expected O, but got Unknown
+		//IL_19f6d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_19f73: Expected O, but got Unknown
+		//IL_19fe8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_19fee: Expected O, but got Unknown
+		//IL_1a051: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1a057: Expected O, but got Unknown
+		//IL_1a0ba: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1a0c0: Expected O, but got Unknown
+		//IL_1a123: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1a129: Expected O, but got Unknown
+		//IL_1a197: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1a19d: Expected O, but got Unknown
+		//IL_1a20b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1a211: Expected O, but got Unknown
+		//IL_1a27f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1a285: Expected O, but got Unknown
+		//IL_1a2fa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1a300: Expected O, but got Unknown
+		//IL_1a363: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1a369: Expected O, but got Unknown
+		//IL_1a3cc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1a3d2: Expected O, but got Unknown
+		//IL_1a41f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1a425: Expected O, but got Unknown
+		//IL_1a493: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1a499: Expected O, but got Unknown
+		//IL_1a50e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1a514: Expected O, but got Unknown
+		//IL_1a582: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1a588: Expected O, but got Unknown
+		//IL_1a5f6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1a5fc: Expected O, but got Unknown
+		//IL_1a66a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1a670: Expected O, but got Unknown
 		//IL_1a6d3: Unknown result type (might be due to invalid IL or missing references)
 		//IL_1a6d9: Expected O, but got Unknown
-		//IL_1a726: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1a72c: Expected O, but got Unknown
-		//IL_1a79a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1a7a0: Expected O, but got Unknown
-		//IL_1a80e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1a814: Expected O, but got Unknown
-		//IL_1a882: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1a888: Expected O, but got Unknown
-		//IL_1a8f6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1a8fc: Expected O, but got Unknown
-		//IL_1a96a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1a970: Expected O, but got Unknown
-		//IL_1a9e5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1a9eb: Expected O, but got Unknown
-		//IL_1aa60: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1aa66: Expected O, but got Unknown
-		//IL_1aadb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1aae1: Expected O, but got Unknown
-		//IL_1ab56: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1ab5c: Expected O, but got Unknown
-		//IL_1aba9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1abaf: Expected O, but got Unknown
-		Command[] array = new Command[1063];
+		//IL_1a747: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1a74d: Expected O, but got Unknown
+		//IL_1a7bb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1a7c1: Expected O, but got Unknown
+		//IL_1a824: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1a82a: Expected O, but got Unknown
+		//IL_1a88d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1a893: Expected O, but got Unknown
+		//IL_1a8e0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1a8e6: Expected O, but got Unknown
+		//IL_1a933: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1a939: Expected O, but got Unknown
+		//IL_1a9a7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1a9ad: Expected O, but got Unknown
+		//IL_1aa1b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1aa21: Expected O, but got Unknown
+		//IL_1aa8f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1aa95: Expected O, but got Unknown
+		//IL_1ab03: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1ab09: Expected O, but got Unknown
+		//IL_1ab77: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1ab7d: Expected O, but got Unknown
+		//IL_1abf2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1abf8: Expected O, but got Unknown
+		//IL_1ac6d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1ac73: Expected O, but got Unknown
+		//IL_1ace8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1acee: Expected O, but got Unknown
+		//IL_1ad63: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1ad69: Expected O, but got Unknown
+		//IL_1adb6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1adbc: Expected O, but got Unknown
+		Command[] array = new Command[1068];
 		Command val = new Command();
 		val.Name = "humanknownplayerslosupdateinterval";
 		val.Parent = "aibrainsenses";
@@ -13972,17 +13982,77 @@ public class ConsoleGen
 		};
 		array[961] = val;
 		val = new Command();
-		val.Name = "framebudgetms";
+		val.Name = "framebudgetelectrichighpriorityms";
 		val.Parent = "ioentity";
-		val.FullName = "ioentity.framebudgetms";
+		val.FullName = "ioentity.framebudgetelectrichighpriorityms";
 		val.ServerAdmin = true;
 		val.Variable = true;
-		val.GetOveride = () => IOEntity.framebudgetms.ToString();
+		val.GetOveride = () => IOEntity.frameBudgetElectricHighPriorityMs.ToString();
 		val.SetOveride = delegate(string str)
 		{
-			IOEntity.framebudgetms = StringExtensions.ToFloat(str, 0f);
+			IOEntity.frameBudgetElectricHighPriorityMs = StringExtensions.ToFloat(str, 0f);
 		};
 		array[962] = val;
+		val = new Command();
+		val.Name = "framebudgetelectriclowpriorityms";
+		val.Parent = "ioentity";
+		val.FullName = "ioentity.framebudgetelectriclowpriorityms";
+		val.ServerAdmin = true;
+		val.Variable = true;
+		val.GetOveride = () => IOEntity.frameBudgetElectricLowPriorityMs.ToString();
+		val.SetOveride = delegate(string str)
+		{
+			IOEntity.frameBudgetElectricLowPriorityMs = StringExtensions.ToFloat(str, 0f);
+		};
+		array[963] = val;
+		val = new Command();
+		val.Name = "framebudgetfluidms";
+		val.Parent = "ioentity";
+		val.FullName = "ioentity.framebudgetfluidms";
+		val.ServerAdmin = true;
+		val.Variable = true;
+		val.GetOveride = () => IOEntity.frameBudgetFluidMs.ToString();
+		val.SetOveride = delegate(string str)
+		{
+			IOEntity.frameBudgetFluidMs = StringExtensions.ToFloat(str, 0f);
+		};
+		array[964] = val;
+		val = new Command();
+		val.Name = "framebudgetgenericms";
+		val.Parent = "ioentity";
+		val.FullName = "ioentity.framebudgetgenericms";
+		val.ServerAdmin = true;
+		val.Variable = true;
+		val.GetOveride = () => IOEntity.frameBudgetGenericMs.ToString();
+		val.SetOveride = delegate(string str)
+		{
+			IOEntity.frameBudgetGenericMs = StringExtensions.ToFloat(str, 0f);
+		};
+		array[965] = val;
+		val = new Command();
+		val.Name = "framebudgetindustrialms";
+		val.Parent = "ioentity";
+		val.FullName = "ioentity.framebudgetindustrialms";
+		val.ServerAdmin = true;
+		val.Variable = true;
+		val.GetOveride = () => IOEntity.frameBudgetIndustrialMs.ToString();
+		val.SetOveride = delegate(string str)
+		{
+			IOEntity.frameBudgetIndustrialMs = StringExtensions.ToFloat(str, 0f);
+		};
+		array[966] = val;
+		val = new Command();
+		val.Name = "framebudgetkineticms";
+		val.Parent = "ioentity";
+		val.FullName = "ioentity.framebudgetkineticms";
+		val.ServerAdmin = true;
+		val.Variable = true;
+		val.GetOveride = () => IOEntity.frameBudgetKineticMs.ToString();
+		val.SetOveride = delegate(string str)
+		{
+			IOEntity.frameBudgetKineticMs = StringExtensions.ToFloat(str, 0f);
+		};
+		array[967] = val;
 		val = new Command();
 		val.Name = "responsetime";
 		val.Parent = "ioentity";
@@ -13994,7 +14064,7 @@ public class ConsoleGen
 		{
 			IOEntity.responsetime = StringExtensions.ToFloat(str, 0f);
 		};
-		array[963] = val;
+		array[968] = val;
 		val = new Command();
 		val.Name = "framebudgetms";
 		val.Parent = "junkpilewater";
@@ -14006,7 +14076,7 @@ public class ConsoleGen
 		{
 			JunkPileWater.framebudgetms = StringExtensions.ToFloat(str, 0f);
 		};
-		array[964] = val;
+		array[969] = val;
 		val = new Command();
 		val.Name = "megaphonevoicerange";
 		val.Parent = "megaphone";
@@ -14022,7 +14092,7 @@ public class ConsoleGen
 			Megaphone.MegaphoneVoiceRange = StringExtensions.ToFloat(str, 0f);
 		};
 		val.Default = "100";
-		array[965] = val;
+		array[970] = val;
 		val = new Command();
 		val.Name = "add";
 		val.Parent = "meta";
@@ -14035,7 +14105,7 @@ public class ConsoleGen
 		{
 			Meta.add(arg);
 		};
-		array[966] = val;
+		array[971] = val;
 		val = new Command();
 		val.Name = "population";
 		val.Parent = "minicopter";
@@ -14049,7 +14119,7 @@ public class ConsoleGen
 		{
 			Minicopter.population = StringExtensions.ToFloat(str, 0f);
 		};
-		array[967] = val;
+		array[972] = val;
 		val = new Command();
 		val.Name = "brokendownminutes";
 		val.Parent = "mlrs";
@@ -14062,7 +14132,7 @@ public class ConsoleGen
 		{
 			MLRS.brokenDownMinutes = StringExtensions.ToFloat(str, 0f);
 		};
-		array[968] = val;
+		array[973] = val;
 		val = new Command();
 		val.Name = "outsidedecayminutes";
 		val.Parent = "modularcar";
@@ -14075,7 +14145,7 @@ public class ConsoleGen
 		{
 			ModularCar.outsidedecayminutes = StringExtensions.ToFloat(str, 0f);
 		};
-		array[969] = val;
+		array[974] = val;
 		val = new Command();
 		val.Name = "population";
 		val.Parent = "modularcar";
@@ -14089,7 +14159,7 @@ public class ConsoleGen
 		{
 			ModularCar.population = StringExtensions.ToFloat(str, 0f);
 		};
-		array[970] = val;
+		array[975] = val;
 		val = new Command();
 		val.Name = "use_baked_terrain_mesh";
 		val.Parent = "monumentnavmesh";
@@ -14101,7 +14171,7 @@ public class ConsoleGen
 		{
 			MonumentNavMesh.use_baked_terrain_mesh = StringExtensions.ToBool(str);
 		};
-		array[971] = val;
+		array[976] = val;
 		val = new Command();
 		val.Name = "decaystartdelayminutes";
 		val.Parent = "motorrowboat";
@@ -14114,7 +14184,7 @@ public class ConsoleGen
 		{
 			MotorRowboat.decaystartdelayminutes = StringExtensions.ToFloat(str, 0f);
 		};
-		array[972] = val;
+		array[977] = val;
 		val = new Command();
 		val.Name = "deepwaterdecayminutes";
 		val.Parent = "motorrowboat";
@@ -14127,7 +14197,7 @@ public class ConsoleGen
 		{
 			MotorRowboat.deepwaterdecayminutes = StringExtensions.ToFloat(str, 0f);
 		};
-		array[973] = val;
+		array[978] = val;
 		val = new Command();
 		val.Name = "outsidedecayminutes";
 		val.Parent = "motorrowboat";
@@ -14140,7 +14210,7 @@ public class ConsoleGen
 		{
 			MotorRowboat.outsidedecayminutes = StringExtensions.ToFloat(str, 0f);
 		};
-		array[974] = val;
+		array[979] = val;
 		val = new Command();
 		val.Name = "population";
 		val.Parent = "motorrowboat";
@@ -14154,7 +14224,7 @@ public class ConsoleGen
 		{
 			MotorRowboat.population = StringExtensions.ToFloat(str, 0f);
 		};
-		array[975] = val;
+		array[980] = val;
 		val = new Command();
 		val.Name = "update";
 		val.Parent = "note";
@@ -14165,7 +14235,7 @@ public class ConsoleGen
 		{
 			note.update(arg);
 		};
-		array[976] = val;
+		array[981] = val;
 		val = new Command();
 		val.Name = "sleeperhostiledelay";
 		val.Parent = "npcautoturret";
@@ -14178,7 +14248,7 @@ public class ConsoleGen
 		{
 			NPCAutoTurret.sleeperhostiledelay = StringExtensions.ToFloat(str, 0f);
 		};
-		array[977] = val;
+		array[982] = val;
 		val = new Command();
 		val.Name = "bypassrepack";
 		val.Parent = "parachute";
@@ -14191,7 +14261,7 @@ public class ConsoleGen
 		{
 			Parachute.BypassRepack = StringExtensions.ToBool(str);
 		};
-		array[978] = val;
+		array[983] = val;
 		val = new Command();
 		val.Name = "landinganimations";
 		val.Parent = "parachute";
@@ -14204,7 +14274,7 @@ public class ConsoleGen
 		{
 			Parachute.LandingAnimations = StringExtensions.ToBool(str);
 		};
-		array[979] = val;
+		array[984] = val;
 		val = new Command();
 		val.Name = "controldistance";
 		val.Parent = "petbrain";
@@ -14220,7 +14290,7 @@ public class ConsoleGen
 			PetBrain.ControlDistance = StringExtensions.ToFloat(str, 0f);
 		};
 		val.Default = "100";
-		array[980] = val;
+		array[985] = val;
 		val = new Command();
 		val.Name = "drownindeepwater";
 		val.Parent = "petbrain";
@@ -14232,7 +14302,7 @@ public class ConsoleGen
 		{
 			PetBrain.DrownInDeepWater = StringExtensions.ToBool(str);
 		};
-		array[981] = val;
+		array[986] = val;
 		val = new Command();
 		val.Name = "drowntimer";
 		val.Parent = "petbrain";
@@ -14244,7 +14314,7 @@ public class ConsoleGen
 		{
 			PetBrain.DrownTimer = StringExtensions.ToFloat(str, 0f);
 		};
-		array[982] = val;
+		array[987] = val;
 		val = new Command();
 		val.Name = "idlewhenownermounted";
 		val.Parent = "petbrain";
@@ -14256,7 +14326,7 @@ public class ConsoleGen
 		{
 			PetBrain.IdleWhenOwnerMounted = StringExtensions.ToBool(str);
 		};
-		array[983] = val;
+		array[988] = val;
 		val = new Command();
 		val.Name = "idlewhenownerofflineordead";
 		val.Parent = "petbrain";
@@ -14268,7 +14338,7 @@ public class ConsoleGen
 		{
 			PetBrain.IdleWhenOwnerOfflineOrDead = StringExtensions.ToBool(str);
 		};
-		array[984] = val;
+		array[989] = val;
 		val = new Command();
 		val.Name = "insidedecayminutes";
 		val.Parent = "playerhelicopter";
@@ -14281,7 +14351,7 @@ public class ConsoleGen
 		{
 			PlayerHelicopter.insidedecayminutes = StringExtensions.ToFloat(str, 0f);
 		};
-		array[985] = val;
+		array[990] = val;
 		val = new Command();
 		val.Name = "outsidedecayminutes";
 		val.Parent = "playerhelicopter";
@@ -14294,7 +14364,7 @@ public class ConsoleGen
 		{
 			PlayerHelicopter.outsidedecayminutes = StringExtensions.ToFloat(str, 0f);
 		};
-		array[986] = val;
+		array[991] = val;
 		val = new Command();
 		val.Name = "forcebirthday";
 		val.Parent = "playerinventory";
@@ -14306,7 +14376,7 @@ public class ConsoleGen
 		{
 			PlayerInventory.forceBirthday = StringExtensions.ToBool(str);
 		};
-		array[987] = val;
+		array[992] = val;
 		val = new Command();
 		val.Name = "population";
 		val.Parent = "polarbear";
@@ -14320,7 +14390,7 @@ public class ConsoleGen
 		{
 			Polarbear.Population = StringExtensions.ToFloat(str, 0f);
 		};
-		array[988] = val;
+		array[993] = val;
 		val = new Command();
 		val.Name = "reclaim_expire_minutes";
 		val.Parent = "reclaimmanager";
@@ -14332,7 +14402,7 @@ public class ConsoleGen
 		{
 			ReclaimManager.reclaim_expire_minutes = StringExtensions.ToFloat(str, 0f);
 		};
-		array[989] = val;
+		array[994] = val;
 		val = new Command();
 		val.Name = "acceptinvite";
 		val.Parent = "relationshipmanager";
@@ -14343,7 +14413,7 @@ public class ConsoleGen
 		{
 			RelationshipManager.acceptinvite(arg);
 		};
-		array[990] = val;
+		array[995] = val;
 		val = new Command();
 		val.Name = "addtoteam";
 		val.Parent = "relationshipmanager";
@@ -14354,7 +14424,7 @@ public class ConsoleGen
 		{
 			RelationshipManager.addtoteam(arg);
 		};
-		array[991] = val;
+		array[996] = val;
 		val = new Command();
 		val.Name = "contacts";
 		val.Parent = "relationshipmanager";
@@ -14370,7 +14440,7 @@ public class ConsoleGen
 			RelationshipManager.contacts = StringExtensions.ToBool(str);
 		};
 		val.Default = "true";
-		array[992] = val;
+		array[997] = val;
 		val = new Command();
 		val.Name = "fakeinvite";
 		val.Parent = "relationshipmanager";
@@ -14381,7 +14451,7 @@ public class ConsoleGen
 		{
 			RelationshipManager.fakeinvite(arg);
 		};
-		array[993] = val;
+		array[998] = val;
 		val = new Command();
 		val.Name = "forgetafterminutes";
 		val.Parent = "relationshipmanager";
@@ -14393,7 +14463,7 @@ public class ConsoleGen
 		{
 			RelationshipManager.forgetafterminutes = StringExtensions.ToInt(str, 0);
 		};
-		array[994] = val;
+		array[999] = val;
 		val = new Command();
 		val.Name = "kickmember";
 		val.Parent = "relationshipmanager";
@@ -14404,7 +14474,7 @@ public class ConsoleGen
 		{
 			RelationshipManager.kickmember(arg);
 		};
-		array[995] = val;
+		array[1000] = val;
 		val = new Command();
 		val.Name = "leaveteam";
 		val.Parent = "relationshipmanager";
@@ -14415,7 +14485,7 @@ public class ConsoleGen
 		{
 			RelationshipManager.leaveteam(arg);
 		};
-		array[996] = val;
+		array[1001] = val;
 		val = new Command();
 		val.Name = "maxplayerrelationships";
 		val.Parent = "relationshipmanager";
@@ -14427,7 +14497,7 @@ public class ConsoleGen
 		{
 			RelationshipManager.maxplayerrelationships = StringExtensions.ToInt(str, 0);
 		};
-		array[997] = val;
+		array[1002] = val;
 		val = new Command();
 		val.Name = "maxteamsize";
 		val.Parent = "relationshipmanager";
@@ -14439,7 +14509,7 @@ public class ConsoleGen
 		{
 			RelationshipManager.maxTeamSize = StringExtensions.ToInt(str, 0);
 		};
-		array[998] = val;
+		array[1003] = val;
 		val = new Command();
 		val.Name = "mugshotupdateinterval";
 		val.Parent = "relationshipmanager";
@@ -14451,7 +14521,7 @@ public class ConsoleGen
 		{
 			RelationshipManager.mugshotUpdateInterval = StringExtensions.ToFloat(str, 0f);
 		};
-		array[999] = val;
+		array[1004] = val;
 		val = new Command();
 		val.Name = "promote";
 		val.Parent = "relationshipmanager";
@@ -14462,7 +14532,7 @@ public class ConsoleGen
 		{
 			RelationshipManager.promote(arg);
 		};
-		array[1000] = val;
+		array[1005] = val;
 		val = new Command();
 		val.Name = "rejectinvite";
 		val.Parent = "relationshipmanager";
@@ -14473,7 +14543,7 @@ public class ConsoleGen
 		{
 			RelationshipManager.rejectinvite(arg);
 		};
-		array[1001] = val;
+		array[1006] = val;
 		val = new Command();
 		val.Name = "seendistance";
 		val.Parent = "relationshipmanager";
@@ -14485,7 +14555,7 @@ public class ConsoleGen
 		{
 			RelationshipManager.seendistance = StringExtensions.ToFloat(str, 0f);
 		};
-		array[1002] = val;
+		array[1007] = val;
 		val = new Command();
 		val.Name = "sendinvite";
 		val.Parent = "relationshipmanager";
@@ -14496,7 +14566,7 @@ public class ConsoleGen
 		{
 			RelationshipManager.sendinvite(arg);
 		};
-		array[1003] = val;
+		array[1008] = val;
 		val = new Command();
 		val.Name = "sleeptoggle";
 		val.Parent = "relationshipmanager";
@@ -14507,7 +14577,7 @@ public class ConsoleGen
 		{
 			RelationshipManager.sleeptoggle(arg);
 		};
-		array[1004] = val;
+		array[1009] = val;
 		val = new Command();
 		val.Name = "trycreateteam";
 		val.Parent = "relationshipmanager";
@@ -14518,7 +14588,7 @@ public class ConsoleGen
 		{
 			RelationshipManager.trycreateteam(arg);
 		};
-		array[1005] = val;
+		array[1010] = val;
 		val = new Command();
 		val.Name = "wipe_all_contacts";
 		val.Parent = "relationshipmanager";
@@ -14529,7 +14599,7 @@ public class ConsoleGen
 		{
 			RelationshipManager.wipe_all_contacts(arg);
 		};
-		array[1006] = val;
+		array[1011] = val;
 		val = new Command();
 		val.Name = "wipecontacts";
 		val.Parent = "relationshipmanager";
@@ -14540,7 +14610,7 @@ public class ConsoleGen
 		{
 			RelationshipManager.wipecontacts(arg);
 		};
-		array[1007] = val;
+		array[1012] = val;
 		val = new Command();
 		val.Name = "rhibpopulation";
 		val.Parent = "rhib";
@@ -14554,7 +14624,7 @@ public class ConsoleGen
 		{
 			RHIB.rhibpopulation = StringExtensions.ToFloat(str, 0f);
 		};
-		array[1008] = val;
+		array[1013] = val;
 		val = new Command();
 		val.Name = "population";
 		val.Parent = "ridablehorse";
@@ -14568,7 +14638,7 @@ public class ConsoleGen
 		{
 			RidableHorse.Population = StringExtensions.ToFloat(str, 0f);
 		};
-		array[1009] = val;
+		array[1014] = val;
 		val = new Command();
 		val.Name = "sethorsebreed";
 		val.Parent = "ridablehorse";
@@ -14579,7 +14649,7 @@ public class ConsoleGen
 		{
 			RidableHorse.setHorseBreed(arg);
 		};
-		array[1010] = val;
+		array[1015] = val;
 		val = new Command();
 		val.Name = "ai_dormant";
 		val.Parent = "aimanager";
@@ -14592,7 +14662,7 @@ public class ConsoleGen
 		{
 			AiManager.ai_dormant = StringExtensions.ToBool(str);
 		};
-		array[1011] = val;
+		array[1016] = val;
 		val = new Command();
 		val.Name = "ai_dormant_max_wakeup_per_tick";
 		val.Parent = "aimanager";
@@ -14605,7 +14675,7 @@ public class ConsoleGen
 		{
 			AiManager.ai_dormant_max_wakeup_per_tick = StringExtensions.ToInt(str, 0);
 		};
-		array[1012] = val;
+		array[1017] = val;
 		val = new Command();
 		val.Name = "ai_htn_animal_tick_budget";
 		val.Parent = "aimanager";
@@ -14618,7 +14688,7 @@ public class ConsoleGen
 		{
 			AiManager.ai_htn_animal_tick_budget = StringExtensions.ToFloat(str, 0f);
 		};
-		array[1013] = val;
+		array[1018] = val;
 		val = new Command();
 		val.Name = "ai_htn_player_junkpile_tick_budget";
 		val.Parent = "aimanager";
@@ -14631,7 +14701,7 @@ public class ConsoleGen
 		{
 			AiManager.ai_htn_player_junkpile_tick_budget = StringExtensions.ToFloat(str, 0f);
 		};
-		array[1014] = val;
+		array[1019] = val;
 		val = new Command();
 		val.Name = "ai_htn_player_tick_budget";
 		val.Parent = "aimanager";
@@ -14644,7 +14714,7 @@ public class ConsoleGen
 		{
 			AiManager.ai_htn_player_tick_budget = StringExtensions.ToFloat(str, 0f);
 		};
-		array[1015] = val;
+		array[1020] = val;
 		val = new Command();
 		val.Name = "ai_htn_use_agency_tick";
 		val.Parent = "aimanager";
@@ -14657,7 +14727,7 @@ public class ConsoleGen
 		{
 			AiManager.ai_htn_use_agency_tick = StringExtensions.ToBool(str);
 		};
-		array[1016] = val;
+		array[1021] = val;
 		val = new Command();
 		val.Name = "ai_to_player_distance_wakeup_range";
 		val.Parent = "aimanager";
@@ -14670,7 +14740,7 @@ public class ConsoleGen
 		{
 			AiManager.ai_to_player_distance_wakeup_range = StringExtensions.ToFloat(str, 0f);
 		};
-		array[1017] = val;
+		array[1022] = val;
 		val = new Command();
 		val.Name = "nav_disable";
 		val.Parent = "aimanager";
@@ -14683,7 +14753,7 @@ public class ConsoleGen
 		{
 			AiManager.nav_disable = StringExtensions.ToBool(str);
 		};
-		array[1018] = val;
+		array[1023] = val;
 		val = new Command();
 		val.Name = "nav_obstacles_carve_state";
 		val.Parent = "aimanager";
@@ -14696,7 +14766,7 @@ public class ConsoleGen
 		{
 			AiManager.nav_obstacles_carve_state = StringExtensions.ToInt(str, 0);
 		};
-		array[1019] = val;
+		array[1024] = val;
 		val = new Command();
 		val.Name = "nav_wait";
 		val.Parent = "aimanager";
@@ -14709,7 +14779,7 @@ public class ConsoleGen
 		{
 			AiManager.nav_wait = StringExtensions.ToBool(str);
 		};
-		array[1020] = val;
+		array[1025] = val;
 		val = new Command();
 		val.Name = "pathfindingiterationsperframe";
 		val.Parent = "aimanager";
@@ -14722,7 +14792,7 @@ public class ConsoleGen
 		{
 			AiManager.pathfindingIterationsPerFrame = StringExtensions.ToInt(str, 0);
 		};
-		array[1021] = val;
+		array[1026] = val;
 		val = new Command();
 		val.Name = "setdestination_navmesh_failsafe";
 		val.Parent = "aimanager";
@@ -14735,7 +14805,7 @@ public class ConsoleGen
 		{
 			AiManager.setdestination_navmesh_failsafe = StringExtensions.ToBool(str);
 		};
-		array[1022] = val;
+		array[1027] = val;
 		val = new Command();
 		val.Name = "cover_point_sample_step_height";
 		val.Parent = "coverpointvolume";
@@ -14748,7 +14818,7 @@ public class ConsoleGen
 		{
 			CoverPointVolume.cover_point_sample_step_height = StringExtensions.ToFloat(str, 0f);
 		};
-		array[1023] = val;
+		array[1028] = val;
 		val = new Command();
 		val.Name = "cover_point_sample_step_size";
 		val.Parent = "coverpointvolume";
@@ -14761,7 +14831,7 @@ public class ConsoleGen
 		{
 			CoverPointVolume.cover_point_sample_step_size = StringExtensions.ToFloat(str, 0f);
 		};
-		array[1024] = val;
+		array[1029] = val;
 		val = new Command();
 		val.Name = "staticrepairseconds";
 		val.Parent = "samsite";
@@ -14774,7 +14844,7 @@ public class ConsoleGen
 		{
 			SamSite.staticrepairseconds = StringExtensions.ToFloat(str, 0f);
 		};
-		array[1025] = val;
+		array[1030] = val;
 		val = new Command();
 		val.Name = "altitudeaboveterrain";
 		val.Parent = "santasleigh";
@@ -14786,7 +14856,7 @@ public class ConsoleGen
 		{
 			SantaSleigh.altitudeAboveTerrain = StringExtensions.ToFloat(str, 0f);
 		};
-		array[1026] = val;
+		array[1031] = val;
 		val = new Command();
 		val.Name = "desiredaltitude";
 		val.Parent = "santasleigh";
@@ -14798,7 +14868,7 @@ public class ConsoleGen
 		{
 			SantaSleigh.desiredAltitude = StringExtensions.ToFloat(str, 0f);
 		};
-		array[1027] = val;
+		array[1032] = val;
 		val = new Command();
 		val.Name = "drop";
 		val.Parent = "santasleigh";
@@ -14809,7 +14879,7 @@ public class ConsoleGen
 		{
 			SantaSleigh.drop(arg);
 		};
-		array[1028] = val;
+		array[1033] = val;
 		val = new Command();
 		val.Name = "population";
 		val.Parent = "scraptransporthelicopter";
@@ -14823,7 +14893,7 @@ public class ConsoleGen
 		{
 			ScrapTransportHelicopter.population = StringExtensions.ToFloat(str, 0f);
 		};
-		array[1029] = val;
+		array[1034] = val;
 		val = new Command();
 		val.Name = "disable";
 		val.Parent = "simpleshark";
@@ -14835,7 +14905,7 @@ public class ConsoleGen
 		{
 			SimpleShark.disable = StringExtensions.ToBool(str);
 		};
-		array[1030] = val;
+		array[1035] = val;
 		val = new Command();
 		val.Name = "forcesurfaceamount";
 		val.Parent = "simpleshark";
@@ -14847,7 +14917,7 @@ public class ConsoleGen
 		{
 			SimpleShark.forceSurfaceAmount = StringExtensions.ToFloat(str, 0f);
 		};
-		array[1031] = val;
+		array[1036] = val;
 		val = new Command();
 		val.Name = "forcepayoutindex";
 		val.Parent = "slotmachine";
@@ -14859,7 +14929,7 @@ public class ConsoleGen
 		{
 			SlotMachine.ForcePayoutIndex = StringExtensions.ToInt(str, 0);
 		};
-		array[1032] = val;
+		array[1037] = val;
 		val = new Command();
 		val.Name = "allowpassengeronly";
 		val.Parent = "snowmobile";
@@ -14872,7 +14942,7 @@ public class ConsoleGen
 		{
 			Snowmobile.allowPassengerOnly = StringExtensions.ToBool(str);
 		};
-		array[1033] = val;
+		array[1038] = val;
 		val = new Command();
 		val.Name = "allterrain";
 		val.Parent = "snowmobile";
@@ -14885,7 +14955,7 @@ public class ConsoleGen
 		{
 			Snowmobile.allTerrain = StringExtensions.ToBool(str);
 		};
-		array[1034] = val;
+		array[1039] = val;
 		val = new Command();
 		val.Name = "outsidedecayminutes";
 		val.Parent = "snowmobile";
@@ -14898,7 +14968,7 @@ public class ConsoleGen
 		{
 			Snowmobile.outsideDecayMinutes = StringExtensions.ToFloat(str, 0f);
 		};
-		array[1035] = val;
+		array[1040] = val;
 		val = new Command();
 		val.Name = "population";
 		val.Parent = "stag";
@@ -14912,7 +14982,7 @@ public class ConsoleGen
 		{
 			Stag.Population = StringExtensions.ToFloat(str, 0f);
 		};
-		array[1036] = val;
+		array[1041] = val;
 		val = new Command();
 		val.Name = "maxcalllength";
 		val.Parent = "telephonemanager";
@@ -14924,7 +14994,7 @@ public class ConsoleGen
 		{
 			TelephoneManager.MaxCallLength = StringExtensions.ToInt(str, 0);
 		};
-		array[1037] = val;
+		array[1042] = val;
 		val = new Command();
 		val.Name = "maxconcurrentcalls";
 		val.Parent = "telephonemanager";
@@ -14936,7 +15006,7 @@ public class ConsoleGen
 		{
 			TelephoneManager.MaxConcurrentCalls = StringExtensions.ToInt(str, 0);
 		};
-		array[1038] = val;
+		array[1043] = val;
 		val = new Command();
 		val.Name = "printallphones";
 		val.Parent = "telephonemanager";
@@ -14947,7 +15017,7 @@ public class ConsoleGen
 		{
 			TelephoneManager.PrintAllPhones(arg);
 		};
-		array[1039] = val;
+		array[1044] = val;
 		val = new Command();
 		val.Name = "decayminutes";
 		val.Parent = "traincar";
@@ -14960,7 +15030,7 @@ public class ConsoleGen
 		{
 			TrainCar.decayminutes = StringExtensions.ToFloat(str, 0f);
 		};
-		array[1040] = val;
+		array[1045] = val;
 		val = new Command();
 		val.Name = "population";
 		val.Parent = "traincar";
@@ -14974,7 +15044,7 @@ public class ConsoleGen
 		{
 			TrainCar.population = StringExtensions.ToFloat(str, 0f);
 		};
-		array[1041] = val;
+		array[1046] = val;
 		val = new Command();
 		val.Name = "wagons_per_engine";
 		val.Parent = "traincar";
@@ -14987,7 +15057,7 @@ public class ConsoleGen
 		{
 			TrainCar.wagons_per_engine = StringExtensions.ToInt(str, 0);
 		};
-		array[1042] = val;
+		array[1047] = val;
 		val = new Command();
 		val.Name = "decayminutesafterunload";
 		val.Parent = "traincarunloadable";
@@ -15000,7 +15070,7 @@ public class ConsoleGen
 		{
 			TrainCarUnloadable.decayminutesafterunload = StringExtensions.ToFloat(str, 0f);
 		};
-		array[1043] = val;
+		array[1048] = val;
 		val = new Command();
 		val.Name = "max_couple_speed";
 		val.Parent = "traincouplingcontroller";
@@ -15013,7 +15083,7 @@ public class ConsoleGen
 		{
 			TrainCouplingController.max_couple_speed = StringExtensions.ToFloat(str, 0f);
 		};
-		array[1044] = val;
+		array[1049] = val;
 		val = new Command();
 		val.Name = "tugcorpseseconds";
 		val.Parent = "tugboat";
@@ -15025,7 +15095,7 @@ public class ConsoleGen
 		{
 			Tugboat.tugcorpseseconds = StringExtensions.ToFloat(str, 0f);
 		};
-		array[1045] = val;
+		array[1050] = val;
 		val = new Command();
 		val.Name = "tugdecayminutes";
 		val.Parent = "tugboat";
@@ -15038,7 +15108,7 @@ public class ConsoleGen
 		{
 			Tugboat.tugdecayminutes = StringExtensions.ToFloat(str, 0f);
 		};
-		array[1046] = val;
+		array[1051] = val;
 		val = new Command();
 		val.Name = "tugdecaystartdelayminutes";
 		val.Parent = "tugboat";
@@ -15051,7 +15121,7 @@ public class ConsoleGen
 		{
 			Tugboat.tugdecaystartdelayminutes = StringExtensions.ToFloat(str, 0f);
 		};
-		array[1047] = val;
+		array[1052] = val;
 		val = new Command();
 		val.Name = "days_to_add_test";
 		val.Parent = "wipetimer";
@@ -15063,7 +15133,7 @@ public class ConsoleGen
 		{
 			WipeTimer.daysToAddTest = StringExtensions.ToInt(str, 0);
 		};
-		array[1048] = val;
+		array[1053] = val;
 		val = new Command();
 		val.Name = "hours_to_add_test";
 		val.Parent = "wipetimer";
@@ -15075,7 +15145,7 @@ public class ConsoleGen
 		{
 			WipeTimer.hoursToAddTest = StringExtensions.ToFloat(str, 0f);
 		};
-		array[1049] = val;
+		array[1054] = val;
 		val = new Command();
 		val.Name = "printtimezones";
 		val.Parent = "wipetimer";
@@ -15086,7 +15156,7 @@ public class ConsoleGen
 		{
 			WipeTimer.PrintTimeZones(arg);
 		};
-		array[1050] = val;
+		array[1055] = val;
 		val = new Command();
 		val.Name = "printwipe";
 		val.Parent = "wipetimer";
@@ -15097,7 +15167,7 @@ public class ConsoleGen
 		{
 			WipeTimer.PrintWipe(arg);
 		};
-		array[1051] = val;
+		array[1056] = val;
 		val = new Command();
 		val.Name = "wipecronoverride";
 		val.Parent = "wipetimer";
@@ -15110,7 +15180,7 @@ public class ConsoleGen
 		{
 			WipeTimer.wipeCronOverride = str;
 		};
-		array[1052] = val;
+		array[1057] = val;
 		val = new Command();
 		val.Name = "wipedayofweek";
 		val.Parent = "wipetimer";
@@ -15123,7 +15193,7 @@ public class ConsoleGen
 		{
 			WipeTimer.wipeDayOfWeek = StringExtensions.ToInt(str, 0);
 		};
-		array[1053] = val;
+		array[1058] = val;
 		val = new Command();
 		val.Name = "wipehourofday";
 		val.Parent = "wipetimer";
@@ -15136,7 +15206,7 @@ public class ConsoleGen
 		{
 			WipeTimer.wipeHourOfDay = StringExtensions.ToFloat(str, 0f);
 		};
-		array[1054] = val;
+		array[1059] = val;
 		val = new Command();
 		val.Name = "wipetimezone";
 		val.Parent = "wipetimer";
@@ -15149,7 +15219,7 @@ public class ConsoleGen
 		{
 			WipeTimer.wipeTimezone = str;
 		};
-		array[1055] = val;
+		array[1060] = val;
 		val = new Command();
 		val.Name = "wipeunixtimestampoverride";
 		val.Parent = "wipetimer";
@@ -15162,7 +15232,7 @@ public class ConsoleGen
 		{
 			WipeTimer.wipeUnixTimestampOverride = StringExtensions.ToLong(str, 0L);
 		};
-		array[1056] = val;
+		array[1061] = val;
 		val = new Command();
 		val.Name = "population";
 		val.Parent = "wolf";
@@ -15176,7 +15246,7 @@ public class ConsoleGen
 		{
 			Wolf.Population = StringExtensions.ToFloat(str, 0f);
 		};
-		array[1057] = val;
+		array[1062] = val;
 		val = new Command();
 		val.Name = "playerdetectrange";
 		val.Parent = "xmasdungeon";
@@ -15190,7 +15260,7 @@ public class ConsoleGen
 		{
 			XmasDungeon.playerdetectrange = StringExtensions.ToFloat(str, 0f);
 		};
-		array[1058] = val;
+		array[1063] = val;
 		val = new Command();
 		val.Name = "xmaslifetime";
 		val.Parent = "xmasdungeon";
@@ -15204,7 +15274,7 @@ public class ConsoleGen
 		{
 			XmasDungeon.xmaslifetime = StringExtensions.ToFloat(str, 0f);
 		};
-		array[1059] = val;
+		array[1064] = val;
 		val = new Command();
 		val.Name = "xmaspopulation";
 		val.Parent = "xmasdungeon";
@@ -15218,7 +15288,7 @@ public class ConsoleGen
 		{
 			XmasDungeon.xmaspopulation = StringExtensions.ToFloat(str, 0f);
 		};
-		array[1060] = val;
+		array[1065] = val;
 		val = new Command();
 		val.Name = "report";
 		val.Parent = "ziplinelaunchpoint";
@@ -15229,7 +15299,7 @@ public class ConsoleGen
 		{
 			ZiplineLaunchPoint.report(arg);
 		};
-		array[1061] = val;
+		array[1066] = val;
 		val = new Command();
 		val.Name = "population";
 		val.Parent = "zombie";
@@ -15243,7 +15313,7 @@ public class ConsoleGen
 		{
 			Zombie.Population = StringExtensions.ToFloat(str, 0f);
 		};
-		array[1062] = val;
+		array[1067] = val;
 		All = (Command[])(object)array;
 	}
 }
