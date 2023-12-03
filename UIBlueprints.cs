@@ -11,7 +11,7 @@ public class UIBlueprints : ListComponent<UIBlueprints>
 
 	public InputField searchField;
 
-	public GameObject searchFieldPlaceholder;
+	public GameObject searchFieldPlaceholder = null;
 
 	public GameObject listAvailable;
 

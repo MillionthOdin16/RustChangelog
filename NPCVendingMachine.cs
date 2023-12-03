@@ -6,7 +6,7 @@ public class NPCVendingMachine : VendingMachine
 {
 	public NPCVendingOrder vendingOrders;
 
-	private float[] refillTimes;
+	private float[] refillTimes = null;
 
 	public byte GetBPState(bool sellItemAsBP, bool currencyItemAsBP)
 	{
@@ -93,19 +93,20 @@ public class NPCVendingMachine : VendingMachine
 				continue;
 			}
 			int num = Mathf.FloorToInt((float)(base.inventory.GetAmount(entry.sellItem.itemid, onlyUsableAmounts: false) / entry.sellItemAmount));
-			int num2 = Mathf.Min(10 - num, entry.refillAmount) * entry.sellItemAmount;
-			if (num2 > 0)
+			int num2 = Mathf.Min(10 - num, entry.refillAmount);
+			int num3 = num2 * entry.sellItemAmount;
+			if (num3 > 0)
 			{
 				transactionActive = true;
 				Item item = null;
 				if (entry.sellItemAsBP)
 				{
-					item = ItemManager.Create(blueprintBaseDef, num2, 0uL);
+					item = ItemManager.Create(blueprintBaseDef, num3, 0uL);
 					item.blueprintTarget = entry.sellItem.itemid;
 				}
 				else
 				{
-					item = ItemManager.Create(entry.sellItem, num2, 0uL);
+					item = ItemManager.Create(entry.sellItem, num3, 0uL);
 				}
 				item.MoveToContainer(base.inventory);
 				transactionActive = false;

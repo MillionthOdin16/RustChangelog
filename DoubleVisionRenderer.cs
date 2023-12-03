@@ -18,10 +18,10 @@ public class DoubleVisionRenderer : PostProcessEffectRenderer<DoubleVision>
 
 	public override void Render(PostProcessRenderContext context)
 	{
-		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
 		CommandBuffer command = context.command;
 		command.BeginSample("DoubleVision");
 		PropertySheet propertySheet = context.propertySheets.Get(doubleVisionShader);

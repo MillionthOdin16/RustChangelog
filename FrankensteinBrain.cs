@@ -22,7 +22,8 @@ public class FrankensteinBrain : PetBrain
 		public override void StateLeave(BaseAIBrain brain, BaseEntity entity)
 		{
 			base.StateLeave(brain, entity);
-			brain.Navigator.StoppingDistance = originalStopDistance;
+			BaseNavigator navigator = brain.Navigator;
+			navigator.StoppingDistance = originalStopDistance;
 			Stop();
 		}
 
@@ -33,9 +34,9 @@ public class FrankensteinBrain : PetBrain
 
 		public override StateStatus StateThink(float delta, BaseAIBrain brain, BaseEntity entity)
 		{
-			//IL_001b: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+			//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0028: Unknown result type (might be due to invalid IL or missing references)
 			base.StateThink(delta, brain, entity);
 			Vector3 pos = brain.Events.Memory.Position.Get(6);
 			if (!brain.Navigator.SetDestination(pos, BaseNavigator.NavigationSpeed.Normal, MoveTowardsRate))
@@ -46,11 +47,7 @@ public class FrankensteinBrain : PetBrain
 			{
 				brain.LoadDefaultAIDesign();
 			}
-			if (!brain.Navigator.Moving)
-			{
-				return StateStatus.Finished;
-			}
-			return StateStatus.Running;
+			return (!brain.Navigator.Moving) ? StateStatus.Finished : StateStatus.Running;
 		}
 	}
 
@@ -74,7 +71,7 @@ public class FrankensteinBrain : PetBrain
 
 		public override StateStatus StateThink(float delta, BaseAIBrain brain, BaseEntity entity)
 		{
-			//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+			//IL_004f: Unknown result type (might be due to invalid IL or missing references)
 			base.StateThink(delta, brain, entity);
 			BaseEntity baseEntity = brain.Events.Memory.Entity.Get(brain.Events.CurrentInputMemorySlot);
 			if ((Object)(object)baseEntity == (Object)null)
@@ -86,11 +83,7 @@ public class FrankensteinBrain : PetBrain
 			{
 				return StateStatus.Error;
 			}
-			if (!brain.Navigator.Moving)
-			{
-				return StateStatus.Finished;
-			}
-			return StateStatus.Running;
+			return (!brain.Navigator.Moving) ? StateStatus.Finished : StateStatus.Running;
 		}
 	}
 

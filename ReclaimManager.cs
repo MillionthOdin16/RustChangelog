@@ -51,7 +51,7 @@ public class ReclaimManager : BaseEntity
 
 	private const int reclaimSlotCount = 40;
 
-	private int lastReclaimID;
+	private int lastReclaimID = 0;
 
 	[ServerVar]
 	public static float reclaim_expire_minutes = 120f;
@@ -60,7 +60,7 @@ public class ReclaimManager : BaseEntity
 
 	public List<PlayerReclaimEntry> entries = new List<PlayerReclaimEntry>();
 
-	private float lastTickTime;
+	private float lastTickTime = 0f;
 
 	public static ReclaimManager instance => _instance;
 
@@ -69,7 +69,8 @@ public class ReclaimManager : BaseEntity
 		PlayerReclaimEntry playerReclaimEntry = NewEntry();
 		for (int num = itemList.Count - 1; num >= 0; num--)
 		{
-			itemList[num].MoveToContainer(playerReclaimEntry.inventory);
+			Item item = itemList[num];
+			item.MoveToContainer(playerReclaimEntry.inventory);
 		}
 		if (reclaimIDToUse == -1)
 		{

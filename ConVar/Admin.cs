@@ -117,8 +117,8 @@ public class Admin : ConsoleSystem
 
 		public ServerUGCInfo(IUGCBrowserEntity fromEntity)
 		{
-			//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+			//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0012: Unknown result type (might be due to invalid IL or missing references)
 			entityId = fromEntity.UgcEntity.net.ID;
 			crcs = fromEntity.GetContentCRCs;
 			contentType = fromEntity.ContentType;
@@ -148,10 +148,10 @@ public class Admin : ConsoleSystem
 	[ServerVar(Help = "Print out currently connected clients")]
 	public static void status(Arg arg)
 	{
-		//IL_00f9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ff: Expected O, but got Unknown
-		//IL_015c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0161: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0112: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0118: Expected O, but got Unknown
+		//IL_017e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0183: Unknown result type (might be due to invalid IL or missing references)
 		string @string = arg.GetString(0, "");
 		if (@string == "--json")
 		{
@@ -162,7 +162,7 @@ public class Admin : ConsoleSystem
 		if (!flag && @string.Length == 0)
 		{
 			text = text + "hostname: " + Server.hostname + "\n";
-			text = text + "version : " + 2509 + " secure (secure mode enabled, connected to Steam3)\n";
+			text = text + "version : " + 2402 + " secure (secure mode enabled, connected to Steam3)\n";
 			text = text + "map     : " + Server.level + "\n";
 			text += $"players : {((IEnumerable<BasePlayer>)BasePlayer.activePlayerList).Count()} ({Server.maxplayers} max) ({SingletonComponent<ServerMgr>.Instance.connectionQueue.Queued} queued) ({SingletonComponent<ServerMgr>.Instance.connectionQueue.Joining} joining)\n\n";
 		}
@@ -246,10 +246,10 @@ public class Admin : ConsoleSystem
 	[ServerVar(Help = "Print out stats of currently connected clients")]
 	public static void stats(Arg arg)
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0011: Expected O, but got Unknown
-		//IL_00d0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Expected O, but got Unknown
+		//IL_00e3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e8: Unknown result type (might be due to invalid IL or missing references)
 		TextTable table = new TextTable();
 		table.AddColumn("id");
 		table.AddColumn("name");
@@ -287,7 +287,7 @@ public class Admin : ConsoleSystem
 			});
 		};
 		ulong uInt = arg.GetUInt64(0, 0uL);
-		if (uInt == 0L)
+		if (uInt == 0)
 		{
 			string @string = arg.GetString(0, "");
 			Enumerator<BasePlayer> enumerator = BasePlayer.activePlayerList.GetEnumerator();
@@ -363,7 +363,7 @@ public class Admin : ConsoleSystem
 
 	private static void SkinRadiusInternal(Arg arg, bool changeAnyGrade)
 	{
-		//IL_048a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04de: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer basePlayer = arg.Player();
 		if ((Object)(object)basePlayer == (Object)null)
 		{
@@ -508,9 +508,9 @@ public class Admin : ConsoleSystem
 	public static void kickall(Arg arg)
 	{
 		BasePlayer[] array = ((IEnumerable<BasePlayer>)BasePlayer.activePlayerList).ToArray();
-		for (int i = 0; i < array.Length; i++)
+		foreach (BasePlayer basePlayer in array)
 		{
-			array[i].Kick("Kicked: " + arg.GetString(1, "No Reason Given"));
+			basePlayer.Kick("Kicked: " + arg.GetString(1, "No Reason Given"));
 		}
 	}
 
@@ -795,10 +795,10 @@ public class Admin : ConsoleSystem
 	[ServerVar(Help = "Print out currently connected clients etc")]
 	public static void players(Arg arg)
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0006: Expected O, but got Unknown
-		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Expected O, but got Unknown
+		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
 		TextTable val = new TextTable();
 		val.AddColumn("id");
 		val.AddColumn("name");
@@ -851,8 +851,8 @@ public class Admin : ConsoleSystem
 	[ServerVar(Help = "Show user info for players on server.")]
 	public static void users(Arg arg)
 	{
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
 		string text = "<slot:userid:\"name\">\n";
 		int num = 0;
 		Enumerator<BasePlayer> enumerator = BasePlayer.activePlayerList.GetEnumerator();
@@ -876,8 +876,8 @@ public class Admin : ConsoleSystem
 	[ServerVar(Help = "Show user info for players on server.")]
 	public static void sleepingusers(Arg arg)
 	{
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
 		string text = "<slot:userid:\"name\">\n";
 		int num = 0;
 		Enumerator<BasePlayer> enumerator = BasePlayer.sleepingPlayerList.GetEnumerator();
@@ -901,8 +901,8 @@ public class Admin : ConsoleSystem
 	[ServerVar(Help = "Show user info for sleeping players on server in range of the player.")]
 	public static void sleepingusersinrange(Arg arg)
 	{
-		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer fromPlayer = arg.Player();
 		if ((Object)(object)fromPlayer == (Object)null)
 		{
@@ -940,8 +940,8 @@ public class Admin : ConsoleSystem
 	[ServerVar(Help = "Show user info for players on server in range of the player.")]
 	public static void usersinrange(Arg arg)
 	{
-		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer fromPlayer = arg.Player();
 		if ((Object)(object)fromPlayer == (Object)null)
 		{
@@ -979,8 +979,8 @@ public class Admin : ConsoleSystem
 	[ServerVar(Help = "Show user info for players on server in range of the supplied player (eg. Jim 50)")]
 	public static void usersinrangeofplayer(Arg arg)
 	{
-		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer targetPlayer = arg.GetPlayerOrSleeper(0);
 		if ((Object)(object)targetPlayer == (Object)null)
 		{
@@ -1077,8 +1077,8 @@ public class Admin : ConsoleSystem
 	[ServerVar]
 	public static void clientperf(Arg arg)
 	{
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
 		string @string = arg.GetString(0, "legacy");
 		int @int = arg.GetInt(1, Random.Range(int.MinValue, int.MaxValue));
 		Enumerator<BasePlayer> enumerator = BasePlayer.activePlayerList.GetEnumerator();
@@ -1099,8 +1099,8 @@ public class Admin : ConsoleSystem
 	[ServerVar]
 	public static void clientperf_frametime(Arg arg)
 	{
-		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
 		ClientFrametimeRequest clientFrametimeRequest = new ClientFrametimeRequest
 		{
 			request_id = arg.GetInt(0, Random.Range(int.MinValue, int.MaxValue)),
@@ -1125,8 +1125,8 @@ public class Admin : ConsoleSystem
 	[ServerVar(Help = "Get information about all the cars in the world")]
 	public static void carstats(Arg arg)
 	{
-		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000b: Expected O, but got Unknown
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Expected O, but got Unknown
 		HashSet<ModularCar> allCarsList = ModularCar.allCarsList;
 		TextTable val = new TextTable();
 		val.AddColumn("id");
@@ -1188,10 +1188,10 @@ public class Admin : ConsoleSystem
 	[ServerVar]
 	public static string teaminfo(Arg arg)
 	{
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0046: Expected O, but got Unknown
+		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0069: Expected O, but got Unknown
 		ulong num = arg.GetUInt64(0, 0uL);
-		if (num == 0L)
+		if (num == 0)
 		{
 			BasePlayer player = arg.GetPlayer(0);
 			if ((Object)(object)player == (Object)null)
@@ -1221,11 +1221,7 @@ public class Admin : ConsoleSystem
 				(memberId == playerTeam.teamLeader) ? "x" : ""
 			});
 		}
-		if (!arg.HasArg("--json"))
-		{
-			return $"ID: {playerTeam.teamID}\n\n{val}";
-		}
-		return val.ToJson();
+		return arg.HasArg("--json") ? val.ToJson() : ((object)val).ToString();
 	}
 
 	[ServerVar]
@@ -1258,7 +1254,7 @@ public class Admin : ConsoleSystem
 
 	private static void SetAuthInRadius(BasePlayer player, float radius, bool auth)
 	{
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
 		List<BaseEntity> list = new List<BaseEntity>();
 		global::Vis.Entities(((Component)player).transform.position, radius, list, -1, (QueryTriggerInteraction)2);
 		foreach (BaseEntity item in list)
@@ -1272,16 +1268,16 @@ public class Admin : ConsoleSystem
 
 	private static bool SetUserAuthorized(BaseEntity entity, ulong userId, bool state)
 	{
-		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0093: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a3: Expected O, but got Unknown
-		//IL_00d9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00de: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0101: Expected O, but got Unknown
+		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00be: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ce: Expected O, but got Unknown
+		//IL_011b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0120: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0127: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0133: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0143: Expected O, but got Unknown
 		if ((Object)(object)entity == (Object)null)
 		{
 			return false;
@@ -1343,9 +1339,9 @@ public class Admin : ConsoleSystem
 	[ServerVar]
 	public static void entid(Arg arg)
 	{
-		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
 		BaseEntity baseEntity = BaseNetworkable.serverEntities.Find(arg.GetEntityID(1)) as BaseEntity;
 		if ((Object)(object)baseEntity == (Object)null || baseEntity is BasePlayer)
 		{
@@ -1389,7 +1385,9 @@ public class Admin : ConsoleSystem
 			arg.ReplyWith(ChangeGrade(baseEntity, 0, 0, (BuildingGrade.Enum)arg.GetInt(2, 0), arg.GetFloat(3, 0f)));
 			return;
 		case "repair":
-			RunInRadius(arg.GetFloat(2, 0f), baseEntity, delegate(BaseCombatEntity entity)
+		{
+			float @float = arg.GetFloat(2, 0f);
+			bool flag = RunInRadius(@float, baseEntity, delegate(BaseCombatEntity entity)
 			{
 				if (entity.repair.enabled)
 				{
@@ -1398,13 +1396,18 @@ public class Admin : ConsoleSystem
 			});
 			break;
 		}
+		}
 		arg.ReplyWith("Unknown command");
 	}
 
 	private static string AuthList(BaseEntity ent)
 	{
-		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006d: Expected O, but got Unknown
+		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bb: Expected O, but got Unknown
+		if (ent == null)
+		{
+			goto IL_0088;
+		}
 		List<PlayerNameID> authorizedPlayers;
 		if (!(ent is BuildingPrivlidge buildingPrivlidge))
 		{
@@ -1412,19 +1415,23 @@ public class Admin : ConsoleSystem
 			{
 				if (!(ent is CodeLock codeLock))
 				{
-					if (ent is BaseVehicleModule vehicleModule)
+					if (!(ent is BaseVehicleModule baseVehicleModule))
 					{
-						return CodeLockAuthList(vehicleModule);
+						goto IL_0088;
 					}
-					return "Entity has no auth list";
+					BaseVehicleModule vehicleModule = baseVehicleModule;
+					return CodeLockAuthList(vehicleModule);
 				}
-				return CodeLockAuthList(codeLock);
+				CodeLock codeLock2 = codeLock;
+				return CodeLockAuthList(codeLock2);
 			}
-			authorizedPlayers = autoTurret.authorizedPlayers;
+			AutoTurret autoTurret2 = autoTurret;
+			authorizedPlayers = autoTurret2.authorizedPlayers;
 		}
 		else
 		{
-			authorizedPlayers = buildingPrivlidge.authorizedPlayers;
+			BuildingPrivlidge buildingPrivlidge2 = buildingPrivlidge;
+			authorizedPlayers = buildingPrivlidge2.authorizedPlayers;
 		}
 		if (authorizedPlayers == null || authorizedPlayers.Count == 0)
 		{
@@ -1442,12 +1449,14 @@ public class Admin : ConsoleSystem
 			});
 		}
 		return ((object)val).ToString();
+		IL_0088:
+		return "Entity has no auth list";
 	}
 
 	private static string CodeLockAuthList(CodeLock codeLock)
 	{
-		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0026: Expected O, but got Unknown
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Expected O, but got Unknown
 		if (codeLock.whitelistPlayers.Count == 0 && codeLock.guestPlayers.Count == 0)
 		{
 			return "Nobody is authed to this entity";
@@ -1479,8 +1488,8 @@ public class Admin : ConsoleSystem
 
 	private static string CodeLockAuthList(BaseVehicleModule vehicleModule)
 	{
-		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0049: Expected O, but got Unknown
+		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0063: Expected O, but got Unknown
 		if (!vehicleModule.IsOnAVehicle)
 		{
 			return "Nobody is authed to this entity";
@@ -1507,25 +1516,13 @@ public class Admin : ConsoleSystem
 	public static string GetPlayerName(ulong steamId)
 	{
 		BasePlayer basePlayer = BasePlayer.allPlayerList.FirstOrDefault((BasePlayer p) => p.userID == steamId);
-		string text;
-		if (!((Object)(object)basePlayer != (Object)null))
-		{
-			text = SingletonComponent<ServerMgr>.Instance.persistance.GetPlayerName(steamId);
-			if (text == null)
-			{
-				return "[unknown]";
-			}
-		}
-		else
-		{
-			text = basePlayer.displayName;
-		}
-		return text;
+		return ((Object)(object)basePlayer != (Object)null) ? basePlayer.displayName : (SingletonComponent<ServerMgr>.Instance.persistance.GetPlayerName(steamId) ?? "[unknown]");
 	}
 
 	public static string ChangeGrade(BaseEntity entity, int increaseBy = 0, int decreaseBy = 0, BuildingGrade.Enum targetGrade = BuildingGrade.Enum.None, float radius = 0f)
 	{
-		if ((Object)(object)(entity as BuildingBlock) == (Object)null)
+		BuildingBlock buildingBlock = entity as BuildingBlock;
+		if ((Object)(object)buildingBlock == (Object)null)
 		{
 			return $"'{entity}' is not a building block";
 		}
@@ -1546,13 +1543,14 @@ public class Admin : ConsoleSystem
 				block.ChangeGrade(grade);
 			}
 		});
-		int count = Pool.GetList<BuildingBlock>().Count;
+		List<BuildingBlock> list = Pool.GetList<BuildingBlock>();
+		int count = list.Count;
 		return $"Upgraded/downgraded '{count}' building block(s)";
 	}
 
 	private static bool RunInRadius<T>(float radius, BaseEntity initial, Action<T> callback, Func<T, bool> filter = null) where T : BaseEntity
 	{
-		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
 		List<T> list = Pool.GetList<T>();
 		radius = Mathf.Clamp(radius, 0f, 200f);
 		if (radius > 0f)
@@ -1623,7 +1621,7 @@ public class Admin : ConsoleSystem
 		result.NetworkOut = (int)((Net.sv != null) ? ((BaseNetwork)Net.sv).GetStat((Connection)null, (StatTypeLong)1) : 0);
 		result.Restarting = SingletonComponent<ServerMgr>.Instance.Restarting;
 		result.SaveCreatedTime = SaveRestore.SaveCreatedTime.ToString();
-		result.Version = 2509;
+		result.Version = 2402;
 		result.Protocol = Protocol.printable;
 		return result;
 	}
@@ -1689,10 +1687,8 @@ public class Admin : ConsoleSystem
 	[ServerVar]
 	public static void AdminUI_RequestUGCList(Arg arg)
 	{
-		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e9: Unknown result type (might be due to invalid IL or missing references)
 		if (!allowAdminUI)
 		{
 			return;
@@ -1700,57 +1696,48 @@ public class Admin : ConsoleSystem
 		List<ServerUGCInfo> list = Pool.GetList<ServerUGCInfo>();
 		uint[] array = null;
 		ulong[] array2 = null;
-		Enumerator<BaseNetworkable> enumerator = BaseNetworkable.serverEntities.GetEnumerator();
-		try
+		IUGCBrowserEntity iUGCBrowserEntity = default(IUGCBrowserEntity);
+		foreach (BaseNetworkable serverEntity in BaseNetworkable.serverEntities)
 		{
-			IUGCBrowserEntity iUGCBrowserEntity = default(IUGCBrowserEntity);
-			while (enumerator.MoveNext())
+			array = null;
+			array2 = null;
+			UGCType uGCType = UGCType.ImageJpg;
+			if (((Component)serverEntity).TryGetComponent<IUGCBrowserEntity>(ref iUGCBrowserEntity))
 			{
-				BaseNetworkable current = enumerator.Current;
-				array = null;
-				array2 = null;
-				UGCType uGCType = UGCType.ImageJpg;
-				if (((Component)current).TryGetComponent<IUGCBrowserEntity>(ref iUGCBrowserEntity))
-				{
-					array = iUGCBrowserEntity.GetContentCRCs;
-					array2 = iUGCBrowserEntity.EditingHistory.ToArray();
-					uGCType = iUGCBrowserEntity.ContentType;
-				}
-				if (array == null || array.Length == 0)
-				{
-					continue;
-				}
-				bool flag = false;
-				uint[] array3 = array;
-				for (int i = 0; i < array3.Length; i++)
-				{
-					if (array3[i] != 0)
-					{
-						flag = true;
-						break;
-					}
-				}
-				if (uGCType == UGCType.PatternBoomer)
+				array = iUGCBrowserEntity.GetContentCRCs;
+				array2 = iUGCBrowserEntity.EditingHistory.ToArray();
+				uGCType = iUGCBrowserEntity.ContentType;
+			}
+			if (array == null || array.Length == 0)
+			{
+				continue;
+			}
+			bool flag = false;
+			uint[] array3 = array;
+			for (int i = 0; i < array3.Length; i++)
+			{
+				if (array3[i] != 0)
 				{
 					flag = true;
-				}
-				if (flag)
-				{
-					list.Add(new ServerUGCInfo
-					{
-						entityId = current.net.ID,
-						crcs = array,
-						contentType = uGCType,
-						entityPrefabID = current.prefabID,
-						shortPrefabName = current.ShortPrefabName,
-						playerIds = array2
-					});
+					break;
 				}
 			}
-		}
-		finally
-		{
-			((IDisposable)enumerator).Dispose();
+			if (uGCType == UGCType.PatternBoomer)
+			{
+				flag = true;
+			}
+			if (flag)
+			{
+				list.Add(new ServerUGCInfo
+				{
+					entityId = serverEntity.net.ID,
+					crcs = array,
+					contentType = uGCType,
+					entityPrefabID = serverEntity.prefabID,
+					shortPrefabName = serverEntity.ShortPrefabName,
+					playerIds = array2
+				});
+			}
 		}
 		ConsoleNetwork.SendClientCommand(arg.Connection, "AdminUI_ReceiveUGCList", JsonConvert.SerializeObject((object)list));
 		Pool.FreeList<ServerUGCInfo>(ref list);
@@ -1759,15 +1746,15 @@ public class Admin : ConsoleSystem
 	[ServerVar]
 	public static void AdminUI_RequestUGCContent(Arg arg)
 	{
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
 		if (allowAdminUI && !((Object)(object)arg.Player() == (Object)null))
 		{
 			uint uInt = arg.GetUInt(0, 0u);
@@ -1790,12 +1777,12 @@ public class Admin : ConsoleSystem
 	[ServerVar]
 	public static void AdminUI_DeleteUGCContent(Arg arg)
 	{
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
 		if (!allowAdminUI)
 		{
 			return;
@@ -1816,16 +1803,16 @@ public class Admin : ConsoleSystem
 	[ServerVar]
 	public static void AdminUI_RequestFireworkPattern(Arg arg)
 	{
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
 		if (allowAdminUI)
 		{
 			NetworkableId entityID = arg.GetEntityID(0);
@@ -1845,13 +1832,13 @@ public class Admin : ConsoleSystem
 	[ServerVar]
 	public static void clearugcentity(Arg arg)
 	{
-		//IL_0004: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
 		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
 		NetworkableId entityID = arg.GetEntityID(0);
 		BaseNetworkable baseNetworkable = BaseNetworkable.serverEntities.Find(entityID);
 		IUGCBrowserEntity iUGCBrowserEntity = default(IUGCBrowserEntity);
@@ -1869,35 +1856,24 @@ public class Admin : ConsoleSystem
 	[ServerVar]
 	public static void clearugcentitiesinrange(Arg arg)
 	{
-		//IL_0004: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
 		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009f: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 vector = arg.GetVector3(0, default(Vector3));
 		float @float = arg.GetFloat(1, 0f);
 		int num = 0;
-		Enumerator<BaseNetworkable> enumerator = BaseNetworkable.serverEntities.GetEnumerator();
-		try
+		IUGCBrowserEntity iUGCBrowserEntity = default(IUGCBrowserEntity);
+		foreach (BaseNetworkable serverEntity in BaseNetworkable.serverEntities)
 		{
-			IUGCBrowserEntity iUGCBrowserEntity = default(IUGCBrowserEntity);
-			while (enumerator.MoveNext())
+			if (((Component)serverEntity).TryGetComponent<IUGCBrowserEntity>(ref iUGCBrowserEntity) && Vector3.Distance(((Component)serverEntity).transform.position, vector) <= @float)
 			{
-				BaseNetworkable current = enumerator.Current;
-				if (((Component)current).TryGetComponent<IUGCBrowserEntity>(ref iUGCBrowserEntity) && Vector3.Distance(((Component)current).transform.position, vector) <= @float)
-				{
-					iUGCBrowserEntity.ClearContent();
-					num++;
-				}
+				iUGCBrowserEntity.ClearContent();
+				num++;
 			}
-		}
-		finally
-		{
-			((IDisposable)enumerator).Dispose();
 		}
 		arg.ReplyWith($"Cleared {num} UGC entities within {@float}m of {vector}");
 	}
@@ -1905,12 +1881,12 @@ public class Admin : ConsoleSystem
 	[ServerVar]
 	public static void getugcinfo(Arg arg)
 	{
-		//IL_0004: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
 		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
 		NetworkableId entityID = arg.GetEntityID(0);
 		BaseNetworkable baseNetworkable = BaseNetworkable.serverEntities.Find(entityID);
 		IUGCBrowserEntity fromEntity = default(IUGCBrowserEntity);
@@ -1928,10 +1904,10 @@ public class Admin : ConsoleSystem
 	[ServerVar(Help = "Returns all entities that the provided player is authed to (TC's, locks, etc), supports --json")]
 	public static void authcount(Arg arg)
 	{
-		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0069: Expected O, but got Unknown
-		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0079: Expected O, but got Unknown
+		//IL_00df: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e4: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer playerOrSleeper = arg.GetPlayerOrSleeper(0);
 		if ((Object)(object)playerOrSleeper == (Object)null)
 		{
@@ -1977,10 +1953,10 @@ public class Admin : ConsoleSystem
 	[ServerVar(Help = "Returns all entities that the provided player has placed, supports --json")]
 	public static void entcount(Arg arg)
 	{
-		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0069: Expected O, but got Unknown
-		//IL_00c4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0079: Expected O, but got Unknown
+		//IL_00d7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00dc: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer playerOrSleeper = arg.GetPlayerOrSleeper(0);
 		if ((Object)(object)playerOrSleeper == (Object)null)
 		{
@@ -2023,73 +1999,62 @@ public class Admin : ConsoleSystem
 
 	private static void FindEntityAssociationsForPlayer(BasePlayer ply, bool useOwnerId, bool useAuth, string filter, List<EntityAssociation> results)
 	{
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
 		results.Clear();
-		Enumerator<BaseNetworkable> enumerator = BaseNetworkable.serverEntities.GetEnumerator();
-		try
+		foreach (BaseNetworkable serverEntity in BaseNetworkable.serverEntities)
 		{
-			while (enumerator.MoveNext())
+			EntityAssociationType entityAssociationType = EntityAssociationType.Owner;
+			if (!(serverEntity is BaseEntity baseEntity))
 			{
-				BaseNetworkable current = enumerator.Current;
-				EntityAssociationType entityAssociationType = EntityAssociationType.Owner;
-				if (!(current is BaseEntity baseEntity))
-				{
-					continue;
-				}
-				bool flag = false;
-				if (useOwnerId && baseEntity.OwnerID == ply.userID)
+				continue;
+			}
+			bool flag = false;
+			if (useOwnerId && baseEntity.OwnerID == ply.userID)
+			{
+				flag = true;
+			}
+			if (useAuth && !flag)
+			{
+				if (!flag && baseEntity is BuildingPrivlidge buildingPrivlidge && buildingPrivlidge.IsAuthed(ply.userID))
 				{
 					flag = true;
 				}
-				if (useAuth && !flag)
+				if (!flag && baseEntity is KeyLock keyLock && keyLock.HasLockPermission(ply))
 				{
-					if (!flag && baseEntity is BuildingPrivlidge buildingPrivlidge && buildingPrivlidge.IsAuthed(ply.userID))
+					flag = true;
+				}
+				else if (baseEntity is CodeLock codeLock)
+				{
+					if (codeLock.whitelistPlayers.Contains(ply.userID))
 					{
 						flag = true;
 					}
-					if (!flag && baseEntity is KeyLock keyLock && keyLock.HasLockPermission(ply))
+					else if (codeLock.guestPlayers.Contains(ply.userID))
 					{
 						flag = true;
-					}
-					else if (baseEntity is CodeLock codeLock)
-					{
-						if (codeLock.whitelistPlayers.Contains(ply.userID))
-						{
-							flag = true;
-						}
-						else if (codeLock.guestPlayers.Contains(ply.userID))
-						{
-							flag = true;
-							entityAssociationType = EntityAssociationType.LockGuest;
-						}
-					}
-					if (!flag && baseEntity is ModularCar modularCar && modularCar.IsLockable && modularCar.CarLock.HasLockPermission(ply))
-					{
-						flag = true;
-					}
-					if (flag && entityAssociationType == EntityAssociationType.Owner)
-					{
-						entityAssociationType = EntityAssociationType.Auth;
+						entityAssociationType = EntityAssociationType.LockGuest;
 					}
 				}
-				if (flag && !string.IsNullOrEmpty(filter) && !StringEx.Contains(current.ShortPrefabName, filter, CompareOptions.IgnoreCase))
+				if (!flag && baseEntity is ModularCar modularCar && modularCar.IsLockable && modularCar.CarLock.HasLockPermission(ply))
 				{
-					flag = false;
+					flag = true;
 				}
-				if (flag)
+				if (flag && entityAssociationType == EntityAssociationType.Owner)
 				{
-					results.Add(new EntityAssociation
-					{
-						TargetEntity = baseEntity,
-						AssociationType = entityAssociationType
-					});
+					entityAssociationType = EntityAssociationType.Auth;
 				}
 			}
-		}
-		finally
-		{
-			((IDisposable)enumerator).Dispose();
+			if (flag && !string.IsNullOrEmpty(filter) && !StringEx.Contains(serverEntity.ShortPrefabName, filter, CompareOptions.IgnoreCase))
+			{
+				flag = false;
+			}
+			if (flag)
+			{
+				results.Add(new EntityAssociation
+				{
+					TargetEntity = baseEntity,
+					AssociationType = entityAssociationType
+				});
+			}
 		}
 	}
 }

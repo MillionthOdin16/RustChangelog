@@ -10,24 +10,27 @@ public class SocketHandle : PrefabAttribute
 
 	internal void AdjustTarget(ref Construction.Target target, float maxplaceDistance)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 val = worldPosition;
-		Vector3 val2 = ((Ray)(ref target.ray)).origin + ((Ray)(ref target.ray)).direction * maxplaceDistance - val;
+		Vector3 val2 = ((Ray)(ref target.ray)).origin + ((Ray)(ref target.ray)).direction * maxplaceDistance;
+		Vector3 val3 = val2 - val;
 		ref Ray ray = ref target.ray;
-		Vector3 val3 = val2 - ((Ray)(ref target.ray)).origin;
-		((Ray)(ref ray)).direction = ((Vector3)(ref val3)).normalized;
+		Vector3 val4 = val3 - ((Ray)(ref target.ray)).origin;
+		((Ray)(ref ray)).direction = ((Vector3)(ref val4)).normalized;
 	}
 }

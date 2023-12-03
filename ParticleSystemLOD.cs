@@ -13,5 +13,5 @@ public class ParticleSystemLOD : LODComponentParticleSystem
 	}
 
 	[Horizontal(1, 0)]
-	public State[] States;
+	public State[] States = null;
 }

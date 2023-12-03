@@ -9,7 +9,7 @@ public class CardReader : IOEntity
 {
 	public float accessDuration = 10f;
 
-	public int accessLevel;
+	public int accessLevel = 0;
 
 	public GameObjectRef accessGrantedEffect;
 
@@ -35,7 +35,7 @@ public class CardReader : IOEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ServerCardSwiped "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ServerCardSwiped "));
 				}
 				TimeWarning val2 = TimeWarning.New("ServerCardSwiped", 0);
 				try
@@ -54,7 +54,7 @@ public class CardReader : IOEntity
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -66,7 +66,7 @@ public class CardReader : IOEntity
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -99,11 +99,7 @@ public class CardReader : IOEntity
 
 	public override int GetPassthroughAmount(int outputSlot = 0)
 	{
-		if (!IsOn())
-		{
-			return 0;
-		}
-		return base.GetPassthroughAmount(outputSlot);
+		return IsOn() ? base.GetPassthroughAmount(outputSlot) : 0;
 	}
 
 	public override void IOStateChanged(int inputAmount, int inputSlot)
@@ -119,8 +115,8 @@ public class CardReader : IOEntity
 
 	public void FailCard()
 	{
-		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
 		Effect.server.Run(accessDeniedEffect.resourcePath, audioPosition.position, Vector3.up);
 	}
 
@@ -134,8 +130,8 @@ public class CardReader : IOEntity
 
 	public void GrantCard()
 	{
-		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
 		SetFlag(Flags.On, b: true);
 		MarkDirty();
 		Effect.server.Run(accessGrantedEffect.resourcePath, audioPosition.position, Vector3.up);
@@ -145,13 +141,13 @@ public class CardReader : IOEntity
 	[RPC_Server.IsVisible(3f)]
 	public void ServerCardSwiped(RPCMessage msg)
 	{
-		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0092: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0097: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0095: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bd: Unknown result type (might be due to invalid IL or missing references)
 		if (!IsPowered() || Vector3Ex.Distance2D(((Component)msg.player).transform.position, ((Component)this).transform.position) > 1f || ((FacepunchBehaviour)this).IsInvoking((Action)GrantCard) || ((FacepunchBehaviour)this).IsInvoking((Action)FailCard) || HasFlag(Flags.On))
 		{
 			return;

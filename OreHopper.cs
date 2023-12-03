@@ -17,7 +17,7 @@ public class OreHopper : PercentFullStorageContainer
 
 	private void SetVisualOreLevel(float percentFull)
 	{
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
 		_oreScale.y = Mathf.Clamp01(percentFull);
 		oreOutputMesh.localScale = _oreScale;
 		((Component)oreOutputMesh).gameObject.SetActive(percentFull > 0f);

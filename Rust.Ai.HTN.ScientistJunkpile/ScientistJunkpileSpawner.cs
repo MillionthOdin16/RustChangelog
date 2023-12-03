@@ -36,16 +36,16 @@ public class ScientistJunkpileSpawner : MonoBehaviour, IServerComponent, ISpawnG
 
 	public float MovementRadius = -1f;
 
-	public bool ReducedLongRangeAccuracy;
+	public bool ReducedLongRangeAccuracy = false;
 
 	public JunkpileType SpawnType;
 
 	[Range(0f, 1f)]
 	public float SpawnBaseChance = 1f;
 
-	private float nextRespawnTime;
+	private float nextRespawnTime = 0f;
 
-	private bool pendingRespawn;
+	private bool pendingRespawn = false;
 
 	public int currentPopulation => Spawned.Count;
 
@@ -156,8 +156,8 @@ public class ScientistJunkpileSpawner : MonoBehaviour, IServerComponent, ISpawnG
 
 	public void SpawnScientist()
 	{
-		//IL_008b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c7: Unknown result type (might be due to invalid IL or missing references)
 		if (!ConVar.AI.npc_enable || Spawned == null || Spawned.Count >= MaxPopulation)
 		{
 			return;
@@ -179,7 +179,10 @@ public class ScientistJunkpileSpawner : MonoBehaviour, IServerComponent, ISpawnG
 		int num2 = MaxPopulation - Spawned.Count;
 		for (int i = 0; i < num2; i++)
 		{
-			if (!((Object)(object)GetSpawnPoint(out var pos, out var rot) == (Object)null))
+			Vector3 pos;
+			Quaternion rot;
+			BaseSpawnPoint spawnPoint = GetSpawnPoint(out pos, out rot);
+			if (!((Object)(object)spawnPoint == (Object)null))
 			{
 				BaseEntity baseEntity = GameManager.server.CreateEntity(ScientistPrefab.resourcePath, pos, rot, startActive: false);
 				if (!((Object)(object)baseEntity != (Object)null))
@@ -196,10 +199,10 @@ public class ScientistJunkpileSpawner : MonoBehaviour, IServerComponent, ISpawnG
 
 	private BaseSpawnPoint GetSpawnPoint(out Vector3 pos, out Quaternion rot)
 	{
-		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0004: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
 		BaseSpawnPoint baseSpawnPoint = null;
 		pos = Vector3.zero;
 		rot = Quaternion.identity;

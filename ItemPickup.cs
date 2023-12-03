@@ -6,7 +6,7 @@ public class ItemPickup : DroppedItem
 
 	public int amount = 1;
 
-	public ulong skinOverride;
+	public ulong skinOverride = 0uL;
 
 	public override float GetDespawnDuration()
 	{

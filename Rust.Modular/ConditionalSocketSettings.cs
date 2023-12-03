@@ -23,15 +23,5 @@ public class ConditionalSocketSettings
 
 	public ModularVehicleSocket.SocketWheelType wheelRestriction;
 
-	public bool HasSocketRestrictions
-	{
-		get
-		{
-			if (!restrictOnLocation)
-			{
-				return restrictOnWheel;
-			}
-			return true;
-		}
-	}
+	public bool HasSocketRestrictions => restrictOnLocation || restrictOnWheel;
 }

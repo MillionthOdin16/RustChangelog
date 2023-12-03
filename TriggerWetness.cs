@@ -6,21 +6,27 @@ public class TriggerWetness : TriggerBase
 
 	public SphereCollider TargetCollider;
 
-	public Transform OriginTransform;
+	public Transform OriginTransform = null;
 
-	public bool ApplyLocalHeightCheck;
+	public bool ApplyLocalHeightCheck = false;
 
-	public float MinLocalHeight;
+	public float MinLocalHeight = 0f;
 
 	public float WorkoutWetness(Vector3 position)
 	{
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		if (ApplyLocalHeightCheck && ((Component)this).transform.InverseTransformPoint(position).y < MinLocalHeight)
+		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		if (ApplyLocalHeightCheck)
 		{
-			return 0f;
+			Vector3 val = ((Component)this).transform.InverseTransformPoint(position);
+			if (val.y < MinLocalHeight)
+			{
+				return 0f;
+			}
 		}
 		float num = Vector3Ex.Distance2D(OriginTransform.position, position) / TargetCollider.radius;
 		num = Mathf.Clamp01(num);

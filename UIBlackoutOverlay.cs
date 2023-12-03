@@ -22,7 +22,7 @@ public class UIBlackoutOverlay : MonoBehaviour
 
 	public blackoutType overlayType = blackoutType.NONE;
 
-	public bool overrideCanvasScaling;
+	public bool overrideCanvasScaling = false;
 
 	public float referenceScale = 1f;
 }

@@ -43,7 +43,7 @@ public class AdventCalendar : BaseCombatEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_RequestGift "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_RequestGift "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_RequestGift", 0);
 				try
@@ -66,7 +66,7 @@ public class AdventCalendar : BaseCombatEntity
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -78,7 +78,7 @@ public class AdventCalendar : BaseCombatEntity
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -115,15 +115,15 @@ public class AdventCalendar : BaseCombatEntity
 
 	public void AwardGift(BasePlayer player)
 	{
-		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ea: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ef: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fe: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0105: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010b: Unknown result type (might be due to invalid IL or missing references)
 		DateTime now = DateTime.Now;
 		int num = now.Day - startDay;
 		if (now.Month == startMonth && num >= 0 && num < days.Length)
@@ -163,7 +163,8 @@ public class AdventCalendar : BaseCombatEntity
 		{
 			return true;
 		}
-		if (playerRewardHistory[player.userID].Contains(num))
+		List<int> list = playerRewardHistory[player.userID];
+		if (list.Contains(num))
 		{
 			return true;
 		}

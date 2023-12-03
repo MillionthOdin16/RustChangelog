@@ -208,10 +208,6 @@ internal static class ShaderIDs
 
 	internal static readonly int ShoSegmentB = Shader.PropertyToID("_ShoSegmentB");
 
-	internal static readonly int MaskMode = Shader.PropertyToID("_MaskMode");
-
-	internal static readonly int MaskIntensity = Shader.PropertyToID("_MaskIntensity");
-
 	internal static readonly int Vignette_Color = Shader.PropertyToID("_Vignette_Color");
 
 	internal static readonly int Vignette_Center = Shader.PropertyToID("_Vignette_Center");

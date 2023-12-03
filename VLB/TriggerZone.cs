@@ -13,11 +13,11 @@ public class TriggerZone : MonoBehaviour
 
 	private const int kMeshColliderNumSides = 8;
 
-	private Mesh m_Mesh;
+	private Mesh m_Mesh = null;
 
 	private void Update()
 	{
-		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
 		VolumetricLightBeam component = ((Component)this).GetComponent<VolumetricLightBeam>();
 		if (Object.op_Implicit((Object)(object)component))
 		{

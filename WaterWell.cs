@@ -20,7 +20,7 @@ public class WaterWell : LiquidContainer
 
 	public float pressureForProduction = 1f;
 
-	public float currentPressure;
+	public float currentPressure = 0f;
 
 	public int waterPerPump = 50;
 
@@ -38,7 +38,7 @@ public class WaterWell : LiquidContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_Pump "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_Pump "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_Pump", 0);
 				try
@@ -57,7 +57,7 @@ public class WaterWell : LiquidContainer
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -69,7 +69,7 @@ public class WaterWell : LiquidContainer
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)

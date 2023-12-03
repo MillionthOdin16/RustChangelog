@@ -10,7 +10,7 @@ public class BasePathNode : MonoBehaviour, IAIPathNode
 
 	public float maxVelocityOnApproach = -1f;
 
-	public bool straightaway;
+	public bool straightaway = false;
 
 	public Vector3 Position => ((Component)this).transform.position;
 

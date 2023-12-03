@@ -24,17 +24,17 @@ public class ChippyArcadeGame : BaseArcadeGame
 
 	public TextArcadeEntity highScoresButton;
 
-	public bool OnMainMenu;
+	public bool OnMainMenu = false;
 
-	public bool GameActive;
+	public bool GameActive = false;
 
-	public int level;
+	public int level = 0;
 
 	public TextArcadeEntity[] scoreDisplays;
 
 	public MenuButtonArcadeEntity[] mainMenuButtons;
 
-	public int selectedButtonIndex;
+	public int selectedButtonIndex = 0;
 
-	public bool OnHighScores;
+	public bool OnHighScores = false;
 }

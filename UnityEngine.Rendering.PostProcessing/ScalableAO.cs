@@ -44,6 +44,8 @@ internal sealed class ScalableAO : IAmbientOcclusionMethod
 
 	public DepthTextureMode GetCameraFlags()
 	{
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
 		return (DepthTextureMode)3;
 	}
 
@@ -73,42 +75,42 @@ internal sealed class ScalableAO : IAmbientOcclusionMethod
 
 	private void Render(PostProcessRenderContext context, CommandBuffer cmd, int occlusionSource)
 	{
-		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00de: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ee: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f4: Invalid comparison between Unknown and I4
-		//IL_0124: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0129: Unknown result type (might be due to invalid IL or missing references)
-		//IL_016b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0172: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01aa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01cf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01da: Unknown result type (might be due to invalid IL or missing references)
-		//IL_020b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00db: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fc: Invalid comparison between Unknown and I4
+		//IL_0135: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0180: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0187: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ba: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01e8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_022a: Unknown result type (might be due to invalid IL or missing references)
 		DoLazyInitialization(context);
 		m_Settings.radius.value = Mathf.Max(m_Settings.radius.value, 0.0001f);
-		bool num = m_Settings.quality.value < AmbientOcclusionQuality.High;
+		bool flag = m_Settings.quality.value < AmbientOcclusionQuality.High;
 		float value = m_Settings.intensity.value;
 		float value2 = m_Settings.radius.value;
-		float num2 = (num ? 0.5f : 1f);
-		float num3 = m_SampleCount[(int)m_Settings.quality.value];
+		float num = (flag ? 0.5f : 1f);
+		float num2 = m_SampleCount[(int)m_Settings.quality.value];
 		PropertySheet propertySheet = m_PropertySheet;
 		propertySheet.ClearKeywords();
-		propertySheet.properties.SetVector(ShaderIDs.AOParams, new Vector4(value, value2, num2, num3));
+		propertySheet.properties.SetVector(ShaderIDs.AOParams, new Vector4(value, value2, num, num2));
 		propertySheet.properties.SetVector(ShaderIDs.AOColor, Color.op_Implicit(Color.white - m_Settings.color.value));
 		if ((int)context.camera.actualRenderingPath == 1 && RenderSettings.fog)
 		{
 			propertySheet.EnableKeyword("APPLY_FORWARD_FOG");
 			propertySheet.properties.SetVector(ShaderIDs.FogParams, Vector4.op_Implicit(new Vector3(RenderSettings.fogDensity, RenderSettings.fogStartDistance, RenderSettings.fogEndDistance)));
 		}
-		int num4 = ((!num) ? 1 : 2);
+		int num3 = ((!flag) ? 1 : 2);
 		int occlusionTexture = ShaderIDs.OcclusionTexture1;
-		int widthOverride = context.width / num4;
-		int heightOverride = context.height / num4;
+		int widthOverride = context.width / num3;
+		int heightOverride = context.height / num3;
 		context.GetScreenSpaceTemporaryRT(cmd, occlusionTexture, 0, (RenderTextureFormat)0, (RenderTextureReadWrite)1, (FilterMode)1, widthOverride, heightOverride);
 		cmd.BlitFullscreenTriangle(RenderTargetIdentifier.op_Implicit((BuiltinRenderTextureType)0), RenderTargetIdentifier.op_Implicit(occlusionTexture), propertySheet, occlusionSource);
 		int occlusionTexture2 = ShaderIDs.OcclusionTexture2;
@@ -125,9 +127,9 @@ internal sealed class ScalableAO : IAmbientOcclusionMethod
 
 	public void RenderAfterOpaque(PostProcessRenderContext context)
 	{
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
 		CommandBuffer command = context.command;
 		command.BeginSample("Ambient Occlusion");
 		Render(context, command, 0);
@@ -146,9 +148,9 @@ internal sealed class ScalableAO : IAmbientOcclusionMethod
 
 	public void CompositeAmbientOnly(PostProcessRenderContext context)
 	{
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
 		CommandBuffer command = context.command;
 		command.BeginSample("Ambient Occlusion Composite");
 		command.SetGlobalTexture(ShaderIDs.SAOcclusionTexture, RenderTargetIdentifier.op_Implicit((Texture)(object)m_Result));

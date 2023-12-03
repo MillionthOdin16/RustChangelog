@@ -32,7 +32,7 @@ public class CompoundBowWeapon : BowWeapon
 
 	protected float movementPenalty;
 
-	internal float stringHoldTimeStart;
+	internal float stringHoldTimeStart = 0f;
 
 	protected float conditionLossCheckTickRate = 0.5f;
 
@@ -48,7 +48,7 @@ public class CompoundBowWeapon : BowWeapon
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_StringHoldStatus "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_StringHoldStatus "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_StringHoldStatus", 0);
 				try
@@ -112,9 +112,13 @@ public class CompoundBowWeapon : BowWeapon
 
 	public void UpdateConditionLoss()
 	{
-		if (stringHoldTimeStart != 0f && Time.time - stringHoldTimeStart > conditionLossHeldDelay && GetStringBonusScale() > 0f)
+		if (stringHoldTimeStart != 0f)
 		{
-			GetOwnerItem()?.LoseCondition(conditionLossCheckTickRate * conditionLossPerSecondHeld);
+			float num = Time.time - stringHoldTimeStart;
+			if (num > conditionLossHeldDelay && GetStringBonusScale() > 0f)
+			{
+				GetOwnerItem()?.LoseCondition(conditionLossCheckTickRate * conditionLossPerSecondHeld);
+			}
 		}
 	}
 
@@ -159,7 +163,10 @@ public class CompoundBowWeapon : BowWeapon
 
 	public float GetLastPlayerMovementTime()
 	{
-		_ = base.isServer;
+		if (base.isServer)
+		{
+			return 0f;
+		}
 		return 0f;
 	}
 
@@ -169,7 +176,10 @@ public class CompoundBowWeapon : BowWeapon
 		{
 			return 0f;
 		}
-		return Mathf.Clamp01(Mathf.Clamp01((Time.time - stringHoldTimeStart) / stringHoldDurationMax) - movementPenalty);
+		float num = Time.time - stringHoldTimeStart;
+		float num2 = num;
+		float num3 = Mathf.Clamp01(num2 / stringHoldDurationMax);
+		return Mathf.Clamp01(num3 - movementPenalty);
 	}
 
 	public override float GetDamageScale(bool getMax = false)

@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class IgnoreCollision : MonoBehaviour
 {
-	public Collider collider;
+	public Collider collider = null;
 
 	protected void OnTriggerEnter(Collider other)
 	{

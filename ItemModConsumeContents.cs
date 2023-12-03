@@ -9,11 +9,12 @@ public class ItemModConsumeContents : ItemMod
 		foreach (Item item2 in item.contents.itemList)
 		{
 			ItemModConsume component = ((Component)item2.info).GetComponent<ItemModConsume>();
-			if (!((Object)(object)component == (Object)null) && component.CanDoAction(item2, player))
+			if ((Object)(object)component == (Object)null || !component.CanDoAction(item2, player))
 			{
-				component.DoAction(item2, player);
-				break;
+				continue;
 			}
+			component.DoAction(item2, player);
+			break;
 		}
 	}
 
@@ -30,10 +31,11 @@ public class ItemModConsumeContents : ItemMod
 		foreach (Item item2 in item.contents.itemList)
 		{
 			ItemModConsume component = ((Component)item2.info).GetComponent<ItemModConsume>();
-			if (!((Object)(object)component == (Object)null) && component.CanDoAction(item2, player))
+			if ((Object)(object)component == (Object)null || !component.CanDoAction(item2, player))
 			{
-				return true;
+				continue;
 			}
+			return true;
 		}
 		return false;
 	}

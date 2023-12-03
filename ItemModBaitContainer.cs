@@ -7,11 +7,7 @@ public class ItemModBaitContainer : ItemModContainer
 	protected override bool CanAcceptItem(Item item, int count)
 	{
 		ItemModCompostable component = ((Component)item.info).GetComponent<ItemModCompostable>();
-		if ((Object)(object)component != (Object)null)
-		{
-			return component.BaitValue > 0f;
-		}
-		return false;
+		return (Object)(object)component != (Object)null && component.BaitValue > 0f;
 	}
 
 	protected override void SetAllowedItems(ItemContainer container)

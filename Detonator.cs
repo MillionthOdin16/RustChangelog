@@ -18,7 +18,7 @@ public class Detonator : HeldEntity, IRFObject
 
 	public GameObjectRef unAttackEffect;
 
-	private float nextChangeTime;
+	private float nextChangeTime = 0f;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -30,7 +30,7 @@ public class Detonator : HeldEntity, IRFObject
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ServerSetFrequency "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ServerSetFrequency "));
 				}
 				TimeWarning val2 = TimeWarning.New("ServerSetFrequency", 0);
 				try
@@ -66,12 +66,12 @@ public class Detonator : HeldEntity, IRFObject
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SetPressed "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SetPressed "));
 				}
-				TimeWarning val2 = TimeWarning.New("SetPressed", 0);
+				TimeWarning val4 = TimeWarning.New("SetPressed", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Call", 0);
+					TimeWarning val5 = TimeWarning.New("Call", 0);
 					try
 					{
 						RPCMessage rPCMessage = default(RPCMessage);
@@ -83,7 +83,7 @@ public class Detonator : HeldEntity, IRFObject
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val5)?.Dispose();
 					}
 				}
 				catch (Exception ex2)
@@ -93,7 +93,7 @@ public class Detonator : HeldEntity, IRFObject
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val4)?.Dispose();
 				}
 				return true;
 			}
@@ -108,16 +108,16 @@ public class Detonator : HeldEntity, IRFObject
 	[RPC_Server]
 	public void SetPressed(RPCMessage msg)
 	{
-		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
 		if (!((Object)(object)msg.player == (Object)null) && !((Object)(object)msg.player != (Object)(object)GetOwnerPlayer()))
 		{
-			bool num = HasFlag(Flags.On);
-			bool flag = msg.read.Bit();
-			InternalSetPressed(flag);
-			if (num != flag)
+			bool flag = HasFlag(Flags.On);
+			bool flag2 = msg.read.Bit();
+			InternalSetPressed(flag2);
+			if (flag != flag2)
 			{
-				Effect.server.Run(flag ? attackEffect.resourcePath : unAttackEffect.resourcePath, this, 0u, Vector3.zero, Vector3.zero);
+				Effect.server.Run(flag2 ? attackEffect.resourcePath : unAttackEffect.resourcePath, this, 0u, Vector3.zero, Vector3.zero);
 			}
 		}
 	}
@@ -137,7 +137,9 @@ public class Detonator : HeldEntity, IRFObject
 
 	public Vector3 GetPosition()
 	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
 		return ((Component)this).transform.position;
 	}
 
@@ -167,8 +169,8 @@ public class Detonator : HeldEntity, IRFObject
 
 	public void ServerSetFrequency(BasePlayer player, int freq)
 	{
-		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008d: Expected O, but got Unknown
+		//IL_00b6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c0: Expected O, but got Unknown
 		if ((Object)(object)player == (Object)null || (Object)(object)GetOwnerPlayer() != (Object)(object)player || Time.time < nextChangeTime)
 		{
 			return;

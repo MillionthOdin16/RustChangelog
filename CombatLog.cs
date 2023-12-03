@@ -90,14 +90,14 @@ public class CombatLog
 
 	public void Log(BaseEntity attacker, AttackEntity weapon, BaseCombatEntity hitEntity, string description, Projectile projectilePrefab = null, int projectileId = -1, float healthOld = -1f, HitInfo hitInfo = null)
 	{
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00eb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0107: Unknown result type (might be due to invalid IL or missing references)
 		Event val = default(Event);
 		float distance = 0f;
 		if (hitInfo != null)
@@ -150,9 +150,9 @@ public class CombatLog
 
 	public string Get(int count, NetworkableId filterByAttacker = default(NetworkableId), bool json = false, bool isAdmin = false, ulong requestingUser = 0uL)
 	{
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002a: Expected O, but got Unknown
-		//IL_013b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004a: Expected O, but got Unknown
+		//IL_0175: Unknown result type (might be due to invalid IL or missing references)
 		if (storage == null)
 		{
 			return string.Empty;

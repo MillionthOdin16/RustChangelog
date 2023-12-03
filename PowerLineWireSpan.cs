@@ -15,25 +15,25 @@ public class PowerLineWireSpan : MonoBehaviour
 
 	public void Init(PowerLineWire wire)
 	{
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
 		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
 		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0089: Unknown result type (might be due to invalid IL or missing references)
 		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ba: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ed: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00dd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fc: Unknown result type (might be due to invalid IL or missing references)
 		if (Object.op_Implicit((Object)(object)start) && Object.op_Implicit((Object)(object)end))
 		{
 			WireLength = Vector3.Distance(start.position, end.position);
@@ -43,12 +43,12 @@ public class PowerLineWireSpan : MonoBehaviour
 				Vector3 val2 = end.TransformPoint(connections[i].inOffset);
 				Vector3 val3 = val - val2;
 				WireLength = ((Vector3)(ref val3)).magnitude;
-				GameObject obj = wirePrefab.Instantiate(((Component)this).transform);
-				((Object)obj).name = "WIRE";
-				obj.transform.position = Vector3.Lerp(val, val2, 0.5f);
-				obj.transform.LookAt(val2);
-				obj.transform.localScale = new Vector3(1f, 1f, Vector3.Distance(val, val2));
-				obj.SetActive(true);
+				GameObject val4 = wirePrefab.Instantiate(((Component)this).transform);
+				((Object)val4).name = "WIRE";
+				val4.transform.position = Vector3.Lerp(val, val2, 0.5f);
+				val4.transform.LookAt(val2);
+				val4.transform.localScale = new Vector3(1f, 1f, Vector3.Distance(val, val2));
+				val4.SetActive(true);
 			}
 		}
 	}

@@ -10,7 +10,7 @@ public class Composter : StorageContainer
 	public ItemDefinition FertilizerDef;
 
 	[Tooltip("If enabled, entire item stacks will be composted each tick, instead of a single item of a stack.")]
-	public bool CompostEntireStack;
+	public bool CompostEntireStack = false;
 
 	private float fertilizerProductionProgress;
 
@@ -87,10 +87,10 @@ public class Composter : StorageContainer
 
 	private void ProduceFertilizer(int amount)
 	{
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
 		if (amount > 0)
 		{
 			Item item = ItemManager.Create(FertilizerDef, amount, 0uL);
