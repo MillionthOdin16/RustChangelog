@@ -532,6 +532,8 @@ public class RidableHorse : BaseRidableAnimal
 		//IL_017a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0181: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0187: Unknown result type (might be due to invalid IL or missing references)
+		//IL_018b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0191: Unknown result type (might be due to invalid IL or missing references)
 		SetFlag(Flags.Reserved4, b: false, recursive: false, networkupdate: false);
 		SetFlag(Flags.Reserved5, b: false, recursive: false, networkupdate: false);
 		SetFlag(Flags.Reserved6, b: false, recursive: false, networkupdate: false);

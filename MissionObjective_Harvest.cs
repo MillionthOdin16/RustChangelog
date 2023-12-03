@@ -15,7 +15,10 @@ public class MissionObjective_Harvest : MissionObjective
 	public override void PostServerLoad(BasePlayer player, BaseMission.MissionInstance.ObjectiveStatus status)
 	{
 		base.PostServerLoad(player, status);
-		InitialiseResourcePings(player);
+		if (status.started)
+		{
+			InitialiseResourcePings(player);
+		}
 	}
 
 	public override void MissionStarted(int index, BaseMission.MissionInstance instance, BasePlayer forPlayer)
@@ -23,7 +26,12 @@ public class MissionObjective_Harvest : MissionObjective
 		base.MissionStarted(index, instance, forPlayer);
 		instance.objectiveStatuses[index].progressCurrent = 0f;
 		instance.objectiveStatuses[index].progressTarget = targetItemAmount;
-		InitialiseResourcePings(forPlayer);
+	}
+
+	public override void ObjectiveStarted(BasePlayer playerFor, int index, BaseMission.MissionInstance instance)
+	{
+		base.ObjectiveStarted(playerFor, index, instance);
+		InitialiseResourcePings(playerFor);
 	}
 
 	private void InitialiseResourcePings(BasePlayer forPlayer)

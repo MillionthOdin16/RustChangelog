@@ -338,7 +338,8 @@ public class CodeLock : BaseLock
 		info.msg.codeLock.hasCode = code.Length > 0;
 		if (!info.forDisk && info.forConnection != null)
 		{
-			info.msg.codeLock.hasAuth = whitelistPlayers.Contains(info.forConnection.userid) || guestPlayers.Contains(info.forConnection.userid);
+			info.msg.codeLock.hasAuth = whitelistPlayers.Contains(info.forConnection.userid);
+			info.msg.codeLock.hasGuestAuth = guestPlayers.Contains(info.forConnection.userid);
 		}
 		if (info.forDisk)
 		{

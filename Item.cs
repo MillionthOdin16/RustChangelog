@@ -324,11 +324,13 @@ public class Item
 		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0189: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0193: Unknown result type (might be due to invalid IL or missing references)
-		//IL_019a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0180: Unknown result type (might be due to invalid IL or missing references)
+		//IL_018c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0196: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ad: Unknown result type (might be due to invalid IL or missing references)
 		if (!hasCondition)
 		{
 			return;
@@ -666,6 +668,8 @@ public class Item
 		//IL_0462: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0469: Unknown result type (might be due to invalid IL or missing references)
 		//IL_046f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0473: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0479: Unknown result type (might be due to invalid IL or missing references)
 		TimeWarning val = TimeWarning.New("MoveToContainer", 0);
 		try
 		{
@@ -900,14 +904,30 @@ public class Item
 		return GetWorldEntity();
 	}
 
-	public BaseEntity Drop(Vector3 vPos, Vector3 vVelocity, Quaternion rotation = default(Quaternion))
+	public BaseEntity Drop(Vector3 vPos, Vector3 vVelocity, Quaternion rotation = default(Quaternion), Quaternion playerRotation = default(Quaternion))
 	{
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008b: Unknown result type (might be due to invalid IL or missing references)
 		RemoveFromWorld();
+		if (info.AlignWorldModelOnDrop && playerRotation != default(Quaternion))
+		{
+			rotation = Quaternion.Euler(0f, ((Quaternion)(ref playerRotation)).eulerAngles.y, 0f);
+			rotation = Quaternion.Euler(info.WorldModelDropOffset) * rotation;
+		}
 		BaseEntity baseEntity = null;
 		if (vPos != Vector3.zero && !info.HasFlag(ItemDefinition.Flag.NoDropping))
 		{
@@ -935,6 +955,8 @@ public class Item
 		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
 		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
 		float num = Random.value * (float)Math.PI * 2f;
 		Vector3 val = default(Vector3);
 		((Vector3)(ref val))._002Ector(Mathf.Sin(num), 1f, Mathf.Cos(num));
@@ -1040,6 +1062,24 @@ public class Item
 			return (info.flags & ItemDefinition.Flag.Backpack) != 0;
 		}
 		return false;
+	}
+
+	public int GetChildItemCount()
+	{
+		return (contents?.itemList?.Count).GetValueOrDefault();
+	}
+
+	public int GetItemVolume()
+	{
+		if (IsBackpack() && (contents?.itemList?.Count).GetValueOrDefault() > 0)
+		{
+			ItemModBackpack component = ((Component)info).GetComponent<ItemModBackpack>();
+			if ((Object)(object)component != (Object)null)
+			{
+				return component.containerVolumeWhenFilled;
+			}
+		}
+		return info.volume;
 	}
 
 	public Item SplitItem(int split_Amount)
@@ -1272,7 +1312,7 @@ public class Item
 	public bool HasAmmo(AmmoTypes ammoType)
 	{
 		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
 		ItemModProjectile itemModProjectile = default(ItemModProjectile);
 		if (((Component)info).TryGetComponent<ItemModProjectile>(ref itemModProjectile) && itemModProjectile.IsAmmo(ammoType))
 		{
@@ -1280,6 +1320,11 @@ public class Item
 		}
 		if (contents != null)
 		{
+			ItemModContainer itemModContainer = default(ItemModContainer);
+			if ((Object)(object)info != (Object)null && ((Component)info).TryGetComponent<ItemModContainer>(ref itemModContainer) && itemModContainer.blockAmmoSource)
+			{
+				return false;
+			}
 			return contents.HasAmmo(ammoType);
 		}
 		return false;
@@ -1409,9 +1454,9 @@ public class Item
 			val.conditionData.maxCondition = _maxCondition;
 			val.conditionData.condition = _condition;
 		}
-		if (contents != null && bIncludeContainer)
+		if (contents != null)
 		{
-			val.contents = contents.Save();
+			val.contents = contents.Save(bIncludeContainer);
 		}
 		return val;
 	}

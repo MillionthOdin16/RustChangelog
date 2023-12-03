@@ -39,6 +39,8 @@ public class VisualStorageContainer : LootContainer
 		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
 		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
 		base.PopulateLoot();
 		for (int i = 0; i < inventorySlots; i++)
 		{

@@ -32,6 +32,7 @@ public class ItemModEntity : ItemMod
 			else
 			{
 				baseEntity.skinID = item.skin;
+				baseEntity.limitNetworking = true;
 				baseEntity.Spawn();
 				item.SetHeldEntity(baseEntity);
 			}
@@ -50,11 +51,16 @@ public class ItemModEntity : ItemMod
 
 	private bool ParentToParent(Item item, BaseEntity ourEntity)
 	{
-		if (item.parentItem == null)
+		Item parentItem = item.parentItem;
+		if (parentItem == null)
 		{
 			return false;
 		}
-		BaseEntity baseEntity = item.parentItem.GetWorldEntity();
+		if (parentItem.IsBackpack())
+		{
+			return false;
+		}
+		BaseEntity baseEntity = parentItem.GetWorldEntity();
 		if ((Object)(object)baseEntity == (Object)null)
 		{
 			baseEntity = item.parentItem.GetHeldEntity();

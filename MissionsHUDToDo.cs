@@ -19,6 +19,8 @@ public class MissionsHUDToDo : BaseMonoBehaviour
 
 	public Phrase optionalPrefix;
 
+	public CanvasGroup group;
+
 	[FormerlySerializedAs("AliveColor")]
 	public Color DefaultColor;
 

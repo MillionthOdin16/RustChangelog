@@ -18,8 +18,8 @@ public class SurveyCharge : TimedExplosive
 		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0218: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0219: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0222: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0223: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0150: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0156: Unknown result type (might be due to invalid IL or missing references)
 		//IL_015b: Unknown result type (might be due to invalid IL or missing references)
@@ -32,10 +32,12 @@ public class SurveyCharge : TimedExplosive
 		//IL_0193: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0198: Unknown result type (might be due to invalid IL or missing references)
 		//IL_019d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ac: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01aa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b6: Unknown result type (might be due to invalid IL or missing references)
 		//IL_01ba: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c4: Unknown result type (might be due to invalid IL or missing references)
 		base.Explode();
 		if (WaterLevel.Test(((Component)this).transform.position, waves: true, volumes: true, this))
 		{
@@ -78,9 +80,13 @@ public class SurveyCharge : TimedExplosive
 				{
 					Item item = ItemManager.Create(resource.type, iAmount, 0uL);
 					Vector3 modifiedAimConeDirection = AimConeUtil.GetModifiedAimConeDirection(20f, Vector3.up);
-					BaseEntity baseEntity = item.Drop(((Component)this).transform.position + Vector3.up * 1f, GetInheritedDropVelocity() + modifiedAimConeDirection * Random.Range(5f, 10f), Random.rotation);
+					Vector3 vPos = ((Component)this).transform.position + Vector3.up * 1f;
+					Vector3 vVelocity = GetInheritedDropVelocity() + modifiedAimConeDirection * Random.Range(5f, 10f);
 					Quaternion rotation = Random.rotation;
-					baseEntity.SetAngularVelocity(((Quaternion)(ref rotation)).eulerAngles * 5f);
+					Quaternion playerRotation = default(Quaternion);
+					BaseEntity baseEntity = item.Drop(vPos, vVelocity, rotation, playerRotation);
+					playerRotation = Random.rotation;
+					baseEntity.SetAngularVelocity(((Quaternion)(ref playerRotation)).eulerAngles * 5f);
 				}
 			}
 		}

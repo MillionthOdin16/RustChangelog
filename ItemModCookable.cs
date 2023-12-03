@@ -44,6 +44,8 @@ public class ItemModCookable : ItemMod
 		//IL_021c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0223: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0229: Unknown result type (might be due to invalid IL or missing references)
+		//IL_022d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0233: Unknown result type (might be due to invalid IL or missing references)
 		if (!CanBeCookedByAtTemperature(item.temperature) || item.cookTimeLeft < 0f)
 		{
 			if (setCookingFlag && item.HasFlag(Item.Flag.Cooking))

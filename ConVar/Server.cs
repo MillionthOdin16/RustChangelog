@@ -155,6 +155,15 @@ public class Server : ConsoleSystem
 	[ServerVar(Saved = true)]
 	public static float bleedingdamage = 1f;
 
+	[ServerVar(Saved = true)]
+	public static float oilrig_radiation_amount_scale = 1f;
+
+	[ServerVar(Saved = true)]
+	public static float oilrig_radiation_time_scale = 1f;
+
+	[ServerVar]
+	public static float oilrig_radiation_alarm_threshold = 0f;
+
 	[ReplicatedVar(Saved = true)]
 	public static float funWaterDamageThreshold = 0.8f;
 
@@ -598,6 +607,19 @@ public class Server : ConsoleSystem
 	}
 
 	[ServerVar]
+	public static int player_state_cache_size
+	{
+		get
+		{
+			return SingletonComponent<ServerMgr>.Instance.playerStateManager.CacheSize;
+		}
+		set
+		{
+			SingletonComponent<ServerMgr>.Instance.playerStateManager.CacheSize = value;
+		}
+	}
+
+	[ServerVar]
 	public static int maxpacketspersecond
 	{
 		get
@@ -696,6 +718,18 @@ public class Server : ConsoleSystem
 		{
 			((IDisposable)enumerator).Dispose();
 		}
+	}
+
+	[ServerVar]
+	public static void player_state_cache_count(Arg args)
+	{
+		args.ReplyWith((object)SingletonComponent<ServerMgr>.Instance.playerStateManager.CacheCount);
+	}
+
+	[ServerVar]
+	public static void player_state_cache_evictions(Arg args)
+	{
+		args.ReplyWith((object)SingletonComponent<ServerMgr>.Instance.playerStateManager.CacheEvictions);
 	}
 
 	[ServerVar]

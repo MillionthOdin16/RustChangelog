@@ -454,6 +454,8 @@ public class MarketTerminal : StorageContainer
 		//IL_01c6: Unknown result type (might be due to invalid IL or missing references)
 		//IL_01cd: Unknown result type (might be due to invalid IL or missing references)
 		//IL_01d3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01dd: Unknown result type (might be due to invalid IL or missing references)
 		if (!CanPlayerInteract(msg.player))
 		{
 			return;

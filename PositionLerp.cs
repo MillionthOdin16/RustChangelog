@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class PositionLerp : IDisposable
 {
-	private static ListHashSet<PositionLerp> InstanceList = new ListHashSet<PositionLerp>(8);
+	private static readonly ListHashSet<PositionLerp> InstanceList = new ListHashSet<PositionLerp>(8);
 
 	public static bool DebugLog = false;
 
@@ -22,7 +22,7 @@ public class PositionLerp : IDisposable
 
 	private Action idleDisable;
 
-	private Interpolator<TransformSnapshot> interpolator = new Interpolator<TransformSnapshot>(32);
+	private readonly Interpolator<TransformSnapshot> interpolator = new Interpolator<TransformSnapshot>(32);
 
 	private IPosLerpTarget target;
 

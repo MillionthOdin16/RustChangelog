@@ -201,9 +201,7 @@ public class TutorialIsland : BaseEntity, IEntityPingSource
 		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00c6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ec: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e5: Unknown result type (might be due to invalid IL or missing references)
 		if (player.IsNpc || player.IsBot)
 		{
 			return null;
@@ -228,7 +226,7 @@ public class TutorialIsland : BaseEntity, IEntityPingSource
 			tutorialIsland.CurrentIslandTime = TimeChange.Apply(tutorialIsland.OnStartTimeChange.value, tutorialIsland.OnStartTimeChange, player);
 			player.Teleport(tutorialIsland.InitialSpawnPoint.position);
 			player.ForceUpdateTriggers();
-			player.ClientRPCPlayer<Vector3>(null, player, "ForceViewAnglesTo", tutorialIsland.InitialSpawnPoint.rotation * Vector3.forward);
+			((Component)player).transform.rotation = tutorialIsland.InitialSpawnPoint.rotation;
 			player.OnStartedTutorial();
 		}
 		else
@@ -415,11 +413,11 @@ public class TutorialIsland : BaseEntity, IEntityPingSource
 		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
 		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
 		base.Save(info);
-		if (info.msg.TutorialIsland == null)
+		if (info.msg.tutorialIsland == null)
 		{
-			info.msg.TutorialIsland = Pool.Get<TutorialIsland>();
+			info.msg.tutorialIsland = Pool.Get<TutorialIsland>();
 		}
-		TutorialIsland tutorialIsland = info.msg.TutorialIsland;
+		TutorialIsland tutorialIsland = info.msg.tutorialIsland;
 		tutorialIsland.targetPlayer = ForPlayer.uid;
 		tutorialIsland.disconnectDuration = disconnectedDuration;
 		tutorialIsland.spawnLocationIndex = SpawnLocationIndex;
@@ -595,9 +593,9 @@ public class TutorialIsland : BaseEntity, IEntityPingSource
 	{
 		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
 		base.Load(info);
-		if (info.msg.TutorialIsland != null)
+		if (info.msg.tutorialIsland != null)
 		{
-			TutorialIsland tutorialIsland = info.msg.TutorialIsland;
+			TutorialIsland tutorialIsland = info.msg.tutorialIsland;
 			ForPlayer.uid = tutorialIsland.targetPlayer;
 			CurrentIslandTime = tutorialIsland.currentIslandTime;
 			disconnectedDuration = tutorialIsland.disconnectDuration;

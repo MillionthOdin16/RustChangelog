@@ -371,10 +371,12 @@ public class BaseOven : StorageContainer, ISplashable, IIndustrialStorage
 
 	private void ConsumeFuel(Item fuel, ItemModBurnable burnable)
 	{
-		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
 		if (allowByproductCreation && (Object)(object)burnable.byproductItem != (Object)null && Random.Range(0f, 1f) > burnable.byproductChance)
 		{
 			Item item = ItemManager.Create(burnable.byproductItem, burnable.byproductAmount * GetCharcoalRate(), 0uL);

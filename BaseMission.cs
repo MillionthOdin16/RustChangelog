@@ -667,6 +667,8 @@ public class BaseMission : BaseScriptableObject
 
 	public bool finishTutorial;
 
+	public bool hideStagesNotStarted;
+
 	public MissionDependancy[] acceptDependancies;
 
 	public MissionEntityEntry[] missionEntities;

@@ -44,6 +44,8 @@ public sealed class ItemContainer : IAmmoContainer
 		CannotAcceptRightNow
 	}
 
+	public static readonly int BackpackSlotIndex = 7;
+
 	public Flag flags;
 
 	public ContentsType allowedContents;
@@ -71,6 +73,8 @@ public sealed class ItemContainer : IAmmoContainer
 	public bool isServer;
 
 	public int maxStackSize;
+
+	public int containerVolume;
 
 	public Func<Item, int, bool> canAcceptItem;
 
@@ -629,7 +633,7 @@ public sealed class ItemContainer : IAmmoContainer
 		return itemList.FindAll((Item x) => x.info.itemid == itemid);
 	}
 
-	public ItemContainer Save()
+	public ItemContainer Save(bool bIncludeContainer = true)
 	{
 		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
@@ -652,6 +656,7 @@ public sealed class ItemContainer : IAmmoContainer
 		}
 		val.flags = (int)flags;
 		val.maxStackSize = maxStackSize;
+		val.volume = containerVolume;
 		if (availableSlots != null && availableSlots.Count > 0)
 		{
 			val.availableSlots = Pool.GetList<int>();
@@ -665,7 +670,7 @@ public sealed class ItemContainer : IAmmoContainer
 			Item item = itemList[k];
 			if (item.IsValid())
 			{
-				val.contents.Add(item.Save(bIncludeContainer: true));
+				val.contents.Add(item.Save(bIncludeContainer));
 			}
 		}
 		return val;
@@ -675,8 +680,8 @@ public sealed class ItemContainer : IAmmoContainer
 	{
 		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0154: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0159: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0160: Unknown result type (might be due to invalid IL or missing references)
 		TimeWarning val = TimeWarning.New("ItemContainer.Load", 0);
 		try
 		{
@@ -700,6 +705,7 @@ public sealed class ItemContainer : IAmmoContainer
 				onlyAllowedItems = null;
 			}
 			maxStackSize = container.maxStackSize;
+			containerVolume = container.volume;
 			availableSlots.Clear();
 			for (int j = 0; j < container.availableSlots.Count; j++)
 			{
@@ -884,7 +890,13 @@ public sealed class ItemContainer : IAmmoContainer
 
 	public bool HasAmmo(AmmoTypes ammoType)
 	{
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Invalid comparison between Unknown and I4
+		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		if ((int)ammoType == 256)
+		{
+			return false;
+		}
 		for (int i = 0; i < itemList.Count; i++)
 		{
 			if (itemList[i].HasAmmo(ammoType))
@@ -1109,6 +1121,10 @@ public sealed class ItemContainer : IAmmoContainer
 			{
 				return CanAcceptResult.CannotAccept;
 			}
+		}
+		if (item.GetItemVolume() > containerVolume)
+		{
+			return CanAcceptResult.CannotAccept;
 		}
 		return CanAcceptResult.CanAccept;
 	}

@@ -258,6 +258,8 @@ public class MixingTable : StorageContainer
 		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00c7: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00cd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d7: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)player == (Object)null || (Object)(object)currentRecipe == (Object)null || orderedContainerItems == null || orderedContainerItems.Count != currentRecipe.Ingredients.Length)
 		{
 			return;
@@ -288,6 +290,8 @@ public class MixingTable : StorageContainer
 		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00bb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)recipe == (Object)null || (Object)(object)recipe.ProducedItem == (Object)null)
 		{
 			return;

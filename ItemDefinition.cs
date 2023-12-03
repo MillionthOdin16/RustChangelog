@@ -98,6 +98,8 @@ public class ItemDefinition : MonoBehaviour
 
 	public int stackable;
 
+	public int volume;
+
 	public bool quickDespawn;
 
 	public BasePlayer.TutorialItemAllowance tutorialAllowance;
@@ -125,6 +127,8 @@ public class ItemDefinition : MonoBehaviour
 	[InspectorFlags]
 	public Flag flags;
 
+	public bool hideSelectedPanel;
+
 	[Tooltip("User can craft this item on any server if they have this steam item")]
 	public SteamInventoryItem steamItem;
 
@@ -134,9 +138,16 @@ public class ItemDefinition : MonoBehaviour
 	[Tooltip("Can only craft this item if the parent is craftable (tech tree)")]
 	public ItemDefinition Parent;
 
+	[Header("World Model")]
 	public GameObjectRef worldModelPrefab;
 
 	public OverrideWorldModel[] worldModelOverrides;
+
+	public bool treatAsComponentForRepairs;
+
+	public bool AlignWorldModelOnDrop;
+
+	public Vector3 WorldModelDropOffset;
 
 	public ItemDefinition isRedirectOf;
 

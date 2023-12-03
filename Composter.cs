@@ -91,6 +91,8 @@ public class Composter : StorageContainer
 		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
 		if (amount > 0)
 		{
 			Item item = ItemManager.Create(FertilizerDef, amount, 0uL);

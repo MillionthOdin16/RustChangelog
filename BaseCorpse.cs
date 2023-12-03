@@ -26,13 +26,13 @@ public class BaseCorpse : BaseCombatEntity
 
 	public override void ServerInit()
 	{
+		base.ServerInit();
 		SetupRigidBody();
 		ResetRemovalTime();
 		resourceDispenser = ((Component)this).GetComponent<ResourceDispenser>();
-		base.ServerInit();
 	}
 
-	public virtual void InitCorpse(BaseEntity pr)
+	public virtual void ServerInitCorpse(BaseEntity pr, BasePlayer.PlayerFlags playerFlagsOnDeath, ModelState modelState)
 	{
 		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
@@ -133,13 +133,17 @@ public class BaseCorpse : BaseCombatEntity
 
 	private Rigidbody SetupRigidBody()
 	{
-		//IL_0162: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0167: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0193: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0176: Unknown result type (might be due to invalid IL or missing references)
+		//IL_017b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_018e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d5: Unknown result type (might be due to invalid IL or missing references)
+		if (!prefabRagdoll.isValid)
+		{
+			return ((Component)this).GetComponent<Rigidbody>();
+		}
 		if (base.isServer)
 		{
 			GameObject val = base.gameManager.FindPrefab(prefabRagdoll.resourcePath);
@@ -175,11 +179,11 @@ public class BaseCorpse : BaseCombatEntity
 		if ((Object)(object)val2 == (Object)null)
 		{
 			val2 = ((Component)this).gameObject.AddComponent<Rigidbody>();
+			val2.mass = 10f;
+			val2.drag = 0.5f;
+			val2.angularDrag = 0.5f;
 		}
-		val2.mass = 10f;
 		val2.useGravity = true;
-		val2.drag = 0.5f;
-		val2.angularDrag = 0.5f;
 		val2.collisionDetectionMode = (CollisionDetectionMode)0;
 		val2.sleepThreshold = Mathf.Max(0.05f, Physics.sleepThreshold);
 		if (base.isServer)

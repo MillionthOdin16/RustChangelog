@@ -564,6 +564,7 @@ public class SleepingBag : DecayEntity
 		}
 		foreach (SleepingBag item2 in list)
 		{
+			item2.deployerUserID = 0uL;
 			RemoveBagForPlayer(item2, userId);
 		}
 		Pool.FreeList<SleepingBag>(ref list);
@@ -744,6 +745,11 @@ public class SleepingBag : DecayEntity
 			notifyPlayerOnServerInit = false;
 			NotifyPlayer(deployerUserID);
 		}
+	}
+
+	public override void OnPlaced(BasePlayer player)
+	{
+		SetDeployedBy(player);
 	}
 
 	public override void OnParentChanging(BaseEntity oldParent, BaseEntity newParent)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using ConVar;
+using Facepunch;
 using Facepunch.Rust;
 using Network;
 using ProtoBuf;
@@ -125,37 +126,37 @@ public class Planner : HeldEntity
 
 	public void DoBuild(CreateBuilding msg)
 	{
-		//IL_02b8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02bd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02d2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02d7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02df: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02e4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02ec: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02f1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0152: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ac: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01cc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01d1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01d6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01e8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ed: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01f2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0204: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0209: Unknown result type (might be due to invalid IL or missing references)
-		//IL_020e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_021f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0225: Unknown result type (might be due to invalid IL or missing references)
-		//IL_022a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_022f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0180: Unknown result type (might be due to invalid IL or missing references)
-		//IL_032d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02fd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0302: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0317: Unknown result type (might be due to invalid IL or missing references)
+		//IL_031c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0324: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0332: Unknown result type (might be due to invalid IL or missing references)
-		//IL_033a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0329: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0331: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0336: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0197: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_020c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0211: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0216: Unknown result type (might be due to invalid IL or missing references)
+		//IL_021b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_022d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0232: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0237: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0249: Unknown result type (might be due to invalid IL or missing references)
+		//IL_024e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0253: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0264: Unknown result type (might be due to invalid IL or missing references)
+		//IL_026a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_026f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0274: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0372: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0369: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0377: Unknown result type (might be due to invalid IL or missing references)
+		//IL_037f: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer ownerPlayer = GetOwnerPlayer();
 		if (!Object.op_Implicit((Object)(object)ownerPlayer))
 		{
@@ -175,7 +176,19 @@ public class Planner : HeldEntity
 		if (!CanAffordToPlace(construction))
 		{
 			ownerPlayer.ChatMessage("Can't afford to place!");
-			return;
+			ItemAmountList val = Pool.Get<ItemAmountList>();
+			try
+			{
+				val.amount = Pool.GetList<float>();
+				val.itemID = Pool.GetList<int>();
+				GetConstructionCost(val, construction);
+				ownerPlayer.ClientRPCPlayer<ItemAmountList>(null, ownerPlayer, "Client_OnRepairFailedResources", val);
+				return;
+			}
+			finally
+			{
+				((IDisposable)val)?.Dispose();
+			}
 		}
 		if (!ownerPlayer.CanBuild() && !construction.canBypassBuildingPermission)
 		{
@@ -433,8 +446,8 @@ public class Planner : HeldEntity
 
 	public GameObject DoPlacement(Construction.Target placement, Construction component)
 	{
-		//IL_014a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0144: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer ownerPlayer = GetOwnerPlayer();
 		if (!Object.op_Implicit((Object)(object)ownerPlayer))
 		{
@@ -476,7 +489,7 @@ public class Planner : HeldEntity
 			baseCombatEntity.ResetLifeStateOnSpawn = false;
 			baseCombatEntity.InitializeHealth(num2 * num, num2);
 		}
-		((Component)baseEntity).gameObject.SendMessage("SetDeployedBy", (object)ownerPlayer, (SendMessageOptions)1);
+		baseEntity.OnPlaced(ownerPlayer);
 		baseEntity.OwnerID = ownerPlayer.userID;
 		baseEntity.Spawn();
 		if (Object.op_Implicit((Object)(object)buildingBlock))
@@ -537,6 +550,17 @@ public class Planner : HeldEntity
 			}
 		}
 		return true;
+	}
+
+	private void GetConstructionCost(ItemAmountList list, Construction component)
+	{
+		list.amount.Clear();
+		list.itemID.Clear();
+		foreach (ItemAmount item in component.defaultGrade.CostToBuild())
+		{
+			list.itemID.Add(item.itemDef.itemid);
+			list.amount.Add((int)item.amount);
+		}
 	}
 
 	private bool ShouldParent(BaseEntity targetEntity, Deployable deployable)

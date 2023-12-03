@@ -16,7 +16,8 @@ public class PlayerInventory : EntityComponent<BasePlayer>, IAmmoContainer
 	{
 		Main,
 		Belt,
-		Wear
+		Wear,
+		BackpackContents
 	}
 
 	public interface ICanMoveFrom
@@ -168,6 +169,7 @@ public class PlayerInventory : EntityComponent<BasePlayer>, IAmmoContainer
 		containerWear = new ItemContainer();
 		containerWear.SetFlag(ItemContainer.Flag.IsPlayer, b: true);
 		containerWear.SetFlag(ItemContainer.Flag.Clothing, b: true);
+		containerWear.containerVolume = 2;
 		crafting = ((Component)this).GetComponent<ItemCrafter>();
 		if ((Object)(object)crafting != (Object)null)
 		{
@@ -356,14 +358,18 @@ public class PlayerInventory : EntityComponent<BasePlayer>, IAmmoContainer
 		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0161: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0167: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0159: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0164: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0171: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0175: Unknown result type (might be due to invalid IL or missing references)
+		//IL_017b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00eb: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00f6: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00fd: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0103: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0107: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010d: Unknown result type (might be due to invalid IL or missing references)
 		if (((Object)(object)msg.player != (Object)null && msg.player.IsWounded()) || base.baseEntity.IsTransferring())
 		{
 			return;
@@ -425,16 +431,20 @@ public class PlayerInventory : EntityComponent<BasePlayer>, IAmmoContainer
 		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
 		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00db: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00e1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_021c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0233: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0234: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0150: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0155: Unknown result type (might be due to invalid IL or missing references)
+		//IL_023c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0253: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0254: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0160: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0165: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0210: Unknown result type (might be due to invalid IL or missing references)
 		if (base.baseEntity.IsTransferring())
 		{
 			return;
@@ -443,7 +453,7 @@ public class PlayerInventory : EntityComponent<BasePlayer>, IAmmoContainer
 		ItemContainerId val2 = msg.read.ItemContainerID();
 		int iTargetPos = msg.read.Int8();
 		int num = (int)msg.read.UInt32();
-		bool flag = msg.read.Bit();
+		ItemMoveModifier val3 = (ItemMoveModifier)msg.read.Int32();
 		Item item = FindItemByUID(val);
 		ItemId itemID;
 		if (item == null)
@@ -477,7 +487,7 @@ public class PlayerInventory : EntityComponent<BasePlayer>, IAmmoContainer
 			{
 				if ((Object)(object)entityOwner == (Object)(object)base.baseEntity)
 				{
-					if (!flag)
+					if (!((Enum)val3).HasFlag((Enum)(object)(ItemMoveModifier)2))
 					{
 						baseEntity = loot.entitySource;
 					}
@@ -489,7 +499,7 @@ public class PlayerInventory : EntityComponent<BasePlayer>, IAmmoContainer
 			}
 			if (baseEntity is IIdealSlotEntity idealSlotEntity)
 			{
-				val2 = idealSlotEntity.GetIdealContainer(base.baseEntity, item, flag);
+				val2 = idealSlotEntity.GetIdealContainer(base.baseEntity, item, val3);
 			}
 			ItemContainer parent = item.parent;
 			if (parent != null && parent.IsLocked())
@@ -510,7 +520,7 @@ public class PlayerInventory : EntityComponent<BasePlayer>, IAmmoContainer
 					}
 					return;
 				}
-				if (!GiveItem(item, flag))
+				if (!GiveItem(item, ((Enum)val3).HasFlag((Enum)(object)(ItemMoveModifier)2)))
 				{
 					msg.player.ChatMessage("GiveItem failed!");
 				}
@@ -521,8 +531,8 @@ public class PlayerInventory : EntityComponent<BasePlayer>, IAmmoContainer
 		if (itemContainer == null)
 		{
 			BasePlayer player3 = msg.player;
-			ItemContainerId val3 = val2;
-			player3.ChatMessage("Invalid container (" + ((object)(ItemContainerId)(ref val3)).ToString() + ")");
+			ItemContainerId val4 = val2;
+			player3.ChatMessage("Invalid container (" + ((object)(ItemContainerId)(ref val4)).ToString() + ")");
 			return;
 		}
 		if (itemContainer.IsLocked())
@@ -535,7 +545,7 @@ public class PlayerInventory : EntityComponent<BasePlayer>, IAmmoContainer
 			msg.player.ChatMessage("Container does not accept player items!");
 			return;
 		}
-		TimeWarning val4 = TimeWarning.New("Split", 0);
+		TimeWarning val5 = TimeWarning.New("Split", 0);
 		try
 		{
 			if (item.amount > num)
@@ -558,7 +568,7 @@ public class PlayerInventory : EntityComponent<BasePlayer>, IAmmoContainer
 		}
 		finally
 		{
-			((IDisposable)val4)?.Dispose();
+			((IDisposable)val5)?.Dispose();
 		}
 		if (item.MoveToContainer(itemContainer, iTargetPos, allowStack: true, ignoreStackLimit: false, base.baseEntity))
 		{
@@ -590,6 +600,8 @@ public class PlayerInventory : EntityComponent<BasePlayer>, IAmmoContainer
 		//IL_008b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0092: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a2: Unknown result type (might be due to invalid IL or missing references)
 		if ((item.info.flags & ItemDefinition.Flag.NotAllowedInBelt) != 0)
 		{
 			return false;
@@ -621,10 +633,12 @@ public class PlayerInventory : EntityComponent<BasePlayer>, IAmmoContainer
 
 	private bool CanWearItem(Item item, bool canAdjustClothing, int targetSlot)
 	{
-		//IL_0114: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0126: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0122: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0134: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0144: Unknown result type (might be due to invalid IL or missing references)
 		ItemModWearable component = ((Component)item.info).GetComponent<ItemModWearable>();
 		if ((Object)(object)component == (Object)null)
 		{
@@ -639,11 +653,11 @@ public class PlayerInventory : EntityComponent<BasePlayer>, IAmmoContainer
 			}
 		}
 		bool flag = item.IsBackpack();
-		if (flag && targetSlot != 7)
+		if (flag && targetSlot != ItemContainer.BackpackSlotIndex)
 		{
 			return false;
 		}
-		if (!flag && targetSlot == 7)
+		if (!flag && targetSlot == ItemContainer.BackpackSlotIndex)
 		{
 			return false;
 		}
@@ -953,7 +967,41 @@ public class PlayerInventory : EntityComponent<BasePlayer>, IAmmoContainer
 		{
 			return containerWear;
 		}
+		if (Type.BackpackContents == id)
+		{
+			return GetBackpackWithInventory()?.contents;
+		}
 		return null;
+	}
+
+	public Item GetAnyBackpack()
+	{
+		return containerWear?.GetSlot(ItemContainer.BackpackSlotIndex);
+	}
+
+	public Item GetBackpackWithInventory()
+	{
+		Item anyBackpack = GetAnyBackpack();
+		if (anyBackpack == null || anyBackpack.contents == null)
+		{
+			return null;
+		}
+		return anyBackpack;
+	}
+
+	public void TryDropBackpack()
+	{
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
+		Item anyBackpack = GetAnyBackpack();
+		if (anyBackpack != null && base.baseEntity.isServer)
+		{
+			anyBackpack.Drop(base.baseEntity.GetDropPosition(), base.baseEntity.GetDropVelocity());
+		}
 	}
 
 	public bool GiveItem(Item item, ItemContainer container = null)
@@ -1001,7 +1049,11 @@ public class PlayerInventory : EntityComponent<BasePlayer>, IAmmoContainer
 				return;
 			}
 		}
-		if (tryWearClothing && item.info.isWearable && CanWearItem(item, canAdjustClothing: false, item.IsBackpack() ? 7 : (-1)))
+		if (item.IsBackpack())
+		{
+			container = containerWear;
+		}
+		else if (tryWearClothing && item.info.isWearable && CanWearItem(item, canAdjustClothing: false, item.IsBackpack() ? 7 : (-1)))
 		{
 			container = containerWear;
 		}
@@ -1031,7 +1083,7 @@ public class PlayerInventory : EntityComponent<BasePlayer>, IAmmoContainer
 		}
 		nextCheckTime = Time.time + 60f;
 		DateTime now = DateTime.Now;
-		wasBirthday = now.Day == 11 && now.Month == 12;
+		wasBirthday = now.Month == 12 && now.Day >= 7 && now.Day <= 16;
 		return wasBirthday;
 	}
 

@@ -1377,6 +1377,8 @@ public class GrowableEntity : BaseCombatEntity, IInstanceDataReceiver
 		//IL_00bb: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00c2: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00c8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d1: Unknown result type (might be due to invalid IL or missing references)
 		Item item = ItemManager.Create(Properties.pickupItem, amount, 0uL);
 		if (applyCondition)
 		{
@@ -1484,6 +1486,8 @@ public class GrowableEntity : BaseCombatEntity, IInstanceDataReceiver
 		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00af: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00be: Unknown result type (might be due to invalid IL or missing references)
 		if (State == PlantProperties.State.Dying && !((Object)(object)Properties.removeDyingItem == (Object)null))
 		{
 			if (Properties.removeDyingEffect.isValid)

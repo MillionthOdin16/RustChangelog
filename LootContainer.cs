@@ -170,6 +170,8 @@ public class LootContainer : StorageContainer
 		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
 		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
 		if (scrapAmount <= 0)
 		{
 			return;
@@ -197,6 +199,8 @@ public class LootContainer : StorageContainer
 		//IL_0109: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0110: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0116: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0120: Unknown result type (might be due to invalid IL or missing references)
 		base.DropBonusItems(initiator, container);
 		if ((Object)(object)initiator == (Object)null || container == null)
 		{

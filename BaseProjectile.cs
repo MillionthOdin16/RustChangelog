@@ -1050,6 +1050,8 @@ public class BaseProjectile : AttackEntity
 		//IL_015e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0165: Unknown result type (might be due to invalid IL or missing references)
 		//IL_016b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0175: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0135: Unknown result type (might be due to invalid IL or missing references)
 		//IL_013a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0144: Unknown result type (might be due to invalid IL or missing references)
@@ -1107,6 +1109,8 @@ public class BaseProjectile : AttackEntity
 		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
 		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008b: Unknown result type (might be due to invalid IL or missing references)
 		BaseProjectile component = ((Component)item.GetHeldEntity()).GetComponent<BaseProjectile>();
 		if (!component.canUnloadAmmo || !Object.op_Implicit((Object)(object)component))
 		{

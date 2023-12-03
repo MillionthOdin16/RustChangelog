@@ -36,6 +36,17 @@ public class JunkPile : BaseEntity
 		isSinking = false;
 	}
 
+	internal override void DoServerDestroy()
+	{
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		base.DoServerDestroy();
+		StabilityEntity.UpdateSurroundingsQueue updateSurroundingsQueue = StabilityEntity.updateSurroundingsQueue;
+		OBB val = WorldSpaceBounds();
+		((ObjectWorkQueue<Bounds>)updateSurroundingsQueue).Add(((OBB)(ref val)).ToBounds());
+	}
+
 	private void SpawnInitial()
 	{
 		SpawnGroup[] array = spawngroups;

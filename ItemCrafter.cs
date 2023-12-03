@@ -155,6 +155,8 @@ public class ItemCrafter : EntityComponent<BasePlayer>
 		//IL_0338: Unknown result type (might be due to invalid IL or missing references)
 		//IL_033f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0345: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0349: Unknown result type (might be due to invalid IL or missing references)
+		//IL_034f: Unknown result type (might be due to invalid IL or missing references)
 		task.amount--;
 		task.numCrafted++;
 		ulong skin = ItemDefinition.FindSkin(task.blueprint.targetItem.itemid, task.skinID);
@@ -222,6 +224,8 @@ public class ItemCrafter : EntityComponent<BasePlayer>
 		//IL_0181: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0188: Unknown result type (might be due to invalid IL or missing references)
 		//IL_018e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0192: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0198: Unknown result type (might be due to invalid IL or missing references)
 		if (queue.Count == 0)
 		{
 			return false;

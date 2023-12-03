@@ -1,10 +1,15 @@
 using System.Collections.Generic;
+using UnityEngine;
 
 public class ItemModContainer : ItemMod
 {
 	public int capacity = 6;
 
 	public int maxStackSize;
+
+	public int containerVolume;
+
+	public bool canLootInWorld;
 
 	[InspectorFlags]
 	public ItemContainer.Flag containerFlags;
@@ -22,6 +27,9 @@ public class ItemModContainer : ItemMod
 	public bool openInInventory = true;
 
 	public List<ItemAmount> defaultContents = new List<ItemAmount>();
+
+	[Tooltip("If true items in this container won't be usable as ammo for reloads")]
+	public bool blockAmmoSource;
 
 	protected virtual bool ForceAcceptItemCheck => false;
 
@@ -49,6 +57,7 @@ public class ItemModContainer : ItemMod
 			item.contents.canAcceptItem = CanAcceptItem;
 		}
 		item.contents.ServerInitialize(item, capacity);
+		item.contents.containerVolume = containerVolume;
 		item.contents.maxStackSize = maxStackSize;
 		item.contents.GiveUID();
 	}
@@ -86,6 +95,8 @@ public class ItemModContainer : ItemMod
 		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
 		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
 		if (item.contents == null)
 		{
 			return;

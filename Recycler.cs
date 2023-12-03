@@ -164,6 +164,8 @@ public class Recycler : StorageContainer
 		//IL_00e6: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00ed: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00f3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fd: Unknown result type (might be due to invalid IL or missing references)
 		int num = -1;
 		for (int i = 6; i < 12; i++)
 		{

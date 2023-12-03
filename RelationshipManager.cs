@@ -1284,6 +1284,15 @@ public class RelationshipManager : BaseEntity
 		return playerTeam;
 	}
 
+	private PlayerTeam CreateTeam(ulong customId)
+	{
+		PlayerTeam playerTeam = Pool.Get<PlayerTeam>();
+		playerTeam.teamID = customId;
+		playerTeam.teamStartTime = Time.realtimeSinceStartup;
+		teams.Add(playerTeam.teamID, playerTeam);
+		return playerTeam;
+	}
+
 	[ServerUserVar]
 	public static void trycreateteam(Arg arg)
 	{
@@ -1508,6 +1517,42 @@ public class RelationshipManager : BaseEntity
 				playerTeam.AddPlayer(component);
 			}
 		}
+	}
+
+	[ServerVar]
+	public static string createAndAddToTeam(Arg arg)
+	{
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		BasePlayer basePlayer = arg.Player();
+		uint uInt = arg.GetUInt(0, 0u);
+		RaycastHit hit = default(RaycastHit);
+		if (Physics.Raycast(basePlayer.eyes.position, basePlayer.eyes.HeadForward(), ref hit, 5f, 1218652417, (QueryTriggerInteraction)1))
+		{
+			BaseEntity entity = hit.GetEntity();
+			if (Object.op_Implicit((Object)(object)entity))
+			{
+				BasePlayer component = ((Component)entity).GetComponent<BasePlayer>();
+				if (Object.op_Implicit((Object)(object)component) && (Object)(object)component != (Object)(object)basePlayer && !component.IsNpc)
+				{
+					if (component.currentTeam != 0L)
+					{
+						return component.displayName + " is already in a team";
+					}
+					if (ServerInstance.FindTeam(uInt) != null)
+					{
+						ServerInstance.FindTeam(uInt).AddPlayer(component);
+						return $"Added {component.displayName} to existing team {uInt}";
+					}
+					PlayerTeam playerTeam = ServerInstance.CreateTeam(uInt);
+					playerTeam.teamLeader = component.userID;
+					playerTeam.AddPlayer(component);
+					return $"Added {component.displayName} to team {uInt}";
+				}
+			}
+		}
+		return "Unable to find valid player in front";
 	}
 
 	public static bool TeamsEnabled()

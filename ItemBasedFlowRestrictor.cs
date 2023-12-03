@@ -106,6 +106,8 @@ public class ItemBasedFlowRestrictor : IOEntity, IContainerSounds
 		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
 		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
 		SetFlag(Flags.On, b: false);
 		if (inventory != null)
 		{

@@ -796,6 +796,8 @@ public class VendingMachine : StorageContainer
 		//IL_031d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0324: Unknown result type (might be due to invalid IL or missing references)
 		//IL_032a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_032e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0334: Unknown result type (might be due to invalid IL or missing references)
 		if (sellOrderId < 0 || sellOrderId >= sellOrders.sellOrders.Count)
 		{
 			return false;
@@ -900,6 +902,8 @@ public class VendingMachine : StorageContainer
 		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
 		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
 		if (!takenCurrencyItem.MoveToContainer(base.inventory))
 		{
 			takenCurrencyItem.Drop(base.inventory.dropPosition, Vector3.zero);
@@ -1156,6 +1160,8 @@ public class VendingMachine : StorageContainer
 		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00b0: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00b6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ba: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
 		ItemDefinition itemDefinition = ItemManager.FindItemDefinition("note");
 		List<Item> list = base.inventory.FindItemsByItemID(itemDefinition.itemid);
 		Item item = null;

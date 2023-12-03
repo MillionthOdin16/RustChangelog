@@ -21,7 +21,10 @@ public class SnowballGun : BaseProjectile
 	public override bool TryReloadMagazine(IAmmoContainer ammoSource, int desiredAmount = -1)
 	{
 		desiredAmount = 1;
-		TryReload(ammoSource, desiredAmount, CanRefundAmmo);
+		if (!TryReload(ammoSource, desiredAmount, CanRefundAmmo))
+		{
+			return false;
+		}
 		SetAmmoCount(primaryMagazine.capacity);
 		primaryMagazine.ammoType = OverrideProjectile;
 		SendNetworkUpdateImmediate();

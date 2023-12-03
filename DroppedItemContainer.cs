@@ -35,6 +35,10 @@ public class DroppedItemContainer : BaseCombatEntity, LootPanel.IHasLootPanel, I
 	{
 		get
 		{
+			if (playerSteamID == 0L)
+			{
+				return "";
+			}
 			return NameHelper.Get(playerSteamID, _playerName, base.isClient);
 		}
 		set

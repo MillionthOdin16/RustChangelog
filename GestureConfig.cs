@@ -79,6 +79,8 @@ public class GestureConfig : ScriptableObject
 
 	public bool useRootMotion;
 
+	public bool forceForwardRotation;
+
 	[Header("Ownership")]
 	public GestureActionType actionType;
 

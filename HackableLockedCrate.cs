@@ -201,6 +201,16 @@ public class HackableLockedCrate : LootContainer
 		RefreshDecay();
 		isLootable = IsFullyHacked();
 		CreateMapMarker(120f);
+		base.inventory.onItemAddedRemoved = OnItemAddedOrRemoved;
+	}
+
+	public override void OnItemAddedOrRemoved(Item item, bool added)
+	{
+		if (!added && (Object)(object)mapMarkerInstance != (Object)null)
+		{
+			mapMarkerInstance.Kill();
+		}
+		base.OnItemAddedOrRemoved(item, added);
 	}
 
 	public void LandCheck()

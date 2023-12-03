@@ -35,6 +35,8 @@ public class BaseMelee : AttackEntity
 
 	public bool canUntieCrates;
 
+	public bool longResourceForgiveness;
+
 	[Header("Effects")]
 	public GameObjectRef strikeFX;
 

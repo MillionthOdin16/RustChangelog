@@ -396,6 +396,8 @@ public class IndustrialCrafter : IndustrialEntity, IItemContainerEntity, IIdealS
 		//IL_00d1: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00d8: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00de: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e8: Unknown result type (might be due to invalid IL or missing references)
 		bool flag = false;
 		for (int i = 8; i <= 11; i++)
 		{
@@ -618,7 +620,7 @@ public class IndustrialCrafter : IndustrialEntity, IItemContainerEntity, IIdealS
 		return -1;
 	}
 
-	public ItemContainerId GetIdealContainer(BasePlayer player, Item item, bool altMove)
+	public ItemContainerId GetIdealContainer(BasePlayer player, Item item, ItemMoveModifier modifier)
 	{
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0008: Unknown result type (might be due to invalid IL or missing references)

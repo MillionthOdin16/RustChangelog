@@ -509,6 +509,8 @@ public class FlameThrower : AttackEntity
 		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
 		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
 		if (item == null || !(command == "unload_ammo"))
 		{
 			return;

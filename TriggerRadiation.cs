@@ -7,10 +7,13 @@ public class TriggerRadiation : TriggerBase
 		MINIMAL,
 		LOW,
 		MEDIUM,
-		HIGH
+		HIGH,
+		NONE
 	}
 
 	public RadiationTier radiationTier = RadiationTier.LOW;
+
+	public bool BypassArmor;
 
 	public float RadiationAmountOverride;
 
@@ -28,11 +31,15 @@ public class TriggerRadiation : TriggerBase
 		return sphereCollider.radius * Vector3Ex.Max(((Component)this).transform.localScale);
 	}
 
-	public float GetRadiationAmount()
+	private float GetRadiationAmount()
 	{
 		if (RadiationAmountOverride > 0f)
 		{
 			return RadiationAmountOverride;
+		}
+		if (radiationTier == RadiationTier.NONE)
+		{
+			return 0f;
 		}
 		if (radiationTier == RadiationTier.MINIMAL)
 		{
@@ -61,7 +68,12 @@ public class TriggerRadiation : TriggerBase
 		float radiationAmount = GetRadiationAmount();
 		float num = Vector3.Distance(((Component)this).gameObject.transform.position, position);
 		float num2 = Mathf.InverseLerp(radiationSize, radiationSize * (1f - falloff), num);
-		return Mathf.Clamp(radiationAmount - radProtection, 0f, radiationAmount) * num2;
+		float num3 = radiationAmount;
+		if (!BypassArmor)
+		{
+			num3 = Mathf.Clamp(radiationAmount - radProtection, 0f, radiationAmount);
+		}
+		return num3 * num2;
 	}
 
 	internal override GameObject InterestedInObject(GameObject obj)

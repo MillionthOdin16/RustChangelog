@@ -138,10 +138,12 @@ public class ItemModWearable : ItemMod
 		//IL_00ed: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00f4: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00fa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0100: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0105: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0108: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0112: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0103: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0109: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0111: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011b: Unknown result type (might be due to invalid IL or missing references)
 		if (!item.hasCondition)
 		{
 			return;
@@ -164,10 +166,12 @@ public class ItemModWearable : ItemMod
 		{
 			Vector3 vPos = ((Component)item.GetOwnerPlayer()).transform.position + new Vector3(0f, 1.8f, 0f);
 			Vector3 vVelocity = item.GetOwnerPlayer().GetInheritedDropVelocity() + Vector3.up * 3f;
-			Quaternion rotation = default(Quaternion);
-			BaseEntity baseEntity = item.Drop(vPos, vVelocity, rotation);
-			rotation = Random.rotation;
-			baseEntity.SetAngularVelocity(((Quaternion)(ref rotation)).eulerAngles * 5f);
+			Quaternion val = default(Quaternion);
+			Quaternion rotation = val;
+			val = default(Quaternion);
+			BaseEntity baseEntity = item.Drop(vPos, vVelocity, rotation, val);
+			val = Random.rotation;
+			baseEntity.SetAngularVelocity(((Quaternion)(ref val)).eulerAngles * 5f);
 		}
 	}
 

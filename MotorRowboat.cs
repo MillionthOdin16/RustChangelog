@@ -412,6 +412,11 @@ public class MotorRowboat : BaseBoat
 		if (fuelSystem.HasFuel(forceCheck: true))
 		{
 			SetFlag(Flags.On, wantsOn);
+			if (wantsOn)
+			{
+				rigidBody.WakeUp();
+				buoyancy.Wake();
+			}
 		}
 	}
 

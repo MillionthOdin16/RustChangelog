@@ -132,14 +132,14 @@ public class ResourceDispenser : EntityComponent<BaseEntity>, IServerComponent
 
 	public void DoGather(HitInfo info, BaseCorpse corpse = null)
 	{
-		//IL_00cf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00eb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01e4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ff: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0204: Unknown result type (might be due to invalid IL or missing references)
-		//IL_020c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0211: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fe: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0108: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0215: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0230: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0235: Unknown result type (might be due to invalid IL or missing references)
+		//IL_023d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0242: Unknown result type (might be due to invalid IL or missing references)
 		if (!base.baseEntity.isServer || !info.CanGather || info.DidGather)
 		{
 			return;
@@ -151,11 +151,12 @@ public class ResourceDispenser : EntityComponent<BaseEntity>, IServerComponent
 		}
 		float num = 0f;
 		float num2 = 0f;
+		float num3 = (((Object)(object)info.InitiatorPlayer != (Object)null && info.InitiatorPlayer.HasPlayerFlag(BasePlayer.PlayerFlags.IsInTutorial)) ? 3f : 1f);
 		BaseMelee baseMelee = (((Object)(object)info.Weapon == (Object)null) ? null : (info.Weapon as BaseMelee));
 		if ((Object)(object)baseMelee != (Object)null)
 		{
 			GatherPropertyEntry gatherInfoFromIndex = baseMelee.GetGatherInfoFromIndex(gatherType);
-			num = gatherInfoFromIndex.gatherDamage * info.gatherScale;
+			num = gatherInfoFromIndex.gatherDamage * info.gatherScale * num3;
 			num2 = gatherInfoFromIndex.destroyFraction;
 			if (num == 0f)
 			{
@@ -174,13 +175,13 @@ public class ResourceDispenser : EntityComponent<BaseEntity>, IServerComponent
 			num = info.damageTypes.Total();
 			num2 = 0.5f;
 		}
-		float num3 = fractionRemaining;
+		float num4 = fractionRemaining;
 		GiveResources(info.InitiatorPlayer, num, num2, info.Weapon);
 		UpdateFraction();
-		float num4 = 0f;
+		float num5 = 0f;
 		if (fractionRemaining <= 0f)
 		{
-			num4 = base.baseEntity.MaxHealth();
+			num5 = base.baseEntity.MaxHealth();
 			if (info.DidGather && num2 < maxDestroyFractionForFinishBonus)
 			{
 				AssignFinishBonus(info.InitiatorPlayer, 1f - num2, info.Weapon);
@@ -193,9 +194,9 @@ public class ResourceDispenser : EntityComponent<BaseEntity>, IServerComponent
 		}
 		else
 		{
-			num4 = (num3 - fractionRemaining) * base.baseEntity.MaxHealth();
+			num5 = (num4 - fractionRemaining) * base.baseEntity.MaxHealth();
 		}
-		HitInfo hitInfo = new HitInfo(info.Initiator, base.baseEntity, DamageType.Generic, num4, ((Component)this).transform.position);
+		HitInfo hitInfo = new HitInfo(info.Initiator, base.baseEntity, DamageType.Generic, num5, ((Component)this).transform.position);
 		hitInfo.gatherScale = 0f;
 		hitInfo.PointStart = info.PointStart;
 		hitInfo.PointEnd = info.PointEnd;

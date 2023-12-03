@@ -52,6 +52,8 @@ public class RandomItemDispenser : PrefabAttribute, IServerComponent
 		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
 		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
 		float num = Random.Range(0f, 1f);
 		if (itemChance.Chance >= num)
 		{

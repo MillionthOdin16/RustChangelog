@@ -118,9 +118,18 @@ public class TutorialNPC : NPCMissionProvider
 		}
 	}
 
+	public override void PostServerLoad()
+	{
+		base.PostServerLoad();
+		EndSleeping();
+		if ((Object)(object)LoopingGesture != (Object)null)
+		{
+			Server_StartGesture(LoopingGesture);
+		}
+	}
+
 	public override void GreetPlayer(BasePlayer player)
 	{
-		base.GreetPlayer(player);
 	}
 
 	public override void Greeting()

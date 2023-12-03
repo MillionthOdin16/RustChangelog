@@ -7,7 +7,7 @@ using ProtoBuf;
 using UnityEngine;
 using UnityEngine.Assertions;
 
-public class WorldItem : BaseEntity
+public class WorldItem : BaseEntity, PlayerInventory.ICanMoveFrom
 {
 	[Header("WorldItem")]
 	public bool allowPickup = true;
@@ -15,11 +15,11 @@ public class WorldItem : BaseEntity
 	[NonSerialized]
 	public Item item;
 
+	private bool _isInvokingSendItemUpdate;
+
 	protected float eatSeconds = 10f;
 
 	protected float caloriesPerSecond = 1f;
-
-	private bool _isInvokingSendItemUpdate;
 
 	public override TraitFlag Traits
 	{
@@ -81,6 +81,57 @@ public class WorldItem : BaseEntity
 					{
 						Debug.LogException(ex);
 						player.Kick("RPC Error in Pickup");
+					}
+				}
+				finally
+				{
+					((IDisposable)val2)?.Dispose();
+				}
+				return true;
+			}
+			if (rpc == 331989034 && (Object)(object)player != (Object)null)
+			{
+				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
+				if (Global.developer > 2)
+				{
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_OpenLoot "));
+				}
+				TimeWarning val2 = TimeWarning.New("RPC_OpenLoot", 0);
+				try
+				{
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					try
+					{
+						if (!RPC_Server.IsVisible.Test(331989034u, "RPC_OpenLoot", this, player, 3f))
+						{
+							return true;
+						}
+					}
+					finally
+					{
+						((IDisposable)val3)?.Dispose();
+					}
+					try
+					{
+						val3 = TimeWarning.New("Call", 0);
+						try
+						{
+							RPCMessage rPCMessage = default(RPCMessage);
+							rPCMessage.connection = msg.connection;
+							rPCMessage.player = player;
+							rPCMessage.read = msg.read;
+							RPCMessage rpc2 = rPCMessage;
+							RPC_OpenLoot(rpc2);
+						}
+						finally
+						{
+							((IDisposable)val3)?.Dispose();
+						}
+					}
+					catch (Exception ex2)
+					{
+						Debug.LogException(ex2);
+						player.Kick("RPC Error in RPC_OpenLoot");
 					}
 				}
 				finally
@@ -160,20 +211,6 @@ public class WorldItem : BaseEntity
 		}
 	}
 
-	public override void Eat(BaseNpc baseNpc, float timeSpent)
-	{
-		if (!(eatSeconds <= 0f))
-		{
-			eatSeconds -= timeSpent;
-			baseNpc.AddCalories(caloriesPerSecond * timeSpent);
-			if (eatSeconds < 0f)
-			{
-				DestroyItem();
-				Kill();
-			}
-		}
-	}
-
 	public override string ToString()
 	{
 		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
@@ -191,6 +228,15 @@ public class WorldItem : BaseEntity
 			}
 		}
 		return _name;
+	}
+
+	public bool CanMoveFrom(BasePlayer player, Item item)
+	{
+		if ((Object)(object)((item != null) ? ((Component)item.info).GetComponent<ItemModBackpack>() : null) == (Object)null)
+		{
+			return true;
+		}
+		return item.parentItem?.parent == player.inventory.containerWear;
 	}
 
 	public override void ServerInit()
@@ -265,5 +311,42 @@ public class WorldItem : BaseEntity
 	public override void SwitchParent(BaseEntity ent)
 	{
 		SetParent(ent, parentBone);
+	}
+
+	public override void Eat(BaseNpc baseNpc, float timeSpent)
+	{
+		if (!(eatSeconds <= 0f))
+		{
+			eatSeconds -= timeSpent;
+			baseNpc.AddCalories(caloriesPerSecond * timeSpent);
+			if (eatSeconds < 0f)
+			{
+				DestroyItem();
+				Kill();
+			}
+		}
+	}
+
+	[RPC_Server]
+	[RPC_Server.IsVisible(3f)]
+	private void RPC_OpenLoot(RPCMessage rpc)
+	{
+		if (item == null || item.contents == null)
+		{
+			return;
+		}
+		ItemModContainer component = ((Component)item.info).GetComponent<ItemModContainer>();
+		if (!((Object)(object)component == (Object)null) && component.canLootInWorld)
+		{
+			BasePlayer player = rpc.player;
+			if (Object.op_Implicit((Object)(object)player) && player.CanInteract() && player.inventory.loot.StartLootingEntity(this))
+			{
+				SetFlag(Flags.Open, b: true);
+				player.inventory.loot.AddContainer(item.contents);
+				player.inventory.loot.SendImmediate();
+				player.ClientRPCPlayer(null, player, "RPC_OpenLootPanel", "generic_resizable");
+				SendNetworkUpdate();
+			}
+		}
 	}
 }

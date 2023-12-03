@@ -267,6 +267,8 @@ public class ExcavatorArm : BaseEntity
 		//IL_00f3: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00fa: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0100: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0104: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010a: Unknown result type (might be due to invalid IL or missing references)
 		float num = resourceProductionTickRate / timeForFullResources;
 		float num2 = resourcesToMine[resourceMiningIndex].amount * num;
 		pendingResources[resourceMiningIndex].amount += num2;

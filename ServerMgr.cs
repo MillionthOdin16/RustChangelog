@@ -922,7 +922,7 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 				obj = "0";
 			}
 			string text7 = (string)obj;
-			SteamServer.GameTags = $"mp{ConVar.Server.maxplayers},cp{BasePlayer.activePlayerList.Count},pt{Net.sv.ProtocolId},qp{SingletonComponent<ServerMgr>.Instance.connectionQueue.Queued},v{2511}{text4}{text6},h{AssemblyHash},{text},{text2},{text3},cs{text7}";
+			SteamServer.GameTags = $"mp{ConVar.Server.maxplayers},cp{BasePlayer.activePlayerList.Count},pt{Net.sv.ProtocolId},qp{SingletonComponent<ServerMgr>.Instance.connectionQueue.Queued},v{2515}{text4}{text6},h{AssemblyHash},{text},{text2},{text3},cs{text7}";
 			if (ConVar.Server.description != null && ConVar.Server.description.Length > 100)
 			{
 				string[] array = StringEx.SplitToChunks(ConVar.Server.description, 100).ToArray();
@@ -1816,14 +1816,14 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 			DebugEx.Log((object)("Kicking " + ((object)packet.connection)?.ToString() + " - their branch is '" + text + "' not '" + branch + "'"), (StackTraceLogType)0);
 			Net.sv.Kick(packet.connection, "Wrong Steam Beta: Requires '" + branch + "' branch!", false);
 		}
-		else if (packet.connection.protocol > 2511)
+		else if (packet.connection.protocol > 2515)
 		{
-			DebugEx.Log((object)("Kicking " + ((object)packet.connection)?.ToString() + " - their protocol is " + packet.connection.protocol + " not " + 2511), (StackTraceLogType)0);
+			DebugEx.Log((object)("Kicking " + ((object)packet.connection)?.ToString() + " - their protocol is " + packet.connection.protocol + " not " + 2515), (StackTraceLogType)0);
 			Net.sv.Kick(packet.connection, "Wrong Connection Protocol: Server update required!", false);
 		}
-		else if (packet.connection.protocol < 2511)
+		else if (packet.connection.protocol < 2515)
 		{
-			DebugEx.Log((object)("Kicking " + ((object)packet.connection)?.ToString() + " - their protocol is " + packet.connection.protocol + " not " + 2511), (StackTraceLogType)0);
+			DebugEx.Log((object)("Kicking " + ((object)packet.connection)?.ToString() + " - their protocol is " + packet.connection.protocol + " not " + 2515), (StackTraceLogType)0);
 			Net.sv.Kick(packet.connection, "Wrong Connection Protocol: Client update required!", false);
 		}
 		else

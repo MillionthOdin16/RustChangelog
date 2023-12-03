@@ -947,6 +947,8 @@ public class BaseRidableAnimal : BaseVehicle
 		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
 		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0089: Unknown result type (might be due to invalid IL or missing references)
 		dungProduction -= 1f;
 		ItemManager.Create(Dung, 1, 0uL).Drop(((Component)this).transform.position + -((Component)this).transform.forward + Vector3.up * 1.1f + Random.insideUnitSphere * 0.1f, -((Component)this).transform.forward);
 	}
