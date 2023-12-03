@@ -28,14 +28,14 @@ public class ItemModProjectileRadialDamage : ItemModProjectileMod
 		//IL_00e1: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00eb: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00f0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fe: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0103: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0106: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0108: Unknown result type (might be due to invalid IL or missing references)
 		//IL_010b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0110: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0114: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0115: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0119: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0123: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0128: Unknown result type (might be due to invalid IL or missing references)
 		if (effect.isValid)
 		{
 			Effect.server.Run(effect.resourcePath, info.HitPositionWorld, info.HitNormalWorld);
@@ -57,11 +57,11 @@ public class ItemModProjectileRadialDamage : ItemModProjectileMod
 				continue;
 			}
 			float num2 = 1f - num;
-			if (item.IsVisibleAndCanSee(info.HitPositionWorld - ((Vector3)(ref info.ProjectileVelocity)).normalized * 0.1f))
+			if (item.IsVisibleAndCanSeeLegacy(info.HitPositionWorld - ((Vector3)(ref info.ProjectileVelocity)).normalized * 0.1f))
 			{
 				Vector3 hitPositionWorld = info.HitPositionWorld;
 				Vector3 val2 = val - info.HitPositionWorld;
-				if (item.IsVisibleAndCanSee(hitPositionWorld - ((Vector3)(ref val2)).normalized * 0.1f))
+				if (item.IsVisibleAndCanSeeLegacy(hitPositionWorld - ((Vector3)(ref val2)).normalized * 0.1f))
 				{
 					list.Add(item);
 					item.OnAttacked(new HitInfo(info.Initiator, item, damage.type, damage.amount * num2));

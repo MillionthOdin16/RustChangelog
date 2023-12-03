@@ -57,17 +57,17 @@ public class GingerbreadNPC : HumanNPC, IClientBrainStateListener
 		return false;
 	}
 
-	public override BaseCorpse CreateCorpse()
+	public override BaseCorpse CreateCorpse(PlayerFlags playerFlagsOnDeath, Vector3 playerPosOnDeath, Quaternion playerRotOnDeath)
 	{
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
 		TimeWarning val = TimeWarning.New("Create corpse", 0);
 		try
 		{
 			string corpseResourcePath = CorpseResourcePath;
-			NPCPlayerCorpse nPCPlayerCorpse = DropCorpse(corpseResourcePath) as NPCPlayerCorpse;
+			NPCPlayerCorpse nPCPlayerCorpse = DropCorpse(corpseResourcePath, playerFlagsOnDeath, modelState) as NPCPlayerCorpse;
 			if (Object.op_Implicit((Object)(object)nPCPlayerCorpse))
 			{
 				((Component)nPCPlayerCorpse).transform.position = ((Component)nPCPlayerCorpse).transform.position + Vector3.down * NavAgent.baseOffset;

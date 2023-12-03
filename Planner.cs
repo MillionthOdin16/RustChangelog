@@ -428,8 +428,8 @@ public class Planner : HeldEntity
 
 	public GameObject DoPlacement(Construction.Target placement, Construction component)
 	{
-		//IL_014a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0144: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer ownerPlayer = GetOwnerPlayer();
 		if (!Object.op_Implicit((Object)(object)ownerPlayer))
 		{
@@ -471,7 +471,7 @@ public class Planner : HeldEntity
 			baseCombatEntity.ResetLifeStateOnSpawn = false;
 			baseCombatEntity.InitializeHealth(num2 * num, num2);
 		}
-		((Component)baseEntity).gameObject.SendMessage("SetDeployedBy", (object)ownerPlayer, (SendMessageOptions)1);
+		baseEntity.OnPlaced(ownerPlayer);
 		baseEntity.OwnerID = ownerPlayer.userID;
 		baseEntity.Spawn();
 		if (Object.op_Implicit((Object)(object)buildingBlock))

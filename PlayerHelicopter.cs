@@ -16,8 +16,6 @@ public class PlayerHelicopter : BaseHelicopter, IEngineControllerUser, IEntity, 
 
 		public Transform visualBone;
 
-		public bool steering;
-
 		public bool groundedTest = true;
 
 		public Flags groundedFlag = Flags.Reserved1;
@@ -27,6 +25,8 @@ public class PlayerHelicopter : BaseHelicopter, IEngineControllerUser, IEntity, 
 
 		[NonSerialized]
 		public Vector3 wheelRot = Vector3.zero;
+
+		public bool steering;
 
 		public bool IsGrounded(PlayerHelicopter parent)
 		{
@@ -54,13 +54,13 @@ public class PlayerHelicopter : BaseHelicopter, IEngineControllerUser, IEntity, 
 	private Transform joystickPositionRight;
 
 	[SerializeField]
+	private Transform passengerJoystickPositionRight;
+
+	[SerializeField]
 	private Transform leftFootPosition;
 
 	[SerializeField]
 	private Transform rightFootPosition;
-
-	[SerializeField]
-	private Transform passengerJoystickPositionRight;
 
 	[SerializeField]
 	protected Animator animator;
@@ -72,13 +72,13 @@ public class PlayerHelicopter : BaseHelicopter, IEngineControllerUser, IEntity, 
 	private float timeUntilMaxRotorSpeed = 7f;
 
 	[SerializeField]
-	private float rotorBlurThreshold = 8f;
-
-	[SerializeField]
 	private Transform mainRotorBlurBone;
 
 	[SerializeField]
 	private Renderer mainRotorBlurMesh;
+
+	[SerializeField]
+	private float rotorBlurThreshold = 8f;
 
 	[SerializeField]
 	private Transform mainRotorBladesBone;
@@ -105,10 +105,10 @@ public class PlayerHelicopter : BaseHelicopter, IEngineControllerUser, IEntity, 
 	private float brakeForceConstant = 500f;
 
 	[SerializeField]
-	private GameObject preventBuildingObject;
+	private float maxPitchAnim = 1f;
 
 	[SerializeField]
-	private float maxPitchAnim = 1f;
+	private GameObject preventBuildingObject;
 
 	[SerializeField]
 	private float maxRollAnim = 1f;
@@ -134,6 +134,10 @@ public class PlayerHelicopter : BaseHelicopter, IEngineControllerUser, IEntity, 
 
 	protected VehicleEngineController<PlayerHelicopter> engineController;
 
+	private TimeSince timeSinceCachedFuelFraction;
+
+	private float cachedFuelFraction;
+
 	protected const Flags WHEEL_GROUNDED_LR = Flags.Reserved1;
 
 	protected const Flags WHEEL_GROUNDED_RR = Flags.Reserved2;
@@ -146,25 +150,9 @@ public class PlayerHelicopter : BaseHelicopter, IEngineControllerUser, IEntity, 
 
 	protected const Flags ENGINE_STARTING_FLAG = Flags.Reserved4;
 
-	private TimeSince timeSinceCachedFuelFraction;
-
-	private float cachedFuelFraction;
-
 	private bool isPushing;
 
 	private float lastEngineOnTime;
-
-	public bool IsStartingUp
-	{
-		get
-		{
-			if (engineController != null)
-			{
-				return engineController.IsStarting;
-			}
-			return false;
-		}
-	}
 
 	public VehicleEngineController<PlayerHelicopter>.EngineState CurEngineState
 	{
@@ -175,6 +163,18 @@ public class PlayerHelicopter : BaseHelicopter, IEngineControllerUser, IEntity, 
 				return VehicleEngineController<PlayerHelicopter>.EngineState.Off;
 			}
 			return engineController.CurEngineState;
+		}
+	}
+
+	public bool IsStartingUp
+	{
+		get
+		{
+			if (engineController != null)
+			{
+				return engineController.IsStarting;
+			}
+			return false;
 		}
 	}
 

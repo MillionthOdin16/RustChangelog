@@ -256,6 +256,10 @@ public class HuntingTrophy : StorageContainer
 	public bool CanSubmitHead(HeadEntity headEnt)
 	{
 		bool flag = false;
+		if ((Object)(object)headEnt == (Object)null || headEnt.CurrentTrophyData == null)
+		{
+			return false;
+		}
 		bool flag2 = CurrentTrophyData != null;
 		if (flag2 && headEnt.CurrentTrophyData.entitySource == CurrentTrophyData.entitySource && headEnt.CurrentTrophyData.playerId == CurrentTrophyData.playerId && headEnt.CurrentTrophyData.horseBreed == CurrentTrophyData.horseBreed)
 		{

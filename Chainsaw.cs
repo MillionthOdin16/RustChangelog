@@ -54,6 +54,8 @@ public class Chainsaw : BaseMelee
 
 	public float engineStartChance = 0.33f;
 
+	private TimeSince lastReloadSignalFromClient;
+
 	private float ammoRemainder;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
@@ -283,6 +285,17 @@ public class Chainsaw : BaseMelee
 		return HasFlag(Flags.Busy);
 	}
 
+	protected override void OnReceivedSignalServer(Signal signal, string arg)
+	{
+		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		base.OnReceivedSignalServer(signal, arg);
+		if (signal == Signal.Reload && base.isServer)
+		{
+			lastReloadSignalFromClient = TimeSince.op_Implicit(0f);
+		}
+	}
+
 	public void ServerNPCStart()
 	{
 		if (!HasFlag(Flags.On))
@@ -371,8 +384,10 @@ public class Chainsaw : BaseMelee
 	[RPC_Server.IsActiveItem]
 	public void DoReload(RPCMessage msg)
 	{
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer ownerPlayer = GetOwnerPlayer();
-		if (!((Object)(object)ownerPlayer == (Object)null) && !IsAttacking())
+		if (!((Object)(object)ownerPlayer == (Object)null) && !IsAttacking() && (ownerPlayer.IsNpc || (!(TimeSince.op_Implicit(lastReloadSignalFromClient) < reloadDuration * 0.25f) && !(TimeSince.op_Implicit(lastReloadSignalFromClient) > reloadDuration * 2f))))
 		{
 			Item item;
 			while (ammo < maxAmmo && (item = GetAmmo()) != null && item.amount > 0)

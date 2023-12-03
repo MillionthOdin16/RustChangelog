@@ -40,6 +40,12 @@ public class StabilityEntity : DecayEntity
 	{
 		protected override void RunJob(Bounds bounds)
 		{
+			//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+			NotifyNeighbours(bounds);
+		}
+
+		public static void NotifyNeighbours(Bounds bounds)
+		{
 			//IL_0010: Unknown result type (might be due to invalid IL or missing references)
 			//IL_0017: Unknown result type (might be due to invalid IL or missing references)
 			//IL_001c: Unknown result type (might be due to invalid IL or missing references)
@@ -50,14 +56,14 @@ public class StabilityEntity : DecayEntity
 			List<BaseEntity> list = Pool.GetList<BaseEntity>();
 			Vector3 center = ((Bounds)(ref bounds)).center;
 			Vector3 extents = ((Bounds)(ref bounds)).extents;
-			Vis.Entities(center, ((Vector3)(ref extents)).magnitude + 1f, list, -2145220350, (QueryTriggerInteraction)2);
+			Vis.Entities(center, ((Vector3)(ref extents)).magnitude + 1f, list, -2144696062, (QueryTriggerInteraction)2);
 			foreach (BaseEntity item in list)
 			{
 				if (!item.IsDestroyed && !item.isClient)
 				{
-					if (item is StabilityEntity)
+					if (item is StabilityEntity stabilityEntity)
 					{
-						(item as StabilityEntity).OnPhysicsNeighbourChanged();
+						stabilityEntity.OnPhysicsNeighbourChanged();
 					}
 					else
 					{

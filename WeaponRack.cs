@@ -1021,7 +1021,7 @@ public class WeaponRack : StorageContainer
 	[RPC_Server]
 	private void LoadWeaponAmmo(RPCMessage msg)
 	{
-		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00dd: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer player = msg.player;
 		if (!Object.op_Implicit((Object)(object)player))
 		{
@@ -1050,6 +1050,19 @@ public class WeaponRack : StorageContainer
 			return;
 		}
 		ItemDefinition itemDefinition = ItemManager.FindItemDefinition(num);
+		if ((Object)(object)itemDefinition == (Object)null)
+		{
+			return;
+		}
+		if ((Object)(object)itemDefinition == (Object)(object)SnowballGun.SnowballInventoryItem)
+		{
+			itemDefinition = SnowballGun.SnowballAmmoItem;
+			if (!((Object)(object)itemDefinition != (Object)null))
+			{
+				return;
+			}
+			num = itemDefinition.itemid;
+		}
 		if ((Object)(object)itemDefinition == (Object)null)
 		{
 			return;

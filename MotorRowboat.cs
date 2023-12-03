@@ -415,6 +415,7 @@ public class MotorRowboat : BaseBoat
 			if (wantsOn)
 			{
 				rigidBody.WakeUp();
+				buoyancy.Wake();
 			}
 		}
 	}

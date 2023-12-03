@@ -1013,7 +1013,7 @@ public class PlayerInventory : EntityComponent<BasePlayer>, IAmmoContainer
 		}
 		nextCheckTime = Time.time + 60f;
 		DateTime now = DateTime.Now;
-		wasBirthday = now.Day == 11 && now.Month == 12;
+		wasBirthday = now.Month == 12 && now.Day >= 7 && now.Day <= 16;
 		return wasBirthday;
 	}
 

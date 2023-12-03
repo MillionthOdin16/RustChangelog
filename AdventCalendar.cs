@@ -33,6 +33,12 @@ public class AdventCalendar : BaseCombatEntity
 
 	public GameObjectRef boxCloseEffect;
 
+	[ServerVar]
+	public static int overrideAdventCalendarDay = 0;
+
+	[ServerVar]
+	public static int overrideAdventCalendarMonth = 0;
+
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
 		TimeWarning val = TimeWarning.New("AdventCalendar.OnRpcMessage", 0);
@@ -115,18 +121,18 @@ public class AdventCalendar : BaseCombatEntity
 
 	public void AwardGift(BasePlayer player)
 	{
-		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00db: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ea: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f7: Unknown result type (might be due to invalid IL or missing references)
 		DateTime now = DateTime.Now;
-		int num = now.Day - startDay;
-		if (now.Month == startMonth && num >= 0 && num < days.Length)
+		int num = ((overrideAdventCalendarDay > 0) ? overrideAdventCalendarDay : now.Day) - startDay;
+		if (((overrideAdventCalendarMonth > 0) ? overrideAdventCalendarMonth : now.Month) == startMonth && num >= 0 && num < days.Length)
 		{
 			if (!playerRewardHistory.ContainsKey(player.userID))
 			{
@@ -154,11 +160,11 @@ public class AdventCalendar : BaseCombatEntity
 			return false;
 		}
 		DateTime now = DateTime.Now;
-		if (now.Month != startMonth)
+		if (((overrideAdventCalendarMonth > 0) ? overrideAdventCalendarMonth : now.Month) != startMonth)
 		{
 			return true;
 		}
-		int num = now.Day - startDay;
+		int num = ((overrideAdventCalendarDay > 0) ? overrideAdventCalendarDay : now.Day) - startDay;
 		if (num < 0 || num >= days.Length)
 		{
 			return true;

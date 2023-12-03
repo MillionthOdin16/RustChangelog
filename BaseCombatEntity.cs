@@ -862,11 +862,28 @@ public class BaseCombatEntity : BaseEntity
 
 	public void UpdateSurroundings()
 	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		BaseEntity baseEntity = GetParentEntity();
+		OBB val;
+		if ((Object)(object)baseEntity != (Object)null)
+		{
+			Vector3 worldVelocity = baseEntity.GetWorldVelocity();
+			if (((Vector3)(ref worldVelocity)).sqrMagnitude > 5f)
+			{
+				val = WorldSpaceBounds();
+				StabilityEntity.UpdateSurroundingsQueue.NotifyNeighbours(((OBB)(ref val)).ToBounds());
+				return;
+			}
+		}
 		StabilityEntity.UpdateSurroundingsQueue updateSurroundingsQueue = StabilityEntity.updateSurroundingsQueue;
-		OBB val = WorldSpaceBounds();
+		val = WorldSpaceBounds();
 		((ObjectWorkQueue<Bounds>)updateSurroundingsQueue).Add(((OBB)(ref val)).ToBounds());
 	}
 

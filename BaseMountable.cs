@@ -114,6 +114,8 @@ public class BaseMountable : BaseCombatEntity
 
 	public static ListHashSet<BaseMountable> FixedUpdateMountables = new ListHashSet<BaseMountable>(8);
 
+	public const float MOUNTABLE_TICK_RATE = 0.05f;
+
 	protected override float PositionTickRate => 0.05f;
 
 	public virtual bool IsSummerDlcVehicle => false;

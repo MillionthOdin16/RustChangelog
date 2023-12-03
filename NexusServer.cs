@@ -401,7 +401,7 @@ public static class NexusServer
 		try
 		{
 			_database = new NexusDB();
-			((Database)_database).Open($"{ConVar.Server.rootFolder}/nexus.{243}.db", true);
+			((Database)_database).Open($"{ConVar.Server.rootFolder}/nexus.{244}.db", true);
 			_database.Initialize();
 		}
 		catch (Exception ex2)
@@ -1146,7 +1146,7 @@ public static class NexusServer
 		try
 		{
 			int valueOrDefault = (World.Config?.JsonString?.GetHashCode()).GetValueOrDefault();
-			string key = $"{2512}##{243}##{World.Name}##{World.Size}##{World.Seed}##{World.Salt}##{Nexus.mapImageScale}##{valueOrDefault}##{5}";
+			string key = $"{2515}##{244}##{World.Name}##{World.Size}##{World.Seed}##{World.Salt}##{Nexus.mapImageScale}##{valueOrDefault}##{5}";
 			if (!force && (await ZoneClient.CheckUploadedMap()).Key == key)
 			{
 				Debug.Log((object)"Nexus already has this map's image uploaded, will not render and upload again");
@@ -1174,7 +1174,7 @@ public static class NexusServer
 		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
 		try
 		{
-			if (packet.protocol != 243)
+			if (packet.protocol != 244)
 			{
 				Debug.LogWarning((object)"Received a nexus message with wrong protocol, ignoring");
 				return;
@@ -1220,7 +1220,7 @@ public static class NexusServer
 	{
 		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
 		Packet val = Pool.Get<Packet>();
-		val.protocol = 243u;
+		val.protocol = 244u;
 		val.sourceZone = ZoneClient.Zone.ZoneId;
 		val.request = request;
 		return SendPacket(id, val, toZoneKey, ttl);
@@ -1231,7 +1231,7 @@ public static class NexusServer
 		try
 		{
 			Packet val = Pool.Get<Packet>();
-			val.protocol = 243u;
+			val.protocol = 244u;
 			val.sourceZone = ZoneClient.Zone.ZoneId;
 			val.response = response;
 			await SendPacket(Uuid.Generate(), val, toZoneKey, ttl);

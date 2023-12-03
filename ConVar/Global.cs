@@ -10,6 +10,7 @@ using Network.Visibility;
 using ProtoBuf;
 using ProtoBuf.Nexus;
 using Rust;
+using Unity.Jobs.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.Profiling;
 
@@ -104,6 +105,26 @@ public class Global : ConsoleSystem
 		set
 		{
 			_developer = value;
+		}
+	}
+
+	[ServerVar]
+	[ClientVar]
+	public static int job_system_threads
+	{
+		get
+		{
+			return JobsUtility.JobWorkerCount;
+		}
+		set
+		{
+			if (value < 1)
+			{
+				JobsUtility.ResetJobWorkerCount();
+				return;
+			}
+			value = Mathf.Clamp(value, 1, JobsUtility.JobWorkerMaximumCount);
+			JobsUtility.JobWorkerCount = value;
 		}
 	}
 
@@ -281,6 +302,20 @@ public class Global : ConsoleSystem
 		}
 	}
 
+	[ServerVar]
+	public static void sleeptarget(Arg args)
+	{
+		BasePlayer basePlayer = args.Player();
+		if (Object.op_Implicit((Object)(object)basePlayer))
+		{
+			BasePlayer lookingAtPlayer = RelationshipManager.GetLookingAtPlayer(basePlayer);
+			if (!((Object)(object)lookingAtPlayer == (Object)null))
+			{
+				lookingAtPlayer.StartSleeping();
+			}
+		}
+	}
+
 	[ServerUserVar]
 	public static void kill(Arg args)
 	{
@@ -385,6 +420,21 @@ public class Global : ConsoleSystem
 				basePlayer.StartSpectating();
 				basePlayer.UpdateSpectateTarget(@string);
 			}
+		}
+	}
+
+	[ServerVar]
+	public static void toggleSpectateTeamInfo(Arg args)
+	{
+		bool @bool = args.GetBool(0, false);
+		BasePlayer basePlayer = args.Player();
+		if ((Object)(object)basePlayer != (Object)null)
+		{
+			basePlayer.SetSpectateTeamInfo(@bool);
+		}
+		else
+		{
+			args.ReplyWith("Invalid player or player is not spectating");
 		}
 	}
 

@@ -16,6 +16,8 @@ public class UIChat : PriorityListComponent<UIChat>
 
 	public CanvasGroup canvasGroup;
 
+	public bool allowOpeningWhileCursorVisible;
+
 	public GameObjectRef chatItemPlayer;
 
 	public GameObject userPopup;

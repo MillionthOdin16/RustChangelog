@@ -143,7 +143,7 @@ public class Buoyancy : ListComponent<Buoyancy>, IServerComponent
 		}
 		bool flag = BaseNetworkable.HasCloseConnections(((Component)this).transform.position, 100f);
 		bool flag2 = rigidBody.IsSleeping() || rigidBody.isKinematic;
-		bool flag3 = flag2 || (!flag && timeInWater > 6f);
+		bool flag3 = timeInWater > 6f && (flag2 || !flag);
 		if ((Object)(object)forVehicle != (Object)null && forVehicle.IsOn())
 		{
 			flag3 = false;

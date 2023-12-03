@@ -699,6 +699,11 @@ public class SleepingBag : DecayEntity
 		}
 	}
 
+	public override void OnPlaced(BasePlayer player)
+	{
+		SetDeployedBy(player);
+	}
+
 	public override void OnParentChanging(BaseEntity oldParent, BaseEntity newParent)
 	{
 		base.OnParentChanging(oldParent, newParent);

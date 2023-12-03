@@ -70,9 +70,9 @@ public class WaypointRace : BaseEntity
 
 	public float WaypointRadius = 10f;
 
-	public GameObject TargetWaypointVisual;
+	public RaceWaypointVisual TargetWaypointVisual;
 
-	public GameObject NextWaypointVisual;
+	public RaceWaypointVisual NextWaypointVisual;
 
 	private List<Vector3> racePoints = new List<Vector3>();
 

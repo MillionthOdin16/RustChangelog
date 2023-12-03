@@ -1540,6 +1540,11 @@ public class RelationshipManager : BaseEntity
 					{
 						return component.displayName + " is already in a team";
 					}
+					if (ServerInstance.FindTeam(uInt) != null)
+					{
+						ServerInstance.FindTeam(uInt).AddPlayer(component);
+						return $"Added {component.displayName} to existing team {uInt}";
+					}
 					PlayerTeam playerTeam = ServerInstance.CreateTeam(uInt);
 					playerTeam.teamLeader = component.userID;
 					playerTeam.AddPlayer(component);
