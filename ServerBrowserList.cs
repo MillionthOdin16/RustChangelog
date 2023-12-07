@@ -1,17 +1,10 @@
 using System;
+using System.Collections.Generic;
 using Facepunch;
 using UnityEngine;
 
-public class ServerBrowserList : ServerBrowserListBase, VirtualScroll.IDataSource, VirtualScroll.IVisualUpdate
+public class ServerBrowserList : BaseMonoBehaviour, VirtualScroll.IDataSource
 {
-	[Serializable]
-	public struct Rules
-	{
-		public string tag;
-
-		public ServerBrowserList serverList;
-	}
-
 	public enum QueryType
 	{
 		RegularInternet,
@@ -30,7 +23,74 @@ public class ServerBrowserList : ServerBrowserListBase, VirtualScroll.IDataSourc
 		public string value;
 	}
 
-	public bool startActive;
+	[Serializable]
+	public struct Rules
+	{
+		public string tag;
+
+		public ServerBrowserList serverList;
+	}
+
+	private class HashSetEqualityComparer<T> : IEqualityComparer<HashSet<T>> where T : IComparable<T>
+	{
+		public static HashSetEqualityComparer<T> Instance { get; } = new HashSetEqualityComparer<T>();
+
+
+		public bool Equals(HashSet<T> x, HashSet<T> y)
+		{
+			if (x == y)
+			{
+				return true;
+			}
+			if (x == null)
+			{
+				return false;
+			}
+			if (y == null)
+			{
+				return false;
+			}
+			if (x.GetType() != y.GetType())
+			{
+				return false;
+			}
+			if (x.Count != y.Count)
+			{
+				return false;
+			}
+			foreach (T item in x)
+			{
+				if (!y.Contains(item))
+				{
+					return false;
+				}
+			}
+			return true;
+		}
+
+		public int GetHashCode(HashSet<T> set)
+		{
+			int num = 0;
+			if (set != null)
+			{
+				foreach (T item in set)
+				{
+					num ^= (item?.GetHashCode() ?? 0) & 0x7FFFFFFF;
+				}
+			}
+			return num;
+		}
+	}
+
+	public QueryType queryType;
+
+	public static string VersionTag = "v" + 2402;
+
+	public ServerKeyvalues[] keyValues = new ServerKeyvalues[0];
+
+	public ServerBrowserCategory categoryButton;
+
+	public bool startActive = false;
 
 	public Transform listTransform;
 
@@ -42,27 +102,17 @@ public class ServerBrowserList : ServerBrowserListBase, VirtualScroll.IDataSourc
 
 	public Rules[] rules;
 
-	public bool hideOfficialServers;
+	public bool hideOfficialServers = false;
 
-	public bool excludeEmptyServersUsingQuery;
+	public bool excludeEmptyServersUsingQuery = false;
 
-	public bool alwaysIncludeEmptyServers;
+	public bool alwaysIncludeEmptyServers = false;
 
-	public bool clampPlayerCountsToTrustedValues;
-
-	public QueryType queryType;
-
-	public static string VersionTag = "v" + 2509;
-
-	public ServerKeyvalues[] keyValues = new ServerKeyvalues[0];
+	public bool clampPlayerCountsToTrustedValues = false;
 
 	public int GetItemCount()
 	{
 		return 0;
-	}
-
-	public void OnVisualUpdate(int i, GameObject obj)
-	{
 	}
 
 	public void SetItemData(int i, GameObject obj)

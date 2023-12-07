@@ -16,7 +16,7 @@ public class TrainCoupling
 
 	public readonly bool isValid;
 
-	public TimeSince timeSinceCouplingBlock;
+	public TimeSince timeSinceCouplingBlock = default(TimeSince);
 
 	public bool IsCoupled => owner.HasFlag(flag);
 
@@ -31,6 +31,7 @@ public class TrainCoupling
 
 	public TrainCoupling(TrainCar owner, bool isFrontCoupling, TrainCouplingController controller, Transform couplingPoint, Transform couplingPivot, BaseEntity.Flags flag)
 	{
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
 		this.owner = owner;
 		this.isFrontCoupling = isFrontCoupling;
 		this.controller = controller;
@@ -42,20 +43,12 @@ public class TrainCoupling
 
 	public bool IsCoupledTo(TrainCar them)
 	{
-		if (CoupledTo != null)
-		{
-			return (Object)(object)CoupledTo.owner == (Object)(object)them;
-		}
-		return false;
+		return CoupledTo != null && (Object)(object)CoupledTo.owner == (Object)(object)them;
 	}
 
 	public bool IsCoupledTo(TrainCoupling them)
 	{
-		if (CoupledTo != null)
-		{
-			return CoupledTo == them;
-		}
-		return false;
+		return CoupledTo != null && CoupledTo == them;
 	}
 
 	public bool TryCouple(TrainCoupling theirCoupling, bool reflect)
@@ -85,8 +78,8 @@ public class TrainCoupling
 
 	public void Uncouple(bool reflect)
 	{
-		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
 		if (!IsUncoupled)
 		{
 			if (reflect && CoupledTo != null)
@@ -103,18 +96,14 @@ public class TrainCoupling
 
 	public TrainCoupling GetOppositeCoupling()
 	{
-		if (!isFrontCoupling)
-		{
-			return controller.frontCoupling;
-		}
-		return controller.rearCoupling;
+		return isFrontCoupling ? controller.rearCoupling : controller.frontCoupling;
 	}
 
 	public bool TryGetCoupledToID(out NetworkableId id)
 	{
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
 		if (CoupledTo != null && (Object)(object)CoupledTo.owner != (Object)null && CoupledTo.owner.IsValid())
 		{
 			id = CoupledTo.owner.net.ID;

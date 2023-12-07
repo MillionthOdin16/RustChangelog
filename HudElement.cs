@@ -8,9 +8,9 @@ public class HudElement : MonoBehaviour
 
 	public Image[] FilledImage;
 
-	private float lastValue;
+	private float lastValue = 0f;
 
-	private float lastMax;
+	private float lastMax = 0f;
 
 	public void SetValue(float value, float max = 1f)
 	{

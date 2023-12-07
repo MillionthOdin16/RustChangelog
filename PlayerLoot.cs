@@ -5,12 +5,13 @@ using Network;
 using ProtoBuf;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.Profiling;
 
 public class PlayerLoot : EntityComponent<BasePlayer>
 {
-	public BaseEntity entitySource;
+	public BaseEntity entitySource = null;
 
-	public Item itemSource;
+	public Item itemSource = null;
 
 	public List<ItemContainer> containers = new List<ItemContainer>();
 
@@ -42,6 +43,7 @@ public class PlayerLoot : EntityComponent<BasePlayer>
 		{
 			return;
 		}
+		Profiler.BeginSample("PlayerLoot.Clear");
 		MarkDirty();
 		if (Object.op_Implicit((Object)(object)entitySource))
 		{
@@ -57,11 +59,12 @@ public class PlayerLoot : EntityComponent<BasePlayer>
 		containers.Clear();
 		entitySource = null;
 		itemSource = null;
+		Profiler.EndSample();
 	}
 
 	public ItemContainer FindContainer(ItemContainerId id)
 	{
-		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
 		Check();
 		if (!IsLooting())
 		{
@@ -80,7 +83,7 @@ public class PlayerLoot : EntityComponent<BasePlayer>
 
 	public Item FindItem(ItemId id)
 	{
-		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
 		Check();
 		if (!IsLooting())
 		{
@@ -99,7 +102,7 @@ public class PlayerLoot : EntityComponent<BasePlayer>
 
 	public void Check()
 	{
-		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
 		if (!IsLooting() || !base.baseEntity.isServer)
 		{
 			return;
@@ -109,7 +112,7 @@ public class PlayerLoot : EntityComponent<BasePlayer>
 			base.baseEntity.ChatMessage("Stopping Looting because lootable doesn't exist!");
 			Clear();
 		}
-		else if (!entitySource.CanBeLooted(base.baseEntity) || entitySource.IsTransferring())
+		else if (!entitySource.CanBeLooted(base.baseEntity))
 		{
 			Clear();
 		}
@@ -133,34 +136,39 @@ public class PlayerLoot : EntityComponent<BasePlayer>
 
 	private void MarkDirty()
 	{
+		Profiler.BeginSample("MarkDirty");
 		if (!isInvokingSendUpdate)
 		{
 			isInvokingSendUpdate = true;
 			((FacepunchBehaviour)this).Invoke((Action)SendUpdate, 0.1f);
 		}
+		Profiler.EndSample();
 	}
 
 	public void SendImmediate()
 	{
+		Profiler.BeginSample("SendImmediate");
 		if (isInvokingSendUpdate)
 		{
 			isInvokingSendUpdate = false;
 			((FacepunchBehaviour)this).CancelInvoke((Action)SendUpdate);
 		}
 		SendUpdate();
+		Profiler.EndSample();
 	}
 
 	private void SendUpdate()
 	{
-		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
 		isInvokingSendUpdate = false;
 		if (!base.baseEntity.IsValid())
 		{
 			return;
 		}
+		Profiler.BeginSample("PlayerLoot.SendUpdate");
 		PlayerUpdateLoot val = Pool.Get<PlayerUpdateLoot>();
 		try
 		{
@@ -186,6 +194,7 @@ public class PlayerLoot : EntityComponent<BasePlayer>
 		{
 			((IDisposable)val)?.Dispose();
 		}
+		Profiler.EndSample();
 	}
 
 	public bool StartLootingEntity(BaseEntity targetEntity, bool doPositionChecks = true)
@@ -200,10 +209,12 @@ public class PlayerLoot : EntityComponent<BasePlayer>
 			return false;
 		}
 		Assert.IsTrue(targetEntity.isServer, "Assure is server");
+		Profiler.BeginSample("PlayerLoot.StartLootingEntity");
 		PositionChecks = doPositionChecks;
 		entitySource = targetEntity;
 		itemSource = null;
 		MarkDirty();
+		Profiler.EndSample();
 		if (targetEntity is ILootableEntity lootableEntity)
 		{
 			lootableEntity.LastLootedBy = base.baseEntity.userID;
@@ -215,8 +226,10 @@ public class PlayerLoot : EntityComponent<BasePlayer>
 	{
 		if (container != null)
 		{
+			Profiler.BeginSample("PlayerLoot.AddContainer");
 			containers.Add(container);
 			container.onDirty += MarkDirty;
+			Profiler.EndSample();
 		}
 	}
 
@@ -248,12 +261,14 @@ public class PlayerLoot : EntityComponent<BasePlayer>
 		Clear();
 		if (item != null && item.contents != null)
 		{
+			Profiler.BeginSample("PlayerLoot.StartLootingItem");
 			PositionChecks = true;
 			containers.Add(item.contents);
 			item.contents.onDirty += MarkDirty;
 			itemSource = item;
 			entitySource = item.GetWorldEntity();
 			MarkDirty();
+			Profiler.EndSample();
 		}
 	}
 }

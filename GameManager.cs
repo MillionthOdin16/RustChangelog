@@ -3,6 +3,7 @@ using ConVar;
 using Facepunch;
 using Rust;
 using UnityEngine;
+using UnityEngine.Profiling;
 using UnityEngine.SceneManagement;
 
 public class GameManager
@@ -27,7 +28,7 @@ public class GameManager
 		Clientside = clientside;
 		Serverside = serverside;
 		preProcessed = new PrefabPreProcess(clientside, serverside);
-		pool = new PrefabPoolCollection(clientside);
+		pool = new PrefabPoolCollection();
 	}
 
 	public GameObject FindPrefab(uint prefabID)
@@ -51,30 +52,39 @@ public class GameManager
 
 	public GameObject FindPrefab(string strPrefab)
 	{
+		Profiler.BeginSample("FindPrefab");
+		Profiler.BeginSample("FindProcessed");
 		GameObject val = preProcessed.Find(strPrefab);
 		if ((Object)(object)val != (Object)null)
 		{
+			Profiler.EndSample();
+			Profiler.EndSample();
 			return val;
 		}
+		Profiler.EndSample();
+		Profiler.BeginSample("LoadFromResources");
 		val = FileSystem.LoadPrefab(strPrefab);
 		if ((Object)(object)val == (Object)null)
 		{
+			Profiler.EndSample();
+			Profiler.EndSample();
 			return null;
 		}
+		Profiler.EndSample();
+		Profiler.BeginSample("PrefabPreProcess.Process");
 		preProcessed.Process(strPrefab, val);
+		Profiler.EndSample();
+		Profiler.EndSample();
 		GameObject val2 = preProcessed.Find(strPrefab);
-		if (!((Object)(object)val2 != (Object)null))
-		{
-			return val;
-		}
-		return val2;
+		return ((Object)(object)val2 != (Object)null) ? val2 : val;
 	}
 
 	public GameObject CreatePrefab(string strPrefab, Vector3 pos, Quaternion rot, Vector3 scale, bool active = true)
 	{
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		Profiler.BeginSample("GameManager.CreatePrefab");
 		GameObject val = Instantiate(strPrefab, pos, rot);
 		if (Object.op_Implicit((Object)(object)val))
 		{
@@ -84,37 +94,43 @@ public class GameManager
 				val.AwakeFromInstantiate();
 			}
 		}
+		Profiler.EndSample();
 		return val;
 	}
 
 	public GameObject CreatePrefab(string strPrefab, Vector3 pos, Quaternion rot, bool active = true)
 	{
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		Profiler.BeginSample("GameManager.CreatePrefab");
 		GameObject val = Instantiate(strPrefab, pos, rot);
 		if (Object.op_Implicit((Object)(object)val) && active)
 		{
 			val.AwakeFromInstantiate();
 		}
+		Profiler.EndSample();
 		return val;
 	}
 
 	public GameObject CreatePrefab(string strPrefab, bool active = true)
 	{
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		Profiler.BeginSample("GameManager.CreatePrefab");
 		GameObject val = Instantiate(strPrefab, Vector3.zero, Quaternion.identity);
 		if (Object.op_Implicit((Object)(object)val) && active)
 		{
 			val.AwakeFromInstantiate();
 		}
+		Profiler.EndSample();
 		return val;
 	}
 
 	public GameObject CreatePrefab(string strPrefab, Transform parent, bool active = true)
 	{
-		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		Profiler.BeginSample("GameManager.CreatePrefab");
 		GameObject val = Instantiate(strPrefab, parent.position, parent.rotation);
 		if (Object.op_Implicit((Object)(object)val))
 		{
@@ -125,13 +141,14 @@ public class GameManager
 				val.AwakeFromInstantiate();
 			}
 		}
+		Profiler.EndSample();
 		return val;
 	}
 
 	public BaseEntity CreateEntity(string strPrefab, Vector3 pos = default(Vector3), Quaternion rot = default(Quaternion), bool startActive = true)
 	{
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
 		if (string.IsNullOrEmpty(strPrefab))
 		{
 			return null;
@@ -141,7 +158,9 @@ public class GameManager
 		{
 			return null;
 		}
+		Profiler.BeginSample("GetComponent");
 		BaseEntity component = val.GetComponent<BaseEntity>();
+		Profiler.EndSample();
 		if ((Object)(object)component == (Object)null)
 		{
 			Debug.LogError((object)("CreateEntity called on a prefab that isn't an entity! " + strPrefab));
@@ -159,28 +178,36 @@ public class GameManager
 
 	private GameObject Instantiate(string strPrefab, Vector3 pos, Quaternion rot)
 	{
-		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0092: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0093: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ba: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0117: Unknown result type (might be due to invalid IL or missing references)
+		Profiler.BeginSample(strPrefab);
+		Profiler.BeginSample("String.ToLower");
 		if (!StringEx.IsLower(strPrefab))
 		{
 			Debug.LogWarning((object)("Converting prefab name to lowercase: " + strPrefab));
 			strPrefab = strPrefab.ToLower();
 		}
+		Profiler.EndSample();
 		GameObject val = FindPrefab(strPrefab);
 		if (!Object.op_Implicit((Object)(object)val))
 		{
 			Debug.LogError((object)("Couldn't find prefab \"" + strPrefab + "\""));
+			Profiler.EndSample();
 			return null;
 		}
+		Profiler.BeginSample("PrefabPool.Pop");
 		GameObject val2 = pool.Pop(StringPool.Get(strPrefab), pos, rot);
+		Profiler.EndSample();
 		if ((Object)(object)val2 == (Object)null)
 		{
+			Profiler.BeginSample("GameObject.Instantiate");
 			val2 = Instantiate.GameObject(val, pos, rot);
 			((Object)val2).name = strPrefab;
+			Profiler.EndSample();
 		}
 		else
 		{
@@ -190,46 +217,63 @@ public class GameManager
 		{
 			SceneManager.MoveGameObjectToScene(val2, Rust.Server.EntityScene);
 		}
+		Profiler.EndSample();
 		return val2;
 	}
 
 	public static void Destroy(Component component, float delay = 0f)
 	{
-		if ((component as BaseEntity).IsValid())
+		BaseEntity ent = component as BaseEntity;
+		if (ent.IsValid())
 		{
 			Debug.LogError((object)("Trying to destroy an entity without killing it first: " + ((Object)component).name));
 		}
+		Profiler.BeginSample("Component.Destroy");
 		Object.Destroy((Object)(object)component, delay);
+		Profiler.EndSample();
 	}
 
 	public static void Destroy(GameObject instance, float delay = 0f)
 	{
 		if (Object.op_Implicit((Object)(object)instance))
 		{
-			if (instance.GetComponent<BaseEntity>().IsValid())
+			Profiler.BeginSample("GetComponent");
+			BaseEntity component = instance.GetComponent<BaseEntity>();
+			Profiler.EndSample();
+			if (component.IsValid())
 			{
 				Debug.LogError((object)("Trying to destroy an entity without killing it first: " + ((Object)instance).name));
 			}
+			Profiler.BeginSample("GameObject.Destroy");
 			Object.Destroy((Object)(object)instance, delay);
+			Profiler.EndSample();
 		}
 	}
 
 	public static void DestroyImmediate(Component component, bool allowDestroyingAssets = false)
 	{
-		if ((component as BaseEntity).IsValid())
+		BaseEntity ent = component as BaseEntity;
+		if (ent.IsValid())
 		{
 			Debug.LogError((object)("Trying to destroy an entity without killing it first: " + ((Object)component).name));
 		}
+		Profiler.BeginSample("Component.DestroyImmediate");
 		Object.DestroyImmediate((Object)(object)component, allowDestroyingAssets);
+		Profiler.EndSample();
 	}
 
 	public static void DestroyImmediate(GameObject instance, bool allowDestroyingAssets = false)
 	{
-		if (instance.GetComponent<BaseEntity>().IsValid())
+		Profiler.BeginSample("GetComponent");
+		BaseEntity component = instance.GetComponent<BaseEntity>();
+		Profiler.EndSample();
+		if (component.IsValid())
 		{
 			Debug.LogError((object)("Trying to destroy an entity without killing it first: " + ((Object)instance).name));
 		}
+		Profiler.BeginSample("GameObject.DestroyImmediate");
 		Object.DestroyImmediate((Object)(object)instance, allowDestroyingAssets);
+		Profiler.EndSample();
 	}
 
 	public void Retire(GameObject instance)
@@ -241,17 +285,24 @@ public class GameManager
 		TimeWarning val = TimeWarning.New("GameManager.Retire", 0);
 		try
 		{
-			if (instance.GetComponent<BaseEntity>().IsValid())
+			Profiler.BeginSample("GetComponent");
+			BaseEntity component = instance.GetComponent<BaseEntity>();
+			Profiler.EndSample();
+			if (component.IsValid())
 			{
 				Debug.LogError((object)("Trying to retire an entity without killing it first: " + ((Object)instance).name));
 			}
 			if (!Application.isQuitting && Pool.enabled && instance.SupportsPooling())
 			{
+				Profiler.BeginSample("PrefabPool.Push");
 				pool.Push(instance);
+				Profiler.EndSample();
 			}
 			else
 			{
+				Profiler.BeginSample("GameObject.Destroy");
 				Object.Destroy((Object)(object)instance);
+				Profiler.EndSample();
 			}
 		}
 		finally

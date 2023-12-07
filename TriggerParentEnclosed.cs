@@ -9,12 +9,12 @@ public class TriggerParentEnclosed : TriggerParent
 		PivotPoint
 	}
 
-	public float Padding;
+	public float Padding = 0f;
 
 	[Tooltip("AnyIntersect: Look for any intersection with the trigger. OriginIntersect: Only consider objects in the trigger if their origin is inside")]
-	public TriggerMode intersectionMode;
+	public TriggerMode intersectionMode = TriggerMode.TriggerPoint;
 
-	public bool CheckBoundsOnUnparent;
+	public bool CheckBoundsOnUnparent = false;
 
 	private BoxCollider boxCollider;
 
@@ -52,13 +52,13 @@ public class TriggerParentEnclosed : TriggerParent
 
 	private bool IsInside(BaseEntity ent, float padding)
 	{
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
 		Bounds val = default(Bounds);
 		((Bounds)(ref val))._002Ector(boxCollider.center, boxCollider.size);
 		if (padding > 0f)

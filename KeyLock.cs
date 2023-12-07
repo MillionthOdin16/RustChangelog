@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using ConVar;
 using Facepunch;
 using Network;
@@ -13,7 +14,7 @@ public class KeyLock : BaseLock
 
 	private int keyCode;
 
-	private bool firstKeyCreated;
+	private bool firstKeyCreated = false;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -25,7 +26,7 @@ public class KeyLock : BaseLock
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_CreateKey "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_CreateKey "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_CreateKey", 0);
 				try
@@ -44,7 +45,7 @@ public class KeyLock : BaseLock
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -56,7 +57,7 @@ public class KeyLock : BaseLock
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -76,12 +77,12 @@ public class KeyLock : BaseLock
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_Lock "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_Lock "));
 				}
-				TimeWarning val2 = TimeWarning.New("RPC_Lock", 0);
+				TimeWarning val5 = TimeWarning.New("RPC_Lock", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					TimeWarning val6 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.MaxDistance.Test(954115386u, "RPC_Lock", this, player, 3f))
@@ -91,11 +92,11 @@ public class KeyLock : BaseLock
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val6)?.Dispose();
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val7 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -107,7 +108,7 @@ public class KeyLock : BaseLock
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val7)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -118,7 +119,7 @@ public class KeyLock : BaseLock
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val5)?.Dispose();
 				}
 				return true;
 			}
@@ -127,12 +128,12 @@ public class KeyLock : BaseLock
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_Unlock "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_Unlock "));
 				}
-				TimeWarning val2 = TimeWarning.New("RPC_Unlock", 0);
+				TimeWarning val8 = TimeWarning.New("RPC_Unlock", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					TimeWarning val9 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.MaxDistance.Test(1663222372u, "RPC_Unlock", this, player, 3f))
@@ -142,11 +143,11 @@ public class KeyLock : BaseLock
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val9)?.Dispose();
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val10 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -158,7 +159,7 @@ public class KeyLock : BaseLock
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val10)?.Dispose();
 						}
 					}
 					catch (Exception ex3)
@@ -169,7 +170,7 @@ public class KeyLock : BaseLock
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val8)?.Dispose();
 				}
 				return true;
 			}
@@ -191,7 +192,8 @@ public class KeyLock : BaseLock
 		{
 			return true;
 		}
-		foreach (Item item in player.inventory.FindItemsByItemID(keyItemType.itemid))
+		List<Item> list = player.inventory.FindItemIDs(keyItemType.itemid);
+		foreach (Item item in list)
 		{
 			if (CanKeyUnlockUs(item))
 			{
@@ -310,7 +312,7 @@ public class KeyLock : BaseLock
 		ItemDefinition itemDefinition = ItemManager.FindItemDefinition(keyItemType.itemid);
 		if ((Object)(object)itemDefinition == (Object)null)
 		{
-			Debug.LogWarning((object)("RPC_CreateKey: Itemdef is missing! " + (object)keyItemType));
+			Debug.LogWarning((object)("RPC_CreateKey: Itemdef is missing! " + keyItemType));
 			return;
 		}
 		ItemBlueprint bp = ItemManager.FindBlueprint(itemDefinition);

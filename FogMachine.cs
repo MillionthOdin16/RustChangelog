@@ -21,7 +21,7 @@ public class FogMachine : ContainerIOEntity
 
 	public float fuelPerSec = 1f;
 
-	private float pendingFuel;
+	private float pendingFuel = 0f;
 
 	public bool IsEmitting()
 	{
@@ -37,10 +37,14 @@ public class FogMachine : ContainerIOEntity
 	[RPC_Server.IsVisible(3f)]
 	public void SetFogOn(RPCMessage msg)
 	{
-		if (!IsEmitting() && !IsOn() && HasFuel() && msg.player.CanBuild())
+		if (!IsEmitting() && !IsOn() && HasFuel())
 		{
-			SetFlag(Flags.On, b: true);
-			((FacepunchBehaviour)this).InvokeRepeating((Action)StartFogging, 0f, fogLength - 1f);
+			BasePlayer player = msg.player;
+			if (player.CanBuild())
+			{
+				SetFlag(Flags.On, b: true);
+				((FacepunchBehaviour)this).InvokeRepeating((Action)StartFogging, 0f, fogLength - 1f);
+			}
 		}
 	}
 
@@ -48,10 +52,14 @@ public class FogMachine : ContainerIOEntity
 	[RPC_Server.IsVisible(3f)]
 	public void SetFogOff(RPCMessage msg)
 	{
-		if (IsOn() && msg.player.CanBuild())
+		if (IsOn())
 		{
-			((FacepunchBehaviour)this).CancelInvoke((Action)StartFogging);
-			SetFlag(Flags.On, b: false);
+			BasePlayer player = msg.player;
+			if (player.CanBuild())
+			{
+				((FacepunchBehaviour)this).CancelInvoke((Action)StartFogging);
+				SetFlag(Flags.On, b: false);
+			}
 		}
 	}
 
@@ -60,7 +68,8 @@ public class FogMachine : ContainerIOEntity
 	public void SetMotionDetection(RPCMessage msg)
 	{
 		bool flag = msg.read.Bit();
-		if (msg.player.CanBuild())
+		BasePlayer player = msg.player;
+		if (player.CanBuild())
 		{
 			SetFlag(Flags.Reserved9, flag);
 			if (flag)
@@ -85,17 +94,23 @@ public class FogMachine : ContainerIOEntity
 
 	public void CheckTrigger()
 	{
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
-		if (!IsEmitting() && BasePlayer.AnyPlayersVisibleToEntity(((Component)this).transform.position + ((Component)this).transform.forward * 3f, 3f, this, ((Component)this).transform.position + Vector3.up * 0.1f, ignorePlayersWithPriv: true))
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
+		if (!IsEmitting())
 		{
-			StartFogging();
+			Vector3 pos = ((Component)this).transform.position + ((Component)this).transform.forward * 3f;
+			if (BasePlayer.AnyPlayersVisibleToEntity(pos, 3f, this, ((Component)this).transform.position + Vector3.up * 0.1f, ignorePlayersWithPriv: true))
+			{
+				StartFogging();
+			}
 		}
 	}
 
@@ -234,7 +249,7 @@ public class FogMachine : ContainerIOEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SetFogOff "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SetFogOff "));
 				}
 				TimeWarning val2 = TimeWarning.New("SetFogOff", 0);
 				try
@@ -253,7 +268,7 @@ public class FogMachine : ContainerIOEntity
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -265,7 +280,7 @@ public class FogMachine : ContainerIOEntity
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -285,12 +300,12 @@ public class FogMachine : ContainerIOEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SetFogOn "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SetFogOn "));
 				}
-				TimeWarning val2 = TimeWarning.New("SetFogOn", 0);
+				TimeWarning val5 = TimeWarning.New("SetFogOn", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					TimeWarning val6 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsVisible.Test(3905831928u, "SetFogOn", this, player, 3f))
@@ -300,11 +315,11 @@ public class FogMachine : ContainerIOEntity
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val6)?.Dispose();
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val7 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -316,7 +331,7 @@ public class FogMachine : ContainerIOEntity
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val7)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -327,7 +342,7 @@ public class FogMachine : ContainerIOEntity
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val5)?.Dispose();
 				}
 				return true;
 			}
@@ -336,12 +351,12 @@ public class FogMachine : ContainerIOEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SetMotionDetection "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SetMotionDetection "));
 				}
-				TimeWarning val2 = TimeWarning.New("SetMotionDetection", 0);
+				TimeWarning val8 = TimeWarning.New("SetMotionDetection", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					TimeWarning val9 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsVisible.Test(1773639087u, "SetMotionDetection", this, player, 3f))
@@ -351,11 +366,11 @@ public class FogMachine : ContainerIOEntity
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val9)?.Dispose();
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val10 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -367,7 +382,7 @@ public class FogMachine : ContainerIOEntity
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val10)?.Dispose();
 						}
 					}
 					catch (Exception ex3)
@@ -378,7 +393,7 @@ public class FogMachine : ContainerIOEntity
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val8)?.Dispose();
 				}
 				return true;
 			}

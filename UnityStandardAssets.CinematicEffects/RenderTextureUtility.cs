@@ -9,8 +9,8 @@ public class RenderTextureUtility
 
 	public RenderTexture GetTemporaryRenderTexture(int width, int height, int depthBuffer = 0, RenderTextureFormat format = 2, FilterMode filterMode = 1)
 	{
-		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0004: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
 		RenderTexture temporary = RenderTexture.GetTemporary(width, height, depthBuffer, format);
 		((Texture)temporary).filterMode = filterMode;
 		((Texture)temporary).wrapMode = (TextureWrapMode)1;

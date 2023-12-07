@@ -32,28 +32,28 @@ public class MeshPaintableSource : MonoBehaviour, IClientComponent
 
 	public Renderer[] extraRenderers;
 
-	public bool paint3D;
+	public bool paint3D = false;
 
 	public bool applyToSkinRenderers = true;
 
 	public bool applyToFirstPersonLegs = true;
 
 	[NonSerialized]
-	public bool isSelected;
+	public bool isSelected = false;
 
 	[NonSerialized]
 	public Renderer legRenderer;
 
-	private static MaterialPropertyBlock block;
+	private static MaterialPropertyBlock block = null;
 
 	public void Init()
 	{
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0027: Expected O, but got Unknown
-		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0079: Expected O, but got Unknown
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Expected O, but got Unknown
+		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0087: Expected O, but got Unknown
 		if ((Object)(object)texture == (Object)null)
 		{
 			texture = new Texture2D(texWidth, texHeight, (TextureFormat)5, false);
@@ -147,8 +147,8 @@ public class MeshPaintableSource : MonoBehaviour, IClientComponent
 
 	public void Clear()
 	{
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
 		if (!((Object)(object)texture == (Object)null))
 		{
 			TextureEx.Clear(texture, Color32.op_Implicit(new Color(0f, 0f, 0f, 0f)));

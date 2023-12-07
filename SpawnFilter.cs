@@ -14,14 +14,14 @@ public class SpawnFilter
 	public Enum TopologyAny = (Enum)(-1);
 
 	[InspectorFlags]
-	public Enum TopologyAll;
+	public Enum TopologyAll = (Enum)0;
 
 	[InspectorFlags]
-	public Enum TopologyNot;
+	public Enum TopologyNot = (Enum)0;
 
 	public bool Test(Vector3 worldPos)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
 		return GetFactor(worldPos) > 0.5f;
 	}
 
@@ -32,8 +32,8 @@ public class SpawnFilter
 
 	public float GetFactor(Vector3 worldPos, bool checkPlacementMap = true)
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
 		float normX = TerrainMeta.NormalizeX(worldPos.x);
 		float normZ = TerrainMeta.NormalizeZ(worldPos.z);
 		return GetFactor(normX, normZ, checkPlacementMap);
@@ -41,16 +41,16 @@ public class SpawnFilter
 
 	public float GetFactor(float normX, float normZ, bool checkPlacementMap = true)
 	{
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003e: Expected I4, but got Unknown
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0045: Expected I4, but got Unknown
-		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004c: Expected I4, but got Unknown
-		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0053: Expected I4, but got Unknown
-		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005b: Expected I4, but got Unknown
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0056: Expected I4, but got Unknown
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005d: Expected I4, but got Unknown
+		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0064: Expected I4, but got Unknown
+		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006b: Expected I4, but got Unknown
+		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0073: Expected I4, but got Unknown
 		if ((Object)(object)TerrainMeta.TopologyMap == (Object)null)
 		{
 			return 0f;
@@ -90,11 +90,14 @@ public class SpawnFilter
 			Debug.LogError((object)"Empty biome filter is invalid.");
 			break;
 		default:
-			if ((TerrainMeta.BiomeMap.GetBiomeMaxType(normX, normZ) & num2) == 0)
+		{
+			int biomeMaxType = TerrainMeta.BiomeMap.GetBiomeMaxType(normX, normZ);
+			if ((biomeMaxType & num2) == 0)
 			{
 				return 0f;
 			}
 			break;
+		}
 		case -1:
 			break;
 		}

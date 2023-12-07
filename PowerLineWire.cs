@@ -31,11 +31,10 @@ public class PowerLineWire : MonoBehaviour
 
 	public static PowerLineWire Create(PowerLineWire wire, List<GameObject> objs, GameObjectRef wirePrefab, string name, PowerLineWire copyfrom, float wiresize, float str)
 	{
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0023: Expected O, but got Unknown
-		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0097: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Expected O, but got Unknown
+		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0094: Expected O, but got Unknown
 		if (objs != null && objs.Count > 1)
 		{
 			GameObject val = null;
@@ -55,10 +54,8 @@ public class PowerLineWire : MonoBehaviour
 			wire.poles.Add(objs[0].transform);
 			for (int i = 0; i < objs.Count - 1; i++)
 			{
-				GameObject val2 = new GameObject
-				{
-					name = name + " Span Mesh " + i
-				};
+				GameObject val2 = new GameObject();
+				((Object)val2).name = name + " Span Mesh " + i;
 				val2.transform.parent = val.transform;
 				PowerLineWireSpan powerLineWireSpan = val2.AddComponent<PowerLineWireSpan>();
 				powerLineWireSpan.wirePrefab = wirePrefab;
@@ -95,14 +92,14 @@ public class PowerLineWire : MonoBehaviour
 
 	public void Init()
 	{
-		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ce: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ba: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d2: Unknown result type (might be due to invalid IL or missing references)
 		for (int i = 0; i < spans.Count; i++)
 		{
 			PowerLineWireSpan powerLineWireSpan = spans[i];

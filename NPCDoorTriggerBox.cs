@@ -9,16 +9,16 @@ public class NPCDoorTriggerBox : MonoBehaviour
 
 	public void Setup(Door d)
 	{
-		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
 		door = d;
 		((Component)this).transform.SetParent(((Component)door).transform, false);
 		((Component)this).gameObject.layer = 18;
-		BoxCollider obj = ((Component)this).gameObject.AddComponent<BoxCollider>();
-		((Collider)obj).isTrigger = true;
-		obj.center = Vector3.zero;
-		obj.size = Vector3.one * AI.npc_door_trigger_size;
+		BoxCollider val = ((Component)this).gameObject.AddComponent<BoxCollider>();
+		((Collider)val).isTrigger = true;
+		val.center = Vector3.zero;
+		val.size = Vector3.one * AI.npc_door_trigger_size;
 	}
 
 	private void OnTriggerEnter(Collider other)

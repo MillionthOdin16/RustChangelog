@@ -154,21 +154,6 @@ public sealed class ColorGrading : PostProcessEffectSettings
 		value = 0f
 	};
 
-	[DisplayName("Mode")]
-	[Tooltip("Select masking type to avoid applying grading to certain areas.")]
-	public MaskingModeParameter maskMode = new MaskingModeParameter
-	{
-		value = MaskingMode.None
-	};
-
-	[DisplayName("Intensity")]
-	[Range(0f, 10f)]
-	[Tooltip("Mask intensity.")]
-	public FloatParameter maskIntensity = new FloatParameter
-	{
-		value = 1f
-	};
-
 	[DisplayName("Red")]
 	[Range(-200f, 200f)]
 	[Tooltip("Modify influence of the red channel in the overall mix.")]

@@ -4,11 +4,12 @@ using UnityEngine;
 
 namespace CompanionServer.Handlers;
 
-public class MapMarkers : BasePlayerHandler<AppEmpty>
+public class MapMarkers : BaseHandler<AppEmpty>
 {
 	public override void Execute()
 	{
-		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00dc: Invalid comparison between Unknown and I4
 		AppMapMarkers val = Pool.Get<AppMapMarkers>();
 		val.markers = Pool.GetList<AppMarker>();
 		RelationshipManager.PlayerTeam playerTeam = RelationshipManager.ServerInstance.FindPlayersTeam(base.UserId);
@@ -41,21 +42,21 @@ public class MapMarkers : BasePlayerHandler<AppEmpty>
 
 	private static AppMarker GetPlayerMarker(BasePlayer player)
 	{
-		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
-		AppMarker obj = Pool.Get<AppMarker>();
-		Vector2 val = Util.WorldToMap(((Component)player).transform.position);
-		obj.id = player.net.ID;
-		obj.type = (AppMarkerType)1;
-		obj.x = val.x;
-		obj.y = val.y;
-		obj.steamId = player.userID;
-		return obj;
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		AppMarker val = Pool.Get<AppMarker>();
+		Vector2 val2 = Util.WorldToMap(((Component)player).transform.position);
+		val.id = player.net.ID;
+		val.type = (AppMarkerType)1;
+		val.x = val2.x;
+		val.y = val2.y;
+		val.steamId = player.userID;
+		return val;
 	}
 }

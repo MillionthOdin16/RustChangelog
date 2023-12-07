@@ -29,11 +29,11 @@ public class Recipe : ScriptableObject
 	public Sprite SpawnedItemIcon;
 
 	[Header("Misc")]
-	public bool RequiresBlueprint;
+	public bool RequiresBlueprint = false;
 
 	public RecipeIngredient[] Ingredients;
 
-	public float MixingDuration;
+	public float MixingDuration = 0f;
 
 	public string DisplayName
 	{

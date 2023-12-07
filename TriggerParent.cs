@@ -12,17 +12,15 @@ public class TriggerParent : TriggerBase, IServerComponent
 	public BaseMountable associatedMountable;
 
 	[Tooltip("Needed if the player might dismount inside the trigger and the trigger might be moving. Being mounting inside the trigger lets them dismount in local trigger-space, which means client and server will sync up.Otherwise the client/server delay can have them dismounting into invalid space.")]
-	public bool parentMountedPlayers;
+	public bool parentMountedPlayers = false;
 
 	[Tooltip("Sleepers don't have all the checks (e.g. clipping) that awake players get. If that might be a problem,sleeper parenting can be disabled. You'll need an associatedMountable though so that the sleeper can be dismounted.")]
 	public bool parentSleepers = true;
 
-	public bool ParentNPCPlayers;
+	public bool ParentNPCPlayers = false;
 
 	[Tooltip("If the player is already parented to something else, they'll switch over to another parent only if this is true")]
 	public bool overrideOtherTriggers;
-
-	public float parentMaxLocalY = float.PositiveInfinity;
 
 	public const int CLIP_CHECK_MASK = 1218511105;
 
@@ -79,16 +77,14 @@ public class TriggerParent : TriggerBase, IServerComponent
 
 	public virtual bool ShouldParent(BaseEntity ent, bool bypassOtherTriggerCheck = false)
 	{
-		//IL_00e3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e8: Unknown result type (might be due to invalid IL or missing references)
 		if (!ent.canTriggerParent)
 		{
 			return false;
 		}
-		if (!bypassOtherTriggerCheck && !overrideOtherTriggers)
+		if (!bypassOtherTriggerCheck)
 		{
 			BaseEntity parentEntity = ent.GetParentEntity();
-			if (parentEntity.IsValid() && (Object)(object)parentEntity != (Object)(object)((Component)this).gameObject.ToBaseEntity())
+			if (!overrideOtherTriggers && parentEntity.IsValid() && (Object)(object)parentEntity != (Object)(object)((Component)this).gameObject.ToBaseEntity())
 			{
 				return false;
 			}
@@ -101,28 +97,19 @@ public class TriggerParent : TriggerBase, IServerComponent
 		{
 			return false;
 		}
-		BasePlayer basePlayer = ent.ToPlayer();
-		if ((Object)(object)basePlayer != (Object)null)
+		if (!parentMountedPlayers || !parentSleepers)
 		{
-			if (basePlayer.IsSwimming())
+			BasePlayer basePlayer = ent.ToPlayer();
+			if ((Object)(object)basePlayer != (Object)null)
 			{
-				return false;
-			}
-			if (!parentMountedPlayers && basePlayer.isMounted)
-			{
-				return false;
-			}
-			if (!parentSleepers && basePlayer.IsSleeping())
-			{
-				return false;
-			}
-		}
-		if (!float.IsInfinity(parentMaxLocalY))
-		{
-			BaseEntity parentEntity2 = ent.GetParentEntity();
-			if ((!parentEntity2.IsValid() || !((Object)(object)parentEntity2 == (Object)(object)((Component)this).gameObject.ToBaseEntity())) && ((Component)this).transform.InverseTransformPoint(((Component)ent).transform.position).y > parentMaxLocalY)
-			{
-				return false;
+				if (!parentMountedPlayers && basePlayer.isMounted)
+				{
+					return false;
+				}
+				if (!parentSleepers && basePlayer.IsSleeping())
+				{
+					return false;
+				}
 			}
 		}
 		return true;
@@ -139,8 +126,8 @@ public class TriggerParent : TriggerBase, IServerComponent
 
 	protected void Unparent(BaseEntity ent)
 	{
-		//IL_00cb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0123: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)ent.GetParentEntity() != (Object)(object)((Component)this).gameObject.ToBaseEntity())
 		{
 			return;
@@ -217,7 +204,7 @@ public class TriggerParent : TriggerBase, IServerComponent
 
 	protected virtual bool IsClipping(BaseEntity ent)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
 		return GamePhysics.CheckOBB(ent.WorldSpaceBounds(), 1218511105, (QueryTriggerInteraction)1);
 	}
 }

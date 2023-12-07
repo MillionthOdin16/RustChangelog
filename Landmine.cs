@@ -18,7 +18,7 @@ public class Landmine : BaseTrap
 
 	public float explosionRadius;
 
-	public bool blocked;
+	public bool blocked = false;
 
 	private ulong triggerPlayerID;
 
@@ -34,7 +34,7 @@ public class Landmine : BaseTrap
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_Disarm "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_Disarm "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_Disarm", 0);
 				try
@@ -53,7 +53,7 @@ public class Landmine : BaseTrap
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -65,7 +65,7 @@ public class Landmine : BaseTrap
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -166,9 +166,9 @@ public class Landmine : BaseTrap
 
 	public virtual void Explode()
 	{
-		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
 		base.health = float.PositiveInfinity;
 		Effect.server.Run(explosionEffect.resourcePath, PivotPoint(), ((Component)this).transform.up, null, broadcast: true);
 		DamageUtil.RadiusDamage(this, LookupPrefab(), CenterPoint(), minExplosionRadius, explosionRadius, damageTypes, 2263296, useLineOfSight: true);
@@ -209,7 +209,8 @@ public class Landmine : BaseTrap
 		if (rpc.player.userID != triggerPlayerID && Armed())
 		{
 			SetFlag(Flags.On, b: false);
-			if (Random.Range(0, 100) < 15)
+			int num = Random.Range(0, 100);
+			if (num < 15)
 			{
 				((FacepunchBehaviour)this).Invoke((Action)TryExplode, 0.05f);
 				return;

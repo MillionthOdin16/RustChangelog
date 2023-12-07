@@ -5,11 +5,11 @@ namespace VLB;
 
 public static class Noise3D
 {
-	private static bool ms_IsSupportedChecked;
+	private static bool ms_IsSupportedChecked = false;
 
-	private static bool ms_IsSupported;
+	private static bool ms_IsSupported = false;
 
-	private static Texture3D ms_NoiseTexture;
+	private static Texture3D ms_NoiseTexture = null;
 
 	private const HideFlags kHideFlags = 61;
 
@@ -44,7 +44,7 @@ public static class Noise3D
 
 	public static void LoadIfNeeded()
 	{
-		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
 		if (!isSupported)
 		{
 			return;
@@ -63,11 +63,11 @@ public static class Noise3D
 
 	private static Texture3D LoadTexture3D(TextAsset textData, int size)
 	{
-		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0062: Expected O, but got Unknown
 		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007e: Expected O, but got Unknown
+		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009e: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)textData == (Object)null)
 		{
 			Debug.LogErrorFormat("Fail to open Noise 3D Data", Array.Empty<object>());

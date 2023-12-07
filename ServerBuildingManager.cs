@@ -2,35 +2,42 @@ using System;
 using ConVar;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.Profiling;
 
 public class ServerBuildingManager : BuildingManager
 {
-	private int decayTickBuildingIndex;
+	private int decayTickBuildingIndex = 0;
 
-	private int decayTickEntityIndex;
+	private int decayTickEntityIndex = 0;
 
-	private int decayTickWorldIndex;
+	private int decayTickWorldIndex = 0;
 
-	private int navmeshCarveTickBuildingIndex;
+	private int navmeshCarveTickBuildingIndex = 0;
 
-	private uint maxBuildingID;
+	private uint maxBuildingID = 0u;
 
 	public void CheckSplit(DecayEntity ent)
 	{
-		if (ent.buildingID != 0)
+		if (ent.buildingID == 0)
 		{
-			Building building = ent.GetBuilding();
-			if (building != null && ShouldSplit(building))
+			return;
+		}
+		Building building = ent.GetBuilding();
+		if (building != null)
+		{
+			Profiler.BeginSample("BuildingManager.CheckSplit");
+			if (ShouldSplit(building))
 			{
 				Split(building);
 			}
+			Profiler.EndSample();
 		}
 	}
 
 	private bool ShouldSplit(Building building)
 	{
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
 		if (building.HasBuildingBlocks())
 		{
 			building.buildingBlocks[0].EntityLinkBroadcast();
@@ -39,7 +46,8 @@ public class ServerBuildingManager : BuildingManager
 			{
 				while (enumerator.MoveNext())
 				{
-					if (!enumerator.Current.ReceivedEntityLinkBroadcast())
+					BuildingBlock current = enumerator.Current;
+					if (!current.ReceivedEntityLinkBroadcast())
 					{
 						return true;
 					}
@@ -95,6 +103,7 @@ public class ServerBuildingManager : BuildingManager
 		{
 			return;
 		}
+		Profiler.BeginSample("BuildingManager.CheckMerge");
 		ent.EntityLinkMessage(delegate(BuildingBlock b)
 		{
 			if (b.buildingID != building.ID)
@@ -106,6 +115,7 @@ public class ServerBuildingManager : BuildingManager
 				}
 			}
 		});
+		Profiler.EndSample();
 		if (AI.nav_carve_use_building_optimization)
 		{
 			building.isNavMeshCarvingDirty = true;
@@ -118,7 +128,8 @@ public class ServerBuildingManager : BuildingManager
 	{
 		while (building2.HasDecayEntities())
 		{
-			building2.decayEntities[0].AttachToBuilding(building1.ID);
+			DecayEntity decayEntity = building2.decayEntities[0];
+			decayEntity.AttachToBuilding(building1.ID);
 		}
 		if (AI.nav_carve_use_building_optimization)
 		{
@@ -141,25 +152,25 @@ public class ServerBuildingManager : BuildingManager
 		{
 			((IDisposable)val)?.Dispose();
 		}
-		val = TimeWarning.New("UpdateSurroundingsQueue", 0);
+		TimeWarning val2 = TimeWarning.New("UpdateSurroundingsQueue", 0);
 		try
 		{
 			((ObjectWorkQueue<Bounds>)StabilityEntity.updateSurroundingsQueue).RunQueue((double)Stability.surroundingsqueue);
 		}
 		finally
 		{
-			((IDisposable)val)?.Dispose();
+			((IDisposable)val2)?.Dispose();
 		}
-		val = TimeWarning.New("UpdateSkinQueue", 0);
+		TimeWarning val3 = TimeWarning.New("UpdateSkinQueue", 0);
 		try
 		{
 			((ObjectWorkQueue<BuildingBlock>)BuildingBlock.updateSkinQueueServer).RunQueue(1.0);
 		}
 		finally
 		{
-			((IDisposable)val)?.Dispose();
+			((IDisposable)val3)?.Dispose();
 		}
-		val = TimeWarning.New("BuildingDecayTick", 0);
+		TimeWarning val4 = TimeWarning.New("BuildingDecayTick", 0);
 		try
 		{
 			int num = 5;
@@ -197,9 +208,9 @@ public class ServerBuildingManager : BuildingManager
 		}
 		finally
 		{
-			((IDisposable)val)?.Dispose();
+			((IDisposable)val4)?.Dispose();
 		}
-		val = TimeWarning.New("WorldDecayTick", 0);
+		TimeWarning val5 = TimeWarning.New("WorldDecayTick", 0);
 		try
 		{
 			int num2 = 5;
@@ -224,13 +235,13 @@ public class ServerBuildingManager : BuildingManager
 		}
 		finally
 		{
-			((IDisposable)val)?.Dispose();
+			((IDisposable)val5)?.Dispose();
 		}
 		if (!AI.nav_carve_use_building_optimization)
 		{
 			return;
 		}
-		val = TimeWarning.New("NavMeshCarving", 0);
+		TimeWarning val6 = TimeWarning.New("NavMeshCarving", 0);
 		try
 		{
 			int ticks = 5;
@@ -251,48 +262,48 @@ public class ServerBuildingManager : BuildingManager
 		}
 		finally
 		{
-			((IDisposable)val)?.Dispose();
+			((IDisposable)val6)?.Dispose();
 		}
 	}
 
 	public void UpdateNavMeshCarver(Building building, ref int ticks, int i)
 	{
-		//IL_0187: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0188: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0189: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0193: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0198: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01da: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01db: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01dc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01e6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01eb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ed: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01fb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0209: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0210: Unknown result type (might be due to invalid IL or missing references)
+		//IL_021e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0225: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0233: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0239: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0248: Unknown result type (might be due to invalid IL or missing references)
+		//IL_024e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_025d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0263: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0124: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0129: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0172: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0150: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0155: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0199: Unknown result type (might be due to invalid IL or missing references)
 		//IL_019e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ba: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ce: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01dc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01e2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01f0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01f6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0204: Unknown result type (might be due to invalid IL or missing references)
-		//IL_020a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ee: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0130: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0135: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0114: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0119: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0156: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0284: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0291: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0296: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0274: Unknown result type (might be due to invalid IL or missing references)
-		//IL_027b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0280: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02cd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0330: Unknown result type (might be due to invalid IL or missing references)
-		//IL_033c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02e8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02f5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02fa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02d6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02dd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02e2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_033e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03ab: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03b9: Unknown result type (might be due to invalid IL or missing references)
 		if (!AI.nav_carve_use_building_optimization || (!building.isNavMeshCarveOptimized && building.navmeshCarvers.Count < AI.nav_carve_min_building_blocks_to_apply_optimization) || !building.isNavMeshCarvingDirty)
 		{
 			return;
@@ -399,10 +410,9 @@ public class ServerBuildingManager : BuildingManager
 
 	protected override Building CreateBuilding(uint id)
 	{
-		return new Building
-		{
-			ID = id
-		};
+		Building building = new Building();
+		building.ID = id;
+		return building;
 	}
 
 	protected override void DisposeBuilding(ref Building building)

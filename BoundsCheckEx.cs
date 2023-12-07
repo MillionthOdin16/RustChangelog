@@ -6,26 +6,27 @@ public static class BoundsCheckEx
 {
 	public static bool ApplyBoundsChecks(this BaseEntity entity, BoundsCheck[] bounds, Vector3 pos, Quaternion rot, Vector3 scale, LayerMask rejectOnLayer)
 	{
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0004: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009e: Unknown result type (might be due to invalid IL or missing references)
 		if (bounds.Length == 0 && LayerMask.op_Implicit(rejectOnLayer) == 0)
 		{
 			return true;
 		}
-		OBB obb = new OBB(pos + rot * Vector3.Scale(((Bounds)(ref entity.bounds)).center, scale), Vector3.Scale(((Bounds)(ref entity.bounds)).extents, scale), rot);
+		OBB obb = default(OBB);
+		((OBB)(ref obb))._002Ector(pos + rot * Vector3.Scale(((Bounds)(ref entity.bounds)).center, scale), Vector3.Scale(((Bounds)(ref entity.bounds)).extents, scale), rot);
 		List<Collider> list = Pool.GetList<Collider>();
 		GamePhysics.OverlapOBB(obb, list, 0x40000 | LayerMask.op_Implicit(rejectOnLayer), (QueryTriggerInteraction)2);
 		SpawnableBoundsBlocker spawnableBoundsBlocker = default(SpawnableBoundsBlocker);

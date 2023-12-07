@@ -5,16 +5,16 @@ using UnityEngine;
 
 public class ZiplineArrivalPoint : BaseEntity
 {
-	public LineRenderer Line;
+	public LineRenderer Line = null;
 
-	private Vector3[] linePositions;
+	private Vector3[] linePositions = null;
 
 	public override void Save(SaveInfo info)
 	{
-		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
 		base.Save(info);
 		if (info.msg.ZiplineArrival == null)
 		{
@@ -30,8 +30,8 @@ public class ZiplineArrivalPoint : BaseEntity
 
 	public void SetPositions(List<Vector3> points)
 	{
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
 		linePositions = (Vector3[])(object)new Vector3[points.Count];
 		for (int i = 0; i < points.Count; i++)
 		{
@@ -41,9 +41,9 @@ public class ZiplineArrivalPoint : BaseEntity
 
 	public override void Load(LoadInfo info)
 	{
-		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
 		base.Load(info);
 		if (info.msg.ZiplineArrival != null && linePositions == null)
 		{

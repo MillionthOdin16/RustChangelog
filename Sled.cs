@@ -11,11 +11,11 @@ public class Sled : BaseVehicle, INotifyTrigger
 
 	private const Flags OnSand = Flags.Reserved4;
 
-	public PhysicMaterial BrakeMaterial;
+	public PhysicMaterial BrakeMaterial = null;
 
-	public PhysicMaterial SnowMaterial;
+	public PhysicMaterial SnowMaterial = null;
 
-	public PhysicMaterial NonSnowMaterial;
+	public PhysicMaterial NonSnowMaterial = null;
 
 	public Transform CentreOfMassTransform;
 
@@ -55,11 +55,11 @@ public class Sled : BaseVehicle, INotifyTrigger
 
 	public AnimationCurve movementLoopPitchCurve;
 
-	private VehicleTerrainHandler terrainHandler;
+	private VehicleTerrainHandler terrainHandler = null;
 
-	private PhysicMaterial cachedMaterial;
+	private PhysicMaterial cachedMaterial = null;
 
-	private float initialForceScale;
+	private float initialForceScale = 0f;
 
 	private TimeSince leftIce;
 
@@ -69,7 +69,7 @@ public class Sled : BaseVehicle, INotifyTrigger
 
 	public override void ServerInit()
 	{
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
 		base.ServerInit();
 		terrainHandler = new VehicleTerrainHandler(this);
 		terrainHandler.RayLength = 0.6f;
@@ -87,17 +87,19 @@ public class Sled : BaseVehicle, INotifyTrigger
 
 	public override void VehicleFixedUpdate()
 	{
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0092: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009f: Unknown result type (might be due to invalid IL or missing references)
 		base.VehicleFixedUpdate();
 		if (!AnyMounted())
 		{
@@ -106,8 +108,10 @@ public class Sled : BaseVehicle, INotifyTrigger
 		terrainHandler.FixedUpdate();
 		if (!terrainHandler.IsGrounded)
 		{
-			Quaternion val = Quaternion.FromToRotation(((Component)this).transform.up, Vector3.up) * rigidBody.rotation;
-			if (Quaternion.Angle(rigidBody.rotation, val) > VerticalAdjustmentAngleThreshold)
+			Vector3 up = ((Component)this).transform.up;
+			Quaternion val = Quaternion.FromToRotation(up, Vector3.up) * rigidBody.rotation;
+			float num = Quaternion.Angle(rigidBody.rotation, val);
+			if (num > VerticalAdjustmentAngleThreshold)
 			{
 				rigidBody.MoveRotation(Quaternion.Slerp(rigidBody.rotation, val, Time.fixedDeltaTime * VerticalAdjustmentForce));
 			}
@@ -118,9 +122,9 @@ public class Sled : BaseVehicle, INotifyTrigger
 	{
 		cachedMaterial = GetPhysicMaterial();
 		Collider[] physicsMaterialTargets = PhysicsMaterialTargets;
-		for (int i = 0; i < physicsMaterialTargets.Length; i++)
+		foreach (Collider val in physicsMaterialTargets)
 		{
-			physicsMaterialTargets[i].sharedMaterial = cachedMaterial;
+			val.sharedMaterial = cachedMaterial;
 		}
 		if (!AnyMounted() && rigidBody.IsSleeping())
 		{
@@ -141,9 +145,9 @@ public class Sled : BaseVehicle, INotifyTrigger
 
 	private PhysicMaterial GetPhysicMaterial()
 	{
-		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
 		if (HasFlag(Flags.Reserved1) || !AnyMounted())
 		{
 			return BrakeMaterial;
@@ -157,11 +161,7 @@ public class Sled : BaseVehicle, INotifyTrigger
 		{
 			flag = true;
 		}
-		if (!flag)
-		{
-			return NonSnowMaterial;
-		}
-		return SnowMaterial;
+		return flag ? SnowMaterial : NonSnowMaterial;
 	}
 
 	public override void PlayerMounted(BasePlayer player, BaseMountable seat)
@@ -189,24 +189,24 @@ public class Sled : BaseVehicle, INotifyTrigger
 
 	private void ApplyInitialForce()
 	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
 		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
 		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
 		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 forward = ((Component)this).transform.forward;
 		Vector3 val = ((Vector3.Dot(forward, -Vector3.up) > Vector3.Dot(-forward, -Vector3.up)) ? forward : (-forward));
 		rigidBody.AddForce(val * initialForceScale * (terrainHandler.IsOnSnowOrIce ? 1f : 0.25f), (ForceMode)5);
@@ -223,40 +223,41 @@ public class Sled : BaseVehicle, INotifyTrigger
 
 	public override void PlayerServerInput(InputState inputState, BasePlayer player)
 	{
-		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0121: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0130: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0136: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0140: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
-		//IL_016a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_016f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0172: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00dd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0103: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0108: Unknown result type (might be due to invalid IL or missing references)
-		//IL_019a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0104: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0120: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0125: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0158: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0168: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0174: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0199: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ad: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01e3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ef: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0200: Unknown result type (might be due to invalid IL or missing references)
 		base.PlayerServerInput(inputState, player);
-		if (Vector3.Dot(((Component)this).transform.up, Vector3.up) < 0.1f || WaterFactor() > 0.25f)
+		float num = Vector3.Dot(((Component)this).transform.up, Vector3.up);
+		if (num < 0.1f || WaterFactor() > 0.25f)
 		{
 			DismountAllPlayers();
 			return;
 		}
-		float num = (inputState.IsDown(BUTTON.LEFT) ? (-1f) : 0f);
-		num += (inputState.IsDown(BUTTON.RIGHT) ? 1f : 0f);
+		float num2 = (inputState.IsDown(BUTTON.LEFT) ? (-1f) : 0f);
+		num2 += (inputState.IsDown(BUTTON.RIGHT) ? 1f : 0f);
 		Vector3 velocity;
 		if (inputState.IsDown(BUTTON.FORWARD) && TimeSince.op_Implicit(lastNudge) > NudgeCooldown)
 		{
@@ -269,16 +270,17 @@ public class Sled : BaseVehicle, INotifyTrigger
 				lastNudge = TimeSince.op_Implicit(0f);
 			}
 		}
-		num *= TurnForce;
+		num2 *= TurnForce;
 		Vector3 velocity2 = rigidBody.velocity;
-		if (num != 0f)
+		if (num2 != 0f)
 		{
-			((Component)this).transform.Rotate(Vector3.up * num * Time.deltaTime * ((Vector3)(ref velocity2)).magnitude, (Space)1);
+			((Component)this).transform.Rotate(Vector3.up * num2 * Time.deltaTime * ((Vector3)(ref velocity2)).magnitude, (Space)1);
 		}
 		if (terrainHandler.IsGrounded)
 		{
 			velocity = rigidBody.velocity;
-			if (Vector3.Dot(((Vector3)(ref velocity)).normalized, ((Component)this).transform.forward) >= 0.5f)
+			float num3 = Vector3.Dot(((Vector3)(ref velocity)).normalized, ((Component)this).transform.forward);
+			if (num3 >= 0.5f)
 			{
 				rigidBody.velocity = Vector3.Lerp(rigidBody.velocity, ((Component)this).transform.forward * ((Vector3)(ref velocity2)).magnitude, Time.deltaTime * DirectionMatchForce);
 			}
@@ -295,11 +297,7 @@ public class Sled : BaseVehicle, INotifyTrigger
 
 	public override bool CanPickup(BasePlayer player)
 	{
-		if (base.CanPickup(player))
-		{
-			return !player.isMounted;
-		}
-		return false;
+		return base.CanPickup(player) && !player.isMounted;
 	}
 
 	public void OnObjects(TriggerNotify trigger)

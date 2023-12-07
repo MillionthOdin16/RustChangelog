@@ -27,14 +27,14 @@ public class BaseGameMode : BaseEntity
 		public PlayerInventoryProperties[] teamloadouts;
 	}
 
-	private GameMode gameModeScores;
+	private GameMode gameModeScores = null;
 
 	public string[] scoreColumns;
 
 	[Header("Vanilla")]
 	public bool globalChat = true;
 
-	public bool localChat;
+	public bool localChat = false;
 
 	public bool teamSystem = true;
 
@@ -50,7 +50,7 @@ public class BaseGameMode : BaseEntity
 
 	public bool rustPlus = true;
 
-	public bool wipeBpsOnProtocol;
+	public bool wipeBpsOnProtocol = false;
 
 	public int maximumSleepingBags = -1;
 
@@ -116,7 +116,7 @@ public class BaseGameMode : BaseEntity
 
 	public bool permanent = true;
 
-	public bool limitTeamAuths;
+	public bool limitTeamAuths = false;
 
 	public bool allowSleeping = true;
 
@@ -126,19 +126,19 @@ public class BaseGameMode : BaseEntity
 
 	public bool allowTemperature = true;
 
-	public bool quickRespawn;
+	public bool quickRespawn = false;
 
-	public bool quickDeploy;
+	public bool quickDeploy = false;
 
 	public float respawnDelayOverride = 5f;
 
-	public float startHealthOverride;
+	public float startHealthOverride = 0f;
 
-	public float autoHealDelay;
+	public float autoHealDelay = 0f;
 
 	public float autoHealDuration = 1f;
 
-	public bool hasKillFeed;
+	public bool hasKillFeed = false;
 
 	public bool allowPings = true;
 
@@ -147,23 +147,23 @@ public class BaseGameMode : BaseEntity
 	public static List<BaseGameMode> svGameModeManifest = new List<BaseGameMode>();
 
 	[NonSerialized]
-	private GameObject[] allspawns;
+	private GameObject[] allspawns = null;
 
 	[NonSerialized]
-	private GameModeSpawnGroup[] gameModeSpawnGroups;
+	private GameModeSpawnGroup[] gameModeSpawnGroups = null;
 
 	public PlayerInventoryProperties[] loadouts;
 
 	[Tooltip("Use steamID to always pick the same loadout per player")]
-	public bool useStaticLoadoutPerPlayer;
+	public bool useStaticLoadoutPerPlayer = false;
 
-	public bool topUpMagazines;
+	public bool topUpMagazines = false;
 
-	public bool sendKillNotifications;
+	public bool sendKillNotifications = false;
 
 	public GameModeTeam[] teams;
 
-	public float corpseRemovalTimeOverride;
+	public float corpseRemovalTimeOverride = 0f;
 
 	private static bool isResetting = false;
 
@@ -201,20 +201,19 @@ public class BaseGameMode : BaseEntity
 
 	public void InitScores()
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000b: Expected O, but got Unknown
-		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0050: Expected O, but got Unknown
-		//IL_0089: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0090: Expected O, but got Unknown
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Expected O, but got Unknown
+		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0053: Expected O, but got Unknown
+		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009b: Expected O, but got Unknown
 		gameModeScores = new GameMode();
 		gameModeScores.scoreColumns = new List<ScoreColumn>();
 		gameModeScores.playerScores = new List<PlayerScore>();
 		gameModeScores.teams = new List<TeamInfo>();
 		GameModeTeam[] array = teams;
-		for (int i = 0; i < array.Length; i++)
+		foreach (GameModeTeam gameModeTeam in array)
 		{
-			_ = array[i];
 			TeamInfo val = new TeamInfo();
 			val.score = 0;
 			val.ShouldPool = false;
@@ -233,12 +232,12 @@ public class BaseGameMode : BaseEntity
 
 	public void CopyGameModeScores(GameMode from, GameMode to)
 	{
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003d: Expected O, but got Unknown
-		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008c: Expected O, but got Unknown
-		//IL_00db: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e2: Expected O, but got Unknown
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Expected O, but got Unknown
+		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0097: Expected O, but got Unknown
+		//IL_00eb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f2: Expected O, but got Unknown
 		to.teams.Clear();
 		to.scoreColumns.Clear();
 		to.playerScores.Clear();
@@ -271,8 +270,8 @@ public class BaseGameMode : BaseEntity
 
 	public PlayerScore GetPlayerScoreForPlayer(BasePlayer player)
 	{
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0051: Expected O, but got Unknown
+		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0063: Expected O, but got Unknown
 		PlayerScore val = null;
 		foreach (PlayerScore playerScore in gameModeScores.playerScores)
 		{
@@ -290,9 +289,8 @@ public class BaseGameMode : BaseEntity
 			val.userid = player.userID;
 			val.scores = new List<int>();
 			string[] array = scoreColumns;
-			for (int i = 0; i < array.Length; i++)
+			foreach (string text in array)
 			{
-				_ = array[i];
 				val.scores.Add(0);
 			}
 			gameModeScores.playerScores.Add(val);
@@ -338,29 +336,28 @@ public class BaseGameMode : BaseEntity
 			return false;
 		}
 		int num3 = -1;
-		int num4 = 0;
-		int num5 = ScoreColumnIndex(victoryScoreName);
-		if (num5 != -1)
+		int num4 = -1;
+		int num5 = 0;
+		int num6 = ScoreColumnIndex(victoryScoreName);
+		if (num6 != -1)
 		{
 			for (int j = 0; j < gameModeScores.playerScores.Count; j++)
 			{
 				PlayerScore val = gameModeScores.playerScores[j];
-				if (val.scores[num5] > num3)
+				if (val.scores[num6] > num3)
 				{
-					num3 = val.scores[num5];
-					num4 = 1;
+					num3 = val.scores[num6];
+					num4 = j;
+					num5 = 1;
 				}
-				else if (val.scores[num5] == num3)
+				else if (val.scores[num6] == num3)
 				{
-					num4++;
+					num4 = j;
+					num5++;
 				}
 			}
 		}
-		if (num3 != 0)
-		{
-			return num4 > 1;
-		}
-		return true;
+		return num3 == 0 || num5 > 1;
 	}
 
 	public virtual string GetWinnerName()
@@ -525,7 +522,7 @@ public class BaseGameMode : BaseEntity
 	{
 		if (KeepScores())
 		{
-			GetPlayerScoreForPlayer(player);
+			PlayerScore playerScoreForPlayer = GetPlayerScoreForPlayer(player);
 			int playerGameScore = GetPlayerGameScore(player, scoreIndex);
 			if (IsTeamGame() && player.gamemodeteam >= 0 && scoreIndex == GetScoreIndexByName(teamScoreName))
 			{
@@ -537,13 +534,15 @@ public class BaseGameMode : BaseEntity
 
 	public int GetPlayerGameScore(BasePlayer player, int scoreIndex)
 	{
-		return GetPlayerScoreForPlayer(player).scores[scoreIndex];
+		PlayerScore playerScoreForPlayer = GetPlayerScoreForPlayer(player);
+		return playerScoreForPlayer.scores[scoreIndex];
 	}
 
 	public void SetPlayerTeam(BasePlayer player, int newTeam)
 	{
 		player.gamemodeteam = newTeam;
-		GetPlayerScoreForPlayer(player).team = newTeam;
+		PlayerScore playerScoreForPlayer = GetPlayerScoreForPlayer(player);
+		playerScoreForPlayer.team = newTeam;
 		SendNetworkUpdate();
 	}
 
@@ -551,7 +550,8 @@ public class BaseGameMode : BaseEntity
 	{
 		if (!base.isClient && KeepScores())
 		{
-			GetPlayerScoreForPlayer(player).scores[scoreIndex] = scoreValue;
+			PlayerScore playerScoreForPlayer = GetPlayerScoreForPlayer(player);
+			playerScoreForPlayer.scores[scoreIndex] = scoreValue;
 			SendNetworkUpdate();
 			CheckGameConditions();
 		}
@@ -581,16 +581,15 @@ public class BaseGameMode : BaseEntity
 
 	private void DeleteEntities()
 	{
-		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
-		//IL_016b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0170: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
 		if (!SingletonComponent<ServerMgr>.Instance.runFrameUpdate)
 		{
 			((FacepunchBehaviour)this).Invoke((Action)DeleteEntities, 5f);
 		}
 		MonumentInfo[] array = TerrainMeta.Path.Monuments.Where((MonumentInfo x) => x.IsSafeZone).ToArray();
-		foreach (MonumentInfo monumentInfo in array)
+		MonumentInfo[] array2 = array;
+		foreach (MonumentInfo monumentInfo in array2)
 		{
 			List<BaseEntity> list = new List<BaseEntity>();
 			Vis.Entities(new OBB(((Component)monumentInfo).transform, monumentInfo.Bounds), list, -1, (QueryTriggerInteraction)2);
@@ -604,9 +603,9 @@ public class BaseGameMode : BaseEntity
 			if (!safeZone)
 			{
 				NPCSpawner[] componentsInChildren = ((Component)monumentInfo).GetComponentsInChildren<NPCSpawner>();
-				for (int j = 0; j < componentsInChildren.Length; j++)
+				foreach (NPCSpawner nPCSpawner in componentsInChildren)
 				{
-					componentsInChildren[j].isSpawnerActive = false;
+					nPCSpawner.isSpawnerActive = false;
 				}
 			}
 			if (mlrs)
@@ -622,25 +621,16 @@ public class BaseGameMode : BaseEntity
 				}
 			}
 		}
-		Enumerator<BaseNetworkable> enumerator2 = BaseNetworkable.serverEntities.GetEnumerator();
-		try
+		foreach (BaseNetworkable serverEntity in BaseNetworkable.serverEntities)
 		{
-			while (enumerator2.MoveNext())
+			if (!mlrs && serverEntity is MLRS)
 			{
-				BaseNetworkable current2 = enumerator2.Current;
-				if (!mlrs && current2 is MLRS)
-				{
-					current2.Kill();
-				}
-				if (!missionSystem && current2 is NPCMissionProvider)
-				{
-					current2.Kill();
-				}
+				serverEntity.Kill();
 			}
-		}
-		finally
-		{
-			((IDisposable)enumerator2).Dispose();
+			if (!missionSystem && serverEntity is NPCMissionProvider)
+			{
+				serverEntity.Kill();
+			}
 		}
 	}
 
@@ -669,9 +659,9 @@ public class BaseGameMode : BaseEntity
 			SingletonComponent<ServerMgr>.Instance.persistance.Dispose();
 			SingletonComponent<ServerMgr>.Instance.persistance = new UserPersistance(ConVar.Server.rootFolder);
 			BasePlayer[] array = Object.FindObjectsOfType<BasePlayer>();
-			for (int i = 0; i < array.Length; i++)
+			foreach (BasePlayer basePlayer in array)
 			{
-				array[i].InvalidateCachedPeristantPlayer();
+				basePlayer.InvalidateCachedPeristantPlayer();
 			}
 		}
 		RelationshipManager.contacts = contactSystem;
@@ -713,24 +703,12 @@ public class BaseGameMode : BaseEntity
 
 	public bool HasLoadouts()
 	{
-		if (loadouts.Length == 0)
-		{
-			if (IsTeamGame())
-			{
-				return teams[0].teamloadouts.Length != 0;
-			}
-			return false;
-		}
-		return true;
+		return loadouts.Length != 0 || (IsTeamGame() && teams[0].teamloadouts.Length != 0);
 	}
 
 	public int GetNumTeams()
 	{
-		if (teams.Length > 1)
-		{
-			return teams.Length;
-		}
-		return 1;
+		return (teams.Length <= 1) ? 1 : teams.Length;
 	}
 
 	public int GetTeamScore(int teamIndex)
@@ -740,8 +718,8 @@ public class BaseGameMode : BaseEntity
 
 	public static void CreateGameMode(string overrideMode = "")
 	{
-		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
 		BaseGameMode activeGameMode = GetActiveGameMode(serverside: true);
 		if (Object.op_Implicit((Object)(object)activeGameMode))
 		{
@@ -840,11 +818,7 @@ public class BaseGameMode : BaseEntity
 
 	public virtual bool IsMatchActive()
 	{
-		if (!InWarmup() && !IsWaitingForPlayers() && !IsMatchOver())
-		{
-			return matchStartTime != -1f;
-		}
-		return false;
+		return !InWarmup() && !IsWaitingForPlayers() && !IsMatchOver() && matchStartTime != -1f;
 	}
 
 	public override void InitShared()
@@ -871,9 +845,9 @@ public class BaseGameMode : BaseEntity
 
 	protected virtual void OnCreated()
 	{
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
 		OnCreated_Vanilla();
 		if (base.isServer)
 		{
@@ -912,8 +886,8 @@ public class BaseGameMode : BaseEntity
 
 	public virtual void ResetMatch()
 	{
-		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
 		if (IsWaitingForPlayers())
 		{
 			return;
@@ -938,9 +912,9 @@ public class BaseGameMode : BaseEntity
 			((IDisposable)enumerator).Dispose();
 		}
 		GameModeSpawnGroup[] array = gameModeSpawnGroups;
-		for (int i = 0; i < array.Length; i++)
+		foreach (GameModeSpawnGroup gameModeSpawnGroup in array)
 		{
-			array[i].ResetSpawnGroup();
+			gameModeSpawnGroup.ResetSpawnGroup();
 		}
 		matchStartTime = -1f;
 		((FacepunchBehaviour)this).Invoke((Action)OnMatchBegin, warmupDuration);
@@ -957,8 +931,8 @@ public class BaseGameMode : BaseEntity
 
 	public virtual void ShutdownGame()
 	{
-		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
 		ResetTeamScores();
 		Enumerator<BasePlayer> enumerator = BasePlayer.activePlayerList.GetEnumerator();
 		try
@@ -985,8 +959,8 @@ public class BaseGameMode : BaseEntity
 
 	protected virtual void OnThink(float delta)
 	{
-		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
 		if (matchStartTime != -1f)
 		{
 			float num = Time.realtimeSinceStartup - matchStartTime;
@@ -1071,8 +1045,8 @@ public class BaseGameMode : BaseEntity
 
 	public virtual void UnassignAllPlayers()
 	{
-		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
 		Enumerator<BasePlayer> enumerator = BasePlayer.activePlayerList.GetEnumerator();
 		try
 		{
@@ -1090,8 +1064,8 @@ public class BaseGameMode : BaseEntity
 
 	public void AutoAssignTeam(BasePlayer player)
 	{
-		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
 		int newTeam = 0;
 		int[] array = new int[teams.Length];
 		int num = Random.Range(0, teams.Length);
@@ -1166,10 +1140,10 @@ public class BaseGameMode : BaseEntity
 
 	public virtual void OnPlayerDeath(BasePlayer instigator, BasePlayer victim, HitInfo deathInfo = null)
 	{
-		//IL_0107: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0112: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0134: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01dd: Unknown result type (might be due to invalid IL or missing references)
 		if (!IsMatchActive())
 		{
 			return;
@@ -1224,11 +1198,7 @@ public class BaseGameMode : BaseEntity
 
 	public virtual bool CanPlayerRespawn(BasePlayer player)
 	{
-		if (IsMatchOver() && !IsWaitingForPlayers())
-		{
-			return isResetting;
-		}
-		return true;
+		return !IsMatchOver() || IsWaitingForPlayers() || isResetting;
 	}
 
 	public virtual void OnPlayerRespawn(BasePlayer player)
@@ -1326,15 +1296,17 @@ public class BaseGameMode : BaseEntity
 
 	public virtual BasePlayer.SpawnPoint GetPlayerSpawn(BasePlayer forPlayer)
 	{
-		//IL_01a6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ab: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01bc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0143: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0122: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01fd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0209: Unknown result type (might be due to invalid IL or missing references)
+		//IL_020e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_017c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0181: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0183: Unknown result type (might be due to invalid IL or missing references)
+		//IL_018c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c3: Unknown result type (might be due to invalid IL or missing references)
 		if (allspawns == null)
 		{
 			InstallSpawnpoints();
@@ -1360,7 +1332,8 @@ public class BaseGameMode : BaseEntity
 						}
 					}
 				}
-				float num5 = Vector3.Distance((forPlayer.ServerCurrentDeathNote == null) ? allspawns[Random.Range(0, allspawns.Length)].transform.position : forPlayer.ServerCurrentDeathNote.worldPosition, val.transform.position);
+				Vector3 val2 = ((forPlayer.ServerCurrentDeathNote == null) ? allspawns[Random.Range(0, allspawns.Length)].transform.position : forPlayer.ServerCurrentDeathNote.worldPosition);
+				float num5 = Vector3.Distance(val2, val.transform.position);
 				float num6 = Mathf.InverseLerp(8f, 25f, num5);
 				num3 *= num6;
 				if (num3 > num)
@@ -1370,12 +1343,11 @@ public class BaseGameMode : BaseEntity
 				}
 			}
 		}
-		GameObject val2 = allspawns[num2];
-		return new BasePlayer.SpawnPoint
-		{
-			pos = val2.transform.position,
-			rot = val2.transform.rotation
-		};
+		GameObject val3 = allspawns[num2];
+		BasePlayer.SpawnPoint spawnPoint = new BasePlayer.SpawnPoint();
+		spawnPoint.pos = val3.transform.position;
+		spawnPoint.rot = val3.transform.rotation;
+		return spawnPoint;
 	}
 
 	public virtual int GetMaxRelationshipTeamSize()

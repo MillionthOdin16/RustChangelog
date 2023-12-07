@@ -3,21 +3,21 @@ using UnityEngine;
 [CreateAssetMenu(menuName = "Rust/Recoil Properties")]
 public class RecoilProperties : ScriptableObject
 {
-	public float recoilYawMin;
+	public float recoilYawMin = 0f;
 
-	public float recoilYawMax;
+	public float recoilYawMax = 0f;
 
-	public float recoilPitchMin;
+	public float recoilPitchMin = 0f;
 
-	public float recoilPitchMax;
+	public float recoilPitchMax = 0f;
 
-	public float timeToTakeMin;
+	public float timeToTakeMin = 0f;
 
 	public float timeToTakeMax = 0.1f;
 
 	public float ADSScale = 0.5f;
 
-	public float movementPenalty;
+	public float movementPenalty = 0f;
 
 	public float clampPitch = float.NegativeInfinity;
 
@@ -33,16 +33,16 @@ public class RecoilProperties : ScriptableObject
 		new Keyframe(1f, 1f)
 	});
 
-	public bool useCurves;
+	public bool useCurves = false;
 
-	public bool curvesAsScalar;
+	public bool curvesAsScalar = false;
 
 	public int shotsUntilMax = 30;
 
 	public float maxRecoilRadius = 5f;
 
 	[Header("AimCone")]
-	public bool overrideAimconeWithCurve;
+	public bool overrideAimconeWithCurve = false;
 
 	public float aimconeCurveScale = 1f;
 
@@ -65,10 +65,6 @@ public class RecoilProperties : ScriptableObject
 
 	public RecoilProperties GetRecoil()
 	{
-		if (!((Object)(object)newRecoilOverride != (Object)null))
-		{
-			return this;
-		}
-		return newRecoilOverride;
+		return ((Object)(object)newRecoilOverride != (Object)null) ? newRecoilOverride : this;
 	}
 }
