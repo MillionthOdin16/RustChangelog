@@ -1,6 +1,7 @@
 using System;
 using Facepunch;
 using ProtoBuf;
+using Rust;
 using UnityEngine;
 
 public class PlayerCorpse : LootableCorpse
@@ -11,19 +12,7 @@ public class PlayerCorpse : LootableCorpse
 
 	public uint underwearSkin;
 
-	public PlayerBonePositionData boneDataStanding;
-
-	public PlayerBonePositionData boneDataCrawling;
-
-	public PlayerBonePositionData boneDataIncapacitated;
-
-	public PlayerBonePositionData boneDataSleeping;
-
-	public PlayerBonePositionData boneDataOnLadder;
-
-	public PlayerBonePositionData boneDataDuck;
-
-	public PlayerBonePositionData boneDataSwimming;
+	public PlayerBonePosData bonePosData;
 
 	private Ragdoll corpseRagdollScript;
 
@@ -31,7 +20,7 @@ public class PlayerCorpse : LootableCorpse
 
 	private Vector3 prevLocalPos;
 
-	private const float SLEEP_CHECK_FREQUENCY = 15f;
+	private const float SLEEP_CHECK_FREQUENCY = 10f;
 
 	protected override float PositionTickRate => 0.05f;
 
@@ -66,20 +55,33 @@ public class PlayerCorpse : LootableCorpse
 			buoyancy.SubmergedChanged = BuoyancyChanged;
 			buoyancy.forEntity = this;
 		}
+		if (Application.isLoadingSave)
+		{
+			corpseRagdollScript = ((Component)this).GetComponent<Ragdoll>();
+		}
+		if (CorpseIsRagdoll)
+		{
+			corpseRagdollScript.simOnServer = true;
+			corpseRagdollScript.ServerInit();
+			if (HasParent())
+			{
+				OnParented();
+			}
+		}
 	}
 
-	public override void ServerInitCorpse(BaseEntity pr, BasePlayer.PlayerFlags playerFlagsOnDeath, ModelState modelState)
+	public override void ServerInitCorpse(BaseEntity pr, Vector3 posOnDeah, Quaternion rotOnDeath, BasePlayer.PlayerFlags playerFlagsOnDeath, ModelState modelState)
 	{
-		//IL_0107: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0112: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0089: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ce: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
 		parentEnt = pr;
 		BasePlayer basePlayer = (BasePlayer)pr;
 		corpseRagdollScript = ((Component)this).GetComponent<Ragdoll>();
@@ -91,8 +93,8 @@ public class PlayerCorpse : LootableCorpse
 		Skeleton component2 = ((Component)this).GetComponent<Skeleton>();
 		if ((Object)(object)component2 != (Object)null)
 		{
-			PlayerBonePositionData bonePositionData = GetBonePositionData(playerFlagsOnDeath, modelState);
-			if ((Object)(object)bonePositionData != (Object)null)
+			PlayerBonePosData.BonePosData bonePositionData = GetBonePositionData(playerFlagsOnDeath, modelState);
+			if (bonePositionData != null)
 			{
 				component2.CopyFrom(bonePositionData.bonePositions, bonePositionData.boneRotations, true);
 				Transform transform = component2.Bones[0].transform;
@@ -101,14 +103,8 @@ public class PlayerCorpse : LootableCorpse
 		}
 		if (CorpseIsRagdoll)
 		{
-			Quaternion val = (((playerFlagsOnDeath & BasePlayer.PlayerFlags.Sleeping) != 0) ? Quaternion.identity : basePlayer.eyes.bodyRotation);
-			((Component)this).transform.SetPositionAndRotation(((Component)parentEnt).transform.position, val);
-			corpseRagdollScript.simOnServer = true;
-			corpseRagdollScript.ServerInit();
-			if (HasParent())
-			{
-				OnParented();
-			}
+			Quaternion val = (((playerFlagsOnDeath & BasePlayer.PlayerFlags.Sleeping) != 0) ? Quaternion.identity : rotOnDeath);
+			((Component)this).transform.SetPositionAndRotation(posOnDeah, val);
 		}
 		else
 		{
@@ -116,33 +112,46 @@ public class PlayerCorpse : LootableCorpse
 		}
 	}
 
-	private PlayerBonePositionData GetBonePositionData(BasePlayer.PlayerFlags flagsOnDeath, ModelState modelState)
+	private PlayerBonePosData.BonePosData GetBonePositionData(BasePlayer.PlayerFlags flagsOnDeath, ModelState modelState)
 	{
 		if (flagsOnDeath.HasFlag(BasePlayer.PlayerFlags.Sleeping))
 		{
-			return boneDataSleeping;
+			return bonePosData.sleeping;
 		}
 		if (flagsOnDeath.HasFlag(BasePlayer.PlayerFlags.Incapacitated))
 		{
-			return boneDataIncapacitated;
+			return bonePosData.incapacitated;
 		}
 		if (flagsOnDeath.HasFlag(BasePlayer.PlayerFlags.Wounded))
 		{
-			return boneDataCrawling;
+			return bonePosData.crawling;
 		}
 		if (modelState.onLadder)
 		{
-			return boneDataOnLadder;
+			return bonePosData.onladder;
 		}
 		if (modelState.ducked)
 		{
-			return boneDataDuck;
+			return bonePosData.ducking;
 		}
 		if (modelState.waterLevel >= 0.75f)
 		{
-			return boneDataSwimming;
+			return bonePosData.swimming;
 		}
-		return boneDataStanding;
+		if (modelState.mounted)
+		{
+			if (modelState.poseType < bonePosData.mountedPoses.Length)
+			{
+				return bonePosData.mountedPoses[modelState.poseType];
+			}
+			if (modelState.poseType == 128)
+			{
+				return bonePosData.standing;
+			}
+			Debug.LogWarning((object)$"PlayerCorpse GetBonePositionData: No saved bone position data for mount pose {modelState.poseType}. Falling back to SitGeneric. Please update the 'Server Side Ragdoll Bone Pos Data' file with the new mount pose.");
+			return bonePosData.mountedPoses[7];
+		}
+		return bonePosData.standing;
 	}
 
 	public void BuoyancyChanged(bool isSubmerged)
@@ -194,7 +203,7 @@ public class PlayerCorpse : LootableCorpse
 			{
 				cachedSleepCheck = SleepCheck;
 			}
-			((FacepunchBehaviour)this).InvokeRandomized(cachedSleepCheck, 15f, 15f, Random.Range(-1.5f, 1.5f));
+			((FacepunchBehaviour)this).InvokeRandomized(cachedSleepCheck, 5f, 10f, Random.Range(-1f, 1f));
 		}
 	}
 
@@ -208,32 +217,28 @@ public class PlayerCorpse : LootableCorpse
 
 	private void SleepCheck()
 	{
+		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
 		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
 		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
 		if (!CorpseIsRagdoll || !HasParent())
 		{
 			return;
 		}
 		if (corpseRagdollScript.IsInactive)
 		{
-			if (!GamePhysics.Trace(new Ray(CenterPoint(), Vector3.down), 0f, out var _, 0.2f, -928830719, (QueryTriggerInteraction)1, this))
+			if (!GamePhysics.Trace(new Ray(CenterPoint(), Vector3.down), 0f, out var _, 0.25f, -928830719, (QueryTriggerInteraction)1, this))
 			{
 				BecomeActive();
 			}
 		}
-		else
+		else if (Vector3.SqrMagnitude(((Component)this).transform.localPosition - prevLocalPos) < 0.1f)
 		{
-			float num = 0.05f;
-			if (Vector3.SqrMagnitude(((Component)this).transform.localPosition - prevLocalPos) < num)
-			{
-				BecomeInactive();
-			}
+			BecomeInactive();
 		}
 		prevLocalPos = ((Component)this).transform.localPosition;
 	}

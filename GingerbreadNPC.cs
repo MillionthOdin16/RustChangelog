@@ -57,7 +57,7 @@ public class GingerbreadNPC : HumanNPC, IClientBrainStateListener
 		return false;
 	}
 
-	public override BaseCorpse CreateCorpse(PlayerFlags playerFlagsOnDeath)
+	public override BaseCorpse CreateCorpse(PlayerFlags flagsOnDeath, Vector3 posOnDeath, Quaternion rotOnDeath, BaseEntity parentOnDeath)
 	{
 		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
@@ -67,7 +67,7 @@ public class GingerbreadNPC : HumanNPC, IClientBrainStateListener
 		try
 		{
 			string corpseResourcePath = CorpseResourcePath;
-			NPCPlayerCorpse nPCPlayerCorpse = DropCorpse(corpseResourcePath, playerFlagsOnDeath, modelState) as NPCPlayerCorpse;
+			NPCPlayerCorpse nPCPlayerCorpse = DropCorpse(corpseResourcePath, flagsOnDeath, modelState) as NPCPlayerCorpse;
 			if (Object.op_Implicit((Object)(object)nPCPlayerCorpse))
 			{
 				((Component)nPCPlayerCorpse).transform.position = ((Component)nPCPlayerCorpse).transform.position + Vector3.down * NavAgent.baseOffset;

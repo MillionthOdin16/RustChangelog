@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using ConVar;
 using Facepunch;
+using Facepunch.Extend;
 using Facepunch.Utility;
 using Network;
 using ProtoBuf;
@@ -53,6 +54,18 @@ public class Ragdoll : EntityComponent<BaseEntity>, IPrefabPreProcess
 	[ReadOnly]
 	[SerializeField]
 	private List<Collider> colliders = new List<Collider>();
+
+	[ReadOnly]
+	[SerializeField]
+	private int[] boneIndex;
+
+	[ReadOnly]
+	[SerializeField]
+	private Vector3[] genericBonePos;
+
+	[ReadOnly]
+	[SerializeField]
+	private Quaternion[] genericBoneRot;
 
 	[SerializeField]
 	private GameObject GibEffect;
@@ -204,9 +217,35 @@ public class Ragdoll : EntityComponent<BaseEntity>, IPrefabPreProcess
 
 	public override void LoadComponent(BaseNetworkable.LoadInfo info)
 	{
-		if (simOnServer)
+		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
+		if (simOnServer && info.msg.ragdoll != null && isServer)
 		{
-			_ = info.msg.ragdoll;
+			for (int i = 0; i < rbTransforms.Count; i++)
+			{
+				rbTransforms[i].localPosition = Compression.UnpackVector3FromInt(info.msg.ragdoll.positions[i], -2f, 2f);
+				rbTransforms[i].localEulerAngles = Compression.UnpackVector3FromInt(info.msg.ragdoll.rotations[i], -360f, 360f);
+			}
+		}
+	}
+
+	public void GetCurrentBoneState(GameObject[] bones, ref Vector3[] bonePos, ref Quaternion[] boneRot)
+	{
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		int num = bones.Length;
+		bonePos = (Vector3[])(object)new Vector3[num];
+		boneRot = (Quaternion[])(object)new Quaternion[num];
+		for (int i = 0; i < num; i++)
+		{
+			if ((Object)(object)bones[i] != (Object)null)
+			{
+				Transform transform = bones[i].transform;
+				bonePos[i] = transform.localPosition;
+				boneRot[i] = transform.localRotation;
+			}
 		}
 	}
 
@@ -230,6 +269,26 @@ public class Ragdoll : EntityComponent<BaseEntity>, IPrefabPreProcess
 		((Component)this).GetComponentsInChildren<CharacterJoint>(true, characterJoints);
 		((Component)this).GetComponentsInChildren<ConfigurableJoint>(true, configurableJoints);
 		((Component)this).GetComponentsInChildren<Collider>(true, colliders);
+		rbTransforms.Sort((Transform t1, Transform t2) => TransformEx.GetDepth(t1).CompareTo(TransformEx.GetDepth(t2)));
+		if (skeleton.Bones != null && skeleton.Bones.Length != 0)
+		{
+			GetCurrentBoneState(skeleton.Bones, ref genericBonePos, ref genericBoneRot);
+			int num = skeleton.Bones.Length;
+			boneIndex = new int[num];
+			for (int j = 0; j < num; j++)
+			{
+				boneIndex[j] = -1;
+				GameObject val = skeleton.Bones[j];
+				for (int k = 0; k < rbTransforms.Count; k++)
+				{
+					if ((Object)(object)((Component)rbTransforms[k]).gameObject == (Object)(object)val)
+					{
+						boneIndex[j] = k;
+						break;
+					}
+				}
+			}
+		}
 		if (!clientside || !simOnServer)
 		{
 			return;
@@ -246,17 +305,20 @@ public class Ragdoll : EntityComponent<BaseEntity>, IPrefabPreProcess
 
 	private void RemoveRootBoneOffset()
 	{
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
-		Transform rootBone = model.rootBone;
-		if (simOnServer && (Object)(object)rootBone != (Object)null && !((Component)(object)rootBone).HasComponent<Rigidbody>())
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
+		if (simOnServer)
 		{
-			((Component)this).transform.position = rootBone.position;
-			((Component)this).transform.rotation = rootBone.rotation;
-			rootBone.localPosition = Vector3.zero;
-			rootBone.localRotation = Quaternion.identity;
+			Transform rootBone = model.rootBone;
+			if ((Object)(object)rootBone != (Object)null && !((Component)(object)rootBone).HasComponent<Rigidbody>())
+			{
+				((Component)this).transform.position = rootBone.position;
+				((Component)this).transform.rotation = rootBone.rotation;
+				rootBone.localPosition = Vector3.zero;
+				rootBone.localRotation = Quaternion.identity;
+			}
 		}
 	}
 
@@ -267,7 +329,10 @@ public class Ragdoll : EntityComponent<BaseEntity>, IPrefabPreProcess
 			RemoveRootBoneOffset();
 			((FacepunchBehaviour)this).InvokeRepeating((Action)SyncJointsToClients, 0f, 0.1f);
 		}
-		MoveRigidbodiesToRoot();
+		else
+		{
+			MoveRigidbodiesToRoot();
+		}
 		SetUpPhysics(isServer: true);
 	}
 

@@ -2613,6 +2613,11 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		}
 	}
 
+	public virtual EntityPrivilege GetEntityBuildingPrivilege()
+	{
+		return null;
+	}
+
 	public virtual BuildingPrivlidge GetBuildingPrivilege()
 	{
 		return GetNearestBuildingPrivledge();
@@ -3473,10 +3478,19 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 
 	public BaseCorpse DropCorpse(string strCorpsePrefab, BasePlayer.PlayerFlags playerFlagsOnDeath = (BasePlayer.PlayerFlags)0, ModelState modelState = null)
 	{
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		return DropCorpse(strCorpsePrefab, ((Component)this).transform.position, ((Component)this).transform.rotation, playerFlagsOnDeath, modelState);
+	}
+
+	public BaseCorpse DropCorpse(string strCorpsePrefab, Vector3 posOnDeath, Quaternion rotOnDeath, BasePlayer.PlayerFlags playerFlagsOnDeath = (BasePlayer.PlayerFlags)0, ModelState modelState = null)
+	{
 		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
 		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
 		Assert.IsTrue(base.isServer, "DropCorpse called on client!");
 		if (!ConVar.Server.corpses)
 		{
@@ -3492,7 +3506,7 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 			Debug.LogWarning((object)("Error creating corpse: " + ((object)((Component)this).gameObject)?.ToString() + " - " + strCorpsePrefab));
 			return null;
 		}
-		baseCorpse.ServerInitCorpse(this, playerFlagsOnDeath, modelState);
+		baseCorpse.ServerInitCorpse(this, posOnDeath, rotOnDeath, playerFlagsOnDeath, modelState);
 		return baseCorpse;
 	}
 

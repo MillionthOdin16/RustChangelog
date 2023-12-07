@@ -10,6 +10,8 @@ public class BaseLock : BaseEntity
 	[ItemSelector(ItemCategory.All)]
 	public ItemDefinition itemType;
 
+	public bool CanRemove = true;
+
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
 		TimeWarning val = TimeWarning.New("BaseLock.OnRpcMessage", 0);
@@ -98,7 +100,7 @@ public class BaseLock : BaseEntity
 	[RPC_Server.MaxDistance(3f, CheckParent = true)]
 	public void RPC_TakeLock(RPCMessage rpc)
 	{
-		if (rpc.player.CanInteract() && !IsLocked())
+		if (rpc.player.CanInteract() && CanRemove && !IsLocked())
 		{
 			Item item = ItemManager.Create(itemType, 1, skinID);
 			if (item != null)

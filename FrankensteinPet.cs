@@ -215,7 +215,7 @@ public class FrankensteinPet : BasePet, IAISenses, IAIAttack
 		return false;
 	}
 
-	public override BaseCorpse CreateCorpse(PlayerFlags playerFlagsOnDeath)
+	public override BaseCorpse CreateCorpse(PlayerFlags flagsOnDeath, Vector3 posOnDeath, Quaternion rotOnDeath, BaseEntity parentOnDeath)
 	{
 		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
@@ -224,7 +224,7 @@ public class FrankensteinPet : BasePet, IAISenses, IAIAttack
 		TimeWarning val = TimeWarning.New("Create corpse", 0);
 		try
 		{
-			NPCPlayerCorpse nPCPlayerCorpse = DropCorpse("assets/rust.ai/agents/NPCPlayer/pet/frankensteinpet_corpse.prefab", playerFlagsOnDeath, modelState) as NPCPlayerCorpse;
+			NPCPlayerCorpse nPCPlayerCorpse = DropCorpse("assets/rust.ai/agents/NPCPlayer/pet/frankensteinpet_corpse.prefab", flagsOnDeath, modelState) as NPCPlayerCorpse;
 			if (Object.op_Implicit((Object)(object)nPCPlayerCorpse))
 			{
 				((Component)nPCPlayerCorpse).transform.position = ((Component)nPCPlayerCorpse).transform.position + Vector3.down * NavAgent.baseOffset;

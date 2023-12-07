@@ -890,13 +890,7 @@ public sealed class ItemContainer : IAmmoContainer
 
 	public bool HasAmmo(AmmoTypes ammoType)
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0006: Invalid comparison between Unknown and I4
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-		if ((int)ammoType == 256)
-		{
-			return false;
-		}
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
 		for (int i = 0; i < itemList.Count; i++)
 		{
 			if (itemList[i].HasAmmo(ammoType))

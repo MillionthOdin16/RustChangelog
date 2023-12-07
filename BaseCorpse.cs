@@ -13,6 +13,10 @@ public class BaseCorpse : BaseCombatEntity
 	[NonSerialized]
 	internal ResourceDispenser resourceDispenser;
 
+	public const float CORPSE_SLEEP_THRESHOLD = 0.05f;
+
+	protected Rigidbody rigidBody;
+
 	[NonSerialized]
 	public SpawnGroup spawnGroup;
 
@@ -27,12 +31,12 @@ public class BaseCorpse : BaseCombatEntity
 	public override void ServerInit()
 	{
 		base.ServerInit();
-		SetupRigidBody();
+		rigidBody = SetupRigidBody();
 		ResetRemovalTime();
 		resourceDispenser = ((Component)this).GetComponent<ResourceDispenser>();
 	}
 
-	public virtual void ServerInitCorpse(BaseEntity pr, BasePlayer.PlayerFlags playerFlagsOnDeath, ModelState modelState)
+	public virtual void ServerInitCorpse(BaseEntity pr, Vector3 posOnDeah, Quaternion rotOnDeath, BasePlayer.PlayerFlags playerFlagsOnDeath, ModelState modelState)
 	{
 		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0023: Unknown result type (might be due to invalid IL or missing references)

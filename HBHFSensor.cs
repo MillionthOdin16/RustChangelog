@@ -10,6 +10,8 @@ public class HBHFSensor : BaseDetector
 
 	public GameObjectRef detectDown;
 
+	public GameObjectRef panelPrefab;
+
 	public const Flags Flag_IncludeOthers = Flags.Reserved2;
 
 	public const Flags Flag_IncludeAuthed = Flags.Reserved3;
@@ -21,20 +23,20 @@ public class HBHFSensor : BaseDetector
 		TimeWarning val = TimeWarning.New("HBHFSensor.OnRpcMessage", 0);
 		try
 		{
-			if (rpc == 3206885720u && (Object)(object)player != (Object)null)
+			if (rpc == 4073303808u && (Object)(object)player != (Object)null)
 			{
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SetIncludeAuth "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SetConfig "));
 				}
-				TimeWarning val2 = TimeWarning.New("SetIncludeAuth", 0);
+				TimeWarning val2 = TimeWarning.New("SetConfig", 0);
 				try
 				{
 					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
-						if (!RPC_Server.IsVisible.Test(3206885720u, "SetIncludeAuth", this, player, 3f))
+						if (!RPC_Server.IsVisible.Test(4073303808u, "SetConfig", this, player, 3f))
 						{
 							return true;
 						}
@@ -52,8 +54,8 @@ public class HBHFSensor : BaseDetector
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage includeAuth = rPCMessage;
-							SetIncludeAuth(includeAuth);
+							RPCMessage config = rPCMessage;
+							SetConfig(config);
 						}
 						finally
 						{
@@ -63,58 +65,7 @@ public class HBHFSensor : BaseDetector
 					catch (Exception ex)
 					{
 						Debug.LogException(ex);
-						player.Kick("RPC Error in SetIncludeAuth");
-					}
-				}
-				finally
-				{
-					((IDisposable)val2)?.Dispose();
-				}
-				return true;
-			}
-			if (rpc == 2223203375u && (Object)(object)player != (Object)null)
-			{
-				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
-				if (Global.developer > 2)
-				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SetIncludeOthers "));
-				}
-				TimeWarning val2 = TimeWarning.New("SetIncludeOthers", 0);
-				try
-				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
-					try
-					{
-						if (!RPC_Server.IsVisible.Test(2223203375u, "SetIncludeOthers", this, player, 3f))
-						{
-							return true;
-						}
-					}
-					finally
-					{
-						((IDisposable)val3)?.Dispose();
-					}
-					try
-					{
-						val3 = TimeWarning.New("Call", 0);
-						try
-						{
-							RPCMessage rPCMessage = default(RPCMessage);
-							rPCMessage.connection = msg.connection;
-							rPCMessage.player = player;
-							rPCMessage.read = msg.read;
-							RPCMessage includeOthers = rPCMessage;
-							SetIncludeOthers(includeOthers);
-						}
-						finally
-						{
-							((IDisposable)val3)?.Dispose();
-						}
-					}
-					catch (Exception ex2)
-					{
-						Debug.LogException(ex2);
-						player.Kick("RPC Error in SetIncludeOthers");
+						player.Kick("RPC Error in SetConfig");
 					}
 				}
 				finally
@@ -197,24 +148,20 @@ public class HBHFSensor : BaseDetector
 
 	[RPC_Server]
 	[RPC_Server.IsVisible(3f)]
-	public void SetIncludeAuth(RPCMessage msg)
+	public void SetConfig(RPCMessage msg)
 	{
-		bool b = msg.read.Bit();
-		if (msg.player.CanBuild() && IsPowered())
+		if (CanUse(msg.player))
 		{
+			bool b = msg.read.Bit();
+			bool b2 = msg.read.Bit();
 			SetFlag(Flags.Reserved3, b);
+			SetFlag(Flags.Reserved2, b2);
 		}
 	}
 
-	[RPC_Server]
-	[RPC_Server.IsVisible(3f)]
-	public void SetIncludeOthers(RPCMessage msg)
+	public bool CanUse(BasePlayer player)
 	{
-		bool b = msg.read.Bit();
-		if (msg.player.CanBuild() && IsPowered())
-		{
-			SetFlag(Flags.Reserved2, b);
-		}
+		return player.CanBuild();
 	}
 
 	public bool ShouldIncludeAuthorized()

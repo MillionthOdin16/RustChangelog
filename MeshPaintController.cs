@@ -11,6 +11,13 @@ public class MeshPaintController : MonoBehaviour, IClientComponent
 		ColorPicker
 	}
 
+	public enum RotateMode
+	{
+		None,
+		Movement,
+		Random
+	}
+
 	public Camera pickerCamera;
 
 	public Tool currentTool;
@@ -31,7 +38,7 @@ public class MeshPaintController : MonoBehaviour, IClientComponent
 
 	public Texture2D stampTexture;
 
-	public bool randomizeRotation;
+	public RotateMode brushRotation;
 
 	public bool applyDefaults;
 

@@ -181,6 +181,7 @@ public class Physics : ConsoleSystem
 	public static void SetPhysicsLayerForRagdolls(bool serverSideRagolls)
 	{
 		Physics.IgnoreLayerCollision(9, 13, !serverSideRagolls);
+		Physics.IgnoreLayerCollision(9, 11, !serverSideRagolls);
 		Physics.IgnoreLayerCollision(9, 28, !serverSideRagolls);
 	}
 }
