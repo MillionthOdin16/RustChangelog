@@ -519,6 +519,10 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 
 	private string _wipeId;
 
+	private BaseEntity cachedPrivilegeFromOther;
+
+	private float cachedPrivilegeFromOtherTime;
+
 	public Dictionary<int, FiredProjectile> firedProjectiles = new Dictionary<int, FiredProjectile>();
 
 	[NonSerialized]
@@ -5343,13 +5347,18 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		return IsBuildingBlockedByEntity(WorldSpaceBounds());
 	}
 
-	private bool IsBuildingBlockedByVehicle(Vector3 position, Quaternion rotation, Bounds bounds)
+	public bool HasPrivilegeFromOther()
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0004: Unknown result type (might be due to invalid IL or missing references)
-		return IsBuildingBlockedByVehicle(new OBB(position, rotation, bounds));
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		if (Time.time - cachedPrivilegeFromOtherTime > 1f)
+		{
+			cachedPrivilegeFromOtherTime = Time.time;
+			cachedPrivilegeFromOther = null;
+			IsBuildingBlockedByEntity(WorldSpaceBounds());
+			IsBuildingBlockedByVehicle(WorldSpaceBounds());
+		}
+		return (Object)(object)cachedPrivilegeFromOther != (Object)null;
 	}
 
 	private bool IsBuildingBlockedByVehicle(OBB obb)
@@ -5362,23 +5371,18 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		for (int i = 0; i < list.Count; i++)
 		{
 			BaseVehicle baseVehicle = list[i];
-			if (baseVehicle.isServer == base.isServer && !baseVehicle.IsDead() && !(((OBB)(ref obb)).Distance(baseVehicle.WorldSpaceBounds()) > 2f) && !baseVehicle.IsAuthed(this))
+			if (baseVehicle.isServer == base.isServer && !baseVehicle.IsDead() && !(((OBB)(ref obb)).Distance(baseVehicle.WorldSpaceBounds()) > 2f))
 			{
-				Pool.FreeList<BaseVehicle>(ref list);
-				return true;
+				if (!baseVehicle.IsAuthed(this))
+				{
+					Pool.FreeList<BaseVehicle>(ref list);
+					return true;
+				}
+				cachedPrivilegeFromOther = baseVehicle;
 			}
 		}
 		Pool.FreeList<BaseVehicle>(ref list);
 		return false;
-	}
-
-	private bool IsBuildingBlockedByEntity(Vector3 position, Quaternion rotation, Bounds bounds)
-	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0004: Unknown result type (might be due to invalid IL or missing references)
-		return IsBuildingBlockedByEntity(new OBB(position, rotation, bounds));
 	}
 
 	private bool IsBuildingBlockedByEntity(OBB obb)
@@ -5386,18 +5390,27 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
-		List<EntityPrivilege> list = Pool.GetList<EntityPrivilege>();
+		List<BaseEntity> list = Pool.GetList<BaseEntity>();
 		Vis.Entities(obb.position, 3f + ((Vector3)(ref obb.extents)).magnitude, list, 2097152, (QueryTriggerInteraction)2);
 		for (int i = 0; i < list.Count; i++)
 		{
-			EntityPrivilege entityPrivilege = list[i];
-			if (entityPrivilege.isServer == base.isServer && !(((OBB)(ref obb)).Distance(entityPrivilege.WorldSpaceBounds()) > 3f) && !entityPrivilege.IsAuthed(this))
+			BaseEntity baseEntity = list[i];
+			if (baseEntity.isServer != base.isServer || ((OBB)(ref obb)).Distance(baseEntity.WorldSpaceBounds()) > 3f)
 			{
-				Pool.FreeList<EntityPrivilege>(ref list);
-				return true;
+				continue;
+			}
+			EntityPrivilege entityBuildingPrivilege = baseEntity.GetEntityBuildingPrivilege();
+			if (!((Object)(object)entityBuildingPrivilege == (Object)null))
+			{
+				if (!entityBuildingPrivilege.IsAuthed(this))
+				{
+					Pool.FreeList<BaseEntity>(ref list);
+					return true;
+				}
+				cachedPrivilegeFromOther = baseEntity;
 			}
 		}
-		Pool.FreeList<EntityPrivilege>(ref list);
+		Pool.FreeList<BaseEntity>(ref list);
 		return false;
 	}
 
@@ -7874,7 +7887,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		}
 	}
 
-	public virtual BaseCorpse CreateCorpse(PlayerFlags playerFlagsOnDeath, Vector3 playerPosOnDeath, Quaternion playerRotOnDeath)
+	public virtual BaseCorpse CreateCorpse(PlayerFlags flagsOnDeath, Vector3 posOnDeath, Quaternion rotOnDeath, BaseEntity parentOnDeath)
 	{
 		//IL_00bb: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00bc: Unknown result type (might be due to invalid IL or missing references)
@@ -7896,7 +7909,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 					}
 				}
 			}
-			PlayerCorpse playerCorpse = DropCorpse(strCorpsePrefab, playerPosOnDeath, playerRotOnDeath, playerFlagsOnDeath, modelState) as PlayerCorpse;
+			PlayerCorpse playerCorpse = DropCorpse(strCorpsePrefab, posOnDeath, rotOnDeath, flagsOnDeath, modelState) as PlayerCorpse;
 			if (Object.op_Implicit((Object)(object)playerCorpse))
 			{
 				playerCorpse.SetFlag(Flags.Reserved5, HasPlayerFlag(PlayerFlags.DisplaySash));
@@ -7910,6 +7923,10 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				playerCorpse.underwearSkin = GetUnderwearSkin();
 				playerCorpse.Spawn();
 				playerCorpse.TakeChildren(this);
+				if ((Object)(object)parentOnDeath != (Object)null)
+				{
+					playerCorpse.SetParent(parentOnDeath, worldPositionStays: true, sendImmediate: true);
+				}
 				ResourceDispenser component = ((Component)playerCorpse).GetComponent<ResourceDispenser>();
 				int num = 2;
 				if (lifeStory != null)
@@ -7942,40 +7959,56 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 	{
 		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0121: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01d1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01d2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0200: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0205: Unknown result type (might be due to invalid IL or missing references)
-		//IL_020f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0214: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0219: Unknown result type (might be due to invalid IL or missing references)
-		//IL_021d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0227: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0748: Unknown result type (might be due to invalid IL or missing references)
-		//IL_074d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_06cc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_06d1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_06f4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03b8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03bd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0635: Unknown result type (might be due to invalid IL or missing references)
-		//IL_063a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0498: Unknown result type (might be due to invalid IL or missing references)
-		//IL_049d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0428: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0400: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0852: Unknown result type (might be due to invalid IL or missing references)
-		//IL_06a2: Unknown result type (might be due to invalid IL or missing references)
-		PlayerFlags playerFlagsOnDeath = playerFlags;
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0158: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_020d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_020e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_023e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0243: Unknown result type (might be due to invalid IL or missing references)
+		//IL_024d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0252: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0257: Unknown result type (might be due to invalid IL or missing references)
+		//IL_025b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0265: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0786: Unknown result type (might be due to invalid IL or missing references)
+		//IL_078b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_070a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_070f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0732: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03f6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03fb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0673: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0678: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04d6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04db: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0466: Unknown result type (might be due to invalid IL or missing references)
+		//IL_043e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0890: Unknown result type (might be due to invalid IL or missing references)
+		//IL_06e0: Unknown result type (might be due to invalid IL or missing references)
+		PlayerFlags flagsOnDeath = playerFlags;
 		Vector3 position = ((Component)this).transform.position;
+		BaseEntity parentOnDeath = GetParentEntity();
 		BaseMountable baseMountable = GetMounted();
-		Quaternion playerRotOnDeath = ((!baseMountable.IsValid()) ? eyes.bodyRotation : baseMountable.mountAnchor.rotation);
+		Quaternion rotOnDeath;
+		if (baseMountable.IsValid())
+		{
+			rotOnDeath = baseMountable.mountAnchor.rotation;
+		}
+		else
+		{
+			float x = ((Component)this).transform.eulerAngles.x;
+			Quaternion bodyRotation = eyes.bodyRotation;
+			rotOnDeath = Quaternion.Euler(x, ((Quaternion)(ref bodyRotation)).eulerAngles.y, ((Component)this).transform.eulerAngles.z);
+		}
 		SetPlayerFlag(PlayerFlags.Unused2, b: false);
 		SetPlayerFlag(PlayerFlags.Unused1, b: false);
 		EnsureDismounted();
@@ -8023,7 +8056,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			inventory.crafting.CancelAll(returnItems: true);
 		}
 		EACServer.LogPlayerDespawn(this);
-		BaseCorpse baseCorpse = CreateCorpse(playerFlagsOnDeath, position, playerRotOnDeath);
+		BaseCorpse baseCorpse = CreateCorpse(flagsOnDeath, position, rotOnDeath, parentOnDeath);
 		Vector3 val;
 		if ((Object)(object)baseCorpse != (Object)null)
 		{

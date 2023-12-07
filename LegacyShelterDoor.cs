@@ -13,6 +13,15 @@ public class LegacyShelterDoor : Door
 	{
 	}
 
+	protected override void OnPlayerOpenedDoor(BasePlayer p)
+	{
+		base.OnPlayerOpenedDoor(p);
+		if ((Object)(object)shelter != (Object)null)
+		{
+			shelter.HasInteracted();
+		}
+	}
+
 	public override void OnRepair()
 	{
 		base.OnRepair();

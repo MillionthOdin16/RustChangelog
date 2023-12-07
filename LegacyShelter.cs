@@ -1,3 +1,4 @@
+using ConVar;
 using Facepunch;
 using ProtoBuf;
 using Rust;
@@ -5,16 +6,92 @@ using UnityEngine;
 
 public class LegacyShelter : DecayEntity
 {
-	[Header("Shelter Settings")]
+	[Header("Shelter References")]
+	public GameObjectRef smallPrivilegePrefab;
+
 	public GameObjectRef includedDoorPrefab;
 
 	public GameObjectRef includedLockPrefab;
+
+	public EntityRef<EntityPrivilege> entityPrivilege;
 
 	private EntityRef<LegacyShelterDoor> childDoorInstance;
 
 	private EntityRef<BaseLock> lockEntityInstance;
 
 	private BasePlayer owner;
+
+	private Decay decayReference;
+
+	private float lastShelterDecayTick;
+
+	private float lastInteractedWithDoor;
+
+	public override EntityPrivilege GetEntityBuildingPrivilege()
+	{
+		return GetEntityPrivilege();
+	}
+
+	public EntityPrivilege GetEntityPrivilege()
+	{
+		EntityPrivilege entityPrivilege = this.entityPrivilege.Get(base.isServer);
+		if (entityPrivilege.IsValid())
+		{
+			return entityPrivilege;
+		}
+		return null;
+	}
+
+	protected override void OnChildAdded(BaseEntity child)
+	{
+		base.OnChildAdded(child);
+		if (base.isServer && child.prefabID == includedDoorPrefab.GetEntity().prefabID && !Application.isLoadingSave)
+		{
+			Setup(child);
+		}
+		if (child.prefabID == smallPrivilegePrefab.GetEntity().prefabID)
+		{
+			EntityPrivilege entity = (EntityPrivilege)child;
+			entityPrivilege.Set(entity);
+		}
+	}
+
+	public override void DecayTick()
+	{
+		base.DecayTick();
+		float num = Time.time - lastShelterDecayTick;
+		lastShelterDecayTick = Time.time;
+		float num2 = num * ConVar.Decay.scale;
+		lastInteractedWithDoor += num2;
+		UpdateDoorHp();
+	}
+
+	public void HasInteracted()
+	{
+		lastInteractedWithDoor = 0f;
+	}
+
+	public void SetupDecay()
+	{
+		decayReference = PrefabAttribute.server.Find<Decay>(prefabID);
+	}
+
+	public override float GetEntityDecayDuration()
+	{
+		if (lastInteractedWithDoor < 64800f)
+		{
+			return float.MaxValue;
+		}
+		if (decayReference == null)
+		{
+			SetupDecay();
+		}
+		if (decayReference != null)
+		{
+			return decayReference.GetDecayDuration(this);
+		}
+		return float.MaxValue;
+	}
 
 	public LegacyShelterDoor GetChildDoor()
 	{
@@ -33,6 +110,7 @@ public class LegacyShelter : DecayEntity
 		if (info.msg.legacyShelter != null)
 		{
 			childDoorInstance = new EntityRef<LegacyShelterDoor>(info.msg.legacyShelter.doorID);
+			lastInteractedWithDoor = info.msg.legacyShelter.timeSinceInteracted;
 		}
 	}
 
@@ -43,15 +121,7 @@ public class LegacyShelter : DecayEntity
 		base.Save(info);
 		info.msg.legacyShelter = Pool.Get<LegacyShelter>();
 		info.msg.legacyShelter.doorID = childDoorInstance.uid;
-	}
-
-	protected override void OnChildAdded(BaseEntity child)
-	{
-		base.OnChildAdded(child);
-		if (base.isServer && child.prefabID == includedDoorPrefab.GetEntity().prefabID && !Application.isLoadingSave)
-		{
-			Setup(child);
-		}
+		info.msg.legacyShelter.timeSinceInteracted = lastInteractedWithDoor;
 	}
 
 	public override void OnPlaced(BasePlayer player)
@@ -91,12 +161,6 @@ public class LegacyShelter : DecayEntity
 		UpdateDoorHp();
 	}
 
-	public override void DecayTick()
-	{
-		base.DecayTick();
-		UpdateDoorHp();
-	}
-
 	public void ProtectedHurt(HitInfo info)
 	{
 		info.HitEntity = this;
@@ -113,6 +177,7 @@ public class LegacyShelter : DecayEntity
 			childDoor.SetMaxHealth(MaxHealth());
 			UpdateDoorHp();
 		}
+		SetupDecay();
 	}
 
 	private void Setup(BaseEntity child)
@@ -132,6 +197,11 @@ public class LegacyShelter : DecayEntity
 		baseEntity.OwnerID = owner.userID;
 		baseEntity.OnDeployed(legacyShelterDoor, owner, null);
 		baseEntity.Spawn();
+		BaseLock baseLock = (BaseLock)baseEntity;
+		if ((Object)(object)baseLock != (Object)null)
+		{
+			baseLock.CanRemove = false;
+		}
 		legacyShelterDoor.SetSlot(Slot.Lock, baseEntity);
 	}
 

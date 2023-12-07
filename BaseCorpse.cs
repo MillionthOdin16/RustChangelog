@@ -13,6 +13,10 @@ public class BaseCorpse : BaseCombatEntity
 	[NonSerialized]
 	internal ResourceDispenser resourceDispenser;
 
+	public const float CORPSE_SLEEP_THRESHOLD = 0.05f;
+
+	protected Rigidbody rigidBody;
+
 	[NonSerialized]
 	public SpawnGroup spawnGroup;
 
@@ -27,7 +31,7 @@ public class BaseCorpse : BaseCombatEntity
 	public override void ServerInit()
 	{
 		base.ServerInit();
-		SetupRigidBody();
+		rigidBody = SetupRigidBody();
 		ResetRemovalTime();
 		resourceDispenser = ((Component)this).GetComponent<ResourceDispenser>();
 	}

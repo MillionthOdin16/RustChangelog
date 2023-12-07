@@ -2613,6 +2613,11 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		}
 	}
 
+	public virtual EntityPrivilege GetEntityBuildingPrivilege()
+	{
+		return null;
+	}
+
 	public virtual BuildingPrivlidge GetBuildingPrivilege()
 	{
 		return GetNearestBuildingPrivledge();

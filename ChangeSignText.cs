@@ -10,6 +10,10 @@ public class ChangeSignText : UIDialog
 
 	public GameObject objectContainer;
 
+	public Transform panTransform;
+
+	public Transform rotateTransform;
+
 	public GameObject currentFrameSection;
 
 	public GameObject[] frameOptions;

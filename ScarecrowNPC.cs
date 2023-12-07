@@ -247,7 +247,7 @@ public class ScarecrowNPC : NPCPlayer, IAISenses, IAIAttack, IThinker
 		return false;
 	}
 
-	public override BaseCorpse CreateCorpse(PlayerFlags playerFlagsOnDeath, Vector3 playerPosOnDeath, Quaternion playerRotOnDeath)
+	public override BaseCorpse CreateCorpse(PlayerFlags flagsOnDeath, Vector3 posOnDeath, Quaternion rotOnDeath, BaseEntity parentOnDeath)
 	{
 		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
@@ -257,7 +257,7 @@ public class ScarecrowNPC : NPCPlayer, IAISenses, IAIAttack, IThinker
 		try
 		{
 			string strCorpsePrefab = "assets/prefabs/npc/murderer/murderer_corpse.prefab";
-			NPCPlayerCorpse nPCPlayerCorpse = DropCorpse(strCorpsePrefab, playerFlagsOnDeath, modelState) as NPCPlayerCorpse;
+			NPCPlayerCorpse nPCPlayerCorpse = DropCorpse(strCorpsePrefab, flagsOnDeath, modelState) as NPCPlayerCorpse;
 			if (Object.op_Implicit((Object)(object)nPCPlayerCorpse))
 			{
 				((Component)nPCPlayerCorpse).transform.position = ((Component)nPCPlayerCorpse).transform.position + Vector3.down * NavAgent.baseOffset;

@@ -16,7 +16,13 @@ public class DroppedItem : WorldItem
 	[Header("DroppedItem")]
 	public GameObject itemModel;
 
+	public const int INTERACTION_ONLY_LAYER = 19;
+
 	private Collider childCollider;
+
+	private const Flags FLAG_STUCK = Flags.Reserved1;
+
+	private int originalLayer = -1;
 
 	[NonSerialized]
 	public DropReasonEnum DropReason;
@@ -26,17 +32,11 @@ public class DroppedItem : WorldItem
 
 	private Rigidbody rB;
 
-	private int originalLayer = -1;
-
 	private CollisionDetectionMode originalCollisionMode;
 
 	private Vector3 prevLocalPos;
 
-	private bool stuckInSomething;
-
-	public const int INTERACTION_ONLY_LAYER = 19;
-
-	private const float SLEEP_CHECK_FREQUENCY = 15f;
+	private const float SLEEP_CHECK_FREQUENCY = 11f;
 
 	private bool hasLastPos;
 
@@ -49,6 +49,8 @@ public class DroppedItem : WorldItem
 	private Action cachedSleepCheck;
 
 	private float maxBoundsExtent;
+
+	private bool StuckInSomething => HasFlag(Flags.Reserved1);
 
 	public override float GetNetworkTime()
 	{
@@ -201,59 +203,21 @@ public class DroppedItem : WorldItem
 
 	public void StickIn()
 	{
-		stuckInSomething = true;
-		BecomeInactive();
+		SetFlag(Flags.Reserved1, b: true);
 	}
 
 	public void Unstick()
 	{
-		stuckInSomething = false;
-		BecomeActive();
-	}
-
-	private void BecomeActive()
-	{
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0092: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0097: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
-		rB.isKinematic = false;
-		rB.collisionDetectionMode = originalCollisionMode;
-		rB.WakeUp();
-		if (HasParent())
-		{
-			Rigidbody component = ((Component)GetParentEntity()).GetComponent<Rigidbody>();
-			if ((Object)(object)component != (Object)null)
-			{
-				rB.velocity = component.velocity;
-				rB.angularVelocity = component.angularVelocity;
-			}
-		}
-		if ((Object)(object)childCollider != (Object)null)
-		{
-			((Component)childCollider).gameObject.layer = originalLayer;
-		}
-		prevLocalPos = ((Component)this).transform.localPosition;
-	}
-
-	private void BecomeInactive()
-	{
-		rB.collisionDetectionMode = (CollisionDetectionMode)0;
-		rB.isKinematic = true;
-		if ((Object)(object)childCollider != (Object)null)
-		{
-			((Component)childCollider).gameObject.layer = 19;
-		}
+		SetFlag(Flags.Reserved1, b: false);
 	}
 
 	private void SleepCheck()
 	{
+		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00db: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d9: Unknown result type (might be due to invalid IL or missing references)
 		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
@@ -261,7 +225,7 @@ public class DroppedItem : WorldItem
 		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-		if (!HasParent() || stuckInSomething)
+		if (!HasParent() || StuckInSomething)
 		{
 			return;
 		}
@@ -286,20 +250,16 @@ public class DroppedItem : WorldItem
 				BecomeActive();
 			}
 		}
-		else
+		else if (Vector3.SqrMagnitude(((Component)this).transform.localPosition - prevLocalPos) < 0.075f)
 		{
-			float num2 = 0.05f;
-			if (Vector3.SqrMagnitude(((Component)this).transform.localPosition - prevLocalPos) < num2)
-			{
-				BecomeInactive();
-			}
+			BecomeInactive();
 		}
 		prevLocalPos = ((Component)this).transform.localPosition;
 	}
 
 	private void OnPhysicsNeighbourChanged()
 	{
-		if (!stuckInSomething)
+		if (!StuckInSomething)
 		{
 			BecomeActive();
 		}
@@ -381,13 +341,13 @@ public class DroppedItem : WorldItem
 			childCollider.enabled = false;
 			((FacepunchBehaviour)this).Invoke((Action)EnableCollider, 0.1f);
 		}
-		if (base.isServer && !stuckInSomething)
+		if (base.isServer && !StuckInSomething)
 		{
 			if (cachedSleepCheck == null)
 			{
 				cachedSleepCheck = SleepCheck;
 			}
-			((FacepunchBehaviour)this).InvokeRandomized(cachedSleepCheck, 15f, 15f, Random.Range(-1.5f, 1.5f));
+			((FacepunchBehaviour)this).InvokeRandomized(cachedSleepCheck, 5.5f, 11f, Random.Range(-1.1f, 1.1f));
 		}
 	}
 
@@ -431,6 +391,7 @@ public class DroppedItem : WorldItem
 			rB.interpolation = (RigidbodyInterpolation)0;
 			rB.collisionDetectionMode = (CollisionDetectionMode)3;
 			originalCollisionMode = rB.collisionDetectionMode;
+			rB.sleepThreshold = Mathf.Max(0.05f, Physics.sleepThreshold);
 			Renderer[] componentsInChildren = val.GetComponentsInChildren<Renderer>(true);
 			for (int i = 0; i < componentsInChildren.Length; i++)
 			{
@@ -450,6 +411,61 @@ public class DroppedItem : WorldItem
 			}
 		}
 		val.SetActive(true);
+	}
+
+	public override void OnFlagsChanged(Flags old, Flags next)
+	{
+		base.OnFlagsChanged(old, next);
+		if (!old.HasFlag(Flags.Reserved1) && next.HasFlag(Flags.Reserved1))
+		{
+			BecomeInactive();
+		}
+		else if (old.HasFlag(Flags.Reserved1) && !next.HasFlag(Flags.Reserved1))
+		{
+			BecomeActive();
+		}
+	}
+
+	private void BecomeActive()
+	{
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
+		if (base.isServer)
+		{
+			rB.isKinematic = false;
+			rB.collisionDetectionMode = originalCollisionMode;
+			rB.WakeUp();
+			if (HasParent())
+			{
+				Rigidbody component = ((Component)GetParentEntity()).GetComponent<Rigidbody>();
+				if ((Object)(object)component != (Object)null)
+				{
+					rB.velocity = component.velocity;
+					rB.angularVelocity = component.angularVelocity;
+				}
+			}
+			prevLocalPos = ((Component)this).transform.localPosition;
+		}
+		if ((Object)(object)childCollider != (Object)null)
+		{
+			((Component)childCollider).gameObject.layer = originalLayer;
+		}
+	}
+
+	private void BecomeInactive()
+	{
+		if (base.isServer)
+		{
+			rB.collisionDetectionMode = (CollisionDetectionMode)0;
+			rB.isKinematic = true;
+		}
+		if ((Object)(object)childCollider != (Object)null)
+		{
+			((Component)childCollider).gameObject.layer = 19;
+		}
 	}
 
 	private void EnableCollider()

@@ -1,6 +1,7 @@
 using System;
 using Facepunch;
 using ProtoBuf;
+using Rust;
 using UnityEngine;
 
 public class PlayerCorpse : LootableCorpse
@@ -19,7 +20,7 @@ public class PlayerCorpse : LootableCorpse
 
 	private Vector3 prevLocalPos;
 
-	private const float SLEEP_CHECK_FREQUENCY = 15f;
+	private const float SLEEP_CHECK_FREQUENCY = 10f;
 
 	protected override float PositionTickRate => 0.05f;
 
@@ -54,12 +55,25 @@ public class PlayerCorpse : LootableCorpse
 			buoyancy.SubmergedChanged = BuoyancyChanged;
 			buoyancy.forEntity = this;
 		}
+		if (Application.isLoadingSave)
+		{
+			corpseRagdollScript = ((Component)this).GetComponent<Ragdoll>();
+		}
+		if (CorpseIsRagdoll)
+		{
+			corpseRagdollScript.simOnServer = true;
+			corpseRagdollScript.ServerInit();
+			if (HasParent())
+			{
+				OnParented();
+			}
+		}
 	}
 
 	public override void ServerInitCorpse(BaseEntity pr, Vector3 posOnDeah, Quaternion rotOnDeath, BasePlayer.PlayerFlags playerFlagsOnDeath, ModelState modelState)
 	{
-		//IL_00eb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d1: Unknown result type (might be due to invalid IL or missing references)
 		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
@@ -91,12 +105,6 @@ public class PlayerCorpse : LootableCorpse
 		{
 			Quaternion val = (((playerFlagsOnDeath & BasePlayer.PlayerFlags.Sleeping) != 0) ? Quaternion.identity : rotOnDeath);
 			((Component)this).transform.SetPositionAndRotation(posOnDeah, val);
-			corpseRagdollScript.simOnServer = true;
-			corpseRagdollScript.ServerInit();
-			if (HasParent())
-			{
-				OnParented();
-			}
 		}
 		else
 		{
@@ -195,7 +203,7 @@ public class PlayerCorpse : LootableCorpse
 			{
 				cachedSleepCheck = SleepCheck;
 			}
-			((FacepunchBehaviour)this).InvokeRandomized(cachedSleepCheck, 15f, 15f, Random.Range(-1.5f, 1.5f));
+			((FacepunchBehaviour)this).InvokeRandomized(cachedSleepCheck, 5f, 10f, Random.Range(-1f, 1f));
 		}
 	}
 
@@ -209,32 +217,28 @@ public class PlayerCorpse : LootableCorpse
 
 	private void SleepCheck()
 	{
+		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
 		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
 		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
 		if (!CorpseIsRagdoll || !HasParent())
 		{
 			return;
 		}
 		if (corpseRagdollScript.IsInactive)
 		{
-			if (!GamePhysics.Trace(new Ray(CenterPoint(), Vector3.down), 0f, out var _, 0.2f, -928830719, (QueryTriggerInteraction)1, this))
+			if (!GamePhysics.Trace(new Ray(CenterPoint(), Vector3.down), 0f, out var _, 0.25f, -928830719, (QueryTriggerInteraction)1, this))
 			{
 				BecomeActive();
 			}
 		}
-		else
+		else if (Vector3.SqrMagnitude(((Component)this).transform.localPosition - prevLocalPos) < 0.1f)
 		{
-			float num = 0.05f;
-			if (Vector3.SqrMagnitude(((Component)this).transform.localPosition - prevLocalPos) < num)
-			{
-				BecomeInactive();
-			}
+			BecomeInactive();
 		}
 		prevLocalPos = ((Component)this).transform.localPosition;
 	}

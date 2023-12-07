@@ -41,6 +41,8 @@ public class Pinata : BaseCombatEntity
 
 	public float HangLength = -1.863f;
 
+	public GameObjectRef FinalDestroyEffect;
+
 	public override void OnKilled(HitInfo info)
 	{
 		//IL_0052: Unknown result type (might be due to invalid IL or missing references)

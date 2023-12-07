@@ -38,12 +38,12 @@
     <Reference Include="UnityEngine.InputLegacyModule" />
     <Reference Include="Rust.Platform.Common" />
     <Reference Include="UnityEngine.UIModule" />
+    <Reference Include="Facepunch.Skeleton" />
     <Reference Include="Facepunch.BurstCloth" />
     <Reference Include="EZhex1991.EZSoftBone" />
     <Reference Include="Unity.TextMeshPro" />
     <Reference Include="CurvedTextMeshPro" />
     <Reference Include="Unity.Mathematics" />
-    <Reference Include="Facepunch.Skeleton" />
     <Reference Include="Facepunch.Input" />
     <Reference Include="Facepunch.UnwrapBaker.Settings" />
     <Reference Include="UnityEngine.IMGUIModule" />

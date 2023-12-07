@@ -322,12 +322,16 @@ public class SaveRestore : SingletonComponent<SaveRestore>
 		Stopwatch stopwatch = Stopwatch.StartNew();
 		for (int i = 0; i < array.Length; i++)
 		{
-			array[i].Kill();
-			if (stopwatch.Elapsed.TotalMilliseconds > 2000.0)
+			BaseEntity baseEntity = array[i];
+			if (baseEntity.enableSaving || !((Object)(object)((Component)baseEntity).GetComponent<DisableSave>() != (Object)null))
 			{
-				stopwatch.Reset();
-				stopwatch.Start();
-				DebugEx.Log((object)("\t" + (i + 1) + " / " + array.Length), (StackTraceLogType)0);
+				array[i].Kill();
+				if (stopwatch.Elapsed.TotalMilliseconds > 2000.0)
+				{
+					stopwatch.Reset();
+					stopwatch.Start();
+					DebugEx.Log((object)("\t" + (i + 1) + " / " + array.Length), (StackTraceLogType)0);
+				}
 			}
 		}
 		ItemManager.Heartbeat();

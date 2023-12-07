@@ -431,6 +431,7 @@ public class Global : ConsoleSystem
 		if ((Object)(object)basePlayer != (Object)null)
 		{
 			basePlayer.SetSpectateTeamInfo(@bool);
+			args.ReplyWith($"ToggleSpectateTeamInfo is now {@bool}");
 		}
 		else
 		{

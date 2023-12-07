@@ -1,8 +1,11 @@
 using System;
+using ConVar;
+using Network;
 using Rust;
 using UnityEngine;
+using UnityEngine.Assertions;
 
-public class ConfettiCannon : DecayEntity
+public class ConfettiCannon : DecayEntity, IIgniteable
 {
 	public float InitialBlastDelay = 1f;
 
@@ -19,6 +22,70 @@ public class ConfettiCannon : DecayEntity
 	private Action blastAction;
 
 	private Action clearBusy;
+
+	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
+	{
+		TimeWarning val = TimeWarning.New("ConfettiCannon.OnRpcMessage", 0);
+		try
+		{
+			if (rpc == 2995985310u && (Object)(object)player != (Object)null)
+			{
+				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
+				if (Global.developer > 2)
+				{
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Blast "));
+				}
+				TimeWarning val2 = TimeWarning.New("Blast", 0);
+				try
+				{
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					try
+					{
+						if (!RPC_Server.IsVisible.Test(2995985310u, "Blast", this, player, 3f))
+						{
+							return true;
+						}
+					}
+					finally
+					{
+						((IDisposable)val3)?.Dispose();
+					}
+					try
+					{
+						val3 = TimeWarning.New("Call", 0);
+						try
+						{
+							RPCMessage rPCMessage = default(RPCMessage);
+							rPCMessage.connection = msg.connection;
+							rPCMessage.player = player;
+							rPCMessage.read = msg.read;
+							RPCMessage msg2 = rPCMessage;
+							Blast(msg2);
+						}
+						finally
+						{
+							((IDisposable)val3)?.Dispose();
+						}
+					}
+					catch (Exception ex)
+					{
+						Debug.LogException(ex);
+						player.Kick("RPC Error in Blast");
+					}
+				}
+				finally
+				{
+					((IDisposable)val2)?.Dispose();
+				}
+				return true;
+			}
+		}
+		finally
+		{
+			((IDisposable)val)?.Dispose();
+		}
+		return base.OnRpcMessage(player, rpc, msg);
+	}
 
 	[RPC_Server]
 	[RPC_Server.IsVisible(3f)]
@@ -62,5 +129,24 @@ public class ConfettiCannon : DecayEntity
 	{
 		base.PostServerLoad();
 		ClearBusy();
+	}
+
+	public void Ignite(Vector3 fromPos)
+	{
+		Blast(default(RPCMessage));
+	}
+
+	public bool CanIgnite()
+	{
+		return !IsBusy();
+	}
+
+	public override void OnAttacked(HitInfo info)
+	{
+		base.OnAttacked(info);
+		if (base.isServer && info.damageTypes.Has(DamageType.Heat))
+		{
+			Blast(default(RPCMessage));
+		}
 	}
 }

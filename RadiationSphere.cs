@@ -22,11 +22,21 @@ public class RadiationSphere : BaseEntity
 
 	private TriggerRadiation[] radiationTriggers;
 
+	public static List<RadiationSphere> All { get; private set; } = new List<RadiationSphere>();
+
+
 	public override void ServerInit()
 	{
 		base.ServerInit();
 		radiationTriggers = ((Component)this).GetComponentsInChildren<TriggerRadiation>();
 		((FacepunchBehaviour)this).InvokeRandomized((Action)UpdateRadiation, InvokeDelay, InvokeDelay, InvokeDelay / 10f);
+		All.Add(this);
+	}
+
+	internal override void DoServerDestroy()
+	{
+		base.DoServerDestroy();
+		All.Remove(this);
 	}
 
 	public void RestartRadiation()
@@ -41,21 +51,26 @@ public class RadiationSphere : BaseEntity
 
 	public void UpdateRadiation()
 	{
+		float num = RadiationCurve.Evaluate((Time.time - timeStarted) / 60f * Server.oilrig_radiation_time_scale) * Server.oilrig_radiation_amount_scale;
 		if (timeStarted == 0f)
 		{
-			return;
+			num = 0f;
 		}
-		float num = RadiationCurve.Evaluate((Time.time - timeStarted) / 60f * Server.oilrig_radiation_time_scale) * Server.oilrig_radiation_amount_scale;
 		TriggerRadiation[] array = radiationTriggers;
 		for (int i = 0; i < array.Length; i++)
 		{
 			array[i].RadiationAmountOverride = num;
 		}
+		SetLights(num > Server.oilrig_radiation_alarm_threshold);
+	}
+
+	private void SetLights(bool state)
+	{
 		foreach (IOEntity radiationLight in RadiationLights)
 		{
 			if (!((Object)(object)radiationLight == (Object)null))
 			{
-				radiationLight.SetFlag(Flags.Reserved8, num > Server.oilrig_radiation_alarm_threshold);
+				radiationLight.SetFlag(Flags.Reserved8, state);
 			}
 		}
 	}

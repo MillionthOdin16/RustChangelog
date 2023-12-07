@@ -200,6 +200,16 @@ public class DecayEntity : BaseCombatEntity
 		return Mathf.Max(0f, 0f - upkeepTimer);
 	}
 
+	public virtual float GetEntityDecayDuration()
+	{
+		return decay.GetDecayDuration(this);
+	}
+
+	public virtual float GetEntityDecayDelay()
+	{
+		return decay.GetDecayDelay(this);
+	}
+
 	public virtual void DecayTick()
 	{
 		if (decay == null)
@@ -232,7 +242,7 @@ public class DecayEntity : BaseCombatEntity
 			{
 				if (base.healthFraction < 1f && ConVar.Decay.upkeep_heal_scale > 0f && base.SecondsSinceAttacked > 600f)
 				{
-					float num3 = num / decay.GetDecayDuration(this) * ConVar.Decay.upkeep_heal_scale;
+					float num3 = num / GetEntityDecayDuration() * ConVar.Decay.upkeep_heal_scale;
 					Heal(MaxHealth() * num3);
 				}
 				return;
@@ -240,7 +250,7 @@ public class DecayEntity : BaseCombatEntity
 			upkeepTimer = 1f;
 		}
 		decayTimer += num2;
-		if (decayTimer < decay.GetDecayDelay(this))
+		if (decayTimer < GetEntityDecayDelay())
 		{
 			return;
 		}
@@ -268,7 +278,7 @@ public class DecayEntity : BaseCombatEntity
 			}
 			if (num4 > 0f)
 			{
-				float num5 = num2 / decay.GetDecayDuration(this) * MaxHealth();
+				float num5 = num2 / GetEntityDecayDuration() * MaxHealth();
 				Hurt(num5 * num4 * decayVariance, DamageType.Decay);
 			}
 		}
