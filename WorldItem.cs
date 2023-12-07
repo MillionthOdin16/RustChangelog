@@ -6,12 +6,9 @@ using Network;
 using ProtoBuf;
 using UnityEngine;
 using UnityEngine.Assertions;
-using UnityEngine.Profiling;
 
 public class WorldItem : BaseEntity
 {
-	private bool _isInvokingSendItemUpdate;
-
 	[Header("WorldItem")]
 	public bool allowPickup = true;
 
@@ -21,6 +18,8 @@ public class WorldItem : BaseEntity
 	protected float eatSeconds = 10f;
 
 	protected float caloriesPerSecond = 1f;
+
+	private bool _isInvokingSendItemUpdate;
 
 	public override TraitFlag Traits
 	{
@@ -44,7 +43,7 @@ public class WorldItem : BaseEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Pickup "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Pickup "));
 				}
 				TimeWarning val2 = TimeWarning.New("Pickup", 0);
 				try
@@ -63,7 +62,7 @@ public class WorldItem : BaseEntity
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -75,7 +74,7 @@ public class WorldItem : BaseEntity
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -98,14 +97,108 @@ public class WorldItem : BaseEntity
 		return base.OnRpcMessage(player, rpc, msg);
 	}
 
+	public override Item GetItem()
+	{
+		return item;
+	}
+
+	public void InitializeItem(Item in_item)
+	{
+		if (item != null)
+		{
+			RemoveItem();
+		}
+		item = in_item;
+		if (item != null)
+		{
+			item.OnDirty += OnItemDirty;
+			((Object)this).name = item.info.shortname + " (world)";
+			item.SetWorldEntity(this);
+			OnItemDirty(item);
+		}
+	}
+
+	public void RemoveItem()
+	{
+		if (item != null)
+		{
+			item.OnDirty -= OnItemDirty;
+			item = null;
+		}
+	}
+
+	public void DestroyItem()
+	{
+		if (item != null)
+		{
+			item.OnDirty -= OnItemDirty;
+			item.Remove();
+			item = null;
+		}
+	}
+
+	protected virtual void OnItemDirty(Item in_item)
+	{
+		Assert.IsTrue(item == in_item, "WorldItem:OnItemDirty - dirty item isn't ours!");
+		if (item != null)
+		{
+			((Component)this).BroadcastMessage("OnItemChanged", (object)item, (SendMessageOptions)1);
+		}
+		DoItemNetworking();
+	}
+
+	public override void Load(LoadInfo info)
+	{
+		base.Load(info);
+		if (info.msg.worldItem != null && info.msg.worldItem.item != null)
+		{
+			Item item = ItemManager.Load(info.msg.worldItem.item, this.item, base.isServer);
+			if (item != null)
+			{
+				InitializeItem(item);
+			}
+		}
+	}
+
+	public override void Eat(BaseNpc baseNpc, float timeSpent)
+	{
+		if (!(eatSeconds <= 0f))
+		{
+			eatSeconds -= timeSpent;
+			baseNpc.AddCalories(caloriesPerSecond * timeSpent);
+			if (eatSeconds < 0f)
+			{
+				DestroyItem();
+				Kill();
+			}
+		}
+	}
+
+	public override string ToString()
+	{
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		if (_name == null)
+		{
+			if (base.isServer)
+			{
+				_name = string.Format("{1}[{0}] {2}", (object)(NetworkableId)(((_003F?)net?.ID) ?? default(NetworkableId)), base.ShortPrefabName, this.IsUnityNull() ? "NULL" : ((Object)this).name);
+			}
+			else
+			{
+				_name = base.ShortPrefabName;
+			}
+		}
+		return _name;
+	}
+
 	public override void ServerInit()
 	{
 		base.ServerInit();
 		if (item != null)
 		{
-			Profiler.BeginSample("BroadcastMessage OnItemChanged");
 			((Component)this).BroadcastMessage("OnItemChanged", (object)item, (SendMessageOptions)1);
-			Profiler.EndSample();
 		}
 	}
 
@@ -158,10 +251,8 @@ public class WorldItem : BaseEntity
 		if (item != null)
 		{
 			bool forDisk = info.forDisk;
-			Profiler.BeginSample("WorldItem.Save");
 			info.msg.worldItem = Pool.Get<WorldItem>();
 			info.msg.worldItem.item = item.Save(forDisk, bIncludeOwners: false);
-			Profiler.EndSample();
 		}
 	}
 
@@ -174,103 +265,5 @@ public class WorldItem : BaseEntity
 	public override void SwitchParent(BaseEntity ent)
 	{
 		SetParent(ent, parentBone);
-	}
-
-	public override Item GetItem()
-	{
-		return item;
-	}
-
-	public void InitializeItem(Item in_item)
-	{
-		if (item != null)
-		{
-			RemoveItem();
-		}
-		item = in_item;
-		if (item != null)
-		{
-			item.OnDirty += OnItemDirty;
-			((Object)this).name = item.info.shortname + " (world)";
-			item.SetWorldEntity(this);
-			OnItemDirty(item);
-		}
-	}
-
-	public void RemoveItem()
-	{
-		if (item != null)
-		{
-			item.OnDirty -= OnItemDirty;
-			item = null;
-		}
-	}
-
-	public void DestroyItem()
-	{
-		if (item != null)
-		{
-			item.OnDirty -= OnItemDirty;
-			item.Remove();
-			item = null;
-		}
-	}
-
-	protected virtual void OnItemDirty(Item in_item)
-	{
-		Assert.IsTrue(item == in_item, "WorldItem:OnItemDirty - dirty item isn't ours!");
-		if (item != null)
-		{
-			Profiler.BeginSample("BroadcastMessage OnItemChanged");
-			((Component)this).BroadcastMessage("OnItemChanged", (object)item, (SendMessageOptions)1);
-			Profiler.EndSample();
-		}
-		DoItemNetworking();
-	}
-
-	public override void Load(LoadInfo info)
-	{
-		base.Load(info);
-		if (info.msg.worldItem != null && info.msg.worldItem.item != null)
-		{
-			Item item = ItemManager.Load(info.msg.worldItem.item, this.item, base.isServer);
-			if (item != null)
-			{
-				InitializeItem(item);
-			}
-		}
-	}
-
-	public override void Eat(BaseNpc baseNpc, float timeSpent)
-	{
-		if (!(eatSeconds <= 0f))
-		{
-			eatSeconds -= timeSpent;
-			baseNpc.AddCalories(caloriesPerSecond * timeSpent);
-			if (eatSeconds < 0f)
-			{
-				DestroyItem();
-				Kill();
-			}
-		}
-	}
-
-	public override string ToString()
-	{
-		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		if (_name == null)
-		{
-			if (base.isServer)
-			{
-				_name = string.Format("{1}[{0}] {2}", (object)(NetworkableId)(((_003F?)net?.ID) ?? default(NetworkableId)), base.ShortPrefabName, this.IsUnityNull() ? "NULL" : ((Object)this).name);
-			}
-			else
-			{
-				_name = base.ShortPrefabName;
-			}
-		}
-		return _name;
 	}
 }

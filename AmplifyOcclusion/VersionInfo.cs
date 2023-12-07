@@ -56,6 +56,10 @@ public class VersionInfo
 
 	public static bool Matches(VersionInfo version)
 	{
-		return 2 == version.m_major && version.m_minor == 0 && version.m_release == 0;
+		if (2 == version.m_major && version.m_minor == 0)
+		{
+			return version.m_release == 0;
+		}
+		return false;
 	}
 }

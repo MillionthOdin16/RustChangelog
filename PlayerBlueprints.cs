@@ -39,7 +39,11 @@ public class PlayerBlueprints : EntityComponent<BasePlayer>
 	public bool IsUnlocked(ItemDefinition itemDef)
 	{
 		PersistantPlayer persistantPlayerInfo = base.baseEntity.PersistantPlayerInfo;
-		return persistantPlayerInfo.unlockedItems != null && persistantPlayerInfo.unlockedItems.Contains(itemDef.itemid);
+		if (persistantPlayerInfo.unlockedItems != null)
+		{
+			return persistantPlayerInfo.unlockedItems.Contains(itemDef.itemid);
+		}
+		return false;
 	}
 
 	public void Unlock(ItemDefinition itemDef)
@@ -114,9 +118,9 @@ public class PlayerBlueprints : EntityComponent<BasePlayer>
 			}
 		}
 		int[] defaultBlueprints = ItemManager.defaultBlueprints;
-		foreach (int num in defaultBlueprints)
+		for (int i = 0; i < defaultBlueprints.Length; i++)
 		{
-			if (num == targetItem.itemid)
+			if (defaultBlueprints[i] == targetItem.itemid)
 			{
 				return true;
 			}

@@ -23,14 +23,14 @@ public class FrankensteinTable : StorageContainer
 	public List<ItemDefinition> LegItems;
 
 	[HideInInspector]
-	public List<ItemDefinition> ItemsToUse = null;
+	public List<ItemDefinition> ItemsToUse;
 
 	public FrankensteinTableVisuals TableVisuals;
 
 	[Header("Timings")]
 	public float TableDownDuration = 0.9f;
 
-	private bool waking = false;
+	private bool waking;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -42,7 +42,7 @@ public class FrankensteinTable : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - CreateFrankenstein "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - CreateFrankenstein "));
 				}
 				TimeWarning val2 = TimeWarning.New("CreateFrankenstein", 0);
 				try
@@ -61,7 +61,7 @@ public class FrankensteinTable : StorageContainer
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -73,7 +73,7 @@ public class FrankensteinTable : StorageContainer
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -93,12 +93,12 @@ public class FrankensteinTable : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RequestSleepFrankenstein "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RequestSleepFrankenstein "));
 				}
-				TimeWarning val5 = TimeWarning.New("RequestSleepFrankenstein", 0);
+				TimeWarning val2 = TimeWarning.New("RequestSleepFrankenstein", 0);
 				try
 				{
-					TimeWarning val6 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.MaxDistance.Test(4797457u, "RequestSleepFrankenstein", this, player, 3f))
@@ -108,11 +108,11 @@ public class FrankensteinTable : StorageContainer
 					}
 					finally
 					{
-						((IDisposable)val6)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val7 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -124,7 +124,7 @@ public class FrankensteinTable : StorageContainer
 						}
 						finally
 						{
-							((IDisposable)val7)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -135,7 +135,7 @@ public class FrankensteinTable : StorageContainer
 				}
 				finally
 				{
-					((IDisposable)val5)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -144,12 +144,12 @@ public class FrankensteinTable : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RequestWakeFrankenstein "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RequestWakeFrankenstein "));
 				}
-				TimeWarning val8 = TimeWarning.New("RequestWakeFrankenstein", 0);
+				TimeWarning val2 = TimeWarning.New("RequestWakeFrankenstein", 0);
 				try
 				{
-					TimeWarning val9 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.MaxDistance.Test(3804893505u, "RequestWakeFrankenstein", this, player, 3f))
@@ -159,11 +159,11 @@ public class FrankensteinTable : StorageContainer
 					}
 					finally
 					{
-						((IDisposable)val9)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val10 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -175,7 +175,7 @@ public class FrankensteinTable : StorageContainer
 						}
 						finally
 						{
-							((IDisposable)val10)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex3)
@@ -186,7 +186,7 @@ public class FrankensteinTable : StorageContainer
 				}
 				finally
 				{
-					((IDisposable)val8)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -354,8 +354,7 @@ public class FrankensteinTable : StorageContainer
 	{
 		for (int i = 0; i < base.inventory.capacity; i++)
 		{
-			Item slot = base.inventory.GetSlot(i);
-			if (slot != null)
+			if (base.inventory.GetSlot(i) != null)
 			{
 				return false;
 			}
@@ -404,15 +403,15 @@ public class FrankensteinTable : StorageContainer
 			yield break;
 		}
 		ItemsToUse = GetValidItems(base.inventory);
-		BaseEntity entity = GameManager.server.CreateEntity(FrankensteinPrefab.resourcePath, SpawnLocation.position, SpawnLocation.rotation, startActive: false);
-		entity.enableSaving = false;
-		((Component)entity).gameObject.AwakeFromInstantiate();
-		entity.Spawn();
-		EquipFrankenstein(entity as FrankensteinPet);
+		BaseEntity baseEntity = GameManager.server.CreateEntity(FrankensteinPrefab.resourcePath, SpawnLocation.position, SpawnLocation.rotation, startActive: false);
+		baseEntity.enableSaving = false;
+		((Component)baseEntity).gameObject.AwakeFromInstantiate();
+		baseEntity.Spawn();
+		EquipFrankenstein(baseEntity as FrankensteinPet);
 		ConsumeInventory();
 		base.inventory.SetLocked(isLocked: false);
 		SendNetworkUpdateImmediate();
-		((MonoBehaviour)this).StartCoroutine(WaitForFrankensteinBrainInit(entity as BasePet, owner));
+		((MonoBehaviour)this).StartCoroutine(WaitForFrankensteinBrainInit(baseEntity as BasePet, owner));
 		waking = false;
 		yield return null;
 	}
@@ -443,8 +442,8 @@ public class FrankensteinTable : StorageContainer
 
 	private void SleepFrankenstein(BasePlayer owner)
 	{
-		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
 		if (IsInventoryEmpty() && !((Object)(object)owner == (Object)null) && !((Object)(object)owner.PetEntity == (Object)null))
 		{
 			FrankensteinPet frankensteinPet = owner.PetEntity as FrankensteinPet;

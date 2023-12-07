@@ -5,7 +5,6 @@ using Facepunch.Rust;
 using Network;
 using Rust;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 public class FlameTurret : StorageContainer
 {
@@ -21,11 +20,13 @@ public class FlameTurret : StorageContainer
 
 		protected override bool ShouldAdd(FlameTurret entity)
 		{
-			return base.ShouldAdd(entity) && entity.IsValid();
+			if (base.ShouldAdd(entity))
+			{
+				return entity.IsValid();
+			}
+			return false;
 		}
 	}
-
-	public static UpdateFlameTurretWorkQueue updateFlameTurretQueueServer = new UpdateFlameTurretWorkQueue();
 
 	public Transform upper;
 
@@ -53,21 +54,23 @@ public class FlameTurret : StorageContainer
 
 	public TargetTrigger trigger;
 
-	private float nextFireballTime = 0f;
+	private float nextFireballTime;
 
 	private int turnDir = 1;
 
-	private float lastMovementUpdate = 0f;
+	private float lastMovementUpdate;
 
-	private float triggeredTime = 0f;
+	private float triggeredTime;
 
-	private float lastServerThink = 0f;
+	private float lastServerThink;
 
 	private float triggerCheckRate = 2f;
 
-	private float nextTriggerCheckTime = 0f;
+	private float nextTriggerCheckTime;
 
-	private float pendingFuel = 0f;
+	private float pendingFuel;
+
+	public static UpdateFlameTurretWorkQueue updateFlameTurretQueueServer = new UpdateFlameTurretWorkQueue();
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -89,15 +92,17 @@ public class FlameTurret : StorageContainer
 
 	public Vector3 GetEyePosition()
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
 		return eyeTransform.position;
 	}
 
 	public override bool CanPickup(BasePlayer player)
 	{
-		return base.CanPickup(player) && !IsTriggered();
+		if (base.CanPickup(player))
+		{
+			return !IsTriggered();
+		}
+		return false;
 	}
 
 	public void SetTriggered(bool triggered)
@@ -117,7 +122,7 @@ public class FlameTurret : StorageContainer
 
 	public void SendAimDir()
 	{
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
 		float delta = Time.realtimeSinceStartup - lastMovementUpdate;
 		lastMovementUpdate = Time.realtimeSinceStartup;
 		MovementUpdate(delta);
@@ -144,11 +149,11 @@ public class FlameTurret : StorageContainer
 
 	public void MovementUpdate(float delta)
 	{
-		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
 		aimDir += new Vector3(0f, delta * GetSpinSpeed(), 0f) * (float)turnDir;
 		if (aimDir.y >= arc || aimDir.y <= 0f - arc)
 		{
@@ -159,12 +164,11 @@ public class FlameTurret : StorageContainer
 
 	public void ServerThink()
 	{
-		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
-		bool flag = IsTriggered();
+		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
+		bool num = IsTriggered();
 		float delta = Time.realtimeSinceStartup - lastServerThink;
 		lastServerThink = Time.realtimeSinceStartup;
-		Profiler.BeginSample("FlameTurret.ServerThink");
 		if (IsTriggered() && (Time.realtimeSinceStartup - triggeredTime > triggeredDuration || !HasFuel()))
 		{
 			SetTriggered(triggered: false);
@@ -174,7 +178,7 @@ public class FlameTurret : StorageContainer
 			SetTriggered(triggered: true);
 			Effect.server.Run(triggeredEffect.resourcePath, ((Component)this).transform.position, Vector3.up);
 		}
-		if (flag != IsTriggered())
+		if (num != IsTriggered())
 		{
 			SendNetworkUpdateImmediate();
 		}
@@ -182,29 +186,25 @@ public class FlameTurret : StorageContainer
 		{
 			DoFlame(delta);
 		}
-		Profiler.EndSample();
 	}
 
 	public bool CheckTrigger()
 	{
-		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00db: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ed: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0100: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0126: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ca: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fc: Unknown result type (might be due to invalid IL or missing references)
 		if (Time.realtimeSinceStartup < nextTriggerCheckTime)
 		{
 			return false;
 		}
 		nextTriggerCheckTime = Time.realtimeSinceStartup + 1f / triggerCheckRate;
-		Profiler.BeginSample("FlameTurret.CheckTrigger");
 		List<RaycastHit> list = Pool.GetList<RaycastHit>();
 		HashSet<BaseEntity> entityContents = trigger.entityContents;
 		bool flag = false;
@@ -223,8 +223,7 @@ public class FlameTurret : StorageContainer
 				GamePhysics.TraceAll(new Ray(position, ((Vector3)(ref val)).normalized), 0f, list, 9f, 1218519297, (QueryTriggerInteraction)0);
 				for (int i = 0; i < list.Count; i++)
 				{
-					RaycastHit hit = list[i];
-					BaseEntity entity = hit.GetEntity();
+					BaseEntity entity = list[i].GetEntity();
 					if ((Object)(object)entity != (Object)null && ((Object)(object)entity == (Object)(object)this || entity.EqualNetID((BaseNetworkable)this)))
 					{
 						flag = true;
@@ -242,27 +241,26 @@ public class FlameTurret : StorageContainer
 			}
 		}
 		Pool.FreeList<RaycastHit>(ref list);
-		Profiler.EndSample();
 		return flag;
 	}
 
 	public override void OnKilled(HitInfo info)
 	{
-		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0095: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00be: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ea: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0100: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0113: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00de: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ee: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0104: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010e: Unknown result type (might be due to invalid IL or missing references)
 		float num = (float)GetFuelAmount() / 500f;
 		DamageUtil.RadiusDamage(this, LookupPrefab(), GetEyePosition(), 2f, 6f, damagePerSec, 133120, useLineOfSight: true);
 		Effect.server.Run(explosionEffect.resourcePath, ((Component)this).transform.position, Vector3.up);
@@ -316,44 +314,43 @@ public class FlameTurret : StorageContainer
 
 	public void DoFlame(float delta)
 	{
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00dd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0118: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0131: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0181: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0188: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01dc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01e6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01eb: Unknown result type (might be due to invalid IL or missing references)
 		//IL_01f2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01f7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0209: Unknown result type (might be due to invalid IL or missing references)
-		//IL_020d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0217: Unknown result type (might be due to invalid IL or missing references)
-		//IL_021c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0223: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0229: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01d0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01e4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01e9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b8: Unknown result type (might be due to invalid IL or missing references)
 		if (!UseFuel(delta))
 		{
 			return;
 		}
-		Profiler.BeginSample("FlameTurret.DoFlame");
 		Ray val = default(Ray);
 		((Ray)(ref val))._002Ector(GetEyePosition(), ((Component)this).transform.TransformDirection(Quaternion.Euler(aimDir) * Vector3.forward));
 		Vector3 origin = ((Ray)(ref val)).origin;
@@ -371,8 +368,7 @@ public class FlameTurret : StorageContainer
 		if (Time.realtimeSinceStartup >= nextFireballTime)
 		{
 			nextFireballTime = Time.realtimeSinceStartup + Random.Range(1f, 2f);
-			bool flag2 = Random.Range(0, 10) <= 7;
-			Vector3 val3 = ((flag2 && flag) ? ((RaycastHit)(ref val2)).point : (((Ray)(ref val)).origin + ((Ray)(ref val)).direction * (flag ? ((RaycastHit)(ref val2)).distance : flameRange) * Random.Range(0.4f, 1f)));
+			Vector3 val3 = ((Random.Range(0, 10) <= 7 && flag) ? ((RaycastHit)(ref val2)).point : (((Ray)(ref val)).origin + ((Ray)(ref val)).direction * (flag ? ((RaycastHit)(ref val2)).distance : flameRange) * Random.Range(0.4f, 1f)));
 			BaseEntity baseEntity = GameManager.server.CreateEntity(fireballPrefab.resourcePath, val3 - ((Ray)(ref val)).direction * 0.25f);
 			if (Object.op_Implicit((Object)(object)baseEntity))
 			{
@@ -380,6 +376,5 @@ public class FlameTurret : StorageContainer
 				baseEntity.Spawn();
 			}
 		}
-		Profiler.EndSample();
 	}
 }

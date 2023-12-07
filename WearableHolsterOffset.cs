@@ -12,7 +12,7 @@ public class WearableHolsterOffset : MonoBehaviour
 
 		public Vector3 rotationOffset;
 
-		public int priority = 0;
+		public int priority;
 	}
 
 	public offsetInfo[] Offsets;

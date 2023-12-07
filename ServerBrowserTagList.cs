@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class ServerBrowserTagList : MonoBehaviour
@@ -19,14 +20,14 @@ public class ServerBrowserTagList : MonoBehaviour
 		Initialize();
 	}
 
-	public bool Refresh(in ServerInfo server)
+	public bool Refresh(HashSet<string> serverTags)
 	{
 		Initialize();
 		int tagsEnabled = 0;
 		ServerBrowserTagGroup[] groups = _groups;
-		foreach (ServerBrowserTagGroup serverBrowserTagGroup in groups)
+		for (int i = 0; i < groups.Length; i++)
 		{
-			serverBrowserTagGroup.Refresh(in server, ref tagsEnabled, maxTagsToShow);
+			groups[i].Refresh(serverTags, ref tagsEnabled, maxTagsToShow);
 		}
 		return tagsEnabled > 0;
 	}

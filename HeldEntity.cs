@@ -6,7 +6,6 @@ using Network;
 using ProtoBuf;
 using UnityEngine;
 using UnityEngine.Assertions;
-using UnityEngine.Profiling;
 
 public class HeldEntity : BaseEntity
 {
@@ -20,9 +19,9 @@ public class HeldEntity : BaseEntity
 			LEFT_THIGH
 		}
 
-		public HolsterSlot slot = HolsterSlot.BACK;
+		public HolsterSlot slot;
 
-		public bool displayWhenHolstered = false;
+		public bool displayWhenHolstered;
 
 		public string holsterBone = "spine3";
 
@@ -62,15 +61,15 @@ public class HeldEntity : BaseEntity
 
 	public AnimatorOverrideController HoldAnimationOverride;
 
-	public bool isBuildingTool = false;
+	public bool isBuildingTool;
 
 	[Header("Hostility")]
-	public float hostileScore = 0f;
+	public float hostileScore;
 
 	public HolsterInfo holsterInfo;
 
 	[Header("Camera")]
-	public BasePlayer.CameraMode HeldCameraMode = BasePlayer.CameraMode.FirstPerson;
+	public BasePlayer.CameraMode HeldCameraMode;
 
 	public Vector3 FirstPersonArmOffset;
 
@@ -79,11 +78,11 @@ public class HeldEntity : BaseEntity
 	[Range(0f, 1f)]
 	public float FirstPersonRotationStrength = 1f;
 
-	private bool holsterVisible = false;
+	private bool holsterVisible;
 
-	private bool genericVisible = false;
+	private bool genericVisible;
 
-	private heldEntityVisState currentVisState = heldEntityVisState.UNSET;
+	private heldEntityVisState currentVisState;
 
 	private TimeSince lastHeldEvent;
 
@@ -93,9 +92,9 @@ public class HeldEntity : BaseEntity
 
 	public bool hostile => hostileScore > 0f;
 
-	public virtual bool IsUsableByTurret => false;
-
 	public virtual Transform MuzzleTransform => null;
+
+	public virtual bool IsUsableByTurret => false;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -108,12 +107,6 @@ public class HeldEntity : BaseEntity
 			((IDisposable)val)?.Dispose();
 		}
 		return base.OnRpcMessage(player, rpc, msg);
-	}
-
-	public void SendPunch(Vector3 amount, float duration)
-	{
-		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
-		ClientRPCPlayer<Vector3, float>(null, GetOwnerPlayer(), "CL_Punch", amount, duration);
 	}
 
 	public bool LightsOn()
@@ -180,6 +173,7 @@ public class HeldEntity : BaseEntity
 		if (holsterInfo.displayWhenHolstered)
 		{
 			holsterVisible = visible;
+			genericVisible = false;
 			UpdateHeldItemVisibility();
 		}
 	}
@@ -204,12 +198,10 @@ public class HeldEntity : BaseEntity
 	public void UpdateHeldItemVisibility()
 	{
 		bool flag = false;
-		if (Object.op_Implicit((Object)(object)GetOwnerPlayer()))
+		if (!genericVisible && Object.op_Implicit((Object)(object)GetOwnerPlayer()))
 		{
-			Profiler.BeginSample("HeldEntity.UpdateHolsterVisiblity");
 			bool flag2 = (Object)(object)GetOwnerPlayer().GetHeldEntity() == (Object)(object)this;
 			flag = ((!Server.showHolsteredItems && !flag2) ? UpdateVisiblity_Invis() : (flag2 ? UpdateVisibility_Hand() : ((!holsterVisible) ? UpdateVisiblity_Invis() : UpdateVisiblity_Holster())));
-			Profiler.EndSample();
 		}
 		else if (genericVisible)
 		{
@@ -278,9 +270,9 @@ public class HeldEntity : BaseEntity
 
 	public virtual void SetHeld(bool bHeld)
 	{
-		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008b: Unknown result type (might be due to invalid IL or missing references)
 		Assert.IsTrue(base.isServer, "Should be server!");
 		SetFlag(Flags.Reserved4, bHeld);
 		if (!bHeld)
@@ -314,13 +306,13 @@ public class HeldEntity : BaseEntity
 
 	protected Item GetOwnerItem()
 	{
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer ownerPlayer = GetOwnerPlayer();
 		if ((Object)(object)ownerPlayer == (Object)null || (Object)(object)ownerPlayer.inventory == (Object)null)
 		{
 			return null;
 		}
-		return ownerPlayer.inventory.FindItemUID(ownerItemUID);
+		return ownerPlayer.inventory.FindItemByUID(ownerItemUID);
 	}
 
 	public override Item GetItem()
@@ -353,8 +345,8 @@ public class HeldEntity : BaseEntity
 
 	public virtual void SetupHeldEntity(Item item)
 	{
-		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
 		ownerItemUID = item.uid;
 		InitOwnerPlayer();
 	}
@@ -389,8 +381,8 @@ public class HeldEntity : BaseEntity
 
 	public override void Save(SaveInfo info)
 	{
-		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
 		base.Save(info);
 		info.msg.heldEntity = Pool.Get<HeldEntity>();
 		info.msg.heldEntity.itemUID = ownerItemUID;
@@ -404,7 +396,11 @@ public class HeldEntity : BaseEntity
 	protected bool HasItemAmount()
 	{
 		Item ownerItem = GetOwnerItem();
-		return ownerItem != null && ownerItem.amount > 0;
+		if (ownerItem != null)
+		{
+			return ownerItem.amount > 0;
+		}
+		return false;
 	}
 
 	protected bool UseItemAmount(int iAmount)
@@ -445,12 +441,18 @@ public class HeldEntity : BaseEntity
 
 	public override void Load(LoadInfo info)
 	{
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
 		base.Load(info);
 		if (info.msg.heldEntity != null)
 		{
 			ownerItemUID = info.msg.heldEntity.itemUID;
 		}
+	}
+
+	public void SendPunch(Vector3 amount, float duration)
+	{
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		ClientRPCPlayer<Vector3, float>(null, GetOwnerPlayer(), "CL_Punch", amount, duration);
 	}
 }

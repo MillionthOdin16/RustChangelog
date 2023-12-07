@@ -37,7 +37,7 @@ public class TexasHoldEmController : CardGameController
 
 	public const string WON_HAND_STAT = "won_hand_texas_holdem";
 
-	private int dealerIndex = 0;
+	private int dealerIndex;
 
 	private StackOfCards deck = new StackOfCards(1);
 
@@ -79,15 +79,13 @@ public class TexasHoldEmController : CardGameController
 
 	public bool TryGetSmallBlind(out CardPlayerData smallBlind)
 	{
-		int num = NumPlayersInGame();
-		int relIndex = ((num < 3) ? dealerIndex : (dealerIndex + 1));
+		int relIndex = ((NumPlayersInGame() < 3) ? dealerIndex : (dealerIndex + 1));
 		return ToCardPlayerData(relIndex, includeOutOfRound: true, out smallBlind);
 	}
 
 	public bool TryGetBigBlind(out CardPlayerData bigBlind)
 	{
-		int num = NumPlayersInGame();
-		int relIndex = ((num < 3) ? (dealerIndex + 1) : (dealerIndex + 2));
+		int relIndex = ((NumPlayersInGame() < 3) ? (dealerIndex + 1) : (dealerIndex + 2));
 		return ToCardPlayerData(relIndex, includeOutOfRound: true, out bigBlind);
 	}
 
@@ -137,8 +135,7 @@ public class TexasHoldEmController : CardGameController
 	public void InputsToList(int availableInputs, List<PokerInputOption> result)
 	{
 		PokerInputOption[] array = (PokerInputOption[])Enum.GetValues(typeof(PokerInputOption));
-		PokerInputOption[] array2 = array;
-		foreach (PokerInputOption pokerInputOption in array2)
+		foreach (PokerInputOption pokerInputOption in array)
 		{
 			if (pokerInputOption != 0 && ((uint)availableInputs & (uint)pokerInputOption) == (uint)pokerInputOption)
 			{
@@ -223,14 +220,13 @@ public class TexasHoldEmController : CardGameController
 		}
 		if (list.Count == 0)
 		{
-			StorageContainer pot = base.Owner.GetPot();
-			pot.inventory.Clear();
+			base.Owner.GetPot().inventory.Clear();
 			return;
 		}
 		bool flag = num > 1;
 		int num2 = GetScrapInPot();
-		CardPlayerData[] playerData2 = base.PlayerData;
-		foreach (CardPlayerData cardPlayerData2 in playerData2)
+		playerData = base.PlayerData;
+		foreach (CardPlayerData cardPlayerData2 in playerData)
 		{
 			if (cardPlayerData2.HasUserInGame)
 			{
@@ -238,23 +234,23 @@ public class TexasHoldEmController : CardGameController
 			}
 		}
 		bool flag2 = true;
-		CardPlayerData[] playerData3 = base.PlayerData;
-		foreach (CardPlayerData cardPlayerData3 in playerData3)
+		playerData = base.PlayerData;
+		foreach (CardPlayerData obj in playerData)
 		{
-			cardPlayerData3.remainingToPayOut = cardPlayerData3.betThisRound;
+			obj.remainingToPayOut = obj.betThisRound;
 		}
 		while (list.Count > 1)
 		{
 			int num3 = int.MaxValue;
 			int num4 = 0;
-			CardPlayerData[] playerData4 = base.PlayerData;
-			foreach (CardPlayerData cardPlayerData4 in playerData4)
+			playerData = base.PlayerData;
+			foreach (CardPlayerData cardPlayerData3 in playerData)
 			{
-				if (cardPlayerData4.betThisRound > 0)
+				if (cardPlayerData3.betThisRound > 0)
 				{
-					if (cardPlayerData4.betThisRound < num3)
+					if (cardPlayerData3.betThisRound < num3)
 					{
-						num3 = cardPlayerData4.betThisRound;
+						num3 = cardPlayerData3.betThisRound;
 					}
 					num4++;
 				}
@@ -317,12 +313,12 @@ public class TexasHoldEmController : CardGameController
 			AddRoundResult(list[0], num10, (int)resultCode2);
 		}
 		base.Owner.ClientRPC<RoundResults>(null, "OnResultsDeclared", base.resultInfo);
-		StorageContainer pot2 = base.Owner.GetPot();
-		int amount = pot2.inventory.GetAmount(base.ScrapItemID, onlyUsableAmounts: true);
+		StorageContainer pot = base.Owner.GetPot();
+		int amount = pot.inventory.GetAmount(base.ScrapItemID, onlyUsableAmounts: true);
 		if (amount > 0)
 		{
 			Debug.LogError((object)$"{GetType().Name}: Something went wrong in the winner calculation. Pot still has {amount} scrap left over after payouts. Expected 0. Clearing it.");
-			pot2.inventory.Clear();
+			pot.inventory.Clear();
 		}
 		Pool.FreeList<CardPlayerData>(ref list);
 	}
@@ -451,22 +447,22 @@ public class TexasHoldEmController : CardGameController
 			{
 				return;
 			}
-			switch ((PokerInputOption)input)
+			switch (input)
 			{
-			case PokerInputOption.Fold:
+			case 1:
 				playerData.LeaveCurrentRound(clearBets: false, leftRoundEarly: true);
 				flag = true;
 				LastActionValue = 0;
 				break;
-			case PokerInputOption.Call:
+			case 2:
 			{
 				int currentBet = GetCurrentBet();
 				int num = TryAddBet(playerData, currentBet - playerData.betThisTurn);
 				LastActionValue = num;
 				break;
 			}
-			case PokerInputOption.Raise:
-			case PokerInputOption.Bet:
+			case 16:
+			case 32:
 			{
 				int currentBet = GetCurrentBet();
 				int biggestRaiseThisTurn = BiggestRaiseThisTurn;
@@ -479,7 +475,7 @@ public class TexasHoldEmController : CardGameController
 				LastActionValue = num;
 				break;
 			}
-			case PokerInputOption.AllIn:
+			case 4:
 			{
 				int currentBet = GetCurrentBet();
 				int num = GoAllIn(playerData);
@@ -487,7 +483,7 @@ public class TexasHoldEmController : CardGameController
 				LastActionValue = num;
 				break;
 			}
-			case PokerInputOption.Check:
+			case 8:
 				LastActionValue = 0;
 				break;
 			}
@@ -600,9 +596,9 @@ public class TexasHoldEmController : CardGameController
 	protected override void EndCycle()
 	{
 		CardPlayerData[] playerData = base.PlayerData;
-		foreach (CardPlayerData cardPlayerData in playerData)
+		for (int i = 0; i < playerData.Length; i++)
 		{
-			cardPlayerData.SetHasCompletedTurn(hasActed: false);
+			playerData[i].SetHasCompletedTurn(hasActed: false);
 		}
 		BiggestRaiseThisTurn = 0;
 		if (DealCommunityCards())

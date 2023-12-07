@@ -46,9 +46,9 @@ public class AdvancedChristmasLights : IOEntity
 	[Tooltip("This many units used will result in +1 power usage")]
 	public float lengthToPowerRatio = 5f;
 
-	private bool finalized = false;
+	private bool finalized;
 
-	private int lengthUsed = 0;
+	private int lengthUsed;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -60,7 +60,7 @@ public class AdvancedChristmasLights : IOEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SetAnimationStyle "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SetAnimationStyle "));
 				}
 				TimeWarning val2 = TimeWarning.New("SetAnimationStyle", 0);
 				try
@@ -79,7 +79,7 @@ public class AdvancedChristmasLights : IOEntity
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -91,7 +91,7 @@ public class AdvancedChristmasLights : IOEntity
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -131,12 +131,12 @@ public class AdvancedChristmasLights : IOEntity
 
 	public void AddPoint(Vector3 newPoint, Vector3 newNormal)
 	{
-		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
 		if (base.isServer && points.Count == 0)
 		{
 			newPoint = wireEmission.position;
@@ -173,10 +173,10 @@ public class AdvancedChristmasLights : IOEntity
 
 	public override void Save(SaveInfo info)
 	{
-		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
 		base.Save(info);
 		info.msg.lightString = Pool.Get<LightString>();
 		info.msg.lightString.points = Pool.GetList<StringPoint>();
@@ -193,8 +193,8 @@ public class AdvancedChristmasLights : IOEntity
 
 	public override void Load(LoadInfo info)
 	{
-		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
 		base.Load(info);
 		if (info.msg.lightString == null)
 		{
@@ -231,7 +231,9 @@ public class AdvancedChristmasLights : IOEntity
 		num = Mathf.Clamp(num, 1, 7);
 		if (Global.developer > 0)
 		{
-			Debug.Log((object)("Set animation style to :" + num + " old was : " + (int)animationStyle));
+			string text = num.ToString();
+			int num2 = (int)animationStyle;
+			Debug.Log((object)("Set animation style to :" + text + " old was : " + num2));
 		}
 		AnimationType animationType = (AnimationType)num;
 		if (animationType != animationStyle)

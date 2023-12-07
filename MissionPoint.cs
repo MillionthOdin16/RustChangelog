@@ -88,14 +88,13 @@ public class MissionPoint : MonoBehaviour
 
 	private void DropToGround()
 	{
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
 		if (Application.isLoading)
 		{
 			((FacepunchBehaviour)SingletonComponent<InvokeHandler>.Instance).Invoke((Action)DropToGround, 0.5f);
 			return;
 		}
-		Vector3 position = ((Component)this).transform.position;
+		_ = ((Component)this).transform.position;
 		((Component)this).transform.DropToGround();
 	}
 
@@ -109,28 +108,22 @@ public class MissionPoint : MonoBehaviour
 
 	public virtual Vector3 GetPosition()
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
 		return ((Component)this).transform.position;
 	}
 
 	public virtual Quaternion GetRotation()
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
 		return ((Component)this).transform.rotation;
 	}
 
 	public static bool GetMissionPoints(ref List<MissionPoint> points, Vector3 near, float minDistance, float maxDistance, int flags, int exclusionFlags)
 	{
-		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
 		List<MissionPoint> list = Pool.GetList<MissionPoint>();
 		foreach (MissionPoint item in all)
 		{

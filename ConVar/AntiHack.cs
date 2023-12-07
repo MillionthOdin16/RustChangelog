@@ -308,6 +308,10 @@ public class AntiHack : ConsoleSystem
 	public static bool eye_terraincheck = true;
 
 	[ServerVar]
+	[Help("whether or not to include vehicles in the eye LOS checks")]
+	public static bool eye_vehiclecheck = true;
+
+	[ServerVar]
 	[Help("distance at which to start testing eye noclipping")]
 	public static float eye_noclip_cutoff = 0.06f;
 
@@ -342,6 +346,10 @@ public class AntiHack : ConsoleSystem
 	[ServerVar]
 	[Help("whether or not to include terrain in the build LOS checks")]
 	public static bool build_terraincheck = true;
+
+	[ServerVar]
+	[Help("whether or not to include vehicles in the build LOS checks")]
+	public static bool build_vehiclecheck = true;
 
 	[ServerVar]
 	[Help("whether or not to check for building being done on the wrong side of something (e.g. inside rocks). 0 = Disabled, 1 = Info only, 2 = Enabled")]

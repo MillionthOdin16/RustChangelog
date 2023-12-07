@@ -19,7 +19,7 @@ public class UIPaintableImage : MonoBehaviour
 
 	public FilterMode filterMode = (FilterMode)1;
 
-	public bool mipmaps = false;
+	public bool mipmaps;
 
 	public RectTransform rectTransform
 	{

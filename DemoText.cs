@@ -3,23 +3,23 @@ using UnityEngine;
 
 public class DemoText : MonoBehaviour
 {
-	public RustText TimeText = null;
+	public RustText TimeText;
 
-	public RustText TotalSecondText = null;
+	public RustText TotalSecondText;
 
-	public RustText TimeScaleText = null;
+	public RustText TimeScaleText;
 
-	public RustText FilenameText = null;
+	public RustText FilenameText;
 
-	public RustText DateTimeText = null;
+	public RustText DateTimeText;
 
-	public RustText ParentText = null;
+	public RustText ParentText;
 
-	public RustText DofText = null;
+	public RustText DofText;
 
-	public GameObject InternalRoot = null;
+	public GameObject InternalRoot;
 
-	public GameObject ParentRoot = null;
+	public GameObject ParentRoot;
 
-	public GameObject DofRoot = null;
+	public GameObject DofRoot;
 }

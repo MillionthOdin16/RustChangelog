@@ -10,7 +10,7 @@ public class EntityFuelSystem
 
 	private readonly uint fuelStorageID;
 
-	public EntityRef<StorageContainer> fuelStorageInstance = default(EntityRef<StorageContainer>);
+	public EntityRef<StorageContainer> fuelStorageInstance;
 
 	private float nextFuelCheckTime;
 
@@ -35,7 +35,7 @@ public class EntityFuelSystem
 
 	public bool IsInFuelInteractionRange(BasePlayer player)
 	{
-		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
 		StorageContainer fuelContainer = GetFuelContainer();
 		if ((Object)(object)fuelContainer != (Object)null)
 		{

@@ -81,27 +81,27 @@ public class EngineAudioClip : MonoBehaviour, IClientComponent
 	{
 		private float[] sourceData;
 
-		private int startSample = 0;
+		private int startSample;
 
-		private int currentSample = 0;
+		private int currentSample;
 
-		private int attackTimeSamples = 0;
+		private int attackTimeSamples;
 
-		private int sustainTimeSamples = 0;
+		private int sustainTimeSamples;
 
-		private int releaseTimeSamples = 0;
+		private int releaseTimeSamples;
 
-		private float gain = 0f;
+		private float gain;
 
-		private float gainPerSampleAttack = 0f;
+		private float gainPerSampleAttack;
 
-		private float gainPerSampleRelease = 0f;
+		private float gainPerSampleRelease;
 
-		private int attackEndSample = 0;
+		private int attackEndSample;
 
-		private int releaseStartSample = 0;
+		private int releaseStartSample;
 
-		private int endSample = 0;
+		private int endSample;
 
 		public bool finished => currentSample >= endSample;
 
@@ -165,24 +165,24 @@ public class EngineAudioClip : MonoBehaviour, IClientComponent
 
 	public int sampleRate = 44100;
 
-	public int samplesUntilNextGrain = 0;
+	public int samplesUntilNextGrain;
 
-	public int lastCycleId = 0;
+	public int lastCycleId;
 
 	public List<Grain> grains = new List<Grain>();
 
-	public int currentRPM = 0;
+	public int currentRPM;
 
 	public int targetRPM = 1500;
 
-	public int minRPM = 0;
+	public int minRPM;
 
-	public int maxRPM = 0;
+	public int maxRPM;
 
-	public int cyclePadding = 0;
+	public int cyclePadding;
 
 	[Range(0f, 1f)]
-	public float RPMControl = 0f;
+	public float RPMControl;
 
 	public AudioSource source;
 

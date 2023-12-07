@@ -14,9 +14,9 @@ public static class Controls
 		float num = float.Parse(GUILayout.TextField(value.ToString(format), (GUILayoutOption[])(object)new GUILayoutOption[1] { GUILayout.ExpandWidth(true) }));
 		GUILayout.EndHorizontal();
 		GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
-		num = GUILayout.HorizontalSlider(num, low, high, Array.Empty<GUILayoutOption>());
+		float result = GUILayout.HorizontalSlider(num, low, high, Array.Empty<GUILayoutOption>());
 		GUILayout.EndHorizontal();
-		return num;
+		return result;
 	}
 
 	public static int IntSlider(string strLabel, int value, int low, int high, string format = "0")
@@ -26,9 +26,9 @@ public static class Controls
 		int num = int.Parse(GUILayout.TextField(value.ToString(format), (GUILayoutOption[])(object)new GUILayoutOption[1] { GUILayout.ExpandWidth(true) }));
 		GUILayout.EndHorizontal();
 		GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
-		num = (int)GUILayout.HorizontalSlider((float)num, (float)low, (float)high, Array.Empty<GUILayoutOption>());
+		int result = (int)GUILayout.HorizontalSlider((float)num, (float)low, (float)high, Array.Empty<GUILayoutOption>());
 		GUILayout.EndHorizontal();
-		return num;
+		return result;
 	}
 
 	public static string TextArea(string strName, string value)

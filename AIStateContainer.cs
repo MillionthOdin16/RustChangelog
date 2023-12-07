@@ -33,8 +33,8 @@ public class AIStateContainer
 
 	public AIStateContainer ToProto()
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0007: Expected O, but got Unknown
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Expected O, but got Unknown
 		AIStateContainer val = new AIStateContainer();
 		val.id = ID;
 		val.state = (int)State;

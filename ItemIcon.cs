@@ -15,7 +15,7 @@ public class ItemIcon : BaseMonoBehaviour, IPointerClickHandler, IEventSystemHan
 
 	public ItemContainerSource containerSource;
 
-	public int slotOffset = 0;
+	public int slotOffset;
 
 	[Range(0f, 64f)]
 	public int slot;
@@ -66,13 +66,13 @@ public class ItemIcon : BaseMonoBehaviour, IPointerClickHandler, IEventSystemHan
 
 	public bool allowMove = true;
 
-	public bool showCountDropShadow = false;
+	public bool showCountDropShadow;
 
 	[NonSerialized]
-	public Item item = null;
+	public Item item;
 
 	[NonSerialized]
-	public bool invalidSlot = false;
+	public bool invalidSlot;
 
 	public SoundDefinition hoverSound;
 

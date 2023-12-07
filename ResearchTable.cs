@@ -17,7 +17,7 @@ public class ResearchTable : StorageContainer
 	}
 
 	[NonSerialized]
-	public float researchFinishedTime = 0f;
+	public float researchFinishedTime;
 
 	public float researchCostFraction = 1f;
 
@@ -33,7 +33,7 @@ public class ResearchTable : StorageContainer
 
 	public ItemDefinition researchResource;
 
-	private BasePlayer user = null;
+	private BasePlayer user;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -45,7 +45,7 @@ public class ResearchTable : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - DoResearch "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - DoResearch "));
 				}
 				TimeWarning val2 = TimeWarning.New("DoResearch", 0);
 				try
@@ -64,7 +64,7 @@ public class ResearchTable : StorageContainer
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -76,7 +76,7 @@ public class ResearchTable : StorageContainer
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -129,12 +129,12 @@ public class ResearchTable : StorageContainer
 
 	public int RarityMultiplier(Rarity rarity)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0003: Invalid comparison between Unknown and I4
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0002: Invalid comparison between Unknown and I4
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0009: Invalid comparison between Unknown and I4
 		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0010: Invalid comparison between Unknown and I4
-		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001d: Invalid comparison between Unknown and I4
 		if ((int)rarity == 1)
 		{
 			return 20;
@@ -152,7 +152,7 @@ public class ResearchTable : StorageContainer
 
 	public int GetBlueprintStacksize(Item sourceItem)
 	{
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
 		int result = RarityMultiplier(sourceItem.info.rarity);
 		if (sourceItem.info.category == ItemCategory.Ammunition)
 		{
@@ -161,23 +161,22 @@ public class ResearchTable : StorageContainer
 		return result;
 	}
 
-	public int ScrapForResearch(Item item)
+	public static int ScrapForResearch(Item item)
 	{
 		return ScrapForResearch(item.info);
 	}
 
-	public int ScrapForResearch(ItemDefinition info)
+	public static int ScrapForResearch(ItemDefinition info)
 	{
-		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002c: Invalid comparison between Unknown and I4
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003e: Invalid comparison between Unknown and I4
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Invalid comparison between Unknown and I4
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Invalid comparison between Unknown and I4
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Invalid comparison between Unknown and I4
+		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0047: Invalid comparison between Unknown and I4
 		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0050: Invalid comparison between Unknown and I4
-		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0062: Invalid comparison between Unknown and I4
-		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006b: Invalid comparison between Unknown and I4
 		if ((Object)(object)info.isRedirectOf != (Object)null)
 		{
 			return ScrapForResearch(info.isRedirectOf);
@@ -209,16 +208,15 @@ public class ResearchTable : StorageContainer
 
 	public static int ScrapForResearch(ItemDefinition info, ResearchType type)
 	{
-		//IL_0004: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000a: Invalid comparison between Unknown and I4
-		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001a: Invalid comparison between Unknown and I4
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002a: Invalid comparison between Unknown and I4
-		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003c: Invalid comparison between Unknown and I4
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0045: Invalid comparison between Unknown and I4
+		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0009: Invalid comparison between Unknown and I4
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0015: Invalid comparison between Unknown and I4
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Invalid comparison between Unknown and I4
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Invalid comparison between Unknown and I4
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
 		int num = 0;
 		if ((int)info.rarity == 1)
 		{
@@ -322,8 +320,8 @@ public class ResearchTable : StorageContainer
 	[RPC_Server.IsVisible(3f)]
 	public void DoResearch(RPCMessage msg)
 	{
-		//IL_00ec: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bc: Unknown result type (might be due to invalid IL or missing references)
 		if (IsResearching())
 		{
 			return;
@@ -351,12 +349,12 @@ public class ResearchTable : StorageContainer
 
 	public void ResearchAttemptFinished()
 	{
-		//IL_00f9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ff: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0106: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0134: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0139: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ce: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00db: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0103: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0108: Unknown result type (might be due to invalid IL or missing references)
 		Item targetItem = GetTargetItem();
 		Item scrapItem = GetScrapItem();
 		if (targetItem != null && scrapItem != null)

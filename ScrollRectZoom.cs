@@ -32,7 +32,7 @@ public class ScrollRectZoom : MonoBehaviour, IScrollHandler, IEventSystemHandler
 
 	public void OnScroll(PointerEventData data)
 	{
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
 		if (mouseWheelZoom)
 		{
 			SetZoom(zoom + scrollAmount * data.scrollDelta.y);
@@ -41,13 +41,13 @@ public class ScrollRectZoom : MonoBehaviour, IScrollHandler, IEventSystemHandler
 
 	public void SetZoom(float z, bool expZoom = true)
 	{
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
 		z = Mathf.Clamp(z, min, max);
 		zoom = z;
 		Vector2 normalizedPosition = scrollRect.normalizedPosition;

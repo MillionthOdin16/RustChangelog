@@ -10,8 +10,6 @@ public abstract class PostProcessEffectRenderer
 
 	public virtual DepthTextureMode GetCameraFlags()
 	{
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
 		return (DepthTextureMode)0;
 	}
 

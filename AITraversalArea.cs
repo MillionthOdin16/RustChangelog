@@ -12,11 +12,11 @@ public class AITraversalArea : TriggerBase
 
 	public Transform activeEntryPoint;
 
-	public float nextFreeTime = 0f;
+	public float nextFreeTime;
 
 	public void OnValidate()
 	{
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
 		((Bounds)(ref movementArea)).center = ((Component)this).transform.position;
 	}
 
@@ -50,10 +50,10 @@ public class AITraversalArea : TriggerBase
 
 	public Transform GetClosestEntry(Vector3 position)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
 		float num = Vector3.Distance(position, entryPoint1.position);
 		float num2 = Vector3.Distance(position, entryPoint2.position);
 		if (num < num2)
@@ -65,10 +65,10 @@ public class AITraversalArea : TriggerBase
 
 	public Transform GetFarthestEntry(Vector3 position)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
 		float num = Vector3.Distance(position, entryPoint1.position);
 		float num2 = Vector3.Distance(position, entryPoint2.position);
 		if (num > num2)
@@ -95,27 +95,27 @@ public class AITraversalArea : TriggerBase
 
 	public AITraversalWaitPoint GetEntryPointNear(Vector3 pos)
 	{
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 position = GetClosestEntry(pos).position;
 		Vector3 position2 = GetFarthestEntry(pos).position;
-		BaseEntity[] array = new BaseEntity[1];
+		_ = new BaseEntity[1];
 		AITraversalWaitPoint result = null;
 		float num = 0f;
-		AITraversalWaitPoint[] array2 = waitPoints;
-		foreach (AITraversalWaitPoint aITraversalWaitPoint in array2)
+		AITraversalWaitPoint[] array = waitPoints;
+		foreach (AITraversalWaitPoint aITraversalWaitPoint in array)
 		{
 			if (aITraversalWaitPoint.Occupied())
 			{
@@ -123,14 +123,13 @@ public class AITraversalArea : TriggerBase
 			}
 			Vector3 position3 = ((Component)aITraversalWaitPoint).transform.position;
 			float num2 = Vector3.Distance(position, position3);
-			float num3 = Vector3.Distance(position2, position3);
-			if (!(num3 < num2))
+			if (!(Vector3.Distance(position2, position3) < num2))
 			{
-				float num4 = Vector3.Distance(position3, pos);
-				float num5 = (1f - Mathf.InverseLerp(0f, 20f, num4)) * 100f;
-				if (num5 > num)
+				float num3 = Vector3.Distance(position3, pos);
+				float num4 = (1f - Mathf.InverseLerp(0f, 20f, num3)) * 100f;
+				if (num4 > num)
 				{
-					num = num5;
+					num = num4;
 					result = aITraversalWaitPoint;
 				}
 			}
@@ -140,7 +139,11 @@ public class AITraversalArea : TriggerBase
 
 	public bool EntityFilter(BaseEntity ent)
 	{
-		return ent.IsNpc && ent.isServer;
+		if (ent.IsNpc)
+		{
+			return ent.isServer;
+		}
+		return false;
 	}
 
 	internal override void OnEntityLeave(BaseEntity ent)
@@ -150,22 +153,22 @@ public class AITraversalArea : TriggerBase
 
 	public void OnDrawGizmos()
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0092: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00da: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d0: Unknown result type (might be due to invalid IL or missing references)
 		Gizmos.color = Color.magenta;
 		Gizmos.DrawCube(entryPoint1.position + Vector3.up * 0.125f, new Vector3(0.5f, 0.25f, 0.5f));
 		Gizmos.DrawCube(entryPoint2.position + Vector3.up * 0.125f, new Vector3(0.5f, 0.25f, 0.5f));
@@ -173,9 +176,9 @@ public class AITraversalArea : TriggerBase
 		Gizmos.DrawCube(((Bounds)(ref movementArea)).center, ((Bounds)(ref movementArea)).size);
 		Gizmos.color = Color.magenta;
 		AITraversalWaitPoint[] array = waitPoints;
-		foreach (AITraversalWaitPoint aITraversalWaitPoint in array)
+		for (int i = 0; i < array.Length; i++)
 		{
-			GizmosUtil.DrawCircleY(((Component)aITraversalWaitPoint).transform.position, 0.5f);
+			GizmosUtil.DrawCircleY(((Component)array[i]).transform.position, 0.5f);
 		}
 	}
 }

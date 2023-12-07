@@ -21,7 +21,7 @@ public class Underwear : ScriptableObject
 	[Tooltip("User can craft this item if they have this DLC purchased")]
 	public SteamDLCItem steamDLC;
 
-	public bool adminOnly = false;
+	public bool adminOnly;
 
 	public uint GetID()
 	{
@@ -58,16 +58,20 @@ public class Underwear : ScriptableObject
 
 	public static bool IsFemale(BasePlayer player)
 	{
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
 		ulong userID = player.userID;
-		ulong num = 4332uL;
+		long num = 4332L;
 		State state = Random.state;
-		Random.InitState((int)(num + userID));
+		Random.InitState((int)(num + (long)userID));
 		float num2 = Random.Range(0f, 1f);
 		Random.state = state;
-		return num2 > 0.5f;
+		if (!(num2 > 0.5f))
+		{
+			return false;
+		}
+		return true;
 	}
 
 	public static bool Validate(Underwear underwear, BasePlayer player)
@@ -84,12 +88,12 @@ public class Underwear : ScriptableObject
 		{
 			return false;
 		}
-		bool flag = (Object)(object)underwear.steamItem == (Object)null || player.blueprints.steamInventory.HasItem(underwear.steamItem.id);
-		bool flag2 = false;
+		bool num = (Object)(object)underwear.steamItem == (Object)null || player.blueprints.steamInventory.HasItem(underwear.steamItem.id);
+		bool flag = false;
 		if (player.isServer && ((Object)(object)underwear.steamDLC == (Object)null || underwear.steamDLC.HasLicense(player.userID)))
 		{
-			flag2 = true;
+			flag = true;
 		}
-		return flag && flag2;
+		return num && flag;
 	}
 }

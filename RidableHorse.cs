@@ -50,9 +50,9 @@ public class RidableHorse : BaseRidableAnimal
 
 	public const Flags Flag_HasDoubleSaddle = Flags.Reserved10;
 
-	private float equipmentSpeedMod = 0f;
+	private float equipmentSpeedMod;
 
-	private int numStorageSlots = 0;
+	private int numStorageSlots;
 
 	private int prevBreed;
 
@@ -64,11 +64,11 @@ public class RidableHorse : BaseRidableAnimal
 
 	private HitchTrough currentHitch;
 
-	private float totalDistance = 0f;
+	private float totalDistance;
 
-	private float kmDistance = 0f;
+	private float kmDistance;
 
-	private float tempDistanceTravelled = 0f;
+	private float tempDistanceTravelled;
 
 	private int numEquipmentSlots = 4;
 
@@ -86,7 +86,7 @@ public class RidableHorse : BaseRidableAnimal
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_ReqSwapSaddleType "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_ReqSwapSaddleType "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_ReqSwapSaddleType", 0);
 				try
@@ -105,7 +105,7 @@ public class RidableHorse : BaseRidableAnimal
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -117,7 +117,7 @@ public class RidableHorse : BaseRidableAnimal
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -152,12 +152,10 @@ public class RidableHorse : BaseRidableAnimal
 			if (index >= breeds.Length || index < 0)
 			{
 				Debug.LogError((object)("ApplyBreed issue! index is " + index + " breed length is : " + breeds.Length));
+				return;
 			}
-			else
-			{
-				ApplyBreedInternal(breeds[index]);
-				currentBreed = index;
-			}
+			ApplyBreedInternal(breeds[index]);
+			currentBreed = index;
 		}
 	}
 
@@ -211,18 +209,18 @@ public class RidableHorse : BaseRidableAnimal
 
 	public override bool IsStandCollisionClear()
 	{
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0105: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0114: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0102: Unknown result type (might be due to invalid IL or missing references)
 		List<Collider> list = Pool.GetList<Collider>();
 		bool flag = false;
 		if (HasSingleSaddle())
@@ -393,8 +391,7 @@ public class RidableHorse : BaseRidableAnimal
 				ItemModConsumable component = ((Component)foodItem.info).GetComponent<ItemModConsumable>();
 				if (Object.op_Implicit((Object)(object)component))
 				{
-					float ifType = component.GetIfType(MetabolismAttribute.Type.Calories);
-					float amount = ifType * currentHitch.caloriesToDecaySeconds;
+					float amount = component.GetIfType(MetabolismAttribute.Type.Calories) * currentHitch.caloriesToDecaySeconds;
 					AddDecayDelay(amount);
 					ReplenishFromFood(component);
 					foodItem.UseItem();
@@ -416,24 +413,20 @@ public class RidableHorse : BaseRidableAnimal
 
 	public void TryHitch()
 	{
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0093: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
 		List<HitchTrough> list = Pool.GetList<HitchTrough>();
 		Vis.Entities(((Component)this).transform.position, 2.5f, list, 256, (QueryTriggerInteraction)1);
 		foreach (HitchTrough item in list)
 		{
-			Vector3 val = Vector3Ex.Direction2D(((Component)item).transform.position, ((Component)this).transform.position);
-			if (Vector3.Dot(val, ((Component)this).transform.forward) < 0.4f || item.isClient || !item.HasSpace() || !item.ValidHitchPosition(((Component)this).transform.position) || !item.AttemptToHitch(this))
+			if (!(Vector3.Dot(Vector3Ex.Direction2D(((Component)item).transform.position, ((Component)this).transform.position), ((Component)this).transform.forward) < 0.4f) && !item.isClient && item.HasSpace() && item.ValidHitchPosition(((Component)this).transform.position) && item.AttemptToHitch(this))
 			{
-				continue;
+				break;
 			}
-			break;
 		}
 		Pool.FreeList<HitchTrough>(ref list);
 	}
@@ -523,7 +516,10 @@ public class RidableHorse : BaseRidableAnimal
 					ItemModAnimalEquipment component2 = ((Component)slot.info).GetComponent<ItemModAnimalEquipment>();
 					if (!((Object)(object)component2 == (Object)null) && component2.slot == component.slot)
 					{
-						Debug.Log((object)("rejecting because slot same, found : " + (int)component2.slot + " new : " + (int)component.slot));
+						int slot2 = (int)component2.slot;
+						string text = slot2.ToString();
+						slot2 = (int)component.slot;
+						Debug.Log((object)("rejecting because slot same, found : " + text + " new : " + slot2));
 						return false;
 					}
 				}
@@ -539,15 +535,15 @@ public class RidableHorse : BaseRidableAnimal
 
 	public void EquipmentUpdate()
 	{
-		//IL_01a3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ad: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01bc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01cd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01d3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0163: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0168: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0177: Unknown result type (might be due to invalid IL or missing references)
+		//IL_017c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0181: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0188: Unknown result type (might be due to invalid IL or missing references)
+		//IL_018e: Unknown result type (might be due to invalid IL or missing references)
 		SetFlag(Flags.Reserved4, b: false, recursive: false, networkupdate: false);
 		SetFlag(Flags.Reserved5, b: false, recursive: false, networkupdate: false);
 		SetFlag(Flags.Reserved6, b: false, recursive: false, networkupdate: false);
@@ -616,14 +612,14 @@ public class RidableHorse : BaseRidableAnimal
 
 	public override void DoNetworkUpdate()
 	{
-		bool flag = false || prevStamina != staminaSeconds || prevMaxStamina != currentMaxStaminaSeconds || prevBreed != currentBreed || prevSlots != numStorageSlots || prevRunState != (int)currentRunState || prevMaxSpeed != GetRunSpeed();
+		bool num = false || prevStamina != staminaSeconds || prevMaxStamina != currentMaxStaminaSeconds || prevBreed != currentBreed || prevSlots != numStorageSlots || prevRunState != (int)currentRunState || prevMaxSpeed != GetRunSpeed();
 		prevStamina = staminaSeconds;
 		prevMaxStamina = currentMaxStaminaSeconds;
 		prevRunState = (int)currentRunState;
 		prevMaxSpeed = GetRunSpeed();
 		prevBreed = currentBreed;
 		prevSlots = numStorageSlots;
-		if (flag)
+		if (num)
 		{
 			SendNetworkUpdate();
 		}
@@ -649,7 +645,11 @@ public class RidableHorse : BaseRidableAnimal
 
 	public bool HasSaddle()
 	{
-		return HasSingleSaddle() || HasDoubleSaddle();
+		if (!HasSingleSaddle())
+		{
+			return HasDoubleSaddle();
+		}
+		return true;
 	}
 
 	public bool HasSingleSaddle()
@@ -757,11 +757,11 @@ public class RidableHorse : BaseRidableAnimal
 	[ServerVar]
 	public static void setHorseBreed(Arg arg)
 	{
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer basePlayer = arg.Player();
 		if ((Object)(object)basePlayer == (Object)null)
 		{

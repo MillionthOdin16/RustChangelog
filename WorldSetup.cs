@@ -5,11 +5,10 @@ using ConVar;
 using Rust;
 using UnityEngine;
 using UnityEngine.Networking;
-using UnityEngine.Profiling;
 
 public class WorldSetup : SingletonComponent<WorldSetup>
 {
-	public bool AutomaticallySetup = false;
+	public bool AutomaticallySetup;
 
 	public GameObject terrain;
 
@@ -21,13 +20,18 @@ public class WorldSetup : SingletonComponent<WorldSetup>
 
 	private TerrainMeta terrainMeta;
 
-	public uint EditorSeed = 0u;
+	public uint EditorSeed;
 
-	public uint EditorSalt = 0u;
+	public uint EditorSalt;
 
-	public uint EditorSize = 0u;
+	public uint EditorSize;
 
 	public string EditorUrl = string.Empty;
+
+	public string EditorConfigFile = string.Empty;
+
+	[TextArea]
+	public string EditorConfigString = string.Empty;
 
 	internal List<ProceduralObject> ProceduralObjects = new List<ProceduralObject>();
 
@@ -47,51 +51,45 @@ public class WorldSetup : SingletonComponent<WorldSetup>
 
 	protected override void Awake()
 	{
-		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0192: Unknown result type (might be due to invalid IL or missing references)
-		//IL_019c: Expected O, but got Unknown
-		//IL_0154: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0127: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0131: Expected O, but got Unknown
+		//IL_00ef: Unknown result type (might be due to invalid IL or missing references)
 		((SingletonComponent)this).Awake();
-		Prefab[] array = Prefab.Load("assets/bundled/prefabs/world");
+		Prefab[] array = Prefab.Load("assets/bundled/prefabs/world", null, null, useProbabilities: false, useWorldConfig: false);
 		foreach (Prefab prefab in array)
 		{
-			Profiler.BeginSample("WorldSetup - " + prefab.Name);
 			if ((Object)(object)prefab.Object.GetComponent<BaseEntity>() != (Object)null)
 			{
-				BaseEntity baseEntity = prefab.SpawnEntity(Vector3.zero, Quaternion.identity);
-				baseEntity.Spawn();
+				prefab.SpawnEntity(Vector3.zero, Quaternion.identity).Spawn();
 			}
 			else
 			{
 				prefab.Spawn(Vector3.zero, Quaternion.identity);
 			}
-			Profiler.EndSample();
 		}
 		SingletonComponent[] array2 = Object.FindObjectsOfType<SingletonComponent>();
-		foreach (SingletonComponent val in array2)
+		for (int i = 0; i < array2.Length; i++)
 		{
-			val.SingletonSetup();
+			array2[i].SingletonSetup();
 		}
 		if (Object.op_Implicit((Object)(object)terrain))
 		{
-			TerrainGenerator component = terrain.GetComponent<TerrainGenerator>();
-			if (Object.op_Implicit((Object)(object)component))
+			if (Object.op_Implicit((Object)(object)terrain.GetComponent<TerrainGenerator>()))
 			{
 				World.Procedural = true;
 			}
 			else
 			{
 				World.Procedural = false;
-				Profiler.BeginSample("TerrainMeta.Setup");
 				terrainMeta = terrain.GetComponent<TerrainMeta>();
 				terrainMeta.Init();
 				terrainMeta.SetupComponents();
 				terrainMeta.BindShaderProperties();
 				terrainMeta.PostSetupComponents();
-				Profiler.EndSample();
 				World.InitSize(Mathf.RoundToInt(TerrainMeta.Size.x));
 				CreateObject(decorPrefab);
 				CreateObject(grassPrefab);
@@ -101,6 +99,14 @@ public class WorldSetup : SingletonComponent<WorldSetup>
 		World.Serialization = new WorldSerialization();
 		World.Cached = false;
 		World.CleanupOldFiles();
+		if (!string.IsNullOrEmpty(EditorConfigString))
+		{
+			ConVar.World.configString = EditorConfigString;
+		}
+		if (!string.IsNullOrEmpty(EditorConfigFile))
+		{
+			ConVar.World.configFile = EditorConfigFile;
+		}
 		if (AutomaticallySetup)
 		{
 			((MonoBehaviour)this).StartCoroutine(InitCoroutine());
@@ -128,6 +134,18 @@ public class WorldSetup : SingletonComponent<WorldSetup>
 		else
 		{
 			Debug.Log((object)("Generating procedural map of size " + World.Size + " with seed " + World.Seed));
+		}
+		World.Config = new WorldConfig();
+		if (!string.IsNullOrEmpty(ConVar.World.configString))
+		{
+			Debug.Log((object)"Loading custom world config from world.configstring convar");
+			World.Config.LoadFromJsonString(ConVar.World.configString);
+		}
+		else if (!string.IsNullOrEmpty(ConVar.World.configFile))
+		{
+			string text = ConVar.Server.rootFolder + "/" + ConVar.World.configFile;
+			Debug.Log((object)("Loading custom world config from world.configfile convar: " + text));
+			World.Config.LoadFromJsonFile(text);
 		}
 		ProceduralComponent[] components = ((Component)this).GetComponentsInChildren<ProceduralComponent>(true);
 		Timing downloadTimer = Timing.Start("Downloading World");
@@ -186,24 +204,22 @@ public class WorldSetup : SingletonComponent<WorldSetup>
 		}
 		if (Object.op_Implicit((Object)(object)terrain))
 		{
-			TerrainGenerator terrainGenerator = terrain.GetComponent<TerrainGenerator>();
-			if (Object.op_Implicit((Object)(object)terrainGenerator))
+			TerrainGenerator component2 = terrain.GetComponent<TerrainGenerator>();
+			if (Object.op_Implicit((Object)(object)component2))
 			{
 				if (World.Cached)
 				{
-					int heightmapResolution = World.GetCachedHeightMapResolution();
-					int alphamapResolution = World.GetCachedSplatMapResolution();
-					terrain = terrainGenerator.CreateTerrain(heightmapResolution, alphamapResolution);
+					int cachedHeightMapResolution = World.GetCachedHeightMapResolution();
+					int cachedSplatMapResolution = World.GetCachedSplatMapResolution();
+					terrain = component2.CreateTerrain(cachedHeightMapResolution, cachedSplatMapResolution);
 				}
 				else
 				{
-					terrain = terrainGenerator.CreateTerrain();
+					terrain = component2.CreateTerrain();
 				}
-				Profiler.BeginSample("TerrainMeta.Setup");
 				terrainMeta = terrain.GetComponent<TerrainMeta>();
 				terrainMeta.Init();
 				terrainMeta.SetupComponents();
-				Profiler.EndSample();
 				CreateObject(decorPrefab);
 				CreateObject(grassPrefab);
 				CreateObject(spawnPrefab);
@@ -239,6 +255,16 @@ public class WorldSetup : SingletonComponent<WorldSetup>
 			TerrainMeta.Path.Powerlines.AddRange(World.GetPaths("Powerline"));
 			TerrainMeta.Path.Rails.AddRange(World.GetPaths("Rail"));
 		}
+		if ((Object)(object)TerrainMeta.Path != (Object)null)
+		{
+			foreach (DungeonBaseLink dungeonBaseLink in TerrainMeta.Path.DungeonBaseLinks)
+			{
+				if ((Object)(object)dungeonBaseLink != (Object)null)
+				{
+					dungeonBaseLink.Initialize();
+				}
+			}
+		}
 		spawnTimer.End();
 		Timing procgenTimer = Timing.Start("Processing World");
 		if (components.Length != 0)
@@ -253,12 +279,12 @@ public class WorldSetup : SingletonComponent<WorldSetup>
 					yield return CoroutineEx.waitForEndOfFrame;
 					yield return CoroutineEx.waitForEndOfFrame;
 					yield return CoroutineEx.waitForEndOfFrame;
-					Timing timer = Timing.Start(component.Description);
+					Timing timing = Timing.Start(component.Description);
 					if (Object.op_Implicit((Object)(object)component))
 					{
 						component.Process(seed);
 					}
-					timer.End();
+					timing.End();
 				}
 			}
 		}
@@ -323,12 +349,11 @@ public class WorldSetup : SingletonComponent<WorldSetup>
 		yield return CoroutineEx.waitForEndOfFrame;
 		yield return CoroutineEx.waitForEndOfFrame;
 		yield return CoroutineEx.waitForEndOfFrame;
-		List<string> invalidAssets = FileSystem.Backend.UnloadBundles("monuments");
-		foreach (string assetName in invalidAssets)
+		foreach (string item in FileSystem.Backend.UnloadBundles("monuments"))
 		{
-			GameManager.server.preProcessed.Invalidate(assetName);
-			GameManifest.Invalidate(assetName);
-			PrefabAttribute.server.Invalidate(StringPool.Get(assetName));
+			GameManager.server.preProcessed.Invalidate(item);
+			GameManifest.Invalidate(item);
+			PrefabAttribute.server.Invalidate(StringPool.Get(item));
 		}
 		Resources.UnloadUnusedAssets();
 		cleaningTimer.End();

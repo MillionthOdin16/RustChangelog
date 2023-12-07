@@ -26,16 +26,16 @@ public class Entity : ConsoleSystem
 
 		public EntityInfo(BaseNetworkable src)
 		{
-			//IL_0045: Unknown result type (might be due to invalid IL or missing references)
-			//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-			//IL_005e: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0059: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00c9: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00ba: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00ce: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00e2: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00e7: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+			//IL_004a: Unknown result type (might be due to invalid IL or missing references)
+			//IL_005d: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0058: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00c8: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00b9: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00cd: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00e1: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00e6: Unknown result type (might be due to invalid IL or missing references)
 			entity = src;
 			BaseEntity baseEntity = entity as BaseEntity;
 			BaseEntity baseEntity2 = (((Object)(object)baseEntity != (Object)null) ? baseEntity.GetParentEntity() : null);
@@ -94,20 +94,22 @@ public class Entity : ConsoleSystem
 
 	private static TextTable GetEntityTable(Func<EntityInfo, bool> filter)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0007: Expected O, but got Unknown
-		//IL_0135: Unknown result type (might be due to invalid IL or missing references)
-		//IL_013a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0157: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0179: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0182: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0187: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ad: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Expected O, but got Unknown
+		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0089: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0119: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0140: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0162: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0166: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0188: Unknown result type (might be due to invalid IL or missing references)
+		//IL_018d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0191: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0196: Unknown result type (might be due to invalid IL or missing references)
 		TextTable val = new TextTable();
 		val.AddColumn("realm");
 		val.AddColumn("entity");
@@ -120,44 +122,53 @@ public class Entity : ConsoleSystem
 		val.AddColumn("local");
 		val.AddColumn("status");
 		val.AddColumn("invokes");
-		foreach (BaseNetworkable serverEntity in BaseNetworkable.serverEntities)
+		Enumerator<BaseNetworkable> enumerator = BaseNetworkable.serverEntities.GetEnumerator();
+		try
 		{
-			if (!((Object)(object)serverEntity == (Object)null))
+			while (enumerator.MoveNext())
 			{
-				EntityInfo arg = new EntityInfo(serverEntity);
-				if (filter(arg))
+				BaseNetworkable current = enumerator.Current;
+				if (!((Object)(object)current == (Object)null))
 				{
-					string[] obj = new string[11]
+					EntityInfo arg = new EntityInfo(current);
+					if (filter(arg))
 					{
-						"sv",
-						arg.entityID.Value.ToString(),
-						arg.groupID.ToString(),
-						arg.parentID.Value.ToString(),
-						arg.entity.ShortPrefabName,
-						null,
-						null,
-						null,
-						null,
-						null,
-						null
-					};
-					Vector3 val2 = ((Component)arg.entity).transform.position;
-					obj[5] = ((object)(Vector3)(ref val2)).ToString();
-					val2 = ((Component)arg.entity).transform.localPosition;
-					obj[6] = ((object)(Vector3)(ref val2)).ToString();
-					Quaternion val3 = ((Component)arg.entity).transform.rotation;
-					val2 = ((Quaternion)(ref val3)).eulerAngles;
-					obj[7] = ((object)(Vector3)(ref val2)).ToString();
-					val3 = ((Component)arg.entity).transform.localRotation;
-					val2 = ((Quaternion)(ref val3)).eulerAngles;
-					obj[8] = ((object)(Vector3)(ref val2)).ToString();
-					obj[9] = arg.status;
-					obj[10] = arg.entity.InvokeString();
-					val.AddRow(obj);
+						string[] obj = new string[11]
+						{
+							"sv",
+							arg.entityID.Value.ToString(),
+							arg.groupID.ToString(),
+							arg.parentID.Value.ToString(),
+							arg.entity.ShortPrefabName,
+							null,
+							null,
+							null,
+							null,
+							null,
+							null
+						};
+						Vector3 val2 = ((Component)arg.entity).transform.position;
+						obj[5] = ((object)(Vector3)(ref val2)).ToString();
+						val2 = ((Component)arg.entity).transform.localPosition;
+						obj[6] = ((object)(Vector3)(ref val2)).ToString();
+						Quaternion val3 = ((Component)arg.entity).transform.rotation;
+						val2 = ((Quaternion)(ref val3)).eulerAngles;
+						obj[7] = ((object)(Vector3)(ref val2)).ToString();
+						val3 = ((Component)arg.entity).transform.localRotation;
+						val2 = ((Quaternion)(ref val3)).eulerAngles;
+						obj[8] = ((object)(Vector3)(ref val2)).ToString();
+						obj[9] = arg.status;
+						obj[10] = arg.entity.InvokeString();
+						val.AddRow(obj);
+					}
 				}
 			}
+			return val;
 		}
-		return val;
+		finally
+		{
+			((IDisposable)enumerator).Dispose();
+		}
 	}
 
 	[ServerVar]
@@ -173,10 +184,10 @@ public class Entity : ConsoleSystem
 	[ClientVar]
 	public static void find_id(Arg args)
 	{
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
 		NetworkableId filter = args.GetEntityID(0);
 		TextTable entityTable = GetEntityTable((EntityInfo info) => info.entityID == filter);
 		args.ReplyWith(((object)entityTable).ToString());
@@ -195,10 +206,10 @@ public class Entity : ConsoleSystem
 	[ClientVar]
 	public static void find_parent(Arg args)
 	{
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
 		NetworkableId filter = args.GetEntityID(0);
 		TextTable entityTable = GetEntityTable((EntityInfo info) => info.parentID == filter);
 		args.ReplyWith(((object)entityTable).ToString());
@@ -230,8 +241,8 @@ public class Entity : ConsoleSystem
 	[ClientVar]
 	public static void find_self(Arg args)
 	{
-		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer basePlayer = args.Player();
 		if (!((Object)(object)basePlayer == (Object)null) && basePlayer.net != null)
 		{
@@ -244,13 +255,15 @@ public class Entity : ConsoleSystem
 	[ServerVar]
 	public static void debug_toggle(Arg args)
 	{
-		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0004: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
-		NetworkableId entityID = args.GetEntityID(0);
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		NetworkableId def = default(NetworkableId);
+		NetworkableId entityID = args.GetEntityID(0, def);
 		if (!((NetworkableId)(ref entityID)).IsValid)
 		{
 			return;
@@ -263,18 +276,19 @@ public class Entity : ConsoleSystem
 			{
 				baseEntity.OnDebugStart();
 			}
-			args.ReplyWith(string.Concat("Debugging for ", baseEntity.net.ID, " ", baseEntity.IsDebugging() ? "enabled" : "disabled"));
+			def = baseEntity.net.ID;
+			args.ReplyWith("Debugging for " + ((object)(NetworkableId)(ref def)).ToString() + " " + (baseEntity.IsDebugging() ? "enabled" : "disabled"));
 		}
 	}
 
 	[ServerVar]
 	public static void nudge(Arg args)
 	{
-		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0004: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
 		NetworkableId entityID = args.GetEntityID(0);
 		if (((NetworkableId)(ref entityID)).IsValid)
 		{
@@ -323,17 +337,18 @@ public class Entity : ConsoleSystem
 	[ServerVar(Name = "spawn")]
 	public static string svspawn(string name, Vector3 pos, Vector3 dir)
 	{
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ee: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ca: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cb: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer arg = ConsoleSystem.CurrentArgs.Player();
 		EntitySpawnRequest spawnEntityFromName = GetSpawnEntityFromName(name);
 		if (!spawnEntityFromName.Valid)
@@ -354,17 +369,20 @@ public class Entity : ConsoleSystem
 		}
 		baseEntity.Spawn();
 		Debug.Log((object)$"{arg} spawned \"{baseEntity}\" at {pos}");
-		return string.Concat("spawned ", baseEntity, " at ", pos);
+		string obj = ((object)baseEntity)?.ToString();
+		Vector3 val2 = pos;
+		return "spawned " + obj + " at " + ((object)(Vector3)(ref val2)).ToString();
 	}
 
 	[ServerVar(Name = "spawnitem")]
 	public static string svspawnitem(string name, Vector3 pos)
 	{
-		//IL_013f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0142: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0148: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0188: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0100: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0103: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0109: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0143: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0144: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer arg = ConsoleSystem.CurrentArgs.Player();
 		if (string.IsNullOrEmpty(name))
 		{
@@ -396,26 +414,28 @@ public class Entity : ConsoleSystem
 		}
 		BaseEntity arg2 = item.CreateWorldObject(pos);
 		Debug.Log((object)$"{arg} spawned \"{arg2}\" at {pos} (via spawnitem)");
-		return string.Concat("spawned ", item, " at ", pos);
+		string obj = item?.ToString();
+		Vector3 val = pos;
+		return "spawned " + obj + " at " + ((object)(Vector3)(ref val)).ToString();
 	}
 
 	[ServerVar(Name = "spawngrid")]
 	public static string svspawngrid(string name, int width = 5, int height = 5, int spacing = 5)
 	{
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ba: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer basePlayer = ConsoleSystem.CurrentArgs.Player();
 		EntitySpawnRequest spawnEntityFromName = GetSpawnEntityFromName(name);
 		if (!spawnEntityFromName.Valid)
@@ -446,13 +466,13 @@ public class Entity : ConsoleSystem
 	[ServerVar]
 	public static void spawnlootfrom(Arg args)
 	{
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer basePlayer = args.Player();
 		string @string = args.GetString(0, string.Empty);
 		int @int = args.GetInt(1, 1);
@@ -481,12 +501,11 @@ public class Entity : ConsoleSystem
 
 	public static int DeleteBy(ulong id)
 	{
-		int num = 0;
 		List<ulong> list = Pool.GetList<ulong>();
 		list.Add(id);
-		num = DeleteBy(list);
+		int result = DeleteBy(list);
 		Pool.FreeList<ulong>(ref list);
-		return num;
+		return result;
 	}
 
 	[ServerVar(Help = "Destroy all entities created by provided users (separate users by space)")]
@@ -496,46 +515,56 @@ public class Entity : ConsoleSystem
 		{
 			return 0;
 		}
-		int num = 0;
 		List<ulong> list = Pool.GetList<ulong>();
 		string[] args = arg.Args;
-		foreach (string s in args)
+		for (int i = 0; i < args.Length; i++)
 		{
-			if (ulong.TryParse(s, out var result))
+			if (ulong.TryParse(args[i], out var result))
 			{
 				list.Add(result);
 			}
 		}
-		num = DeleteBy(list);
+		int result2 = DeleteBy(list);
 		Pool.FreeList<ulong>(ref list);
-		return num;
+		return result2;
 	}
 
 	private static int DeleteBy(List<ulong> ids)
 	{
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
 		int num = 0;
-		foreach (BaseEntity serverEntity in BaseNetworkable.serverEntities)
+		Enumerator<BaseNetworkable> enumerator = BaseNetworkable.serverEntities.GetEnumerator();
+		try
 		{
-			if ((Object)(object)serverEntity == (Object)null)
+			while (enumerator.MoveNext())
 			{
-				continue;
-			}
-			bool flag = false;
-			foreach (ulong id in ids)
-			{
-				if (serverEntity.OwnerID == id)
+				BaseEntity baseEntity = (BaseEntity)enumerator.Current;
+				if ((Object)(object)baseEntity == (Object)null)
 				{
-					flag = true;
-					break;
+					continue;
+				}
+				bool flag = false;
+				foreach (ulong id in ids)
+				{
+					if (baseEntity.OwnerID == id)
+					{
+						flag = true;
+						break;
+					}
+				}
+				if (flag)
+				{
+					((FacepunchBehaviour)baseEntity).Invoke((Action)baseEntity.KillMessage, (float)num * 0.2f);
+					num++;
 				}
 			}
-			if (flag)
-			{
-				((FacepunchBehaviour)serverEntity).Invoke((Action)serverEntity.KillMessage, (float)num * 0.2f);
-				num++;
-			}
+			return num;
 		}
-		return num;
+		finally
+		{
+			((IDisposable)enumerator).Dispose();
+		}
 	}
 
 	[ServerVar(Help = "Destroy all entities created by users in the provided text block (can use with copied results from ent auth)")]
@@ -546,8 +575,7 @@ public class Entity : ConsoleSystem
 			arg.ReplyWith("Invalid arguments, provide a text block surrounded by \" and listing player id's at the start of each line");
 			return;
 		}
-		string @string = arg.GetString(0, "");
-		MatchCollection matchCollection = Regex.Matches(@string, "^\\b\\d{17}", RegexOptions.Multiline);
+		MatchCollection matchCollection = Regex.Matches(arg.GetString(0, ""), "^\\b\\d{17}", RegexOptions.Multiline);
 		List<ulong> list = Pool.GetList<ulong>();
 		foreach (Match item in matchCollection)
 		{

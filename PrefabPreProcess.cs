@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ConVar;
 using Facepunch;
 using Rust.UI;
 using UnityEngine;
@@ -138,16 +139,18 @@ public class PrefabPreProcess : IPrefabProcessor
 
 	public void ProcessObject(string name, GameObject go, bool resetLocalTransform = true)
 	{
-		//IL_0184: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0187: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0189: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0151: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0162: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ac: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01bb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ca: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0165: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0168: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0136: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0146: Unknown result type (might be due to invalid IL or missing references)
+		//IL_018c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0191: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0196: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019b: Unknown result type (might be due to invalid IL or missing references)
+		StringPool.Get(name);
+		bool flag = go.GetComponent<StripEmptyChildren>() != null && Render.IsInstancingEnabled;
 		if (!isClientside)
 		{
 			Type[] array = clientsideOnlyTypes;
@@ -162,8 +165,8 @@ public class PrefabPreProcess : IPrefabProcessor
 		}
 		if (!isServerside)
 		{
-			Type[] array2 = serversideOnlyTypes;
-			foreach (Type t2 in array2)
+			Type[] array = serversideOnlyTypes;
+			foreach (Type t2 in array)
 			{
 				DestroyComponents(t2, go, isClientside, isServerside);
 			}
@@ -207,11 +210,15 @@ public class PrefabPreProcess : IPrefabProcessor
 			}
 			if (isClientside)
 			{
-				bool flag = ((Component)item5).gameObject.CompareTag("Client Cull");
+				bool num = ((Component)item5).gameObject.CompareTag("Client Cull");
 				bool flag2 = (Object)(object)item5 != (Object)(object)go.transform && (Object)(object)((Component)item5).gameObject.GetComponent<BaseEntity>() != (Object)null;
-				if (flag || flag2)
+				if (num || flag2)
 				{
 					RemoveComponents(((Component)item5).gameObject);
+					NominateForDeletion(((Component)item5).gameObject);
+				}
+				else if (flag)
+				{
 					NominateForDeletion(((Component)item5).gameObject);
 				}
 			}
@@ -300,8 +307,8 @@ public class PrefabPreProcess : IPrefabProcessor
 
 	private bool HasComponents<T>(Transform transform)
 	{
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002d: Expected O, but got Unknown
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0024: Expected O, but got Unknown
 		if (((Component)transform).GetComponent<T>() != null)
 		{
 			return true;
@@ -319,8 +326,8 @@ public class PrefabPreProcess : IPrefabProcessor
 
 	private bool HasComponents(Transform transform, Type t)
 	{
-		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002c: Expected O, but got Unknown
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Expected O, but got Unknown
 		if ((Object)(object)((Component)transform).GetComponent(t) != (Object)null)
 		{
 			return true;
@@ -345,8 +352,8 @@ public class PrefabPreProcess : IPrefabProcessor
 
 	public void FindComponents<T>(Transform transform, List<T> list)
 	{
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0024: Expected O, but got Unknown
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Expected O, but got Unknown
 		list.AddRange(((Component)transform).GetComponents<T>());
 		foreach (Transform item in transform)
 		{
@@ -367,8 +374,8 @@ public class PrefabPreProcess : IPrefabProcessor
 
 	public void FindComponents(Transform transform, List<Component> list, Type t)
 	{
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0025: Expected O, but got Unknown
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0022: Expected O, but got Unknown
 		list.AddRange(((Component)transform).GetComponents(t));
 		foreach (Transform item in transform)
 		{

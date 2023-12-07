@@ -11,11 +11,11 @@ public class SlidingProgressDoor : ProgressDoor
 
 	public GameObject doorObject;
 
-	public TriggerVehiclePush vehiclePhysBox = null;
+	public TriggerVehiclePush vehiclePhysBox;
 
-	private float lastEnergyTime = 0f;
+	private float lastEnergyTime;
 
-	private float lastServerUpdateTime = 0f;
+	private float lastServerUpdateTime;
 
 	public override void Spawn()
 	{
@@ -81,15 +81,15 @@ public class SlidingProgressDoor : ProgressDoor
 
 	public override void UpdateProgress()
 	{
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 localPosition = doorObject.transform.localPosition;
 		float num = storedEnergy / energyForOpen;
 		Vector3 val = Vector3.Lerp(closedPosition, openPosition, num);
@@ -108,9 +108,7 @@ public class SlidingProgressDoor : ProgressDoor
 	public override void Load(LoadInfo info)
 	{
 		base.Load(info);
-		if (info.msg.sphereEntity != null)
-		{
-		}
+		_ = info.msg.sphereEntity;
 	}
 
 	public override void Save(SaveInfo info)

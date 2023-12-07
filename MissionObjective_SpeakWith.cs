@@ -9,8 +9,8 @@ public class MissionObjective_SpeakWith : MissionObjective
 
 	public override void ObjectiveStarted(BasePlayer playerFor, int index, BaseMission.MissionInstance instance)
 	{
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
 		BaseEntity baseEntity = instance.ProviderEntity();
 		if (Object.op_Implicit((Object)(object)baseEntity))
 		{
@@ -22,8 +22,8 @@ public class MissionObjective_SpeakWith : MissionObjective
 
 	public override void ProcessMissionEvent(BasePlayer playerFor, BaseMission.MissionInstance instance, int index, BaseMission.MissionEventType type, string identifier, float amount)
 	{
-		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
 		if (IsCompleted(index, instance) || !CanProgress(index, instance))
 		{
 			return;
@@ -50,8 +50,8 @@ public class MissionObjective_SpeakWith : MissionObjective
 						}
 						if (flag && destroyReturnItems)
 						{
-							ItemAmount[] array2 = requiredReturnItems;
-							foreach (ItemAmount itemAmount2 in array2)
+							array = requiredReturnItems;
+							foreach (ItemAmount itemAmount2 in array)
 							{
 								playerFor.inventory.Take(null, itemAmount2.itemDef.itemid, (int)itemAmount2.amount);
 							}

@@ -27,7 +27,7 @@ public class SprayCanSpray : DecayEntity, ISplashable
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_RequestWaterClear "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_RequestWaterClear "));
 				}
 				TimeWarning val2 = TimeWarning.New("Server_RequestWaterClear", 0);
 				try
@@ -92,7 +92,7 @@ public class SprayCanSpray : DecayEntity, ISplashable
 		base.OnDeployed(parent, deployedBy, fromItem);
 		sprayTimestamp = DateTime.Now;
 		sprayedByPlayer = deployedBy.userID;
-		if (Global.MaxSpraysPerPlayer > 0 && sprayedByPlayer != 0)
+		if (Global.MaxSpraysPerPlayer > 0 && sprayedByPlayer != 0L)
 		{
 			int num = -1;
 			DateTime now = DateTime.Now;
@@ -152,7 +152,7 @@ public class SprayCanSpray : DecayEntity, ISplashable
 
 	private void RainCheck()
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
 		if (Climate.GetRain(((Component)this).transform.position) > 0f && IsOutside())
 		{
 			Kill();
@@ -185,6 +185,10 @@ public class SprayCanSpray : DecayEntity, ISplashable
 
 	private bool Menu_WaterClear_ShowIf(BasePlayer player)
 	{
-		return (Object)(object)player.GetHeldEntity() != (Object)null && player.GetHeldEntity() is BaseLiquidVessel baseLiquidVessel && baseLiquidVessel.AmountHeld() > 0;
+		if ((Object)(object)player.GetHeldEntity() != (Object)null && player.GetHeldEntity() is BaseLiquidVessel baseLiquidVessel)
+		{
+			return baseLiquidVessel.AmountHeld() > 0;
+		}
+		return false;
 	}
 }

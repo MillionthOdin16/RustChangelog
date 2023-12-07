@@ -16,11 +16,11 @@ public class AudioVisualisationEntityLight : AudioVisualisationEntity
 		public Color EmissionColour;
 	}
 
-	public Light TargetLight = null;
+	public Light TargetLight;
 
-	public Light SecondaryLight = null;
+	public Light SecondaryLight;
 
-	public MeshRenderer[] TargetRenderer = null;
+	public MeshRenderer[] TargetRenderer;
 
 	public LightColourSet RedColour;
 

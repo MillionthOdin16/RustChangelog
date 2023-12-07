@@ -8,14 +8,14 @@ public class BaseCommandBuffer : MonoBehaviour
 
 	protected CommandBuffer GetCommandBuffer(string name, Camera camera, CameraEvent cameraEvent)
 	{
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0035: Expected I4, but got Unknown
-		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004b: Expected O, but got Unknown
-		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005b: Expected I4, but got Unknown
-		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Expected I4, but got Unknown
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003c: Expected O, but got Unknown
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004b: Expected I4, but got Unknown
+		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
 		if (!cameras.TryGetValue(camera, out var value))
 		{
 			value = new Dictionary<int, CommandBuffer>();
@@ -38,11 +38,10 @@ public class BaseCommandBuffer : MonoBehaviour
 
 	protected void CleanupCamera(string name, Camera camera, CameraEvent cameraEvent)
 	{
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
 		CommandBuffer[] commandBuffers = camera.GetCommandBuffers(cameraEvent);
-		CommandBuffer[] array = commandBuffers;
-		foreach (CommandBuffer val in array)
+		foreach (CommandBuffer val in commandBuffers)
 		{
 			if (val.name == name)
 			{
@@ -53,9 +52,9 @@ public class BaseCommandBuffer : MonoBehaviour
 
 	protected void CleanupCommandBuffer(Camera camera, CameraEvent cameraEvent)
 	{
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0021: Expected I4, but got Unknown
-		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001a: Expected I4, but got Unknown
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
 		if (cameras.TryGetValue(camera, out var value) && value.TryGetValue((int)cameraEvent, out var value2))
 		{
 			camera.RemoveCommandBuffer(cameraEvent, value2);

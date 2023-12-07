@@ -7,54 +7,63 @@ public class ItemModWearable : ItemMod
 
 	public GameObjectRef entityPrefabFemale = new GameObjectRef();
 
-	public ProtectionProperties protectionProperties = null;
+	public ProtectionProperties protectionProperties;
 
-	public ArmorProperties armorProperties = null;
+	public ArmorProperties armorProperties;
 
-	public ClothingMovementProperties movementProperties = null;
+	public ClothingMovementProperties movementProperties;
 
 	public UIBlackoutOverlay.blackoutType occlusionType = UIBlackoutOverlay.blackoutType.NONE;
 
-	public bool blocksAiming = false;
+	public bool blocksAiming;
 
-	public bool emissive = false;
+	public bool emissive;
 
-	public float accuracyBonus = 0f;
+	public float accuracyBonus;
 
-	public bool blocksEquipping = false;
+	public bool blocksEquipping;
 
-	public float eggVision = 0f;
+	public float eggVision;
 
-	public float weight = 0f;
+	public float weight;
 
 	public bool equipOnRightClick = true;
 
-	public bool npcOnly = false;
+	public bool npcOnly;
 
 	public GameObjectRef breakEffect = new GameObjectRef();
 
 	public GameObjectRef viewmodelAddition;
 
-	public Wearable targetWearable => (!entityPrefab.isValid) ? null : entityPrefab.Get().GetComponent<Wearable>();
+	public Wearable targetWearable
+	{
+		get
+		{
+			if (entityPrefab.isValid)
+			{
+				return entityPrefab.Get().GetComponent<Wearable>();
+			}
+			return null;
+		}
+	}
 
 	private void DoPrepare()
 	{
 		if (!entityPrefab.isValid)
 		{
-			Debug.LogWarning((object)("ItemModWearable: entityPrefab is null! " + ((Component)this).gameObject), (Object)(object)((Component)this).gameObject);
+			Debug.LogWarning((object)("ItemModWearable: entityPrefab is null! " + (object)((Component)this).gameObject), (Object)(object)((Component)this).gameObject);
 		}
 		if (entityPrefab.isValid && (Object)(object)targetWearable == (Object)null)
 		{
-			Debug.LogWarning((object)("ItemModWearable: entityPrefab doesn't have a Wearable component! " + ((Component)this).gameObject), (Object)(object)entityPrefab.Get());
+			Debug.LogWarning((object)("ItemModWearable: entityPrefab doesn't have a Wearable component! " + (object)((Component)this).gameObject), (Object)(object)entityPrefab.Get());
 		}
 	}
 
 	public override void ModInit()
 	{
-		string resourcePath = entityPrefab.resourcePath;
-		if (string.IsNullOrEmpty(resourcePath))
+		if (string.IsNullOrEmpty(entityPrefab.resourcePath))
 		{
-			Debug.LogWarning((object)string.Concat(this, " - entityPrefab is null or something.. - ", entityPrefab.guid));
+			Debug.LogWarning((object)(((object)this)?.ToString() + " - entityPrefab is null or something.. - " + entityPrefab.guid));
 		}
 	}
 
@@ -83,7 +92,11 @@ public class ItemModWearable : ItemMod
 
 	public float ConditionProtectionScale(Item item)
 	{
-		return item.isBroken ? 0.25f : 1f;
+		if (!item.isBroken)
+		{
+			return 1f;
+		}
+		return 0.25f;
 	}
 
 	public void CollectProtection(Item item, ProtectionProperties protection)
@@ -116,19 +129,19 @@ public class ItemModWearable : ItemMod
 
 	public override void OnAttacked(Item item, HitInfo info)
 	{
+		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ce: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00de: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e8: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00ed: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0101: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0106: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0111: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0116: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0120: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0125: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0132: Unknown result type (might be due to invalid IL or missing references)
-		//IL_013d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0142: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0146: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0150: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0100: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0105: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0108: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0112: Unknown result type (might be due to invalid IL or missing references)
 		if (!item.hasCondition)
 		{
 			return;
