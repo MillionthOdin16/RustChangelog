@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEngine;
 
 public class ItemModContainer : ItemMod
 {
@@ -22,6 +23,9 @@ public class ItemModContainer : ItemMod
 	public bool openInInventory = true;
 
 	public List<ItemAmount> defaultContents = new List<ItemAmount>();
+
+	[Tooltip("If true items in this container won't be usable as ammo for reloads")]
+	public bool blockAmmoSource;
 
 	protected virtual bool ForceAcceptItemCheck => false;
 

@@ -5,7 +5,7 @@ namespace Rust.Interpolation;
 
 public class GenericLerp<T> : IDisposable where T : ISnapshot<T>, new()
 {
-	private Interpolator<T> interpolator;
+	private readonly Interpolator<T> interpolator;
 
 	private IGenericLerpTarget<T> target;
 

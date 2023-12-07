@@ -1271,7 +1271,7 @@ public class Item
 	public bool HasAmmo(AmmoTypes ammoType)
 	{
 		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
 		ItemModProjectile itemModProjectile = default(ItemModProjectile);
 		if (((Component)info).TryGetComponent<ItemModProjectile>(ref itemModProjectile) && itemModProjectile.IsAmmo(ammoType))
 		{
@@ -1279,6 +1279,11 @@ public class Item
 		}
 		if (contents != null)
 		{
+			ItemModContainer itemModContainer = default(ItemModContainer);
+			if ((Object)(object)info != (Object)null && ((Component)info).TryGetComponent<ItemModContainer>(ref itemModContainer) && itemModContainer.blockAmmoSource)
+			{
+				return false;
+			}
 			return contents.HasAmmo(ammoType);
 		}
 		return false;

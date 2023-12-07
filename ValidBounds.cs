@@ -24,15 +24,6 @@ public class ValidBounds : SingletonComponent<ValidBounds>
 		return SingletonComponent<ValidBounds>.Instance.DistToWorldEdge2D(vPos);
 	}
 
-	private void OnDrawGizmosSelected()
-	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
-		Gizmos.color = Color.blue;
-		Gizmos.DrawWireCube(((Bounds)(ref worldBounds)).center, ((Bounds)(ref worldBounds)).size);
-	}
-
 	internal bool IsInside(Vector3 vPos)
 	{
 		//IL_0000: Unknown result type (might be due to invalid IL or missing references)

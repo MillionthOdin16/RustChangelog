@@ -32,6 +32,7 @@ public class ItemModEntity : ItemMod
 			else
 			{
 				baseEntity.skinID = item.skin;
+				baseEntity.limitNetworking = true;
 				baseEntity.Spawn();
 				item.SetHeldEntity(baseEntity);
 			}

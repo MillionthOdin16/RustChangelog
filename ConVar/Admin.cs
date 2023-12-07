@@ -162,7 +162,7 @@ public class Admin : ConsoleSystem
 		if (!flag && @string.Length == 0)
 		{
 			text = text + "hostname: " + Server.hostname + "\n";
-			text = text + "version : " + 2511 + " secure (secure mode enabled, connected to Steam3)\n";
+			text = text + "version : " + 2515 + " secure (secure mode enabled, connected to Steam3)\n";
 			text = text + "map     : " + Server.level + "\n";
 			text += $"players : {((IEnumerable<BasePlayer>)BasePlayer.activePlayerList).Count()} ({Server.maxplayers} max) ({SingletonComponent<ServerMgr>.Instance.connectionQueue.Queued} queued) ({SingletonComponent<ServerMgr>.Instance.connectionQueue.Joining} joining)\n\n";
 		}
@@ -361,38 +361,35 @@ public class Admin : ConsoleSystem
 		}
 	}
 
-	private static void SkinRadiusInternal(Arg arg, bool changeAnyGrade)
+	public static BuildingGrade FindBuildingSkin(string name, out string error)
 	{
-		//IL_048a: Unknown result type (might be due to invalid IL or missing references)
-		BasePlayer basePlayer = arg.Player();
-		if ((Object)(object)basePlayer == (Object)null)
-		{
-			arg.ReplyWith("This must be called from the client");
-			return;
-		}
-		float @float = arg.GetFloat(1, 0f);
-		string @string = arg.GetString(0, "");
 		BuildingGrade buildingGrade = null;
+		error = null;
 		IEnumerable<BuildingGrade> source = from x in PrefabAttribute.server.FindAll<ConstructionGrade>(2194854973u)
 			select x.gradeBase;
-		switch (@string)
+		switch (name)
 		{
 		case "twig":
+		case "0":
 			buildingGrade = source.FirstOrDefault((BuildingGrade x) => ((Object)x).name == "twigs");
 			break;
 		case "wood":
+		case "1":
 			buildingGrade = source.FirstOrDefault((BuildingGrade x) => ((Object)x).name == "wood");
 			break;
 		case "stone":
+		case "2":
 			buildingGrade = source.FirstOrDefault((BuildingGrade x) => ((Object)x).name == "stone");
 			break;
 		case "metal":
 		case "sheetmetal":
+		case "3":
 			buildingGrade = source.FirstOrDefault((BuildingGrade x) => ((Object)x).name == "metal");
 			break;
 		case "hqm":
 		case "armored":
 		case "armoured":
+		case "4":
 			buildingGrade = source.FirstOrDefault((BuildingGrade x) => ((Object)x).name == "toptier");
 			break;
 		case "adobe":
@@ -410,13 +407,39 @@ public class Admin : ConsoleSystem
 		case "brick":
 			buildingGrade = source.FirstOrDefault((BuildingGrade x) => ((Object)x).name == "brick");
 			break;
+		case "frontier":
+			buildingGrade = source.FirstOrDefault((BuildingGrade x) => ((Object)x).name == "frontier");
+			break;
+		case "gingerbread":
+			buildingGrade = source.FirstOrDefault((BuildingGrade x) => ((Object)x).name == "gingerbread");
+			break;
 		default:
-			arg.ReplyWith("Valid skins are: twig, wood, stone, metal, hqm, adobe, shipping, brutalist, brick");
-			return;
+			error = "Valid skins are: twig, wood, stone, metal, hqm, adobe, shipping, brutalist, brick, frontier, gingerbread";
+			return null;
 		}
 		if ((Object)(object)buildingGrade == (Object)null)
 		{
-			arg.ReplyWith("Unable to find skin object for " + @string);
+			error = "Unable to find skin object for '" + name + "'";
+		}
+		return buildingGrade;
+	}
+
+	private static void SkinRadiusInternal(Arg arg, bool changeAnyGrade)
+	{
+		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
+		BasePlayer basePlayer = arg.Player();
+		if ((Object)(object)basePlayer == (Object)null)
+		{
+			arg.ReplyWith("This must be called from the client");
+			return;
+		}
+		float @float = arg.GetFloat(1, 0f);
+		string @string = arg.GetString(0, "");
+		string error;
+		BuildingGrade buildingGrade = FindBuildingSkin(@string, out error);
+		if ((Object)(object)buildingGrade == (Object)null)
+		{
+			arg.ReplyWith(error);
 			return;
 		}
 		if (!buildingGrade.enabledInStandalone)
@@ -564,6 +587,7 @@ public class Admin : ConsoleSystem
 			return;
 		}
 		ServerUsers.Set(uInt, ServerUsers.UserGroup.Moderator, @string, string2, -1L);
+		ServerUsers.Save();
 		BasePlayer basePlayer = BasePlayer.FindByID(uInt);
 		if ((Object)(object)basePlayer != (Object)null)
 		{
@@ -596,6 +620,7 @@ public class Admin : ConsoleSystem
 			return;
 		}
 		ServerUsers.Set(uInt, ServerUsers.UserGroup.Owner, @string, string2, -1L);
+		ServerUsers.Save();
 		BasePlayer basePlayer = BasePlayer.FindByID(uInt);
 		if ((Object)(object)basePlayer != (Object)null)
 		{
@@ -621,6 +646,7 @@ public class Admin : ConsoleSystem
 			return;
 		}
 		ServerUsers.Remove(uInt);
+		ServerUsers.Save();
 		BasePlayer basePlayer = BasePlayer.FindByID(uInt);
 		if ((Object)(object)basePlayer != (Object)null)
 		{
@@ -646,6 +672,7 @@ public class Admin : ConsoleSystem
 			return;
 		}
 		ServerUsers.Remove(uInt);
+		ServerUsers.Save();
 		BasePlayer basePlayer = BasePlayer.FindByID(uInt);
 		if ((Object)(object)basePlayer != (Object)null)
 		{
@@ -1392,14 +1419,18 @@ public class Admin : ConsoleSystem
 			arg.ReplyWith(AuthList(baseEntity));
 			return;
 		case "upgrade":
-			arg.ReplyWith(ChangeGrade(baseEntity, arg.GetInt(2, 1), 0, BuildingGrade.Enum.None, arg.GetFloat(3, 0f)));
+			arg.ReplyWith(ChangeGrade(baseEntity, arg.GetInt(2, 1), 0, BuildingGrade.Enum.None, 0uL, arg.GetFloat(3, 0f)));
 			return;
 		case "downgrade":
-			arg.ReplyWith(ChangeGrade(baseEntity, 0, arg.GetInt(2, 1), BuildingGrade.Enum.None, arg.GetFloat(3, 0f)));
+			arg.ReplyWith(ChangeGrade(baseEntity, 0, arg.GetInt(2, 1), BuildingGrade.Enum.None, 0uL, arg.GetFloat(3, 0f)));
 			return;
 		case "setgrade":
-			arg.ReplyWith(ChangeGrade(baseEntity, 0, 0, (BuildingGrade.Enum)arg.GetInt(2, 0), arg.GetFloat(3, 0f)));
+		{
+			string error;
+			BuildingGrade buildingGrade = FindBuildingSkin(arg.GetString(2, ""), out error);
+			arg.ReplyWith(ChangeGrade(baseEntity, 0, 0, buildingGrade.type, buildingGrade.skin, arg.GetFloat(3, 0f)));
 			return;
+		}
 		case "repair":
 			RunInRadius(arg.GetFloat(2, 0f), baseEntity, delegate(BaseCombatEntity entity)
 			{
@@ -1535,7 +1566,7 @@ public class Admin : ConsoleSystem
 		return text;
 	}
 
-	public static string ChangeGrade(BaseEntity entity, int increaseBy = 0, int decreaseBy = 0, BuildingGrade.Enum targetGrade = BuildingGrade.Enum.None, float radius = 0f)
+	public static string ChangeGrade(BaseEntity entity, int increaseBy = 0, int decreaseBy = 0, BuildingGrade.Enum targetGrade = BuildingGrade.Enum.None, ulong skin = 0uL, float radius = 0f)
 	{
 		if ((Object)(object)(entity as BuildingBlock) == (Object)null)
 		{
@@ -1555,7 +1586,7 @@ public class Admin : ConsoleSystem
 			}
 			if (grade != block.grade)
 			{
-				block.ChangeGrade(grade);
+				block.ChangeGradeAndSkin(targetGrade, skin);
 			}
 		});
 		int count = Pool.GetList<BuildingBlock>().Count;
@@ -1635,7 +1666,7 @@ public class Admin : ConsoleSystem
 		result.NetworkOut = (int)((Net.sv != null) ? ((BaseNetwork)Net.sv).GetStat((Connection)null, (StatTypeLong)1) : 0);
 		result.Restarting = SingletonComponent<ServerMgr>.Instance.Restarting;
 		result.SaveCreatedTime = SaveRestore.SaveCreatedTime.ToString();
-		result.Version = 2511;
+		result.Version = 2515;
 		result.Protocol = Protocol.printable;
 		return result;
 	}

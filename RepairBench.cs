@@ -167,7 +167,7 @@ public class RepairBench : StorageContainer
 		for (int i = 0; i < allIngredients.Count; i++)
 		{
 			ItemAmount itemAmount = allIngredients[i];
-			if (itemAmount.itemDef.category != ItemCategory.Component)
+			if (itemAmount.itemDef.category != ItemCategory.Component && !itemAmount.itemDef.treatAsComponentForRepairs)
 			{
 				continue;
 			}
@@ -179,14 +179,14 @@ public class RepairBench : StorageContainer
 				{
 					if ((Object)(object)allIngredient.itemDef == (Object)(object)itemAmount2.itemDef)
 					{
-						allIngredient.amount += itemAmount2.amount * itemAmount.amount;
+						allIngredient.amount += Mathf.Min(itemAmount2.amount * itemAmount.amount, 1f);
 						flag = true;
 						break;
 					}
 				}
 				if (!flag)
 				{
-					allIngredients.Add(new ItemAmount(itemAmount2.itemDef, itemAmount2.amount * itemAmount.amount));
+					allIngredients.Add(new ItemAmount(itemAmount2.itemDef, Mathf.Min(itemAmount2.amount * itemAmount.amount, 1f)));
 				}
 			}
 			allIngredients.RemoveAt(i);
@@ -210,7 +210,7 @@ public class RepairBench : StorageContainer
 		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
 		//IL_04f9: Unknown result type (might be due to invalid IL or missing references)
 		//IL_04fe: Unknown result type (might be due to invalid IL or missing references)
-		bool flag = Time.realtimeSinceStartup < nextSkinChangeTime;
+		bool flag = Time.realtimeSinceStartup > nextSkinChangeTime;
 		BasePlayer player = msg.player;
 		int num = msg.read.Int32();
 		ItemId val = default(ItemId);

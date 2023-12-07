@@ -73,7 +73,7 @@ public class FishSwarm : MonoBehaviour
 		}
 	}
 
-	private void OnDrawGizmos()
+	private void OnDrawGizmosSelected()
 	{
 		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
 		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
@@ -84,7 +84,7 @@ public class FishSwarm : MonoBehaviour
 			FishShoal[] array = fishShoals;
 			for (int i = 0; i < array.Length; i++)
 			{
-				array[i].OnDrawGizmos();
+				array[i].OnDrawGizmosSelected();
 			}
 		}
 	}

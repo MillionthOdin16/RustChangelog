@@ -1,44 +1,33 @@
-using System;
 using Rust.UI;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class ItemStoreItem : MonoBehaviour
 {
+	public Button Button;
+
 	public HttpImage Icon;
 
+	public RawImage IconImage;
+
+	public Material IconImageDisabledMaterial;
+
 	public RustText Name;
+
+	public GameObject PriceButton;
 
 	public TextMeshProUGUI Price;
 
 	public RustText ItemName;
 
+	public GameObject NewTag;
+
+	public GameObject InInventoryTag;
+
+	public RustText InInventoryText;
+
 	public GameObject InCartTag;
 
-	private IPlayerItemDefinition item;
-
-	internal void Init(IPlayerItemDefinition item, bool inCart)
-	{
-		this.item = item;
-		Icon.Load(item.IconUrl);
-		Name.SetText(item.Name);
-		((TMP_Text)Price).text = item.LocalPriceFormatted;
-		InCartTag.SetActive(inCart);
-		if (!string.IsNullOrWhiteSpace(item.ItemShortName))
-		{
-			ItemDefinition itemDefinition = ItemManager.FindItemDefinition(item.ItemShortName);
-			if ((Object)(object)itemDefinition != (Object)null && !string.Equals(itemDefinition.displayName.english, item.Name, StringComparison.InvariantCultureIgnoreCase))
-			{
-				ItemName.SetPhrase(itemDefinition.displayName);
-			}
-			else
-			{
-				ItemName.SetText("");
-			}
-		}
-		else
-		{
-			ItemName.SetText("");
-		}
-	}
+	public GameObject Footer;
 }

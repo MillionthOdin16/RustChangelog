@@ -778,8 +778,6 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 
 	private int ticksSinceStopped;
 
-	private int doneMovingWithoutARigidBodyCheck = 1;
-
 	private bool isCallingUpdateNetworkGroup;
 
 	private EntityRef[] entitySlots = new EntityRef[8];
@@ -1449,6 +1447,34 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		}
 		Vector3 val2 = ClosestPoint(position);
 		if (IsVisible(position, val2) && CanSee(val2, position))
+		{
+			return true;
+		}
+		return false;
+	}
+
+	public bool IsVisibleAndCanSeeLegacy(Vector3 position, float maxDistance = float.PositiveInfinity)
+	{
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		Vector3 val = CenterPoint();
+		if (IsVisible(position, val, maxDistance) && IsVisible(val, position, maxDistance))
+		{
+			return true;
+		}
+		Vector3 val2 = ClosestPoint(position);
+		if (IsVisible(position, val2, maxDistance) && IsVisible(val2, position, maxDistance))
 		{
 			return true;
 		}
@@ -2587,6 +2613,11 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		}
 	}
 
+	public virtual EntityPrivilege GetEntityBuildingPrivilege()
+	{
+		return null;
+	}
+
 	public virtual BuildingPrivlidge GetBuildingPrivilege()
 	{
 		return GetNearestBuildingPrivledge();
@@ -3288,6 +3319,10 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		Query.Server.Add(this);
 	}
 
+	public virtual void OnPlaced(BasePlayer player)
+	{
+	}
+
 	public virtual void OnSensation(Sensation sensation)
 	{
 	}
@@ -3345,18 +3380,6 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 
 	public virtual void OnPositionalNetworkUpdate()
 	{
-	}
-
-	public void DoMovingWithoutARigidBodyCheck()
-	{
-		if (doneMovingWithoutARigidBodyCheck <= 10)
-		{
-			doneMovingWithoutARigidBodyCheck++;
-			if (doneMovingWithoutARigidBodyCheck >= 10 && !((Object)(object)((Component)this).GetComponent<Collider>() == (Object)null) && (Object)(object)((Component)this).GetComponent<Rigidbody>() == (Object)null)
-			{
-				Debug.LogWarning((object)("Entity moving without a rigid body! (" + ((object)((Component)this).gameObject)?.ToString() + ")"), (Object)(object)this);
-			}
-		}
 	}
 
 	public override void Spawn()
@@ -3453,12 +3476,21 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		Kill();
 	}
 
-	public BaseCorpse DropCorpse(string strCorpsePrefab)
+	public BaseCorpse DropCorpse(string strCorpsePrefab, BasePlayer.PlayerFlags playerFlagsOnDeath = (BasePlayer.PlayerFlags)0, ModelState modelState = null)
+	{
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		return DropCorpse(strCorpsePrefab, ((Component)this).transform.position, ((Component)this).transform.rotation, playerFlagsOnDeath, modelState);
+	}
+
+	public BaseCorpse DropCorpse(string strCorpsePrefab, Vector3 posOnDeath, Quaternion rotOnDeath, BasePlayer.PlayerFlags playerFlagsOnDeath = (BasePlayer.PlayerFlags)0, ModelState modelState = null)
 	{
 		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
 		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
 		Assert.IsTrue(base.isServer, "DropCorpse called on client!");
 		if (!ConVar.Server.corpses)
 		{
@@ -3474,7 +3506,7 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 			Debug.LogWarning((object)("Error creating corpse: " + ((object)((Component)this).gameObject)?.ToString() + " - " + strCorpsePrefab));
 			return null;
 		}
-		baseCorpse.InitCorpse(this);
+		baseCorpse.ServerInitCorpse(this, posOnDeath, rotOnDeath, playerFlagsOnDeath, modelState);
 		return baseCorpse;
 	}
 
@@ -3678,8 +3710,13 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 				Signal signal = (Signal)msg.read.Int32();
 				string arg = msg.read.String(256, false);
 				SignalBroadcast(signal, arg, msg.connection);
+				OnReceivedSignalServer(signal, arg);
 			}
 		}
+	}
+
+	protected virtual void OnReceivedSignalServer(Signal signal, string arg)
+	{
 	}
 
 	public void SignalBroadcast(Signal signal, string arg, Connection sourceConnection = null)

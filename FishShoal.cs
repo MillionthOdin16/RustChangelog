@@ -618,7 +618,7 @@ public class FishShoal : IDisposable
 		fishBuffer.Dispose();
 	}
 
-	public void OnDrawGizmos()
+	public void OnDrawGizmosSelected()
 	{
 		((JobHandle)(ref jobHandle)).Complete();
 		_ = fishCount[0];

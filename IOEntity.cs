@@ -1448,24 +1448,33 @@ public class IOEntity : DecayEntity
 		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0092: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0095: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_009e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00be: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00af: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00db: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0135: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0137: Unknown result type (might be due to invalid IL or missing references)
 		ClearIndustrialPreventBuilding();
 		Matrix4x4 localToWorldMatrix = ((Component)this).transform.localToWorldMatrix;
-		CapsuleCollider val4 = default(CapsuleCollider);
+		CapsuleCollider val5 = default(CapsuleCollider);
 		ColliderInfo_Pipe colliderInfo_Pipe = default(ColliderInfo_Pipe);
 		for (int i = 0; i < outputs.Length; i++)
 		{
@@ -1481,13 +1490,23 @@ public class IOEntity : DecayEntity
 				Vector3 pos = Vector3.Lerp(val2, val, 0.5f);
 				float num = Vector3.Distance(val2, val);
 				Vector3 val3 = val2 - val;
-				Quaternion rot = Quaternion.LookRotation(((Vector3)(ref val3)).normalized);
+				Quaternion val4;
+				if (!(((Vector3)(ref val3)).normalized != Vector3.zero))
+				{
+					val4 = Quaternion.identity;
+				}
+				else
+				{
+					val3 = val2 - val;
+					val4 = Quaternion.LookRotation(((Vector3)(ref val3)).normalized);
+				}
+				Quaternion rot = val4;
 				GameObject obj = base.gameManager.CreatePrefab("assets/prefabs/misc/ioentitypreventbuilding.prefab", pos, rot);
 				obj.transform.SetParent(((Component)this).transform);
-				if (obj.TryGetComponent<CapsuleCollider>(ref val4))
+				if (obj.TryGetComponent<CapsuleCollider>(ref val5))
 				{
-					val4.height = num + val4.radius;
-					spawnedColliders.Add((Collider)(object)val4);
+					val5.height = num + val5.radius;
+					spawnedColliders.Add((Collider)(object)val5);
 				}
 				if (obj.TryGetComponent<ColliderInfo_Pipe>(ref colliderInfo_Pipe))
 				{

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(menuName = "Rust/Player Inventory Properties")]
+[CreateAssetMenu(menuName = "Rust/Player/Player Inventory Properties")]
 public class PlayerInventoryProperties : ScriptableObject
 {
 	[Serializable]

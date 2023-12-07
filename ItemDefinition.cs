@@ -136,6 +136,8 @@ public class ItemDefinition : MonoBehaviour
 
 	public OverrideWorldModel[] worldModelOverrides;
 
+	public bool treatAsComponentForRepairs;
+
 	public ItemDefinition isRedirectOf;
 
 	public RedirectVendingBehaviour redirectVendingBehaviour;

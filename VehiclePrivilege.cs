@@ -1,20 +1,14 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using ConVar;
-using Facepunch;
 using Facepunch.Rust;
 using Network;
 using ProtoBuf;
 using UnityEngine;
 using UnityEngine.Assertions;
 
-public class VehiclePrivilege : BaseEntity
+public class VehiclePrivilege : SimplePrivilege
 {
-	public List<PlayerNameID> authorizedPlayers = new List<PlayerNameID>();
-
-	public const Flags Flag_MaxAuths = Flags.Reserved5;
-
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
 		TimeWarning val = TimeWarning.New("VehiclePrivilege.OnRpcMessage", 0);
@@ -181,50 +175,6 @@ public class VehiclePrivilege : BaseEntity
 		return base.OnRpcMessage(player, rpc, msg);
 	}
 
-	public override void ResetState()
-	{
-		base.ResetState();
-		authorizedPlayers.Clear();
-	}
-
-	public bool IsAuthed(BasePlayer player)
-	{
-		return authorizedPlayers.Any((PlayerNameID x) => x.userid == player.userID);
-	}
-
-	public bool IsAuthed(ulong userID)
-	{
-		return authorizedPlayers.Any((PlayerNameID x) => x.userid == userID);
-	}
-
-	public bool AnyAuthed()
-	{
-		return authorizedPlayers.Count > 0;
-	}
-
-	public override void Save(SaveInfo info)
-	{
-		base.Save(info);
-		info.msg.buildingPrivilege = Pool.Get<BuildingPrivilege>();
-		info.msg.buildingPrivilege.users = authorizedPlayers;
-	}
-
-	public override void PostSave(SaveInfo info)
-	{
-		info.msg.buildingPrivilege.users = null;
-	}
-
-	public override void Load(LoadInfo info)
-	{
-		base.Load(info);
-		authorizedPlayers.Clear();
-		if (info.msg.buildingPrivilege != null && info.msg.buildingPrivilege.users != null)
-		{
-			authorizedPlayers = info.msg.buildingPrivilege.users;
-			info.msg.buildingPrivilege.users = null;
-		}
-	}
-
 	public bool IsDriver(BasePlayer player)
 	{
 		BaseEntity baseEntity = GetParentEntity();
@@ -238,20 +188,6 @@ public class VehiclePrivilege : BaseEntity
 			return false;
 		}
 		return baseVehicle.IsDriver(player);
-	}
-
-	public bool AtMaxAuthCapacity()
-	{
-		return HasFlag(Flags.Reserved5);
-	}
-
-	public void UpdateMaxAuthCapacity()
-	{
-		BaseGameMode activeGameMode = BaseGameMode.GetActiveGameMode(serverside: true);
-		if (Object.op_Implicit((Object)(object)activeGameMode) && activeGameMode.limitTeamAuths)
-		{
-			SetFlag(Flags.Reserved5, authorizedPlayers.Count >= activeGameMode.GetMaxRelationshipTeamSize());
-		}
 	}
 
 	[RPC_Server]

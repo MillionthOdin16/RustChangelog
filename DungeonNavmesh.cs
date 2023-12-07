@@ -265,15 +265,4 @@ public class DungeonNavmesh : FacepunchBehaviour, IServerComponent
 			BuildingOperation = null;
 		}
 	}
-
-	public void OnDrawGizmosSelected()
-	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-		Gizmos.color = Color.magenta * new Color(1f, 1f, 1f, 0.5f);
-		Gizmos.DrawCube(((Component)this).transform.position, ((Bounds)(ref Bounds)).size);
-	}
 }
