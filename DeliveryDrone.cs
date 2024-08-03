@@ -60,8 +60,8 @@ public class DeliveryDrone : Drone
 
 	public void Setup(Marketplace marketplace, MarketTerminal terminal, VendingMachine vendingMachine)
 	{
-		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
 		sourceMarketplace.Set(marketplace);
 		sourceTerminal.Set(terminal);
 		targetVendingMachine.Set(vendingMachine);
@@ -79,8 +79,8 @@ public class DeliveryDrone : Drone
 
 	public void CreateMapMarker()
 	{
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)_mapMarkerInstance != (Object)null)
 		{
 			_mapMarkerInstance.Kill();
@@ -94,36 +94,36 @@ public class DeliveryDrone : Drone
 
 	private void Think()
 	{
-		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0191: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0196: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_025f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0274: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02ef: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03db: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_013d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0107: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0113: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01e3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_032a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0430: Unknown result type (might be due to invalid IL or missing references)
-		//IL_022d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_035c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0361: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0364: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0369: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0380: Unknown result type (might be due to invalid IL or missing references)
-		//IL_046b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03b0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0493: Unknown result type (might be due to invalid IL or missing references)
-		//IL_04a3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0093: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0151: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0156: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0160: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0165: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0203: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0217: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0281: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0345: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0103: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00db: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02d9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02de: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02e1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02e6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02b6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0386: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02f6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0323: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03b8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03d6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03e6: Unknown result type (might be due to invalid IL or missing references)
 		if (RealTimeSince.op_Implicit(_sinceLastStateChange) > stateTimeout)
 		{
 			Debug.LogError((object)"Delivery drone hasn't change state in too long, killing", (Object)(object)this);
@@ -257,114 +257,114 @@ public class DeliveryDrone : Drone
 		}
 		float CalculatePreferredY(out bool isBlocked)
 		{
-			//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0016: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0017: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00e5: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00ff: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0125: Unknown result type (might be due to invalid IL or missing references)
-			//IL_012a: Unknown result type (might be due to invalid IL or missing references)
-			//IL_012b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00c3: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00dd: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0101: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0106: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0107: Unknown result type (might be due to invalid IL or missing references)
+			//IL_010c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0114: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0121: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0126: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0129: Unknown result type (might be due to invalid IL or missing references)
 			//IL_0130: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0138: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0145: Unknown result type (might be due to invalid IL or missing references)
-			//IL_014a: Unknown result type (might be due to invalid IL or missing references)
-			//IL_014d: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0154: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0159: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0135: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0141: Unknown result type (might be due to invalid IL or missing references)
+			//IL_014e: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0153: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0158: Unknown result type (might be due to invalid IL or missing references)
 			//IL_0165: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0172: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0177: Unknown result type (might be due to invalid IL or missing references)
-			//IL_017c: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0181: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0183: Unknown result type (might be due to invalid IL or missing references)
-			//IL_018d: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0192: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0195: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0197: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0199: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01a0: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01ad: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0033: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0048: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0055: Unknown result type (might be due to invalid IL or missing references)
-			//IL_005a: Unknown result type (might be due to invalid IL or missing references)
-			//IL_005d: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0064: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0069: Unknown result type (might be due to invalid IL or missing references)
-			//IL_006c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_016a: Unknown result type (might be due to invalid IL or missing references)
+			//IL_016d: Unknown result type (might be due to invalid IL or missing references)
+			//IL_016f: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0171: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0178: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0185: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+			//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0047: Unknown result type (might be due to invalid IL or missing references)
+			//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_004e: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0054: Unknown result type (might be due to invalid IL or missing references)
+			//IL_005b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_005c: Unknown result type (might be due to invalid IL or missing references)
 			//IL_006e: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0080: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01c8: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01ca: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01d4: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01d8: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01dd: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01e2: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01e6: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01eb: Unknown result type (might be due to invalid IL or missing references)
-			Vector3 val2 = Vector3Ex.WithY(body.velocity, 0f);
-			Vector3 val3 = default(Vector3);
+			//IL_019b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_019d: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01a7: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01ab: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01b0: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01b5: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01b9: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01be: Unknown result type (might be due to invalid IL or missing references)
+			Vector3 val2 = default(Vector3);
 			float num4 = default(float);
-			Vector3Ex.ToDirectionAndMagnitude(val2, ref val3, ref num4);
+			Vector3Ex.ToDirectionAndMagnitude(Vector3Ex.WithY(body.velocity, 0f), ref val2, ref num4);
 			if (num4 < 0.5f)
 			{
 				float num5 = GetMinimumHeight(Vector3.zero) + preferredCruiseHeight;
-				Vector3 val4 = Vector3Ex.WithY(currentPosition, num5 + 1000f);
-				Vector3 val5 = Vector3Ex.WithY(currentPosition, num5);
-				RaycastHit val6 = default(RaycastHit);
-				isBlocked = Physics.Raycast(val4, Vector3.down, ref val6, 1000f, LayerMask.op_Implicit(config.layerMask));
-				return isBlocked ? (num5 + (1000f - ((RaycastHit)(ref val6)).distance) + preferredHeightAboveObstacle) : num5;
+				Vector3 val3 = Vector3Ex.WithY(currentPosition, num5 + 1000f);
+				Vector3Ex.WithY(currentPosition, num5);
+				RaycastHit val4 = default(RaycastHit);
+				isBlocked = Physics.Raycast(val3, Vector3.down, ref val4, 1000f, LayerMask.op_Implicit(config.layerMask));
+				if (!isBlocked)
+				{
+					return num5;
+				}
+				return num5 + (1000f - ((RaycastHit)(ref val4)).distance) + preferredHeightAboveObstacle;
 			}
 			float num6 = num4 * 2f;
 			float minimumHeight = GetMinimumHeight(Vector3.zero);
 			float minimumHeight2 = GetMinimumHeight(new Vector3(0f, 0f, num6 / 2f));
 			float minimumHeight3 = GetMinimumHeight(new Vector3(0f, 0f, num6));
 			float num7 = Mathf.Max(Mathf.Max(minimumHeight, minimumHeight2), minimumHeight3) + preferredCruiseHeight;
-			Quaternion val7 = Quaternion.FromToRotation(Vector3.forward, val3);
-			Vector3 val8 = Vector3Ex.WithZ(config.halfExtents, num6 / 2f);
-			Vector3 val9 = Vector3Ex.WithY(currentPosition, num7) + val7 * new Vector3(0f, 0f, val8.z / 2f);
-			Vector3 val10 = Vector3Ex.WithY(val9, num7 + 1000f);
-			RaycastHit val11 = default(RaycastHit);
-			isBlocked = Physics.BoxCast(val10, val8, Vector3.down, ref val11, val7, 1000f, LayerMask.op_Implicit(config.layerMask));
-			float result;
+			Quaternion val5 = Quaternion.FromToRotation(Vector3.forward, val2);
+			Vector3 val6 = Vector3Ex.WithZ(config.halfExtents, num6 / 2f);
+			Vector3 val7 = Vector3Ex.WithY(Vector3Ex.WithY(currentPosition, num7) + val5 * new Vector3(0f, 0f, val6.z / 2f), num7 + 1000f);
+			RaycastHit val8 = default(RaycastHit);
+			isBlocked = Physics.BoxCast(val7, val6, Vector3.down, ref val8, val5, 1000f, LayerMask.op_Implicit(config.layerMask));
 			if (isBlocked)
 			{
 				Ray ray = default(Ray);
-				((Ray)(ref ray))._002Ector(val10, Vector3.down);
-				Vector3 val12 = ray.ClosestPoint(((RaycastHit)(ref val11)).point);
-				float num8 = Vector3.Distance(((Ray)(ref ray)).origin, val12);
-				result = num7 + (1000f - num8) + preferredHeightAboveObstacle;
+				((Ray)(ref ray))._002Ector(val7, Vector3.down);
+				Vector3 val9 = ray.ClosestPoint(((RaycastHit)(ref val8)).point);
+				float num8 = Vector3.Distance(((Ray)(ref ray)).origin, val9);
+				return num7 + (1000f - num8) + preferredHeightAboveObstacle;
 			}
-			else
-			{
-				result = num7;
-			}
-			return result;
+			return num7;
 		}
 		float GetMinimumHeight(Vector3 offset)
 		{
+			//IL_0006: Unknown result type (might be due to invalid IL or missing references)
 			//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-			//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-			//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-			Vector3 val13 = ((Component)this).transform.TransformPoint(offset);
-			float height = TerrainMeta.HeightMap.GetHeight(val13);
-			float height2 = WaterSystem.GetHeight(val13);
+			//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+			Vector3 val10 = ((Component)this).transform.TransformPoint(offset);
+			float height = TerrainMeta.HeightMap.GetHeight(val10);
+			float height2 = WaterSystem.GetHeight(val10);
 			return Mathf.Max(height, height2);
 		}
 		bool IsAtGoToY()
 		{
-			return _goToY.HasValue && Mathf.Abs(_goToY.Value - currentPosition.y) < targetPositionTolerance;
+			if (_goToY.HasValue)
+			{
+				return Mathf.Abs(_goToY.Value - currentPosition.y) < targetPositionTolerance;
+			}
+			return false;
 		}
 		bool IsAtGoalPosition()
 		{
 			//IL_0013: Unknown result type (might be due to invalid IL or missing references)
 			//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-			return _stateGoalPosition.HasValue && Vector3.Distance(_stateGoalPosition.Value, currentPosition) < targetPositionTolerance;
+			if (_stateGoalPosition.HasValue)
+			{
+				return Vector3.Distance(_stateGoalPosition.Value, currentPosition) < targetPositionTolerance;
+			}
+			return false;
 		}
 		Vector3 LandingPosition()
 		{
@@ -373,23 +373,23 @@ public class DeliveryDrone : Drone
 		}
 		void SetGoToY(float y)
 		{
-			//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+			//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0014: Unknown result type (might be due to invalid IL or missing references)
 			_goToY = y;
 			targetPosition = Vector3Ex.WithY(currentPosition, y);
 		}
 		void SetGoalPosition(Vector3 position)
 		{
-			//IL_000e: Unknown result type (might be due to invalid IL or missing references)
-			//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+			//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0019: Unknown result type (might be due to invalid IL or missing references)
 			_goToY = null;
 			_stateGoalPosition = position;
 			targetPosition = position;
 		}
 		void SetState(State newState)
 		{
-			//IL_000e: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+			//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0012: Unknown result type (might be due to invalid IL or missing references)
 			_state = newState;
 			_sinceLastStateChange = RealTimeSince.op_Implicit(0f);
 			_pickUpTicks = 0;
@@ -413,12 +413,12 @@ public class DeliveryDrone : Drone
 
 	public override void Save(SaveInfo info)
 	{
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
 		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
 		base.Save(info);
 		if (info.forDisk)
 		{
@@ -432,9 +432,9 @@ public class DeliveryDrone : Drone
 
 	public override void Load(LoadInfo info)
 	{
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
 		base.Load(info);
 		if (info.msg.deliveryDrone != null)
 		{

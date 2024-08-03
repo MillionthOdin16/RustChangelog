@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using Facepunch;
 using UnityEngine;
 
 public class SocketMod_SphereCheck : SocketMod
@@ -6,18 +8,16 @@ public class SocketMod_SphereCheck : SocketMod
 
 	public LayerMask layerMask;
 
-	public bool wantsCollide = false;
+	public bool wantsCollide;
 
-	public static Phrase Error_WantsCollideConstruction = new Phrase("error_wantsconstruction", "Must be placed on construction");
-
-	public static Phrase Error_DoesNotWantCollideConstruction = new Phrase("error_doesnotwantconstruction", "Cannot be placed on construction");
+	public bool requireMonument;
 
 	private void OnDrawGizmosSelected()
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
 		Gizmos.matrix = ((Component)this).transform.localToWorldMatrix;
 		Gizmos.color = (wantsCollide ? new Color(0f, 1f, 0f, 0.7f) : new Color(1f, 0f, 0f, 0.7f));
 		Gizmos.DrawSphere(Vector3.zero, sphereRadius);
@@ -25,26 +25,39 @@ public class SocketMod_SphereCheck : SocketMod
 
 	public override bool DoCheck(Construction.Placement place)
 	{
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0169: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ca: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ce: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0125: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 position = place.position + place.rotation * worldPosition;
-		bool flag = wantsCollide == GamePhysics.CheckSphere(position, sphereRadius, ((LayerMask)(ref layerMask)).value, (QueryTriggerInteraction)0);
+		List<Collider> list = Pool.GetList<Collider>();
+		GamePhysics.OverlapSphere(position, sphereRadius, list, ((LayerMask)(ref layerMask)).value, (QueryTriggerInteraction)2);
+		if (requireMonument)
+		{
+			for (int i = 0; i < list.Count; i++)
+			{
+				Collider val = list[i];
+				if (!((Component)val).gameObject.HasCustomTag(GameObjectTag.BlockBarricadePlacement) && ((Object)(object)val.GetMonument() == (Object)null || ((Component)val).gameObject.HasCustomTag(GameObjectTag.AllowBarricadePlacement)))
+				{
+					list.RemoveAt(i);
+					i--;
+				}
+			}
+		}
+		bool flag = wantsCollide == list.Count > 0;
+		Pool.FreeList<Collider>(ref list);
 		if (!flag)
 		{
 			bool flag2 = false;
 			Construction.lastPlacementError = "Failed Check: Sphere Test (" + hierachyName + ")";
 			if (LayerMask.op_Implicit(layerMask) == 2097152 && wantsCollide)
 			{
-				Construction.lastPlacementError = Error_WantsCollideConstruction.translated;
+				Construction.placementError = ConstructionErrors.MustPlaceOnConstruction;
 				if (flag2)
 				{
 					Construction.lastPlacementError = Construction.lastPlacementError + " (" + hierachyName + ")";
@@ -52,11 +65,15 @@ public class SocketMod_SphereCheck : SocketMod
 			}
 			else if (!wantsCollide && (LayerMask.op_Implicit(layerMask) & 0x200000) == 2097152)
 			{
-				Construction.lastPlacementError = Error_DoesNotWantCollideConstruction.translated;
+				Construction.placementError = ConstructionErrors.CantPlaceOnConstruction;
 				if (flag2)
 				{
 					Construction.lastPlacementError = Construction.lastPlacementError + " (" + hierachyName + ")";
 				}
+			}
+			else if (!wantsCollide && requireMonument)
+			{
+				Construction.placementError = ConstructionErrors.CantPlaceOnMonument;
 			}
 			else
 			{

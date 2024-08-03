@@ -12,11 +12,10 @@ public class ExplosionDemoReactivator : MonoBehaviour
 	private void Reactivate()
 	{
 		Transform[] componentsInChildren = ((Component)this).GetComponentsInChildren<Transform>();
-		Transform[] array = componentsInChildren;
-		foreach (Transform val in array)
+		foreach (Transform obj in componentsInChildren)
 		{
-			((Component)val).gameObject.SetActive(false);
-			((Component)val).gameObject.SetActive(true);
+			((Component)obj).gameObject.SetActive(false);
+			((Component)obj).gameObject.SetActive(true);
 		}
 	}
 }

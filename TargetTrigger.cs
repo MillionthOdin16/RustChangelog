@@ -3,12 +3,12 @@ using UnityEngine;
 public class TargetTrigger : TriggerBase
 {
 	[Tooltip("If set, the entering object must have line of sight to this transform to be added, note this is only checked on entry")]
-	public Transform losEyes = null;
+	public Transform losEyes;
 
 	internal override GameObject InterestedInObject(GameObject obj)
 	{
-		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
 		obj = base.InterestedInObject(obj);
 		if ((Object)(object)obj == (Object)null)
 		{

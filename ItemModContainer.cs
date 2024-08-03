@@ -1,10 +1,23 @@
+using System;
 using System.Collections.Generic;
+using Rust;
+using UnityEngine;
 
 public class ItemModContainer : ItemMod
 {
 	public int capacity = 6;
 
-	public int maxStackSize = 0;
+	public int maxStackSize;
+
+	public int containerVolume;
+
+	public bool canLootInWorld;
+
+	public float pickupInWorldDelay;
+
+	public float maxWeight = -1f;
+
+	public float worldWeightScale = 1f;
 
 	[InspectorFlags]
 	public ItemContainer.Flag containerFlags;
@@ -22,6 +35,14 @@ public class ItemModContainer : ItemMod
 	public bool openInInventory = true;
 
 	public List<ItemAmount> defaultContents = new List<ItemAmount>();
+
+	[Tooltip("If true items in this container won't be usable as ammo for reloads")]
+	public bool blockAmmoSource;
+
+	[Header("Sounds")]
+	public SoundDefinition openSound;
+
+	public SoundDefinition closeSound;
 
 	protected virtual bool ForceAcceptItemCheck => false;
 
@@ -44,11 +65,14 @@ public class ItemModContainer : ItemMod
 		item.contents.allowedContents = ((onlyAllowedContents == (ItemContainer.ContentsType)0) ? ItemContainer.ContentsType.Generic : onlyAllowedContents);
 		SetAllowedItems(item.contents);
 		item.contents.availableSlots = availableSlots;
+		ItemContainer contents = item.contents;
+		contents.onItemAddedRemoved = (Action<Item, bool>)Delegate.Combine(contents.onItemAddedRemoved, new Action<Item, bool>(OnItemAddedOrRemoved));
 		if ((validItemWhitelist != null && validItemWhitelist.Length != 0) || ForceAcceptItemCheck)
 		{
 			item.contents.canAcceptItem = CanAcceptItem;
 		}
 		item.contents.ServerInitialize(item, capacity);
+		item.contents.containerVolume = containerVolume;
 		item.contents.maxStackSize = maxStackSize;
 		item.contents.GiveUID();
 	}
@@ -61,14 +85,26 @@ public class ItemModContainer : ItemMod
 	protected virtual bool CanAcceptItem(Item item, int count)
 	{
 		ItemDefinition[] array = validItemWhitelist;
-		foreach (ItemDefinition itemDefinition in array)
+		for (int i = 0; i < array.Length; i++)
 		{
-			if (itemDefinition.itemid == item.info.itemid)
+			if (array[i].itemid == item.info.itemid)
 			{
 				return true;
 			}
 		}
 		return false;
+	}
+
+	private void OnItemAddedOrRemoved(Item item, bool added)
+	{
+		if (!Application.isLoadingSave)
+		{
+			DroppedItem droppedItem = item.parentItem?.GetWorldEntity() as DroppedItem;
+			if (!((Object)(object)droppedItem == (Object)null))
+			{
+				droppedItem.UpdateItemMass();
+			}
+		}
 	}
 
 	public override void OnVirginItem(Item item)
@@ -82,10 +118,10 @@ public class ItemModContainer : ItemMod
 
 	public override void CollectedForCrafting(Item item, BasePlayer crafter)
 	{
-		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
 		if (item.contents == null)
 		{
 			return;

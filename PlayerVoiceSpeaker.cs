@@ -1,4 +1,4 @@
 public class PlayerVoiceSpeaker : EntityComponent<BasePlayer>
 {
-	public VoiceProcessor voiceProcessor = null;
+	public VoiceProcessor voiceProcessor;
 }

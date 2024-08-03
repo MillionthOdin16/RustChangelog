@@ -5,5 +5,6 @@ public enum NotificationChannel
 	Pairing = 1001,
 	PlayerLoggedIn,
 	PlayerDied,
-	SmartAlarm
+	SmartAlarm,
+	ClanAnnouncement
 }

@@ -2,5 +2,5 @@ using UnityEngine;
 
 public class UndergroundLODSwitcher : MonoBehaviour, IClientComponent
 {
-	public LODComponent TargetComponent = null;
+	public LODComponent TargetComponent;
 }

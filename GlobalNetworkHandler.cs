@@ -13,6 +13,7 @@ public class GlobalNetworkHandler : PointEntity
 {
 	public static GlobalNetworkHandler server;
 
+	[NonSerialized]
 	public Dictionary<NetworkableId, GlobalEntityData> serverData = new Dictionary<NetworkableId, GlobalEntityData>();
 
 	private List<Connection> globalConnections = new List<Connection>();
@@ -37,6 +38,10 @@ public class GlobalNetworkHandler : PointEntity
 			return false;
 		}
 		if (entity.HasParent())
+		{
+			return false;
+		}
+		if (entity.net != null && entity.net.group != null && entity.net.group.restricted)
 		{
 			return false;
 		}
@@ -204,11 +209,11 @@ public class GlobalNetworkHandler : PointEntity
 
 	private void SendEntityDelete(NetworkableId networkableId, SendInfo info)
 	{
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
 		if (Net.globalNetworkedBases)
 		{
-			NetWrite val = ClientRPCStart(null, "CLIENT_EntityDeletes");
+			NetWrite val = ClientRPCStart("CLIENT_EntityDeletes");
 			int num = Math.Min(ConVar.Server.maxpacketsize_globalentities, 1);
 			val.UInt16((ushort)num);
 			for (int i = 0; i < num; i++)
@@ -221,10 +226,10 @@ public class GlobalNetworkHandler : PointEntity
 
 	private void SendGlobalEntities(GlobalEntityCollection entities, SendInfo info)
 	{
-		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
 		if (Net.globalNetworkedBases)
 		{
-			ClientRPCEx<GlobalEntityCollection>(info, null, "CLIENT_EntityUpdates", entities);
+			ClientRPC<GlobalEntityCollection>(RpcTarget.SendInfo("CLIENT_EntityUpdates", info), entities);
 		}
 	}
 

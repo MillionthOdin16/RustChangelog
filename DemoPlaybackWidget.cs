@@ -11,21 +11,21 @@ public class DemoPlaybackWidget : MonoBehaviour
 
 	public RustText DemoCurrentTime;
 
-	public GameObject PausedRoot = null;
+	public GameObject PausedRoot;
 
-	public GameObject PlayingRoot = null;
+	public GameObject PlayingRoot;
 
-	public RectTransform DemoPlaybackHandle = null;
+	public RectTransform DemoPlaybackHandle;
 
-	public RectTransform ShotPlaybackWindow = null;
+	public RectTransform ShotPlaybackWindow;
 
-	public RustButton LoopButton = null;
+	public RustButton LoopButton;
 
-	public GameObject ShotButtonRoot = null;
+	public GameObject ShotButtonRoot;
 
-	public RustText ShotNameText = null;
+	public RustText ShotNameText;
 
-	public GameObject ShotNameRoot = null;
+	public GameObject ShotNameRoot;
 
-	public RectTransform ShotRecordWindow = null;
+	public RectTransform ShotRecordWindow;
 }

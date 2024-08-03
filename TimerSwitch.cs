@@ -12,6 +12,8 @@ public class TimerSwitch : IOEntity
 
 	private float timePassed = -1f;
 
+	private float input1Amount;
+
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
 		TimeWarning val = TimeWarning.New("TimerSwitch.OnRpcMessage", 0);
@@ -22,7 +24,7 @@ public class TimerSwitch : IOEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SVSwitch "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SVSwitch "));
 				}
 				TimeWarning val2 = TimeWarning.New("SVSwitch", 0);
 				try
@@ -41,7 +43,7 @@ public class TimerSwitch : IOEntity
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -53,7 +55,7 @@ public class TimerSwitch : IOEntity
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -76,6 +78,11 @@ public class TimerSwitch : IOEntity
 		return base.OnRpcMessage(player, rpc, msg);
 	}
 
+	public override int ConsumptionAmount()
+	{
+		return 0;
+	}
+
 	public override void ResetIOState()
 	{
 		base.ResetIOState();
@@ -88,19 +95,32 @@ public class TimerSwitch : IOEntity
 
 	public override bool WantsPassthroughPower()
 	{
-		return IsPowered() && IsOn();
+		if (IsPowered())
+		{
+			return IsOn();
+		}
+		return false;
 	}
 
 	public override int GetPassthroughAmount(int outputSlot = 0)
 	{
-		return (IsPowered() && IsOn()) ? base.GetPassthroughAmount() : 0;
+		if (!IsPowered() || !IsOn())
+		{
+			return 0;
+		}
+		return base.GetPassthroughAmount(outputSlot);
+	}
+
+	public override bool WantsPower(int inputIndex)
+	{
+		return inputIndex == 0;
 	}
 
 	public override void UpdateHasPower(int inputAmount, int inputSlot)
 	{
 		if (inputSlot == 0)
 		{
-			SetFlag(Flags.Reserved8, inputAmount > 0, recursive: false, networkupdate: false);
+			base.UpdateHasPower(inputAmount, inputSlot);
 		}
 	}
 
@@ -121,9 +141,13 @@ public class TimerSwitch : IOEntity
 			}
 			break;
 		case 1:
-			if (inputAmount > 0)
+			if (input1Amount != (float)inputAmount)
 			{
-				SwitchPressed();
+				if (inputAmount > 0)
+				{
+					SwitchPressed();
+				}
+				input1Amount = inputAmount;
 			}
 			break;
 		}

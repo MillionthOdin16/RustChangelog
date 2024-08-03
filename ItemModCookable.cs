@@ -14,7 +14,7 @@ public class ItemModCookable : ItemMod
 
 	public int highTemp;
 
-	public bool setCookingFlag = false;
+	public bool setCookingFlag;
 
 	public void OnValidate()
 	{
@@ -30,15 +30,24 @@ public class ItemModCookable : ItemMod
 
 	public bool CanBeCookedByAtTemperature(float temperature)
 	{
-		return temperature > (float)lowTemp && temperature < (float)highTemp;
+		if (temperature > (float)lowTemp)
+		{
+			return temperature < (float)highTemp;
+		}
+		return false;
 	}
 
 	private void CycleCooking(Item item, float delta)
 	{
-		//IL_01e2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ed: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01f4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01fa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0198: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0260: Unknown result type (might be due to invalid IL or missing references)
+		//IL_026b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0272: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0278: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01fc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0201: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0218: Unknown result type (might be due to invalid IL or missing references)
+		//IL_021d: Unknown result type (might be due to invalid IL or missing references)
 		if (!CanBeCookedByAtTemperature(item.temperature) || item.cookTimeLeft < 0f)
 		{
 			if (setCookingFlag && item.HasFlag(Item.Flag.Cooking))
@@ -80,6 +89,23 @@ public class ItemModCookable : ItemMod
 		}
 		Item item2 = ItemManager.Create(becomeOnCooked, amountOfBecome * num2, 0uL);
 		Analytics.Azure.AddPendingItems(baseOven, item2.info.shortname, item2.amount, "smelt", consumed: false);
+		if ((Object)(object)item.parent.entityOwner != (Object)null && item.parent.entityOwner.net.group.restricted)
+		{
+			TutorialIsland closestTutorialIsland = TutorialIsland.GetClosestTutorialIsland(((Component)item.parent.entityOwner).transform.position, 50f);
+			if ((Object)(object)closestTutorialIsland != (Object)null)
+			{
+				BasePlayer basePlayer = closestTutorialIsland.ForPlayer.Get(serverside: true);
+				if ((Object)(object)basePlayer != (Object)null)
+				{
+					basePlayer.ProcessMissionEvent(BaseMission.MissionEventType.COOK, new BaseMission.MissionEventPayload
+					{
+						IntIdentifier = item2.info.itemid,
+						WorldPosition = ((Component)item.parent.entityOwner).transform.position,
+						NetworkIdentifier = item.parent.entityOwner.net.ID
+					}, item2.amount);
+				}
+			}
+		}
 		if (item2 != null && !item2.MoveToContainer(item.parent) && !item2.MoveToContainer(item.parent))
 		{
 			item2.Drop(item.parent.dropPosition, item.parent.dropVelocity);

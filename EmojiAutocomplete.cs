@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class EmojiAutocomplete : MonoBehaviour
 {
-	public RectTransform Parent = null;
+	public RectTransform Parent;
 
 	public GameObjectRef EmojiPrefab;
 

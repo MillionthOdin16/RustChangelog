@@ -21,11 +21,14 @@ public class BuildingGrade : ScriptableObject
 
 	public bool enabledInStandalone;
 
+	[Tooltip("Will bypass the inventory check if this is enabled, allowing anyone to craft this item, enabledInStandalone will still need to be true")]
+	public bool alwaysUnlock;
+
 	public float baseHealth;
 
 	public List<ItemAmount> baseCost;
 
-	public PhysicMaterial physicMaterial = null;
+	public PhysicMaterial physicMaterial;
 
 	public ProtectionProperties damageProtecton;
 

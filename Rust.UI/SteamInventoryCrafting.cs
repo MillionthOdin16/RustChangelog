@@ -12,6 +12,8 @@ public class SteamInventoryCrafting : MonoBehaviour
 
 	public Button ConvertToItem;
 
+	public Button DeleteButton;
+
 	public TextMeshProUGUI WoodAmount;
 
 	public TextMeshProUGUI ClothAmount;

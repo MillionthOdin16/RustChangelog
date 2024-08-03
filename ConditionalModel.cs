@@ -9,6 +9,8 @@ public class ConditionalModel : PrefabAttribute
 
 	public bool onServer = true;
 
+	public bool IsImportant;
+
 	[NonSerialized]
 	public ModelConditionTest[] conditions;
 
@@ -30,10 +32,22 @@ public class ConditionalModel : PrefabAttribute
 		return true;
 	}
 
+	public bool RunTestsExceptFoundationSide(BaseEntity parent)
+	{
+		for (int i = 0; i < conditions.Length; i++)
+		{
+			if (!(conditions[i] is ModelConditionTest_FoundationSide) && !conditions[i].DoTest(parent))
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+
 	public GameObject InstantiateSkin(BaseEntity parent)
 	{
-		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
 		if (!onServer && isServer)
 		{
 			return null;

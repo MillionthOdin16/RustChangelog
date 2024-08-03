@@ -26,8 +26,8 @@ public class MiningQuarry : BaseResourceExtractor
 
 		public void DoSpawn(MiningQuarry owner)
 		{
-			//IL_0031: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+			//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+			//IL_003a: Unknown result type (might be due to invalid IL or missing references)
 			if (prefabToSpawn.isValid)
 			{
 				instance = GameManager.server.CreateEntity(prefabToSpawn.resourcePath, origin.transform.localPosition, origin.transform.localRotation);
@@ -42,6 +42,10 @@ public class MiningQuarry : BaseResourceExtractor
 	public Renderer beltScrollRenderer;
 
 	public int scrollMatIndex = 3;
+
+	public float animatorSpeedChange = 1f;
+
+	public float beltScrollSpeedMultiplier = 1f;
 
 	public SoundPlayer[] onSounds;
 
@@ -63,9 +67,9 @@ public class MiningQuarry : BaseResourceExtractor
 
 	public ChildPrefab fuelStoragePrefab;
 
-	public QuarryType staticType = QuarryType.None;
+	public QuarryType staticType;
 
-	public bool isStatic = false;
+	public bool isStatic;
 
 	private ResourceDepositManager.ResourceDeposit _linkedDeposit;
 
@@ -104,7 +108,7 @@ public class MiningQuarry : BaseResourceExtractor
 
 	public override void ServerInit()
 	{
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
 		base.ServerInit();
 		if (isStatic)
 		{
@@ -226,8 +230,7 @@ public class MiningQuarry : BaseResourceExtractor
 		{
 			return true;
 		}
-		ItemContainer inventory = ((Component)fuelStoragePrefab.instance).GetComponent<StorageContainer>().inventory;
-		Item item = inventory.FindItemsByItemName("diesel_barrel");
+		Item item = ((Component)fuelStoragePrefab.instance).GetComponent<StorageContainer>().inventory.FindItemByItemName("diesel_barrel");
 		if (item != null && item.amount >= 1)
 		{
 			pendingWork += workPerFuel;
@@ -270,9 +273,5 @@ public class MiningQuarry : BaseResourceExtractor
 			((Component)hopperPrefab.instance).GetComponent<StorageContainer>().inventory.Load(info.msg.miningQuarry.extractor.outputContents);
 			staticType = (QuarryType)info.msg.miningQuarry.staticType;
 		}
-	}
-
-	public void Update()
-	{
 	}
 }

@@ -1,8 +1,11 @@
 using System;
 using System.Collections;
+using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using CompanionServer;
 using ConVar;
 using Facepunch;
@@ -16,13 +19,12 @@ using Rust.Ai;
 using TMPro;
 using UnityEngine;
 using UnityEngine.AI;
-using UnityEngine.Profiling;
 
 public class Bootstrap : SingletonComponent<Bootstrap>
 {
-	internal static bool bootstrapInitRun = false;
+	internal static bool bootstrapInitRun;
 
-	public static bool isErrored = false;
+	public static bool isErrored;
 
 	public string messageString = "Loading...";
 
@@ -103,12 +105,38 @@ public class Bootstrap : SingletonComponent<Bootstrap>
 			string text = CommandLine.Full.Replace(CommandLine.GetSwitch("-rcon.password", CommandLine.GetSwitch("+rcon.password", "RCONPASSWORD")), "******");
 			WriteToLog("Command Line: " + text);
 		}
+		int parentProcessId = CommandLine.GetSwitchInt("-parent-pid", 0);
+		if (parentProcessId != 0)
+		{
+			try
+			{
+				SynchronizationContext syncContext = SynchronizationContext.Current;
+				Process processById = Process.GetProcessById(parentProcessId);
+				processById.EnableRaisingEvents = true;
+				processById.Exited += delegate
+				{
+					syncContext.Post(delegate
+					{
+						//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+						WriteToLog($"Parent process ID {parentProcessId} exited. Exiting the server now...");
+						ConsoleSystem.Run(Option.Server, "quit", Array.Empty<object>());
+					}, null);
+				};
+				WriteToLog($"Watching parent process ID {parentProcessId}...");
+			}
+			catch (ArgumentException)
+			{
+				WriteToLog($"Parent process ID {parentProcessId} has exited during boot! Exiting now...");
+				Application.Quit();
+			}
+		}
+		UnityHookHandler.EnsureCreated();
 	}
 
 	public static void Init_Systems()
 	{
-		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005a: Expected O, but got Unknown
+		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004f: Expected O, but got Unknown
 		Global.Init();
 		if (GameInfo.IsOfficialServer && ConVar.Server.stats)
 		{
@@ -123,27 +151,30 @@ public class Bootstrap : SingletonComponent<Bootstrap>
 
 	public static void Init_Config()
 	{
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
 		ConsoleNetwork.Init();
 		ConsoleSystem.UpdateValuesFromCommandLine();
-		Profiler.BeginSample("Bootstrap.readcfg");
 		ConsoleSystem.Run(Option.Server, "server.readcfg", Array.Empty<object>());
 		ServerUsers.Load();
-		RustEmojiLibrary.FindAllServerEmoji();
-		Profiler.EndSample();
+		if (string.IsNullOrEmpty(ConVar.Server.server_id))
+		{
+			ConVar.Server.server_id = Guid.NewGuid().ToString("N");
+			ConsoleSystem.Run(Option.Server, "server.writecfg", Array.Empty<object>());
+		}
 	}
 
 	public static void NetworkInitRaknet()
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000b: Expected O, but got Unknown
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000a: Expected O, but got Unknown
 		Net.sv = (Server)new Server();
 	}
 
 	public static void NetworkInitSteamworks(bool enableSteamDatagramRelay)
 	{
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Expected O, but got Unknown
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000b: Expected O, but got Unknown
 		Net.sv = (Server)new Server(enableSteamDatagramRelay);
 	}
 
@@ -154,8 +185,8 @@ public class Bootstrap : SingletonComponent<Bootstrap>
 		BenchmarkTimer timer = BenchmarkTimer.New("bootstrap");
 		if (!Application.isEditor)
 		{
-			BuildInfo build = BuildInfo.Current;
-			if ((build.Scm.Branch == null || !(build.Scm.Branch == "experimental/release")) && !(build.Scm.Branch == "release"))
+			BuildInfo current = BuildInfo.Current;
+			if ((current.Scm.Branch == null || !(current.Scm.Branch == "experimental/release")) && !(current.Scm.Branch == "release"))
 			{
 				ExceptionReporter.InitializeFromUrl("https://0654eb77d1e04d6babad83201b6b6b95:d2098f1d15834cae90501548bd5dbd0d@sentry.io/1836389");
 			}
@@ -163,14 +194,16 @@ public class Bootstrap : SingletonComponent<Bootstrap>
 			{
 				ExceptionReporter.InitializeFromUrl("https://83df169465e84da091c1a3cd2fbffeee:3671b903f9a840ecb68411cf946ab9b6@sentry.io/51080");
 			}
-			bool hasOfficialConvar = CommandLine.Full.Contains("-official") || CommandLine.Full.Contains("-server.official") || CommandLine.Full.Contains("+official") || CommandLine.Full.Contains("+server.official");
-			bool hasStatsConvar = CommandLine.Full.Contains("-stats") || CommandLine.Full.Contains("-server.stats") || CommandLine.Full.Contains("+stats") || CommandLine.Full.Contains("+server.stats");
-			ExceptionReporter.Disabled = !(hasOfficialConvar && hasStatsConvar);
+			bool num = CommandLine.Full.Contains("-official") || CommandLine.Full.Contains("-server.official") || CommandLine.Full.Contains("+official") || CommandLine.Full.Contains("+server.official");
+			bool flag = CommandLine.Full.Contains("-stats") || CommandLine.Full.Contains("-server.stats") || CommandLine.Full.Contains("+stats") || CommandLine.Full.Contains("+server.stats");
+			ExceptionReporter.Disabled = !(num && flag);
 		}
+		BenchmarkTimer val;
+		BenchmarkTimer val2;
 		if (AssetBundleBackend.Enabled)
 		{
 			AssetBundleBackend newBackend = new AssetBundleBackend();
-			BenchmarkTimer val = BenchmarkTimer.New("bootstrap;bundles");
+			val = BenchmarkTimer.New("bootstrap;bundles");
 			try
 			{
 				yield return ((MonoBehaviour)this).StartCoroutine(LoadingUpdate("Opening Bundles"));
@@ -186,7 +219,7 @@ public class Bootstrap : SingletonComponent<Bootstrap>
 				ThrowError(FileSystem.Backend.loadingError);
 				yield break;
 			}
-			BenchmarkTimer val2 = BenchmarkTimer.New("bootstrap;bundlesindex");
+			val2 = BenchmarkTimer.New("bootstrap;bundlesindex");
 			try
 			{
 				newBackend.BuildFileIndex();
@@ -210,7 +243,7 @@ public class Bootstrap : SingletonComponent<Bootstrap>
 		{
 			yield break;
 		}
-		BenchmarkTimer val3 = BenchmarkTimer.New("bootstrap;gamemanifest");
+		val = BenchmarkTimer.New("bootstrap;gamemanifest");
 		try
 		{
 			yield return ((MonoBehaviour)this).StartCoroutine(LoadingUpdate("Loading Game Manifest"));
@@ -219,9 +252,9 @@ public class Bootstrap : SingletonComponent<Bootstrap>
 		}
 		finally
 		{
-			((IDisposable)val3)?.Dispose();
+			((IDisposable)val)?.Dispose();
 		}
-		BenchmarkTimer val4 = BenchmarkTimer.New("bootstrap;selfcheck");
+		val = BenchmarkTimer.New("bootstrap;selfcheck");
 		try
 		{
 			yield return ((MonoBehaviour)this).StartCoroutine(LoadingUpdate("Running Self Check"));
@@ -229,64 +262,64 @@ public class Bootstrap : SingletonComponent<Bootstrap>
 		}
 		finally
 		{
-			((IDisposable)val4)?.Dispose();
+			((IDisposable)val)?.Dispose();
 		}
 		if (isErrored)
 		{
 			yield break;
 		}
 		yield return ((MonoBehaviour)this).StartCoroutine(LoadingUpdate("Bootstrap Tier0"));
-		BenchmarkTimer val5 = BenchmarkTimer.New("bootstrap;tier0");
+		val2 = BenchmarkTimer.New("bootstrap;tier0");
 		try
 		{
 			Init_Tier0();
 		}
 		finally
 		{
-			((IDisposable)val5)?.Dispose();
+			((IDisposable)val2)?.Dispose();
 		}
-		BenchmarkTimer val6 = BenchmarkTimer.New("bootstrap;commandlinevalues");
+		val2 = BenchmarkTimer.New("bootstrap;commandlinevalues");
 		try
 		{
 			ConsoleSystem.UpdateValuesFromCommandLine();
 		}
 		finally
 		{
-			((IDisposable)val6)?.Dispose();
+			((IDisposable)val2)?.Dispose();
 		}
 		yield return ((MonoBehaviour)this).StartCoroutine(LoadingUpdate("Bootstrap Systems"));
-		BenchmarkTimer val7 = BenchmarkTimer.New("bootstrap;init_systems");
+		val2 = BenchmarkTimer.New("bootstrap;init_systems");
 		try
 		{
 			Init_Systems();
 		}
 		finally
 		{
-			((IDisposable)val7)?.Dispose();
+			((IDisposable)val2)?.Dispose();
 		}
 		yield return ((MonoBehaviour)this).StartCoroutine(LoadingUpdate("Bootstrap Config"));
-		BenchmarkTimer val8 = BenchmarkTimer.New("bootstrap;init_config");
+		val2 = BenchmarkTimer.New("bootstrap;init_config");
 		try
 		{
 			Init_Config();
 		}
 		finally
 		{
-			((IDisposable)val8)?.Dispose();
+			((IDisposable)val2)?.Dispose();
 		}
 		if (isErrored)
 		{
 			yield break;
 		}
 		yield return ((MonoBehaviour)this).StartCoroutine(LoadingUpdate("Loading Items"));
-		BenchmarkTimer val9 = BenchmarkTimer.New("bootstrap;itemmanager");
+		val2 = BenchmarkTimer.New("bootstrap;itemmanager");
 		try
 		{
 			ItemManager.Initialize();
 		}
 		finally
 		{
-			((IDisposable)val9)?.Dispose();
+			((IDisposable)val2)?.Dispose();
 		}
 		if (!isErrored)
 		{
@@ -307,13 +340,15 @@ public class Bootstrap : SingletonComponent<Bootstrap>
 		yield return CoroutineEx.waitForEndOfFrame;
 		yield return CoroutineEx.waitForEndOfFrame;
 		GameManifest.LoadAssets();
+		WriteToLog("Initializing Nexus");
+		yield return ((MonoBehaviour)this).StartCoroutine(StartNexusServer());
 		WriteToLog("Loading Scene");
 		yield return CoroutineEx.waitForEndOfFrame;
 		yield return CoroutineEx.waitForEndOfFrame;
-		Physics.solverIterationCount = 3;
-		int oldGraphicsQuality = PlayerPrefs.GetInt("UnityGraphicsQuality");
+		Physics.defaultSolverIterations = 3;
+		int @int = PlayerPrefs.GetInt("UnityGraphicsQuality");
 		QualitySettings.SetQualityLevel(0);
-		PlayerPrefs.SetInt("UnityGraphicsQuality", oldGraphicsQuality);
+		PlayerPrefs.SetInt("UnityGraphicsQuality", @int);
 		Object.DontDestroyOnLoad((Object)(object)((Component)this).gameObject);
 		Object.DontDestroyOnLoad((Object)(object)GameManager.server.CreatePrefab("assets/bundled/prefabs/system/server_console.prefab"));
 		StartupShared();
@@ -333,7 +368,53 @@ public class Bootstrap : SingletonComponent<Bootstrap>
 			Object.DontDestroyOnLoad((Object)(object)GameManager.server.CreatePrefab("assets/bundled/prefabs/system/performance.prefab"));
 		}
 		Rust.GC.Collect();
+		DemoConVars.Level = LevelManager.CurrentLevelName;
+		DemoConVars.Seed = World.Seed.ToString();
+		DemoConVars.WorldSize = World.Size.ToString();
+		DemoConVars.LevelUrl = World.Url;
+		DemoConVars.Checksum = World.Checksum;
+		DemoConVars.Hostname = ConVar.Server.hostname;
+		DemoConVars.NetworkVersion = 2553;
+		BuildInfo current = BuildInfo.Current;
+		object obj;
+		if (current == null)
+		{
+			obj = null;
+		}
+		else
+		{
+			ScmInfo scm = current.Scm;
+			obj = ((scm != null) ? scm.ChangeId : null);
+		}
+		if (obj == null)
+		{
+			obj = "0";
+		}
+		DemoConVars.Changeset = (string)obj;
 		Application.isLoading = false;
+	}
+
+	private static void EnsureRootFolderCreated()
+	{
+		try
+		{
+			Directory.CreateDirectory(ConVar.Server.rootFolder);
+		}
+		catch (Exception arg)
+		{
+			Debug.LogWarning((object)$"Failed to automatically create the save directory: {ConVar.Server.rootFolder}\n\n{arg}");
+		}
+	}
+
+	public static IEnumerator StartNexusServer()
+	{
+		EnsureRootFolderCreated();
+		yield return NexusServer.Initialize();
+		if (NexusServer.FailedToStart)
+		{
+			Debug.LogError((object)"Nexus server failed to start, terminating");
+			Application.Quit();
+		}
 	}
 
 	public static IEnumerator StartServer(bool doLoad, string saveFileOverride, bool allowOutOfDateSaves)
@@ -345,6 +426,7 @@ public class Bootstrap : SingletonComponent<Bootstrap>
 		}
 		RCon.Initialize();
 		BaseEntity.Query.Server = new BaseEntity.Query.EntityTree(8096f);
+		EnsureRootFolderCreated();
 		if (Object.op_Implicit((Object)(object)SingletonComponent<WorldSetup>.Instance))
 		{
 			yield return ((MonoBehaviour)SingletonComponent<WorldSetup>.Instance).StartCoroutine(SingletonComponent<WorldSetup>.Instance.InitCoroutine());
@@ -367,10 +449,10 @@ public class Bootstrap : SingletonComponent<Bootstrap>
 				}
 				if (Object.op_Implicit((Object)(object)TerrainMeta.Path) && Object.op_Implicit((Object)(object)TerrainMeta.Path.DungeonGridRoot))
 				{
-					DungeonNavmesh dungeonNavMesh = TerrainMeta.Path.DungeonGridRoot.AddComponent<DungeonNavmesh>();
-					dungeonNavMesh.NavMeshCollectGeometry = (NavMeshCollectGeometry)1;
-					dungeonNavMesh.LayerMask = LayerMask.op_Implicit(65537);
-					yield return ((MonoBehaviour)dungeonNavMesh).StartCoroutine(dungeonNavMesh.UpdateNavMeshAndWait());
+					DungeonNavmesh dungeonNavmesh = TerrainMeta.Path.DungeonGridRoot.AddComponent<DungeonNavmesh>();
+					dungeonNavmesh.NavMeshCollectGeometry = (NavMeshCollectGeometry)1;
+					dungeonNavmesh.LayerMask = LayerMask.op_Implicit(65537);
+					yield return ((MonoBehaviour)dungeonNavmesh).StartCoroutine(dungeonNavmesh.UpdateNavMeshAndWait());
 				}
 				else
 				{
@@ -378,11 +460,11 @@ public class Bootstrap : SingletonComponent<Bootstrap>
 				}
 				if (Object.op_Implicit((Object)(object)TerrainMeta.Path) && Object.op_Implicit((Object)(object)TerrainMeta.Path.DungeonBaseRoot))
 				{
-					DungeonNavmesh dungeonNavMesh2 = TerrainMeta.Path.DungeonBaseRoot.AddComponent<DungeonNavmesh>();
-					dungeonNavMesh2.NavmeshResolutionModifier = 0.3f;
-					dungeonNavMesh2.NavMeshCollectGeometry = (NavMeshCollectGeometry)1;
-					dungeonNavMesh2.LayerMask = LayerMask.op_Implicit(65537);
-					yield return ((MonoBehaviour)dungeonNavMesh2).StartCoroutine(dungeonNavMesh2.UpdateNavMeshAndWait());
+					DungeonNavmesh dungeonNavmesh2 = TerrainMeta.Path.DungeonBaseRoot.AddComponent<DungeonNavmesh>();
+					dungeonNavmesh2.NavmeshResolutionModifier = 0.3f;
+					dungeonNavmesh2.NavMeshCollectGeometry = (NavMeshCollectGeometry)1;
+					dungeonNavmesh2.LayerMask = LayerMask.op_Implicit(65537);
+					yield return ((MonoBehaviour)dungeonNavmesh2).StartCoroutine(dungeonNavmesh2.UpdateNavMeshAndWait());
 				}
 				else
 				{
@@ -391,52 +473,59 @@ public class Bootstrap : SingletonComponent<Bootstrap>
 				GenerateDungeonBase.SetupAI();
 			}
 		}
-		Profiler.BeginSample("Bootstrap.InstantiateServerMgr");
-		GameObject server = GameManager.server.CreatePrefab("assets/bundled/prefabs/system/server.prefab");
-		Object.DontDestroyOnLoad((Object)(object)server);
-		ServerMgr serverMgr = server.GetComponent<ServerMgr>();
-		Profiler.EndSample();
-		Profiler.BeginSample("ServerMgr.Initialize");
-		serverMgr.Initialize(doLoad, saveFileOverride, allowOutOfDateSaves);
-		Profiler.EndSample();
+		GameObject val = GameManager.server.CreatePrefab("assets/bundled/prefabs/system/server.prefab");
+		Object.DontDestroyOnLoad((Object)(object)val);
+		ServerMgr serverMgr = val.GetComponent<ServerMgr>();
+		bool saveWasLoaded = serverMgr.Initialize(doLoad, saveFileOverride, allowOutOfDateSaves);
 		yield return CoroutineEx.waitForSecondsRealtime(0.1f);
-		Profiler.BeginSample("SaveRestore.InitializeEntityLinks");
 		SaveRestore.InitializeEntityLinks();
-		Profiler.EndSample();
 		yield return CoroutineEx.waitForSecondsRealtime(0.1f);
-		Profiler.BeginSample("SaveRestore.InitializeEntitySupports");
 		SaveRestore.InitializeEntitySupports();
-		Profiler.EndSample();
 		yield return CoroutineEx.waitForSecondsRealtime(0.1f);
-		Profiler.BeginSample("SaveRestore.InitializeEntityConditionals");
 		SaveRestore.InitializeEntityConditionals();
-		Profiler.EndSample();
 		yield return CoroutineEx.waitForSecondsRealtime(0.1f);
-		Profiler.BeginSample("SaveRestore.GetSaveCache");
 		SaveRestore.GetSaveCache();
-		Profiler.EndSample();
 		yield return CoroutineEx.waitForSecondsRealtime(0.1f);
-		Profiler.BeginSample("ServerMgr.CreateGameMode");
 		BaseGameMode.CreateGameMode();
-		Profiler.EndSample();
 		yield return CoroutineEx.waitForSecondsRealtime(0.1f);
-		Profiler.BeginSample("MissionManifest.Get");
 		MissionManifest.Get();
-		Profiler.EndSample();
 		yield return CoroutineEx.waitForSecondsRealtime(0.1f);
-		Profiler.BeginSample("ServerMgr.OpenConnection");
+		if (Clan.enabled)
+		{
+			ClanManager clanManager = ClanManager.ServerInstance;
+			if ((Object)(object)clanManager == (Object)null)
+			{
+				Debug.LogError((object)"ClanManager was not spawned!");
+				Application.Quit();
+				yield break;
+			}
+			Task initializeTask = clanManager.Initialize();
+			yield return (object)new WaitUntil((Func<bool>)(() => initializeTask.IsCompleted));
+			initializeTask.Wait();
+			clanManager.LoadClanInfoForSleepers();
+		}
+		yield return CoroutineEx.waitForSecondsRealtime(0.1f);
+		if (NexusServer.Started)
+		{
+			NexusServer.UploadMapImage();
+			if (saveWasLoaded)
+			{
+				NexusServer.RestoreUnsavedState();
+			}
+			NexusServer.ZoneClient.StartListening();
+		}
 		serverMgr.OpenConnection();
-		Profiler.EndSample();
 		CompanionServer.Server.Initialize();
-		BenchmarkTimer val = BenchmarkTimer.New("Boombox.LoadStations");
+		BenchmarkTimer val2 = BenchmarkTimer.New("Boombox.LoadStations");
 		try
 		{
 			BoomBox.LoadStations();
 		}
 		finally
 		{
-			((IDisposable)val)?.Dispose();
+			((IDisposable)val2)?.Dispose();
 		}
+		RustEmojiLibrary.FindAllServerEmoji();
 		if (Time.pausewhileloading)
 		{
 			Time.timeScale = timeScale;

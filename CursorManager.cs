@@ -2,9 +2,9 @@ using UnityEngine;
 
 public class CursorManager : SingletonComponent<CursorManager>
 {
-	private static int iHoldOpen = 0;
+	private static int iHoldOpen;
 
-	private static int iPreviousOpen = 0;
+	private static int iPreviousOpen;
 
 	private static float lastTimeVisible;
 
@@ -29,8 +29,8 @@ public class CursorManager : SingletonComponent<CursorManager>
 
 	public void SwitchToGame()
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0007: Invalid comparison between Unknown and I4
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Invalid comparison between Unknown and I4
 		if ((int)Cursor.lockState != 1)
 		{
 			Cursor.lockState = (CursorLockMode)1;
@@ -44,9 +44,8 @@ public class CursorManager : SingletonComponent<CursorManager>
 
 	private void SwitchToUI()
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0007: Invalid comparison between Unknown and I4
-		if ((int)Cursor.lockState > 0)
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		if ((int)Cursor.lockState != 0)
 		{
 			Cursor.lockState = (CursorLockMode)0;
 		}

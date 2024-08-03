@@ -42,9 +42,9 @@ public class v_chainsaw : MonoBehaviour
 
 	private Vector2 saveST;
 
-	private float chainSpeed = 0f;
+	private float chainSpeed;
 
-	private float chainAmount = 0f;
+	private float chainAmount;
 
 	public float temp1;
 
@@ -52,11 +52,11 @@ public class v_chainsaw : MonoBehaviour
 
 	public void OnEnable()
 	{
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0019: Expected O, but got Unknown
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Expected O, but got Unknown
 		if (block == null)
 		{
 			block = new MaterialPropertyBlock();
@@ -75,7 +75,7 @@ public class v_chainsaw : MonoBehaviour
 
 	private void ScrollChainTexture()
 	{
-		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
 		float num = (chainAmount = (chainAmount + Time.deltaTime * chainSpeed) % 1f);
 		block.Clear();
 		block.SetVector("_MainTex_ST", new Vector4(saveST.x, saveST.y, num, 0f));
@@ -90,79 +90,79 @@ public class v_chainsaw : MonoBehaviour
 		{
 			chainsawAnimator.SetBool("attackHit", true);
 			ParticleSystem[] array = hitMetalFX;
-			foreach (ParticleSystem val in array)
+			for (int i = 0; i < array.Length; i++)
 			{
-				val.enableEmission = true;
+				array[i].enableEmission = true;
 			}
-			ParticleSystem[] array2 = hitWoodFX;
-			foreach (ParticleSystem val2 in array2)
+			array = hitWoodFX;
+			for (int i = 0; i < array.Length; i++)
 			{
-				val2.enableEmission = false;
+				array[i].enableEmission = false;
 			}
-			ParticleSystem[] array3 = hitFleshFX;
-			foreach (ParticleSystem val3 in array3)
+			array = hitFleshFX;
+			for (int i = 0; i < array.Length; i++)
 			{
-				val3.enableEmission = false;
+				array[i].enableEmission = false;
 			}
 			DoHitSound(hitMetalSoundDef);
 		}
 		else if (bHitWood)
 		{
 			chainsawAnimator.SetBool("attackHit", true);
-			ParticleSystem[] array4 = hitMetalFX;
-			foreach (ParticleSystem val4 in array4)
+			ParticleSystem[] array = hitMetalFX;
+			for (int i = 0; i < array.Length; i++)
 			{
-				val4.enableEmission = false;
+				array[i].enableEmission = false;
 			}
-			ParticleSystem[] array5 = hitWoodFX;
-			foreach (ParticleSystem val5 in array5)
+			array = hitWoodFX;
+			for (int i = 0; i < array.Length; i++)
 			{
-				val5.enableEmission = true;
+				array[i].enableEmission = true;
 			}
-			ParticleSystem[] array6 = hitFleshFX;
-			foreach (ParticleSystem val6 in array6)
+			array = hitFleshFX;
+			for (int i = 0; i < array.Length; i++)
 			{
-				val6.enableEmission = false;
+				array[i].enableEmission = false;
 			}
 			DoHitSound(hitWoodSoundDef);
 		}
 		else if (bHitFlesh)
 		{
 			chainsawAnimator.SetBool("attackHit", true);
-			ParticleSystem[] array7 = hitMetalFX;
-			foreach (ParticleSystem val7 in array7)
+			ParticleSystem[] array = hitMetalFX;
+			for (int i = 0; i < array.Length; i++)
 			{
-				val7.enableEmission = false;
+				array[i].enableEmission = false;
 			}
-			ParticleSystem[] array8 = hitWoodFX;
-			foreach (ParticleSystem val8 in array8)
+			array = hitWoodFX;
+			for (int i = 0; i < array.Length; i++)
 			{
-				val8.enableEmission = false;
+				array[i].enableEmission = false;
 			}
-			ParticleSystem[] array9 = hitFleshFX;
-			foreach (ParticleSystem val9 in array9)
+			array = hitFleshFX;
+			for (int i = 0; i < array.Length; i++)
 			{
-				val9.enableEmission = true;
+				array[i].enableEmission = true;
 			}
 			DoHitSound(hitFleshSoundDef);
 		}
 		else
 		{
 			chainsawAnimator.SetBool("attackHit", false);
-			ParticleSystem[] array10 = hitMetalFX;
-			foreach (ParticleSystem val10 in array10)
+			ParticleSystem[] array = hitMetalFX;
+			for (int i = 0; i < array.Length; i++)
 			{
-				val10.enableEmission = false;
+				array[i].enableEmission = false;
 			}
-			ParticleSystem[] array11 = hitWoodFX;
-			foreach (ParticleSystem val11 in array11)
+			array = hitWoodFX;
+			for (int i = 0; i < array.Length; i++)
 			{
-				val11.enableEmission = false;
+				array[i].enableEmission = false;
 			}
-			ParticleSystem[] array12 = hitFleshFX;
-			foreach (ParticleSystem val12 in array12)
+			array = hitFleshFX;
+			for (int i = 0; i < array.Length; i++)
 			{
-				val12.enableEmission = false;
+				array[i].enableEmission = false;
 			}
 		}
 	}

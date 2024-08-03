@@ -5,20 +5,8 @@ using ProtoBuf;
 using Rust.Modular;
 using UnityEngine;
 
-public abstract class BaseModularVehicle : GroundVehicle, PlayerInventory.ICanMoveFrom, IPrefabPreProcess
+public abstract class BaseModularVehicle : GroundVehicle, IPrefabPreProcess, PlayerInventory.ICanMoveFrom
 {
-	internal bool inEditableLocation;
-
-	private bool prevEditable;
-
-	internal bool immuneToDecay;
-
-	protected Vector3 realLocalCOM;
-
-	public Item AssociatedItemInstance;
-
-	private bool disablePhysics;
-
 	[Header("Modular Vehicle")]
 	[SerializeField]
 	private List<ModularVehicleSocket> moduleSockets;
@@ -40,7 +28,17 @@ public abstract class BaseModularVehicle : GroundVehicle, PlayerInventory.ICanMo
 
 	private Dictionary<BaseVehicleModule, Action> moduleAddActions = new Dictionary<BaseVehicleModule, Action>();
 
-	public ModularVehicleInventory Inventory { get; private set; }
+	internal bool inEditableLocation;
+
+	private bool prevEditable;
+
+	internal bool immuneToDecay;
+
+	protected Vector3 realLocalCOM;
+
+	public Item AssociatedItemInstance;
+
+	private bool disablePhysics;
 
 	public Vector3 CentreOfMass => centreOfMassTransform.localPosition;
 
@@ -94,9 +92,277 @@ public abstract class BaseModularVehicle : GroundVehicle, PlayerInventory.ICanMo
 		{
 			if (base.isServer)
 			{
-				return inEditableLocation && CouldBeEdited();
+				if (inEditableLocation)
+				{
+					return CouldBeEdited();
+				}
+				return false;
 			}
 			return false;
+		}
+	}
+
+	public ModularVehicleInventory Inventory { get; private set; }
+
+	public override void InitShared()
+	{
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		base.InitShared();
+		AddMass(Mass, CentreOfMass, ((Component)this).transform.position);
+		HasInited = true;
+		foreach (BaseVehicleModule attachedModuleEntity in AttachedModuleEntities)
+		{
+			attachedModuleEntity.RefreshConditionals(canGib: false);
+		}
+	}
+
+	public virtual bool PlayerCanUseThis(BasePlayer player, ModularCarCodeLock.LockType lockType)
+	{
+		return true;
+	}
+
+	public bool TryDeduceSocketIndex(BaseVehicleModule addedModule, out int index)
+	{
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		if (addedModule.FirstSocketIndex >= 0)
+		{
+			index = addedModule.FirstSocketIndex;
+			return index >= 0;
+		}
+		index = -1;
+		for (int i = 0; i < moduleSockets.Count; i++)
+		{
+			if (Vector3.SqrMagnitude(moduleSockets[i].WorldPosition - ((Component)addedModule).transform.position) < 0.1f)
+			{
+				index = i;
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public void AddMass(float moduleMass, Vector3 moduleCOM, Vector3 moduleWorldPos)
+	{
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
+		if (base.isServer)
+		{
+			Vector3 val = ((Component)this).transform.InverseTransformPoint(moduleWorldPos) + moduleCOM;
+			if (TotalMass == 0f)
+			{
+				SetMass(moduleMass);
+				SetCOM(val);
+				return;
+			}
+			float num = TotalMass + moduleMass;
+			Vector3 cOM = realLocalCOM * (TotalMass / num) + val * (moduleMass / num);
+			SetMass(num);
+			SetCOM(cOM);
+		}
+	}
+
+	public void RemoveMass(float moduleMass, Vector3 moduleCOM, Vector3 moduleWorldPos)
+	{
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
+		if (base.isServer)
+		{
+			float num = TotalMass - moduleMass;
+			Vector3 val = ((Component)this).transform.InverseTransformPoint(moduleWorldPos) + moduleCOM;
+			Vector3 cOM = (realLocalCOM - val * (moduleMass / TotalMass)) / (num / TotalMass);
+			SetMass(num);
+			SetCOM(cOM);
+		}
+	}
+
+	public bool TryGetModuleAt(int socketIndex, out BaseVehicleModule result)
+	{
+		if (socketIndex < 0 || socketIndex >= moduleSockets.Count)
+		{
+			result = null;
+			return false;
+		}
+		foreach (BaseVehicleModule attachedModuleEntity in AttachedModuleEntities)
+		{
+			int firstSocketIndex = attachedModuleEntity.FirstSocketIndex;
+			int num = firstSocketIndex + attachedModuleEntity.GetNumSocketsTaken() - 1;
+			if (firstSocketIndex <= socketIndex && num >= socketIndex)
+			{
+				result = attachedModuleEntity;
+				return true;
+			}
+		}
+		result = null;
+		return false;
+	}
+
+	public ModularVehicleSocket GetSocket(int index)
+	{
+		if (index < 0 || index >= moduleSockets.Count)
+		{
+			return null;
+		}
+		return moduleSockets[index];
+	}
+
+	public override void Load(LoadInfo info)
+	{
+		base.Load(info);
+		_ = info.msg.modularVehicle;
+	}
+
+	protected override bool CanPushNow(BasePlayer pusher)
+	{
+		if (!base.CanPushNow(pusher))
+		{
+			return false;
+		}
+		if (!IsKinematic)
+		{
+			return !IsEditableNow;
+		}
+		return false;
+	}
+
+	protected override void OnChildAdded(BaseEntity childEntity)
+	{
+		base.OnChildAdded(childEntity);
+		BaseVehicleModule module = childEntity as BaseVehicleModule;
+		if (module != null)
+		{
+			Action action = delegate
+			{
+				ModuleEntityAdded(module);
+			};
+			moduleAddActions[module] = action;
+			((FacepunchBehaviour)module).Invoke(action, 0f);
+		}
+	}
+
+	protected override void OnChildRemoved(BaseEntity childEntity)
+	{
+		base.OnChildRemoved(childEntity);
+		if (childEntity is BaseVehicleModule removedModule)
+		{
+			ModuleEntityRemoved(removedModule);
+		}
+	}
+
+	protected virtual void ModuleEntityAdded(BaseVehicleModule addedModule)
+	{
+		//IL_0154: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0092: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00be: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00df: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e4: Unknown result type (might be due to invalid IL or missing references)
+		if (AttachedModuleEntities.Contains(addedModule))
+		{
+			return;
+		}
+		if (base.isServer && ((Object)(object)this == (Object)null || IsDead() || base.IsDestroyed))
+		{
+			if ((Object)(object)addedModule != (Object)null && !addedModule.IsDestroyed)
+			{
+				addedModule.Kill();
+			}
+			return;
+		}
+		int index = -1;
+		if (base.isServer && addedModule.AssociatedItemInstance != null)
+		{
+			index = addedModule.AssociatedItemInstance.position;
+		}
+		if (index == -1 && !TryDeduceSocketIndex(addedModule, out index))
+		{
+			string text = $"{((object)this).GetType().Name}: Couldn't get socket index from position ({((Component)addedModule).transform.position}).";
+			for (int i = 0; i < moduleSockets.Count; i++)
+			{
+				text += $" Sqr dist to socket {i} at {moduleSockets[i].WorldPosition} is {Vector3.SqrMagnitude(moduleSockets[i].WorldPosition - ((Component)addedModule).transform.position)}.";
+			}
+			Debug.LogError((object)text, (Object)(object)((Component)addedModule).gameObject);
+			return;
+		}
+		if (moduleAddActions.ContainsKey(addedModule))
+		{
+			moduleAddActions.Remove(addedModule);
+		}
+		AttachedModuleEntities.Add(addedModule);
+		addedModule.ModuleAdded(this, index);
+		AddMass(addedModule.Mass, addedModule.CentreOfMass, ((Component)addedModule).transform.position);
+		if (base.isServer && !Inventory.TrySyncModuleInventory(addedModule, index))
+		{
+			Debug.LogError((object)$"{((object)this).GetType().Name}: Unable to add module {((Object)addedModule).name} to socket ({index}). Destroying it.", (Object)(object)((Component)this).gameObject);
+			addedModule.Kill();
+			AttachedModuleEntities.Remove(addedModule);
+			return;
+		}
+		RefreshModulesExcept(addedModule);
+		if (base.isServer)
+		{
+			UpdateMountFlags();
+		}
+	}
+
+	protected virtual void ModuleEntityRemoved(BaseVehicleModule removedModule)
+	{
+		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
+		if (base.IsDestroyed)
+		{
+			return;
+		}
+		if (moduleAddActions.ContainsKey(removedModule))
+		{
+			((FacepunchBehaviour)removedModule).CancelInvoke(moduleAddActions[removedModule]);
+			moduleAddActions.Remove(removedModule);
+		}
+		if (AttachedModuleEntities.Contains(removedModule))
+		{
+			RemoveMass(removedModule.Mass, removedModule.CentreOfMass, ((Component)removedModule).transform.position);
+			AttachedModuleEntities.Remove(removedModule);
+			removedModule.ModuleRemoved();
+			RefreshModulesExcept(removedModule);
+			if (base.isServer)
+			{
+				UpdateMountFlags();
+			}
+		}
+	}
+
+	private void RefreshModulesExcept(BaseVehicleModule ignoredModule)
+	{
+		foreach (BaseVehicleModule attachedModuleEntity in AttachedModuleEntities)
+		{
+			if ((Object)(object)attachedModuleEntity != (Object)(object)ignoredModule)
+			{
+				attachedModuleEntity.OtherVehicleModulesChanged();
+			}
 		}
 	}
 
@@ -125,8 +391,8 @@ public abstract class BaseModularVehicle : GroundVehicle, PlayerInventory.ICanMo
 
 	public override void PostServerLoad()
 	{
-		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
 		base.PostServerLoad();
 		if (Inventory != null)
 		{
@@ -150,15 +416,18 @@ public abstract class BaseModularVehicle : GroundVehicle, PlayerInventory.ICanMo
 
 	public override float MaxVelocity()
 	{
-		float num = GetMaxForwardSpeed() * 1.3f;
-		return Mathf.Max(num, 30f);
+		return Mathf.Max(GetMaxForwardSpeed() * 1.3f, 30f);
 	}
 
 	public abstract bool IsComplete();
 
 	public bool CouldBeEdited()
 	{
-		return !AnyMounted() && !IsDead();
+		if (!AnyMounted())
+		{
+			return !IsDead();
+		}
+		return false;
 	}
 
 	public void DisablePhysics()
@@ -186,8 +455,8 @@ public abstract class BaseModularVehicle : GroundVehicle, PlayerInventory.ICanMo
 
 	public override bool MountEligable(BasePlayer player)
 	{
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
 		if (!base.MountEligable(player))
 		{
 			return false;
@@ -226,7 +495,10 @@ public abstract class BaseModularVehicle : GroundVehicle, PlayerInventory.ICanMo
 
 	protected abstract Vector3 GetCOMMultiplier();
 
-	public abstract void ModuleHurt(BaseVehicleModule hurtModule, HitInfo info);
+	public virtual void ModuleHurt(BaseVehicleModule hurtModule, HitInfo info)
+	{
+		DoExplosionForce(info);
+	}
 
 	public abstract void ModuleReachedZeroHealth();
 
@@ -237,12 +509,12 @@ public abstract class BaseModularVehicle : GroundVehicle, PlayerInventory.ICanMo
 			Debug.LogError((object)(((object)this).GetType().Name + ": Can't add module: " + failureReason));
 			return false;
 		}
-		bool flag = Inventory.TryAddModuleItem(moduleItem, socketIndex);
-		if (!flag)
+		bool num = Inventory.TryAddModuleItem(moduleItem, socketIndex);
+		if (!num)
 		{
 			Debug.LogError((object)(((object)this).GetType().Name + ": Couldn't add new item!"));
 		}
-		return flag;
+		return num;
 	}
 
 	public bool TryAddModule(Item moduleItem)
@@ -300,12 +572,12 @@ public abstract class BaseModularVehicle : GroundVehicle, PlayerInventory.ICanMo
 
 	public BaseVehicleModule CreatePhysicalModuleEntity(Item moduleItem, ItemModVehicleModule itemModModule, int socketIndex)
 	{
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 worldPosition = moduleSockets[socketIndex].WorldPosition;
 		Quaternion worldRotation = moduleSockets[socketIndex].WorldRotation;
 		BaseVehicleModule baseVehicleModule = itemModModule.CreateModuleEntity(this, worldPosition, worldRotation);
@@ -325,8 +597,8 @@ public abstract class BaseModularVehicle : GroundVehicle, PlayerInventory.ICanMo
 
 	public Item GetVehicleItem(ItemId itemUID)
 	{
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
 		Item item = Inventory.ChassisContainer.FindItemByUID(itemUID);
 		if (item == null)
 		{
@@ -359,272 +631,12 @@ public abstract class BaseModularVehicle : GroundVehicle, PlayerInventory.ICanMo
 
 	private void SetCOM(Vector3 com)
 	{
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
 		realLocalCOM = com;
 		rigidBody.centerOfMass = Vector3.Scale(realLocalCOM, GetCOMMultiplier());
-	}
-
-	public override void InitShared()
-	{
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
-		base.InitShared();
-		AddMass(Mass, CentreOfMass, ((Component)this).transform.position);
-		HasInited = true;
-		foreach (BaseVehicleModule attachedModuleEntity in AttachedModuleEntities)
-		{
-			attachedModuleEntity.RefreshConditionals(canGib: false);
-		}
-	}
-
-	public virtual bool PlayerCanUseThis(BasePlayer player, ModularCarCodeLock.LockType lockType)
-	{
-		return true;
-	}
-
-	public bool TryDeduceSocketIndex(BaseVehicleModule addedModule, out int index)
-	{
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
-		if (addedModule.FirstSocketIndex >= 0)
-		{
-			index = addedModule.FirstSocketIndex;
-			return index >= 0;
-		}
-		index = -1;
-		for (int i = 0; i < moduleSockets.Count; i++)
-		{
-			if (Vector3.SqrMagnitude(moduleSockets[i].WorldPosition - ((Component)addedModule).transform.position) < 0.1f)
-			{
-				index = i;
-				return true;
-			}
-		}
-		return false;
-	}
-
-	public void AddMass(float moduleMass, Vector3 moduleCOM, Vector3 moduleWorldPos)
-	{
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-		if (base.isServer)
-		{
-			Vector3 val = ((Component)this).transform.InverseTransformPoint(moduleWorldPos) + moduleCOM;
-			if (TotalMass == 0f)
-			{
-				SetMass(moduleMass);
-				SetCOM(val);
-				return;
-			}
-			float num = TotalMass + moduleMass;
-			Vector3 cOM = realLocalCOM * (TotalMass / num) + val * (moduleMass / num);
-			SetMass(num);
-			SetCOM(cOM);
-		}
-	}
-
-	public void RemoveMass(float moduleMass, Vector3 moduleCOM, Vector3 moduleWorldPos)
-	{
-		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
-		if (base.isServer)
-		{
-			float num = TotalMass - moduleMass;
-			Vector3 val = ((Component)this).transform.InverseTransformPoint(moduleWorldPos) + moduleCOM;
-			Vector3 cOM = (realLocalCOM - val * (moduleMass / TotalMass)) / (num / TotalMass);
-			SetMass(num);
-			SetCOM(cOM);
-		}
-	}
-
-	public bool TryGetModuleAt(int socketIndex, out BaseVehicleModule result)
-	{
-		if (socketIndex < 0 || socketIndex >= moduleSockets.Count)
-		{
-			result = null;
-			return false;
-		}
-		foreach (BaseVehicleModule attachedModuleEntity in AttachedModuleEntities)
-		{
-			int firstSocketIndex = attachedModuleEntity.FirstSocketIndex;
-			int num = firstSocketIndex + attachedModuleEntity.GetNumSocketsTaken() - 1;
-			if (firstSocketIndex <= socketIndex && num >= socketIndex)
-			{
-				result = attachedModuleEntity;
-				return true;
-			}
-		}
-		result = null;
-		return false;
-	}
-
-	public ModularVehicleSocket GetSocket(int index)
-	{
-		if (index < 0 || index >= moduleSockets.Count)
-		{
-			return null;
-		}
-		return moduleSockets[index];
-	}
-
-	public override void Load(LoadInfo info)
-	{
-		base.Load(info);
-		if (info.msg.modularVehicle == null)
-		{
-		}
-	}
-
-	protected override bool CanPushNow(BasePlayer pusher)
-	{
-		if (!base.CanPushNow(pusher))
-		{
-			return false;
-		}
-		return !IsKinematic && !IsEditableNow;
-	}
-
-	protected override void OnChildAdded(BaseEntity childEntity)
-	{
-		base.OnChildAdded(childEntity);
-		BaseVehicleModule module;
-		if ((module = childEntity as BaseVehicleModule) != null)
-		{
-			Action action = delegate
-			{
-				ModuleEntityAdded(module);
-			};
-			moduleAddActions[module] = action;
-			((FacepunchBehaviour)module).Invoke(action, 0f);
-		}
-	}
-
-	protected override void OnChildRemoved(BaseEntity childEntity)
-	{
-		base.OnChildRemoved(childEntity);
-		if (childEntity is BaseVehicleModule removedModule)
-		{
-			ModuleEntityRemoved(removedModule);
-		}
-	}
-
-	protected virtual void ModuleEntityAdded(BaseVehicleModule addedModule)
-	{
-		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0119: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011e: Unknown result type (might be due to invalid IL or missing references)
-		if (AttachedModuleEntities.Contains(addedModule))
-		{
-			return;
-		}
-		if (base.isServer && ((Object)(object)this == (Object)null || IsDead() || base.IsDestroyed))
-		{
-			if ((Object)(object)addedModule != (Object)null && !addedModule.IsDestroyed)
-			{
-				addedModule.Kill();
-			}
-			return;
-		}
-		int index = -1;
-		if (base.isServer && addedModule.AssociatedItemInstance != null)
-		{
-			index = addedModule.AssociatedItemInstance.position;
-		}
-		if (index == -1 && !TryDeduceSocketIndex(addedModule, out index))
-		{
-			string text = $"{((object)this).GetType().Name}: Couldn't get socket index from position ({((Component)addedModule).transform.position}).";
-			for (int i = 0; i < moduleSockets.Count; i++)
-			{
-				text += $" Sqr dist to socket {i} at {moduleSockets[i].WorldPosition} is {Vector3.SqrMagnitude(moduleSockets[i].WorldPosition - ((Component)addedModule).transform.position)}.";
-			}
-			Debug.LogError((object)text, (Object)(object)((Component)addedModule).gameObject);
-			return;
-		}
-		if (moduleAddActions.ContainsKey(addedModule))
-		{
-			moduleAddActions.Remove(addedModule);
-		}
-		AttachedModuleEntities.Add(addedModule);
-		addedModule.ModuleAdded(this, index);
-		AddMass(addedModule.Mass, addedModule.CentreOfMass, ((Component)addedModule).transform.position);
-		if (base.isServer && !Inventory.TrySyncModuleInventory(addedModule, index))
-		{
-			Debug.LogError((object)$"{((object)this).GetType().Name}: Unable to add module {((Object)addedModule).name} to socket ({index}). Destroying it.", (Object)(object)((Component)this).gameObject);
-			addedModule.Kill();
-			AttachedModuleEntities.Remove(addedModule);
-			return;
-		}
-		RefreshModulesExcept(addedModule);
-		if (base.isServer)
-		{
-			UpdateMountFlags();
-		}
-	}
-
-	protected virtual void ModuleEntityRemoved(BaseVehicleModule removedModule)
-	{
-		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
-		if (base.IsDestroyed)
-		{
-			return;
-		}
-		if (moduleAddActions.ContainsKey(removedModule))
-		{
-			((FacepunchBehaviour)removedModule).CancelInvoke(moduleAddActions[removedModule]);
-			moduleAddActions.Remove(removedModule);
-		}
-		if (AttachedModuleEntities.Contains(removedModule))
-		{
-			RemoveMass(removedModule.Mass, removedModule.CentreOfMass, ((Component)removedModule).transform.position);
-			AttachedModuleEntities.Remove(removedModule);
-			removedModule.ModuleRemoved();
-			RefreshModulesExcept(removedModule);
-			if (base.isServer)
-			{
-				UpdateMountFlags();
-			}
-		}
-	}
-
-	private void RefreshModulesExcept(BaseVehicleModule ignoredModule)
-	{
-		foreach (BaseVehicleModule attachedModuleEntity in AttachedModuleEntities)
-		{
-			if ((Object)(object)attachedModuleEntity != (Object)(object)ignoredModule)
-			{
-				attachedModuleEntity.OtherVehicleModulesChanged();
-			}
-		}
 	}
 }

@@ -2,15 +2,15 @@ using UnityEngine;
 
 public class RandomStaticObject : MonoBehaviour
 {
-	public uint Seed = 0u;
+	public uint Seed;
 
 	public float Probability = 0.5f;
 
-	public GameObject[] Candidates = null;
+	public GameObject[] Candidates;
 
 	protected void Start()
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
 		uint num = SeedEx.Seed(((Component)this).transform.position, World.Seed + Seed);
 		if (SeedRandom.Value(ref num) > Probability)
 		{

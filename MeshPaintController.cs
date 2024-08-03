@@ -1,9 +1,26 @@
+using Rust.UI;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class MeshPaintController : MonoBehaviour, IClientComponent
 {
+	public enum Tool
+	{
+		Brush,
+		Eraser,
+		ColorPicker
+	}
+
+	public enum RotateMode
+	{
+		None,
+		Movement,
+		Random
+	}
+
 	public Camera pickerCamera;
+
+	public Tool currentTool;
 
 	public Texture2D brushTexture;
 
@@ -13,11 +30,17 @@ public class MeshPaintController : MonoBehaviour, IClientComponent
 
 	public float brushSpacing = 2f;
 
+	public float brushSpacingFactor = 0.25f;
+
 	public RawImage brushImage;
 
 	public float brushPreviewScaleMultiplier = 1f;
 
-	public bool applyDefaults = false;
+	public Texture2D stampTexture;
+
+	public RotateMode brushRotation;
+
+	public bool applyDefaults;
 
 	public Texture2D defaltBrushTexture;
 
@@ -27,11 +50,13 @@ public class MeshPaintController : MonoBehaviour, IClientComponent
 
 	public float defaultBrushAlpha = 0.5f;
 
-	public Toggle lastBrush;
+	public float maxBrushScale = 32f;
 
-	public Button UndoButton;
+	public RustButton UndoButton;
 
-	public Button RedoButton;
+	public RustButton RedoButton;
+
+	public GameObject BackgroundBlocker;
 
 	private Vector3 lastPosition;
 }

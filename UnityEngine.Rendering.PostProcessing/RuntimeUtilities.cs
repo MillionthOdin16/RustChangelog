@@ -47,10 +47,10 @@ public static class RuntimeUtilities
 	{
 		get
 		{
-			//IL_0015: Unknown result type (might be due to invalid IL or missing references)
-			//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-			//IL_002b: Expected O, but got Unknown
-			//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0026: Expected O, but got Unknown
+			//IL_002d: Unknown result type (might be due to invalid IL or missing references)
 			if ((Object)(object)m_WhiteTexture == (Object)null)
 			{
 				m_WhiteTexture = new Texture2D(1, 1, (TextureFormat)5, false)
@@ -68,11 +68,11 @@ public static class RuntimeUtilities
 	{
 		get
 		{
-			//IL_0016: Unknown result type (might be due to invalid IL or missing references)
-			//IL_001b: Unknown result type (might be due to invalid IL or missing references)
-			//IL_002c: Expected O, but got Unknown
+			//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0027: Expected O, but got Unknown
+			//IL_0034: Unknown result type (might be due to invalid IL or missing references)
 			//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-			//IL_003e: Unknown result type (might be due to invalid IL or missing references)
 			if ((Object)(object)m_WhiteTexture3D == (Object)null)
 			{
 				m_WhiteTexture3D = new Texture3D(1, 1, 1, (TextureFormat)5, false)
@@ -90,10 +90,10 @@ public static class RuntimeUtilities
 	{
 		get
 		{
-			//IL_0015: Unknown result type (might be due to invalid IL or missing references)
-			//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-			//IL_002b: Expected O, but got Unknown
-			//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0026: Expected O, but got Unknown
+			//IL_002d: Unknown result type (might be due to invalid IL or missing references)
 			if ((Object)(object)m_BlackTexture == (Object)null)
 			{
 				m_BlackTexture = new Texture2D(1, 1, (TextureFormat)5, false)
@@ -111,11 +111,11 @@ public static class RuntimeUtilities
 	{
 		get
 		{
-			//IL_0016: Unknown result type (might be due to invalid IL or missing references)
-			//IL_001b: Unknown result type (might be due to invalid IL or missing references)
-			//IL_002c: Expected O, but got Unknown
+			//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0027: Expected O, but got Unknown
+			//IL_0034: Unknown result type (might be due to invalid IL or missing references)
 			//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-			//IL_003e: Unknown result type (might be due to invalid IL or missing references)
 			if ((Object)(object)m_BlackTexture3D == (Object)null)
 			{
 				m_BlackTexture3D = new Texture3D(1, 1, 1, (TextureFormat)5, false)
@@ -133,10 +133,10 @@ public static class RuntimeUtilities
 	{
 		get
 		{
-			//IL_0015: Unknown result type (might be due to invalid IL or missing references)
-			//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-			//IL_002b: Expected O, but got Unknown
-			//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0026: Expected O, but got Unknown
+			//IL_002d: Unknown result type (might be due to invalid IL or missing references)
 			if ((Object)(object)m_TransparentTexture == (Object)null)
 			{
 				m_TransparentTexture = new Texture2D(1, 1, (TextureFormat)5, false)
@@ -154,11 +154,11 @@ public static class RuntimeUtilities
 	{
 		get
 		{
-			//IL_0016: Unknown result type (might be due to invalid IL or missing references)
-			//IL_001b: Unknown result type (might be due to invalid IL or missing references)
-			//IL_002c: Expected O, but got Unknown
+			//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0027: Expected O, but got Unknown
+			//IL_0034: Unknown result type (might be due to invalid IL or missing references)
 			//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-			//IL_003e: Unknown result type (might be due to invalid IL or missing references)
 			if ((Object)(object)m_TransparentTexture3D == (Object)null)
 			{
 				m_TransparentTexture3D = new Texture3D(1, 1, 1, (TextureFormat)5, false)
@@ -176,12 +176,12 @@ public static class RuntimeUtilities
 	{
 		get
 		{
-			//IL_001b: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0031: Expected O, but got Unknown
-			//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0066: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0081: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0028: Expected O, but got Unknown
+			//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+			//IL_005c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0076: Unknown result type (might be due to invalid IL or missing references)
 			if ((Object)(object)s_FullscreenTriangle != (Object)null)
 			{
 				return s_FullscreenTriangle;
@@ -206,17 +206,16 @@ public static class RuntimeUtilities
 	{
 		get
 		{
-			//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0045: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0053: Expected O, but got Unknown
+			//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+			//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0049: Expected O, but got Unknown
 			if ((Object)(object)s_CopyStdMaterial != (Object)null)
 			{
 				return s_CopyStdMaterial;
 			}
 			Assert.IsNotNull<PostProcessResources>(s_Resources);
-			Shader copyStd = s_Resources.shaders.copyStd;
-			s_CopyStdMaterial = new Material(copyStd)
+			s_CopyStdMaterial = new Material(s_Resources.shaders.copyStd)
 			{
 				name = "PostProcess - CopyStd",
 				hideFlags = (HideFlags)61
@@ -229,17 +228,16 @@ public static class RuntimeUtilities
 	{
 		get
 		{
-			//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0045: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0053: Expected O, but got Unknown
+			//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+			//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0049: Expected O, but got Unknown
 			if ((Object)(object)s_CopyStdFromDoubleWideMaterial != (Object)null)
 			{
 				return s_CopyStdFromDoubleWideMaterial;
 			}
 			Assert.IsNotNull<PostProcessResources>(s_Resources);
-			Shader copyStdFromDoubleWide = s_Resources.shaders.copyStdFromDoubleWide;
-			s_CopyStdFromDoubleWideMaterial = new Material(copyStdFromDoubleWide)
+			s_CopyStdFromDoubleWideMaterial = new Material(s_Resources.shaders.copyStdFromDoubleWide)
 			{
 				name = "PostProcess - CopyStdFromDoubleWide",
 				hideFlags = (HideFlags)61
@@ -252,17 +250,16 @@ public static class RuntimeUtilities
 	{
 		get
 		{
-			//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0045: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0053: Expected O, but got Unknown
+			//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+			//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0049: Expected O, but got Unknown
 			if ((Object)(object)s_CopyMaterial != (Object)null)
 			{
 				return s_CopyMaterial;
 			}
 			Assert.IsNotNull<PostProcessResources>(s_Resources);
-			Shader copy = s_Resources.shaders.copy;
-			s_CopyMaterial = new Material(copy)
+			s_CopyMaterial = new Material(s_Resources.shaders.copy)
 			{
 				name = "PostProcess - Copy",
 				hideFlags = (HideFlags)61
@@ -275,17 +272,16 @@ public static class RuntimeUtilities
 	{
 		get
 		{
-			//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0045: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0053: Expected O, but got Unknown
+			//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+			//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0049: Expected O, but got Unknown
 			if ((Object)(object)s_CopyFromTexArrayMaterial != (Object)null)
 			{
 				return s_CopyFromTexArrayMaterial;
 			}
 			Assert.IsNotNull<PostProcessResources>(s_Resources);
-			Shader copyStdFromTexArray = s_Resources.shaders.copyStdFromTexArray;
-			s_CopyFromTexArrayMaterial = new Material(copyStdFromTexArray)
+			s_CopyFromTexArrayMaterial = new Material(s_Resources.shaders.copyStdFromTexArray)
 			{
 				name = "PostProcess - CopyFromTexArray",
 				hideFlags = (HideFlags)61
@@ -320,15 +316,53 @@ public static class RuntimeUtilities
 
 	public static bool scriptableRenderPipelineActive => (Object)(object)GraphicsSettings.renderPipelineAsset != (Object)null;
 
-	public static bool supportsDeferredShading => scriptableRenderPipelineActive || (int)GraphicsSettings.GetShaderMode((BuiltinShaderType)0) > 0;
+	public static bool supportsDeferredShading
+	{
+		get
+		{
+			//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+			//IL_000e: Invalid comparison between Unknown and I4
+			if (!scriptableRenderPipelineActive)
+			{
+				return (int)GraphicsSettings.GetShaderMode((BuiltinShaderType)0) > 0;
+			}
+			return true;
+		}
+	}
 
-	public static bool supportsDepthNormals => scriptableRenderPipelineActive || (int)GraphicsSettings.GetShaderMode((BuiltinShaderType)4) > 0;
+	public static bool supportsDepthNormals
+	{
+		get
+		{
+			//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+			//IL_000e: Invalid comparison between Unknown and I4
+			if (!scriptableRenderPipelineActive)
+			{
+				return (int)GraphicsSettings.GetShaderMode((BuiltinShaderType)4) > 0;
+			}
+			return true;
+		}
+	}
 
 	public static bool isSinglePassStereoEnabled => false;
 
 	public static bool isVREnabled => false;
 
-	public static bool isAndroidOpenGL => (int)Application.platform == 11 && (int)SystemInfo.graphicsDeviceType != 21;
+	public static bool isAndroidOpenGL
+	{
+		get
+		{
+			//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0007: Invalid comparison between Unknown and I4
+			//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0010: Invalid comparison between Unknown and I4
+			if ((int)Application.platform == 11)
+			{
+				return (int)SystemInfo.graphicsDeviceType != 21;
+			}
+			return false;
+		}
+	}
 
 	public static RenderTextureFormat defaultHDRRenderTextureFormat => (RenderTextureFormat)9;
 
@@ -336,35 +370,36 @@ public static class RuntimeUtilities
 
 	public static Texture2D GetLutStrip(int size)
 	{
-		//IL_00bd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ce: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00d6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00da: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00df: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ff: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0107: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0118: Expected O, but got Unknown
-		//IL_00d0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00dd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ec: Expected O, but got Unknown
+		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
 		if (!m_LutStrips.TryGetValue(size, out var value))
 		{
 			int num = size * size;
-			Color[] array = (Color[])(object)new Color[num * size];
-			float num2 = 1f / ((float)size - 1f);
+			int num2 = size;
+			Color[] array = (Color[])(object)new Color[num * num2];
+			float num3 = 1f / ((float)size - 1f);
 			for (int i = 0; i < size; i++)
 			{
-				int num3 = i * size;
-				float num4 = (float)i * num2;
+				int num4 = i * size;
+				float num5 = (float)i * num3;
 				for (int j = 0; j < size; j++)
 				{
-					float num5 = (float)j * num2;
+					float num6 = (float)j * num3;
 					for (int k = 0; k < size; k++)
 					{
-						float num6 = (float)k * num2;
-						array[j * num + num3 + k] = new Color(num6, num5, num4);
+						float num7 = (float)k * num3;
+						array[j * num + num4 + k] = new Color(num7, num6, num5);
 					}
 				}
 			}
@@ -390,30 +425,30 @@ public static class RuntimeUtilities
 
 	public static void SetRenderTargetWithLoadStoreAction(this CommandBuffer cmd, RenderTargetIdentifier rt, RenderBufferLoadAction loadAction, RenderBufferStoreAction storeAction)
 	{
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0004: Unknown result type (might be due to invalid IL or missing references)
 		cmd.SetRenderTarget(rt, loadAction, storeAction);
 	}
 
 	public static void SetRenderTargetWithLoadStoreAction(this CommandBuffer cmd, RenderTargetIdentifier color, RenderBufferLoadAction colorLoadAction, RenderBufferStoreAction colorStoreAction, RenderTargetIdentifier depth, RenderBufferLoadAction depthLoadAction, RenderBufferStoreAction depthStoreAction)
 	{
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0004: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
 		cmd.SetRenderTarget(color, colorLoadAction, colorStoreAction, depth, depthLoadAction, depthStoreAction);
 	}
 
 	public static void BlitFullscreenTriangle(this CommandBuffer cmd, RenderTargetIdentifier source, RenderTargetIdentifier destination, bool clear = false, Rect? viewport = null)
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
 		cmd.SetGlobalTexture(ShaderIDs.MainTex, source);
 		cmd.SetRenderTargetWithLoadStoreAction(destination, (RenderBufferLoadAction)((!viewport.HasValue) ? 2 : 0), (RenderBufferStoreAction)0);
 		if (viewport.HasValue)
@@ -429,44 +464,42 @@ public static class RuntimeUtilities
 
 	public static void BlitFullscreenTriangle(this CommandBuffer cmd, RenderTargetIdentifier source, RenderTargetIdentifier destination, PropertySheet propertySheet, int pass, RenderBufferLoadAction loadAction, Rect? viewport = null)
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0011: Invalid comparison between Unknown and I4
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0032: Expected O, but got I4
-		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002c->IL002c: Incompatible stack types: O vs I4
-		//IL_002a->IL002c: Incompatible stack types: I4 vs O
-		//IL_002a->IL002c: Incompatible stack types: O vs I4
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000f: Invalid comparison between Unknown and I4
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Expected O, but got Unknown
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
 		cmd.SetGlobalTexture(ShaderIDs.MainTex, source);
-		bool flag = (int)loadAction == 1;
-		if (flag)
+		int num = (((int)loadAction == 1) ? 1 : 0);
+		if (num != 0)
 		{
 			loadAction = (RenderBufferLoadAction)2;
 		}
 		object obj = cmd;
-		int num;
+		_003F val = destination;
 		if (!viewport.HasValue)
 		{
-			obj = loadAction;
-			num = (int)obj;
+			num = (int)loadAction;
+			obj = (object)val;
+			val = obj;
 		}
 		else
 		{
 			num = 0;
-			obj = num;
-			num = (int)obj;
+			obj = (object)val;
+			val = obj;
 		}
-		((CommandBuffer)(object)num).SetRenderTargetWithLoadStoreAction(destination, (RenderBufferLoadAction)obj, (RenderBufferStoreAction)0);
+		((CommandBuffer)val).SetRenderTargetWithLoadStoreAction((RenderTargetIdentifier)obj, (RenderBufferLoadAction)num, (RenderBufferStoreAction)0);
 		if (viewport.HasValue)
 		{
 			cmd.SetViewport(viewport.Value);
 		}
-		if (flag)
+		if (num != 0)
 		{
 			cmd.ClearRenderTarget(true, true, Color.clear);
 		}
@@ -475,16 +508,16 @@ public static class RuntimeUtilities
 
 	public static void BlitFullscreenTriangle(this CommandBuffer cmd, RenderTargetIdentifier source, RenderTargetIdentifier destination, PropertySheet propertySheet, int pass, bool clear = false, Rect? viewport = null)
 	{
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
 		cmd.BlitFullscreenTriangle(source, destination, propertySheet, pass, (RenderBufferLoadAction)(clear ? 1 : 2), viewport);
 	}
 
 	public static void BlitFullscreenTriangleFromDoubleWide(this CommandBuffer cmd, RenderTargetIdentifier source, RenderTargetIdentifier destination, Material material, int pass, int eye)
 	{
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
 		Vector4 val = default(Vector4);
 		((Vector4)(ref val))._002Ector(0.5f, 1f, 0f, 0f);
 		if (eye == 1)
@@ -497,9 +530,9 @@ public static class RuntimeUtilities
 
 	public static void BlitFullscreenTriangleToDoubleWide(this CommandBuffer cmd, RenderTargetIdentifier source, RenderTargetIdentifier destination, PropertySheet propertySheet, int pass, int eye)
 	{
-		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
 		Vector4 val = default(Vector4);
 		((Vector4)(ref val))._002Ector(0.5f, 1f, -0.5f, 0f);
 		if (eye == 1)
@@ -513,10 +546,10 @@ public static class RuntimeUtilities
 
 	public static void BlitFullscreenTriangleFromTexArray(this CommandBuffer cmd, RenderTargetIdentifier source, RenderTargetIdentifier destination, PropertySheet propertySheet, int pass, bool clear = false, int depthSlice = -1)
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
 		cmd.SetGlobalTexture(ShaderIDs.MainTex, source);
 		cmd.SetGlobalFloat(ShaderIDs.DepthSlice, (float)depthSlice);
 		cmd.SetRenderTargetWithLoadStoreAction(destination, (RenderBufferLoadAction)2, (RenderBufferStoreAction)0);
@@ -529,10 +562,10 @@ public static class RuntimeUtilities
 
 	public static void BlitFullscreenTriangleToTexArray(this CommandBuffer cmd, RenderTargetIdentifier source, RenderTargetIdentifier destination, PropertySheet propertySheet, int pass, bool clear = false, int depthSlice = -1)
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
 		cmd.SetGlobalTexture(ShaderIDs.MainTex, source);
 		cmd.SetGlobalFloat(ShaderIDs.DepthSlice, (float)depthSlice);
 		cmd.SetRenderTarget(destination, 0, (CubemapFace)(-1), -1);
@@ -545,18 +578,18 @@ public static class RuntimeUtilities
 
 	public static void BlitFullscreenTriangle(this CommandBuffer cmd, RenderTargetIdentifier source, RenderTargetIdentifier destination, RenderTargetIdentifier depth, PropertySheet propertySheet, int pass, bool clear = false, Rect? viewport = null)
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
 		cmd.SetGlobalTexture(ShaderIDs.MainTex, source);
 		RenderBufferLoadAction val = (RenderBufferLoadAction)((!viewport.HasValue) ? 2 : 0);
 		if (clear)
@@ -577,11 +610,11 @@ public static class RuntimeUtilities
 
 	public static void BlitFullscreenTriangle(this CommandBuffer cmd, RenderTargetIdentifier source, RenderTargetIdentifier[] destinations, RenderTargetIdentifier depth, PropertySheet propertySheet, int pass, bool clear = false, Rect? viewport = null)
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
 		cmd.SetGlobalTexture(ShaderIDs.MainTex, source);
 		cmd.SetRenderTarget(destinations, depth);
 		if (viewport.HasValue)
@@ -597,11 +630,11 @@ public static class RuntimeUtilities
 
 	public static void BuiltinBlit(this CommandBuffer cmd, RenderTargetIdentifier source, RenderTargetIdentifier destination)
 	{
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
 		cmd.SetRenderTarget(destination, (RenderBufferLoadAction)2, (RenderBufferStoreAction)0);
 		destination = RenderTargetIdentifier.op_Implicit((BuiltinRenderTextureType)1);
 		cmd.Blit(source, destination);
@@ -609,11 +642,11 @@ public static class RuntimeUtilities
 
 	public static void BuiltinBlit(this CommandBuffer cmd, RenderTargetIdentifier source, RenderTargetIdentifier destination, Material mat, int pass = 0)
 	{
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
 		cmd.SetRenderTarget(destination, (RenderBufferLoadAction)2, (RenderBufferStoreAction)0);
 		destination = RenderTargetIdentifier.op_Implicit((BuiltinRenderTextureType)1);
 		cmd.Blit(source, destination, mat, pass);
@@ -621,12 +654,12 @@ public static class RuntimeUtilities
 
 	public static void CopyTexture(CommandBuffer cmd, RenderTargetIdentifier source, RenderTargetIdentifier destination)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0007: Invalid comparison between Unknown and I4
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Invalid comparison between Unknown and I4
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
 		if ((int)SystemInfo.copyTextureSupport > 0)
 		{
 			cmd.CopyTexture(source, destination);
@@ -639,23 +672,27 @@ public static class RuntimeUtilities
 
 	public static bool isFloatingPointFormat(RenderTextureFormat format)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0004: Invalid comparison between Unknown and I4
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Invalid comparison between Unknown and I4
-		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000d: Invalid comparison between Unknown and I4
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Invalid comparison between Unknown and I4
-		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0017: Invalid comparison between Unknown and I4
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001c: Invalid comparison between Unknown and I4
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0021: Invalid comparison between Unknown and I4
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0026: Invalid comparison between Unknown and I4
-		return (int)format == 9 || (int)format == 2 || (int)format == 11 || (int)format == 12 || (int)format == 13 || (int)format == 14 || (int)format == 15 || (int)format == 22;
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0003: Invalid comparison between Unknown and I4
+		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Invalid comparison between Unknown and I4
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Invalid comparison between Unknown and I4
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Invalid comparison between Unknown and I4
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Invalid comparison between Unknown and I4
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Invalid comparison between Unknown and I4
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Invalid comparison between Unknown and I4
+		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Invalid comparison between Unknown and I4
+		if ((int)format != 9 && (int)format != 2 && (int)format != 11 && (int)format != 12 && (int)format != 13 && (int)format != 14 && (int)format != 15)
+		{
+			return (int)format == 22;
+		}
+		return true;
 	}
 
 	public static void Destroy(Object obj)
@@ -668,18 +705,26 @@ public static class RuntimeUtilities
 
 	public static bool IsResolvedDepthAvailable(Camera camera)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000e: Invalid comparison between Unknown and I4
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Invalid comparison between Unknown and I4
-		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0017: Invalid comparison between Unknown and I4
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001c: Invalid comparison between Unknown and I4
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Invalid comparison between Unknown and I4
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Invalid comparison between Unknown and I4
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Invalid comparison between Unknown and I4
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Invalid comparison between Unknown and I4
 		GraphicsDeviceType graphicsDeviceType = SystemInfo.graphicsDeviceType;
-		return (int)camera.actualRenderingPath == 3 && ((int)graphicsDeviceType == 2 || (int)graphicsDeviceType == 18 || (int)graphicsDeviceType == 14);
+		if ((int)camera.actualRenderingPath == 3)
+		{
+			if ((int)graphicsDeviceType != 2 && (int)graphicsDeviceType != 18)
+			{
+				return (int)graphicsDeviceType == 14;
+			}
+			return true;
+		}
+		return false;
 	}
 
 	public static void DestroyProfile(PostProcessProfile profile, bool destroyEffects)
@@ -710,39 +755,47 @@ public static class RuntimeUtilities
 
 	public static bool IsPostProcessingActive(PostProcessLayer layer)
 	{
-		return (Object)(object)layer != (Object)null && ((Behaviour)layer).enabled;
+		if ((Object)(object)layer != (Object)null)
+		{
+			return ((Behaviour)layer).enabled;
+		}
+		return false;
 	}
 
 	public static bool IsTemporalAntialiasingActive(PostProcessLayer layer)
 	{
-		return IsPostProcessingActive(layer) && layer.antialiasingMode == PostProcessLayer.Antialiasing.TemporalAntialiasing && layer.temporalAntialiasing.IsSupported();
+		if (IsPostProcessingActive(layer) && layer.antialiasingMode == PostProcessLayer.Antialiasing.TemporalAntialiasing)
+		{
+			return layer.temporalAntialiasing.IsSupported();
+		}
+		return false;
 	}
 
 	public static IEnumerable<T> GetAllSceneObjects<T>() where T : Component
 	{
 		Queue<Transform> queue = new Queue<Transform>();
 		Scene activeScene = SceneManager.GetActiveScene();
-		GameObject[] roots = ((Scene)(ref activeScene)).GetRootGameObjects();
-		GameObject[] array = roots;
-		foreach (GameObject root in array)
+		GameObject[] rootGameObjects = ((Scene)(ref activeScene)).GetRootGameObjects();
+		GameObject[] array = rootGameObjects;
+		foreach (GameObject val in array)
 		{
-			queue.Enqueue(root.transform);
-			T comp = root.GetComponent<T>();
-			if ((Object)(object)comp != (Object)null)
+			queue.Enqueue(val.transform);
+			T component = val.GetComponent<T>();
+			if ((Object)(object)component != (Object)null)
 			{
-				yield return comp;
+				yield return component;
 			}
 		}
 		while (queue.Count > 0)
 		{
 			foreach (Transform item in queue.Dequeue())
 			{
-				Transform child = item;
-				queue.Enqueue(child);
-				T comp2 = ((Component)child).GetComponent<T>();
-				if ((Object)(object)comp2 != (Object)null)
+				Transform val2 = item;
+				queue.Enqueue(val2);
+				T component2 = ((Component)val2).GetComponent<T>();
+				if ((Object)(object)component2 != (Object)null)
 				{
-					yield return comp2;
+					yield return component2;
 				}
 			}
 		}
@@ -763,15 +816,13 @@ public static class RuntimeUtilities
 
 	public static Matrix4x4 GetJitteredPerspectiveProjectionMatrix(Camera camera, Vector2 offset)
 	{
-		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
 		float nearClipPlane = camera.nearClipPlane;
-		float farClipPlane = camera.farClipPlane;
+		_ = camera.farClipPlane;
 		float num = Mathf.Tan((float)Math.PI / 360f * camera.fieldOfView) * nearClipPlane;
 		float num2 = num * camera.aspect;
 		offset.x *= num2 / (0.5f * (float)camera.pixelWidth);
@@ -786,13 +837,11 @@ public static class RuntimeUtilities
 
 	public static Matrix4x4 GetJitteredOrthographicProjectionMatrix(Camera camera, Vector2 offset)
 	{
-		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
 		float orthographicSize = camera.orthographicSize;
 		float num = orthographicSize * camera.aspect;
 		offset.x *= num / (0.5f * (float)camera.pixelWidth);
@@ -806,24 +855,20 @@ public static class RuntimeUtilities
 
 	public static Matrix4x4 GenerateJitteredProjectionMatrixFromOriginal(PostProcessRenderContext context, Matrix4x4 origProj, Vector2 jitter)
 	{
-		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ac: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
 		FrustumPlanes decomposeProjection = ((Matrix4x4)(ref origProj)).decomposeProjection;
 		float num = Math.Abs(decomposeProjection.top) + Math.Abs(decomposeProjection.bottom);
 		float num2 = Math.Abs(decomposeProjection.left) + Math.Abs(decomposeProjection.right);
@@ -869,19 +914,16 @@ public static class RuntimeUtilities
 		{
 			expression = ((LambdaExpression)expression).Body;
 		}
-		ExpressionType nodeType = expression.NodeType;
-		if (nodeType == ExpressionType.MemberAccess)
+		if (expression.NodeType == ExpressionType.MemberAccess)
 		{
-			FieldInfo fieldInfo = (FieldInfo)((MemberExpression)expression).Member;
-			return fieldInfo.GetCustomAttributes(inherit: false).Cast<Attribute>().ToArray();
+			return ((FieldInfo)((MemberExpression)expression).Member).GetCustomAttributes(inherit: false).Cast<Attribute>().ToArray();
 		}
 		throw new InvalidOperationException();
 	}
 
 	public static string GetFieldPath<TType, TValue>(Expression<Func<TType, TValue>> expr)
 	{
-		ExpressionType nodeType = expr.Body.NodeType;
-		if (nodeType == ExpressionType.MemberAccess)
+		if (expr.Body.NodeType == ExpressionType.MemberAccess)
 		{
 			MemberExpression memberExpression = expr.Body as MemberExpression;
 			List<string> list = new List<string>();

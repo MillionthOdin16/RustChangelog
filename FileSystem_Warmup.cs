@@ -13,13 +13,22 @@ public class FileSystem_Warmup : MonoBehaviour
 
 	public static Coroutine warmupTask;
 
+	private static List<(string, TimeSpan)> warmupTimes = new List<(string, TimeSpan)>();
+
 	private static bool run = true;
 
-	public static string[] ExcludeFilter = new string[11]
+	public static string[] ExcludeFilter = new string[12]
 	{
-		"/bundled/prefabs/autospawn/monument", "/bundled/prefabs/autospawn/mountain", "/bundled/prefabs/autospawn/canyon", "/bundled/prefabs/autospawn/decor", "/bundled/prefabs/navmesh", "/content/ui/", "/prefabs/ui/", "/prefabs/world/", "/prefabs/system/", "/standard assets/",
-		"/third party/"
+		"/bundled/prefabs/autospawn/monument", "/bundled/prefabs/autospawn/mountain", "/bundled/prefabs/autospawn/canyon", "/bundled/prefabs/autospawn/decor", "/bundled/prefabs/autospawn/tunnel", "/bundled/prefabs/navmesh", "/content/ui/", "/prefabs/ui/", "/prefabs/world/", "/prefabs/system/",
+		"/standard assets/", "/third party/"
 	};
+
+	private static Stopwatch warmupTimer = new Stopwatch();
+
+	public static IEnumerable<(string, TimeSpan)> GetWarmupTimes()
+	{
+		return warmupTimes;
+	}
 
 	public static void Run()
 	{
@@ -36,7 +45,11 @@ public class FileSystem_Warmup : MonoBehaviour
 
 	public static IEnumerator Run(string[] assetList, Action<string> statusFunction = null, string format = null, int priority = 0)
 	{
-		return (Global.warmupConcurrency > 1) ? RunAsyncImpl(assetList, statusFunction, format, priority) : RunImpl(assetList, statusFunction, format);
+		if (Global.warmupConcurrency <= 1)
+		{
+			return RunImpl(assetList, statusFunction, format);
+		}
+		return RunAsyncImpl(assetList, statusFunction, format, priority);
 	}
 
 	private static IEnumerator RunAsyncImpl(string[] assetList, Action<string> statusFunction, string format, int priority)
@@ -46,15 +59,16 @@ public class FileSystem_Warmup : MonoBehaviour
 			yield break;
 		}
 		Stopwatch statusSw = Stopwatch.StartNew();
+		Timing timer = new Timing("asset_warmup_async");
 		Stopwatch sw = Stopwatch.StartNew();
 		AssetPreloadResult preload = FileSystem.PreloadAssets((IEnumerable<string>)assetList, Global.warmupConcurrency, priority);
 		int warmupIndex = 0;
 		while (((CustomYieldInstruction)preload).MoveNext() || warmupIndex < preload.TotalCount)
 		{
-			float frameBudget = CalculateFrameBudget();
-			if (frameBudget > 0f)
+			float num = CalculateFrameBudget();
+			if (num > 0f)
 			{
-				while (warmupIndex < preload.Results.Count && sw.Elapsed.TotalSeconds < (double)frameBudget)
+				while (warmupIndex < preload.Results.Count && sw.Elapsed.TotalSeconds < (double)num)
 				{
 					PrefabWarmup(preload.Results[warmupIndex++].Item1);
 				}
@@ -67,6 +81,7 @@ public class FileSystem_Warmup : MonoBehaviour
 			yield return CoroutineEx.waitForEndOfFrame;
 			sw.Restart();
 		}
+		timer.End();
 		run = false;
 	}
 
@@ -76,6 +91,7 @@ public class FileSystem_Warmup : MonoBehaviour
 		{
 			yield break;
 		}
+		Timing timer = new Timing("asset_warmup");
 		Stopwatch sw = Stopwatch.StartNew();
 		for (int i = 0; i < assetList.Length; i++)
 		{
@@ -88,6 +104,7 @@ public class FileSystem_Warmup : MonoBehaviour
 			}
 			PrefabWarmup(assetList[i]);
 		}
+		timer.End();
 		run = false;
 	}
 
@@ -124,6 +141,9 @@ public class FileSystem_Warmup : MonoBehaviour
 
 	private static void PrefabWarmup(string path)
 	{
+		warmupTimer.Restart();
 		GameManager.server.FindPrefab(path);
+		warmupTimer.Stop();
+		warmupTimes.Add(ValueTuple.Create(path, warmupTimer.Elapsed));
 	}
 }

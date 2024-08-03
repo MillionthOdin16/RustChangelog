@@ -7,14 +7,12 @@ public static class UISound
 
 	private static AudioSource GetAudioSource()
 	{
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0023: Expected O, but got Unknown
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)source != (Object)null)
 		{
 			return source;
 		}
-		GameObject val = new GameObject("UISound");
-		source = val.AddComponent<AudioSource>();
+		source = new GameObject("UISound").AddComponent<AudioSource>();
 		source.spatialBlend = 0f;
 		source.volume = 1f;
 		return source;

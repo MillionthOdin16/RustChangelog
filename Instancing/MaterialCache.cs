@@ -17,7 +17,7 @@ public class MaterialCache
 		}
 		value = new Material(material);
 		value.enableInstancing = true;
-		value.EnableKeyword("RUST_PROCEDURAL_INSTANCING");
+		value.EnableKeyword("PROCEDURAL_INSTANCING_ON");
 		modifiedMaterials.Add(material, value);
 		RequestTextureStreaming(material);
 		return value;

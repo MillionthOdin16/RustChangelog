@@ -4,11 +4,11 @@ using UnityEngine;
 
 public class NPCSpawner : SpawnGroup
 {
-	public int AdditionalLOSBlockingLayer = 0;
+	public int AdditionalLOSBlockingLayer;
 
 	public MonumentNavMesh monumentNavMesh;
 
-	public bool shouldFillOnSpawn = false;
+	public bool shouldFillOnSpawn;
 
 	[Header("InfoZone Config")]
 	public AIInformationZone VirtualInfoZone;
@@ -19,7 +19,7 @@ public class NPCSpawner : SpawnGroup
 	public BasePath AStarGraph;
 
 	[Header("Human Stat Replacements")]
-	public bool UseStatModifiers = false;
+	public bool UseStatModifiers;
 
 	public float SenseRange = 30f;
 
@@ -31,7 +31,7 @@ public class NPCSpawner : SpawnGroup
 
 	public float ListenRange = 10f;
 
-	public float CanUseHealingItemsChance = 0f;
+	public float CanUseHealingItemsChance;
 
 	[Header("Loadout Replacements")]
 	public PlayerInventoryProperties[] Loadouts;

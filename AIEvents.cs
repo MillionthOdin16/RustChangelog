@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 public class AIEvents
 {
@@ -12,9 +11,9 @@ public class AIEvents
 
 	private AIBrainSenses senses;
 
-	private int currentEventIndex = 0;
+	private int currentEventIndex;
 
-	private bool inBlock = false;
+	private bool inBlock;
 
 	public int CurrentInputMemorySlot { get; private set; } = -1;
 
@@ -55,7 +54,6 @@ public class AIEvents
 
 	public void Tick(float deltaTime, StateStatus stateStatus)
 	{
-		Profiler.BeginSample("AIEvents.Tick");
 		foreach (BaseAIEvent @event in events)
 		{
 			@event.Tick(deltaTime, eventListener);
@@ -88,8 +86,7 @@ public class AIEvents
 							if (baseAIEvent.HasValidTriggerState)
 							{
 								baseAIEvent.TriggerStateChange(eventListener, baseAIEvent.ID);
-								Profiler.EndSample();
-								return;
+								break;
 							}
 						}
 					}
@@ -102,12 +99,10 @@ public class AIEvents
 				else if (result && baseAIEvent.HasValidTriggerState)
 				{
 					baseAIEvent.TriggerStateChange(eventListener, baseAIEvent.ID);
-					Profiler.EndSample();
-					return;
+					break;
 				}
 			}
 		}
-		Profiler.EndSample();
 	}
 
 	private int FindNextEventBlock()

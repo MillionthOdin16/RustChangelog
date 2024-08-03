@@ -1,21 +1,21 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ClientIOLine : BaseMonoBehaviour
+public class ClientIOLine : BaseMonoBehaviour, INotifyLOD
 {
-	public RendererLOD _lod;
-
 	public LineRenderer _line;
+
+	public NotifyLOD lod;
 
 	public Material directionalMaterial;
 
 	public Material defaultMaterial;
 
-	public IOEntity.IOType lineType = IOEntity.IOType.Electric;
+	public IOEntity.IOType lineType;
 
-	public static List<ClientIOLine> _allLines = new List<ClientIOLine>();
+	public WireTool.WireColour colour;
 
-	public WireTool.WireColour colour = WireTool.WireColour.Default;
+	public static List<ClientIOLine> allLines = new List<ClientIOLine>();
 
-	public IOEntity ownerIOEnt = null;
+	public IOEntity ownerIOEnt;
 }

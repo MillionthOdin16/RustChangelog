@@ -4,8 +4,7 @@ public static class BaseEntityEx
 {
 	public static bool IsValidEntityReference<T>(this T obj) where T : class
 	{
-		BaseEntity baseEntity = obj as BaseEntity;
-		return (Object)(object)baseEntity != (Object)null;
+		return (Object)(object)(obj as BaseEntity) != (Object)null;
 	}
 
 	public static bool HasEntityInParents(this BaseEntity ent, BaseEntity toFind)

@@ -4,13 +4,18 @@ using UnityEngine;
 public class ElectricalDFlipFlop : IOEntity
 {
 	[NonSerialized]
-	private int setAmount = 0;
+	private int setAmount;
 
 	[NonSerialized]
-	private int resetAmount = 0;
+	private int resetAmount;
 
 	[NonSerialized]
-	private int toggleAmount = 0;
+	private int toggleAmount;
+
+	public override int ConsumptionAmount()
+	{
+		return 0;
+	}
 
 	public override void UpdateHasPower(int inputAmount, int inputSlot)
 	{
@@ -49,10 +54,10 @@ public class ElectricalDFlipFlop : IOEntity
 	{
 		if (IsPowered())
 		{
-			bool flag = IsOn();
+			bool num = IsOn();
 			bool desiredState = GetDesiredState();
 			SetFlag(Flags.On, desiredState);
-			if (flag != IsOn())
+			if (num != IsOn())
 			{
 				MarkDirtyForceUpdateOutputs();
 			}
@@ -61,45 +66,77 @@ public class ElectricalDFlipFlop : IOEntity
 
 	public override void UpdateFromInput(int inputAmount, int inputSlot)
 	{
+		bool flag = false;
 		switch (inputSlot)
 		{
 		case 1:
+			flag = inputAmount != setAmount;
 			setAmount = inputAmount;
-			UpdateState();
 			break;
 		case 2:
+			flag = inputAmount != resetAmount;
 			resetAmount = inputAmount;
-			UpdateState();
 			break;
 		case 3:
+			flag = inputAmount != toggleAmount;
 			toggleAmount = inputAmount;
-			UpdateState();
 			break;
 		case 0:
 			base.UpdateFromInput(inputAmount, inputSlot);
 			UpdateState();
 			break;
 		}
+		if (flag)
+		{
+			UpdateState();
+		}
 	}
 
 	public override int GetPassthroughAmount(int outputSlot = 0)
 	{
-		return base.GetPassthroughAmount(outputSlot);
+		int result = Mathf.Max(0, currentEnergy);
+		if (outputSlot == -1)
+		{
+			return result;
+		}
+		if (!AllowDrainFrom(outputSlot))
+		{
+			return 0;
+		}
+		return result;
 	}
 
 	public override void UpdateOutputs()
 	{
 		if (ShouldUpdateOutputs() && ensureOutputsUpdated)
 		{
-			int num = Mathf.Max(0, currentEnergy - 1);
+			int passthroughAmount = GetPassthroughAmount(-1);
 			if ((Object)(object)outputs[0].connectedTo.Get() != (Object)null)
 			{
-				outputs[0].connectedTo.Get().UpdateFromInput(IsOn() ? num : 0, outputs[0].connectedToSlot);
+				outputs[0].connectedTo.Get().UpdateFromInput(IsOn() ? passthroughAmount : 0, outputs[0].connectedToSlot);
 			}
 			if ((Object)(object)outputs[1].connectedTo.Get() != (Object)null)
 			{
-				outputs[1].connectedTo.Get().UpdateFromInput((!IsOn()) ? num : 0, outputs[1].connectedToSlot);
+				outputs[1].connectedTo.Get().UpdateFromInput((!IsOn()) ? passthroughAmount : 0, outputs[1].connectedToSlot);
 			}
 		}
+	}
+
+	public override bool AllowDrainFrom(int outputSlot)
+	{
+		if (outputSlot == -1)
+		{
+			return true;
+		}
+		if (!IsOn())
+		{
+			return outputSlot == 1;
+		}
+		return outputSlot == 0;
+	}
+
+	public override bool WantsPower(int inputIndex)
+	{
+		return inputIndex == 0;
 	}
 }

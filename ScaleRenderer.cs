@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class ScaleRenderer : MonoBehaviour
 {
-	public bool useRandomScale = false;
+	public bool useRandomScale;
 
 	public float scaleMin = 1f;
 
@@ -10,7 +10,7 @@ public class ScaleRenderer : MonoBehaviour
 
 	private float lastScale = -1f;
 
-	protected bool hasInitialValues = false;
+	protected bool hasInitialValues;
 
 	public Renderer myRenderer;
 

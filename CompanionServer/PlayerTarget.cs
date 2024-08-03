@@ -18,7 +18,11 @@ public readonly struct PlayerTarget : IEquatable<PlayerTarget>
 
 	public override bool Equals(object obj)
 	{
-		return obj is PlayerTarget other && Equals(other);
+		if (obj is PlayerTarget other)
+		{
+			return Equals(other);
+		}
+		return false;
 	}
 
 	public override int GetHashCode()

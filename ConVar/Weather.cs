@@ -563,6 +563,11 @@ public class Weather : ConsoleSystem
 		}
 	}
 
+	public static WeatherPreset GetWeatherPreset(string withName)
+	{
+		return Array.Find(SingletonComponent<Climate>.Instance.WeatherPresets, (WeatherPreset x) => StringEx.Contains(((Object)x).name, withName, CompareOptions.IgnoreCase));
+	}
+
 	[ClientVar]
 	[ServerVar]
 	public static void reset(Arg args)
@@ -581,8 +586,8 @@ public class Weather : ConsoleSystem
 	[ServerVar]
 	public static void report(Arg args)
 	{
-		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001d: Expected O, but got Unknown
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Expected O, but got Unknown
 		if (Object.op_Implicit((Object)(object)SingletonComponent<Climate>.Instance))
 		{
 			TextTable val = new TextTable();

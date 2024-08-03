@@ -8,7 +8,7 @@ public class TriggerLadder : TriggerBase
 		Rope
 	}
 
-	public LadderType Type = LadderType.Rungs;
+	public LadderType Type;
 
 	internal override GameObject InterestedInObject(GameObject obj)
 	{

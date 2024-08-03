@@ -36,17 +36,15 @@ public class GameModeSoftcore : GameModeVanilla
 		}
 		fraction = Mathf.Clamp01(fraction);
 		int count = from.itemList.Count;
-		float num = (float)count * fraction;
-		float num2 = Mathf.Ceil(num);
-		if (count == 1 && num2 == 1f && !takeLastItem)
+		float num = Mathf.Ceil((float)count * fraction);
+		if (count == 1 && num == 1f && !takeLastItem)
 		{
 			return;
 		}
 		List<int> list = Pool.GetList<int>();
 		for (int i = 0; i < from.capacity; i++)
 		{
-			Item slot = from.GetSlot(i);
-			if (slot != null)
+			if (from.GetSlot(i) != null)
 			{
 				list.Add(i);
 			}
@@ -56,7 +54,7 @@ public class GameModeSoftcore : GameModeVanilla
 			Pool.FreeList<int>(ref list);
 			return;
 		}
-		for (int j = 0; (float)j < num2; j++)
+		for (int j = 0; (float)j < num; j++)
 		{
 			int index = Random.Range(0, list.Count);
 			Item item = from.GetSlot(list[index]);
@@ -113,17 +111,21 @@ public class GameModeSoftcore : GameModeVanilla
 
 	public override void OnPlayerDeath(BasePlayer instigator, BasePlayer victim, HitInfo deathInfo = null)
 	{
-		//IL_012e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0133: Unknown result type (might be due to invalid IL or missing references)
-		//IL_013d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0142: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0147: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0154: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0163: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0168: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017c: Unknown result type (might be due to invalid IL or missing references)
-		if ((Object)(object)victim != (Object)null && !victim.IsNpc)
+		//IL_015d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0162: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0171: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0176: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0182: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0191: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0196: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a9: Unknown result type (might be due to invalid IL or missing references)
+		if ((Object)(object)victim != (Object)null && (victim.IsInTutorial || (victim.net != null && victim.net.group != null && victim.net.group.restricted)))
+		{
+			return;
+		}
+		if ((Object)(object)victim != (Object)null && !victim.IsNpc && !victim.IsInTutorial)
 		{
 			SetInventoryLocked(victim, wantsLocked: false);
 			int newID = 0;
@@ -139,7 +141,7 @@ public class GameModeSoftcore : GameModeVanilla
 			AddFractionOfContainer(victim.inventory.containerMain, ref to, reclaim_fraction_main);
 			if (to.Count > 0)
 			{
-				newID = ReclaimManager.instance.AddPlayerReclaim(victim.userID, to, ((Object)(object)instigator == (Object)null) ? 0 : instigator.userID, ((Object)(object)instigator == (Object)null) ? "" : instigator.displayName);
+				newID = ReclaimManager.instance.AddPlayerReclaim(victim.userID, to, ((Object)(object)instigator == (Object)null) ? ((BasePlayer.EncryptedValue<ulong>)0uL) : instigator.userID, ((Object)(object)instigator == (Object)null) ? "" : instigator.displayName);
 			}
 			ReturnItemsTo(ref source, victim.inventory.containerBelt);
 			if (to.Count > 0)
@@ -158,7 +160,10 @@ public class GameModeSoftcore : GameModeVanilla
 	public override void OnPlayerRespawn(BasePlayer player)
 	{
 		base.OnPlayerRespawn(player);
-		player.ShowToast(GameTip.Styles.Blue_Long, ReclaimToast);
+		if (!player.IsInTutorial)
+		{
+			player.ShowToast(GameTip.Styles.Blue_Long, ReclaimToast);
+		}
 	}
 
 	public override SleepingBag[] FindSleepingBagsForPlayer(ulong playerID, bool ignoreTimers)
@@ -168,7 +173,7 @@ public class GameModeSoftcore : GameModeVanilla
 
 	public override float CorpseRemovalTime(BaseCorpse corpse)
 	{
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
 		foreach (MonumentInfo monument in TerrainMeta.Path.Monuments)
 		{
 			if ((Object)(object)monument != (Object)null && monument.IsSafeZone && ((Bounds)(ref monument.Bounds)).Contains(((Component)corpse).transform.position))

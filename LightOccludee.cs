@@ -6,5 +6,5 @@ public class LightOccludee : MonoBehaviour
 
 	public float MinTimeVisible = 0.1f;
 
-	public bool IsDynamic = false;
+	public bool IsDynamic;
 }

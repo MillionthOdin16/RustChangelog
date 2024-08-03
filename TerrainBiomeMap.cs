@@ -3,18 +3,18 @@ using UnityEngine;
 
 public class TerrainBiomeMap : TerrainMap<byte>
 {
-	public Texture2D BiomeTexture = null;
+	public Texture2D BiomeTexture;
 
 	internal int num;
 
 	public override void Setup()
 	{
-		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_013d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0109: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012b: Unknown result type (might be due to invalid IL or missing references)
 		res = terrain.terrainData.alphamapResolution;
 		this.num = 4;
 		src = (dst = new byte[this.num * res * res]);
@@ -52,16 +52,16 @@ public class TerrainBiomeMap : TerrainMap<byte>
 
 	public void GenerateTextures()
 	{
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0028: Expected O, but got Unknown
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Expected O, but got Unknown
 		BiomeTexture = new Texture2D(res, res, (TextureFormat)4, true, true);
 		((Object)BiomeTexture).name = "BiomeTexture";
 		((Texture)BiomeTexture).wrapMode = (TextureWrapMode)1;
 		Color32[] col = (Color32[])(object)new Color32[res * res];
 		Parallel.For(0, res, (Action<int>)delegate(int z)
 		{
-			//IL_00ca: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00cf: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00c8: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00cd: Unknown result type (might be due to invalid IL or missing references)
 			for (int i = 0; i < res; i++)
 			{
 				byte[] array = src;
@@ -85,8 +85,8 @@ public class TerrainBiomeMap : TerrainMap<byte>
 
 	public float GetBiomeMax(Vector3 worldPos, int mask = -1)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
 		float normX = TerrainMeta.NormalizeX(worldPos.x);
 		float normZ = TerrainMeta.NormalizeZ(worldPos.z);
 		return GetBiomeMax(normX, normZ, mask);
@@ -118,8 +118,8 @@ public class TerrainBiomeMap : TerrainMap<byte>
 
 	public int GetBiomeMaxIndex(Vector3 worldPos, int mask = -1)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
 		float normX = TerrainMeta.NormalizeX(worldPos.x);
 		float normZ = TerrainMeta.NormalizeZ(worldPos.z);
 		return GetBiomeMaxIndex(normX, normZ, mask);
@@ -153,7 +153,7 @@ public class TerrainBiomeMap : TerrainMap<byte>
 
 	public int GetBiomeMaxType(Vector3 worldPos, int mask = -1)
 	{
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
 		return TerrainBiome.IndexToType(GetBiomeMaxIndex(worldPos, mask));
 	}
 
@@ -169,8 +169,8 @@ public class TerrainBiomeMap : TerrainMap<byte>
 
 	public float GetBiome(Vector3 worldPos, int mask)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
 		float normX = TerrainMeta.NormalizeX(worldPos.x);
 		float normZ = TerrainMeta.NormalizeZ(worldPos.z);
 		return GetBiome(normX, normZ, mask);
@@ -202,8 +202,8 @@ public class TerrainBiomeMap : TerrainMap<byte>
 
 	public void SetBiome(Vector3 worldPos, int id)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
 		float normX = TerrainMeta.NormalizeX(worldPos.x);
 		float normZ = TerrainMeta.NormalizeZ(worldPos.z);
 		SetBiome(normX, normZ, id);
@@ -234,8 +234,8 @@ public class TerrainBiomeMap : TerrainMap<byte>
 
 	public void SetBiome(Vector3 worldPos, int id, float v)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
 		float normX = TerrainMeta.NormalizeX(worldPos.x);
 		float normZ = TerrainMeta.NormalizeZ(worldPos.z);
 		SetBiome(normX, normZ, id, v);
@@ -255,18 +255,18 @@ public class TerrainBiomeMap : TerrainMap<byte>
 
 	public void SetBiomeRaw(int x, int z, Vector4 v, float opacity)
 	{
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0145: Unknown result type (might be due to invalid IL or missing references)
-		//IL_018a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01d3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_021c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0125: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01fc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00de: Unknown result type (might be due to invalid IL or missing references)
 		if (opacity == 0f)
 		{
 			return;

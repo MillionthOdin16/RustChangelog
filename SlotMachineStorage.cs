@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class SlotMachineStorage : StorageContainer
 {
-	public int Amount = 0;
+	public int Amount;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -49,7 +49,7 @@ public class SlotMachineStorage : StorageContainer
 		{
 			Amount = amount;
 			(GetParentEntity() as SlotMachine).OnBettingScrapUpdated(amount);
-			ClientRPC(null, "RPC_UpdateAmount", Amount);
+			ClientRPC(RpcTarget.NetworkGroup("RPC_UpdateAmount"), Amount);
 		}
 	}
 

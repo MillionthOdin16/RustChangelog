@@ -16,7 +16,7 @@ public class EngineSwitch : BaseEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - StartEngine "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - StartEngine "));
 				}
 				TimeWarning val2 = TimeWarning.New("StartEngine", 0);
 				try
@@ -35,7 +35,7 @@ public class EngineSwitch : BaseEntity
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -47,7 +47,7 @@ public class EngineSwitch : BaseEntity
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -67,12 +67,12 @@ public class EngineSwitch : BaseEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - StopEngine "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - StopEngine "));
 				}
-				TimeWarning val5 = TimeWarning.New("StopEngine", 0);
+				TimeWarning val2 = TimeWarning.New("StopEngine", 0);
 				try
 				{
-					TimeWarning val6 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.MaxDistance.Test(1739656243u, "StopEngine", this, player, 3f))
@@ -82,11 +82,11 @@ public class EngineSwitch : BaseEntity
 					}
 					finally
 					{
-						((IDisposable)val6)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val7 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -98,7 +98,7 @@ public class EngineSwitch : BaseEntity
 						}
 						finally
 						{
-							((IDisposable)val7)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -109,7 +109,7 @@ public class EngineSwitch : BaseEntity
 				}
 				finally
 				{
-					((IDisposable)val5)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}

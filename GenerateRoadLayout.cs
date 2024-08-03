@@ -24,7 +24,7 @@ public class GenerateRoadLayout : ProceduralComponent
 		public TerrainPathConnect target;
 	}
 
-	public InfrastructureType RoadType = InfrastructureType.Road;
+	public InfrastructureType RoadType;
 
 	public const float RoadWidth = 10f;
 
@@ -85,17 +85,41 @@ public class GenerateRoadLayout : ProceduralComponent
 
 	public override void Process(uint seed)
 	{
-		//IL_0916: Unknown result type (might be due to invalid IL or missing references)
-		//IL_093a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0755: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0772: Unknown result type (might be due to invalid IL or missing references)
-		//IL_081a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_07b7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_07d4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0092: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0815: Unknown result type (might be due to invalid IL or missing references)
+		//IL_075a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0777: Unknown result type (might be due to invalid IL or missing references)
+		//IL_08eb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_090d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_07b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_07d0: Unknown result type (might be due to invalid IL or missing references)
 		if (World.Networked)
 		{
 			TerrainMeta.Path.Roads.Clear();
 			TerrainMeta.Path.Roads.AddRange(World.GetPaths("Road"));
+			{
+				foreach (PathList road in TerrainMeta.Path.Roads)
+				{
+					Vector3[] points = road.Path.Points;
+					for (int i = 1; i < points.Length - 1; i++)
+					{
+						Vector3 val = points[i];
+						val.y = Mathf.Max(TerrainMeta.HeightMap.GetHeight(val), 1f);
+						points[i] = val;
+					}
+					road.Path.Smoothen(16, new Vector3(0f, 1f, 0f));
+					road.Path.RecalculateTangents();
+				}
+				return;
+			}
+		}
+		if ((RoadType == InfrastructureType.Road && !World.Config.SideRoads) || (RoadType == InfrastructureType.Trail && !World.Config.Trails))
+		{
 			return;
 		}
 		List<PathList> list = new List<PathList>();
@@ -109,14 +133,14 @@ public class GenerateRoadLayout : ProceduralComponent
 		List<PathFinder.Point> list6 = new List<PathFinder.Point>();
 		List<PathFinder.Point> list7 = new List<PathFinder.Point>();
 		List<PathFinder.Point> list8 = new List<PathFinder.Point>();
-		foreach (PathList road in TerrainMeta.Path.Roads)
+		foreach (PathList road2 in TerrainMeta.Path.Roads)
 		{
-			if (road.ProcgenStartNode == null || road.ProcgenEndNode == null)
+			if (road2.ProcgenStartNode == null || road2.ProcgenEndNode == null)
 			{
 				continue;
 			}
 			int num = 1;
-			for (PathFinder.Node node4 = road.ProcgenStartNode; node4 != null; node4 = node4.next)
+			for (PathFinder.Node node4 = road2.ProcgenStartNode; node4 != null; node4 = node4.next)
 			{
 				if (num % 8 == 0)
 				{
@@ -157,9 +181,8 @@ public class GenerateRoadLayout : ProceduralComponent
 				list4.AddRange(list5.Where((PathNode x) => (Object)(object)x.monument == (Object)(object)node3.monument));
 				list5.RemoveAll((PathNode x) => (Object)(object)x.monument == (Object)(object)node3.monument);
 				pathFinder.PushPoint = node3.monument.GetPathFinderPoint(length);
-				pathFinder.PushRadius = node3.monument.GetPathFinderRadius(length);
-				pathFinder.PushDistance = 40;
-				pathFinder.PushMultiplier = 1;
+				pathFinder.PushRadius = (pathFinder.PushDistance = node3.monument.GetPathFinderRadius(length));
+				pathFinder.PushMultiplier = 50000;
 			}
 			list8.Clear();
 			list8.AddRange(list4.Select((PathNode x) => x.node.point));
@@ -281,6 +304,6 @@ public class GenerateRoadLayout : ProceduralComponent
 			item2.Path.RecalculateTangents();
 			item2.AdjustPlacementMap(20f);
 		}
-		TerrainMeta.Path.Roads.AddRange(list);
+		TerrainMeta.Path.AddRoad(list);
 	}
 }

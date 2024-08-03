@@ -22,11 +22,22 @@ public class MainMenuSystem : SingletonComponent<MainMenuSystem>
 
 	public GameObject DemoBrowserButton;
 
-	public GameObject SuicideButton = null;
+	public GameObject SuicideButton;
 
-	public GameObject EndDemoButton = null;
+	public GameObject EndDemoButton;
 
 	public GameObject ReflexModeOption;
 
 	public GameObject ReflexLatencyMarkerOption;
+
+	[SerializeField]
+	private GameObject QuitConfirmation;
+
+	public GameObject QuitTutorialOption;
+
+	[SerializeField]
+	private GameObject Connection;
+
+	[SerializeField]
+	private UISafeZoneWarning safeZoneWarning;
 }

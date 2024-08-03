@@ -54,10 +54,14 @@ public sealed class ScreenSpaceReflections : PostProcessEffectSettings
 
 	public override bool IsEnabledAndSupported(PostProcessRenderContext context)
 	{
-		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001a: Invalid comparison between Unknown and I4
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0030: Invalid comparison between Unknown and I4
-		return (bool)enabled && (int)context.camera.actualRenderingPath == 3 && SystemInfo.supportsMotionVectors && SystemInfo.supportsComputeShaders && (int)SystemInfo.copyTextureSupport > 0 && Object.op_Implicit((Object)(object)context.resources.shaders.screenSpaceReflections) && context.resources.shaders.screenSpaceReflections.isSupported && Object.op_Implicit((Object)(object)context.resources.computeShaders.gaussianDownsample);
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Invalid comparison between Unknown and I4
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Invalid comparison between Unknown and I4
+		if ((bool)enabled && (int)context.camera.actualRenderingPath == 3 && SystemInfo.supportsMotionVectors && SystemInfo.supportsComputeShaders && (int)SystemInfo.copyTextureSupport > 0 && Object.op_Implicit((Object)(object)context.resources.shaders.screenSpaceReflections) && context.resources.shaders.screenSpaceReflections.isSupported)
+		{
+			return Object.op_Implicit((Object)(object)context.resources.computeShaders.gaussianDownsample);
+		}
+		return false;
 	}
 }

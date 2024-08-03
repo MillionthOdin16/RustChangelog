@@ -73,13 +73,14 @@ public static class Ballistics
 		return val;
 	}
 
-	public static Vector3 GetPhysicsProjectileHitPos(Vector3 origin, Vector3 direction, float speed, float gravity, float flightTimePerUpwardCheck = 2f, float flightTimePerDownwardCheck = 0.66f, float maxRays = 128f, BaseNetworkable owner = null)
+	public static bool TryGetPhysicsProjectileHitPos(Vector3 origin, Vector3 direction, float speed, float gravity, out Vector3 result, float flightTimePerUpwardCheck = 2f, float flightTimePerDownwardCheck = 0.66f, float maxRays = 128f, BaseNetworkable owner = null)
 	{
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
 		TheoreticalProjectile projectile = new TheoreticalProjectile(origin, direction * speed, gravity);
 		int num = 0;
 		float dt = ((projectile.forward.y > 0f) ? flightTimePerUpwardCheck : flightTimePerDownwardCheck);
@@ -87,7 +88,8 @@ public static class Ballistics
 		{
 			num++;
 		}
-		return projectile.pos;
+		result = projectile.pos;
+		return (float)num < maxRays;
 	}
 
 	public static Vector3 GetBulletHitPoint(Vector3 origin, Vector3 direction)

@@ -7,7 +7,7 @@ namespace ConVar;
 public class Texture : ConsoleSystem
 {
 	[ClientVar]
-	public static int streamingBudgetOverride = 0;
+	public static int streamingBudgetOverride;
 
 	[ClientVar(Saved = true, Help = "Enable/Disable texture streaming")]
 	public static bool streaming

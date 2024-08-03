@@ -11,9 +11,9 @@ public class BaseAIEvent
 		VeryFast
 	}
 
-	private float executeTimer = 0f;
+	private float executeTimer;
 
-	protected float deltaTime = 0f;
+	protected float deltaTime;
 
 	public AIEventType EventType { get; private set; }
 
@@ -74,16 +74,23 @@ public class BaseAIEvent
 
 	public virtual AIEventData ToProto()
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0007: Expected O, but got Unknown
-		AIEventData val = new AIEventData();
-		val.id = ID;
-		val.eventType = (int)EventType;
-		val.triggerStateContainer = TriggerStateContainerID;
-		val.outputMemorySlot = OutputEntityMemorySlot;
-		val.inputMemorySlot = InputEntityMemorySlot;
-		val.inverted = Inverted;
-		return val;
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004e: Expected O, but got Unknown
+		return new AIEventData
+		{
+			id = ID,
+			eventType = (int)EventType,
+			triggerStateContainer = TriggerStateContainerID,
+			outputMemorySlot = OutputEntityMemorySlot,
+			inputMemorySlot = InputEntityMemorySlot,
+			inverted = Inverted
+		};
 	}
 
 	public virtual void Reset()
@@ -182,7 +189,7 @@ public class BaseAIEvent
 		case AIEventType.IsBlinded:
 			return new IsBlindedAIEvent();
 		default:
-			Debug.LogWarning((object)string.Concat("No case for ", eventType, " event in BaseAIEvent.CreateEvent()!"));
+			Debug.LogWarning((object)("No case for " + eventType.ToString() + " event in BaseAIEvent.CreateEvent()!"));
 			return null;
 		}
 	}

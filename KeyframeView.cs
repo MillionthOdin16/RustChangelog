@@ -8,11 +8,11 @@ public class KeyframeView : MonoBehaviour
 
 	public GameObjectRef KeyframePrefab;
 
-	public RectTransform KeyframeRoot = null;
+	public RectTransform KeyframeRoot;
 
-	public Transform CurrentPositionIndicator = null;
+	public Transform CurrentPositionIndicator;
 
-	public bool LockScrollToCurrentPosition = false;
+	public bool LockScrollToCurrentPosition;
 
 	public RustText TrackName;
 }

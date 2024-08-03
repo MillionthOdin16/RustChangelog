@@ -9,7 +9,7 @@ public class RepeatingFirework : BaseFirework
 
 	public SoundPlayer launchSound;
 
-	private int numFired = 0;
+	private int numFired;
 
 	public override void Begin()
 	{
@@ -20,7 +20,7 @@ public class RepeatingFirework : BaseFirework
 
 	public void SendFire()
 	{
-		ClientRPC(null, "RPCFire");
+		ClientRPC(RpcTarget.NetworkGroup("RPCFire"));
 		numFired++;
 		if (numFired >= maxRepeats)
 		{

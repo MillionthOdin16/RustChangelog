@@ -20,28 +20,22 @@ public class DoorManipulator : IOEntity
 
 	private bool toggle = true;
 
-	public virtual bool PairWithLockedDoors()
+	public virtual bool CanPairWithLockedDoors()
 	{
 		return true;
 	}
 
-	public virtual void SetTargetDoor(Door newTargetDoor)
+	public override void Init()
 	{
-		Door door = targetDoor;
-		targetDoor = newTargetDoor;
-		SetFlag(Flags.On, (Object)(object)targetDoor != (Object)null);
-		entityRef.Set(newTargetDoor);
-		if ((Object)(object)door != (Object)(object)targetDoor && (Object)(object)targetDoor != (Object)null)
-		{
-			DoAction();
-		}
+		base.Init();
+		SetupInitialDoorConnection();
 	}
 
 	public virtual void SetupInitialDoorConnection()
 	{
 		if ((Object)(object)targetDoor == (Object)null && !entityRef.IsValid(serverside: true))
 		{
-			SetTargetDoor(FindDoor(PairWithLockedDoors()));
+			SetTargetDoor(FindDoor(CanPairWithLockedDoors()));
 		}
 		if ((Object)(object)targetDoor != (Object)null && !entityRef.IsValid(serverside: true))
 		{
@@ -53,17 +47,23 @@ public class DoorManipulator : IOEntity
 		}
 	}
 
-	public override void Init()
+	public virtual void SetTargetDoor(Door newTargetDoor)
 	{
-		base.Init();
-		SetupInitialDoorConnection();
+		Door door = targetDoor;
+		targetDoor = newTargetDoor;
+		SetFlag(Flags.On, (Object)(object)targetDoor != (Object)null);
+		entityRef.Set(newTargetDoor);
+		if ((Object)(object)door != (Object)(object)targetDoor && (Object)(object)targetDoor != (Object)null)
+		{
+			DoAction(powerAction);
+		}
 	}
 
-	public Door FindDoor(bool allowLocked = true)
+	public virtual Door FindDoor(bool allowLocked = true)
 	{
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0093: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
 		List<Door> list = Pool.GetList<Door>();
 		Vis.Entities(((Component)this).transform.position, 1f, list, 2097152, (QueryTriggerInteraction)1);
 		Door result = null;
@@ -82,11 +82,14 @@ public class DoorManipulator : IOEntity
 					continue;
 				}
 			}
-			float num2 = Vector3.Distance(((Component)item).transform.position, ((Component)this).transform.position);
-			if (num2 < num)
+			if (!item.IsOnMovingObject())
 			{
-				result = item;
-				num = num2;
+				float num2 = Vector3.Distance(((Component)item).transform.position, ((Component)this).transform.position);
+				if (num2 < num)
+				{
+					result = item;
+					num = num2;
+				}
 			}
 		}
 		Pool.FreeList<Door>(ref list);
@@ -95,10 +98,10 @@ public class DoorManipulator : IOEntity
 
 	public virtual void DoActionDoorMissing()
 	{
-		SetTargetDoor(FindDoor(PairWithLockedDoors()));
+		SetTargetDoor(FindDoor(CanPairWithLockedDoors()));
 	}
 
-	public void DoAction()
+	public virtual void DoAction(DoorEffect action)
 	{
 		bool flag = IsPowered();
 		if ((Object)(object)targetDoor == (Object)null)
@@ -111,9 +114,12 @@ public class DoorManipulator : IOEntity
 		}
 		if (targetDoor.IsBusy())
 		{
-			((FacepunchBehaviour)this).Invoke((Action)DoAction, 1f);
+			((FacepunchBehaviour)this).Invoke((Action)delegate
+			{
+				DoAction(action);
+			}, 1f);
 		}
-		else if (powerAction == DoorEffect.Open)
+		else if (action == DoorEffect.Open)
 		{
 			if (flag)
 			{
@@ -127,7 +133,7 @@ public class DoorManipulator : IOEntity
 				targetDoor.SetOpen(open: false);
 			}
 		}
-		else if (powerAction == DoorEffect.Close)
+		else if (action == DoorEffect.Close)
 		{
 			if (flag)
 			{
@@ -141,7 +147,7 @@ public class DoorManipulator : IOEntity
 				targetDoor.SetOpen(open: true);
 			}
 		}
-		else if (powerAction == DoorEffect.Toggle)
+		else if (action == DoorEffect.Toggle)
 		{
 			if (flag && toggle)
 			{
@@ -158,13 +164,13 @@ public class DoorManipulator : IOEntity
 	public override void IOStateChanged(int inputAmount, int inputSlot)
 	{
 		base.IOStateChanged(inputAmount, inputSlot);
-		DoAction();
+		DoAction(powerAction);
 	}
 
 	public override void Save(SaveInfo info)
 	{
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
 		base.Save(info);
 		info.msg.ioEntity.genericEntRef1 = entityRef.uid;
 		info.msg.ioEntity.genericInt1 = (int)powerAction;
@@ -172,7 +178,7 @@ public class DoorManipulator : IOEntity
 
 	public override void Load(LoadInfo info)
 	{
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
 		base.Load(info);
 		if (info.msg.ioEntity != null)
 		{

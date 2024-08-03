@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 public class UIRootScaled : UIRoot
 {
-	private static UIRootScaled Instance = null;
+	private static UIRootScaled Instance;
 
 	public bool OverrideReference;
 
@@ -22,9 +22,9 @@ public class UIRootScaled : UIRoot
 
 	protected override void Refresh()
 	{
-		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
 		Vector2 val = default(Vector2);
 		((Vector2)(ref val))._002Ector(1280f / Graphics.uiscale, 720f / Graphics.uiscale);
 		if (OverrideReference)

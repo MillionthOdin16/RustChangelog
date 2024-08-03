@@ -9,9 +9,9 @@ public class ServerAdminUGCEntryImage : ServerAdminUGCEntry
 
 	public RectTransform Backing;
 
-	public GameObject MultiImageRoot = null;
+	public GameObject MultiImageRoot;
 
-	public RustText ImageIndex = null;
+	public RustText ImageIndex;
 
 	public Vector2 OriginalImageSize;
 }

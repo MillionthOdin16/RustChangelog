@@ -44,6 +44,10 @@ public class BaseDetector : IOEntity
 
 	public override int GetPassthroughAmount(int outputSlot = 0)
 	{
-		return HasFlag(Flags.Reserved1) ? base.GetPassthroughAmount() : 0;
+		if (!HasFlag(Flags.Reserved1))
+		{
+			return 0;
+		}
+		return base.GetPassthroughAmount();
 	}
 }

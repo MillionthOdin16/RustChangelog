@@ -6,13 +6,13 @@ public class SoundPlayer : BaseMonoBehaviour, IClientComponent
 
 	public bool playImmediately = true;
 
-	public float minStartDelay = 0f;
+	public float minStartDelay;
 
-	public float maxStartDelay = 0f;
+	public float maxStartDelay;
 
-	public bool debugRepeat = false;
+	public bool debugRepeat;
 
-	public bool pending = false;
+	public bool pending;
 
 	public Vector3 soundOffset = Vector3.zero;
 }

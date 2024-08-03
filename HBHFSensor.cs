@@ -10,31 +10,33 @@ public class HBHFSensor : BaseDetector
 
 	public GameObjectRef detectDown;
 
+	public GameObjectRef panelPrefab;
+
 	public const Flags Flag_IncludeOthers = Flags.Reserved2;
 
 	public const Flags Flag_IncludeAuthed = Flags.Reserved3;
 
-	private int detectedPlayers = 0;
+	private int detectedPlayers;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
 		TimeWarning val = TimeWarning.New("HBHFSensor.OnRpcMessage", 0);
 		try
 		{
-			if (rpc == 3206885720u && (Object)(object)player != (Object)null)
+			if (rpc == 4073303808u && (Object)(object)player != (Object)null)
 			{
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SetIncludeAuth "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SetConfig "));
 				}
-				TimeWarning val2 = TimeWarning.New("SetIncludeAuth", 0);
+				TimeWarning val2 = TimeWarning.New("SetConfig", 0);
 				try
 				{
 					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
-						if (!RPC_Server.IsVisible.Test(3206885720u, "SetIncludeAuth", this, player, 3f))
+						if (!RPC_Server.IsVisible.Test(4073303808u, "SetConfig", this, player, 3f))
 						{
 							return true;
 						}
@@ -45,81 +47,30 @@ public class HBHFSensor : BaseDetector
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage includeAuth = rPCMessage;
-							SetIncludeAuth(includeAuth);
+							RPCMessage config = rPCMessage;
+							SetConfig(config);
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
 					{
 						Debug.LogException(ex);
-						player.Kick("RPC Error in SetIncludeAuth");
+						player.Kick("RPC Error in SetConfig");
 					}
 				}
 				finally
 				{
 					((IDisposable)val2)?.Dispose();
-				}
-				return true;
-			}
-			if (rpc == 2223203375u && (Object)(object)player != (Object)null)
-			{
-				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
-				if (Global.developer > 2)
-				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SetIncludeOthers "));
-				}
-				TimeWarning val5 = TimeWarning.New("SetIncludeOthers", 0);
-				try
-				{
-					TimeWarning val6 = TimeWarning.New("Conditions", 0);
-					try
-					{
-						if (!RPC_Server.IsVisible.Test(2223203375u, "SetIncludeOthers", this, player, 3f))
-						{
-							return true;
-						}
-					}
-					finally
-					{
-						((IDisposable)val6)?.Dispose();
-					}
-					try
-					{
-						TimeWarning val7 = TimeWarning.New("Call", 0);
-						try
-						{
-							RPCMessage rPCMessage = default(RPCMessage);
-							rPCMessage.connection = msg.connection;
-							rPCMessage.player = player;
-							rPCMessage.read = msg.read;
-							RPCMessage includeOthers = rPCMessage;
-							SetIncludeOthers(includeOthers);
-						}
-						finally
-						{
-							((IDisposable)val7)?.Dispose();
-						}
-					}
-					catch (Exception ex2)
-					{
-						Debug.LogException(ex2);
-						player.Kick("RPC Error in SetIncludeOthers");
-					}
-				}
-				finally
-				{
-					((IDisposable)val5)?.Dispose();
 				}
 				return true;
 			}
@@ -152,14 +103,14 @@ public class HBHFSensor : BaseDetector
 
 	public void UpdatePassthroughAmount()
 	{
-		//IL_0173: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0178: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ac: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0126: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0152: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0157: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
 		if (base.isClient)
 		{
 			return;
@@ -197,24 +148,20 @@ public class HBHFSensor : BaseDetector
 
 	[RPC_Server]
 	[RPC_Server.IsVisible(3f)]
-	public void SetIncludeAuth(RPCMessage msg)
+	public void SetConfig(RPCMessage msg)
 	{
-		bool b = msg.read.Bit();
-		if (msg.player.CanBuild() && IsPowered())
+		if (CanUse(msg.player))
 		{
+			bool b = msg.read.Bit();
+			bool b2 = msg.read.Bit();
 			SetFlag(Flags.Reserved3, b);
+			SetFlag(Flags.Reserved2, b2);
 		}
 	}
 
-	[RPC_Server]
-	[RPC_Server.IsVisible(3f)]
-	public void SetIncludeOthers(RPCMessage msg)
+	public bool CanUse(BasePlayer player)
 	{
-		bool b = msg.read.Bit();
-		if (msg.player.CanBuild() && IsPowered())
-		{
-			SetFlag(Flags.Reserved2, b);
-		}
+		return player.CanBuild();
 	}
 
 	public bool ShouldIncludeAuthorized()

@@ -5,6 +5,8 @@ public class KeyBindUI : MonoBehaviour
 {
 	public GameObject blockingCanvas;
 
+	public Text Label;
+
 	public Button btnA;
 
 	public Button btnB;

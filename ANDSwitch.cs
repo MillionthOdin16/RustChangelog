@@ -6,9 +6,32 @@ public class ANDSwitch : IOEntity
 
 	private int input2Amount;
 
+	public override int ConsumptionAmount()
+	{
+		return 0;
+	}
+
+	public override bool WantsPower(int inputIndex)
+	{
+		if (input1Amount == 0 || input2Amount == 0)
+		{
+			return false;
+		}
+		if (input1Amount == input2Amount)
+		{
+			return inputIndex == 0;
+		}
+		int num = ((input1Amount <= input2Amount) ? 1 : 0);
+		return inputIndex == num;
+	}
+
 	public override int GetPassthroughAmount(int outputSlot = 0)
 	{
-		return (input1Amount > 0 && input2Amount > 0) ? Mathf.Max(input1Amount, input2Amount) : 0;
+		if (input1Amount <= 0 || input2Amount <= 0)
+		{
+			return 0;
+		}
+		return Mathf.Max(input1Amount, input2Amount);
 	}
 
 	public override void UpdateHasPower(int inputAmount, int inputSlot)

@@ -394,7 +394,7 @@ public class CellMeshAllocator
 		return result;
 	}
 
-	private void ExpandData()
+	public void ExpandData()
 	{
 		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_007d: Unknown result type (might be due to invalid IL or missing references)

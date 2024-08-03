@@ -7,7 +7,7 @@ public class VirtualItemIcon : MonoBehaviour
 
 	public int itemAmount;
 
-	public bool asBlueprint = false;
+	public bool asBlueprint;
 
 	public Image iconImage;
 
@@ -28,4 +28,11 @@ public class VirtualItemIcon : MonoBehaviour
 	public Image maxConditionFill;
 
 	public Image cornerIcon;
+
+	[Header("Slots")]
+	public GameObject slots;
+
+	public Image[] slotImages;
+
+	public static Phrase attachmentsPhrase = new Phrase("vendor_attachments", "Attachments");
 }

@@ -2,9 +2,9 @@ using UnityEngine;
 
 public class FoliageRenderer : MonoBehaviour, IClientComponent
 {
-	public Material material = null;
+	public Material material;
 
-	public Mesh LOD0 = null;
+	public Mesh LOD0;
 
-	public Mesh LOD1 = null;
+	public Mesh LOD1;
 }

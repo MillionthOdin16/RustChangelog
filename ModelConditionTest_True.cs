@@ -1,6 +1,6 @@
 public class ModelConditionTest_True : ModelConditionTest
 {
-	public ConditionalModel reference = null;
+	public ConditionalModel reference;
 
 	public override bool DoTest(BaseEntity ent)
 	{

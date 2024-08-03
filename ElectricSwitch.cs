@@ -6,27 +6,27 @@ using UnityEngine.Assertions;
 
 public class ElectricSwitch : IOEntity
 {
-	public bool isToggleSwitch = false;
+	public bool isToggleSwitch;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
 		TimeWarning val = TimeWarning.New("ElectricSwitch.OnRpcMessage", 0);
 		try
 		{
-			if (rpc == 4167839872u && (Object)(object)player != (Object)null)
+			if (rpc == 3043863856u && (Object)(object)player != (Object)null)
 			{
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SVSwitch "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_Switch "));
 				}
-				TimeWarning val2 = TimeWarning.New("SVSwitch", 0);
+				TimeWarning val2 = TimeWarning.New("RPC_Switch", 0);
 				try
 				{
 					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
-						if (!RPC_Server.IsVisible.Test(4167839872u, "SVSwitch", this, player, 3f))
+						if (!RPC_Server.IsVisible.Test(3043863856u, "RPC_Switch", this, player, 3f))
 						{
 							return true;
 						}
@@ -37,7 +37,7 @@ public class ElectricSwitch : IOEntity
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -45,17 +45,17 @@ public class ElectricSwitch : IOEntity
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
 							RPCMessage msg2 = rPCMessage;
-							SVSwitch(msg2);
+							RPC_Switch(msg2);
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
 					{
 						Debug.LogException(ex);
-						player.Kick("RPC Error in SVSwitch");
+						player.Kick("RPC Error in RPC_Switch");
 					}
 				}
 				finally
@@ -72,14 +72,18 @@ public class ElectricSwitch : IOEntity
 		return base.OnRpcMessage(player, rpc, msg);
 	}
 
-	public override bool WantsPower()
+	public override bool WantsPower(int inputIndex)
 	{
-		return IsOn();
+		if (inputIndex == 0)
+		{
+			return IsOn();
+		}
+		return false;
 	}
 
 	public override int ConsumptionAmount()
 	{
-		return IsOn() ? 1 : 0;
+		return 0;
 	}
 
 	public override void ResetIOState()
@@ -89,20 +93,36 @@ public class ElectricSwitch : IOEntity
 
 	public override int GetPassthroughAmount(int outputSlot = 0)
 	{
-		return IsOn() ? GetCurrentEnergy() : 0;
+		if (!IsOn())
+		{
+			return 0;
+		}
+		return GetCurrentEnergy();
 	}
 
-	public override void IOStateChanged(int inputAmount, int inputSlot)
+	public override int CalculateCurrentEnergy(int inputAmount, int inputSlot)
+	{
+		if (inputSlot != 0)
+		{
+			return currentEnergy;
+		}
+		return base.CalculateCurrentEnergy(inputAmount, inputSlot);
+	}
+
+	public override void UpdateHasPower(int inputAmount, int inputSlot)
 	{
 		if (inputSlot == 1 && inputAmount > 0)
 		{
-			SetSwitch(wantsOn: true);
+			SetSwitch(state: true);
 		}
 		if (inputSlot == 2 && inputAmount > 0)
 		{
-			SetSwitch(wantsOn: false);
+			SetSwitch(state: false);
 		}
-		base.IOStateChanged(inputAmount, inputSlot);
+		if (inputSlot == 0)
+		{
+			base.UpdateHasPower(inputAmount, inputSlot);
+		}
 	}
 
 	public override void ServerInit()
@@ -111,26 +131,32 @@ public class ElectricSwitch : IOEntity
 		SetFlag(Flags.Busy, b: false);
 	}
 
-	public virtual void SetSwitch(bool wantsOn)
+	public virtual void SetSwitch(bool state)
 	{
-		if (wantsOn != IsOn())
+		if (state != IsOn())
 		{
-			SetFlag(Flags.On, wantsOn);
+			SetFlag(Flags.On, state);
 			SetFlag(Flags.Busy, b: true);
-			((FacepunchBehaviour)this).Invoke((Action)Unbusy, 0.5f);
+			((FacepunchBehaviour)this).Invoke((Action)UnBusy, 0.5f);
 			SendNetworkUpdateImmediate();
 			MarkDirty();
 		}
 	}
 
-	[RPC_Server]
-	[RPC_Server.IsVisible(3f)]
-	public void SVSwitch(RPCMessage msg)
+	public void Flip()
 	{
 		SetSwitch(!IsOn());
 	}
 
-	public void Unbusy()
+	[RPC_Server]
+	[RPC_Server.IsVisible(3f)]
+	public void RPC_Switch(RPCMessage msg)
+	{
+		bool @switch = msg.read.Bool();
+		SetSwitch(@switch);
+	}
+
+	private void UnBusy()
 	{
 		SetFlag(Flags.Busy, b: false);
 	}

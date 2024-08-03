@@ -38,7 +38,7 @@ public class SlotMachinePayoutSettings : ScriptableObject
 
 	public IndividualPayouts[] FacePayouts = new IndividualPayouts[0];
 
-	public int TotalStops = 0;
+	public int TotalStops;
 
 	public GameObjectRef DefaultWinEffect;
 }

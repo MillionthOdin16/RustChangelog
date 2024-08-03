@@ -21,21 +21,23 @@ public class TextureColorPicker : MonoBehaviour, IPointerDownHandler, IEventSyst
 
 	public virtual void OnDrag(PointerEventData eventData)
 	{
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0095: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
 		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00df: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00af: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00dc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e3: Unknown result type (might be due to invalid IL or missing references)
 		Transform transform = ((Component)this).transform;
 		RectTransform val = (RectTransform)(object)((transform is RectTransform) ? transform : null);
 		Vector2 val2 = default(Vector2);
@@ -44,11 +46,11 @@ public class TextureColorPicker : MonoBehaviour, IPointerDownHandler, IEventSyst
 			ref float x = ref val2.x;
 			float num = x;
 			Rect rect = val.rect;
-			x = num + ((Rect)(ref rect)).width * 0.5f;
+			x = num + ((Rect)(ref rect)).width * val.pivot.x;
 			ref float y = ref val2.y;
 			float num2 = y;
 			rect = val.rect;
-			y = num2 + ((Rect)(ref rect)).height * 0.5f;
+			y = num2 + ((Rect)(ref rect)).height * val.pivot.y;
 			ref float x2 = ref val2.x;
 			float num3 = x2;
 			rect = val.rect;

@@ -21,16 +21,20 @@ public class CardPlayerData : IDisposable
 
 	private readonly bool isServer;
 
+	[NonSerialized]
 	public int availableInputs;
 
 	public int betThisRound;
 
 	public int betThisTurn;
 
+	[NonSerialized]
 	public int finalScore;
 
+	[NonSerialized]
 	public float lastActionTime;
 
+	[NonSerialized]
 	public int remainingToPayOut;
 
 	private Func<int, StorageContainer> getStorage;
@@ -141,7 +145,11 @@ public class CardPlayerData : IDisposable
 
 	public bool HasBeenIdleFor(int seconds)
 	{
-		return HasUserInGame && Time.unscaledTime > lastActionTime + (float)seconds;
+		if (HasUserInGame)
+		{
+			return Time.unscaledTime > lastActionTime + (float)seconds;
+		}
+		return false;
 	}
 
 	public StorageContainer GetStorage()

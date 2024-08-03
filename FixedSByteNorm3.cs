@@ -16,9 +16,9 @@ public struct FixedSByteNorm3
 
 	public FixedSByteNorm3(Vector3 vec)
 	{
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
 		x = (sbyte)(vec.x * 128f);
 		y = (sbyte)(vec.y * 128f);
 		z = (sbyte)(vec.z * 128f);
@@ -26,9 +26,7 @@ public struct FixedSByteNorm3
 
 	public static explicit operator Vector3(FixedSByteNorm3 vec)
 	{
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
 		return new Vector3((float)vec.x * (1f / 128f), (float)vec.y * (1f / 128f), (float)vec.z * (1f / 128f));
 	}
 }

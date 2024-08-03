@@ -15,7 +15,7 @@ public class ExpandedLifeStats : MonoBehaviour
 		public Phrase displayPhrase;
 	}
 
-	public GameObject DisplayRoot = null;
+	public GameObject DisplayRoot;
 
 	public GameObjectRef GenericStatRow;
 
@@ -36,17 +36,17 @@ public class ExpandedLifeStats : MonoBehaviour
 
 	public LifeInfographic Infographic;
 
-	public RectTransform MoveRoot = null;
+	public RectTransform MoveRoot;
 
 	public Vector2 OpenPosition;
 
 	public Vector2 ClosedPosition;
 
-	public GameObject OpenButtonRoot = null;
+	public GameObject OpenButtonRoot;
 
-	public GameObject CloseButtonRoot = null;
+	public GameObject CloseButtonRoot;
 
-	public GameObject ScrollGradient = null;
+	public GameObject ScrollGradient;
 
-	public ScrollRect Scroller = null;
+	public ScrollRect Scroller;
 }

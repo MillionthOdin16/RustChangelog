@@ -38,7 +38,7 @@ public class CardGamePlayerWidget : MonoBehaviour
 	private Animation actionShowAnimation;
 
 	[SerializeField]
-	private RustText actionText = null;
+	private RustText actionText;
 
 	[SerializeField]
 	private Sprite canSeeIcon;

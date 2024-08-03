@@ -16,7 +16,7 @@ public class RepairBench : StorageContainer
 
 	public const float REPAIR_COST_FRACTION = 0.2f;
 
-	private float nextSkinChangeTime = 0f;
+	private float nextSkinChangeAudioTime;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -28,7 +28,7 @@ public class RepairBench : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ChangeSkin "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ChangeSkin "));
 				}
 				TimeWarning val2 = TimeWarning.New("ChangeSkin", 0);
 				try
@@ -47,7 +47,7 @@ public class RepairBench : StorageContainer
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -59,7 +59,7 @@ public class RepairBench : StorageContainer
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -79,12 +79,12 @@ public class RepairBench : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RepairItem "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RepairItem "));
 				}
-				TimeWarning val5 = TimeWarning.New("RepairItem", 0);
+				TimeWarning val2 = TimeWarning.New("RepairItem", 0);
 				try
 				{
-					TimeWarning val6 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsVisible.Test(1178348163u, "RepairItem", this, player, 3f))
@@ -94,11 +94,11 @@ public class RepairBench : StorageContainer
 					}
 					finally
 					{
-						((IDisposable)val6)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val7 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -110,7 +110,7 @@ public class RepairBench : StorageContainer
 						}
 						finally
 						{
-							((IDisposable)val7)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -121,7 +121,7 @@ public class RepairBench : StorageContainer
 				}
 				finally
 				{
-					((IDisposable)val5)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -145,6 +145,12 @@ public class RepairBench : StorageContainer
 
 	public static void GetRepairCostList(ItemBlueprint bp, List<ItemAmount> allIngredients)
 	{
+		ItemDefinition targetItem = bp.targetItem;
+		ItemModRepair itemModRepair = ((targetItem != null) ? ((Component)targetItem).GetComponent<ItemModRepair>() : null);
+		if ((Object)(object)itemModRepair != (Object)null && itemModRepair.canUseRepairBench)
+		{
+			return;
+		}
 		foreach (ItemAmount ingredient in bp.ingredients)
 		{
 			allIngredients.Add(new ItemAmount(ingredient.itemDef, ingredient.amount));
@@ -152,7 +158,7 @@ public class RepairBench : StorageContainer
 		StripComponentRepairCost(allIngredients);
 	}
 
-	public static void StripComponentRepairCost(List<ItemAmount> allIngredients)
+	public static void StripComponentRepairCost(List<ItemAmount> allIngredients, float repairCostMultiplier = 1f)
 	{
 		if (allIngredients == null)
 		{
@@ -161,7 +167,7 @@ public class RepairBench : StorageContainer
 		for (int i = 0; i < allIngredients.Count; i++)
 		{
 			ItemAmount itemAmount = allIngredients[i];
-			if (itemAmount.itemDef.category != ItemCategory.Component)
+			if (itemAmount.itemDef.category != ItemCategory.Component && !itemAmount.itemDef.treatAsComponentForRepairs)
 			{
 				continue;
 			}
@@ -173,14 +179,14 @@ public class RepairBench : StorageContainer
 				{
 					if ((Object)(object)allIngredient.itemDef == (Object)(object)itemAmount2.itemDef)
 					{
-						allIngredient.amount += itemAmount2.amount * itemAmount.amount;
+						allIngredient.amount += Mathf.Max(itemAmount2.amount * itemAmount.amount * repairCostMultiplier, 1f);
 						flag = true;
 						break;
 					}
 				}
 				if (!flag)
 				{
-					allIngredients.Add(new ItemAmount(itemAmount2.itemDef, itemAmount2.amount * itemAmount.amount));
+					allIngredients.Add(new ItemAmount(itemAmount2.itemDef, Mathf.Max(itemAmount2.amount * itemAmount.amount * repairCostMultiplier, 1f)));
 				}
 			}
 			allIngredients.RemoveAt(i);
@@ -200,25 +206,27 @@ public class RepairBench : StorageContainer
 	[RPC_Server.IsVisible(3f)]
 	public void ChangeSkin(RPCMessage msg)
 	{
-		//IL_0581: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0586: Unknown result type (might be due to invalid IL or missing references)
-		if (Time.realtimeSinceStartup < nextSkinChangeTime)
-		{
-			return;
-		}
+		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_050a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_050f: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer player = msg.player;
 		int num = msg.read.Int32();
+		ItemId val = default(ItemId);
+		((ItemId)(ref val))._002Ector(msg.read.UInt64());
+		bool isValid = ((ItemId)(ref val)).IsValid;
+		bool flag = !isValid || Time.realtimeSinceStartup > nextSkinChangeAudioTime;
 		Item slot = base.inventory.GetSlot(0);
-		if (slot == null)
+		if (slot == null || (isValid && slot.uid != val))
 		{
 			return;
 		}
-		bool flag = false;
+		bool flag2 = false;
 		if (msg.player.UnlockAllSkins)
 		{
-			flag = true;
+			flag2 = true;
 		}
-		if (num != 0 && !flag && !player.blueprints.CheckSkinOwnership(num, player.userID))
+		if (num != 0 && !flag2 && !player.blueprints.CheckSkinOwnership(num, player.userID))
 		{
 			debugprint("RepairBench.ChangeSkin player does not have item :" + num + ":");
 			return;
@@ -229,7 +237,10 @@ public class RepairBench : StorageContainer
 			debugprint("RepairBench.ChangeSkin cannot apply same skin twice : " + Skin + ": " + slot.skin);
 			return;
 		}
-		nextSkinChangeTime = Time.realtimeSinceStartup + 0.75f;
+		if (flag)
+		{
+			nextSkinChangeAudioTime = Time.realtimeSinceStartup + 0.75f;
+		}
 		ItemSkinDirectory.Skin skin = slot.info.skins.FirstOrDefault((ItemSkinDirectory.Skin x) => (ulong)x.id == Skin);
 		if ((Object)(object)slot.info.isRedirectOf != (Object)null)
 		{
@@ -240,20 +251,20 @@ public class RepairBench : StorageContainer
 		if ((Object.op_Implicit((Object)(object)itemSkin) && ((Object)(object)itemSkin.Redirect != (Object)null || (Object)(object)slot.info.isRedirectOf != (Object)null)) || (!Object.op_Implicit((Object)(object)itemSkin) && (Object)(object)slot.info.isRedirectOf != (Object)null))
 		{
 			ItemDefinition template = (((Object)(object)itemSkin != (Object)null) ? itemSkin.Redirect : slot.info.isRedirectOf);
-			bool flag2 = false;
+			bool flag3 = false;
 			if ((Object)(object)itemSkin != (Object)null && (Object)(object)itemSkin.Redirect == (Object)null && (Object)(object)slot.info.isRedirectOf != (Object)null)
 			{
 				template = slot.info.isRedirectOf;
-				flag2 = num != 0;
+				flag3 = num != 0;
 			}
 			float condition = slot.condition;
 			float maxCondition = slot.maxCondition;
 			int amount = slot.amount;
-			int contents = 0;
+			int ammoCount = 0;
 			ItemDefinition ammoType = null;
 			if ((Object)(object)slot.GetHeldEntity() != (Object)null && slot.GetHeldEntity() is BaseProjectile baseProjectile && baseProjectile.primaryMagazine != null)
 			{
-				contents = baseProjectile.primaryMagazine.contents;
+				ammoCount = baseProjectile.primaryMagazine.contents;
 				ammoType = baseProjectile.primaryMagazine.ammoType;
 			}
 			List<Item> list = Pool.GetList<Item>();
@@ -279,7 +290,7 @@ public class RepairBench : StorageContainer
 			{
 				if (baseProjectile2.primaryMagazine != null)
 				{
-					baseProjectile2.primaryMagazine.contents = contents;
+					baseProjectile2.SetAmmoCount(ammoCount);
 					baseProjectile2.primaryMagazine.ammoType = ammoType;
 				}
 				baseProjectile2.ForceModsChanged();
@@ -292,7 +303,7 @@ public class RepairBench : StorageContainer
 				}
 			}
 			Pool.FreeList<Item>(ref list);
-			if (flag2)
+			if (flag3)
 			{
 				ApplySkinToItem(item, Skin);
 			}
@@ -305,7 +316,7 @@ public class RepairBench : StorageContainer
 			Analytics.Server.SkinUsed(slot.info.shortname, num);
 			Analytics.Azure.OnSkinChanged(player, this, slot, Skin);
 		}
-		if (skinchangeEffect.isValid)
+		if (flag && skinchangeEffect.isValid)
 		{
 			Effect.server.Run(skinchangeEffect.resourcePath, this, 0u, new Vector3(0f, 1.5f, 0f), Vector3.zero);
 		}
@@ -329,25 +340,36 @@ public class RepairBench : StorageContainer
 	{
 		Item slot = base.inventory.GetSlot(0);
 		BasePlayer player = msg.player;
-		RepairAnItem(slot, player, this, maxConditionLostOnRepair, mustKnowBlueprint: true);
+		float conditionLost = maxConditionLostOnRepair;
+		ItemModRepair component = ((Component)slot.info).GetComponent<ItemModRepair>();
+		if ((Object)(object)component != (Object)null)
+		{
+			conditionLost = component.conditionLost;
+		}
+		RepairAnItem(slot, player, this, conditionLost, mustKnowBlueprint: true);
 	}
 
-	public override int GetIdealSlot(BasePlayer player, Item item)
+	public override int GetIdealSlot(BasePlayer player, ItemContainer container, Item item)
 	{
 		return 0;
 	}
 
 	public static void RepairAnItem(Item itemToRepair, BasePlayer player, BaseEntity repairBenchEntity, float maxConditionLostOnRepair, bool mustKnowBlueprint)
 	{
-		//IL_028f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0294: Unknown result type (might be due to invalid IL or missing references)
+		//IL_024d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0252: Unknown result type (might be due to invalid IL or missing references)
 		if (itemToRepair == null)
 		{
 			return;
 		}
 		ItemDefinition info = itemToRepair.info;
 		ItemBlueprint component = ((Component)info).GetComponent<ItemBlueprint>();
-		if (!Object.op_Implicit((Object)(object)component) || !info.condition.repairable || itemToRepair.condition == itemToRepair.maxCondition)
+		if (!Object.op_Implicit((Object)(object)component))
+		{
+			return;
+		}
+		ItemModRepair component2 = ((Component)itemToRepair.info).GetComponent<ItemModRepair>();
+		if (!info.condition.repairable || itemToRepair.condition == itemToRepair.maxCondition)
 		{
 			return;
 		}
@@ -368,8 +390,7 @@ public class RepairBench : StorageContainer
 			if (item.itemDef.category != ItemCategory.Component)
 			{
 				int amount = player.inventory.GetAmount(item.itemDef.itemid);
-				int num2 = Mathf.CeilToInt(item.amount * num);
-				if (num2 > amount)
+				if (Mathf.CeilToInt(item.amount * num) > amount)
 				{
 					flag = true;
 					break;
@@ -399,6 +420,11 @@ public class RepairBench : StorageContainer
 		{
 			Debug.Log((object)("Item repaired! condition : " + itemToRepair.condition + "/" + itemToRepair.maxCondition));
 		}
-		Effect.server.Run("assets/bundled/prefabs/fx/repairbench/itemrepair.prefab", repairBenchEntity, 0u, Vector3.zero, Vector3.zero);
+		string strName = "assets/bundled/prefabs/fx/repairbench/itemrepair.prefab";
+		if ((Object)(object)component2 != (Object)null && (Object)(object)component2.successEffect?.Get() != (Object)null)
+		{
+			strName = component2.successEffect.resourcePath;
+		}
+		Effect.server.Run(strName, repairBenchEntity, 0u, Vector3.zero, Vector3.zero);
 	}
 }

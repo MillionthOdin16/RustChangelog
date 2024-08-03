@@ -22,22 +22,21 @@ public class SkeletonProperties : ScriptableObject
 	public BoneProperty[] bones;
 
 	[NonSerialized]
-	private Dictionary<uint, BoneProperty> quickLookup = null;
+	private Dictionary<uint, BoneProperty> quickLookup;
 
 	public void OnValidate()
 	{
-		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0095: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00b0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e3: Expected O, but got Unknown
+		//IL_00cb: Expected O, but got Unknown
 		if ((Object)(object)boneReference == (Object)null)
 		{
 			Debug.LogWarning((object)("boneReference is null on " + ((Object)this).name), (Object)(object)this);
 			return;
 		}
 		List<BoneProperty> list = bones.ToList();
-		List<Transform> allChildren = boneReference.transform.GetAllChildren();
-		foreach (Transform child in allChildren)
+		foreach (Transform child in boneReference.transform.GetAllChildren())
 		{
 			if (list.All((BoneProperty x) => (Object)(object)x.bone != (Object)(object)((Component)child).gameObject))
 			{
@@ -71,15 +70,15 @@ public class SkeletonProperties : ScriptableObject
 				Debug.LogWarning((object)("Bone error in SkeletonProperties.BuildDictionary for " + ((Object)boneReference).name));
 				continue;
 			}
-			uint num = StringPool.Get(((Object)boneProperty.bone).name);
-			if (!quickLookup.ContainsKey(num))
+			uint key = StringPool.Get(((Object)boneProperty.bone).name);
+			if (!quickLookup.ContainsKey(key))
 			{
-				quickLookup.Add(num, boneProperty);
+				quickLookup.Add(key, boneProperty);
 				continue;
 			}
 			string name = ((Object)boneProperty.bone).name;
-			string name2 = ((Object)quickLookup[num].bone).name;
-			Debug.LogWarning((object)("Duplicate bone id " + num + " for " + name + " and " + name2));
+			string name2 = ((Object)quickLookup[key].bone).name;
+			Debug.LogWarning((object)("Duplicate bone id " + key + " for " + name + " and " + name2));
 		}
 	}
 

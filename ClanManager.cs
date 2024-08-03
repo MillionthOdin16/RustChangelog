@@ -12,6 +12,10 @@ using UnityEngine.Assertions;
 
 public class ClanManager : BaseEntity
 {
+	private RealTimeSince _sinceLastLeaderboardUpdate;
+
+	private List<ClanLeaderboardEntry> _leaderboardCache;
+
 	public static readonly TokenisedPhrase InvitationToast = new TokenisedPhrase("clan.invitation.toast", "You were invited to {clanName}! Press [clan.toggleclan] to manage your clan invitations.");
 
 	public const int LogoSize = 512;
@@ -496,6 +500,57 @@ public class ClanManager : BaseEntity
 				}
 				return true;
 			}
+			if (rpc == 1953068009 && (Object)(object)player != (Object)null)
+			{
+				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
+				if (Global.developer > 2)
+				{
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_GetLeaderboard "));
+				}
+				TimeWarning val2 = TimeWarning.New("Server_GetLeaderboard", 0);
+				try
+				{
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					try
+					{
+						if (!RPC_Server.CallsPerSecond.Test(1953068009u, "Server_GetLeaderboard", this, player, 3uL))
+						{
+							return true;
+						}
+					}
+					finally
+					{
+						((IDisposable)val3)?.Dispose();
+					}
+					try
+					{
+						val3 = TimeWarning.New("Call", 0);
+						try
+						{
+							RPCMessage rPCMessage = default(RPCMessage);
+							rPCMessage.connection = msg.connection;
+							rPCMessage.player = player;
+							rPCMessage.read = msg.read;
+							RPCMessage msg11 = rPCMessage;
+							Server_GetLeaderboard(msg11);
+						}
+						finally
+						{
+							((IDisposable)val3)?.Dispose();
+						}
+					}
+					catch (Exception ex10)
+					{
+						Debug.LogException(ex10);
+						player.Kick("RPC Error in Server_GetLeaderboard");
+					}
+				}
+				finally
+				{
+					((IDisposable)val2)?.Dispose();
+				}
+				return true;
+			}
 			if (rpc == 3858074978u && (Object)(object)player != (Object)null)
 			{
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
@@ -527,18 +582,69 @@ public class ClanManager : BaseEntity
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg11 = rPCMessage;
-							Server_GetLogs(msg11);
+							RPCMessage msg12 = rPCMessage;
+							Server_GetLogs(msg12);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex10)
+					catch (Exception ex11)
 					{
-						Debug.LogException(ex10);
+						Debug.LogException(ex11);
 						player.Kick("RPC Error in Server_GetLogs");
+					}
+				}
+				finally
+				{
+					((IDisposable)val2)?.Dispose();
+				}
+				return true;
+			}
+			if (rpc == 558876504 && (Object)(object)player != (Object)null)
+			{
+				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
+				if (Global.developer > 2)
+				{
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_GetScoreEvents "));
+				}
+				TimeWarning val2 = TimeWarning.New("Server_GetScoreEvents", 0);
+				try
+				{
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					try
+					{
+						if (!RPC_Server.CallsPerSecond.Test(558876504u, "Server_GetScoreEvents", this, player, 3uL))
+						{
+							return true;
+						}
+					}
+					finally
+					{
+						((IDisposable)val3)?.Dispose();
+					}
+					try
+					{
+						val3 = TimeWarning.New("Call", 0);
+						try
+						{
+							RPCMessage rPCMessage = default(RPCMessage);
+							rPCMessage.connection = msg.connection;
+							rPCMessage.player = player;
+							rPCMessage.read = msg.read;
+							RPCMessage msg13 = rPCMessage;
+							Server_GetScoreEvents(msg13);
+						}
+						finally
+						{
+							((IDisposable)val3)?.Dispose();
+						}
+					}
+					catch (Exception ex12)
+					{
+						Debug.LogException(ex12);
+						player.Kick("RPC Error in Server_GetScoreEvents");
 					}
 				}
 				finally
@@ -578,17 +684,17 @@ public class ClanManager : BaseEntity
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg12 = rPCMessage;
-							Server_Invite(msg12);
+							RPCMessage msg14 = rPCMessage;
+							Server_Invite(msg14);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex11)
+					catch (Exception ex13)
 					{
-						Debug.LogException(ex11);
+						Debug.LogException(ex13);
 						player.Kick("RPC Error in Server_Invite");
 					}
 				}
@@ -629,17 +735,17 @@ public class ClanManager : BaseEntity
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg13 = rPCMessage;
-							Server_Kick(msg13);
+							RPCMessage msg15 = rPCMessage;
+							Server_Kick(msg15);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex12)
+					catch (Exception ex14)
 					{
-						Debug.LogException(ex12);
+						Debug.LogException(ex14);
 						player.Kick("RPC Error in Server_Kick");
 					}
 				}
@@ -680,17 +786,17 @@ public class ClanManager : BaseEntity
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg14 = rPCMessage;
-							Server_SetColor(msg14);
+							RPCMessage msg16 = rPCMessage;
+							Server_SetColor(msg16);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex13)
+					catch (Exception ex15)
 					{
-						Debug.LogException(ex13);
+						Debug.LogException(ex15);
 						player.Kick("RPC Error in Server_SetColor");
 					}
 				}
@@ -731,17 +837,17 @@ public class ClanManager : BaseEntity
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg15 = rPCMessage;
-							Server_SetLogo(msg15);
+							RPCMessage msg17 = rPCMessage;
+							Server_SetLogo(msg17);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex14)
+					catch (Exception ex16)
 					{
-						Debug.LogException(ex14);
+						Debug.LogException(ex16);
 						player.Kick("RPC Error in Server_SetLogo");
 					}
 				}
@@ -782,17 +888,17 @@ public class ClanManager : BaseEntity
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg16 = rPCMessage;
-							Server_SetMotd(msg16);
+							RPCMessage msg18 = rPCMessage;
+							Server_SetMotd(msg18);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex15)
+					catch (Exception ex17)
 					{
-						Debug.LogException(ex15);
+						Debug.LogException(ex17);
 						player.Kick("RPC Error in Server_SetMotd");
 					}
 				}
@@ -833,17 +939,17 @@ public class ClanManager : BaseEntity
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg17 = rPCMessage;
-							Server_SetPlayerNotes(msg17);
+							RPCMessage msg19 = rPCMessage;
+							Server_SetPlayerNotes(msg19);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex16)
+					catch (Exception ex18)
 					{
-						Debug.LogException(ex16);
+						Debug.LogException(ex18);
 						player.Kick("RPC Error in Server_SetPlayerNotes");
 					}
 				}
@@ -884,17 +990,17 @@ public class ClanManager : BaseEntity
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg18 = rPCMessage;
-							Server_SetPlayerRole(msg18);
+							RPCMessage msg20 = rPCMessage;
+							Server_SetPlayerRole(msg20);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex17)
+					catch (Exception ex19)
 					{
-						Debug.LogException(ex17);
+						Debug.LogException(ex19);
 						player.Kick("RPC Error in Server_SetPlayerRole");
 					}
 				}
@@ -935,17 +1041,17 @@ public class ClanManager : BaseEntity
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg19 = rPCMessage;
-							Server_SwapRoles(msg19);
+							RPCMessage msg21 = rPCMessage;
+							Server_SwapRoles(msg21);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex18)
+					catch (Exception ex20)
 					{
-						Debug.LogException(ex18);
+						Debug.LogException(ex20);
 						player.Kick("RPC Error in Server_SwapRoles");
 					}
 				}
@@ -986,17 +1092,17 @@ public class ClanManager : BaseEntity
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg20 = rPCMessage;
-							Server_UpdateRole(msg20);
+							RPCMessage msg22 = rPCMessage;
+							Server_UpdateRole(msg22);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex19)
+					catch (Exception ex21)
 					{
-						Debug.LogException(ex19);
+						Debug.LogException(ex21);
 						player.Kick("RPC Error in Server_UpdateRole");
 					}
 				}
@@ -1020,15 +1126,15 @@ public class ClanManager : BaseEntity
 	{
 		int requestId = msg.read.Int32();
 		string text = default(string);
-		if (!ClanValidator.ValidateClanName(msg.read.String(256), ref text))
+		if (!ClanValidator.ValidateClanName(msg.read.String(256, false), ref text))
 		{
-			ClientRPCPlayer<ClanActionResult>(null, msg.player, "Client_ReceiveActionResult", BuildActionResult(requestId, (ClanResult)6, null, hasClanInfo: false));
+			ClientRPC<ClanActionResult>(RpcTarget.Player("Client_ReceiveActionResult", msg.player), BuildActionResult(requestId, (ClanResult)6, null, hasClanInfo: false));
 			return;
 		}
-		ClanValueResult<IClan> result = await Backend.Create(msg.player.userID, text);
+		ClanValueResult<IClan> result = await Backend.Create((ulong)msg.player.userID, text);
 		if (CheckClanResult(requestId, msg.player, result, out var clan))
 		{
-			ClientRPCPlayer<ClanActionResult>(null, msg.player, "Client_ReceiveActionResult", BuildActionResult(requestId, (ClanResult)1, clan));
+			ClientRPC<ClanActionResult>(RpcTarget.Player("Client_ReceiveActionResult", msg.player), BuildActionResult(requestId, (ClanResult)1, clan));
 		}
 	}
 
@@ -1040,7 +1146,8 @@ public class ClanManager : BaseEntity
 		ClanValueResult<IClan> result = await Backend.Get(msg.player.clanId);
 		if (CheckClanResult(requestId, msg.player, result, out var clan))
 		{
-			ClientRPCPlayer<ClanActionResult>(null, msg.player, "Client_ReceiveActionResult", BuildActionResult(requestId, (ClanResult)1, clan));
+			await clan.RefreshIfStale();
+			ClientRPC<ClanActionResult>(RpcTarget.Player("Client_ReceiveActionResult", msg.player), BuildActionResult(requestId, (ClanResult)1, clan));
 		}
 	}
 
@@ -1052,10 +1159,27 @@ public class ClanManager : BaseEntity
 		ClanValueResult<IClan> result = await Backend.Get(msg.player.clanId);
 		if (CheckClanResult(requestId, msg.player, result, out var clan))
 		{
-			ClanValueResult<ClanLogs> val = await clan.GetLogs(100, msg.player.userID);
+			ClanValueResult<ClanLogs> val = await clan.GetLogs(100, (ulong)msg.player.userID);
 			if (val.IsSuccess)
 			{
-				ClientRPCPlayer<ClanLog>(null, msg.player, "Client_ReceiveClanLogs", val.Value.ToProto());
+				ClientRPC<ClanLog>(RpcTarget.Player("Client_ReceiveClanLogs", msg.player), val.Value.ToProto());
+			}
+			ClientRPC<ClanActionResult>(RpcTarget.Player("Client_ReceiveActionResult", msg.player), BuildActionResult(requestId, val.Result, clan));
+		}
+	}
+
+	[RPC_Server]
+	[RPC_Server.CallsPerSecond(3uL)]
+	public async void Server_GetScoreEvents(RPCMessage msg)
+	{
+		int requestId = msg.read.Int32();
+		ClanValueResult<IClan> result = await Backend.Get(msg.player.clanId);
+		if (CheckClanResult(requestId, msg.player, result, out var clan))
+		{
+			ClanValueResult<ClanScoreEvents> val = await clan.GetScoreEvents(100, (ulong)msg.player.userID);
+			if (val.IsSuccess)
+			{
+				ClientRPCPlayer<ClanScoreEvents>(null, msg.player, "Client_ReceiveClanScoreEvents", val.Value.ToProto());
 			}
 			ClientRPCPlayer<ClanActionResult>(null, msg.player, "Client_ReceiveActionResult", BuildActionResult(requestId, val.Result, clan));
 		}
@@ -1066,12 +1190,38 @@ public class ClanManager : BaseEntity
 	public async void Server_GetInvitations(RPCMessage msg)
 	{
 		int requestId = msg.read.Int32();
-		ClanValueResult<List<ClanInvitation>> val = await Backend.ListInvitations(msg.player.userID);
+		ClanValueResult<List<ClanInvitation>> val = await Backend.ListInvitations((ulong)msg.player.userID);
 		if (val.IsSuccess)
 		{
-			ClientRPCPlayer<ClanInvitations>(null, msg.player, "Client_ReceiveClanInvitations", val.Value.ToProto());
+			ClientRPC<ClanInvitations>(RpcTarget.Player("Client_ReceiveClanInvitations", msg.player), val.Value.ToProto());
 		}
-		ClientRPCPlayer<ClanActionResult>(null, msg.player, "Client_ReceiveActionResult", BuildActionResult(requestId, val.Result, null, hasClanInfo: false));
+		ClientRPC<ClanActionResult>(RpcTarget.Player("Client_ReceiveActionResult", msg.player), BuildActionResult(requestId, val.Result, null, hasClanInfo: false));
+	}
+
+	[RPC_Server]
+	[RPC_Server.CallsPerSecond(3uL)]
+	public async void Server_GetLeaderboard(RPCMessage msg)
+	{
+		int requestId = msg.read.Int32();
+		if (_leaderboardCache == null || RealTimeSince.op_Implicit(_sinceLastLeaderboardUpdate) > 30f)
+		{
+			ClanValueResult<List<ClanLeaderboardEntry>> val = await Backend.GetLeaderboard(100);
+			if (val.IsSuccess)
+			{
+				_leaderboardCache = val.Value;
+				_sinceLastLeaderboardUpdate = RealTimeSince.op_Implicit(0f);
+			}
+			else
+			{
+				_leaderboardCache = null;
+			}
+		}
+		if (_leaderboardCache != null)
+		{
+			ClientRPCPlayer<ClanLeaderboard>(null, msg.player, "Client_ReceiveClanLeaderboard", _leaderboardCache.ToProto());
+		}
+		ClanResult result = (ClanResult)(_leaderboardCache != null);
+		ClientRPCPlayer<ClanActionResult>(null, msg.player, "Client_ReceiveActionResult", BuildActionResult(requestId, result, null, hasClanInfo: false));
 	}
 
 	[RPC_Server]
@@ -1079,22 +1229,22 @@ public class ClanManager : BaseEntity
 	public async void Server_SetLogo(RPCMessage msg)
 	{
 		int requestId = msg.read.Int32();
-		byte[] newLogo = msg.read.BytesWithSize(10485760u);
+		byte[] newLogo = msg.read.BytesWithSize(10485760u, false);
 		if (!msg.player.CanModifyClan())
 		{
-			ClientRPCPlayer<ClanActionResult>(null, msg.player, "Client_ReceiveActionResult", BuildActionResult(requestId, (ClanResult)16, null, hasClanInfo: false));
+			ClientRPC<ClanActionResult>(RpcTarget.Player("Client_ReceiveActionResult", msg.player), BuildActionResult(requestId, (ClanResult)16, null, hasClanInfo: false));
 			return;
 		}
 		if (!ImageProcessing.IsValidPNG(newLogo, 512, 512))
 		{
-			ClientRPCPlayer<ClanActionResult>(null, msg.player, "Client_ReceiveActionResult", BuildActionResult(requestId, (ClanResult)7, null, hasClanInfo: false));
+			ClientRPC<ClanActionResult>(RpcTarget.Player("Client_ReceiveActionResult", msg.player), BuildActionResult(requestId, (ClanResult)7, null, hasClanInfo: false));
 			return;
 		}
 		ClanValueResult<IClan> result = await Backend.Get(msg.player.clanId);
 		if (CheckClanResult(requestId, msg.player, result, out var clan))
 		{
-			ClanResult result2 = await clan.SetLogo(newLogo, msg.player.userID);
-			ClientRPCPlayer<ClanActionResult>(null, msg.player, "Client_ReceiveActionResult", BuildActionResult(requestId, result2, clan));
+			ClanResult result2 = await clan.SetLogo(newLogo, (ulong)msg.player.userID);
+			ClientRPC<ClanActionResult>(RpcTarget.Player("Client_ReceiveActionResult", msg.player), BuildActionResult(requestId, result2, clan));
 		}
 	}
 
@@ -1106,19 +1256,19 @@ public class ClanManager : BaseEntity
 		Color32 newColor = msg.read.Color32();
 		if (!msg.player.CanModifyClan())
 		{
-			ClientRPCPlayer<ClanActionResult>(null, msg.player, "Client_ReceiveActionResult", BuildActionResult(requestId, (ClanResult)16, null, hasClanInfo: false));
+			ClientRPC<ClanActionResult>(RpcTarget.Player("Client_ReceiveActionResult", msg.player), BuildActionResult(requestId, (ClanResult)16, null, hasClanInfo: false));
 			return;
 		}
 		if (newColor.a != byte.MaxValue)
 		{
-			ClientRPCPlayer<ClanActionResult>(null, msg.player, "Client_ReceiveActionResult", BuildActionResult(requestId, (ClanResult)8, null, hasClanInfo: false));
+			ClientRPC<ClanActionResult>(RpcTarget.Player("Client_ReceiveActionResult", msg.player), BuildActionResult(requestId, (ClanResult)8, null, hasClanInfo: false));
 			return;
 		}
 		ClanValueResult<IClan> result = await Backend.Get(msg.player.clanId);
 		if (CheckClanResult(requestId, msg.player, result, out var clan))
 		{
-			ClanResult result2 = await clan.SetColor(newColor, msg.player.userID);
-			ClientRPCPlayer<ClanActionResult>(null, msg.player, "Client_ReceiveActionResult", BuildActionResult(requestId, result2, clan));
+			ClanResult result2 = await clan.SetColor(newColor, (ulong)msg.player.userID);
+			ClientRPC<ClanActionResult>(RpcTarget.Player("Client_ReceiveActionResult", msg.player), BuildActionResult(requestId, result2, clan));
 		}
 	}
 
@@ -1127,24 +1277,24 @@ public class ClanManager : BaseEntity
 	public async void Server_SetMotd(RPCMessage msg)
 	{
 		int requestId = msg.read.Int32();
-		string text = msg.read.StringMultiLine(2048);
+		string text = msg.read.StringMultiLine(2048, false);
 		if (!msg.player.CanModifyClan())
 		{
-			ClientRPCPlayer<ClanActionResult>(null, msg.player, "Client_ReceiveActionResult", BuildActionResult(requestId, (ClanResult)16, null, hasClanInfo: false));
+			ClientRPC<ClanActionResult>(RpcTarget.Player("Client_ReceiveActionResult", msg.player), BuildActionResult(requestId, (ClanResult)16, null, hasClanInfo: false));
 			return;
 		}
 		string validatedMotd = default(string);
 		if (!ClanValidator.ValidateMotd(text, ref validatedMotd))
 		{
-			ClientRPCPlayer<ClanActionResult>(null, msg.player, "Client_ReceiveActionResult", BuildActionResult(requestId, (ClanResult)6, null, hasClanInfo: false));
+			ClientRPC<ClanActionResult>(RpcTarget.Player("Client_ReceiveActionResult", msg.player), BuildActionResult(requestId, (ClanResult)6, null, hasClanInfo: false));
 			return;
 		}
 		ClanValueResult<IClan> result = await Backend.Get(msg.player.clanId);
 		if (CheckClanResult(requestId, msg.player, result, out var clan))
 		{
 			long previousTimestamp = clan.MotdTimestamp;
-			ClanResult val = await clan.SetMotd(validatedMotd, msg.player.userID);
-			ClientRPCPlayer<ClanActionResult>(null, msg.player, "Client_ReceiveActionResult", BuildActionResult(requestId, val, clan));
+			ClanResult val = await clan.SetMotd(validatedMotd, (ulong)msg.player.userID);
+			ClientRPC<ClanActionResult>(RpcTarget.Player("Client_ReceiveActionResult", msg.player), BuildActionResult(requestId, val, clan));
 			if ((int)val == 1)
 			{
 				ClanPushNotifications.SendClanAnnouncement(clan, previousTimestamp, msg.player.userID);
@@ -1160,14 +1310,14 @@ public class ClanManager : BaseEntity
 		ulong steamId = msg.read.UInt64();
 		if (!msg.player.CanModifyClan())
 		{
-			ClientRPCPlayer<ClanActionResult>(null, msg.player, "Client_ReceiveActionResult", BuildActionResult(requestId, (ClanResult)16, null, hasClanInfo: false));
+			ClientRPC<ClanActionResult>(RpcTarget.Player("Client_ReceiveActionResult", msg.player), BuildActionResult(requestId, (ClanResult)16, null, hasClanInfo: false));
 			return;
 		}
 		ClanValueResult<IClan> result = await Backend.Get(msg.player.clanId);
 		if (CheckClanResult(requestId, msg.player, result, out var clan))
 		{
-			ClanResult result2 = await clan.Invite(steamId, msg.player.userID);
-			ClientRPCPlayer<ClanActionResult>(null, msg.player, "Client_ReceiveActionResult", BuildActionResult(requestId, result2, clan));
+			ClanResult result2 = await clan.Invite(steamId, (ulong)msg.player.userID);
+			ClientRPC<ClanActionResult>(RpcTarget.Player("Client_ReceiveActionResult", msg.player), BuildActionResult(requestId, result2, clan));
 		}
 	}
 
@@ -1179,14 +1329,14 @@ public class ClanManager : BaseEntity
 		ulong steamId = msg.read.UInt64();
 		if (!msg.player.CanModifyClan())
 		{
-			ClientRPCPlayer<ClanActionResult>(null, msg.player, "Client_ReceiveActionResult", BuildActionResult(requestId, (ClanResult)16, null, hasClanInfo: false));
+			ClientRPC<ClanActionResult>(RpcTarget.Player("Client_ReceiveActionResult", msg.player), BuildActionResult(requestId, (ClanResult)16, null, hasClanInfo: false));
 			return;
 		}
 		ClanValueResult<IClan> result = await Backend.Get(msg.player.clanId);
 		if (CheckClanResult(requestId, msg.player, result, out var clan))
 		{
-			ClanResult result2 = await clan.CancelInvite(steamId, msg.player.userID);
-			ClientRPCPlayer<ClanActionResult>(null, msg.player, "Client_ReceiveActionResult", BuildActionResult(requestId, result2, clan));
+			ClanResult result2 = await clan.CancelInvite(steamId, (ulong)msg.player.userID);
+			ClientRPC<ClanActionResult>(RpcTarget.Player("Client_ReceiveActionResult", msg.player), BuildActionResult(requestId, result2, clan));
 		}
 	}
 
@@ -1198,14 +1348,14 @@ public class ClanManager : BaseEntity
 		long num = msg.read.Int64();
 		if (!msg.player.CanModifyClan())
 		{
-			ClientRPCPlayer<ClanActionResult>(null, msg.player, "Client_ReceiveActionResult", BuildActionResult(requestId, (ClanResult)16, null, hasClanInfo: false));
+			ClientRPC<ClanActionResult>(RpcTarget.Player("Client_ReceiveActionResult", msg.player), BuildActionResult(requestId, (ClanResult)16, null, hasClanInfo: false));
 			return;
 		}
 		ClanValueResult<IClan> result = await Backend.Get(num);
 		if (CheckClanResult(requestId, msg.player, result, out var clan))
 		{
-			ClanResult result2 = await clan.AcceptInvite(msg.player.userID);
-			ClientRPCPlayer<ClanActionResult>(null, msg.player, "Client_ReceiveActionResult", BuildActionResult(requestId, result2, null));
+			ClanResult result2 = await clan.AcceptInvite((ulong)msg.player.userID);
+			ClientRPC<ClanActionResult>(RpcTarget.Player("Client_ReceiveActionResult", msg.player), BuildActionResult(requestId, result2, null));
 		}
 	}
 
@@ -1217,14 +1367,14 @@ public class ClanManager : BaseEntity
 		long num = msg.read.Int64();
 		if (!msg.player.CanModifyClan())
 		{
-			ClientRPCPlayer<ClanActionResult>(null, msg.player, "Client_ReceiveActionResult", BuildActionResult(requestId, (ClanResult)16, null, hasClanInfo: false));
+			ClientRPC<ClanActionResult>(RpcTarget.Player("Client_ReceiveActionResult", msg.player), BuildActionResult(requestId, (ClanResult)16, null, hasClanInfo: false));
 			return;
 		}
 		ClanValueResult<IClan> result = await Backend.Get(num);
 		if (CheckClanResult(requestId, msg.player, result, out var clan))
 		{
-			ClanResult result2 = await clan.CancelInvite(msg.player.userID, msg.player.userID);
-			ClientRPCPlayer<ClanActionResult>(null, msg.player, "Client_ReceiveActionResult", BuildActionResult(requestId, result2, null));
+			ClanResult result2 = await clan.CancelInvite((ulong)msg.player.userID, (ulong)msg.player.userID);
+			ClientRPC<ClanActionResult>(RpcTarget.Player("Client_ReceiveActionResult", msg.player), BuildActionResult(requestId, result2, null));
 		}
 	}
 
@@ -1234,16 +1384,16 @@ public class ClanManager : BaseEntity
 	{
 		int requestId = msg.read.Int32();
 		ulong steamId = msg.read.UInt64();
-		if (msg.player.userID != steamId && !msg.player.CanModifyClan())
+		if ((ulong)msg.player.userID != steamId && !msg.player.CanModifyClan())
 		{
-			ClientRPCPlayer<ClanActionResult>(null, msg.player, "Client_ReceiveActionResult", BuildActionResult(requestId, (ClanResult)16, null, hasClanInfo: false));
+			ClientRPC<ClanActionResult>(RpcTarget.Player("Client_ReceiveActionResult", msg.player), BuildActionResult(requestId, (ClanResult)16, null, hasClanInfo: false));
 			return;
 		}
 		ClanValueResult<IClan> result = await Backend.Get(msg.player.clanId);
 		if (CheckClanResult(requestId, msg.player, result, out var clan))
 		{
-			ClanResult result2 = await clan.Kick(steamId, msg.player.userID);
-			ClientRPCPlayer<ClanActionResult>(null, msg.player, "Client_ReceiveActionResult", BuildActionResult(requestId, result2, clan));
+			ClanResult result2 = await clan.Kick(steamId, (ulong)msg.player.userID);
+			ClientRPC<ClanActionResult>(RpcTarget.Player("Client_ReceiveActionResult", msg.player), BuildActionResult(requestId, result2, clan));
 		}
 	}
 
@@ -1256,14 +1406,14 @@ public class ClanManager : BaseEntity
 		int newRoleId = msg.read.Int32();
 		if (!msg.player.CanModifyClan())
 		{
-			ClientRPCPlayer<ClanActionResult>(null, msg.player, "Client_ReceiveActionResult", BuildActionResult(requestId, (ClanResult)16, null, hasClanInfo: false));
+			ClientRPC<ClanActionResult>(RpcTarget.Player("Client_ReceiveActionResult", msg.player), BuildActionResult(requestId, (ClanResult)16, null, hasClanInfo: false));
 			return;
 		}
 		ClanValueResult<IClan> result = await Backend.Get(msg.player.clanId);
 		if (CheckClanResult(requestId, msg.player, result, out var clan))
 		{
-			ClanResult result2 = await clan.SetPlayerRole(steamId, newRoleId, msg.player.userID);
-			ClientRPCPlayer<ClanActionResult>(null, msg.player, "Client_ReceiveActionResult", BuildActionResult(requestId, result2, clan));
+			ClanResult result2 = await clan.SetPlayerRole(steamId, newRoleId, (ulong)msg.player.userID);
+			ClientRPC<ClanActionResult>(RpcTarget.Player("Client_ReceiveActionResult", msg.player), BuildActionResult(requestId, result2, clan));
 		}
 	}
 
@@ -1273,23 +1423,23 @@ public class ClanManager : BaseEntity
 	{
 		int requestId = msg.read.Int32();
 		ulong steamId = msg.read.UInt64();
-		string text = msg.read.StringMultiLine(1024);
+		string text = msg.read.StringMultiLine(1024, false);
 		if (!msg.player.CanModifyClan())
 		{
-			ClientRPCPlayer<ClanActionResult>(null, msg.player, "Client_ReceiveActionResult", BuildActionResult(requestId, (ClanResult)16, null, hasClanInfo: false));
+			ClientRPC<ClanActionResult>(RpcTarget.Player("Client_ReceiveActionResult", msg.player), BuildActionResult(requestId, (ClanResult)16, null, hasClanInfo: false));
 			return;
 		}
 		string validatedNotes = default(string);
 		if (!ClanValidator.ValidatePlayerNote(text, ref validatedNotes))
 		{
-			ClientRPCPlayer<ClanActionResult>(null, msg.player, "Client_ReceiveActionResult", BuildActionResult(requestId, (ClanResult)6, null, hasClanInfo: false));
+			ClientRPC<ClanActionResult>(RpcTarget.Player("Client_ReceiveActionResult", msg.player), BuildActionResult(requestId, (ClanResult)6, null, hasClanInfo: false));
 			return;
 		}
 		ClanValueResult<IClan> result = await Backend.Get(msg.player.clanId);
 		if (CheckClanResult(requestId, msg.player, result, out var clan))
 		{
-			ClanResult result2 = await clan.SetPlayerNotes(steamId, validatedNotes, msg.player.userID);
-			ClientRPCPlayer<ClanActionResult>(null, msg.player, "Client_ReceiveActionResult", BuildActionResult(requestId, result2, clan));
+			ClanResult result2 = await clan.SetPlayerNotes(steamId, validatedNotes, (ulong)msg.player.userID);
+			ClientRPC<ClanActionResult>(RpcTarget.Player("Client_ReceiveActionResult", msg.player), BuildActionResult(requestId, result2, clan));
 		}
 	}
 
@@ -1298,16 +1448,16 @@ public class ClanManager : BaseEntity
 	public async void Server_CreateRole(RPCMessage msg)
 	{
 		int requestId = msg.read.Int32();
-		string text = msg.read.String(128);
+		string text = msg.read.String(128, false);
 		if (!msg.player.CanModifyClan())
 		{
-			ClientRPCPlayer<ClanActionResult>(null, msg.player, "Client_ReceiveActionResult", BuildActionResult(requestId, (ClanResult)16, null, hasClanInfo: false));
+			ClientRPC<ClanActionResult>(RpcTarget.Player("Client_ReceiveActionResult", msg.player), BuildActionResult(requestId, (ClanResult)16, null, hasClanInfo: false));
 			return;
 		}
 		string name = default(string);
 		if (!ClanValidator.ValidateRoleName(text, ref name))
 		{
-			ClientRPCPlayer<ClanActionResult>(null, msg.player, "Client_ReceiveActionResult", BuildActionResult(requestId, (ClanResult)6, null, hasClanInfo: false));
+			ClientRPC<ClanActionResult>(RpcTarget.Player("Client_ReceiveActionResult", msg.player), BuildActionResult(requestId, (ClanResult)6, null, hasClanInfo: false));
 			return;
 		}
 		ClanRole role = new ClanRole
@@ -1317,8 +1467,8 @@ public class ClanManager : BaseEntity
 		ClanValueResult<IClan> result = await Backend.Get(msg.player.clanId);
 		if (CheckClanResult(requestId, msg.player, result, out var clan))
 		{
-			ClanResult result2 = await clan.CreateRole(role, msg.player.userID);
-			ClientRPCPlayer<ClanActionResult>(null, msg.player, "Client_ReceiveActionResult", BuildActionResult(requestId, result2, clan));
+			ClanResult result2 = await clan.CreateRole(role, (ulong)msg.player.userID);
+			ClientRPC<ClanActionResult>(RpcTarget.Player("Client_ReceiveActionResult", msg.player), BuildActionResult(requestId, result2, clan));
 		}
 	}
 
@@ -1329,7 +1479,7 @@ public class ClanManager : BaseEntity
 		int requestId = msg.read.Int32();
 		if (!msg.player.CanModifyClan())
 		{
-			ClientRPCPlayer<ClanActionResult>(null, msg.player, "Client_ReceiveActionResult", BuildActionResult(requestId, (ClanResult)16, null, hasClanInfo: false));
+			ClientRPC<ClanActionResult>(RpcTarget.Player("Client_ReceiveActionResult", msg.player), BuildActionResult(requestId, (ClanResult)16, null, hasClanInfo: false));
 			return;
 		}
 		Role role = Role.Deserialize((Stream)(object)msg.read);
@@ -1338,7 +1488,7 @@ public class ClanManager : BaseEntity
 			string name = default(string);
 			if (!ClanValidator.ValidateRoleName(role.name, ref name))
 			{
-				ClientRPCPlayer<ClanActionResult>(null, msg.player, "Client_ReceiveActionResult", BuildActionResult(requestId, (ClanResult)6, null, hasClanInfo: false));
+				ClientRPC<ClanActionResult>(RpcTarget.Player("Client_ReceiveActionResult", msg.player), BuildActionResult(requestId, (ClanResult)6, null, hasClanInfo: false));
 				return;
 			}
 			role.name = name;
@@ -1347,8 +1497,8 @@ public class ClanManager : BaseEntity
 			{
 				return;
 			}
-			ClanResult result2 = await clan.UpdateRole(role.FromProto(), msg.player.userID);
-			ClientRPCPlayer<ClanActionResult>(null, msg.player, "Client_ReceiveActionResult", BuildActionResult(requestId, result2, clan));
+			ClanResult result2 = await clan.UpdateRole(role.FromProto(), (ulong)msg.player.userID);
+			ClientRPC<ClanActionResult>(RpcTarget.Player("Client_ReceiveActionResult", msg.player), BuildActionResult(requestId, result2, clan));
 		}
 		finally
 		{
@@ -1364,14 +1514,14 @@ public class ClanManager : BaseEntity
 		int roleId = msg.read.Int32();
 		if (!msg.player.CanModifyClan())
 		{
-			ClientRPCPlayer<ClanActionResult>(null, msg.player, "Client_ReceiveActionResult", BuildActionResult(requestId, (ClanResult)16, null, hasClanInfo: false));
+			ClientRPC<ClanActionResult>(RpcTarget.Player("Client_ReceiveActionResult", msg.player), BuildActionResult(requestId, (ClanResult)16, null, hasClanInfo: false));
 			return;
 		}
 		ClanValueResult<IClan> result = await Backend.Get(msg.player.clanId);
 		if (CheckClanResult(requestId, msg.player, result, out var clan))
 		{
-			ClanResult result2 = await clan.DeleteRole(roleId, msg.player.userID);
-			ClientRPCPlayer<ClanActionResult>(null, msg.player, "Client_ReceiveActionResult", BuildActionResult(requestId, result2, clan));
+			ClanResult result2 = await clan.DeleteRole(roleId, (ulong)msg.player.userID);
+			ClientRPC<ClanActionResult>(RpcTarget.Player("Client_ReceiveActionResult", msg.player), BuildActionResult(requestId, result2, clan));
 		}
 	}
 
@@ -1384,27 +1534,27 @@ public class ClanManager : BaseEntity
 		int roleIdB = msg.read.Int32();
 		if (!msg.player.CanModifyClan())
 		{
-			ClientRPCPlayer<ClanActionResult>(null, msg.player, "Client_ReceiveActionResult", BuildActionResult(requestId, (ClanResult)16, null, hasClanInfo: false));
+			ClientRPC<ClanActionResult>(RpcTarget.Player("Client_ReceiveActionResult", msg.player), BuildActionResult(requestId, (ClanResult)16, null, hasClanInfo: false));
 			return;
 		}
 		ClanValueResult<IClan> result = await Backend.Get(msg.player.clanId);
 		if (CheckClanResult(requestId, msg.player, result, out var clan))
 		{
-			ClanResult result2 = await clan.SwapRoleRanks(roleIdA, roleIdB, msg.player.userID);
-			ClientRPCPlayer<ClanActionResult>(null, msg.player, "Client_ReceiveActionResult", BuildActionResult(requestId, result2, clan));
+			ClanResult result2 = await clan.SwapRoleRanks(roleIdA, roleIdB, (ulong)msg.player.userID);
+			ClientRPC<ClanActionResult>(RpcTarget.Player("Client_ReceiveActionResult", msg.player), BuildActionResult(requestId, result2, clan));
 		}
 	}
 
 	private bool CheckClanResult(int requestId, BasePlayer player, ClanValueResult<IClan> result, out IClan clan)
 	{
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
 		if (result.IsSuccess)
 		{
 			clan = result.Value;
 			return true;
 		}
-		ClientRPCPlayer<ClanActionResult>(null, player, "Client_ReceiveActionResult", BuildActionResult(requestId, result.Result, null));
+		ClientRPC<ClanActionResult>(RpcTarget.Player("Client_ReceiveActionResult", player), BuildActionResult(requestId, result.Result, null));
 		clan = null;
 		return false;
 	}
@@ -1578,18 +1728,60 @@ public class ClanManager : BaseEntity
 		if (val.IsSuccess)
 		{
 			IClan value = val.Value;
-			ClientRPCPlayer<long, string, int, Color32>(null, msg.player, "Client_GetClanMetadataResponse", clanId, value.Name ?? "", value.Members?.Count ?? 0, value.Color);
+			ClientRPC<long, string, int, Color32>(RpcTarget.Player("Client_GetClanMetadataResponse", msg.player), clanId, value.Name ?? "", value.Members?.Count ?? 0, value.Color);
 		}
 		else
 		{
-			ClientRPCPlayer<long, string, int, Color32>(null, msg.player, "Client_GetClanMetadataResponse", clanId, "[unknown]", 0, Color32.op_Implicit(Color.white));
+			ClientRPC<long, string, int, Color32>(RpcTarget.Player("Client_GetClanMetadataResponse", msg.player), clanId, "[unknown]", 0, Color32.op_Implicit(Color.white));
+		}
+	}
+
+	public void AddScore(IClan clan, ClanScoreEvent entry)
+	{
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		Assert.IsNotNull<IClan>(clan, "clan != null");
+		ValueTask<ClanResult> task2 = clan.AddScoreEvent(entry);
+		if (task2.IsCompletedSuccessfully)
+		{
+			CheckResult(task2.Result);
+		}
+		else
+		{
+			AwaitResult(task2);
+		}
+		async void AwaitResult(ValueTask<ClanResult> task)
+		{
+			//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+			try
+			{
+				CheckResult(await task);
+			}
+			catch (Exception ex)
+			{
+				Debug.LogError((object)$"Exception while adding score event to clan {clan.ClanId}:");
+				Debug.LogException(ex);
+			}
+		}
+		void CheckResult(ClanResult result)
+		{
+			//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0002: Invalid comparison between Unknown and I4
+			//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+			if ((int)result != 1)
+			{
+				Debug.LogWarning((object)$"Failed to add score event to clan {clan.ClanId}: {result}");
+			}
 		}
 	}
 
 	public void SendClanChanged(IClan clan)
 	{
 		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
 		List<Connection> list = Pool.GetList<Connection>();
 		foreach (ClanMember member in clan.Members)
 		{
@@ -1599,7 +1791,7 @@ public class ClanManager : BaseEntity
 				list.Add(basePlayer.net.connection);
 			}
 		}
-		ClientRPCEx(new SendInfo(list), null, "Client_CurrentClanChanged");
+		ClientRPC(RpcTarget.Players("Client_CurrentClanChanged", list));
 		Pool.FreeList<Connection>(ref list);
 	}
 
@@ -1608,7 +1800,7 @@ public class ClanManager : BaseEntity
 		BasePlayer basePlayer = BasePlayer.FindByID(steamId);
 		if (!((Object)(object)basePlayer == (Object)null) && basePlayer.IsConnected)
 		{
-			ClientRPCPlayer(null, basePlayer, "Client_ReceiveClanInvitation", clanId);
+			ClientRPC(RpcTarget.Player("Client_ReceiveClanInvitation", basePlayer), clanId);
 		}
 	}
 
@@ -1683,10 +1875,11 @@ public class ClanManager : BaseEntity
 			}
 			try
 			{
-				ClanValueResult<IClan> val = await Backend.GetByMember(player.userID);
+				ClanValueResult<IClan> val = await Backend.GetByMember((ulong)player.userID);
 				if (val.IsSuccess)
 				{
 					IClan value = val.Value;
+					player.serverClan = value;
 					player.clanId = value.ClanId;
 					SendNetworkUpdate();
 					found.Add(player.userID);
@@ -1694,6 +1887,7 @@ public class ClanManager : BaseEntity
 					{
 						if (sleepers.TryGetValue(member.SteamId, out var value2) && found.Add(member.SteamId))
 						{
+							value2.serverClan = value;
 							value2.clanId = value.ClanId;
 							value2.SendNetworkUpdate();
 						}
@@ -1701,6 +1895,7 @@ public class ClanManager : BaseEntity
 				}
 				else if ((int)val.Result == 3)
 				{
+					player.serverClan = null;
 					player.clanId = 0L;
 					SendNetworkUpdate();
 					found.Add(player.userID);

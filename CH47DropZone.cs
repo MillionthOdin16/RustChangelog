@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class CH47DropZone : MonoBehaviour
 {
-	public float lastDropTime = 0f;
+	public float lastDropTime;
 
 	private static List<CH47DropZone> dropZones = new List<CH47DropZone>();
 
@@ -17,8 +17,8 @@ public class CH47DropZone : MonoBehaviour
 
 	public static CH47DropZone GetClosest(Vector3 pos)
 	{
-		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
 		float num = float.PositiveInfinity;
 		CH47DropZone result = null;
 		foreach (CH47DropZone dropZone in dropZones)
@@ -53,8 +53,8 @@ public class CH47DropZone : MonoBehaviour
 
 	public void OnDrawGizmos()
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
 		Gizmos.color = Color.yellow;
 		Gizmos.DrawSphere(((Component)this).transform.position, 5f);
 	}

@@ -10,7 +10,7 @@ public class IconSkinPicker : MonoBehaviour
 
 	public Action skinChangedEvent;
 
-	public ScrollRect scroller = null;
+	public ScrollRect scroller;
 
-	public SearchFilterInput searchFilter = null;
+	public SearchFilterInput searchFilter;
 }

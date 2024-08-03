@@ -96,8 +96,7 @@ public class WaterSystem : MonoBehaviour
 		}
 	}
 
-	public bool IsInitialized { get; private set; } = false;
-
+	public bool IsInitialized { get; private set; }
 
 	public int Layer => ((Component)this).gameObject.layer;
 
@@ -106,14 +105,6 @@ public class WaterSystem : MonoBehaviour
 	public float WindowDirection => oceanSettings.windDirection;
 
 	public float[] OctaveScales => oceanSettings.octaveScales;
-
-	private void EditorInitialize()
-	{
-	}
-
-	private void EditorShutdown()
-	{
-	}
 
 	private void CheckInstance()
 	{
@@ -159,9 +150,9 @@ public class WaterSystem : MonoBehaviour
 
 	public static bool Trace(Ray ray, out Vector3 position, float maxDist = 100f)
 	{
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)Instance == (Object)null)
 		{
 			position = Vector3.zero;
@@ -172,13 +163,13 @@ public class WaterSystem : MonoBehaviour
 
 	public static bool Trace(Ray ray, out Vector3 position, out Vector3 normal, float maxDist = 100f)
 	{
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)Instance == (Object)null)
 		{
 			position = Vector3.zero;
@@ -191,16 +182,16 @@ public class WaterSystem : MonoBehaviour
 
 	public static void GetHeightArray_Managed(Vector2[] pos, Vector2[] posUV, Vector3[] shore, float[] terrainHeight, float[] waterHeight)
 	{
-		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ba: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00de: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d5: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)TerrainTexturing.Instance != (Object)null)
 		{
 			for (int i = 0; i < posUV.Length; i++)
@@ -240,7 +231,7 @@ public class WaterSystem : MonoBehaviour
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static float GetHeight(Vector3 pos)
 	{
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)Instance == (Object)null)
 		{
 			return OceanLevel;
@@ -250,9 +241,7 @@ public class WaterSystem : MonoBehaviour
 
 	public static Vector3 GetNormal(Vector3 pos)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
 		return Vector3.up;
 	}
 
@@ -276,8 +265,8 @@ public class WaterSystem : MonoBehaviour
 
 	public static void RegisterBody(WaterBody body)
 	{
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
 		if (body.Type == WaterBodyType.Ocean)
 		{
 			if ((Object)(object)Ocean == (Object)null)
@@ -305,8 +294,8 @@ public class WaterSystem : MonoBehaviour
 
 	private static void UpdateOceanLevel()
 	{
-		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)Ocean != (Object)null)
 		{
 			Ocean.Transform.position = Vector3Ex.WithY(Ocean.Transform.position, OceanLevel);
@@ -339,5 +328,13 @@ public class WaterSystem : MonoBehaviour
 	{
 		oceanSimulation.Dispose();
 		oceanSimulation = new OceanSimulation(oceanSettings);
+	}
+
+	private void EditorInitialize()
+	{
+	}
+
+	private void EditorShutdown()
+	{
 	}
 }

@@ -2,11 +2,11 @@ using UnityEngine;
 
 public class ConvarToggleChildren : MonoBehaviour
 {
-	public string ConvarName = null;
+	public string ConvarName;
 
 	public string ConvarEnabled = "True";
 
-	private bool state = false;
+	private bool state;
 
 	private Command Command;
 
@@ -37,12 +37,10 @@ public class ConvarToggleChildren : MonoBehaviour
 
 	private void SetState(bool newState)
 	{
-		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001c: Expected O, but got Unknown
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
 		foreach (Transform item in ((Component)this).transform)
 		{
-			Transform val = item;
-			((Component)val).gameObject.SetActive(newState);
+			((Component)item).gameObject.SetActive(newState);
 		}
 		state = newState;
 	}

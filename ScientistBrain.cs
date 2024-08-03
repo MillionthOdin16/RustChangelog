@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.Profiling;
 
 public class ScientistBrain : BaseAIBrain
 {
@@ -7,12 +6,12 @@ public class ScientistBrain : BaseAIBrain
 	{
 		public override void StateEnter(BaseAIBrain brain, BaseEntity entity)
 		{
-			//IL_0037: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0040: Unknown result type (might be due to invalid IL or missing references)
 			base.StateEnter(brain, entity);
-			HumanNPC humanNPC = entity as HumanNPC;
-			humanNPC.SetDucked(flag: false);
-			humanNPC.Server_StartGesture(235662700u);
+			HumanNPC obj = entity as HumanNPC;
+			obj.SetDucked(flag: false);
+			obj.Server_StartGesture(235662700u);
 			brain.Navigator.SetDestination(brain.PathFinder.GetRandomPositionAround(((Component)entity).transform.position, 1f, 2.5f), BaseNavigator.NavigationSpeed.Slowest);
 		}
 
@@ -31,7 +30,7 @@ public class ScientistBrain : BaseAIBrain
 	{
 		private StateStatus status = StateStatus.Error;
 
-		private float nextPositionUpdateTime = 0f;
+		private float nextPositionUpdateTime;
 
 		public ChaseState()
 			: base(AIState.Chase)
@@ -64,32 +63,43 @@ public class ScientistBrain : BaseAIBrain
 
 		public override StateStatus StateThink(float delta, BaseAIBrain brain, BaseEntity entity)
 		{
-			//IL_0071: Unknown result type (might be due to invalid IL or missing references)
-			//IL_007c: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0143: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0148: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0156: Unknown result type (might be due to invalid IL or missing references)
-			//IL_017c: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0187: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01cf: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01e6: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01eb: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0237: Unknown result type (might be due to invalid IL or missing references)
+			//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00fc: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0101: Unknown result type (might be due to invalid IL or missing references)
+			//IL_010e: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0393: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0379: Unknown result type (might be due to invalid IL or missing references)
+			//IL_018e: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01a4: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0348: Unknown result type (might be due to invalid IL or missing references)
+			//IL_035f: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0364: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01bb: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01c0: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01d6: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01e5: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01ea: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01ef: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01f4: Unknown result type (might be due to invalid IL or missing references)
+			//IL_025d: Unknown result type (might be due to invalid IL or missing references)
+			//IL_025f: Unknown result type (might be due to invalid IL or missing references)
 			//IL_021c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0221: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0226: Unknown result type (might be due to invalid IL or missing references)
+			//IL_022b: Unknown result type (might be due to invalid IL or missing references)
 			base.StateThink(delta, brain, entity);
 			if (status == StateStatus.Error)
 			{
 				return status;
 			}
-			Profiler.BeginSample("ScientistBrain.States.Chase.StateThink");
 			BaseEntity baseEntity = brain.Events.Memory.Entity.Get(brain.Events.CurrentInputMemorySlot);
 			if ((Object)(object)baseEntity == (Object)null)
 			{
-				Profiler.EndSample();
 				return StateStatus.Error;
 			}
 			float num = Vector3.Distance(((Component)baseEntity).transform.position, ((Component)entity).transform.position);
-			if (brain.Senses.Memory.IsLOS(baseEntity) || num <= 10f || base.TimeInState <= 5f)
+			if (brain.Senses.Memory.IsLOS(baseEntity) || num <= brain.Navigator.FaceTargetChaseDistance || base.TimeInState <= 5f)
 			{
 				brain.Navigator.SetFacingDirectionEntity(baseEntity);
 			}
@@ -113,17 +123,59 @@ public class ScientistBrain : BaseAIBrain
 				bool flag = false;
 				if ((Object)(object)informationZone != (Object)null)
 				{
-					AIMovePoint bestMovePointNear = informationZone.GetBestMovePointNear(((Component)baseEntity).transform.position, ((Component)entity).transform.position, 0f, brain.Navigator.BestMovementPointMaxDistance, checkLOS: true, entity, returnClosest: true);
-					if (Object.op_Implicit((Object)(object)bestMovePointNear))
+					AIMovePoint aIMovePoint = informationZone.GetBestMovePointNear(baseEntity, entity, 0f, brain.Navigator.BestMovementPointMaxDistance, checkLOS: true, entity);
+					flag = (Object)(object)aIMovePoint != (Object)null;
+					if (!flag && brain.Navigator.CanPathFindToChaseTargetIfNoMovePoint)
 					{
-						bestMovePointNear.SetUsedBy(entity, 5f);
-						pos = brain.PathFinder.GetRandomPositionAround(((Component)bestMovePointNear).transform.position, 0f, bestMovePointNear.radius - 0.3f);
+						float num2 = brain.Navigator.BestMovementPointMaxDistance * brain.Navigator.PathFindChaseLOSDistanceMultiplier;
+						if (num <= num2 && Vector3.Distance(((Component)baseEntity).transform.position, brain.Events.Memory.Position.Get(4)) <= num2)
+						{
+							Vector3 val = ((Component)brain).transform.position;
+							bool flag2 = false;
+							for (int i = 0; i < brain.Navigator.PathFindChaseLOSAttemptCount; i++)
+							{
+								val = brain.PathFinder.GetRandomPositionAround(((Component)baseEntity).transform.position, 1.5f, 7f) + Vector3.up;
+								BasePlayer obj = baseEntity as BasePlayer;
+								HumanNPC humanNPC = entity as HumanNPC;
+								if ((Object)(object)obj != (Object)null && (Object)(object)humanNPC != (Object)null)
+								{
+									flag2 = !Physics.Linecast(((Component)baseEntity).transform.position + Vector3.up, val, 1218519297, (QueryTriggerInteraction)1);
+								}
+								if (flag2)
+								{
+									break;
+								}
+							}
+							if (flag2)
+							{
+								pos = val;
+							}
+							flag = flag2;
+							nextPositionUpdateTime = Time.time + Random.Range(5f, 8f);
+						}
+					}
+					if (!flag && brain.Navigator.CanUseRandomMovePointIfNonFound)
+					{
+						aIMovePoint = informationZone.GetBestMovePointNear(baseEntity, entity, 0f, brain.Navigator.BestMovementPointMaxDistance, checkLOS: true, entity, returnClosest: false, returnRandom: true);
+						if ((Object)(object)aIMovePoint != (Object)null)
+						{
+							nextPositionUpdateTime = Time.time + 15f;
+						}
 						flag = true;
+					}
+					if (!flag)
+					{
+						aIMovePoint = ((!brain.Navigator.CanPathFindToChaseTargetIfNoMovePoint) ? informationZone.GetBestMovePointNear(baseEntity, entity, 0f, brain.Navigator.BestMovementPointMaxDistance, checkLOS: true, entity, returnClosest: true) : informationZone.GetBestMovePointNear(baseEntity, entity, 0f, brain.Navigator.BestMovementPointMaxDistance, checkLOS: true, entity, returnClosest: true, returnRandom: true));
+						flag = (Object)(object)aIMovePoint != (Object)null;
+					}
+					if (Object.op_Implicit((Object)(object)aIMovePoint))
+					{
+						aIMovePoint.SetUsedBy(entity, 5f);
+						pos = brain.PathFinder.GetRandomPositionAround(((Component)aIMovePoint).transform.position, 0f, aIMovePoint.radius - 0.3f);
 					}
 				}
 				if (!flag)
 				{
-					Profiler.EndSample();
 					return StateStatus.Error;
 				}
 				if (num < 10f)
@@ -135,7 +187,6 @@ public class ScientistBrain : BaseAIBrain
 					brain.Navigator.SetDestination(pos, BaseNavigator.NavigationSpeed.Fast);
 				}
 			}
-			Profiler.EndSample();
 			if (brain.Navigator.Moving)
 			{
 				return StateStatus.Running;
@@ -146,7 +197,7 @@ public class ScientistBrain : BaseAIBrain
 
 	public class CombatState : BasicAIState
 	{
-		private float nextActionTime = 0f;
+		private float nextActionTime;
 
 		private Vector3 combatStartPosition;
 
@@ -158,8 +209,8 @@ public class ScientistBrain : BaseAIBrain
 
 		public override void StateEnter(BaseAIBrain brain, BaseEntity entity)
 		{
-			//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+			//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0014: Unknown result type (might be due to invalid IL or missing references)
 			base.StateEnter(brain, entity);
 			combatStartPosition = ((Component)entity).transform.position;
 			FaceTarget();
@@ -174,10 +225,9 @@ public class ScientistBrain : BaseAIBrain
 
 		public override StateStatus StateThink(float delta, BaseAIBrain brain, BaseEntity entity)
 		{
-			//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00ba: Unknown result type (might be due to invalid IL or missing references)
+			//IL_008f: Unknown result type (might be due to invalid IL or missing references)
+			//IL_009e: Unknown result type (might be due to invalid IL or missing references)
 			base.StateThink(delta, brain, entity);
-			Profiler.BeginSample("ScientistBrain.States.Combat.StateThink");
 			HumanNPC humanNPC = entity as HumanNPC;
 			FaceTarget();
 			if (Time.time > nextActionTime)
@@ -195,7 +245,6 @@ public class ScientistBrain : BaseAIBrain
 					brain.Navigator.SetDestination(brain.PathFinder.GetRandomPositionAround(combatStartPosition, 1f), BaseNavigator.NavigationSpeed.Normal);
 				}
 			}
-			Profiler.EndSample();
 			return StateStatus.Running;
 		}
 
@@ -230,7 +279,6 @@ public class ScientistBrain : BaseAIBrain
 		public override StateStatus StateThink(float delta, BaseAIBrain brain, BaseEntity entity)
 		{
 			base.StateThink(delta, brain, entity);
-			Profiler.BeginSample("ScientistBrain.States.CombatStationary.StateThink");
 			BaseEntity baseEntity = brain.Events.Memory.Entity.Get(brain.Events.CurrentInputMemorySlot);
 			if ((Object)(object)baseEntity != (Object)null)
 			{
@@ -240,7 +288,6 @@ public class ScientistBrain : BaseAIBrain
 			{
 				brain.Navigator.ClearFacingDirectionOverride();
 			}
-			Profiler.EndSample();
 			return StateStatus.Running;
 		}
 	}
@@ -254,8 +301,8 @@ public class ScientistBrain : BaseAIBrain
 
 		public override void StateEnter(BaseAIBrain brain, BaseEntity entity)
 		{
-			//IL_00d2: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00de: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00bd: Unknown result type (might be due to invalid IL or missing references)
 			base.StateEnter(brain, entity);
 			HumanNPC humanNPC = entity as HumanNPC;
 			humanNPC.SetDucked(flag: true);
@@ -294,7 +341,6 @@ public class ScientistBrain : BaseAIBrain
 		public override StateStatus StateThink(float delta, BaseAIBrain brain, BaseEntity entity)
 		{
 			base.StateThink(delta, brain, entity);
-			Profiler.BeginSample("ScientistBrain.States.Cover.StateThink");
 			HumanNPC humanNPC = entity as HumanNPC;
 			BaseEntity baseEntity = brain.Events.Memory.Entity.Get(brain.Events.CurrentInputMemorySlot);
 			float num = humanNPC.AmmoFractionRemaining();
@@ -306,7 +352,6 @@ public class ScientistBrain : BaseAIBrain
 			{
 				brain.Navigator.SetFacingDirectionEntity(baseEntity);
 			}
-			Profiler.EndSample();
 			return StateStatus.Running;
 		}
 	}
@@ -317,13 +362,13 @@ public class ScientistBrain : BaseAIBrain
 
 		public override void StateEnter(BaseAIBrain brain, BaseEntity entity)
 		{
-			//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-			//IL_005e: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0069: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00b7: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00bc: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00c3: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+			//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0092: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0085: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0097: Unknown result type (might be due to invalid IL or missing references)
+			//IL_009e: Unknown result type (might be due to invalid IL or missing references)
 			base.StateEnter(brain, entity);
 			status = StateStatus.Error;
 			if (brain.PathFinder == null)
@@ -333,7 +378,6 @@ public class ScientistBrain : BaseAIBrain
 			AIInformationZone informationZone = (entity as HumanNPC).GetInformationZone(((Component)entity).transform.position);
 			if (!((Object)(object)informationZone == (Object)null))
 			{
-				Profiler.BeginSample("ScientistBrain.States.Dismounted.StateEnter");
 				AICoverPoint bestCoverPoint = informationZone.GetBestCoverPoint(((Component)entity).transform.position, ((Component)entity).transform.position, 25f, 50f, entity);
 				if (Object.op_Implicit((Object)(object)bestCoverPoint))
 				{
@@ -344,7 +388,6 @@ public class ScientistBrain : BaseAIBrain
 				{
 					status = StateStatus.Running;
 				}
-				Profiler.EndSample();
 			}
 		}
 
@@ -365,6 +408,39 @@ public class ScientistBrain : BaseAIBrain
 
 	public class IdleState : BaseIdleState
 	{
+	}
+
+	public class KillSelfState : BasicAIState
+	{
+		public KillSelfState()
+			: base(AIState.KillSelf)
+		{
+		}
+
+		public override void StateEnter(BaseAIBrain brain, BaseEntity entity)
+		{
+			base.StateEnter(brain, entity);
+			entity.Kill();
+		}
+	}
+
+	public class MountAPC : BasicAIState
+	{
+		public MountAPC()
+			: base(AIState.MountAPC)
+		{
+		}
+
+		public override void StateEnter(BaseAIBrain brain, BaseEntity entity)
+		{
+			base.StateEnter(brain, entity);
+			BradleyAPC bradleyAPC = brain.Events.Memory.Entity.Get(7) as BradleyAPC;
+			if ((Object)(object)bradleyAPC != (Object)null)
+			{
+				bradleyAPC.OnScientistMounted(entity as ScientistNPC);
+			}
+			entity.Kill();
+		}
 	}
 
 	public class MountedState : BaseMountedState
@@ -392,16 +468,20 @@ public class ScientistBrain : BaseAIBrain
 
 		public override StateStatus StateThink(float delta, BaseAIBrain brain, BaseEntity entity)
 		{
-			//IL_001c: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0021: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+			//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0027: Unknown result type (might be due to invalid IL or missing references)
 			base.StateThink(delta, brain, entity);
 			Vector3 pos = brain.Events.Memory.Position.Get(7);
 			if (!brain.Navigator.SetDestination(pos, BaseNavigator.NavigationSpeed.Fast, 0.5f))
 			{
 				return StateStatus.Error;
 			}
-			return (!brain.Navigator.Moving) ? StateStatus.Finished : StateStatus.Running;
+			if (!brain.Navigator.Moving)
+			{
+				return StateStatus.Finished;
+			}
+			return StateStatus.Running;
 		}
 	}
 
@@ -420,17 +500,15 @@ public class ScientistBrain : BaseAIBrain
 
 		public override void StateEnter(BaseAIBrain brain, BaseEntity entity)
 		{
-			//IL_004c: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0057: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0067: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
-			Profiler.BeginSample("ScientistBrain.States.Roam.StatEnter");
+			//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+			//IL_008d: Unknown result type (might be due to invalid IL or missing references)
 			base.StateEnter(brain, entity);
 			status = StateStatus.Error;
 			ClearRoamPointUsage(entity);
 			if (brain.PathFinder == null)
 			{
-				Profiler.EndSample();
 				return;
 			}
 			status = StateStatus.Error;
@@ -447,7 +525,6 @@ public class ScientistBrain : BaseAIBrain
 					roamPoint.SetUsedBy(entity, 600f);
 				}
 			}
-			Profiler.EndSample();
 		}
 
 		private void ClearRoamPointUsage(BaseEntity entity)
@@ -522,46 +599,40 @@ public class ScientistBrain : BaseAIBrain
 
 		private bool StartMovingToCover(HumanNPC entity)
 		{
-			//IL_0076: Unknown result type (might be due to invalid IL or missing references)
-			//IL_004f: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0055: Unknown result type (might be due to invalid IL or missing references)
-			//IL_005f: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0064: Unknown result type (might be due to invalid IL or missing references)
-			//IL_007b: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0083: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00df: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00e4: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0112: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0117: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0124: Unknown result type (might be due to invalid IL or missing references)
+			//IL_006a: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0053: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0058: Unknown result type (might be due to invalid IL or missing references)
+			//IL_006f: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0077: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00c4: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00e3: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00e8: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00f5: Unknown result type (might be due to invalid IL or missing references)
 			coverFromEntity = brain.Events.Memory.Entity.Get(brain.Events.CurrentInputMemorySlot);
-			Profiler.BeginSample("ScientistBrain.States.TakeCover.StartMovingToCover");
 			Vector3 hideFromPosition = (Object.op_Implicit((Object)(object)coverFromEntity) ? ((Component)coverFromEntity).transform.position : (((Component)entity).transform.position + entity.LastAttackedDir * 30f));
 			AIInformationZone informationZone = entity.GetInformationZone(((Component)entity).transform.position);
 			if ((Object)(object)informationZone == (Object)null)
 			{
-				Profiler.EndSample();
 				return false;
 			}
-			float secondsSinceAttacked = entity.SecondsSinceAttacked;
-			float minRange = ((secondsSinceAttacked < 2f) ? 2f : 0f);
+			float minRange = ((entity.SecondsSinceAttacked < 2f) ? 2f : 0f);
 			float bestCoverPointMaxDistance = brain.Navigator.BestCoverPointMaxDistance;
 			AICoverPoint bestCoverPoint = informationZone.GetBestCoverPoint(((Component)entity).transform.position, hideFromPosition, minRange, bestCoverPointMaxDistance, entity);
 			if ((Object)(object)bestCoverPoint == (Object)null)
 			{
-				Profiler.EndSample();
 				return false;
 			}
 			Vector3 position = ((Component)bestCoverPoint).transform.position;
 			if (!brain.Navigator.SetDestination(position, BaseNavigator.NavigationSpeed.Normal))
 			{
-				Profiler.EndSample();
 				return false;
 			}
 			FaceCoverFromEntity();
 			brain.Events.Memory.AIPoint.Set(bestCoverPoint, 4);
 			bestCoverPoint.SetUsedBy(entity);
-			Profiler.EndSample();
 			return true;
 		}
 
@@ -614,6 +685,8 @@ public class ScientistBrain : BaseAIBrain
 		AddState(new BaseMoveTorwardsState());
 		AddState(new MoveToVector3State());
 		AddState(new BlindedState());
+		AddState(new KillSelfState());
+		AddState(new MountAPC());
 	}
 
 	public override void InitializeAI()

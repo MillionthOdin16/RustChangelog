@@ -26,13 +26,23 @@ public class TechTreeData : ScriptableObject
 
 		public bool IsGroup()
 		{
-			return (Object)(object)itemDef == (Object)null && groupName != "Entry" && !string.IsNullOrEmpty(groupName);
+			if ((Object)(object)itemDef == (Object)null && groupName != "Entry")
+			{
+				return !string.IsNullOrEmpty(groupName);
+			}
+			return false;
 		}
 	}
 
 	public string shortname;
 
-	public int nextID = 0;
+	public int nextID;
+
+	public int techTreeLevel;
+
+	public SoundDefinition openSound;
+
+	public SoundDefinition closeSound;
 
 	private Dictionary<int, NodeInstance> _idToNode;
 
@@ -150,7 +160,11 @@ public class TechTreeData : ScriptableObject
 
 	public bool PlayerCanUnlock(BasePlayer player, NodeInstance node)
 	{
-		return PlayerHasPathForUnlock(player, node) && !HasPlayerUnlocked(player, node);
+		if (PlayerHasPathForUnlock(player, node))
+		{
+			return !HasPlayerUnlocked(player, node);
+		}
+		return false;
 	}
 
 	public bool HasPlayerUnlocked(BasePlayer player, NodeInstance node)
@@ -158,15 +172,17 @@ public class TechTreeData : ScriptableObject
 		if (node.IsGroup())
 		{
 			bool result = true;
-			foreach (int output in node.outputs)
 			{
-				NodeInstance byID = GetByID(output);
-				if (!HasPlayerUnlocked(player, byID))
+				foreach (int output in node.outputs)
 				{
-					result = false;
+					NodeInstance byID = GetByID(output);
+					if (!HasPlayerUnlocked(player, byID))
+					{
+						result = false;
+					}
 				}
+				return result;
 			}
-			return result;
 		}
 		return player.blueprints.HasUnlocked(node.itemDef);
 	}
@@ -194,7 +210,7 @@ public class TechTreeData : ScriptableObject
 			{
 				if (!((Object)(object)item.itemDef == (Object)null) && !HasPlayerUnlocked(player, item))
 				{
-					num2 += ResearchTable.ScrapForResearch(item.itemDef, ResearchTable.ResearchType.TechTree);
+					num2 += Workbench.ScrapForResearch(item.itemDef, 0, out var _);
 				}
 			}
 			if (num2 < num)

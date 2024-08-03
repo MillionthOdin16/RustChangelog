@@ -18,10 +18,10 @@ public class FlameThrower : AttackEntity
 
 	public ItemDefinition fuelType;
 
-	public float timeSinceLastAttack = 0f;
+	public float timeSinceLastAttack;
 
 	[FormerlySerializedAs("nextAttackTime")]
-	public float nextReadyTime = 0f;
+	public float nextReadyTime;
 
 	public float flameRange = 10f;
 
@@ -35,6 +35,8 @@ public class FlameThrower : AttackEntity
 
 	public List<DamageTypeEntry> damagePerSec;
 
+	public float playerDamageMultiplier = 4f;
+
 	public SoundDefinition flameStart3P;
 
 	public SoundDefinition flameLoop3P;
@@ -43,19 +45,19 @@ public class FlameThrower : AttackEntity
 
 	public SoundDefinition pilotLoopSoundDef;
 
-	private float tickRate = 0.25f;
+	private float tickRate = 0.15f;
 
 	private float lastFlameTick;
 
 	public float fuelPerSec;
 
-	private float ammoRemainder = 0f;
+	private float ammoRemainder;
 
 	public float reloadDuration = 3.5f;
 
 	private float lastReloadTime = -10f;
 
-	private float nextFlameTime = 0f;
+	private float nextFlameTime;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -67,7 +69,7 @@ public class FlameThrower : AttackEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - DoReload "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - DoReload "));
 				}
 				TimeWarning val2 = TimeWarning.New("DoReload", 0);
 				try
@@ -86,7 +88,7 @@ public class FlameThrower : AttackEntity
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -98,7 +100,7 @@ public class FlameThrower : AttackEntity
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -118,12 +120,12 @@ public class FlameThrower : AttackEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SetFiring "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SetFiring "));
 				}
-				TimeWarning val5 = TimeWarning.New("SetFiring", 0);
+				TimeWarning val2 = TimeWarning.New("SetFiring", 0);
 				try
 				{
-					TimeWarning val6 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsActiveItem.Test(3749570935u, "SetFiring", this, player))
@@ -133,11 +135,11 @@ public class FlameThrower : AttackEntity
 					}
 					finally
 					{
-						((IDisposable)val6)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val7 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -149,7 +151,7 @@ public class FlameThrower : AttackEntity
 						}
 						finally
 						{
-							((IDisposable)val7)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -160,7 +162,7 @@ public class FlameThrower : AttackEntity
 				}
 				finally
 				{
-					((IDisposable)val5)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -169,12 +171,12 @@ public class FlameThrower : AttackEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - TogglePilotLight "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - TogglePilotLight "));
 				}
-				TimeWarning val8 = TimeWarning.New("TogglePilotLight", 0);
+				TimeWarning val2 = TimeWarning.New("TogglePilotLight", 0);
 				try
 				{
-					TimeWarning val9 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsActiveItem.Test(1057268396u, "TogglePilotLight", this, player))
@@ -184,11 +186,11 @@ public class FlameThrower : AttackEntity
 					}
 					finally
 					{
-						((IDisposable)val9)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val10 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -200,7 +202,7 @@ public class FlameThrower : AttackEntity
 						}
 						finally
 						{
-							((IDisposable)val10)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex3)
@@ -211,7 +213,7 @@ public class FlameThrower : AttackEntity
 				}
 				finally
 				{
-					((IDisposable)val8)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -293,12 +295,7 @@ public class FlameThrower : AttackEntity
 		{
 			return null;
 		}
-		Item item = ownerPlayer.inventory.containerMain.FindItemsByItemName(fuelType.shortname);
-		if (item == null)
-		{
-			item = ownerPlayer.inventory.containerBelt.FindItemsByItemName(fuelType.shortname);
-		}
-		return item;
+		return ownerPlayer.inventory.FindItemByItemName(fuelType.shortname);
 	}
 
 	public override void Load(LoadInfo info)
@@ -333,10 +330,13 @@ public class FlameThrower : AttackEntity
 
 	public override void ServerUse()
 	{
-		if (!IsOnFire())
+		if (!IsOnFire() && !ServerIsReloading())
 		{
-			SetFlameState(wantsOn: true);
-			((FacepunchBehaviour)this).Invoke((Action)StopFlameState, 0.2f);
+			if (!IsFlameOn())
+			{
+				SetFlameState(wantsOn: true);
+			}
+			((FacepunchBehaviour)this).Invoke((Action)StopFlameState, 1.25f);
 			base.ServerUse();
 		}
 	}
@@ -365,6 +365,7 @@ public class FlameThrower : AttackEntity
 	{
 		if (!ServerIsReloading())
 		{
+			SetFlameState(wantsOn: false);
 			lastReloadTime = Time.time;
 			StartAttackCooldown(reloadDuration);
 			GetOwnerPlayer().SignalBroadcast(Signal.Reload);
@@ -414,13 +415,16 @@ public class FlameThrower : AttackEntity
 		{
 			wantsOn = false;
 		}
-		if (wantsOn)
-		{
-		}
 		SetFlag(Flags.OnFire, wantsOn);
 		if (IsFlameOn())
 		{
-			nextFlameTime = Time.realtimeSinceStartup + 1f;
+			float num = 1f;
+			BasePlayer ownerPlayer = GetOwnerPlayer();
+			if ((Object)(object)ownerPlayer != (Object)null && ownerPlayer.IsNpc)
+			{
+				num = 0.4f;
+			}
+			nextFlameTime = Time.realtimeSinceStartup + num;
 			lastFlameTick = Time.realtimeSinceStartup;
 			((FacepunchBehaviour)this).InvokeRepeating((Action)FlameTick, tickRate, tickRate);
 		}
@@ -445,27 +449,31 @@ public class FlameThrower : AttackEntity
 
 	public void FlameTick()
 	{
-		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0095: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ec: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f8: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0102: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0191: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0195: Unknown result type (might be due to invalid IL or missing references)
-		//IL_019f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ab: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0107: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0160: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0167: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0171: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0176: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01fd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_020f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0213: Unknown result type (might be due to invalid IL or missing references)
+		//IL_021d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0222: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0229: Unknown result type (might be due to invalid IL or missing references)
+		//IL_022f: Unknown result type (might be due to invalid IL or missing references)
 		float num = Time.realtimeSinceStartup - lastFlameTick;
 		lastFlameTick = Time.realtimeSinceStartup;
 		BasePlayer ownerPlayer = GetOwnerPlayer();
@@ -478,24 +486,37 @@ public class FlameThrower : AttackEntity
 		Ray val = ownerPlayer.eyes.BodyRay();
 		Vector3 origin = ((Ray)(ref val)).origin;
 		RaycastHit val2 = default(RaycastHit);
-		bool flag = Physics.SphereCast(val, 0.3f, ref val2, flameRange, 1218652417);
-		if (!flag)
+		bool num2 = Physics.SphereCast(val, 0.3f, ref val2, flameRange, 1218652417);
+		if (!num2)
 		{
 			((RaycastHit)(ref val2)).point = origin + ((Ray)(ref val)).direction * flameRange;
 		}
-		float num2 = (ownerPlayer.IsNpc ? npcDamageScale : 1f);
+		float num3 = (ownerPlayer.IsNpc ? npcDamageScale : 1f);
 		float amount = damagePerSec[0].amount;
-		damagePerSec[0].amount = amount * num * num2;
-		DamageUtil.RadiusDamage(ownerPlayer, LookupPrefab(), ((RaycastHit)(ref val2)).point - ((Ray)(ref val)).direction * 0.1f, flameRadius * 0.5f, flameRadius, damagePerSec, 2279681, useLineOfSight: true);
-		damagePerSec[0].amount = amount;
-		if (flag && Time.realtimeSinceStartup >= nextFlameTime && ((RaycastHit)(ref val2)).distance > 1.1f)
+		damagePerSec[0].amount = amount * num * num3;
+		int num4 = 2146305;
+		int layers = 133376;
+		if (!ownerPlayer.IsNpc)
 		{
-			nextFlameTime = Time.realtimeSinceStartup + 0.45f;
+			num4 |= 0x800;
+		}
+		DamageUtil.RadiusDamage(ownerPlayer, LookupPrefab(), ((RaycastHit)(ref val2)).point - ((Ray)(ref val)).direction * 0.1f, flameRadius * 0.5f, flameRadius, damagePerSec, num4, useLineOfSight: true, ignoreAI: false, ignoreAttackingPlayer: true);
+		damagePerSec[0].amount = damagePerSec[0].amount * playerDamageMultiplier;
+		DamageUtil.RadiusDamage(ownerPlayer, LookupPrefab(), ((RaycastHit)(ref val2)).point - ((Ray)(ref val)).direction * 0.1f, flameRadius * 0.5f, flameRadius, damagePerSec, layers, useLineOfSight: true, ignoreAI: false, ignoreAttackingPlayer: true);
+		damagePerSec[0].amount = amount;
+		if (num2 && Time.realtimeSinceStartup >= nextFlameTime && ((RaycastHit)(ref val2)).distance > 1.1f)
+		{
+			nextFlameTime = Time.realtimeSinceStartup + (ownerPlayer.IsNpc ? 0.25f : 0.45f);
 			Vector3 point = ((RaycastHit)(ref val2)).point;
 			BaseEntity baseEntity = GameManager.server.CreateEntity(fireballPrefab.resourcePath, point - ((Ray)(ref val)).direction * 0.25f);
 			if (Object.op_Implicit((Object)(object)baseEntity))
 			{
 				baseEntity.creatorEntity = ownerPlayer;
+				FireBall fireBall = baseEntity as FireBall;
+				if ((Object)(object)fireBall != (Object)null && ownerPlayer.IsNpc)
+				{
+					fireBall.ignoreNPC = true;
+				}
 				baseEntity.Spawn();
 			}
 		}
@@ -504,7 +525,7 @@ public class FlameThrower : AttackEntity
 			SetFlameState(wantsOn: false);
 		}
 		Item ownerItem = GetOwnerItem();
-		if (ownerItem != null && !base.UsingInfiniteAmmoCheat)
+		if (ownerItem != null && !base.UsingInfiniteAmmoCheat && !ownerPlayer.IsNpc)
 		{
 			ownerItem.LoseCondition(num);
 		}
@@ -512,11 +533,11 @@ public class FlameThrower : AttackEntity
 
 	public override void ServerCommand(Item item, string command, BasePlayer player)
 	{
-		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0095: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
 		if (item == null || !(command == "unload_ammo"))
 		{
 			return;

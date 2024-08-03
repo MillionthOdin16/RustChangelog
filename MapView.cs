@@ -1,10 +1,12 @@
 using System.Collections.Generic;
 using Rust.UI;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.Events;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
 
-public class MapView : FacepunchBehaviour
+public class MapView : FacepunchBehaviour, IPointerDownHandler, IEventSystemHandler
 {
 	public RawImage mapImage;
 
@@ -26,24 +28,30 @@ public class MapView : FacepunchBehaviour
 
 	public Transform localPlayerInterestPointRoot;
 
+	public GameObject shelterMarkerContainer;
+
+	public GameObjectRef shelterMapMarkerPrefab;
+
 	public TeamMemberMapMarker[] teamPositions;
 
-	public List<PointOfInterestMapMarker> PointOfInterestMarkers = null;
+	public TeamMemberMapMarker[] clanPositions;
 
-	public List<PointOfInterestMapMarker> TeamPointOfInterestMarkers = null;
+	public List<PointOfInterestMapMarker> PointOfInterestMarkers;
 
-	public List<PointOfInterestMapMarker> LocalPings = null;
+	public List<PointOfInterestMapMarker> TeamPointOfInterestMarkers;
 
-	public List<PointOfInterestMapMarker> TeamPings = null;
+	public List<PointOfInterestMapMarker> LocalPings;
 
-	public GameObject PlayerDeathMarker = null;
+	public List<PointOfInterestMapMarker> TeamPings;
+
+	public GameObject PlayerDeathMarker;
 
 	public List<SleepingBagMapMarker> SleepingBagMarkers = new List<SleepingBagMapMarker>();
 
 	public List<SleepingBagClusterMapMarker> SleepingBagClusters = new List<SleepingBagClusterMapMarker>();
 
 	[FormerlySerializedAs("TrainLayer")]
-	public RawImage UndergroundLayer = null;
+	public RawImage UndergroundLayer;
 
 	public bool ShowGrid;
 
@@ -53,20 +61,24 @@ public class MapView : FacepunchBehaviour
 
 	public bool ShowSleepingBags = true;
 
-	public bool AllowSleepingBagDeletion = false;
+	public bool AllowSleepingBagDeletion;
 
 	public bool ShowLocalPlayer = true;
 
 	public bool ShowTeamMembers = true;
 
-	public bool ShowTrainLayer = false;
+	public bool ShowBagsOnBottom;
 
-	public bool ShowMissions = false;
+	public bool ShowTrainLayer;
+
+	public bool ShowMissions;
+
+	public bool ForceShowVendingMachines;
 
 	[FormerlySerializedAs("ShowTrainLayer")]
-	public bool ShowUndergroundLayers = false;
+	public bool ShowUndergroundLayers;
 
-	public bool MLRSMarkerMode = false;
+	public bool MLRSMarkerMode;
 
 	public RustImageButton LockButton;
 
@@ -77,4 +89,16 @@ public class MapView : FacepunchBehaviour
 	public RustImageButton[] UnderwaterButtons;
 
 	public RustImageButton DungeonButton;
+
+	public CanvasLineRenderer CargoPatrolPath;
+
+	public CanvasLineRenderer[] HarborPaths;
+
+	public CanvasLineRenderer FerryPath;
+
+	public UnityEvent onClicked;
+
+	public void OnPointerDown(PointerEventData eventData)
+	{
+	}
 }

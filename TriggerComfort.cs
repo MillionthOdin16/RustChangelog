@@ -17,7 +17,7 @@ public class TriggerComfort : TriggerBase
 
 	private void OnValidate()
 	{
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
 		triggerSize = ((Component)this).GetComponent<SphereCollider>().radius * ((Component)this).transform.localScale.y;
 	}
 
@@ -42,8 +42,8 @@ public class TriggerComfort : TriggerBase
 
 	public float CalculateComfort(Vector3 position, BasePlayer forPlayer = null)
 	{
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
 		float num = Vector3.Distance(((Component)this).gameObject.transform.position, position);
 		float num2 = 1f - Mathf.Clamp(num - minComfortRange, 0f, num / (triggerSize - minComfortRange));
 		float num3 = 0f;

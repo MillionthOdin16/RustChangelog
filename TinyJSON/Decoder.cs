@@ -33,7 +33,11 @@ public sealed class Decoder : IDisposable
 		get
 		{
 			int num = json.Peek();
-			return (num != -1) ? Convert.ToChar(num) : '\0';
+			if (num != -1)
+			{
+				return Convert.ToChar(num);
+			}
+			return '\0';
 		}
 	}
 
@@ -133,12 +137,12 @@ public sealed class Decoder : IDisposable
 		{
 			switch (NextToken)
 			{
+			case Token.Comma:
+				continue;
 			case Token.None:
 				return null;
 			case Token.CloseBrace:
 				return proxyObject;
-			case Token.Comma:
-				continue;
 			}
 			string text = DecodeString();
 			if (text == null)

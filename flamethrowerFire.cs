@@ -31,9 +31,9 @@ public class flamethrowerFire : MonoBehaviour
 	public void SetFlameStatus(bool status)
 	{
 		ParticleSystem[] array = flameFX;
-		foreach (ParticleSystem val in array)
+		for (int i = 0; i < array.Length; i++)
 		{
-			val.enableEmission = status;
+			array[i].enableEmission = status;
 		}
 	}
 
@@ -52,6 +52,7 @@ public class flamethrowerFire : MonoBehaviour
 	private void Start()
 	{
 		previousflameState = (flameState = flamethrowerState.OFF);
+		ShutOff();
 	}
 
 	private void Update()

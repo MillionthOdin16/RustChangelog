@@ -25,16 +25,25 @@ public class TeslaCoil : IOEntity
 
 	public int powerForHeavyShorting = 10;
 
-	private float lastDischargeTime = 0f;
+	private float lastDischargeTime;
 
 	public override int ConsumptionAmount()
 	{
 		return Mathf.CeilToInt(maxDamageOutput / powerToDamageRatio);
 	}
 
+	public override int DesiredPower(int inputIndex = 0)
+	{
+		if (!CanDischarge())
+		{
+			return 0;
+		}
+		return Mathf.Clamp(currentEnergy, 0, ConsumptionAmount());
+	}
+
 	public bool CanDischarge()
 	{
-		return base.healthFraction >= 0.25f;
+		return base.healthFraction >= 0.1f;
 	}
 
 	public override void UpdateFromInput(int inputAmount, int inputSlot)
@@ -64,11 +73,9 @@ public class TeslaCoil : IOEntity
 
 	public void Discharge()
 	{
-		//IL_00a0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
-		float num = (float)currentEnergy * powerToDamageRatio;
-		num = Mathf.Clamp(num, 0f, maxDamageOutput);
-		float damageAmount = num * dischargeTickRate;
+		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
+		float damageAmount = Mathf.Clamp((float)currentEnergy * powerToDamageRatio, 0f, maxDamageOutput) * dischargeTickRate;
 		lastDischargeTime = Time.time;
 		if (targetTrigger.entityContents != null)
 		{
@@ -76,9 +83,9 @@ public class TeslaCoil : IOEntity
 			if (array != null)
 			{
 				BaseEntity[] array2 = array;
-				foreach (BaseEntity baseEntity in array2)
+				for (int i = 0; i < array2.Length; i++)
 				{
-					BaseCombatEntity component = ((Component)baseEntity).GetComponent<BaseCombatEntity>();
+					BaseCombatEntity component = ((Component)array2[i]).GetComponent<BaseCombatEntity>();
 					if (Object.op_Implicit((Object)(object)component) && component.IsVisible(((Component)damageEyes).transform.position, component.CenterPoint()))
 					{
 						component.OnAttacked(new HitInfo(this, component, DamageType.ElectricShock, damageAmount));
@@ -90,7 +97,16 @@ public class TeslaCoil : IOEntity
 		Hurt(amount, DamageType.ElectricShock, this, useProtection: false);
 		if (!CanDischarge())
 		{
-			MarkDirty();
+			SendChangedToRoot(forceUpdate: true);
+		}
+	}
+
+	public override void OnRepair()
+	{
+		base.OnRepair();
+		if (CanDischarge())
+		{
+			SendChangedToRoot(forceUpdate: true);
 		}
 	}
 }

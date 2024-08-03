@@ -32,19 +32,17 @@ public static class Util
 
 	public static Vector2 WorldToMap(Vector3 worldPos)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
 		return new Vector2(worldPos.x - TerrainMeta.Position.x, worldPos.z - TerrainMeta.Position.z);
 	}
 
 	public static void SendSignedInNotification(BasePlayer player)
 	{
-		if (!((Object)(object)player == (Object)null) && player.currentTeam != 0)
+		if (!((Object)(object)player == (Object)null) && player.currentTeam != 0L)
 		{
 			RelationshipManager.PlayerTeam playerTeam = RelationshipManager.ServerInstance.FindTeam(player.currentTeam);
 			Dictionary<string, string> serverPairingData = GetServerPairingData();
@@ -109,6 +107,17 @@ public static class Util
 		dictionary.Add("url", StringExtensions.Truncate(ConVar.Server.url, 128, (string)null));
 		dictionary.Add("ip", App.GetPublicIP());
 		dictionary.Add("port", App.port.ToString("G", CultureInfo.InvariantCulture));
+		if (NexusServer.Started)
+		{
+			int? nexusId = NexusServer.NexusId;
+			string zoneKey = NexusServer.ZoneKey;
+			if (nexusId.HasValue && zoneKey != null)
+			{
+				dictionary.Add("nexus", Nexus.endpoint);
+				dictionary.Add("nexusId", nexusId.Value.ToString("G"));
+				dictionary.Add("nexusZone", zoneKey);
+			}
+		}
 		return dictionary;
 	}
 
@@ -151,10 +160,10 @@ public static class Util
 		uint current = (uint)Epoch.Current;
 		Server.TeamChat.Record(team.teamID, steamId, name, message, color, current);
 		AppBroadcast val = Pool.Get<AppBroadcast>();
-		val.teamMessage = Pool.Get<AppTeamMessage>();
-		val.teamMessage.message = Pool.Get<AppChatMessage>();
+		val.teamMessage = Pool.Get<AppNewTeamMessage>();
+		val.teamMessage.message = Pool.Get<AppTeamMessage>();
 		val.ShouldPool = false;
-		AppChatMessage message2 = val.teamMessage.message;
+		AppTeamMessage message2 = val.teamMessage.message;
 		message2.steamId = steamId;
 		message2.name = name;
 		message2.message = message;
@@ -168,9 +177,9 @@ public static class Util
 		val.Dispose();
 	}
 
-	public static void SendNotification(this RelationshipManager.PlayerTeam team, NotificationChannel channel, string title, string body, Dictionary<string, string> data, ulong ignorePlayer = 0uL)
+	public static async void SendNotification(this RelationshipManager.PlayerTeam team, NotificationChannel channel, string title, string body, Dictionary<string, string> data, ulong ignorePlayer = 0uL)
 	{
-		List<ulong> list = Pool.GetList<ulong>();
+		List<ulong> steamIds = Pool.GetList<ulong>();
 		foreach (ulong member in team.members)
 		{
 			if (member == ignorePlayer)
@@ -186,10 +195,10 @@ public static class Util
 					continue;
 				}
 			}
-			list.Add(member);
+			steamIds.Add(member);
 		}
-		NotificationList.SendNotificationTo(list, channel, title, body, data);
-		Pool.FreeList<ulong>(ref list);
+		await NotificationList.SendNotificationTo(steamIds, channel, title, body, data);
+		Pool.FreeList<ulong>(ref steamIds);
 	}
 
 	public static string ToErrorCode(this ValidationResult result)

@@ -8,5 +8,5 @@ public class MuteListController : UIDialog
 
 	public GameObjectRef UserWidget;
 
-	public SteamFriendsList SearchList = null;
+	public SteamFriendsList SearchList;
 }

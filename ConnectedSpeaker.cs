@@ -6,7 +6,7 @@ using UnityEngine;
 
 public class ConnectedSpeaker : IOEntity
 {
-	public AudioSource SoundSource = null;
+	public AudioSource SoundSource;
 
 	private EntityRef<IOEntity> connectedTo;
 
@@ -27,8 +27,8 @@ public class ConnectedSpeaker : IOEntity
 
 	public override void OnFlagsChanged(Flags old, Flags next)
 	{
-		//IL_00cf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
 		base.OnFlagsChanged(old, next);
 		if (!base.isServer || old.HasFlag(Flags.Reserved8) == next.HasFlag(Flags.Reserved8))
 		{
@@ -39,20 +39,20 @@ public class ConnectedSpeaker : IOEntity
 			IAudioConnectionSource connectionSource = GetConnectionSource(this, BoomBox.BacktrackLength);
 			if (connectionSource != null)
 			{
-				ClientRPC<NetworkableId>(null, "Client_PlayAudioFrom", connectionSource.ToEntity().net.ID);
+				ClientRPC<NetworkableId>(RpcTarget.NetworkGroup("Client_PlayAudioFrom"), connectionSource.ToEntity().net.ID);
 				connectedTo.Set(connectionSource.ToEntity());
 			}
 		}
 		else if (connectedTo.IsSet)
 		{
-			ClientRPC<NetworkableId>(null, "Client_StopPlayingAudio", connectedTo.uid);
+			ClientRPC<NetworkableId>(RpcTarget.NetworkGroup("Client_StopPlayingAudio"), connectedTo.uid);
 			connectedTo.Set(null);
 		}
 	}
 
 	public override void Load(LoadInfo info)
 	{
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
 		base.Load(info);
 		if (info.msg.connectedSpeaker != null)
 		{
@@ -67,9 +67,9 @@ public class ConnectedSpeaker : IOEntity
 			return null;
 		}
 		IOSlot[] array = entity.inputs;
-		foreach (IOSlot iOSlot in array)
+		for (int i = 0; i < array.Length; i++)
 		{
-			IOEntity iOEntity = iOSlot.connectedTo.Get(base.isServer);
+			IOEntity iOEntity = array[i].connectedTo.Get(base.isServer);
 			if ((Object)(object)iOEntity == (Object)(object)this)
 			{
 				return null;
@@ -92,8 +92,8 @@ public class ConnectedSpeaker : IOEntity
 
 	public override void Save(SaveInfo info)
 	{
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
 		base.Save(info);
 		if (info.msg.connectedSpeaker == null)
 		{

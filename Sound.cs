@@ -8,7 +8,7 @@ public class Sound : MonoBehaviour, IClientComponent
 
 	public SoundModifier[] modifiers;
 
-	public SoundSource soundSource = null;
+	public SoundSource soundSource;
 
 	public AudioSource[] audioSources = (AudioSource[])(object)new AudioSource[2];
 

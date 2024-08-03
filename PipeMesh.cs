@@ -4,7 +4,7 @@ public class PipeMesh : MonoBehaviour
 {
 	public float PipeRadius = 0.04f;
 
-	public Material PipeMaterial = null;
+	public Material PipeMaterial;
 
 	public float StraightLength = 0.3f;
 

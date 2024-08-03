@@ -6,27 +6,27 @@ using UnityEngine;
 
 public static class DamageUtil
 {
-	public static void RadiusDamage(BaseEntity attackingPlayer, BaseEntity weaponPrefab, Vector3 pos, float minradius, float radius, List<DamageTypeEntry> damage, int layers, bool useLineOfSight)
+	public static void RadiusDamage(BaseEntity attackingPlayer, BaseEntity weaponPrefab, Vector3 pos, float minradius, float radius, List<DamageTypeEntry> damage, int layers, bool useLineOfSight, bool ignoreAI = false, bool ignoreAttackingPlayer = false)
 	{
-		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0100: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0102: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0109: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0111: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0115: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0121: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0122: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0130: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ec: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ed: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ef: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0104: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0105: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0113: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
 		TimeWarning val = TimeWarning.New("DamageUtil.RadiusDamage", 0);
 		try
 		{
@@ -37,16 +37,15 @@ public static class DamageUtil
 			for (int i = 0; i < list3.Count; i++)
 			{
 				BaseEntity baseEntity = list3[i];
-				if (!baseEntity.isServer || list2.Contains(baseEntity))
+				if (!baseEntity.isServer || list2.Contains(baseEntity) || (ignoreAI && IsIgnoredAI(baseEntity)))
 				{
 					continue;
 				}
 				Vector3 val2 = baseEntity.ClosestPoint(pos);
-				float num = Vector3.Distance(val2, pos);
-				float num2 = Mathf.Clamp01((num - minradius) / (radius - minradius));
-				if (!(num2 > 1f))
+				float num = Mathf.Clamp01((Vector3.Distance(val2, pos) - minradius) / (radius - minradius));
+				if (!(num > 1f))
 				{
-					float amount = 1f - num2;
+					float amount = 1f - num;
 					if (!useLineOfSight || baseEntity.IsVisible(pos))
 					{
 						HitInfo hitInfo = new HitInfo();
@@ -68,7 +67,10 @@ public static class DamageUtil
 			{
 				BaseEntity baseEntity2 = list2[j];
 				HitInfo info = list[j];
-				baseEntity2.OnAttacked(info);
+				if (!ignoreAttackingPlayer || !((Object)(object)attackingPlayer != (Object)null) || !baseEntity2.EqualNetID((BaseNetworkable)attackingPlayer))
+				{
+					baseEntity2.OnAttacked(info);
+				}
 			}
 			Pool.FreeList<HitInfo>(ref list);
 			Pool.FreeList<BaseEntity>(ref list2);
@@ -78,5 +80,10 @@ public static class DamageUtil
 		{
 			((IDisposable)val)?.Dispose();
 		}
+	}
+
+	private static bool IsIgnoredAI(BaseEntity ent)
+	{
+		return ent is ScientistNPC;
 	}
 }

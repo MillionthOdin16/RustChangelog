@@ -42,7 +42,7 @@ public class SmartAlarm : AppIOEntity, ISubscribable
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SetNotificationTextImpl "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SetNotificationTextImpl "));
 				}
 				TimeWarning val2 = TimeWarning.New("SetNotificationTextImpl", 0);
 				try
@@ -65,7 +65,7 @@ public class SmartAlarm : AppIOEntity, ISubscribable
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -77,7 +77,7 @@ public class SmartAlarm : AppIOEntity, ISubscribable
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -97,12 +97,12 @@ public class SmartAlarm : AppIOEntity, ISubscribable
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - StartSetupNotification "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - StartSetupNotification "));
 				}
-				TimeWarning val5 = TimeWarning.New("StartSetupNotification", 0);
+				TimeWarning val2 = TimeWarning.New("StartSetupNotification", 0);
 				try
 				{
-					TimeWarning val6 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.CallsPerSecond.Test(4207149767u, "StartSetupNotification", this, player, 5uL))
@@ -116,11 +116,11 @@ public class SmartAlarm : AppIOEntity, ISubscribable
 					}
 					finally
 					{
-						((IDisposable)val6)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val7 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -132,7 +132,7 @@ public class SmartAlarm : AppIOEntity, ISubscribable
 						}
 						finally
 						{
-							((IDisposable)val7)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -143,7 +143,7 @@ public class SmartAlarm : AppIOEntity, ISubscribable
 				}
 				finally
 				{
-					((IDisposable)val5)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -226,7 +226,7 @@ public class SmartAlarm : AppIOEntity, ISubscribable
 	{
 		if (!((Object)(object)player == (Object)null) && !AddSubscription(player.userID))
 		{
-			player.ClientRPCPlayer(null, player, "HandleCompanionPairingResult", 7);
+			player.ClientRPC(RpcTarget.Player("HandleCompanionPairingResult", player), 7);
 		}
 	}
 
@@ -240,7 +240,7 @@ public class SmartAlarm : AppIOEntity, ISubscribable
 			BuildingPrivlidge buildingPrivilege = GetBuildingPrivilege();
 			if (!((Object)(object)buildingPrivilege != (Object)null) || buildingPrivilege.CanAdministrate(rpc.player))
 			{
-				ClientRPCPlayer(null, rpc.player, "SetupNotification", _notificationTitle, _notificationBody);
+				ClientRPC(RpcTarget.Player("SetupNotification", rpc.player), _notificationTitle, _notificationBody);
 			}
 		}
 	}
@@ -257,8 +257,8 @@ public class SmartAlarm : AppIOEntity, ISubscribable
 		BuildingPrivlidge buildingPrivilege = GetBuildingPrivilege();
 		if (!((Object)(object)buildingPrivilege != (Object)null) || buildingPrivilege.CanAdministrate(rpc.player))
 		{
-			string text = rpc.read.String(128);
-			string text2 = rpc.read.String(512);
+			string text = rpc.read.String(128, false);
+			string text2 = rpc.read.String(512, false);
 			if (!string.IsNullOrWhiteSpace(text))
 			{
 				_notificationTitle = text;

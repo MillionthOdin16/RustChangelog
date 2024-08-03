@@ -9,56 +9,6 @@ using UnityEngine.Assertions;
 
 public class MagnetCrane : GroundVehicle, CarPhysics<MagnetCrane>.ICar
 {
-	private float steerInput;
-
-	private float throttleInput;
-
-	private float brakeInput;
-
-	private float yawInput;
-
-	private float extensionInput;
-
-	private float raiseArmInput;
-
-	private float extensionMove;
-
-	private float yawMove;
-
-	private float raiseArmMove;
-
-	private float nextToggleTime;
-
-	private Vector3 spawnOrigin = Vector3.zero;
-
-	private float lastExtensionArmState;
-
-	private float lastRaiseArmState;
-
-	private float lastYawState;
-
-	private bool handbrakeOn = true;
-
-	private float nextSelfHealTime;
-
-	private Vector3 lastDamagePos = Vector3.zero;
-
-	private float lastDrivenTime;
-
-	private float lastFixedUpdateTime;
-
-	private CarPhysics<MagnetCrane> carPhysics;
-
-	private VehicleTerrainHandler serverTerrainHandler;
-
-	private Vector3 customInertiaTensor = new Vector3(25000f, 11000f, 19000f);
-
-	private float extensionArmState;
-
-	private float raiseArmState;
-
-	private float yawState = 1f;
-
 	[Header("Magnet Crane")]
 	public Animator animator;
 
@@ -159,6 +109,58 @@ public class MagnetCrane : GroundVehicle, CarPhysics<MagnetCrane>.ICar
 
 	private static int arm2Param = Animator.StringToHash("Arm_02");
 
+	private float steerInput;
+
+	private float throttleInput;
+
+	private float brakeInput;
+
+	private float yawInput;
+
+	private float extensionInput;
+
+	private float raiseArmInput;
+
+	private float extensionMove;
+
+	private float yawMove;
+
+	private float raiseArmMove;
+
+	private float nextToggleTime;
+
+	private Vector3 spawnOrigin = Vector3.zero;
+
+	private float lastExtensionArmState;
+
+	private float lastRaiseArmState;
+
+	private float lastYawState;
+
+	private bool handbrakeOn = true;
+
+	private float nextSelfHealTime;
+
+	private Vector3 lastDamagePos = Vector3.zero;
+
+	private float lastDrivenTime;
+
+	private float lastFixedUpdateTime;
+
+	private CarPhysics<MagnetCrane> carPhysics;
+
+	private VehicleTerrainHandler serverTerrainHandler;
+
+	private Vector3 customInertiaTensor = new Vector3(25000f, 11000f, 19000f);
+
+	private float extensionArmState;
+
+	private float raiseArmState;
+
+	private float yawState = 1f;
+
+	public override float DriveWheelVelocity => GetSpeed();
+
 	public VehicleTerrainHandler.Surface OnSurface
 	{
 		get
@@ -171,8 +173,6 @@ public class MagnetCrane : GroundVehicle, CarPhysics<MagnetCrane>.ICar
 		}
 	}
 
-	public override float DriveWheelVelocity => GetSpeed();
-
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
 		TimeWarning val = TimeWarning.New("MagnetCrane.OnRpcMessage", 0);
@@ -183,7 +183,7 @@ public class MagnetCrane : GroundVehicle, CarPhysics<MagnetCrane>.ICar
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_OpenFuel "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_OpenFuel "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_OpenFuel", 0);
 				try
@@ -222,11 +222,62 @@ public class MagnetCrane : GroundVehicle, CarPhysics<MagnetCrane>.ICar
 		return base.OnRpcMessage(player, rpc, msg);
 	}
 
+	public override float GetThrottleInput()
+	{
+		if (base.isServer)
+		{
+			return throttleInput;
+		}
+		throw new NotImplementedException("We don't know magnet crane throttle input on the client.");
+	}
+
+	public override float GetBrakeInput()
+	{
+		if (base.isServer)
+		{
+			if (handbrakeOn)
+			{
+				return 1f;
+			}
+			return brakeInput;
+		}
+		throw new NotImplementedException("We don't know magnet crane brake input on the client.");
+	}
+
+	public override void Load(LoadInfo info)
+	{
+		base.Load(info);
+		if (info.msg.crane != null && base.isServer)
+		{
+			yawState = info.msg.crane.yaw;
+			extensionArmState = info.msg.crane.arm1;
+			raiseArmState = info.msg.crane.arm2;
+		}
+	}
+
+	public override float GetMaxForwardSpeed()
+	{
+		return 13f;
+	}
+
+	public override bool CanBeLooted(BasePlayer player)
+	{
+		if (!base.CanBeLooted(player))
+		{
+			return false;
+		}
+		if (!PlayerIsMounted(player))
+		{
+			return !IsOn();
+		}
+		return true;
+	}
+
 	public override void ServerInit()
 	{
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0095: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0093: Unknown result type (might be due to invalid IL or missing references)
 		base.ServerInit();
 		((FacepunchBehaviour)this).InvokeRepeating((Action)UpdateParams, 0f, 0.1f);
 		animator.cullingMode = (AnimatorCullingMode)0;
@@ -238,9 +289,9 @@ public class MagnetCrane : GroundVehicle, CarPhysics<MagnetCrane>.ICar
 		spawnOrigin = ((Component)this).transform.position;
 		lastDrivenTime = Time.realtimeSinceStartup;
 		GameObject[] onTriggers = OnTriggers;
-		foreach (GameObject val in onTriggers)
+		for (int i = 0; i < onTriggers.Length; i++)
 		{
-			val.SetActive(false);
+			onTriggers[i].SetActive(false);
 		}
 	}
 
@@ -265,37 +316,37 @@ public class MagnetCrane : GroundVehicle, CarPhysics<MagnetCrane>.ICar
 		}
 		else if (engineController.IsOn)
 		{
-			bool flag = inputState.IsDown(BUTTON.SPRINT);
+			bool num = inputState.IsDown(BUTTON.SPRINT);
 			if (inputState.IsDown(BUTTON.RELOAD) && Time.realtimeSinceStartup > nextToggleTime)
 			{
 				Magnet.SetMagnetEnabled(!Magnet.IsMagnetOn(), player);
 				nextToggleTime = Time.realtimeSinceStartup + 0.5f;
 			}
-			if (flag)
+			if (num)
 			{
 				float speed = GetSpeed();
-				float num = 0f;
+				float num2 = 0f;
 				if (inputState.IsDown(BUTTON.FORWARD))
 				{
-					num = 1f;
+					num2 = 1f;
 				}
 				else if (inputState.IsDown(BUTTON.BACKWARD))
 				{
-					num = -1f;
+					num2 = -1f;
 				}
-				if (speed > 1f && num < 0f)
+				if (speed > 1f && num2 < 0f)
 				{
 					throttleInput = 0f;
-					brakeInput = 0f - num;
+					brakeInput = 0f - num2;
 				}
-				else if (speed < -1f && num > 0f)
+				else if (speed < -1f && num2 > 0f)
 				{
 					throttleInput = 0f;
-					brakeInput = num;
+					brakeInput = num2;
 				}
 				else
 				{
-					throttleInput = num;
+					throttleInput = num2;
 					brakeInput = 0f;
 				}
 				if (inputState.IsDown(BUTTON.RIGHT))
@@ -348,8 +399,7 @@ public class MagnetCrane : GroundVehicle, CarPhysics<MagnetCrane>.ICar
 
 	public override float MaxVelocity()
 	{
-		float num = GetMaxForwardSpeed() * 1.3f;
-		return Mathf.Max(num, 30f);
+		return Mathf.Max(GetMaxForwardSpeed() * 1.3f, 30f);
 	}
 
 	public float GetSteerInput()
@@ -373,29 +423,27 @@ public class MagnetCrane : GroundVehicle, CarPhysics<MagnetCrane>.ICar
 
 	public override void VehicleFixedUpdate()
 	{
-		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ab: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01df: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01e5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_020b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0211: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0272: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0277: Unknown result type (might be due to invalid IL or missing references)
-		//IL_029a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_029f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02a9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02ae: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02b3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0393: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0398: Unknown result type (might be due to invalid IL or missing references)
-		//IL_039a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03df: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03e4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0135: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0170: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0195: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01bc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0302: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0210: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0215: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0238: Unknown result type (might be due to invalid IL or missing references)
+		//IL_023d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0247: Unknown result type (might be due to invalid IL or missing references)
+		//IL_024c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0251: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0344: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0349: Unknown result type (might be due to invalid IL or missing references)
 		base.VehicleFixedUpdate();
 		rigidBody.ResetInertiaTensor();
 		rigidBody.inertiaTensor = Vector3.Lerp(rigidBody.inertiaTensor, customInertiaTensor, 0.5f);
@@ -420,9 +468,9 @@ public class MagnetCrane : GroundVehicle, CarPhysics<MagnetCrane>.ICar
 		if (IsOn() != flag)
 		{
 			GameObject[] onTriggers = OnTriggers;
-			foreach (GameObject val in onTriggers)
+			for (int i = 0; i < onTriggers.Length; i++)
 			{
-				val.SetActive(IsOn());
+				onTriggers[i].SetActive(IsOn());
 			}
 		}
 		if (Vector3.Dot(((Component)this).transform.up, Vector3.down) >= 0.4f)
@@ -437,8 +485,7 @@ public class MagnetCrane : GroundVehicle, CarPhysics<MagnetCrane>.ICar
 		}
 		if (spawnOrigin != Vector3.zero && maxDistanceFromOrigin != 0f)
 		{
-			float num4 = Vector3Ex.Distance2D(((Component)this).transform.position, spawnOrigin);
-			if (num4 > maxDistanceFromOrigin)
+			if (Vector3Ex.Distance2D(((Component)this).transform.position, spawnOrigin) > maxDistanceFromOrigin)
 			{
 				if (Vector3Ex.Distance2D(((Component)this).transform.position, lastDamagePos) > 6f)
 				{
@@ -469,15 +516,11 @@ public class MagnetCrane : GroundVehicle, CarPhysics<MagnetCrane>.ICar
 		else
 		{
 			lastDrivenTime = realtimeSinceStartup;
-			if (Magnet.IsMagnetOn() && Magnet.HasConnectedObject())
+			if (Magnet.IsMagnetOn() && Magnet.HasConnectedObject() && GamePhysics.CheckOBB(Magnet.GetConnectedOBB(0.75f), 1084293121, (QueryTriggerInteraction)1))
 			{
-				OBB connectedOBB = Magnet.GetConnectedOBB(0.75f);
-				if (GamePhysics.CheckOBB(connectedOBB, 1084293121, (QueryTriggerInteraction)1))
-				{
-					Magnet.SetMagnetEnabled(wantsOn: false, null);
-					nextToggleTime = realtimeSinceStartup + 2f;
-					Effect.server.Run(selfDamageEffect.resourcePath, ((Component)Magnet).transform.position, Vector3.up);
-				}
+				Magnet.SetMagnetEnabled(wantsOn: false, null);
+				nextToggleTime = realtimeSinceStartup + 2f;
+				Effect.server.Run(selfDamageEffect.resourcePath, ((Component)Magnet).transform.position, Vector3.up);
 			}
 		}
 		extensionMove = UpdateMoveInput(extensionInput, extensionMove, 3f, Time.fixedDeltaTime);
@@ -517,9 +560,9 @@ public class MagnetCrane : GroundVehicle, CarPhysics<MagnetCrane>.ICar
 		info.msg.crane.arm2 = raiseArmState;
 		info.msg.crane.yaw = yawState;
 		info.msg.crane.time = GetNetworkTime();
-		byte b = (byte)((carPhysics.TankThrottleLeft + 1f) * 7f);
-		byte b2 = (byte)((carPhysics.TankThrottleRight + 1f) * 7f);
-		byte treadInput = (byte)(b + (b2 << 4));
+		byte num = (byte)((carPhysics.TankThrottleLeft + 1f) * 7f);
+		byte b = (byte)((carPhysics.TankThrottleRight + 1f) * 7f);
+		byte treadInput = (byte)(num + (b << 4));
 		info.msg.crane.treadInput = treadInput;
 	}
 
@@ -553,14 +596,14 @@ public class MagnetCrane : GroundVehicle, CarPhysics<MagnetCrane>.ICar
 
 	public override void OnAttacked(HitInfo info)
 	{
-		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0097: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
 		if (base.isServer)
 		{
 			BasePlayer driver = GetDriver();
@@ -583,12 +626,11 @@ public class MagnetCrane : GroundVehicle, CarPhysics<MagnetCrane>.ICar
 
 	public override void OnKilled(HitInfo info)
 	{
-		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
 		if (HasDriver())
 		{
-			BasePlayer driver = GetDriver();
-			driver.Hurt(10000f, DamageType.Blunt, info.Initiator, useProtection: false);
+			GetDriver().Hurt(10000f, DamageType.Blunt, info.Initiator, useProtection: false);
 		}
 		if (explosionEffect.isValid)
 		{
@@ -599,27 +641,25 @@ public class MagnetCrane : GroundVehicle, CarPhysics<MagnetCrane>.ICar
 
 	public bool IsColliding()
 	{
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
 		Transform[] array = collisionTestingPoints;
-		OBB obb = default(OBB);
 		foreach (Transform val in array)
 		{
 			if (((Component)val).gameObject.activeSelf)
 			{
 				Vector3 position = val.position;
 				Quaternion rotation = val.rotation;
-				((OBB)(ref obb))._002Ector(position, new Vector3(val.localScale.x, val.localScale.y, val.localScale.z), rotation);
-				if (GamePhysics.CheckOBB(obb, 1084293121, (QueryTriggerInteraction)1))
+				if (GamePhysics.CheckOBB(new OBB(position, new Vector3(val.localScale.x, val.localScale.y, val.localScale.z), rotation), 1084293121, (QueryTriggerInteraction)1))
 				{
 					return true;
 				}
@@ -665,52 +705,5 @@ public class MagnetCrane : GroundVehicle, CarPhysics<MagnetCrane>.ICar
 		{
 			GetFuelSystem().LootFuel(player);
 		}
-	}
-
-	public override float GetThrottleInput()
-	{
-		if (base.isServer)
-		{
-			return throttleInput;
-		}
-		throw new NotImplementedException("We don't know magnet crane throttle input on the client.");
-	}
-
-	public override float GetBrakeInput()
-	{
-		if (base.isServer)
-		{
-			if (handbrakeOn)
-			{
-				return 1f;
-			}
-			return brakeInput;
-		}
-		throw new NotImplementedException("We don't know magnet crane brake input on the client.");
-	}
-
-	public override void Load(LoadInfo info)
-	{
-		base.Load(info);
-		if (info.msg.crane != null && base.isServer)
-		{
-			yawState = info.msg.crane.yaw;
-			extensionArmState = info.msg.crane.arm1;
-			raiseArmState = info.msg.crane.arm2;
-		}
-	}
-
-	public override float GetMaxForwardSpeed()
-	{
-		return 13f;
-	}
-
-	public override bool CanBeLooted(BasePlayer player)
-	{
-		if (!base.CanBeLooted(player))
-		{
-			return false;
-		}
-		return PlayerIsMounted(player) || !IsOn();
 	}
 }

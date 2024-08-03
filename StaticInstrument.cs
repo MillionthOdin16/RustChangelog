@@ -6,13 +6,13 @@ using UnityEngine.Assertions;
 
 public class StaticInstrument : BaseMountable
 {
-	public AnimatorOverrideController AnimatorOverride = null;
+	public AnimatorOverrideController AnimatorOverride;
 
-	public bool ShowDeployAnimation = false;
+	public bool ShowDeployAnimation;
 
 	public InstrumentKeyController KeyController;
 
-	public bool ShouldSuppressHandsAnimationLayer = false;
+	public bool ShouldSuppressHandsAnimationLayer;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -24,7 +24,7 @@ public class StaticInstrument : BaseMountable
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_PlayNote "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_PlayNote "));
 				}
 				TimeWarning val2 = TimeWarning.New("Server_PlayNote", 0);
 				try
@@ -60,12 +60,12 @@ public class StaticInstrument : BaseMountable
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_StopNote "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_StopNote "));
 				}
-				TimeWarning val4 = TimeWarning.New("Server_StopNote", 0);
+				TimeWarning val2 = TimeWarning.New("Server_StopNote", 0);
 				try
 				{
-					TimeWarning val5 = TimeWarning.New("Call", 0);
+					TimeWarning val3 = TimeWarning.New("Call", 0);
 					try
 					{
 						RPCMessage rPCMessage = default(RPCMessage);
@@ -77,7 +77,7 @@ public class StaticInstrument : BaseMountable
 					}
 					finally
 					{
-						((IDisposable)val5)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 				}
 				catch (Exception ex2)
@@ -87,7 +87,7 @@ public class StaticInstrument : BaseMountable
 				}
 				finally
 				{
-					((IDisposable)val4)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -107,7 +107,7 @@ public class StaticInstrument : BaseMountable
 		int arg3 = msg.read.Int32();
 		float arg4 = msg.read.Float();
 		KeyController.ProcessServerPlayedNote(GetMounted());
-		ClientRPC(null, "Client_PlayNote", arg, arg2, arg3, arg4);
+		ClientRPC(RpcTarget.NetworkGroup("Client_PlayNote"), arg, arg2, arg3, arg4);
 	}
 
 	[RPC_Server]
@@ -116,7 +116,7 @@ public class StaticInstrument : BaseMountable
 		int arg = msg.read.Int32();
 		int arg2 = msg.read.Int32();
 		int arg3 = msg.read.Int32();
-		ClientRPC(null, "Client_StopNote", arg, arg2, arg3);
+		ClientRPC(RpcTarget.NetworkGroup("Client_StopNote"), arg, arg2, arg3);
 	}
 
 	public override bool IsInstrument()

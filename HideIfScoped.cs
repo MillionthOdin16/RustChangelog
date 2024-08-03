@@ -9,7 +9,10 @@ public class HideIfScoped : MonoBehaviour
 		Renderer[] array = renderers;
 		foreach (Renderer val in array)
 		{
-			val.enabled = vis;
+			if ((Object)(object)val != (Object)null)
+			{
+				val.enabled = vis;
+			}
 		}
 	}
 }

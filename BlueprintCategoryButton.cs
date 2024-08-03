@@ -7,7 +7,7 @@ public class BlueprintCategoryButton : MonoBehaviour, IInventoryChanged
 
 	public ItemCategory Category;
 
-	public bool AlwaysShow = false;
+	public bool AlwaysShow;
 
 	public bool ShowItemCount = true;
 
@@ -16,4 +16,6 @@ public class BlueprintCategoryButton : MonoBehaviour, IInventoryChanged
 	public SoundDefinition clickSound;
 
 	public SoundDefinition hoverSound;
+
+	public PingWidget tutorialHighlight;
 }

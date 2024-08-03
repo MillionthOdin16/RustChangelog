@@ -61,9 +61,9 @@ public class Performance : SingletonComponent<Performance>
 
 	private static int[] frameTimes = new int[1000];
 
-	private int frames = 0;
+	private int frames;
 
-	private float time = 0f;
+	private float time;
 
 	private void Update()
 	{
@@ -112,6 +112,8 @@ public class Performance : SingletonComponent<Performance>
 			current.loadBalancerTasks = LoadBalancer.Count();
 			current.invokeHandlerTasks = InvokeHandler.Count();
 			current.workshopSkinsQueued = WorkshopSkin.QueuedCount;
+			current.performanceSample = PerformanceMetrics.PerformancePerSecond;
+			PerformanceMetrics.PerformancePerSecond = default(PerformanceSamplePoint);
 			current.gcTriggered = memoryCollections != current.memoryCollections;
 			frames = 0;
 			time = 0f;

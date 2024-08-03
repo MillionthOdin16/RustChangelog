@@ -12,7 +12,7 @@ public class OverlayMeshPaintableSource : MeshPaintableSource
 
 	public override void UpdateMaterials(MaterialPropertyBlock block, Texture2D textureOverride = null, bool forEditing = false, bool isSelected = false)
 	{
-		//IL_00ef: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d3: Unknown result type (might be due to invalid IL or missing references)
 		base.UpdateMaterials(block, textureOverride, forEditing, isSelected);
 		if ((Object)(object)baseTexture != (Object)null)
 		{

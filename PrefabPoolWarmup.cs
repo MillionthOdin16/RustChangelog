@@ -46,6 +46,7 @@ public class PrefabPoolWarmup
 		}
 		Application.isLoadingPrefabs = true;
 		string[] prewarmAssets = GetAssetList();
+		Timing timer = new Timing("prefab_warmup");
 		Stopwatch sw = Stopwatch.StartNew();
 		for (int i = 0; i < prewarmAssets.Length; i++)
 		{
@@ -58,6 +59,7 @@ public class PrefabPoolWarmup
 			}
 			PrefabWarmup(prewarmAssets[i]);
 		}
+		timer.End();
 		Application.isLoadingPrefabs = false;
 	}
 
@@ -77,8 +79,7 @@ public class PrefabPoolWarmup
 		GameObject val = GameManager.server.FindPrefab(path);
 		if ((Object)(object)val != (Object)null && val.SupportsPooling())
 		{
-			Poolable component = val.GetComponent<Poolable>();
-			int num = component.ServerCount;
+			int num = val.GetComponent<Poolable>().ServerCount;
 			List<GameObject> list = new List<GameObject>();
 			if (num > 0 && countOverride > 0)
 			{

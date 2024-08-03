@@ -1,3 +1,4 @@
+using ConVar;
 using UnityEngine;
 
 public class RealmedCollider : BasePrefab
@@ -9,20 +10,20 @@ public class RealmedCollider : BasePrefab
 	public override void PreProcess(IPrefabProcessor process, GameObject rootObj, string name, bool serverside, bool clientside, bool bundling)
 	{
 		base.PreProcess(process, rootObj, name, serverside, clientside, bundling);
-		if ((Object)(object)ServerCollider != (Object)(object)ClientCollider)
+		if (serverside && (Object)(object)ServerCollider != (Object)(object)ClientCollider)
 		{
-			if (clientside)
+			if (Tree.simplified_collider)
 			{
-				if (Object.op_Implicit((Object)(object)ServerCollider))
+				if (Object.op_Implicit((Object)(object)ClientCollider))
 				{
-					process.RemoveComponent((Component)(object)ServerCollider);
-					ServerCollider = null;
+					process.RemoveComponent((Component)(object)ClientCollider);
+					ClientCollider = ServerCollider;
 				}
 			}
-			else if (Object.op_Implicit((Object)(object)ClientCollider))
+			else if (Object.op_Implicit((Object)(object)ServerCollider))
 			{
-				process.RemoveComponent((Component)(object)ClientCollider);
-				ClientCollider = null;
+				process.RemoveComponent((Component)(object)ServerCollider);
+				ServerCollider = ClientCollider;
 			}
 		}
 		process.RemoveComponent((Component)(object)this);

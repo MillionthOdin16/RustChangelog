@@ -2,5 +2,7 @@ using UnityEngine;
 
 public class BoneRetarget : MonoBehaviour
 {
-	public bool preserveInFirstPerson = false;
+	public bool preserveInFirstPerson;
+
+	public bool restoreBeforePooling;
 }

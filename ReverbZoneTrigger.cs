@@ -8,7 +8,7 @@ public class ReverbZoneTrigger : TriggerBase, IClientComponentEx, ILOD
 
 	public float lodDistance = 100f;
 
-	public bool inRange = false;
+	public bool inRange;
 
 	public ReverbSettings reverbSettings;
 

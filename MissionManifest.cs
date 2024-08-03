@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.Profiling;
 
 [CreateAssetMenu(menuName = "Rust/MissionManifest")]
 public class MissionManifest : ScriptableObject
@@ -12,13 +11,9 @@ public class MissionManifest : ScriptableObject
 
 	public static MissionManifest Get()
 	{
-		Profiler.BeginSample("MissionManifestGet");
 		if ((Object)(object)instance == (Object)null)
 		{
-			Profiler.BeginSample("ResourcesLoadManifest");
 			instance = Resources.Load<MissionManifest>("MissionManifest");
-			Profiler.EndSample();
-			Profiler.BeginSample("PositionGeneratorLoop");
 			WorldPositionGenerator[] array = instance.positionGenerators;
 			foreach (WorldPositionGenerator worldPositionGenerator in array)
 			{
@@ -27,19 +22,16 @@ public class MissionManifest : ScriptableObject
 					worldPositionGenerator.PrecalculatePositions();
 				}
 			}
-			Profiler.EndSample();
 		}
-		Profiler.EndSample();
 		return instance;
 	}
 
 	public static BaseMission GetFromShortName(string shortname)
 	{
-		MissionManifest missionManifest = Get();
-		ScriptableObjectRef[] array = missionManifest.missionList;
-		foreach (ScriptableObjectRef scriptableObjectRef in array)
+		ScriptableObjectRef[] array = Get().missionList;
+		for (int i = 0; i < array.Length; i++)
 		{
-			BaseMission baseMission = scriptableObjectRef.Get() as BaseMission;
+			BaseMission baseMission = array[i].Get() as BaseMission;
 			if (baseMission.shortname == shortname)
 			{
 				return baseMission;
@@ -56,9 +48,9 @@ public class MissionManifest : ScriptableObject
 			return null;
 		}
 		ScriptableObjectRef[] array = missionManifest.missionList;
-		foreach (ScriptableObjectRef scriptableObjectRef in array)
+		for (int i = 0; i < array.Length; i++)
 		{
-			BaseMission baseMission = scriptableObjectRef.Get() as BaseMission;
+			BaseMission baseMission = array[i].Get() as BaseMission;
 			if (baseMission.id == id)
 			{
 				return baseMission;

@@ -23,9 +23,9 @@ public class Boar : BaseAnimalNPC
 		if ((Object)(object)collectibleEntity != (Object)null)
 		{
 			ItemAmount[] itemList = collectibleEntity.itemList;
-			foreach (ItemAmount itemAmount in itemList)
+			for (int i = 0; i < itemList.Length; i++)
 			{
-				if (itemAmount.itemDef.category == ItemCategory.Food)
+				if (itemList[i].itemDef.category == ItemCategory.Food)
 				{
 					return true;
 				}

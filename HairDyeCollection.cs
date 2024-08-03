@@ -5,7 +5,7 @@ public class HairDyeCollection : ScriptableObject
 {
 	public Texture capMask;
 
-	public bool applyCap = false;
+	public bool applyCap;
 
 	public HairDye[] Variations;
 

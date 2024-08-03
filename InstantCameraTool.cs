@@ -30,7 +30,7 @@ public class InstantCameraTool : HeldEntity
 
 	private TimeSince _sinceLastPhoto;
 
-	private bool hasSentAchievement = false;
+	private bool hasSentAchievement;
 
 	public const string PhotographPlayerAchievement = "SUMMER_PAPARAZZI";
 
@@ -44,7 +44,7 @@ public class InstantCameraTool : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - TakePhoto "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - TakePhoto "));
 				}
 				TimeWarning val2 = TimeWarning.New("TakePhoto", 0);
 				try
@@ -67,7 +67,7 @@ public class InstantCameraTool : HeldEntity
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -79,7 +79,7 @@ public class InstantCameraTool : HeldEntity
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -107,29 +107,27 @@ public class InstantCameraTool : HeldEntity
 	[RPC_Server.CallsPerSecond(3uL)]
 	private void TakePhoto(RPCMessage msg)
 	{
-		//IL_00e2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_019f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01aa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0172: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0178: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0185: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01f1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01f6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0203: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0208: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0211: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0213: Unknown result type (might be due to invalid IL or missing references)
-		//IL_021a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_021f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0272: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0148: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0153: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0122: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0129: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_018d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ab: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0207: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer player = msg.player;
 		Item item = GetItem();
 		if ((Object)(object)player == (Object)null || item == null || item.condition <= 0f)
 		{
 			return;
 		}
-		byte[] array = msg.read.BytesWithSize(10485760u);
+		byte[] array = msg.read.BytesWithSize(10485760u, false);
 		if (array.Length > 102400 || !ImageProcessing.IsValidJPG(array, resolutionX, resolutionY))
 		{
 			return;
@@ -164,8 +162,7 @@ public class InstantCameraTool : HeldEntity
 		{
 			item2.Drop(player.GetDropPosition(), player.GetDropVelocity());
 		}
-		Effect effect = new Effect(screenshotEffect.resourcePath, ((Component)this).transform.position, ((Component)this).transform.forward, msg.connection);
-		EffectNetwork.Send(effect);
+		EffectNetwork.Send(new Effect(screenshotEffect.resourcePath, ((Component)this).transform.position, ((Component)this).transform.forward, msg.connection));
 		if (!hasSentAchievement && !string.IsNullOrEmpty("SUMMER_PAPARAZZI"))
 		{
 			Vector3 position = GetOwnerPlayer().eyes.position;

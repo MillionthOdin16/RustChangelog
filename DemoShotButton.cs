@@ -3,7 +3,7 @@ using UnityEngine.EventSystems;
 
 public class DemoShotButton : RustButton, IPointerClickHandler, IEventSystemHandler
 {
-	public bool FireEventOnClicked = false;
+	public bool FireEventOnClicked;
 
 	public override void OnPointerDown(PointerEventData eventData)
 	{

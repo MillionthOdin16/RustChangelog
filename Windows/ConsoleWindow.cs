@@ -28,12 +28,10 @@ public class ConsoleWindow
 		try
 		{
 			Console.OutputEncoding = Encoding.UTF8;
-			IntPtr stdHandle = GetStdHandle(-11);
-			SafeFileHandle handle = new SafeFileHandle(stdHandle, ownsHandle: true);
-			FileStream stream = new FileStream(handle, FileAccess.Write);
-			StreamWriter streamWriter = new StreamWriter(stream, Encoding.UTF8);
-			streamWriter.AutoFlush = true;
-			Console.SetOut(streamWriter);
+			Console.SetOut(new StreamWriter(new FileStream(new SafeFileHandle(GetStdHandle(-11), ownsHandle: true), FileAccess.Write), Encoding.UTF8)
+			{
+				AutoFlush = true
+			});
 		}
 		catch (Exception ex)
 		{

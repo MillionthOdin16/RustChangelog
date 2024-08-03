@@ -33,14 +33,17 @@ public class HackableLockedCrate : LootContainer
 
 	public bool shouldDecay = true;
 
-	[NonSerialized]
-	public ulong OriginalHackerPlayer;
+	private BasePlayer originalHackerPlayer;
+
+	private ulong originalHackerPlayerId;
+
+	private bool hasBeenOpened;
 
 	private BaseEntity mapMarkerInstance;
 
 	private bool hasLanded;
 
-	private bool wasDropped = false;
+	private bool wasDropped;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -52,7 +55,7 @@ public class HackableLockedCrate : LootContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_Hack "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_Hack "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_Hack", 0);
 				try
@@ -71,7 +74,7 @@ public class HackableLockedCrate : LootContainer
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -83,7 +86,7 @@ public class HackableLockedCrate : LootContainer
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -127,9 +130,9 @@ public class HackableLockedCrate : LootContainer
 
 	public void CreateMapMarker(float durationMinutes)
 	{
-		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
 		if (Object.op_Implicit((Object)(object)mapMarkerInstance))
 		{
 			mapMarkerInstance.Kill();
@@ -158,8 +161,8 @@ public class HackableLockedCrate : LootContainer
 
 	public override void OnAttacked(HitInfo info)
 	{
-		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
 		if (base.isServer)
 		{
 			if (StringPool.Get(info.HitBone) == "laptopcollision")
@@ -201,29 +204,34 @@ public class HackableLockedCrate : LootContainer
 		RefreshDecay();
 		isLootable = IsFullyHacked();
 		CreateMapMarker(120f);
+		base.inventory.onItemAddedRemoved = OnItemAddedOrRemoved;
+	}
+
+	public override void OnItemAddedOrRemoved(Item item, bool added)
+	{
+		if (!added && (Object)(object)mapMarkerInstance != (Object)null)
+		{
+			mapMarkerInstance.Kill();
+		}
+		base.OnItemAddedOrRemoved(item, added);
 	}
 
 	public void LandCheck()
 	{
-		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
-		if (!hasLanded)
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		RaycastHit val = default(RaycastHit);
+		if (!hasLanded && Physics.Raycast(new Ray(((Component)this).transform.position + Vector3.up * 0.5f, Vector3.down), ref val, 1f, 1084293377))
 		{
-			Ray val = default(Ray);
-			((Ray)(ref val))._002Ector(((Component)this).transform.position + Vector3.up * 0.5f, Vector3.down);
-			RaycastHit val2 = default(RaycastHit);
-			if (Physics.Raycast(val, ref val2, 1f, 1218511105))
-			{
-				Effect.server.Run(landEffect.resourcePath, ((RaycastHit)(ref val2)).point, Vector3.up);
-				hasLanded = true;
-				((FacepunchBehaviour)this).CancelInvoke((Action)LandCheck);
-			}
+			Effect.server.Run(landEffect.resourcePath, ((RaycastHit)(ref val)).point, Vector3.up);
+			hasLanded = true;
+			((FacepunchBehaviour)this).CancelInvoke((Action)LandCheck);
 		}
 	}
 
@@ -240,7 +248,8 @@ public class HackableLockedCrate : LootContainer
 		if (!IsBeingHacked())
 		{
 			Analytics.Azure.OnLockedCrateStarted(msg.player, this);
-			OriginalHackerPlayer = msg.player.userID;
+			originalHackerPlayerId = msg.player.userID;
+			originalHackerPlayer = msg.player;
 			StartHacking();
 		}
 	}
@@ -250,7 +259,7 @@ public class HackableLockedCrate : LootContainer
 		BroadcastEntityMessage("HackingStarted", 20f, 256);
 		SetFlag(Flags.Reserved1, b: true);
 		((FacepunchBehaviour)this).InvokeRepeating((Action)HackProgress, 1f, 1f);
-		ClientRPC(null, "UpdateHackProgress", 0, (int)requiredHackSeconds);
+		ClientRPC(RpcTarget.NetworkGroup("UpdateHackProgress"), 0, (int)requiredHackSeconds);
 		RefreshDecay();
 	}
 
@@ -259,12 +268,27 @@ public class HackableLockedCrate : LootContainer
 		hackSeconds += 1f;
 		if (hackSeconds > requiredHackSeconds)
 		{
-			Analytics.Azure.OnLockedCrateFinished(OriginalHackerPlayer, this);
+			Analytics.Azure.OnLockedCrateFinished(originalHackerPlayerId, this);
+			if ((Object)(object)originalHackerPlayer != (Object)null && originalHackerPlayer.serverClan != null)
+			{
+				originalHackerPlayer.AddClanScore((ClanScoreEventType)5);
+			}
 			RefreshDecay();
 			SetFlag(Flags.Reserved2, b: true);
 			isLootable = true;
 			((FacepunchBehaviour)this).CancelInvoke((Action)HackProgress);
 		}
-		ClientRPC(null, "UpdateHackProgress", (int)hackSeconds, (int)requiredHackSeconds);
+		ClientRPC(RpcTarget.NetworkGroup("UpdateHackProgress"), (int)hackSeconds, (int)requiredHackSeconds);
+	}
+
+	public override bool OnStartBeingLooted(BasePlayer player)
+	{
+		bool num = base.OnStartBeingLooted(player);
+		if (num && !hasBeenOpened)
+		{
+			hasBeenOpened = true;
+			player.AddClanScore((ClanScoreEventType)6);
+		}
+		return num;
 	}
 }

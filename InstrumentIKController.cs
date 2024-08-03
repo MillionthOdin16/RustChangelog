@@ -27,11 +27,11 @@ public class InstrumentIKController : MonoBehaviour
 	public float NoteHitTime = 0.5f;
 
 	[Header("Look IK")]
-	public float BodyLookWeight = 0f;
+	public float BodyLookWeight;
 
-	public float HeadLookWeight = 0f;
+	public float HeadLookWeight;
 
-	public float LookWeightLimit = 0f;
+	public float LookWeightLimit;
 
-	public bool HoldHandsAtPlay = false;
+	public bool HoldHandsAtPlay;
 }

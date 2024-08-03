@@ -53,16 +53,16 @@ public class Audio : ConsoleSystem
 	{
 		get
 		{
-			//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0007: Expected I4, but got Unknown
+			//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0006: Expected I4, but got Unknown
 			return (int)AudioSettings.speakerMode;
 		}
 		set
 		{
-			//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-			//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0021: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+			//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+			//IL_002f: Unknown result type (might be due to invalid IL or missing references)
 			value = Mathf.Clamp(value, 2, 7);
 			if (!Application.isEditor)
 			{

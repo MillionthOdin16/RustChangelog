@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class ItemModConditionInWater : ItemMod
 {
-	public bool requiredState = false;
+	public bool requiredState;
 
 	public override bool Passes(Item item)
 	{
@@ -11,7 +11,6 @@ public class ItemModConditionInWater : ItemMod
 		{
 			return false;
 		}
-		bool flag = ownerPlayer.IsHeadUnderwater();
-		return flag == requiredState;
+		return ownerPlayer.IsHeadUnderwater() == requiredState;
 	}
 }

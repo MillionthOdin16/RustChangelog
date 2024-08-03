@@ -5,7 +5,7 @@ public class LootGrid : MonoBehaviour
 {
 	public int Container;
 
-	public int Offset = 0;
+	public int Offset;
 
 	public int Count = 1;
 

@@ -7,7 +7,7 @@ public class MusicClip : ScriptableObject
 
 	public int lengthInBars = 1;
 
-	public int lengthInBarsWithTail = 0;
+	public int lengthInBarsWithTail;
 
 	public List<float> fadeInPoints = new List<float>();
 

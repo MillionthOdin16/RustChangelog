@@ -12,15 +12,15 @@ public class SoundFade : MonoBehaviour, IClientComponent
 
 	public float currentGain = 1f;
 
-	public float startingGain = 0f;
+	public float startingGain;
 
 	public float finalGain = 1f;
 
 	public int sampleRate = 44100;
 
-	public bool highQualityFadeCompleted = false;
+	public bool highQualityFadeCompleted;
 
-	public float length = 0f;
+	public float length;
 
 	public Direction currentDirection;
 }

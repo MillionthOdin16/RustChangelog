@@ -6,17 +6,22 @@ using Network;
 using ProtoBuf;
 using UnityEngine;
 using UnityEngine.Assertions;
-using UnityEngine.Profiling;
 
-public class WorldItem : BaseEntity
+public class WorldItem : BaseEntity, PlayerInventory.ICanMoveFrom
 {
-	private bool _isInvokingSendItemUpdate;
+	public static readonly Phrase OpenLootTitle = new Phrase("open_loot", "Open");
+
+	public static readonly Phrase PickUpTitle = new Phrase("pick_up", "Pick Up");
+
+	public static readonly Phrase HoldToPickupPhrase = new Phrase("hold_use_to_pickup", "Hold [USE] to pickup");
 
 	[Header("WorldItem")]
 	public bool allowPickup = true;
 
 	[NonSerialized]
 	public Item item;
+
+	private bool _isInvokingSendItemUpdate;
 
 	protected float eatSeconds = 10f;
 
@@ -44,7 +49,7 @@ public class WorldItem : BaseEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Pickup "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Pickup "));
 				}
 				TimeWarning val2 = TimeWarning.New("Pickup", 0);
 				try
@@ -63,7 +68,7 @@ public class WorldItem : BaseEntity
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -75,7 +80,7 @@ public class WorldItem : BaseEntity
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -90,90 +95,63 @@ public class WorldItem : BaseEntity
 				}
 				return true;
 			}
+			if (rpc == 331989034 && (Object)(object)player != (Object)null)
+			{
+				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
+				if (Global.developer > 2)
+				{
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_OpenLoot "));
+				}
+				TimeWarning val2 = TimeWarning.New("RPC_OpenLoot", 0);
+				try
+				{
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					try
+					{
+						if (!RPC_Server.IsVisible.Test(331989034u, "RPC_OpenLoot", this, player, 3f))
+						{
+							return true;
+						}
+					}
+					finally
+					{
+						((IDisposable)val3)?.Dispose();
+					}
+					try
+					{
+						val3 = TimeWarning.New("Call", 0);
+						try
+						{
+							RPCMessage rPCMessage = default(RPCMessage);
+							rPCMessage.connection = msg.connection;
+							rPCMessage.player = player;
+							rPCMessage.read = msg.read;
+							RPCMessage rpc2 = rPCMessage;
+							RPC_OpenLoot(rpc2);
+						}
+						finally
+						{
+							((IDisposable)val3)?.Dispose();
+						}
+					}
+					catch (Exception ex2)
+					{
+						Debug.LogException(ex2);
+						player.Kick("RPC Error in RPC_OpenLoot");
+					}
+				}
+				finally
+				{
+					((IDisposable)val2)?.Dispose();
+				}
+				return true;
+			}
 		}
 		finally
 		{
 			((IDisposable)val)?.Dispose();
 		}
 		return base.OnRpcMessage(player, rpc, msg);
-	}
-
-	public override void ServerInit()
-	{
-		base.ServerInit();
-		if (item != null)
-		{
-			Profiler.BeginSample("BroadcastMessage OnItemChanged");
-			((Component)this).BroadcastMessage("OnItemChanged", (object)item, (SendMessageOptions)1);
-			Profiler.EndSample();
-		}
-	}
-
-	private void DoItemNetworking()
-	{
-		if (!_isInvokingSendItemUpdate)
-		{
-			_isInvokingSendItemUpdate = true;
-			((FacepunchBehaviour)this).Invoke((Action)SendItemUpdate, 0.1f);
-		}
-	}
-
-	private void SendItemUpdate()
-	{
-		_isInvokingSendItemUpdate = false;
-		if (item == null)
-		{
-			return;
-		}
-		UpdateItem val = Pool.Get<UpdateItem>();
-		try
-		{
-			val.item = item.Save(bIncludeContainer: false, bIncludeOwners: false);
-			ClientRPC<UpdateItem>(null, "UpdateItem", val);
-		}
-		finally
-		{
-			((IDisposable)val)?.Dispose();
-		}
-	}
-
-	[RPC_Server]
-	[RPC_Server.IsVisible(3f)]
-	public void Pickup(RPCMessage msg)
-	{
-		if (msg.player.CanInteract() && this.item != null && allowPickup)
-		{
-			ClientRPC(null, "PickupSound");
-			Item item = this.item;
-			Analytics.Azure.OnItemPickup(msg.player, this);
-			RemoveItem();
-			msg.player.GiveItem(item, GiveItemReason.PickedUp);
-			msg.player.SignalBroadcast(Signal.Gesture, "pickup_item");
-		}
-	}
-
-	public override void Save(SaveInfo info)
-	{
-		base.Save(info);
-		if (item != null)
-		{
-			bool forDisk = info.forDisk;
-			Profiler.BeginSample("WorldItem.Save");
-			info.msg.worldItem = Pool.Get<WorldItem>();
-			info.msg.worldItem.item = item.Save(forDisk, bIncludeOwners: false);
-			Profiler.EndSample();
-		}
-	}
-
-	internal override void DoServerDestroy()
-	{
-		base.DoServerDestroy();
-		DestroyItem();
-	}
-
-	public override void SwitchParent(BaseEntity ent)
-	{
-		SetParent(ent, parentBone);
 	}
 
 	public override Item GetItem()
@@ -221,9 +199,7 @@ public class WorldItem : BaseEntity
 		Assert.IsTrue(item == in_item, "WorldItem:OnItemDirty - dirty item isn't ours!");
 		if (item != null)
 		{
-			Profiler.BeginSample("BroadcastMessage OnItemChanged");
 			((Component)this).BroadcastMessage("OnItemChanged", (object)item, (SendMessageOptions)1);
-			Profiler.EndSample();
 		}
 		DoItemNetworking();
 	}
@@ -241,6 +217,108 @@ public class WorldItem : BaseEntity
 		}
 	}
 
+	public override string ToString()
+	{
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		if (_name == null)
+		{
+			if (base.isServer)
+			{
+				_name = string.Format("{1}[{0}] {2}", (object)(NetworkableId)(((_003F?)net?.ID) ?? default(NetworkableId)), base.ShortPrefabName, this.IsUnityNull() ? "NULL" : ((Object)this).name);
+			}
+			else
+			{
+				_name = base.ShortPrefabName;
+			}
+		}
+		return _name;
+	}
+
+	public bool CanMoveFrom(BasePlayer player, Item item)
+	{
+		if ((Object)(object)((item != null) ? ((Component)item.info).GetComponent<ItemModBackpack>() : null) == (Object)null)
+		{
+			return true;
+		}
+		return item.parentItem?.parent == player.inventory.containerWear;
+	}
+
+	public override void ServerInit()
+	{
+		base.ServerInit();
+		if (item != null)
+		{
+			((Component)this).BroadcastMessage("OnItemChanged", (object)item, (SendMessageOptions)1);
+		}
+	}
+
+	private void DoItemNetworking()
+	{
+		if (!_isInvokingSendItemUpdate)
+		{
+			_isInvokingSendItemUpdate = true;
+			((FacepunchBehaviour)this).Invoke((Action)SendItemUpdate, 0.1f);
+		}
+	}
+
+	private void SendItemUpdate()
+	{
+		_isInvokingSendItemUpdate = false;
+		if (item == null)
+		{
+			return;
+		}
+		UpdateItem val = Pool.Get<UpdateItem>();
+		try
+		{
+			val.item = item.Save(bIncludeContainer: false, bIncludeOwners: false);
+			ClientRPC<UpdateItem>(RpcTarget.NetworkGroup("UpdateItem"), val);
+		}
+		finally
+		{
+			((IDisposable)val)?.Dispose();
+		}
+	}
+
+	[RPC_Server]
+	[RPC_Server.IsVisible(3f)]
+	public void Pickup(RPCMessage msg)
+	{
+		if (msg.player.CanInteract() && this.item != null && allowPickup && CanOpenInSafeZone(msg.player))
+		{
+			ClientRPC(RpcTarget.NetworkGroup("PickupSound"));
+			Item item = this.item;
+			Analytics.Azure.OnItemPickup(msg.player, this);
+			RemoveItem();
+			msg.player.GiveItem(item, GiveItemReason.PickedUp);
+			msg.player.SignalBroadcast(Signal.Gesture, "pickup_item");
+		}
+	}
+
+	public override void Save(SaveInfo info)
+	{
+		base.Save(info);
+		if (item != null)
+		{
+			bool forDisk = info.forDisk;
+			info.msg.worldItem = Pool.Get<WorldItem>();
+			info.msg.worldItem.item = item.Save(forDisk, bIncludeOwners: false);
+		}
+	}
+
+	internal override void DoServerDestroy()
+	{
+		base.DoServerDestroy();
+		DestroyItem();
+	}
+
+	public override void SwitchParent(BaseEntity ent)
+	{
+		SetParent(ent, parentBone);
+	}
+
 	public override void Eat(BaseNpc baseNpc, float timeSpent)
 	{
 		if (!(eatSeconds <= 0f))
@@ -255,22 +333,43 @@ public class WorldItem : BaseEntity
 		}
 	}
 
-	public override string ToString()
+	private bool CanOpenInSafeZone(BasePlayer looter)
 	{
-		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		if (_name == null)
+		if (item == null || !item.info.blockStealingInSafeZone)
 		{
-			if (base.isServer)
+			return true;
+		}
+		if (!(this is DroppedItem droppedItem))
+		{
+			return true;
+		}
+		if (looter.InSafeZone() && droppedItem.DroppedBy != (ulong)looter.userID && droppedItem.DroppedBy != 0L)
+		{
+			return false;
+		}
+		return true;
+	}
+
+	[RPC_Server]
+	[RPC_Server.IsVisible(3f)]
+	private void RPC_OpenLoot(RPCMessage rpc)
+	{
+		if (item == null || item.contents == null)
+		{
+			return;
+		}
+		ItemModContainer component = ((Component)item.info).GetComponent<ItemModContainer>();
+		if (!((Object)(object)component == (Object)null) && component.canLootInWorld)
+		{
+			BasePlayer player = rpc.player;
+			if (Object.op_Implicit((Object)(object)player) && player.CanInteract() && CanOpenInSafeZone(player) && player.inventory.loot.StartLootingEntity(this))
 			{
-				_name = string.Format("{1}[{0}] {2}", (object)(NetworkableId)(((_003F?)net?.ID) ?? default(NetworkableId)), base.ShortPrefabName, this.IsUnityNull() ? "NULL" : ((Object)this).name);
-			}
-			else
-			{
-				_name = base.ShortPrefabName;
+				SetFlag(Flags.Open, b: true);
+				player.inventory.loot.AddContainer(item.contents);
+				player.inventory.loot.SendImmediate();
+				player.ClientRPC(RpcTarget.Player("RPC_OpenLootPanel", player), "generic_resizable");
+				SendNetworkUpdate();
 			}
 		}
-		return _name;
 	}
 }

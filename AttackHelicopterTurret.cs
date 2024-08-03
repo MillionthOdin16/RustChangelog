@@ -98,13 +98,20 @@ public class AttackHelicopterTurret : StorageContainer
 
 	public void GetAmmoAmounts(out int clip, out int available)
 	{
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
 		clip = 0;
 		available = 0;
 		if (base.isServer && GetAttachedHeldEntity() is BaseProjectile baseProjectile)
 		{
 			clip = baseProjectile.primaryMagazine.contents;
-			available = base.inventory.GetAmmoAmount(baseProjectile.primaryMagazine.definition.ammoTypes);
+			if (baseProjectile.primaryMagazine.allowAmmoSwitching)
+			{
+				available = base.inventory.GetAmmoAmount(baseProjectile.primaryMagazine.definition.ammoTypes);
+			}
+			else
+			{
+				available = base.inventory.GetAmmoAmount(baseProjectile.primaryMagazine.ammoType);
+			}
 		}
 	}
 
@@ -258,7 +265,7 @@ public class AttackHelicopterTurret : StorageContainer
 		SetGunRotation(num, y);
 		if (Mathf.Abs(num - lastSentX) > 1f || Mathf.Abs(y - lastSentY) > 1f)
 		{
-			ClientRPC(null, "RPCRotation", GetNetworkTime(), num, y);
+			ClientRPC(RpcTarget.NetworkGroup("RPCRotation"), GetNetworkTime(), num, y);
 			lastSentX = num;
 			lastSentY = y;
 		}
@@ -368,7 +375,7 @@ public class AttackHelicopterTurret : StorageContainer
 		}
 		heldEntity.ServerUse();
 		GetAmmoAmounts(out var clip, out var available);
-		ClientRPC(null, "RPCAmmo", (short)clip, (short)available);
+		ClientRPC(RpcTarget.NetworkGroup("RPCAmmo"), (short)clip, (short)available);
 		return true;
 	}
 

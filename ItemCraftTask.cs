@@ -9,27 +9,19 @@ public class ItemCraftTask
 
 	public int taskUID;
 
-	public BasePlayer owner;
+	public bool cancelled;
 
-	public bool cancelled = false;
-
-	public InstanceData instanceData = null;
+	public InstanceData instanceData;
 
 	public int amount = 1;
 
 	public int skinID;
-
-	public List<ulong> potentialOwners;
 
 	public List<Item> takenItems;
 
 	public int numCrafted;
 
 	public float conditionScale = 1f;
-
-	public float workSecondsComplete;
-
-	public float worksecondsRequired;
 
 	public BaseEntity workbenchEntity;
 }

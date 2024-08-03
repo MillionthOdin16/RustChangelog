@@ -14,12 +14,20 @@ public struct CameraViewerId : IEquatable<CameraViewerId>
 
 	public bool Equals(CameraViewerId other)
 	{
-		return SteamId == other.SteamId && ConnectionId == other.ConnectionId;
+		if (SteamId == other.SteamId)
+		{
+			return ConnectionId == other.ConnectionId;
+		}
+		return false;
 	}
 
 	public override bool Equals(object obj)
 	{
-		return obj is CameraViewerId other && Equals(other);
+		if (obj is CameraViewerId other)
+		{
+			return Equals(other);
+		}
+		return false;
 	}
 
 	public override int GetHashCode()

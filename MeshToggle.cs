@@ -2,9 +2,9 @@ using UnityEngine;
 
 public class MeshToggle : MonoBehaviour
 {
-	public Mesh[] RendererMeshes = null;
+	public Mesh[] RendererMeshes;
 
-	public Mesh[] ColliderMeshes = null;
+	public Mesh[] ColliderMeshes;
 
 	public void SwitchRenderer(int index)
 	{

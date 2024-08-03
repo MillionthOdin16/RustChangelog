@@ -21,6 +21,10 @@ public class BuildingBlockDecay : Decay
 
 	public override bool ShouldDecay(BaseEntity entity)
 	{
+		if (entity.net.group != null && entity.net.group.restricted)
+		{
+			return false;
+		}
 		if (ConVar.Decay.upkeep)
 		{
 			return true;
@@ -30,8 +34,7 @@ public class BuildingBlockDecay : Decay
 			return true;
 		}
 		BuildingBlock buildingBlock = entity as BuildingBlock;
-		BuildingGrade.Enum @enum = (Object.op_Implicit((Object)(object)buildingBlock) ? buildingBlock.grade : BuildingGrade.Enum.Twigs);
-		return @enum == BuildingGrade.Enum.Twigs;
+		return !Object.op_Implicit((Object)(object)buildingBlock) || buildingBlock.grade == BuildingGrade.Enum.Twigs;
 	}
 
 	protected override void AttributeSetup(GameObject rootObj, string name, bool serverside, bool clientside, bool bundling)

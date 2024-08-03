@@ -115,7 +115,7 @@ public class VehicleModuleSeating : BaseVehicleModule, IPrefabPreProcess
 
 	private static int emissionColorID = Shader.PropertyToID("_EmissionColor");
 
-	private BasePlayer hornPlayer = null;
+	private BasePlayer hornPlayer;
 
 	public override bool HasSeating => mountPoints.Count > 0;
 
@@ -137,7 +137,7 @@ public class VehicleModuleSeating : BaseVehicleModule, IPrefabPreProcess
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_DestroyLock "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_DestroyLock "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_DestroyLock", 0);
 				try
@@ -156,7 +156,7 @@ public class VehicleModuleSeating : BaseVehicleModule, IPrefabPreProcess
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -168,7 +168,7 @@ public class VehicleModuleSeating : BaseVehicleModule, IPrefabPreProcess
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -193,16 +193,16 @@ public class VehicleModuleSeating : BaseVehicleModule, IPrefabPreProcess
 
 	public override void PreProcess(IPrefabProcessor preProcess, GameObject rootObj, string name, bool serverside, bool clientside, bool bundling)
 	{
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0092: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00be: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ed: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ad: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00db: Unknown result type (might be due to invalid IL or missing references)
 		base.PreProcess(preProcess, rootObj, name, serverside, clientside, bundling);
 		if ((Object)(object)seating.steeringWheel != (Object)null)
 		{
@@ -231,8 +231,7 @@ public class VehicleModuleSeating : BaseVehicleModule, IPrefabPreProcess
 		BaseMountable mounted = player.GetMounted();
 		if ((Object)(object)mounted != (Object)null)
 		{
-			VehicleModuleSeating vehicleModuleSeating = mounted.GetParentEntity() as VehicleModuleSeating;
-			return (Object)(object)vehicleModuleSeating == (Object)(object)this;
+			return (Object)(object)(mounted.GetParentEntity() as VehicleModuleSeating) == (Object)(object)this;
 		}
 		return false;
 	}
@@ -352,9 +351,7 @@ public class VehicleModuleSeating : BaseVehicleModule, IPrefabPreProcess
 
 	protected virtual Vector3 ModifySeatPositionLocalSpace(int index, Vector3 desiredPos)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
 		return desiredPos;
 	}
 

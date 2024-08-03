@@ -32,8 +32,8 @@ internal static class MeshUtilities
 
 	internal static Mesh GetColliderMesh(Collider collider)
 	{
-		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
 		Type type = ((object)collider).GetType();
 		if (type == typeof(MeshCollider))
 		{
@@ -45,9 +45,9 @@ internal static class MeshUtilities
 
 	internal static Mesh GetPrimitive(PrimitiveType primitiveType)
 	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
 		if (!s_Primitives.TryGetValue(primitiveType, out var value))
 		{
 			value = GetBuiltinMesh(primitiveType);
@@ -58,10 +58,10 @@ internal static class MeshUtilities
 
 	private static Mesh GetBuiltinMesh(PrimitiveType primitiveType)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		GameObject val = GameObject.CreatePrimitive(primitiveType);
-		Mesh sharedMesh = val.GetComponent<MeshFilter>().sharedMesh;
-		RuntimeUtilities.Destroy((Object)(object)val);
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		GameObject obj = GameObject.CreatePrimitive(primitiveType);
+		Mesh sharedMesh = obj.GetComponent<MeshFilter>().sharedMesh;
+		RuntimeUtilities.Destroy((Object)(object)obj);
 		return sharedMesh;
 	}
 }

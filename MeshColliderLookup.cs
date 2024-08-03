@@ -44,8 +44,8 @@ public class MeshColliderLookup
 
 		public LookupEntry(MeshColliderInstance instance)
 		{
-			//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-			//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+			//IL_002b: Unknown result type (might be due to invalid IL or missing references)
 			transform = instance.transform;
 			rigidbody = instance.rigidbody;
 			collider = instance.collider;

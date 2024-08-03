@@ -5,13 +5,13 @@ public abstract class TerrainModifier : PrefabAttribute
 {
 	public float Opacity = 1f;
 
-	public float Radius = 0f;
+	public float Radius;
 
-	public float Fade = 0f;
+	public float Fade;
 
 	public void Apply(Vector3 pos, float scale)
 	{
-		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
 		float opacity = Opacity;
 		float radius = scale * Radius;
 		float fade = scale * Fade;

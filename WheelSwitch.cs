@@ -38,7 +38,7 @@ public class WheelSwitch : IOEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - BeginRotate "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - BeginRotate "));
 				}
 				TimeWarning val2 = TimeWarning.New("BeginRotate", 0);
 				try
@@ -57,7 +57,7 @@ public class WheelSwitch : IOEntity
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -69,7 +69,7 @@ public class WheelSwitch : IOEntity
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -89,12 +89,12 @@ public class WheelSwitch : IOEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - CancelRotate "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - CancelRotate "));
 				}
-				TimeWarning val5 = TimeWarning.New("CancelRotate", 0);
+				TimeWarning val2 = TimeWarning.New("CancelRotate", 0);
 				try
 				{
-					TimeWarning val6 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsVisible.Test(434251040u, "CancelRotate", this, player, 3f))
@@ -104,11 +104,11 @@ public class WheelSwitch : IOEntity
 					}
 					finally
 					{
-						((IDisposable)val6)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val7 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -120,7 +120,7 @@ public class WheelSwitch : IOEntity
 						}
 						finally
 						{
-							((IDisposable)val7)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -131,7 +131,7 @@ public class WheelSwitch : IOEntity
 				}
 				finally
 				{
-					((IDisposable)val5)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -177,8 +177,8 @@ public class WheelSwitch : IOEntity
 
 	public void RotateProgress()
 	{
-		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
 		if (!Object.op_Implicit((Object)(object)rotatorPlayer) || rotatorPlayer.IsDead() || rotatorPlayer.IsSleeping() || Vector3Ex.Distance2D(((Component)rotatorPlayer).transform.position, ((Component)this).transform.position) > 2f)
 		{
 			CancelPlayerRotation();

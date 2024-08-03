@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class ModularCarSeat : MouseSteerableSeat
@@ -14,8 +15,9 @@ public class ModularCarSeat : MouseSteerableSeat
 	[SerializeField]
 	private Vector3 rightHandIKPos;
 
-	public float providesComfort = 0f;
+	public float providesComfort;
 
+	[NonSerialized]
 	public VehicleModuleSeating associatedSeatingModule;
 
 	public override bool CanSwapToThis(BasePlayer player)

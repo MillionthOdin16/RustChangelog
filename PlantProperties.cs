@@ -115,7 +115,7 @@ public class PlantProperties : ScriptableObject
 
 	public int maxHarvests = 1;
 
-	public bool disappearAfterHarvest = false;
+	public bool disappearAfterHarvest;
 
 	[Header("Seeds")]
 	public GameObjectRef CrossBreedEffect;

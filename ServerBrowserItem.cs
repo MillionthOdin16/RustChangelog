@@ -13,9 +13,9 @@ public class ServerBrowserItem : MonoBehaviour
 
 	public TextMeshProUGUI ping;
 
+	public TextMeshProUGUI pendingPing;
+
 	public Toggle favourited;
 
 	public ServerBrowserTagList serverTagList;
-
-	public TextMeshProUGUI changeset;
 }

@@ -1,34 +1,58 @@
+using System;
+using System.Collections.Generic;
+using Facepunch;
 using UnityEngine;
-using UnityEngine.Profiling;
 
-public class MissionObjective : ScriptableObject
+public abstract class MissionObjective : ScriptableObject
 {
-	public virtual void MissionStarted(int index, BaseMission.MissionInstance instance)
+	public virtual void MissionStarted(int index, BaseMission.MissionInstance instance, BasePlayer forPlayer)
 	{
 	}
 
 	public virtual void ObjectiveStarted(BasePlayer playerFor, int index, BaseMission.MissionInstance instance)
 	{
 		instance.objectiveStatuses[index].started = true;
+		BaseMission mission = instance.GetMission();
+		if (mission != null && mission.objectives[index].requiredEntities != null)
+		{
+			string[] requiredEntities = mission.objectives[index].requiredEntities;
+			foreach (string identifier in requiredEntities)
+			{
+				instance.GetMissionEntity(identifier, playerFor);
+			}
+		}
 		playerFor.MissionDirty();
+	}
+
+	public virtual void ObjectiveCompleted(BasePlayer playerFor, int index, BaseMission.MissionInstance instance)
+	{
+	}
+
+	public virtual void ObjectiveFailed(BasePlayer playerFor, int index, BaseMission.MissionInstance instance)
+	{
 	}
 
 	public bool IsStarted(int index, BaseMission.MissionInstance instance)
 	{
+		if (instance == null || instance.objectiveStatuses.Length <= index)
+		{
+			return false;
+		}
 		return instance.objectiveStatuses[index].started;
 	}
 
 	public bool CanProgress(int index, BaseMission.MissionInstance instance)
 	{
-		BaseMission.MissionObjectiveEntry missionObjectiveEntry = instance.GetMission().objectives[index];
-		return !missionObjectiveEntry.onlyProgressIfStarted || IsStarted(index, instance);
+		if (instance.GetMission().objectives[index].onlyProgressIfStarted)
+		{
+			return IsStarted(index, instance);
+		}
+		return true;
 	}
 
 	public bool ShouldObjectiveStart(int index, BaseMission.MissionInstance instance)
 	{
-		BaseMission mission = instance.GetMission();
-		BaseMission.MissionObjectiveEntry missionObjectiveEntry = mission.objectives[index];
-		int[] startAfterCompletedObjectives = missionObjectiveEntry.startAfterCompletedObjectives;
+		int[] startAfterCompletedObjectives = instance.GetMission().objectives[index].startAfterCompletedObjectives;
 		foreach (int num in startAfterCompletedObjectives)
 		{
 			if (!instance.objectiveStatuses[num].completed && !instance.objectiveStatuses[num].failed)
@@ -41,7 +65,11 @@ public class MissionObjective : ScriptableObject
 
 	public bool IsCompleted(int index, BaseMission.MissionInstance instance)
 	{
-		return instance.objectiveStatuses[index].completed || instance.objectiveStatuses[index].failed;
+		if (!instance.objectiveStatuses[index].completed)
+		{
+			return instance.objectiveStatuses[index].failed;
+		}
+		return true;
 	}
 
 	public virtual bool ShouldThink(int index, BaseMission.MissionInstance instance)
@@ -49,23 +77,79 @@ public class MissionObjective : ScriptableObject
 		return !IsCompleted(index, instance);
 	}
 
-	public virtual void CompleteObjective(int index, BaseMission.MissionInstance instance, BasePlayer playerFor)
+	public void ResetObjective(int index, BaseMission.MissionInstance instance, BasePlayer playerFor)
 	{
-		instance.objectiveStatuses[index].completed = true;
-		instance.GetMission().OnObjectiveCompleted(index, instance, playerFor);
+		if (instance.objectiveStatuses[index].completed || instance.objectiveStatuses[index].failed)
+		{
+			instance.objectiveStatuses[index].completed = false;
+			instance.objectiveStatuses[index].failed = false;
+			playerFor.MissionDirty();
+		}
 	}
 
-	public virtual void ProcessMissionEvent(BasePlayer playerFor, BaseMission.MissionInstance instance, int index, BaseMission.MissionEventType type, string identifier, float amount)
+	public void CompleteObjective(int index, BaseMission.MissionInstance instance, BasePlayer playerFor)
+	{
+		if (!instance.objectiveStatuses[index].completed && !instance.objectiveStatuses[index].failed)
+		{
+			instance.objectiveStatuses[index].completed = true;
+			instance.GetMission().OnObjectiveCompleted(index, instance, playerFor);
+			playerFor.MissionDirty();
+			ObjectiveCompleted(playerFor, index, instance);
+		}
+	}
+
+	public void FailObjective(int index, BaseMission.MissionInstance instance, BasePlayer playerFor)
+	{
+		if (!instance.objectiveStatuses[index].completed && !instance.objectiveStatuses[index].failed)
+		{
+			instance.objectiveStatuses[index].failed = true;
+			instance.GetMission().OnObjectiveFailed(index, instance, playerFor);
+			playerFor.MissionDirty();
+			ObjectiveFailed(playerFor, index, instance);
+		}
+	}
+
+	public virtual void ProcessMissionEvent(BasePlayer playerFor, BaseMission.MissionInstance instance, int index, BaseMission.MissionEventType type, BaseMission.MissionEventPayload payload, float amount)
 	{
 	}
 
 	public virtual void Think(int index, BaseMission.MissionInstance instance, BasePlayer assignee, float delta)
 	{
-		Profiler.BeginSample("MissionObjective.Think");
 		if (ShouldObjectiveStart(index, instance) && !IsStarted(index, instance))
 		{
 			ObjectiveStarted(assignee, index, instance);
 		}
-		Profiler.EndSample();
+	}
+
+	protected bool TryFindNearby<T>(Vector3 origin, Func<T, bool> filter, out T entity, float radius = 20f) where T : BaseEntity
+	{
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		List<T> list = Pool.GetList<T>();
+		Vis.Entities(origin, radius, list, -1, (QueryTriggerInteraction)2);
+		int num = -1;
+		float num2 = float.PositiveInfinity;
+		for (int i = 0; i < list.Count; i++)
+		{
+			T val = list[i];
+			if (filter == null || filter(val))
+			{
+				float num3 = Vector3.Distance(((Component)val).transform.position, origin);
+				if (num3 < num2)
+				{
+					num = i;
+					num2 = num3;
+				}
+			}
+		}
+		bool flag = num != -1;
+		entity = (flag ? list[num] : null);
+		Pool.FreeList<T>(ref list);
+		return flag;
+	}
+
+	public virtual void PostServerLoad(BasePlayer player, BaseMission.MissionInstance.ObjectiveStatus status)
+	{
 	}
 }

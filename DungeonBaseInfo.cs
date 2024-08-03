@@ -9,27 +9,27 @@ public class DungeonBaseInfo : LandmarkInfo
 
 	public float Distance(Vector3 position)
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 val = ((Component)this).transform.position - position;
 		return ((Vector3)(ref val)).magnitude;
 	}
 
 	public float SqrDistance(Vector3 position)
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 val = ((Component)this).transform.position - position;
 		return ((Vector3)(ref val)).sqrMagnitude;
 	}
 
 	public void Add(DungeonBaseLink link)
 	{
-		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
 		Links.Add(((Component)link).gameObject);
 		if (link.Type == DungeonBaseLinkType.End)
 		{

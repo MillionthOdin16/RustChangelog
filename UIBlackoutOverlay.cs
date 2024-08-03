@@ -13,6 +13,7 @@ public class UIBlackoutOverlay : MonoBehaviour
 		NVG = 5,
 		FULLWHITE = 6,
 		SUNGLASSES = 7,
+		PRISONERHOOD = 8,
 		NONE = 64
 	}
 
@@ -22,7 +23,7 @@ public class UIBlackoutOverlay : MonoBehaviour
 
 	public blackoutType overlayType = blackoutType.NONE;
 
-	public bool overrideCanvasScaling = false;
+	public bool overrideCanvasScaling;
 
 	public float referenceScale = 1f;
 }

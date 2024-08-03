@@ -13,16 +13,16 @@ public class DoorAnimEvents : MonoBehaviour, IClientComponent
 
 	public GameObject soundTarget;
 
-	public bool checkAnimSpeed = false;
+	public bool checkAnimSpeed;
 
 	public Animator animator => ((Component)this).GetComponent<Animator>();
 
-	private void DoorOpenStart()
+	public void DoorOpenStart()
 	{
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
 		if (Application.isLoading || !openStart.isValid || animator.IsInTransition(0))
 		{
 			return;
@@ -43,12 +43,12 @@ public class DoorAnimEvents : MonoBehaviour, IClientComponent
 		Effect.client.Run(openStart.resourcePath, ((Object)(object)soundTarget == (Object)null) ? ((Component)this).gameObject : soundTarget);
 	}
 
-	private void DoorOpenEnd()
+	public void DoorOpenEnd()
 	{
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
 		if (Application.isLoading || !openEnd.isValid || animator.IsInTransition(0))
 		{
 			return;
@@ -69,12 +69,12 @@ public class DoorAnimEvents : MonoBehaviour, IClientComponent
 		Effect.client.Run(openEnd.resourcePath, ((Object)(object)soundTarget == (Object)null) ? ((Component)this).gameObject : soundTarget);
 	}
 
-	private void DoorCloseStart()
+	public void DoorCloseStart()
 	{
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
 		if (Application.isLoading || !closeStart.isValid || animator.IsInTransition(0))
 		{
 			return;
@@ -95,12 +95,12 @@ public class DoorAnimEvents : MonoBehaviour, IClientComponent
 		Effect.client.Run(closeStart.resourcePath, ((Object)(object)soundTarget == (Object)null) ? ((Component)this).gameObject : soundTarget);
 	}
 
-	private void DoorCloseEnd()
+	public void DoorCloseEnd()
 	{
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
 		if (Application.isLoading || !closeEnd.isValid || animator.IsInTransition(0))
 		{
 			return;

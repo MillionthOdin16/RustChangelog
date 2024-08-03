@@ -10,6 +10,8 @@ public class BaseLock : BaseEntity
 	[ItemSelector(ItemCategory.All)]
 	public ItemDefinition itemType;
 
+	public bool CanRemove = true;
+
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
 		TimeWarning val = TimeWarning.New("BaseLock.OnRpcMessage", 0);
@@ -20,7 +22,7 @@ public class BaseLock : BaseEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_TakeLock "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_TakeLock "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_TakeLock", 0);
 				try
@@ -28,7 +30,7 @@ public class BaseLock : BaseEntity
 					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
-						if (!RPC_Server.MaxDistance.Test(3572556655u, "RPC_TakeLock", this, player, 3f))
+						if (!RPC_Server.MaxDistance.Test(3572556655u, "RPC_TakeLock", this, player, 3f, checkParent: true))
 						{
 							return true;
 						}
@@ -39,7 +41,7 @@ public class BaseLock : BaseEntity
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -51,7 +53,7 @@ public class BaseLock : BaseEntity
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -95,10 +97,10 @@ public class BaseLock : BaseEntity
 	}
 
 	[RPC_Server]
-	[RPC_Server.MaxDistance(3f)]
+	[RPC_Server.MaxDistance(3f, CheckParent = true)]
 	public void RPC_TakeLock(RPCMessage rpc)
 	{
-		if (rpc.player.CanInteract() && !IsLocked())
+		if (rpc.player.CanInteract() && CanRemove && !IsLocked())
 		{
 			Item item = ItemManager.Create(itemType, 1, skinID);
 			if (item != null)
@@ -106,6 +108,11 @@ public class BaseLock : BaseEntity
 				rpc.player.GiveItem(item);
 			}
 			Analytics.Azure.OnEntityPickedUp(rpc.player, this);
+			BaseEntity baseEntity = GetParentEntity();
+			if ((Object)(object)baseEntity != (Object)null && (Object)(object)baseEntity.GetSlot(Slot.Lock) == (Object)(object)this)
+			{
+				baseEntity.SetSlot(Slot.Lock, null);
+			}
 			Kill();
 		}
 	}

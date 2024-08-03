@@ -8,7 +8,7 @@ public class PlayerStatistics
 
 	public CombatLog combat;
 
-	private BasePlayer forPlayer = null;
+	private BasePlayer forPlayer;
 
 	private TimeSince lastSteamSave;
 
@@ -29,9 +29,9 @@ public class PlayerStatistics
 
 	public void Save(bool forceSteamSave = false)
 	{
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
 		if (Server.official && (forceSteamSave || TimeSince.op_Implicit(lastSteamSave) > 60f))
 		{
 			lastSteamSave = TimeSince.op_Implicit(0f);

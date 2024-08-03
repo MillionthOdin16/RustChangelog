@@ -66,6 +66,15 @@ public class Server : ConsoleSystem
 	public static string anticheatkey = "OWUDFZmi9VNL/7VhGVSSmCWALKTltKw8ISepa0VXs60";
 
 	[ServerVar]
+	public static bool anticheattoken = true;
+
+	[ServerVar]
+	public static bool strictauth_eac = false;
+
+	[ServerVar]
+	public static bool strictauth_steam = false;
+
+	[ServerVar]
 	public static int tickrate = 10;
 
 	[ServerVar]
@@ -94,6 +103,9 @@ public class Server : ConsoleSystem
 
 	[ServerVar]
 	public static float itemdespawn_container_scale = 2f;
+
+	[ServerVar]
+	public static int itemdespawn_container_max_multiplier = 24;
 
 	[ServerVar]
 	public static float itemdespawn_quick = 30f;
@@ -128,6 +140,14 @@ public class Server : ConsoleSystem
 	[ServerVar]
 	public static bool statBackup = false;
 
+	[ServerVar]
+	public static int rejoin_delay = 300;
+
+	[ServerVar]
+	public static string ping_region_code_override = "";
+
+	private static string _favoritesEndpoint = "";
+
 	[ServerVar(Saved = true, ShowInAdminUI = true)]
 	public static string headerimage = "";
 
@@ -151,6 +171,15 @@ public class Server : ConsoleSystem
 
 	[ServerVar(Saved = true)]
 	public static float bleedingdamage = 1f;
+
+	[ServerVar(Saved = true)]
+	public static float oilrig_radiation_amount_scale = 1f;
+
+	[ServerVar(Saved = true)]
+	public static float oilrig_radiation_time_scale = 1f;
+
+	[ServerVar]
+	public static float oilrig_radiation_alarm_threshold = 0f;
 
 	[ReplicatedVar(Saved = true)]
 	public static float funWaterDamageThreshold = 0.8f;
@@ -258,6 +287,9 @@ public class Server : ConsoleSystem
 	public static int max_sleeping_bags = 15;
 
 	[ReplicatedVar]
+	public static int max_shelters = 1;
+
+	[ReplicatedVar]
 	public static bool bag_quota_item_amount = true;
 
 	[ServerVar]
@@ -305,8 +337,7 @@ public class Server : ConsoleSystem
 	[ServerVar]
 	public static string gamemode = "";
 
-	[ServerVar(Help = "Comma-separated server browser tag values (see wiki)", Saved = true, ShowInAdminUI = true)]
-	public static string tags = "";
+	private static string _tags = "";
 
 	[ServerVar(Help = "Censors the Steam player list to make player tracking more difficult")]
 	public static bool censorplayerlist = true;
@@ -356,6 +387,12 @@ public class Server : ConsoleSystem
 	[ServerVar(Help = "How long per frame to spend on industrial jobs", Saved = true, ShowInAdminUI = true)]
 	public static float industrialFrameBudgetMs = 0.5f;
 
+	[ServerVar(Help = "When enabled industrial transfers will abort if they start to take too long. Will lead to inconsistent splitting but should retain performance", Saved = true)]
+	public static bool industrialTransferStrictTimeLimits = false;
+
+	[ServerVar(Help = "Enables a faster way to move items around during conveyor transfers. Should be on unless there's a issue")]
+	public static bool industrialAllowQuickMove = true;
+
 	[ReplicatedVar(Help = "How many markers each player can place", Saved = true, ShowInAdminUI = true)]
 	public static int maximumMapMarkers = 5;
 
@@ -365,8 +402,31 @@ public class Server : ConsoleSystem
 	[ServerVar(Help = "How long a ping should last", Saved = true, ShowInAdminUI = true)]
 	public static float pingDuration = 10f;
 
-	[ServerVar(Help = "Whether emoji ownership is checked server side. Could be performance draining in high chat volumes")]
-	public static bool emojiOwnershipCheck = true;
+	[ServerVar(Help = "Allows backpack equipping while not grounded", Saved = true, ShowInAdminUI = true)]
+	public static bool canEquipBackpacksInAir = false;
+
+	[ReplicatedVar(Help = "How long it takes to pick up a used parachute in seconds", Saved = true, ShowInAdminUI = true)]
+	public static float parachuteRepackTime = 8f;
+
+	public static bool emojiOwnershipCheck = false;
+
+	[ReplicatedVar(Help = "Skip death screen fade", Saved = false, ShowInAdminUI = false)]
+	public static bool skipDeathScreenFade = false;
+
+	[ReplicatedVar(Help = "Controls whether the tutorial is enabled on this server", Saved = true, ShowInAdminUI = true, Default = "false")]
+	public static bool tutorialEnabled = false;
+
+	[ReplicatedVar(Help = "How much of a tax to apply to workbench T1 tech unlocks. 10 = additional 10% scrap cost", Saved = true)]
+	public static float workbench1TaxRate = 0f;
+
+	[ServerVar(Help = "Automatically upload procedurally generated maps so that players download them (faster) instead of re-generating them", Saved = true, ShowInAdminUI = true)]
+	public static bool autoUploadMap = true;
+
+	[ReplicatedVar(Help = "How much of a tax to apply to workbench T2 tech unlocks. 10 = additional 10% scrap cost", Saved = true)]
+	public static float workbench2TaxRate = 10f;
+
+	[ReplicatedVar(Help = "How much of a tax to apply to workbench  T3tech unlocks. 10 = additional 10% scrap cost", Saved = true)]
+	public static float workbench3TaxRate = 20f;
 
 	[ServerVar(Saved = true)]
 	public static bool showHolsteredItems = true;
@@ -387,6 +447,12 @@ public class Server : ConsoleSystem
 	public static int maxpacketsize_command = 100000;
 
 	[ServerVar]
+	public static int maxpacketsize_globaltrees = 100;
+
+	[ServerVar]
+	public static int maxpacketsize_globalentities = 1000;
+
+	[ServerVar]
 	public static int maxpacketspersecond_tick = 300;
 
 	[ServerVar]
@@ -398,19 +464,76 @@ public class Server : ConsoleSystem
 	[ServerVar]
 	public static bool rpclog_enabled = false;
 
+	[ServerVar(Saved = true)]
+	public static string server_id
+	{
+		get
+		{
+			return DemoConVars.ServerId;
+		}
+		set
+		{
+			DemoConVars.ServerId = value;
+		}
+	}
+
+	[ServerVar(ShowInAdminUI = true, Saved = true, Help = "Domain name to save when players favorite your server. The port can be omitted if using the default port or a SRV DNS record is created.")]
+	public static string favoritesEndpoint
+	{
+		get
+		{
+			return _favoritesEndpoint;
+		}
+		set
+		{
+			if (string.IsNullOrWhiteSpace(value))
+			{
+				_favoritesEndpoint = "";
+				return;
+			}
+			value = value.Trim();
+			if (value.StartsWith("https://"))
+			{
+				string text = value;
+				int length = "https://".Length;
+				value = text.Substring(length, text.Length - length);
+			}
+			if (value.StartsWith("http://"))
+			{
+				string text = value;
+				int length = "http://".Length;
+				value = text.Substring(length, text.Length - length);
+			}
+			_favoritesEndpoint = value.Trim().ToLowerInvariant();
+		}
+	}
+
 	[ServerVar]
 	public static int anticheatlog
 	{
 		get
 		{
-			//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0007: Expected I4, but got Unknown
+			//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0006: Expected I4, but got Unknown
 			return (int)EOS.LogLevel;
 		}
 		set
 		{
-			//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0001: Unknown result type (might be due to invalid IL or missing references)
 			EOS.LogLevel = (LogLevel)value;
+		}
+	}
+
+	[ServerVar(Help = "Comma-separated server browser tag values (see wiki)", Saved = true, ShowInAdminUI = true)]
+	public static string tags
+	{
+		get
+		{
+			return _tags;
+		}
+		set
+		{
+			_tags = AutoCorrectTags(value);
 		}
 	}
 
@@ -584,6 +707,19 @@ public class Server : ConsoleSystem
 	}
 
 	[ServerVar]
+	public static int player_state_cache_size
+	{
+		get
+		{
+			return SingletonComponent<ServerMgr>.Instance?.playerStateManager.CacheSize ?? 0;
+		}
+		set
+		{
+			SingletonComponent<ServerMgr>.Instance.playerStateManager.CacheSize = value;
+		}
+	}
+
+	[ServerVar]
 	public static int maxpacketspersecond
 	{
 		get
@@ -640,6 +776,24 @@ public class Server : ConsoleSystem
 		}
 	}
 
+	public static float GetTaxRateForWorkbenchUnlock(int workbenchLevel)
+	{
+		float num = 0f;
+		switch (workbenchLevel)
+		{
+		case 0:
+			num = workbench1TaxRate;
+			break;
+		case 1:
+			num = workbench2TaxRate;
+			break;
+		case 2:
+			num = workbench3TaxRate;
+			break;
+		}
+		return Mathf.Clamp(num, 0f, 100f);
+	}
+
 	public static float TickDelta()
 	{
 		return 1f / (float)tickrate;
@@ -653,37 +807,47 @@ public class Server : ConsoleSystem
 	[ServerVar(Help = "Show holstered items on player bodies")]
 	public static void setshowholstereditems(Arg arg)
 	{
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
 		showHolsteredItems = arg.GetBool(0, showHolsteredItems);
 		Enumerator<BasePlayer> enumerator = BasePlayer.activePlayerList.GetEnumerator();
 		try
 		{
 			while (enumerator.MoveNext())
 			{
-				BasePlayer current = enumerator.Current;
-				current.inventory.UpdatedVisibleHolsteredItems();
+				enumerator.Current.inventory.UpdatedVisibleHolsteredItems();
 			}
 		}
 		finally
 		{
 			((IDisposable)enumerator).Dispose();
 		}
-		Enumerator<BasePlayer> enumerator2 = BasePlayer.sleepingPlayerList.GetEnumerator();
+		enumerator = BasePlayer.sleepingPlayerList.GetEnumerator();
 		try
 		{
-			while (enumerator2.MoveNext())
+			while (enumerator.MoveNext())
 			{
-				BasePlayer current2 = enumerator2.Current;
-				current2.inventory.UpdatedVisibleHolsteredItems();
+				enumerator.Current.inventory.UpdatedVisibleHolsteredItems();
 			}
 		}
 		finally
 		{
-			((IDisposable)enumerator2).Dispose();
+			((IDisposable)enumerator).Dispose();
 		}
+	}
+
+	[ServerVar]
+	public static void player_state_cache_count(Arg args)
+	{
+		args.ReplyWith((object)SingletonComponent<ServerMgr>.Instance.playerStateManager.CacheCount);
+	}
+
+	[ServerVar]
+	public static void player_state_cache_evictions(Arg args)
+	{
+		args.ReplyWith((object)SingletonComponent<ServerMgr>.Instance.playerStateManager.CacheEvictions);
 	}
 
 	[ServerVar]
@@ -707,11 +871,11 @@ public class Server : ConsoleSystem
 	[ServerVar]
 	public static string packetlog(Arg arg)
 	{
-		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0082: Expected O, but got Unknown
-		//IL_00e8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ed: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006f: Expected O, but got Unknown
+		//IL_00c9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ce: Unknown result type (might be due to invalid IL or missing references)
 		if (!packetlog_enabled)
 		{
 			return "Packet log is not enabled.";
@@ -726,7 +890,7 @@ public class Server : ConsoleSystem
 		val.AddColumn("calls");
 		foreach (Tuple<Type, ulong> item3 in list.OrderByDescending((Tuple<Type, ulong> entry) => entry.Item2))
 		{
-			if (item3.Item2 == 0)
+			if (item3.Item2 == 0L)
 			{
 				break;
 			}
@@ -735,14 +899,18 @@ public class Server : ConsoleSystem
 			string text2 = item3.Item2.ToString();
 			val.AddRow(new string[2] { text, text2 });
 		}
-		return arg.HasArg("--json") ? val.ToJson() : ((object)val).ToString();
+		if (!arg.HasArg("--json", false))
+		{
+			return ((object)val).ToString();
+		}
+		return val.ToJson();
 	}
 
 	[ServerVar]
 	public static string rpclog(Arg arg)
 	{
-		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0082: Expected O, but got Unknown
+		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006f: Expected O, but got Unknown
 		if (!rpclog_enabled)
 		{
 			return "RPC log is not enabled.";
@@ -758,7 +926,7 @@ public class Server : ConsoleSystem
 		val.AddColumn("calls");
 		foreach (Tuple<uint, ulong> item2 in list.OrderByDescending((Tuple<uint, ulong> entry) => entry.Item2))
 		{
-			if (item2.Item2 == 0)
+			if (item2.Item2 == 0L)
 			{
 				break;
 			}
@@ -828,8 +996,7 @@ public class Server : ConsoleSystem
 	public static void writecfg(Arg arg)
 	{
 		string contents = ConsoleSystem.SaveToConfigString(true);
-		string serverFolder = GetServerFolder("cfg");
-		File.WriteAllText(serverFolder + "/serverauto.cfg", contents);
+		File.WriteAllText(GetServerFolder("cfg") + "/serverauto.cfg", contents);
 		ServerUsers.Save();
 		arg.ReplyWith("Config Saved");
 	}
@@ -855,12 +1022,12 @@ public class Server : ConsoleSystem
 	[ServerVar]
 	public static string readcfg(Arg arg)
 	{
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
 		string serverFolder = GetServerFolder("cfg");
 		Option server;
 		if (File.Exists(serverFolder + "/serverauto.cfg"))
@@ -896,16 +1063,51 @@ public class Server : ConsoleSystem
 		{
 			string text = arg.GetUInt64(0, 0uL).ToString();
 			string @string = arg.GetString(1, "");
-			Debug.LogWarning((object)string.Concat(basePlayer, " reported ", text, ": ", StringEx.ToPrintable(@string, 140)));
+			Debug.LogWarning((object)(((object)basePlayer)?.ToString() + " reported " + text + ": " + StringEx.ToPrintable(@string, 140)));
 			EACServer.SendPlayerBehaviorReport(basePlayer, (PlayerReportsCategory)1, text, @string);
 		}
+	}
+
+	[ServerVar(Help = "Get info on player corpses on the server")]
+	public static void corpseinfo(Arg arg)
+	{
+		PlayerCorpse[] array = BaseNetworkable.serverEntities.OfType<PlayerCorpse>().ToArray();
+		int num = 0;
+		int num2 = 0;
+		int num3 = 0;
+		int num4 = 0;
+		PlayerCorpse[] array2 = array;
+		foreach (PlayerCorpse playerCorpse in array2)
+		{
+			if (playerCorpse.isClient)
+			{
+				continue;
+			}
+			num++;
+			if (playerCorpse.CorpseIsRagdoll)
+			{
+				num2++;
+				if (playerCorpse.CorpseRagdollScript.IsKinematic)
+				{
+					num3++;
+				}
+				else if (playerCorpse.CorpseRagdollScript.IsFullySleeping())
+				{
+					num4++;
+				}
+			}
+		}
+		int num5 = num2 - num3 - num4;
+		float num6 = ((num2 > 0) ? ((float)num5 / (float)num2) : 0f);
+		string text = $"Found {num} player corpses in the world, " + $"of which {num2} are using server-side ragdolls. " + $"{num5} of those are active ({num6:0%}), {num4} are sleeping, and {num3} are kinematic.";
+		arg.ReplyWith(text);
 	}
 
 	[ServerAllVar(Help = "Get the player combat log")]
 	public static string combatlog(Arg arg)
 	{
-		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer basePlayer = arg.Player();
 		if (arg.HasArgs(1) && arg.IsAdmin)
 		{
@@ -915,13 +1117,18 @@ public class Server : ConsoleSystem
 		{
 			return "invalid player";
 		}
-		return basePlayer.stats.combat.Get(combatlogsize, default(NetworkableId), arg.HasArg("--json"), arg.IsAdmin, arg.Connection?.userid ?? 0);
+		CombatLog combat = basePlayer.stats.combat;
+		int count = combatlogsize;
+		bool json = arg.HasArg("--json", false);
+		bool isAdmin = arg.IsAdmin;
+		ulong requestingUser = arg.Connection?.userid ?? 0;
+		return combat.Get(count, default(NetworkableId), json, isAdmin, requestingUser);
 	}
 
 	[ServerAllVar(Help = "Get the player combat log, only showing outgoing damage")]
 	public static string combatlog_outgoing(Arg arg)
 	{
-		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer basePlayer = arg.Player();
 		if (arg.HasArgs(1) && arg.IsAdmin)
 		{
@@ -931,82 +1138,67 @@ public class Server : ConsoleSystem
 		{
 			return "invalid player";
 		}
-		return basePlayer.stats.combat.Get(combatlogsize, basePlayer.net.ID, arg.HasArg("--json"), arg.IsAdmin, arg.Connection?.userid ?? 0);
+		return basePlayer.stats.combat.Get(combatlogsize, basePlayer.net.ID, arg.HasArg("--json", false), arg.IsAdmin, arg.Connection?.userid ?? 0);
 	}
 
 	[ServerVar(Help = "Print the current player position.")]
 	public static string printpos(Arg arg)
 	{
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
 		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer basePlayer = arg.Player();
 		if (arg.HasArgs(1))
 		{
 			basePlayer = arg.GetPlayerOrSleeper(0);
 		}
-		object result;
 		if (!((Object)(object)basePlayer == (Object)null))
 		{
 			Vector3 position = ((Component)basePlayer).transform.position;
-			result = ((object)(Vector3)(ref position)).ToString();
+			return ((object)(Vector3)(ref position)).ToString();
 		}
-		else
-		{
-			result = "invalid player";
-		}
-		return (string)result;
+		return "invalid player";
 	}
 
 	[ServerVar(Help = "Print the current player rotation.")]
 	public static string printrot(Arg arg)
 	{
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
 		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer basePlayer = arg.Player();
 		if (arg.HasArgs(1))
 		{
 			basePlayer = arg.GetPlayerOrSleeper(0);
 		}
-		object result;
 		if (!((Object)(object)basePlayer == (Object)null))
 		{
 			Quaternion rotation = ((Component)basePlayer).transform.rotation;
 			Vector3 eulerAngles = ((Quaternion)(ref rotation)).eulerAngles;
-			result = ((object)(Vector3)(ref eulerAngles)).ToString();
+			return ((object)(Vector3)(ref eulerAngles)).ToString();
 		}
-		else
-		{
-			result = "invalid player";
-		}
-		return (string)result;
+		return "invalid player";
 	}
 
 	[ServerVar(Help = "Print the current player eyes.")]
 	public static string printeyes(Arg arg)
 	{
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
 		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer basePlayer = arg.Player();
 		if (arg.HasArgs(1))
 		{
 			basePlayer = arg.GetPlayerOrSleeper(0);
 		}
-		object result;
 		if (!((Object)(object)basePlayer == (Object)null))
 		{
 			Quaternion rotation = basePlayer.eyes.rotation;
 			Vector3 eulerAngles = ((Quaternion)(ref rotation)).eulerAngles;
-			result = ((object)(Vector3)(ref eulerAngles)).ToString();
+			return ((object)(Vector3)(ref eulerAngles)).ToString();
 		}
-		else
-		{
-			result = "invalid player";
-		}
-		return (string)result;
+		return "invalid player";
 	}
 
 	[ServerVar(ServerAdmin = true, Help = "This sends a snapshot of all the entities in the client's pvs. This is mostly redundant, but we request this when the client starts recording a demo.. so they get all the information.")]
@@ -1015,7 +1207,7 @@ public class Server : ConsoleSystem
 		BasePlayer basePlayer = arg.Player();
 		if (!((Object)(object)basePlayer == (Object)null))
 		{
-			Debug.Log((object)("Sending full snapshot to " + basePlayer));
+			Debug.Log((object)("Sending full snapshot to " + (object)basePlayer));
 			basePlayer.SendNetworkUpdateImmediate();
 			basePlayer.SendGlobalSnapshot();
 			basePlayer.SendFullSnapshot();
@@ -1028,15 +1220,14 @@ public class Server : ConsoleSystem
 	[ServerVar(Help = "Send network update for all players")]
 	public static void sendnetworkupdate(Arg arg)
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
 		Enumerator<BasePlayer> enumerator = BasePlayer.activePlayerList.GetEnumerator();
 		try
 		{
 			while (enumerator.MoveNext())
 			{
-				BasePlayer current = enumerator.Current;
-				current.SendNetworkUpdate();
+				enumerator.Current.SendNetworkUpdate();
 			}
 		}
 		finally
@@ -1048,14 +1239,14 @@ public class Server : ConsoleSystem
 	[ServerVar(Help = "Prints the position of all players on the server")]
 	public static void playerlistpos(Arg arg)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0007: Expected O, but got Unknown
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0092: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Expected O, but got Unknown
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
 		TextTable val = new TextTable();
 		val.AddColumns(new string[4] { "SteamID", "DisplayName", "POS", "ROT" });
 		Enumerator<BasePlayer> enumerator = BasePlayer.activePlayerList.GetEnumerator();
@@ -1082,16 +1273,16 @@ public class Server : ConsoleSystem
 		{
 			((IDisposable)enumerator).Dispose();
 		}
-		arg.ReplyWith(arg.HasArg("--json") ? val.ToJson() : ((object)val).ToString());
+		arg.ReplyWith(arg.HasArg("--json", false) ? val.ToJson() : ((object)val).ToString());
 	}
 
 	[ServerVar(Help = "Prints all the vending machines on the server")]
 	public static void listvendingmachines(Arg arg)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0007: Expected O, but got Unknown
-		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Expected O, but got Unknown
+		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
 		TextTable val = new TextTable();
 		val.AddColumns(new string[3] { "EntityId", "Position", "Name" });
 		foreach (VendingMachine item in BaseNetworkable.serverEntities.OfType<VendingMachine>())
@@ -1107,16 +1298,16 @@ public class Server : ConsoleSystem
 			obj[2] = StringExtensions.QuoteSafe(item.shopName);
 			val.AddRow(obj);
 		}
-		arg.ReplyWith(arg.HasArg("--json") ? val.ToJson() : ((object)val).ToString());
+		arg.ReplyWith(arg.HasArg("--json", false) ? val.ToJson() : ((object)val).ToString());
 	}
 
 	[ServerVar(Help = "Prints all the Tool Cupboards on the server")]
 	public static void listtoolcupboards(Arg arg)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0007: Expected O, but got Unknown
-		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Expected O, but got Unknown
+		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
 		TextTable val = new TextTable();
 		val.AddColumns(new string[3] { "EntityId", "Position", "Authed" });
 		foreach (BuildingPrivlidge item in BaseNetworkable.serverEntities.OfType<BuildingPrivlidge>())
@@ -1132,14 +1323,14 @@ public class Server : ConsoleSystem
 			obj[2] = item.authorizedPlayers.Count.ToString();
 			val.AddRow(obj);
 		}
-		arg.ReplyWith(arg.HasArg("--json") ? val.ToJson() : ((object)val).ToString());
+		arg.ReplyWith(arg.HasArg("--json", false) ? val.ToJson() : ((object)val).ToString());
 	}
 
 	[ServerVar]
 	public static void BroadcastPlayVideo(Arg arg)
 	{
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
 		string @string = arg.GetString(0, "");
 		if (string.IsNullOrWhiteSpace(@string))
 		{
@@ -1151,8 +1342,7 @@ public class Server : ConsoleSystem
 		{
 			while (enumerator.MoveNext())
 			{
-				BasePlayer current = enumerator.Current;
-				current.Command("client.playvideo", @string);
+				enumerator.Current.Command("client.playvideo", @string);
 			}
 		}
 		finally
@@ -1166,5 +1356,42 @@ public class Server : ConsoleSystem
 	public static void ResetServerEmoji()
 	{
 		RustEmojiLibrary.ResetServerEmoji();
+	}
+
+	private static string AutoCorrectTags(string value)
+	{
+		List<string> inputValues = (from s in value.Split(',', StringSplitOptions.RemoveEmptyEntries)
+			select s.Trim().ToLowerInvariant()).ToList();
+		List<string> outputValues = new List<string>();
+		Add(new string[3] { "monthly", "biweekly", "weekly" });
+		Add(new string[3] { "vanilla", "hardcore", "softcore" });
+		Add(new string[1] { "roleplay" });
+		Add(new string[1] { "creative" });
+		Add(new string[1] { "minigame" });
+		Add(new string[1] { "training" });
+		Add(new string[1] { "battlefield" });
+		Add(new string[1] { "broyale" });
+		Add(new string[1] { "builds" });
+		Add(new string[7] { "NA", "SA", "EU", "WA", "EA", "OC", "AF" });
+		Add(new string[1] { "tut" });
+		if (!pve)
+		{
+			Add(new string[1] { "pve" });
+		}
+		return string.Join<string>(',', (IEnumerable<string>)outputValues);
+		void Add(string[] options)
+		{
+			if (outputValues.Count < 4)
+			{
+				foreach (string text in options)
+				{
+					if (inputValues.Contains(text, StringComparer.InvariantCultureIgnoreCase))
+					{
+						outputValues.Add(text);
+						break;
+					}
+				}
+			}
+		}
 	}
 }

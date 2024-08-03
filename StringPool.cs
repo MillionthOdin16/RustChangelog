@@ -8,7 +8,7 @@ public class StringPool
 
 	private static Dictionary<string, uint> toNumber;
 
-	private static bool initialized = false;
+	private static bool initialized;
 
 	public static uint closest;
 

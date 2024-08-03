@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using Facepunch;
 using Rust;
 
 namespace UnityEngine;
@@ -6,7 +9,7 @@ public static class ColliderEx
 {
 	public static PhysicMaterial GetMaterialAt(this Collider obj, Vector3 pos)
 	{
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)obj == (Object)null)
 		{
 			return TerrainMeta.Config.WaterMaterial;
@@ -18,65 +21,166 @@ public static class ColliderEx
 		return obj.sharedMaterial;
 	}
 
+	public static float EstimateVolume(this Collider collider)
+	{
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ba: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ea: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0108: Unknown result type (might be due to invalid IL or missing references)
+		Vector3 lossyScale = ((Component)collider).transform.lossyScale;
+		SphereCollider val = (SphereCollider)(object)((collider is SphereCollider) ? collider : null);
+		if (val != null)
+		{
+			return val.radius * lossyScale.x * val.radius * lossyScale.y * val.radius * lossyScale.z * 4.1887903f;
+		}
+		BoxCollider val2 = (BoxCollider)(object)((collider is BoxCollider) ? collider : null);
+		if (val2 != null)
+		{
+			return val2.size.x * lossyScale.x * val2.size.y * lossyScale.y * val2.size.z * lossyScale.z;
+		}
+		MeshCollider val3 = (MeshCollider)(object)((collider is MeshCollider) ? collider : null);
+		if (val3 != null)
+		{
+			Bounds bounds = ((Collider)val3).bounds;
+			Vector3 size = ((Bounds)(ref bounds)).size;
+			return size.x * lossyScale.x * size.y * lossyScale.y * size.z * lossyScale.z;
+		}
+		CapsuleCollider val4 = (CapsuleCollider)(object)((collider is CapsuleCollider) ? collider : null);
+		if (val4 != null)
+		{
+			float num = val4.radius * Mathf.Max(lossyScale.x, lossyScale.z);
+			float num2 = (val4.height - num * 2f) * lossyScale.y;
+			return (float)Math.PI * num * num * num2 + 4.1887903f * num * num * num;
+		}
+		return 0f;
+	}
+
 	public static bool IsOnLayer(this Collider col, Layer rustLayer)
 	{
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
-		return (Object)(object)col != (Object)null && ((Component)col).gameObject.IsOnLayer(rustLayer);
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		if ((Object)(object)col != (Object)null)
+		{
+			return ((Component)col).gameObject.IsOnLayer(rustLayer);
+		}
+		return false;
 	}
 
 	public static bool IsOnLayer(this Collider col, int layer)
 	{
-		return (Object)(object)col != (Object)null && ((Component)col).gameObject.IsOnLayer(layer);
+		if ((Object)(object)col != (Object)null)
+		{
+			return ((Component)col).gameObject.IsOnLayer(layer);
+		}
+		return false;
 	}
 
 	public static float GetRadius(this Collider col, Vector3 transformScale)
 	{
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ce: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00dd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00df: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0092: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
 		float result = 1f;
-		SphereCollider val;
-		BoxCollider val2;
-		CapsuleCollider val4;
-		MeshCollider val5;
-		if ((val = (SphereCollider)(object)((col is SphereCollider) ? col : null)) != null)
+		SphereCollider val = (SphereCollider)(object)((col is SphereCollider) ? col : null);
+		if (val != null)
 		{
 			result = val.radius * Vector3Ex.Max(transformScale);
 		}
-		else if ((val2 = (BoxCollider)(object)((col is BoxCollider) ? col : null)) != null)
+		else
 		{
-			Vector3 val3 = Vector3.Scale(val2.size, transformScale);
-			result = Vector3Ex.Max(val3) * 0.5f;
-		}
-		else if ((val4 = (CapsuleCollider)(object)((col is CapsuleCollider) ? col : null)) != null)
-		{
-			float num = val4.direction switch
+			BoxCollider val2 = (BoxCollider)(object)((col is BoxCollider) ? col : null);
+			if (val2 != null)
 			{
-				0 => transformScale.y, 
-				1 => transformScale.x, 
-				_ => transformScale.x, 
-			};
-			result = val4.radius * num;
-		}
-		else if ((val5 = (MeshCollider)(object)((col is MeshCollider) ? col : null)) != null)
-		{
-			Bounds bounds = ((Collider)val5).bounds;
-			Vector3 val6 = Vector3.Scale(((Bounds)(ref bounds)).size, transformScale);
-			result = Vector3Ex.Max(val6) * 0.5f;
+				result = Vector3Ex.Max(Vector3.Scale(val2.size, transformScale)) * 0.5f;
+			}
+			else
+			{
+				CapsuleCollider val3 = (CapsuleCollider)(object)((col is CapsuleCollider) ? col : null);
+				if (val3 != null)
+				{
+					float num = val3.direction switch
+					{
+						0 => transformScale.y, 
+						1 => transformScale.x, 
+						_ => transformScale.x, 
+					};
+					result = val3.radius * num;
+				}
+				else
+				{
+					MeshCollider val4 = (MeshCollider)(object)((col is MeshCollider) ? col : null);
+					if (val4 != null)
+					{
+						Bounds bounds = ((Collider)val4).bounds;
+						result = Vector3Ex.Max(Vector3.Scale(((Bounds)(ref bounds)).size, transformScale)) * 0.5f;
+					}
+				}
+			}
 		}
 		return result;
+	}
+
+	public static MonumentInfo GetMonument(this Collider collider, bool ignoreEntity = true)
+	{
+		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
+		if ((Object)(object)collider == (Object)null)
+		{
+			return null;
+		}
+		if (ignoreEntity && (Object)(object)collider.ToBaseEntity() != (Object)null)
+		{
+			return null;
+		}
+		MonumentColliderTag monumentColliderTag = ((Component)collider).GetComponent<MonumentColliderTag>();
+		if ((Object)(object)monumentColliderTag == (Object)null)
+		{
+			monumentColliderTag = ((Component)collider).gameObject.AddComponent<MonumentColliderTag>();
+			PreventBuildingMonumentTag component = ((Component)collider).GetComponent<PreventBuildingMonumentTag>();
+			if ((Object)(object)component != (Object)null)
+			{
+				monumentColliderTag.Monument = component.AttachedMonument;
+				return monumentColliderTag.Monument;
+			}
+			List<Collider> list = Pool.GetList<Collider>();
+			GamePhysics.OverlapBounds(collider.bounds, list, 536870912, (QueryTriggerInteraction)2);
+			foreach (Collider item in list)
+			{
+				component = ((Component)item).GetComponent<PreventBuildingMonumentTag>();
+				if ((Object)(object)component != (Object)null)
+				{
+					monumentColliderTag.Monument = component.AttachedMonument;
+				}
+			}
+			Pool.FreeList<Collider>(ref list);
+		}
+		return monumentColliderTag?.Monument;
 	}
 }

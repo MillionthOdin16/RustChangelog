@@ -7,13 +7,13 @@ namespace Rust.Ai;
 public class AiManagedAgent : FacepunchBehaviour, IServerComponent
 {
 	[Tooltip("TODO: Replace with actual agent type id on the NavMeshAgent when we upgrade to 5.6.1 or above.")]
-	public int AgentTypeIndex = 0;
+	public int AgentTypeIndex;
 
 	[NonSerialized]
 	[ReadOnly]
 	public Vector2i NavmeshGridCoord;
 
-	private bool isRegistered = false;
+	private bool isRegistered;
 
 	private void OnEnable()
 	{
@@ -34,8 +34,9 @@ public class AiManagedAgent : FacepunchBehaviour, IServerComponent
 
 	private void OnDisable()
 	{
-		if (!Application.isQuitting && !((Object)(object)SingletonComponent<AiManager>.Instance == (Object)null) && ((Behaviour)SingletonComponent<AiManager>.Instance).enabled && isRegistered)
+		if (!Application.isQuitting && !((Object)(object)SingletonComponent<AiManager>.Instance == (Object)null) && ((Behaviour)SingletonComponent<AiManager>.Instance).enabled)
 		{
+			_ = isRegistered;
 		}
 	}
 }

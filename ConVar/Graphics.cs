@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Rust.Workshop;
 using UnityEngine;
 
@@ -6,6 +7,42 @@ namespace ConVar;
 [Factory("graphics")]
 public class Graphics : ConsoleSystem
 {
+	public struct EncryptedValue<TInner> where TInner : unmanaged
+	{
+		private TInner _value;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public TInner Get()
+		{
+			return _value;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Set(TInner value)
+		{
+			_value = value;
+		}
+
+		public override string ToString()
+		{
+			return Get().ToString();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static implicit operator EncryptedValue<TInner>(TInner value)
+		{
+			EncryptedValue<TInner> result = default(EncryptedValue<TInner>);
+			result.Set(value);
+			return result;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static implicit operator TInner(EncryptedValue<TInner> encrypted)
+		{
+			return encrypted.Get();
+		}
+	}
+
 	private const float MinShadowDistance = 100f;
 
 	private const float MaxShadowDistance2Split = 600f;
@@ -31,7 +68,7 @@ public class Graphics : ConsoleSystem
 	[ClientVar(Saved = true)]
 	public static float drawdistance = 2500f;
 
-	private static float _fov = 75f;
+	private static EncryptedValue<float> _fov = 75f;
 
 	[ClientVar]
 	public static bool hud = true;
@@ -62,6 +99,12 @@ public class Graphics : ConsoleSystem
 
 	[ClientVar(Saved = true)]
 	public static float dof_focus_time = 0.2f;
+
+	[ClientVar(Saved = true, ClientAdmin = true)]
+	public static float dof_squeeze = 0f;
+
+	[ClientVar(Saved = true, ClientAdmin = true)]
+	public static float dof_barrel = 0f;
 
 	[ClientVar(Saved = true, ClientAdmin = true)]
 	public static bool dof_debug = false;
@@ -135,13 +178,15 @@ public class Graphics : ConsoleSystem
 		}
 		set
 		{
-			//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0021: Invalid comparison between Unknown and I4
+			//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0020: Invalid comparison between Unknown and I4
 			_shadowquality = Mathf.Clamp(value, 0, 3);
 			shadowmode = _shadowquality + 1;
 			bool flag = (int)SystemInfo.graphicsDeviceType == 17;
 			KeywordUtil.EnsureKeywordState("SHADOW_QUALITY_HIGH", !flag && _shadowquality == 2);
 			KeywordUtil.EnsureKeywordState("SHADOW_QUALITY_VERYHIGH", !flag && _shadowquality == 3);
+			KeywordUtil.EnsureKeywordState("FORWARD_SHADOWS_MEDIUM", _shadowquality == 1);
+			KeywordUtil.EnsureKeywordState("FORWARD_SHADOWS_HIGH", _shadowquality >= 2);
 		}
 	}
 

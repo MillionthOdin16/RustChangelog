@@ -6,7 +6,7 @@ public class EnvironmentManager : SingletonComponent<EnvironmentManager>
 {
 	public static EnvironmentType Get(OBB obb)
 	{
-		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
 		EnvironmentType environmentType = (EnvironmentType)0;
 		List<EnvironmentVolume> list = Pool.GetList<EnvironmentVolume>();
 		GamePhysics.OverlapOBB<EnvironmentVolume>(obb, list, 262144, (QueryTriggerInteraction)2);
@@ -18,11 +18,11 @@ public class EnvironmentManager : SingletonComponent<EnvironmentManager>
 		return environmentType;
 	}
 
-	public static EnvironmentType Get(Vector3 pos, ref List<EnvironmentVolume> list)
+	public static EnvironmentType Get(Vector3 pos, ref List<EnvironmentVolume> list, float radius = 0.01f)
 	{
-		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
 		EnvironmentType environmentType = (EnvironmentType)0;
-		GamePhysics.OverlapSphere<EnvironmentVolume>(pos, 0.01f, list, 262144, (QueryTriggerInteraction)2);
+		GamePhysics.OverlapSphere<EnvironmentVolume>(pos, radius, list, 262144, (QueryTriggerInteraction)2);
 		for (int i = 0; i < list.Count; i++)
 		{
 			environmentType |= list[i].Type;
@@ -30,24 +30,24 @@ public class EnvironmentManager : SingletonComponent<EnvironmentManager>
 		return environmentType;
 	}
 
-	public static EnvironmentType Get(Vector3 pos)
+	public static EnvironmentType Get(Vector3 pos, float radius = 0.01f)
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
 		List<EnvironmentVolume> list = Pool.GetList<EnvironmentVolume>();
-		EnvironmentType result = Get(pos, ref list);
+		EnvironmentType result = Get(pos, ref list, radius);
 		Pool.FreeList<EnvironmentVolume>(ref list);
 		return result;
 	}
 
 	public static bool Check(OBB obb, EnvironmentType type)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
 		return (Get(obb) & type) != 0;
 	}
 
-	public static bool Check(Vector3 pos, EnvironmentType type)
+	public static bool Check(Vector3 pos, EnvironmentType type, float radius = 0.01f)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		return (Get(pos) & type) != 0;
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		return (Get(pos, radius) & type) != 0;
 	}
 }

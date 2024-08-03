@@ -2,11 +2,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Rust;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 public class LoadBalancer : SingletonComponent<LoadBalancer>
 {
-	public static bool Paused = false;
+	public static bool Paused;
 
 	private const float MinMilliseconds = 1f;
 
@@ -43,10 +42,7 @@ public class LoadBalancer : SingletonComponent<LoadBalancer>
 			Queue<DeferredAction> queue = queues[i];
 			while (queue.Count > 0)
 			{
-				DeferredAction deferredAction = queue.Dequeue();
-				Profiler.BeginSample("LoadBalancer.Tick");
-				deferredAction.Action();
-				Profiler.EndSample();
+				queue.Dequeue().Action();
 				if (watch.Elapsed.TotalMilliseconds > (double)num3)
 				{
 					return;
@@ -81,34 +77,31 @@ public class LoadBalancer : SingletonComponent<LoadBalancer>
 		{
 			while (queue.Count > 0)
 			{
-				DeferredAction deferredAction = queue.Dequeue();
-				deferredAction.Action();
+				queue.Dequeue().Action();
 			}
 		}
 	}
 
 	public static void Enqueue(DeferredAction action)
 	{
-		Profiler.BeginSample("LoadBalancer.Enqueue");
 		if (!Object.op_Implicit((Object)(object)SingletonComponent<LoadBalancer>.Instance))
 		{
 			CreateInstance();
 		}
-		Queue<DeferredAction>[] array = SingletonComponent<LoadBalancer>.Instance.queues;
-		Queue<DeferredAction> queue = array[action.Index];
-		queue.Enqueue(action);
-		Profiler.EndSample();
+		SingletonComponent<LoadBalancer>.Instance.queues[action.Index].Enqueue(action);
 	}
 
 	private static void CreateInstance()
 	{
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Expected O, but got Unknown
-		Profiler.BeginSample("LoadBalancer.CreateInstance");
-		GameObject val = new GameObject();
-		((Object)val).name = "LoadBalancer";
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Expected O, but got Unknown
+		GameObject val = new GameObject
+		{
+			name = "LoadBalancer"
+		};
 		val.AddComponent<LoadBalancer>();
-		Object.DontDestroyOnLoad((Object)(object)val);
-		Profiler.EndSample();
+		Object.DontDestroyOnLoad((Object)val);
 	}
 }

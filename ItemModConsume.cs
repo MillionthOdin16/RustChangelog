@@ -12,7 +12,7 @@ public class ItemModConsume : ItemMod
 	[Tooltip("Items that are given on consumption of this item")]
 	public ItemAmountRandom[] product;
 
-	public ItemModConsumable primaryConsumable = null;
+	public ItemModConsumable primaryConsumable;
 
 	public virtual ItemModConsumable GetConsumable()
 	{
@@ -30,15 +30,15 @@ public class ItemModConsume : ItemMod
 
 	public override void DoAction(Item item, BasePlayer player)
 	{
-		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0182: Unknown result type (might be due to invalid IL or missing references)
-		//IL_018d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0197: Unknown result type (might be due to invalid IL or missing references)
-		//IL_019c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0148: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0153: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0162: Unknown result type (might be due to invalid IL or missing references)
 		if (item.amount < 1)
 		{
 			return;
@@ -86,6 +86,7 @@ public class ItemModConsume : ItemMod
 				player.metabolism.ApplyChange(effect.type, effect.amount * num3 * num4, effect.time * num3 * num4);
 			}
 		}
+		player.ProcessMissionEvent(BaseMission.MissionEventType.CONSUME, item.info.itemid, 1f);
 		if ((Object)(object)player.modifiers != (Object)null)
 		{
 			player.modifiers.Add(consumable.modifiers);

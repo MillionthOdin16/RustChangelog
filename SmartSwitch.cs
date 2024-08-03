@@ -34,7 +34,7 @@ public class SmartSwitch : AppIOEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ToggleSwitch "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ToggleSwitch "));
 				}
 				TimeWarning val2 = TimeWarning.New("ToggleSwitch", 0);
 				try
@@ -57,7 +57,7 @@ public class SmartSwitch : AppIOEntity
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -69,7 +69,7 @@ public class SmartSwitch : AppIOEntity
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -92,20 +92,24 @@ public class SmartSwitch : AppIOEntity
 		return base.OnRpcMessage(player, rpc, msg);
 	}
 
-	public override bool WantsPower()
+	public override bool WantsPower(int inputIndex)
 	{
-		return IsOn();
+		if (inputIndex == 0)
+		{
+			return IsOn();
+		}
+		return false;
+	}
+
+	public override int ConsumptionAmount()
+	{
+		return 0;
 	}
 
 	public override void ServerInit()
 	{
 		base.ServerInit();
 		SetFlag(Flags.Busy, b: false);
-	}
-
-	public override int ConsumptionAmount()
-	{
-		return IsOn() ? 1 : 0;
 	}
 
 	public override void ResetIOState()
@@ -115,10 +119,23 @@ public class SmartSwitch : AppIOEntity
 
 	public override int GetPassthroughAmount(int outputSlot = 0)
 	{
-		return IsOn() ? GetCurrentEnergy() : 0;
+		if (!IsOn())
+		{
+			return 0;
+		}
+		return GetCurrentEnergy();
 	}
 
-	public override void IOStateChanged(int inputAmount, int inputSlot)
+	public override int CalculateCurrentEnergy(int inputAmount, int inputSlot)
+	{
+		if (inputSlot != 0)
+		{
+			return currentEnergy;
+		}
+		return base.CalculateCurrentEnergy(inputAmount, inputSlot);
+	}
+
+	public override void UpdateHasPower(int inputAmount, int inputSlot)
 	{
 		if (inputSlot == 1 && inputAmount > 0)
 		{
@@ -128,7 +145,10 @@ public class SmartSwitch : AppIOEntity
 		{
 			SetSwitch(wantsOn: false);
 		}
-		base.IOStateChanged(inputAmount, inputSlot);
+		if (inputSlot == 0)
+		{
+			base.UpdateHasPower(inputAmount, inputSlot);
+		}
 	}
 
 	public void SetSwitch(bool wantsOn)
@@ -162,6 +182,10 @@ public class SmartSwitch : AppIOEntity
 
 	private static bool PlayerCanToggle(BasePlayer player)
 	{
-		return (Object)(object)player != (Object)null && player.CanBuild();
+		if ((Object)(object)player != (Object)null)
+		{
+			return player.CanBuild();
+		}
+		return false;
 	}
 }

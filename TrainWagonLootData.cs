@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.Serialization;
 
-[CreateAssetMenu(menuName = "Rust/Vehicles/Train Wagon Loot Data", fileName = "Train Wagon Loot Data")]
+[CreateAssetMenu(menuName = "Scriptable Object/Vehicles/Train Wagon Loot Data", fileName = "Train Wagon Loot Data")]
 public class TrainWagonLootData : ScriptableObject
 {
 	[Serializable]
@@ -37,16 +37,22 @@ public class TrainWagonLootData : ScriptableObject
 	[SerializeField]
 	private LootOption fuelWagonContent;
 
-	public static TrainWagonLootData instance;
+	private static TrainWagonLootData _instance;
 
 	private const int LOOT_WAGON_INDEX = 1000;
 
 	private const int FUEL_WAGON_INDEX = 1001;
 
-	[RuntimeInitializeOnLoadMethod]
-	private static void Init()
+	public static TrainWagonLootData instance
 	{
-		instance = Resources.Load<TrainWagonLootData>("Train Wagon Loot Data");
+		get
+		{
+			if ((Object)(object)_instance == (Object)null)
+			{
+				_instance = Resources.Load<TrainWagonLootData>("Train Wagon Loot Data");
+			}
+			return _instance;
+		}
 	}
 
 	public LootOption GetLootOption(TrainCarUnloadable.WagonType wagonType, out int index)
@@ -135,15 +141,7 @@ public class TrainWagonLootData : ScriptableObject
 		if (sc.IsValid())
 		{
 			int maxLootAmount = lootOption.maxLootAmount;
-			if ((float)maxLootAmount == 0f)
-			{
-				result = 0f;
-			}
-			else
-			{
-				int amount = sc.inventory.GetAmount(lootOption.lootItem.itemid, onlyUsableAmounts: false);
-				result = Mathf.Clamp01((float)amount / (float)maxLootAmount);
-			}
+			result = (((float)maxLootAmount != 0f) ? Mathf.Clamp01((float)sc.inventory.GetAmount(lootOption.lootItem.itemid, onlyUsableAmounts: false) / (float)maxLootAmount) : 0f);
 		}
 		return result;
 	}

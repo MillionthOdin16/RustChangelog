@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Facepunch;
+using Network;
 using ProtoBuf;
 using UnityEngine;
 
@@ -15,10 +16,28 @@ public class VendingMachineMapMarker : MapMarker
 	[NonSerialized]
 	public NetworkableId client_vendingMachineNetworkID;
 
-	public GameObjectRef clusterMarkerObj = null;
+	public GameObjectRef clusterMarkerObj;
+
+	private UIMapVendingMachineMarker myUIMarker;
+
+	private RectTransform markerTransform;
+
+	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
+	{
+		TimeWarning val = TimeWarning.New("VendingMachineMapMarker.OnRpcMessage", 0);
+		try
+		{
+		}
+		finally
+		{
+			((IDisposable)val)?.Dispose();
+		}
+		return base.OnRpcMessage(player, rpc, msg);
+	}
 
 	public void SetVendingMachine(VendingMachine vm, string shopName)
 	{
+		_ = (Object)(object)vm == (Object)null;
 		server_vendingMachine = vm;
 		markerShopName = shopName;
 		if (!((FacepunchBehaviour)this).IsInvoking((Action)TryUpdatePosition))
@@ -27,9 +46,14 @@ public class VendingMachineMapMarker : MapMarker
 		}
 	}
 
-	private void TryUpdatePosition()
+	public void SetupPositionUpdate()
 	{
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		ClientRPC(RpcTarget.NetworkGroup("RPC_ShouldLocalUpdate"), arg1: true);
+	}
+
+	public void TryUpdatePosition()
+	{
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)server_vendingMachine != (Object)null && (Object)(object)server_vendingMachine.GetParentEntity() != (Object)null)
 		{
 			((Component)this).transform.position = ((Component)server_vendingMachine).transform.position;
@@ -47,20 +71,24 @@ public class VendingMachineMapMarker : MapMarker
 
 	public override void Save(SaveInfo info)
 	{
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0019: Expected O, but got Unknown
-		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0078: Expected O, but got Unknown
-		//IL_00ca: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d0: Expected O, but got Unknown
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Expected O, but got Unknown
+		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a0: Expected O, but got Unknown
+		//IL_00ef: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f5: Expected O, but got Unknown
 		base.Save(info);
 		info.msg.vendingMachine = new VendingMachine();
 		info.msg.vendingMachine.shopName = markerShopName;
 		if (!((Object)(object)server_vendingMachine != (Object)null))
 		{
 			return;
+		}
+		if (server_vendingMachine is NPCVendingMachine nPCVendingMachine && nPCVendingMachine.IsLocalized)
+		{
+			info.msg.vendingMachine.translationToken = nPCVendingMachine.GetTranslationToken();
 		}
 		info.msg.vendingMachine.networkID = server_vendingMachine.net.ID;
 		info.msg.vendingMachine.sellOrderContainer = new SellOrderContainer();
@@ -95,6 +123,7 @@ public class VendingMachineMapMarker : MapMarker
 				val.currencyIsBlueprint = sellOrder.currencyIsBP;
 				val.itemCondition = sellOrder.itemCondition;
 				val.itemConditionMax = sellOrder.itemConditionMax;
+				val.priceMultiplier = sellOrder.priceMultiplier;
 				appMarkerData.sellOrders.Add(val);
 			}
 		}

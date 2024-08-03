@@ -56,10 +56,9 @@ public sealed class PostProcessManager
 	private void ReloadBaseTypes()
 	{
 		CleanBaseTypes();
-		IEnumerable<Type> enumerable = from t in RuntimeUtilities.GetAllAssemblyTypes()
+		foreach (Type item in from t in RuntimeUtilities.GetAllAssemblyTypes()
 			where t.IsSubclassOf(typeof(PostProcessEffectSettings)) && t.IsDefined(typeof(PostProcessAttribute), inherit: false) && !t.IsAbstract
-			select t;
-		foreach (Type item in enumerable)
+			select t)
 		{
 			settingsTypes.Add(item, item.GetAttribute<PostProcessAttribute>());
 			PostProcessEffectSettings postProcessEffectSettings = (PostProcessEffectSettings)(object)ScriptableObject.CreateInstance(item);
@@ -70,26 +69,23 @@ public sealed class PostProcessManager
 
 	public void GetActiveVolumes(PostProcessLayer layer, List<PostProcessVolume> results, bool skipDisabled = true, bool skipZeroWeight = true)
 	{
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ce: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
 		int value = ((LayerMask)(ref layer.volumeLayer)).value;
 		Transform volumeTrigger = layer.volumeTrigger;
 		bool flag = (Object)(object)volumeTrigger == (Object)null;
 		Vector3 val = (flag ? Vector3.zero : volumeTrigger.position);
-		List<PostProcessVolume> list = GrabVolumes(LayerMask.op_Implicit(value));
 		OBB val2 = default(OBB);
-		foreach (PostProcessVolume item in list)
+		foreach (PostProcessVolume item in GrabVolumes(LayerMask.op_Implicit(value)))
 		{
 			if ((skipDisabled && !((Behaviour)item).enabled) || (Object)(object)item.profileRef == (Object)null || (skipZeroWeight && item.weight <= 0f))
 			{
@@ -102,9 +98,8 @@ public sealed class PostProcessManager
 			else if (!flag)
 			{
 				((OBB)(ref val2))._002Ector(((Component)item).transform, item.bounds);
-				Vector3 val3 = ((OBB)(ref val2)).ClosestPoint(val);
-				Vector3 val4 = (val3 - val) / 2f;
-				float sqrMagnitude = ((Vector3)(ref val4)).sqrMagnitude;
+				Vector3 val3 = (((OBB)(ref val2)).ClosestPoint(val) - val) / 2f;
+				float sqrMagnitude = ((Vector3)(ref val3)).sqrMagnitude;
 				float num = item.blendDistance * item.blendDistance;
 				if (sqrMagnitude <= num)
 				{
@@ -116,7 +111,7 @@ public sealed class PostProcessManager
 
 	public PostProcessVolume GetHighestPriorityVolume(PostProcessLayer layer)
 	{
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)layer == (Object)null)
 		{
 			throw new ArgumentNullException("layer");
@@ -126,7 +121,7 @@ public sealed class PostProcessManager
 
 	public PostProcessVolume GetHighestPriorityVolume(LayerMask mask)
 	{
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
 		float num = float.NegativeInfinity;
 		PostProcessVolume result = null;
 		if (m_SortedVolumes.TryGetValue(LayerMask.op_Implicit(mask), out var value))
@@ -145,18 +140,16 @@ public sealed class PostProcessManager
 
 	public PostProcessVolume QuickVolume(int layer, float priority, params PostProcessEffectSettings[] settings)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0024: Expected O, but got Unknown
-		GameObject val = new GameObject
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		PostProcessVolume postProcessVolume = new GameObject
 		{
 			name = "Quick Volume",
 			layer = layer,
 			hideFlags = (HideFlags)61
-		};
-		PostProcessVolume postProcessVolume = val.AddComponent<PostProcessVolume>();
+		}.AddComponent<PostProcessVolume>();
 		postProcessVolume.priority = priority;
 		postProcessVolume.isGlobal = true;
 		PostProcessProfile profile = postProcessVolume.profile;
@@ -193,8 +186,7 @@ public sealed class PostProcessManager
 		m_Volumes.Add(volume);
 		foreach (KeyValuePair<int, List<PostProcessVolume>> sortedVolume in m_SortedVolumes)
 		{
-			int key = sortedVolume.Key;
-			if ((key & (1 << layer)) != 0)
+			if ((sortedVolume.Key & (1 << layer)) != 0)
 			{
 				sortedVolume.Value.Add(volume);
 			}
@@ -213,8 +205,7 @@ public sealed class PostProcessManager
 		m_Volumes.Remove(volume);
 		foreach (KeyValuePair<int, List<PostProcessVolume>> sortedVolume in m_SortedVolumes)
 		{
-			int key = sortedVolume.Key;
-			if ((key & (1 << layer)) != 0)
+			if ((sortedVolume.Key & (1 << layer)) != 0)
 			{
 				sortedVolume.Value.Remove(volume);
 			}
@@ -242,27 +233,24 @@ public sealed class PostProcessManager
 
 	internal void UpdateSettings(PostProcessLayer postProcessLayer, Camera camera)
 	{
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ec: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ed: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0101: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0106: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e6: Unknown result type (might be due to invalid IL or missing references)
 		ReplaceData(postProcessLayer);
 		int value = ((LayerMask)(ref postProcessLayer.volumeLayer)).value;
 		Transform volumeTrigger = postProcessLayer.volumeTrigger;
 		bool flag = (Object)(object)volumeTrigger == (Object)null;
 		Vector3 val = (flag ? Vector3.zero : volumeTrigger.position);
-		List<PostProcessVolume> list = GrabVolumes(LayerMask.op_Implicit(value));
 		OBB val2 = default(OBB);
-		foreach (PostProcessVolume item in list)
+		foreach (PostProcessVolume item in GrabVolumes(LayerMask.op_Implicit(value)))
 		{
 			if (!((Behaviour)item).enabled || (Object)(object)item.profileRef == (Object)null || item.weight <= 0f)
 			{
@@ -280,9 +268,8 @@ public sealed class PostProcessManager
 					continue;
 				}
 				((OBB)(ref val2))._002Ector(((Component)item).transform, item.bounds);
-				Vector3 val3 = ((OBB)(ref val2)).ClosestPoint(val);
-				Vector3 val4 = (val3 - val) / 2f;
-				float sqrMagnitude = ((Vector3)(ref val4)).sqrMagnitude;
+				Vector3 val3 = (((OBB)(ref val2)).ClosestPoint(val) - val) / 2f;
+				float sqrMagnitude = ((Vector3)(ref val3)).sqrMagnitude;
 				float num = item.blendDistance * item.blendDistance;
 				if (!(sqrMagnitude > num))
 				{
@@ -299,12 +286,12 @@ public sealed class PostProcessManager
 
 	private List<PostProcessVolume> GrabVolumes(LayerMask mask)
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ce: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
 		if (!m_SortedVolumes.TryGetValue(LayerMask.op_Implicit(mask), out var value))
 		{
 			value = new List<PostProcessVolume>();

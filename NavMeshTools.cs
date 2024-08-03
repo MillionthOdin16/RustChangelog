@@ -26,8 +26,8 @@ public static class NavMeshTools
 		float time = Time.realtimeSinceStartup;
 		Debug.Log((object)"Starting Navmesh Source Collecting");
 		mask = ((!useBakedTerrainMesh) ? (mask | 0x800000) : (mask & -8388609));
-		List<NavMeshBuildMarkup> markups = new List<NavMeshBuildMarkup>();
-		NavMeshBuilder.CollectSources(bounds, mask, geometry, area, markups, sources);
+		List<NavMeshBuildMarkup> list = new List<NavMeshBuildMarkup>();
+		NavMeshBuilder.CollectSources(bounds, mask, geometry, area, list, sources);
 		if (useBakedTerrainMesh && (Object)(object)TerrainMeta.HeightMap != (Object)null)
 		{
 			for (float x = 0f - ((Bounds)(ref bounds)).extents.x; x < ((Bounds)(ref bounds)).extents.x - (float)(cellSize / 2); x += (float)cellSize)
@@ -57,12 +57,12 @@ public static class NavMeshTools
 		{
 			yield return CoroutineEx.waitForSeconds(1f);
 		}
-		float time = Time.realtimeSinceStartup;
+		float realtimeSinceStartup = Time.realtimeSinceStartup;
 		Debug.Log((object)"Starting Navmesh Source Collecting");
-		List<NavMeshBuildMarkup> markups = new List<NavMeshBuildMarkup>();
-		NavMeshBuilder.CollectSources(root, mask, geometry, area, markups, sources);
+		List<NavMeshBuildMarkup> list = new List<NavMeshBuildMarkup>();
+		NavMeshBuilder.CollectSources(root, mask, geometry, area, list, sources);
 		append?.Invoke(sources);
-		Debug.Log((object)$"Navmesh Source Collecting took {Time.realtimeSinceStartup - time:0.00} seconds");
+		Debug.Log((object)$"Navmesh Source Collecting took {Time.realtimeSinceStartup - realtimeSinceStartup:0.00} seconds");
 		callback?.Invoke();
 	}
 }

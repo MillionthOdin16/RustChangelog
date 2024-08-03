@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class GenerateRailLayout : ProceduralComponent
@@ -46,253 +47,394 @@ public class GenerateRailLayout : ProceduralComponent
 
 	private PathList CreateSegment(int number, Vector3[] points)
 	{
-		PathList pathList = new PathList("Rail " + number, points);
-		pathList.Spline = true;
-		pathList.Width = 4f;
-		pathList.InnerPadding = 1f;
-		pathList.OuterPadding = 1f;
-		pathList.InnerFade = 1f;
-		pathList.OuterFade = 32f;
-		pathList.RandomScale = 1f;
-		pathList.MeshOffset = 0f;
-		pathList.TerrainOffset = -0.125f;
-		pathList.Topology = 524288;
-		pathList.Splat = 128;
-		pathList.Hierarchy = 1;
-		return pathList;
+		return new PathList("Rail " + number, points)
+		{
+			Spline = true,
+			Width = 4f,
+			InnerPadding = 1f,
+			OuterPadding = 1f,
+			InnerFade = 1f,
+			OuterFade = 32f,
+			RandomScale = 1f,
+			MeshOffset = 0f,
+			TerrainOffset = -0.125f,
+			Topology = 524288,
+			Splat = 128,
+			Hierarchy = 1
+		};
 	}
 
 	public override void Process(uint seed)
 	{
-		//IL_01c1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01cf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01d9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01de: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01e3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0735: Unknown result type (might be due to invalid IL or missing references)
-		//IL_075f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01f4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01fc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01fe: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0200: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0205: Unknown result type (might be due to invalid IL or missing references)
-		//IL_020a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03d4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_040f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0414: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0421: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0426: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0428: Unknown result type (might be due to invalid IL or missing references)
-		//IL_042a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_042c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0431: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0435: Unknown result type (might be due to invalid IL or missing references)
-		//IL_043a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_04f8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_04fd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02a9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02ae: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0313: Unknown result type (might be due to invalid IL or missing references)
+		//IL_031a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_031f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02d2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02d7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02e0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02fa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02fc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02fe: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0303: Unknown result type (might be due to invalid IL or missing references)
+		//IL_033d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0342: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0344: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0349: Unknown result type (might be due to invalid IL or missing references)
+		//IL_034d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_032f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0352: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0377: Unknown result type (might be due to invalid IL or missing references)
+		//IL_038e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04cf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04d4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04dd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04e7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04ec: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04ee: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03b2: Unknown result type (might be due to invalid IL or missing references)
 		//IL_04ff: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0501: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0506: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0508: Unknown result type (might be due to invalid IL or missing references)
 		//IL_050a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_050f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_047b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0481: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0529: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0542: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0547: Unknown result type (might be due to invalid IL or missing references)
-		//IL_054c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0551: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0568: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0571: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0576: Unknown result type (might be due to invalid IL or missing references)
-		//IL_057b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0580: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0582: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0584: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0586: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0593: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0598: Unknown result type (might be due to invalid IL or missing references)
-		//IL_059a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_059f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_05b0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_05b2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_05b7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0602: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0607: Unknown result type (might be due to invalid IL or missing references)
-		//IL_060b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0610: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0511: Unknown result type (might be due to invalid IL or missing references)
+		//IL_05c6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_06be: Unknown result type (might be due to invalid IL or missing references)
+		//IL_06e0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_06e5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_06e7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_06e9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_079c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_07a2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_084a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0858: Unknown result type (might be due to invalid IL or missing references)
+		//IL_085d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0862: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0867: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0869: Unknown result type (might be due to invalid IL or missing references)
+		//IL_086e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0870: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0875: Unknown result type (might be due to invalid IL or missing references)
+		//IL_07f7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_07fc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_07fe: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0800: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0807: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0809: Unknown result type (might be due to invalid IL or missing references)
+		//IL_080e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_072b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0731: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0886: Unknown result type (might be due to invalid IL or missing references)
+		//IL_089f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_08a4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_08a9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_08ae: Unknown result type (might be due to invalid IL or missing references)
+		//IL_08b0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_08b2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_08b4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_08c6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_08c8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_08cd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0912: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0917: Unknown result type (might be due to invalid IL or missing references)
+		//IL_091b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0920: Unknown result type (might be due to invalid IL or missing references)
+		//IL_09d9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0a02: Unknown result type (might be due to invalid IL or missing references)
 		if (World.Networked)
 		{
 			TerrainMeta.Path.Rails.Clear();
 			TerrainMeta.Path.Rails.AddRange(World.GetPaths("Rail"));
+			{
+				foreach (PathList rail2 in TerrainMeta.Path.Rails)
+				{
+					Func<int, float> filter = delegate(int i)
+					{
+						float num19 = Mathf.InverseLerp(0f, 8f, (float)i);
+						float num20 = Mathf.InverseLerp((float)rail2.Path.DefaultMaxIndex, (float)(rail2.Path.DefaultMaxIndex - 8), (float)i);
+						return Mathf.SmoothStep(0f, 1f, Mathf.Min(num19, num20));
+					};
+					Vector3[] points = rail2.Path.Points;
+					for (int j = 1; j < points.Length - 1; j++)
+					{
+						Vector3 val = points[j];
+						val.y = Mathf.Max(TerrainMeta.HeightMap.GetHeight(val), 1f);
+						points[j] = val;
+					}
+					rail2.Path.Smoothen(64, new Vector3(0f, 1f, 0f), filter);
+					rail2.Path.RecalculateTangents();
+				}
+				return;
+			}
+		}
+		if (!World.Config.AboveGroundRails)
+		{
 			return;
 		}
 		List<PathList> list = new List<PathList>();
 		int[,] array = TerrainPath.CreateRailCostmap(ref seed);
 		PathFinder pathFinder = new PathFinder(array);
+		PathFinder pathFinder2 = new PathFinder(array);
 		int length = array.GetLength(0);
-		List<PathSegment> list2 = new List<PathSegment>();
-		List<PathFinder.Node> list3 = new List<PathFinder.Node>();
+		new List<PathSegment>();
+		List<PathFinder.Point> list2 = new List<PathFinder.Point>();
+		List<PathFinder.Point> list3 = new List<PathFinder.Point>();
 		List<PathFinder.Point> list4 = new List<PathFinder.Point>();
-		List<PathFinder.Point> list5 = new List<PathFinder.Point>();
-		List<Vector3> list6 = new List<Vector3>();
-		List<Vector3> list7 = new List<Vector3>();
-		List<Vector3> list8 = new List<Vector3>();
-		List<Vector3> list9 = new List<Vector3>();
-		foreach (PathList rail2 in TerrainMeta.Path.Rails)
+		List<Vector3> list5 = new List<Vector3>();
+		foreach (PathList rail3 in TerrainMeta.Path.Rails)
 		{
-			if (rail2.ProcgenStartNode != null && rail2.ProcgenEndNode != null)
+			for (PathFinder.Node node = rail3.ProcgenStartNode; node != null; node = node.next)
 			{
-				for (PathFinder.Node node = rail2.ProcgenStartNode; node != null; node = node.next)
-				{
-					list3.Add(node);
-				}
+				list2.Add(node.point);
 			}
 		}
 		foreach (MonumentInfo monument in TerrainMeta.Path.Monuments)
 		{
 			pathFinder.PushPoint = monument.GetPathFinderPoint(length);
-			pathFinder.PushRadius = monument.GetPathFinderRadius(length);
-			pathFinder.PushDistance = 60;
-			pathFinder.PushMultiplier = 1;
-			TerrainPathConnect[] componentsInChildren = ((Component)monument).GetComponentsInChildren<TerrainPathConnect>(true);
-			foreach (TerrainPathConnect terrainPathConnect in componentsInChildren)
+			pathFinder.PushRadius = (pathFinder.PushDistance = monument.GetPathFinderRadius(length));
+			pathFinder.PushMultiplier = 50000;
+			int num = int.MaxValue;
+			TerrainPathConnect[] array2 = (from target in ((Component)monument).GetComponentsInChildren<TerrainPathConnect>(true)
+				where target.Type == InfrastructureType.Rail
+				orderby DistanceToRail(((Component)target).transform.position)
+				select target).ToArray();
+			TerrainPathConnect[] array3 = array2;
+			foreach (TerrainPathConnect terrainPathConnect in array3)
 			{
-				list6.Clear();
-				list7.Clear();
-				list8.Clear();
-				list9.Clear();
-				if (terrainPathConnect.Type != InfrastructureType.Rail)
+				pathFinder.PushPointsAdditional.Clear();
+				pathFinder.BlockedPointsAdditional.Clear();
+				Vector3 val2 = ((Component)terrainPathConnect).transform.position;
+				TerrainPathConnect[] array4 = array2;
+				foreach (TerrainPathConnect terrainPathConnect2 in array4)
 				{
-					continue;
-				}
-				Vector3 val = ((Component)terrainPathConnect).transform.position;
-				Vector3 val2 = ((Component)terrainPathConnect).transform.forward * 7.5f;
-				PathFinder.Point pathFinderPoint = terrainPathConnect.GetPathFinderPoint(length, val);
-				for (int k = 0; k < 8 || !pathFinder.IsWalkable(pathFinderPoint); k++)
-				{
-					list6.Add(val);
-					val += val2;
-					pathFinderPoint = terrainPathConnect.GetPathFinderPoint(length, val);
-				}
-				list4.Clear();
-				list4.Add(pathFinderPoint);
-				list5.Clear();
-				foreach (PathFinder.Node item in list3)
-				{
-					if (!(pathFinder.Distance(item.point, pathFinder.PushPoint) < (float)(pathFinder.PushRadius + pathFinder.PushDistance / 2)))
+					if (!((Object)(object)terrainPathConnect == (Object)(object)terrainPathConnect2))
 					{
-						list5.Add(item.point);
+						Vector3 position = ((Component)terrainPathConnect2).transform.position;
+						PathFinder.Point point = PathFinder.GetPoint(((Component)terrainPathConnect2).transform.position, length);
+						pathFinder.PushPointsAdditional.Add(point);
+						val2 += position;
 					}
 				}
-				PathFinder.Node node2 = pathFinder.FindPathDirected(list4, list5, 250000);
-				if (node2 == null)
+				val2 /= (float)array2.Length;
+				Vector3 val3;
+				if (array2.Length <= 1)
 				{
-					continue;
+					val3 = ((Component)terrainPathConnect).transform.forward;
 				}
-				PathFinder.Node node3 = null;
-				PathFinder.Node node4 = null;
-				PathFinder.Node node5 = node2;
-				while (node5 != null && node5.next != null)
+				else
 				{
-					if (node5 == node2.next)
+					Vector3 val4 = ((Component)terrainPathConnect).transform.position - val2;
+					val3 = ((Vector3)(ref val4)).normalized;
+				}
+				Vector3 val5 = val3;
+				foreach (PathList item in list)
+				{
+					pathFinder.PushPointsAdditional.Add(PathFinder.GetPoint(item.Path.GetEndPoint(), length));
+					PathFinder.Point point2 = PathFinder.GetPoint(item.Path.GetStartPoint(), length);
+					Vector3[] points2 = item.Path.Points;
+					for (int l = 0; l < points2.Length; l++)
 					{
-						node3 = node5;
+						PathFinder.Point point3 = PathFinder.GetPoint(points2[l], length);
+						pathFinder.BlockedPointsAdditional.Add(point3);
+						pathFinder.BlockedPointsAdditional.Add(new PathFinder.Point(point3.x, point2.y));
+						pathFinder.BlockedPointsAdditional.Add(new PathFinder.Point(point2.x, point3.y));
+						point2 = point3;
 					}
-					if (node5.next.next == null)
+					if (item.ProcgenStartNode != null)
 					{
-						node4 = node5;
-					}
-					node5 = node5.next;
-				}
-				if (node3 == null || node4 == null)
-				{
-					continue;
-				}
-				node2 = node3;
-				node4.next = null;
-				for (PathFinder.Node node6 = node3; node6 != null; node6 = node6.next)
-				{
-					float normX = ((float)node6.point.x + 0.5f) / (float)length;
-					float normZ = ((float)node6.point.y + 0.5f) / (float)length;
-					float num = TerrainMeta.DenormalizeX(normX);
-					float num2 = TerrainMeta.DenormalizeZ(normZ);
-					float num3 = Mathf.Max(TerrainMeta.HeightMap.GetHeight(normX, normZ), 1f);
-					list7.Add(new Vector3(num, num3, num2));
-				}
-				if (list7.Count == 0)
-				{
-					continue;
-				}
-				Vector3 val3 = list6[0];
-				Vector3 val4 = list7[list7.Count - 1];
-				Vector3 val5 = val4 - val3;
-				Vector3 normalized = ((Vector3)(ref val5)).normalized;
-				PathList pathList = null;
-				float num4 = float.MaxValue;
-				int num5 = -1;
-				foreach (PathList rail3 in TerrainMeta.Path.Rails)
-				{
-					Vector3[] points = rail3.Path.Points;
-					for (int l = 0; l < points.Length; l++)
-					{
-						float num6 = Vector3.Distance(val4, points[l]);
-						if (num6 < num4)
+						PathFinder.Point point4 = item.ProcgenStartNode.point;
+						for (PathFinder.Node node2 = item.ProcgenStartNode; node2 != null; node2 = node2.next)
 						{
-							num4 = num6;
-							pathList = rail3;
-							num5 = l;
+							PathFinder.Point point5 = node2.point;
+							pathFinder.BlockedPointsAdditional.Add(point5);
+							pathFinder.BlockedPointsAdditional.Add(new PathFinder.Point(point5.x, point4.y));
+							pathFinder.BlockedPointsAdditional.Add(new PathFinder.Point(point4.x, point5.y));
+							point4 = point5;
 						}
 					}
 				}
-				Vector3[] points2 = pathList.Path.Points;
-				Vector3[] tangents = pathList.Path.Tangents;
-				Vector3 val6 = tangents[num5];
-				int num7 = ((Vector3.Angle(val6, normalized) < Vector3.Angle(-val6, normalized)) ? 1 : (-1));
-				Vector3 val7 = Vector3.Normalize(list7[list7.Count - 1] - list7[Mathf.Max(0, list7.Count - 1 - 16)]);
-				Vector3 val8 = Vector3.Normalize(points2[(num5 + num7 * 8 * 2 + points2.Length) % points2.Length] - points2[num5]);
-				float num8 = 0f - Vector3.SignedAngle(val8, val7, Vector3.up);
-				Vector3 val9 = rot90 * val8;
-				if (num8 < 0f)
+				list5.Clear();
+				Vector3 val6 = ((Component)terrainPathConnect).transform.position;
+				Vector3 val7 = ((Component)terrainPathConnect).transform.forward * 7.5f;
+				PathFinder.Point point6 = PathFinder.GetPoint(val6, length);
+				for (int m = 0; (m < 8 && pathFinder.Heuristic(point6, list2) > 1) || (m < 16 && !pathFinder.IsWalkable(point6)); m++)
 				{
-					val9 = -val9;
+					list5.Add(val6);
+					val6 += val7;
+					point6 = PathFinder.GetPoint(val6, length);
 				}
-				for (int m = 0; m < 8; m++)
+				if (!pathFinder.IsWalkable(point6))
 				{
-					float num9 = Mathf.InverseLerp(7f, 0f, (float)m);
-					float num10 = Mathf.SmoothStep(0f, 2f, num9) * 4f;
-					list8.Add(points2[(num5 + num7 * m + points2.Length) % points2.Length] + val9 * num10);
+					continue;
 				}
-				list9.AddRange(list6);
-				list9.AddRange(list7);
-				list9.AddRange(list8);
-				if (list9.Count >= 2)
+				list3.Clear();
+				list3.Add(point6);
+				list4.Clear();
+				list4.AddRange(list2);
+				PathFinder.Node node3 = pathFinder.FindPathDirected(list3, list4, 250000);
+				bool flag = false;
+				if (node3 == null && list.Count > 0 && num != int.MaxValue)
+				{
+					PathList pathList = list[list.Count - 1];
+					list4.Clear();
+					for (int n = 0; n < pathList.Path.Points.Length; n++)
+					{
+						list4.Add(PathFinder.GetPoint(pathList.Path.Points[n], length));
+					}
+					node3 = pathFinder2.FindPathDirected(list3, list4, 250000);
+					flag = true;
+				}
+				if (node3 == null)
+				{
+					continue;
+				}
+				PathFinder.Node node4 = null;
+				PathFinder.Node node5 = null;
+				PathFinder.Node node6 = node3;
+				while (node6 != null && node6.next != null)
+				{
+					if (node6 == node3.next)
+					{
+						node4 = node6;
+					}
+					if (node6.next.next == null)
+					{
+						node5 = node6;
+						node5.next = null;
+					}
+					node6 = node6.next;
+				}
+				for (PathFinder.Node node7 = node4; node7 != null; node7 = node7.next)
+				{
+					float normX = ((float)node7.point.x + 0.5f) / (float)length;
+					float normZ = ((float)node7.point.y + 0.5f) / (float)length;
+					float num2 = TerrainMeta.DenormalizeX(normX);
+					float num3 = TerrainMeta.DenormalizeZ(normZ);
+					float num4 = Mathf.Max(TerrainMeta.HeightMap.GetHeight(normX, normZ), 1f);
+					list5.Add(new Vector3(num2, num4, num3));
+				}
+				Vector3 val8 = list5[list5.Count - 1];
+				Vector3 val9 = val5;
+				PathList pathList2 = null;
+				float num5 = float.MaxValue;
+				int num6 = -1;
+				if (!flag)
+				{
+					foreach (PathList rail4 in TerrainMeta.Path.Rails)
+					{
+						Vector3[] points3 = rail4.Path.Points;
+						for (int num7 = 0; num7 < points3.Length; num7++)
+						{
+							float num8 = Vector3.Distance(val8, points3[num7]);
+							if (num8 < num5)
+							{
+								num5 = num8;
+								pathList2 = rail4;
+								num6 = num7;
+							}
+						}
+					}
+				}
+				else
+				{
+					foreach (PathList item2 in list)
+					{
+						Vector3[] points4 = item2.Path.Points;
+						for (int num9 = 0; num9 < points4.Length; num9++)
+						{
+							float num10 = Vector3.Distance(val8, points4[num9]);
+							if (num10 < num5)
+							{
+								num5 = num10;
+								pathList2 = item2;
+								num6 = num9;
+							}
+						}
+					}
+				}
+				int num11 = 1;
+				if (!flag)
+				{
+					Vector3 tangentByIndex = pathList2.Path.GetTangentByIndex(num6);
+					num11 = ((Vector3.Angle(tangentByIndex, val9) < Vector3.Angle(-tangentByIndex, val9)) ? 1 : (-1));
+					if (num != int.MaxValue)
+					{
+						GenericsUtil.Swap<int>(ref num, ref num11);
+						num11 = -num11;
+					}
+					else
+					{
+						num = num11;
+					}
+				}
+				Vector3 val10 = Vector3.Normalize(pathList2.Path.GetPointByIndex(num6 + num11 * 8 * 2) - pathList2.Path.GetPointByIndex(num6));
+				Vector3 val11 = rot90 * val10;
+				if (!flag)
+				{
+					Vector3 val12 = Vector3.Normalize(list5[list5.Count - 1] - list5[Mathf.Max(0, list5.Count - 1 - 16)]);
+					if (0f - Vector3.SignedAngle(val10, val12, Vector3.up) < 0f)
+					{
+						val11 = -val11;
+					}
+				}
+				for (int num12 = 0; num12 < 8; num12++)
+				{
+					float num13 = Mathf.InverseLerp(7f, 0f, (float)num12);
+					float num14 = Mathf.SmoothStep(0f, 2f, num13) * 4f;
+					list5.Add(pathList2.Path.GetPointByIndex(num6 + num11 * num12) + val11 * num14);
+				}
+				if (list5.Count >= 2)
 				{
 					int number = TerrainMeta.Path.Rails.Count + list.Count;
-					PathList pathList2 = CreateSegment(number, list9.ToArray());
-					pathList2.Start = true;
-					pathList2.End = false;
-					pathList2.ProcgenStartNode = node3;
-					pathList2.ProcgenEndNode = node4;
-					list.Add(pathList2);
+					PathList rail = CreateSegment(number, list5.ToArray());
+					rail.Start = true;
+					rail.End = false;
+					rail.ProcgenStartNode = node4;
+					rail.ProcgenEndNode = node5;
+					Func<int, float> filter2 = delegate(int i)
+					{
+						float num17 = Mathf.InverseLerp(0f, 8f, (float)i);
+						float num18 = Mathf.InverseLerp((float)rail.Path.DefaultMaxIndex, (float)(rail.Path.DefaultMaxIndex - 8), (float)i);
+						return Mathf.SmoothStep(0f, 1f, Mathf.Min(num17, num18));
+					};
+					rail.Path.Smoothen(32, new Vector3(1f, 0f, 1f), filter2);
+					rail.Path.Smoothen(64, new Vector3(0f, 1f, 0f), filter2);
+					rail.Path.Resample(7.5f);
+					rail.Path.RecalculateTangents();
+					list.Add(rail);
 				}
 			}
 		}
-		foreach (PathList rail in list)
+		foreach (PathList item3 in list)
 		{
-			Func<int, float> filter = delegate(int i)
-			{
-				float num11 = Mathf.InverseLerp(0f, 8f, (float)i);
-				float num12 = Mathf.InverseLerp((float)rail.Path.DefaultMaxIndex, (float)(rail.Path.DefaultMaxIndex - 8), (float)i);
-				return Mathf.SmoothStep(0f, 1f, Mathf.Min(num11, num12));
-			};
-			rail.Path.Smoothen(32, new Vector3(1f, 0f, 1f), filter);
-			rail.Path.Smoothen(64, new Vector3(0f, 1f, 0f), filter);
-			rail.Path.Resample(7.5f);
-			rail.Path.RecalculateTangents();
-			rail.AdjustPlacementMap(20f);
+			item3.AdjustPlacementMap(20f);
 		}
 		TerrainMeta.Path.Rails.AddRange(list);
+		static float DistanceToRail(Vector3 vec)
+		{
+			//IL_0030: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+			//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+			float num15 = float.MaxValue;
+			foreach (PathList rail5 in TerrainMeta.Path.Rails)
+			{
+				Vector3[] points5 = rail5.Path.Points;
+				foreach (Vector3 val13 in points5)
+				{
+					num15 = Mathf.Min(num15, Vector3Ex.Magnitude2D(vec - val13));
+				}
+			}
+			return num15;
+		}
 	}
 }

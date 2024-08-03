@@ -4,7 +4,7 @@ using Network;
 using UnityEngine;
 using UnityEngine.Assertions;
 
-public class SpookySpeaker : BaseCombatEntity
+public class SpookySpeaker : IOEntity
 {
 	public SoundPlayer soundPlayer;
 
@@ -22,7 +22,7 @@ public class SpookySpeaker : BaseCombatEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SetWantsOn "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SetWantsOn "));
 				}
 				TimeWarning val2 = TimeWarning.New("SetWantsOn", 0);
 				try
@@ -41,7 +41,7 @@ public class SpookySpeaker : BaseCombatEntity
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -53,7 +53,7 @@ public class SpookySpeaker : BaseCombatEntity
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -82,13 +82,36 @@ public class SpookySpeaker : BaseCombatEntity
 		UpdateInvokes();
 	}
 
+	public override void UpdateHasPower(int inputAmount, int inputSlot)
+	{
+		base.UpdateHasPower(inputAmount, inputSlot);
+		if (inputSlot == 1)
+		{
+			SetTargetState(state: false);
+		}
+		if (inputSlot == 0)
+		{
+			SetTargetState(state: true);
+		}
+	}
+
+	public override int ConsumptionAmount()
+	{
+		return 0;
+	}
+
+	private void SetTargetState(bool state)
+	{
+		SetFlag(Flags.On, state);
+		UpdateInvokes();
+	}
+
 	[RPC_Server]
 	[RPC_Server.IsVisible(3f)]
 	public void SetWantsOn(RPCMessage msg)
 	{
-		bool b = msg.read.Bit();
-		SetFlag(Flags.On, b);
-		UpdateInvokes();
+		bool targetState = msg.read.Bit();
+		SetTargetState(targetState);
 	}
 
 	public void UpdateInvokes()
@@ -107,7 +130,7 @@ public class SpookySpeaker : BaseCombatEntity
 
 	public void SendPlaySound()
 	{
-		ClientRPC(null, "PlaySpookySound");
+		ClientRPC(RpcTarget.NetworkGroup("PlaySpookySound"));
 	}
 
 	public void DelayedOff()

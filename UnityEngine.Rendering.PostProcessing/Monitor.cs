@@ -2,13 +2,17 @@ namespace UnityEngine.Rendering.PostProcessing;
 
 public abstract class Monitor
 {
-	internal bool requested = false;
+	internal bool requested;
 
 	public RenderTexture output { get; protected set; }
 
 	public bool IsRequestedAndSupported(PostProcessRenderContext context)
 	{
-		return requested && SystemInfo.supportsComputeShaders && !RuntimeUtilities.isAndroidOpenGL && ShaderResourcesAvailable(context);
+		if (requested && SystemInfo.supportsComputeShaders && !RuntimeUtilities.isAndroidOpenGL)
+		{
+			return ShaderResourcesAvailable(context);
+		}
+		return false;
 	}
 
 	internal abstract bool ShaderResourcesAvailable(PostProcessRenderContext context);
@@ -20,12 +24,12 @@ public abstract class Monitor
 
 	protected void CheckOutput(int width, int height)
 	{
-		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007e: Expected O, but got Unknown
+		//IL_006d: Expected O, but got Unknown
 		if ((Object)(object)output == (Object)null || !output.IsCreated() || ((Texture)output).width != width || ((Texture)output).height != height)
 		{
 			RuntimeUtilities.Destroy((Object)(object)output);

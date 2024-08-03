@@ -21,20 +21,17 @@ public class UIBuffs : SingletonComponent<UIBuffs>
 		{
 			if (item != null)
 			{
-				Transform val = Object.Instantiate<Transform>(PrefabBuffIcon);
-				val.SetParent(((Component)this).transform);
+				Object.Instantiate<Transform>(PrefabBuffIcon).SetParent(((Component)this).transform);
 			}
 		}
 	}
 
 	private void RemoveAll()
 	{
-		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001c: Expected O, but got Unknown
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
 		foreach (Transform item in ((Component)this).transform)
 		{
-			Transform val = item;
-			Object.Destroy((Object)(object)((Component)val).gameObject);
+			Object.Destroy((Object)(object)((Component)item).gameObject);
 		}
 	}
 }

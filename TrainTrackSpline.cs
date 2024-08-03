@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Facepunch;
 using UnityEngine;
@@ -25,11 +26,11 @@ public class TrainTrackSpline : WorldSpline
 
 	private class ConnectedTrackInfo
 	{
-		public TrainTrackSpline track;
+		public readonly TrainTrackSpline track;
 
-		public TrackOrientation orientation;
+		public readonly TrackOrientation orientation;
 
-		public float angle;
+		public readonly float angle;
 
 		public ConnectedTrackInfo(TrainTrackSpline track, TrackOrientation orientation, float angle)
 		{
@@ -56,6 +57,68 @@ public class TrainTrackSpline : WorldSpline
 		Vector3 GetWorldVelocity();
 	}
 
+	public struct MoveRequest
+	{
+		public delegate MoveResult SplineAction(MoveResult result, MoveRequest request, TrainTrackSpline spline, float splineLength);
+
+		public float distAlongSpline;
+
+		public float maxMoveDist;
+
+		public SplineAction onSpline;
+
+		public TrackRequest trackRequest;
+
+		public float totalDistMoved;
+
+		public float ProjectEndDist(bool facingForward)
+		{
+			if (!facingForward)
+			{
+				return distAlongSpline - maxMoveDist;
+			}
+			return distAlongSpline + maxMoveDist;
+		}
+
+		public MoveRequest(float distAlongSpline, float maxMoveDist, SplineAction onSpline, TrackRequest trackRequest)
+		{
+			this.distAlongSpline = distAlongSpline;
+			this.maxMoveDist = maxMoveDist;
+			this.onSpline = onSpline;
+			this.trackRequest = trackRequest;
+			totalDistMoved = 0f;
+		}
+	}
+
+	public struct TrackRequest
+	{
+		public TrackSelection trackSelection;
+
+		public TrainTrackSpline preferredAltA;
+
+		public TrainTrackSpline preferredAltB;
+
+		public TrackRequest(TrackSelection trackSelection, TrainTrackSpline preferredAltA, TrainTrackSpline preferredAltB)
+		{
+			this.trackSelection = trackSelection;
+			this.preferredAltA = preferredAltA;
+			this.preferredAltB = preferredAltB;
+		}
+	}
+
+	public struct MoveResult
+	{
+		public TrainTrackSpline spline;
+
+		public float distAlongSpline;
+
+		public bool atEndOfLine;
+
+		public TrainSignal signal;
+
+		public float totalDistMoved;
+	}
+
 	[Tooltip("Is this track spline part of a train station?")]
 	public bool isStation;
 
@@ -66,15 +129,19 @@ public class TrainTrackSpline : WorldSpline
 
 	public static List<TrainTrackSpline> SidingSplines = new List<TrainTrackSpline>();
 
-	private List<ConnectedTrackInfo> nextTracks = new List<ConnectedTrackInfo>();
+	private readonly List<ConnectedTrackInfo> nextTracks = new List<ConnectedTrackInfo>();
 
-	private int straightestNextIndex = 0;
+	private int straightestNextIndex;
 
-	private List<ConnectedTrackInfo> prevTracks = new List<ConnectedTrackInfo>();
+	private readonly List<ConnectedTrackInfo> prevTracks = new List<ConnectedTrackInfo>();
 
-	private int straightestPrevIndex = 0;
+	private int straightestPrevIndex;
 
-	private HashSet<ITrainTrackUser> trackUsers = new HashSet<ITrainTrackUser>();
+	[NonSerialized]
+	public HashSet<ITrainTrackUser> trackUsers = new HashSet<ITrainTrackUser>();
+
+	[NonSerialized]
+	public HashSet<TrainSignal> signals = new HashSet<TrainSignal>();
 
 	private bool HasNextTrack => nextTracks.Count > 0;
 
@@ -90,75 +157,98 @@ public class TrainTrackSpline : WorldSpline
 		hierarchy = sourceSpline.hierarchy;
 	}
 
-	public float GetSplineDistAfterMove(float prevSplineDist, Vector3 askerForward, float distMoved, TrackSelection trackSelection, out TrainTrackSpline onSpline, out bool atEndOfLine, TrainTrackSpline preferredAltA, TrainTrackSpline preferredAltB)
+	public MoveResult MoveAlongSpline(float prevSplineDist, Vector3 askerForward, float distMoved, TrackRequest tReq = default(TrackRequest), MoveRequest.SplineAction onSpline = null)
 	{
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		MoveRequest request = new MoveRequest(prevSplineDist, distMoved, onSpline, tReq);
 		bool facingForward = IsForward(askerForward, prevSplineDist);
-		return GetSplineDistAfterMove(prevSplineDist, distMoved, trackSelection, facingForward, out onSpline, out atEndOfLine, preferredAltA, preferredAltB);
+		return MoveAlongSpline(request, facingForward, 0f);
 	}
 
-	private float GetSplineDistAfterMove(float prevSplineDist, float distMoved, TrackSelection trackSelection, bool facingForward, out TrainTrackSpline onSpline, out bool atEndOfLine, TrainTrackSpline preferredAltA, TrainTrackSpline preferredAltB)
+	private MoveResult MoveAlongSpline(MoveRequest request, bool facingForward, float prevDistMoved)
 	{
+		MoveResult moveResult = default(MoveResult);
+		moveResult.totalDistMoved = prevDistMoved;
+		MoveResult result = moveResult;
 		WorldSplineData data = GetData();
-		float num = (facingForward ? (prevSplineDist + distMoved) : (prevSplineDist - distMoved));
-		atEndOfLine = false;
-		onSpline = this;
-		if (num < 0f)
+		result.distAlongSpline = request.ProjectEndDist(facingForward);
+		if (request.onSpline != null)
 		{
-			if (HasPrevTrack)
-			{
-				ConnectedTrackInfo trackSelection2 = GetTrackSelection(prevTracks, straightestPrevIndex, trackSelection, nextTrack: false, facingForward, preferredAltA, preferredAltB);
-				float distMoved2 = (facingForward ? num : (0f - num));
-				if (trackSelection2.orientation == TrackOrientation.Same)
-				{
-					prevSplineDist = trackSelection2.track.GetLength();
-				}
-				else
-				{
-					prevSplineDist = 0f;
-					facingForward = !facingForward;
-				}
-				return trackSelection2.track.GetSplineDistAfterMove(prevSplineDist, distMoved2, trackSelection, facingForward, out onSpline, out atEndOfLine, preferredAltA, preferredAltB);
-			}
-			atEndOfLine = true;
-			num = 0f;
+			result = request.onSpline(result, request, this, data.Length);
 		}
-		else if (num > data.Length)
+		result.spline = this;
+		if (result.distAlongSpline < 0f)
 		{
-			if (HasNextTrack)
-			{
-				ConnectedTrackInfo trackSelection3 = GetTrackSelection(nextTracks, straightestNextIndex, trackSelection, nextTrack: true, facingForward, preferredAltA, preferredAltB);
-				float distMoved3 = (facingForward ? (num - data.Length) : (0f - (num - data.Length)));
-				if (trackSelection3.orientation == TrackOrientation.Same)
-				{
-					prevSplineDist = 0f;
-				}
-				else
-				{
-					prevSplineDist = trackSelection3.track.GetLength();
-					facingForward = !facingForward;
-				}
-				return trackSelection3.track.GetSplineDistAfterMove(prevSplineDist, distMoved3, trackSelection, facingForward, out onSpline, out atEndOfLine, preferredAltA, preferredAltB);
-			}
-			atEndOfLine = true;
-			num = data.Length;
+			result.totalDistMoved += request.distAlongSpline;
+			result = MoveToPrevSpline(result, request, facingForward);
 		}
-		return num;
+		else if (result.distAlongSpline > data.Length)
+		{
+			result.totalDistMoved += data.Length - request.distAlongSpline;
+			result = MoveToNextSpline(result, request, facingForward, data.Length);
+		}
+		else
+		{
+			result.totalDistMoved += Mathf.Abs(result.distAlongSpline - request.distAlongSpline);
+		}
+		return result;
+	}
+
+	private MoveResult MoveToNextSpline(MoveResult result, MoveRequest request, bool facingForward, float splineLength)
+	{
+		if (HasNextTrack)
+		{
+			ConnectedTrackInfo trackSelection = GetTrackSelection(nextTracks, straightestNextIndex, nextTrack: true, facingForward, request.trackRequest);
+			request.maxMoveDist = (facingForward ? (result.distAlongSpline - splineLength) : (0f - (result.distAlongSpline - splineLength)));
+			if (trackSelection.orientation == TrackOrientation.Same)
+			{
+				request.distAlongSpline = 0f;
+			}
+			else
+			{
+				request.distAlongSpline = trackSelection.track.GetLength();
+				facingForward = !facingForward;
+			}
+			return trackSelection.track.MoveAlongSpline(request, facingForward, result.totalDistMoved);
+		}
+		result.atEndOfLine = true;
+		result.distAlongSpline = splineLength;
+		return result;
+	}
+
+	private MoveResult MoveToPrevSpline(MoveResult result, MoveRequest request, bool facingForward)
+	{
+		if (HasPrevTrack)
+		{
+			ConnectedTrackInfo trackSelection = GetTrackSelection(prevTracks, straightestPrevIndex, nextTrack: false, facingForward, request.trackRequest);
+			request.maxMoveDist = (facingForward ? result.distAlongSpline : (0f - result.distAlongSpline));
+			if (trackSelection.orientation == TrackOrientation.Same)
+			{
+				request.distAlongSpline = trackSelection.track.GetLength();
+			}
+			else
+			{
+				request.distAlongSpline = 0f;
+				facingForward = !facingForward;
+			}
+			return trackSelection.track.MoveAlongSpline(request, facingForward, result.totalDistMoved);
+		}
+		result.atEndOfLine = true;
+		result.distAlongSpline = 0f;
+		return result;
 	}
 
 	public float GetDistance(Vector3 position, float maxError, out float minSplineDist)
 	{
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0118: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fc: Unknown result type (might be due to invalid IL or missing references)
 		WorldSplineData data = GetData();
 		float num = maxError * maxError;
 		Vector3 val = ((Component)this).transform.InverseTransformPoint(position);
@@ -170,8 +260,7 @@ public class TrainTrackSpline : WorldSpline
 		{
 			for (int i = 0; (float)i < data.Length + 10f; i += 10)
 			{
-				Vector3 pointCubicHermite = data.GetPointCubicHermite(i);
-				float num5 = Vector3.SqrMagnitude(pointCubicHermite - val);
+				float num5 = Vector3.SqrMagnitude(data.GetPointCubicHermite(i) - val);
 				if (num5 < num2)
 				{
 					num2 = num5;
@@ -209,24 +298,18 @@ public class TrainTrackSpline : WorldSpline
 
 	public Vector3 GetPosition(float distance)
 	{
-		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
 		return GetPointCubicHermiteWorld(distance);
 	}
 
 	public Vector3 GetPositionAndTangent(float distance, Vector3 askerForward, out Vector3 tangent)
 	{
-		//IL_0004: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
 		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 pointAndTangentCubicHermiteWorld = GetPointAndTangentCubicHermiteWorld(distance, out tangent);
 		if (Vector3.Dot(askerForward, tangent) < 0f)
 		{
@@ -237,23 +320,21 @@ public class TrainTrackSpline : WorldSpline
 
 	public void AddTrackConnection(TrainTrackSpline track, TrackPosition p, TrackOrientation o)
 	{
-		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
 		//IL_009e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ba: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ad: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00af: Unknown result type (might be due to invalid IL or missing references)
 		List<ConnectedTrackInfo> list = ((p == TrackPosition.Next) ? nextTracks : prevTracks);
 		for (int i = 0; i < list.Count; i++)
 		{
@@ -320,12 +401,25 @@ public class TrainTrackSpline : WorldSpline
 		}
 	}
 
+	public void RegisterSignal(TrainSignal signal)
+	{
+		signals.Add(signal);
+	}
+
+	public void DeregisterSignal(TrainSignal signal)
+	{
+		if (!((Object)(object)signal == (Object)null))
+		{
+			signals.Remove(signal);
+		}
+	}
+
 	public bool IsForward(Vector3 askerForward, float askerSplineDist)
 	{
-		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
 		WorldSplineData data = GetData();
 		Vector3 tangentCubicHermiteWorld = GetTangentCubicHermiteWorld(askerSplineDist, data);
 		return Vector3.Dot(askerForward, tangentCubicHermiteWorld) >= 0f;
@@ -333,12 +427,12 @@ public class TrainTrackSpline : WorldSpline
 
 	public bool HasValidHazardWithin(TrainCar asker, float askerSplineDist, float minHazardDist, float maxHazardDist, TrackSelection trackSelection, float trackSpeed, TrainTrackSpline preferredAltA, TrainTrackSpline preferredAltB)
 	{
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 askerForward = ((trackSpeed >= 0f) ? ((Component)asker).transform.forward : (-((Component)asker).transform.forward));
 		bool movingForward = IsForward(askerForward, askerSplineDist);
 		return HasValidHazardWithin(asker, askerForward, askerSplineDist, minHazardDist, maxHazardDist, trackSelection, movingForward, preferredAltA, preferredAltB);
@@ -346,18 +440,18 @@ public class TrainTrackSpline : WorldSpline
 
 	public bool HasValidHazardWithin(ITrainTrackUser asker, Vector3 askerForward, float askerSplineDist, float minHazardDist, float maxHazardDist, TrackSelection trackSelection, bool movingForward, TrainTrackSpline preferredAltA, TrainTrackSpline preferredAltB)
 	{
-		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0186: Unknown result type (might be due to invalid IL or missing references)
-		//IL_023e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0146: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01e4: Unknown result type (might be due to invalid IL or missing references)
 		WorldSplineData data = GetData();
 		foreach (ITrainTrackUser trackUser in trackUsers)
 		{
@@ -386,10 +480,10 @@ public class TrainTrackSpline : WorldSpline
 		{
 			if (HasPrevTrack)
 			{
-				ConnectedTrackInfo trackSelection2 = GetTrackSelection(prevTracks, straightestPrevIndex, trackSelection, nextTrack: false, movingForward, preferredAltA, preferredAltB);
-				if (trackSelection2.orientation == TrackOrientation.Same)
+				ConnectedTrackInfo connectedTrackInfo = GetTrackSelection(request: new TrackRequest(trackSelection, preferredAltA, preferredAltB), trackOptions: prevTracks, straightestIndex: straightestPrevIndex, nextTrack: false, trainForward: movingForward);
+				if (connectedTrackInfo.orientation == TrackOrientation.Same)
 				{
-					askerSplineDist = trackSelection2.track.GetLength();
+					askerSplineDist = connectedTrackInfo.track.GetLength();
 				}
 				else
 				{
@@ -398,24 +492,24 @@ public class TrainTrackSpline : WorldSpline
 				}
 				float minHazardDist2 = Mathf.Max(0f - num, 0f);
 				float maxHazardDist2 = 0f - num2;
-				return trackSelection2.track.HasValidHazardWithin(asker, askerForward, askerSplineDist, minHazardDist2, maxHazardDist2, trackSelection, movingForward, preferredAltA, preferredAltB);
+				return connectedTrackInfo.track.HasValidHazardWithin(asker, askerForward, askerSplineDist, minHazardDist2, maxHazardDist2, trackSelection, movingForward, preferredAltA, preferredAltB);
 			}
 		}
 		else if (num2 > data.Length && HasNextTrack)
 		{
-			ConnectedTrackInfo trackSelection3 = GetTrackSelection(nextTracks, straightestNextIndex, trackSelection, nextTrack: true, movingForward, preferredAltA, preferredAltB);
-			if (trackSelection3.orientation == TrackOrientation.Same)
+			ConnectedTrackInfo connectedTrackInfo2 = GetTrackSelection(request: new TrackRequest(trackSelection, preferredAltA, preferredAltB), trackOptions: nextTracks, straightestIndex: straightestNextIndex, nextTrack: true, trainForward: movingForward);
+			if (connectedTrackInfo2.orientation == TrackOrientation.Same)
 			{
 				askerSplineDist = 0f;
 			}
 			else
 			{
-				askerSplineDist = trackSelection3.track.GetLength();
+				askerSplineDist = connectedTrackInfo2.track.GetLength();
 				movingForward = !movingForward;
 			}
 			float minHazardDist3 = Mathf.Max(num - data.Length, 0f);
 			float maxHazardDist3 = num2 - data.Length;
-			return trackSelection3.track.HasValidHazardWithin(asker, askerForward, askerSplineDist, minHazardDist3, maxHazardDist3, trackSelection, movingForward, preferredAltA, preferredAltB);
+			return connectedTrackInfo2.track.HasValidHazardWithin(asker, askerForward, askerSplineDist, minHazardDist3, maxHazardDist3, trackSelection, movingForward, preferredAltA, preferredAltB);
 		}
 		return false;
 	}
@@ -439,7 +533,11 @@ public class TrainTrackSpline : WorldSpline
 
 	public bool HasConnectedTrack(TrainTrackSpline tts)
 	{
-		return HasConnectedNextTrack(tts) || HasConnectedPrevTrack(tts);
+		if (!HasConnectedNextTrack(tts))
+		{
+			return HasConnectedPrevTrack(tts);
+		}
+		return true;
 	}
 
 	public bool HasConnectedNextTrack(TrainTrackSpline tts)
@@ -468,29 +566,27 @@ public class TrainTrackSpline : WorldSpline
 
 	private static Vector3 GetInitialVector(TrainTrackSpline track, TrackPosition p, TrackOrientation o)
 	{
-		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0097: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00da: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00af: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 val;
 		Vector3 val2;
 		if (p == TrackPosition.Next)
@@ -521,20 +617,20 @@ public class TrainTrackSpline : WorldSpline
 
 	protected override void OnDrawGizmosSelected()
 	{
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0112: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00da: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0095: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ad: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
 		base.OnDrawGizmosSelected();
 		for (int i = 0; i < nextTracks.Count; i++)
 		{
@@ -570,7 +666,7 @@ public class TrainTrackSpline : WorldSpline
 		}
 	}
 
-	private ConnectedTrackInfo GetTrackSelection(List<ConnectedTrackInfo> trackOptions, int straightestIndex, TrackSelection trackSelection, bool nextTrack, bool trainForward, TrainTrackSpline preferredAltA, TrainTrackSpline preferredAltB)
+	private ConnectedTrackInfo GetTrackSelection(List<ConnectedTrackInfo> trackOptions, int straightestIndex, bool nextTrack, bool trainForward, TrackRequest request)
 	{
 		if (trackOptions.Count == 1)
 		{
@@ -578,24 +674,35 @@ public class TrainTrackSpline : WorldSpline
 		}
 		foreach (ConnectedTrackInfo trackOption in trackOptions)
 		{
-			if ((Object)(object)trackOption.track == (Object)(object)preferredAltA || (Object)(object)trackOption.track == (Object)(object)preferredAltB)
+			if ((Object)(object)trackOption.track == (Object)(object)request.preferredAltA || (Object)(object)trackOption.track == (Object)(object)request.preferredAltB)
 			{
 				return trackOption;
 			}
 		}
 		bool flag = nextTrack ^ trainForward;
-		return trackSelection switch
+		switch (request.trackSelection)
 		{
-			TrackSelection.Left => flag ? trackOptions[trackOptions.Count - 1] : trackOptions[0], 
-			TrackSelection.Right => flag ? trackOptions[0] : trackOptions[trackOptions.Count - 1], 
-			_ => trackOptions[straightestIndex], 
-		};
+		case TrackSelection.Left:
+			if (!flag)
+			{
+				return trackOptions[0];
+			}
+			return trackOptions[trackOptions.Count - 1];
+		case TrackSelection.Right:
+			if (!flag)
+			{
+				return trackOptions[trackOptions.Count - 1];
+			}
+			return trackOptions[0];
+		default:
+			return trackOptions[straightestIndex];
+		}
 	}
 
 	public static bool TryFindTrackNear(Vector3 pos, float maxDist, out TrainTrackSpline splineResult, out float distResult)
 	{
-		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
 		splineResult = null;
 		distResult = 0f;
 		List<Collider> list = Pool.GetList<Collider>();

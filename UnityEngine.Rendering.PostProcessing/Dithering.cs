@@ -8,11 +8,11 @@ namespace UnityEngine.Rendering.PostProcessing;
 [Preserve]
 internal sealed class Dithering
 {
-	private int m_NoiseTextureIndex = 0;
+	private int m_NoiseTextureIndex;
 
 	internal void Render(PostProcessRenderContext context)
 	{
-		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0092: Unknown result type (might be due to invalid IL or missing references)
 		Texture2D[] blueNoise = context.resources.blueNoise64;
 		Assert.IsTrue(blueNoise != null && blueNoise.Length != 0);
 		if (++m_NoiseTextureIndex >= blueNoise.Length)

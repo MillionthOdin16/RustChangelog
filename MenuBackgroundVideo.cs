@@ -10,14 +10,14 @@ public class MenuBackgroundVideo : SingletonComponent<MenuBackgroundVideo>
 {
 	private string[] videos;
 
-	private int index = 0;
+	private int index;
 
-	private bool errored = false;
+	private bool errored;
 
 	protected override void Awake()
 	{
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002d: Expected O, but got Unknown
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Expected O, but got Unknown
 		((SingletonComponent)this).Awake();
 		LoadVideoList();
 		NextVideo();

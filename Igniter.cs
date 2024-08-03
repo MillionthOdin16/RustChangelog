@@ -10,9 +10,9 @@ public class Igniter : IOEntity
 
 	public float IgniteFrequency = 1f;
 
-	public float IgniteStartDelay = 0f;
+	public float IgniteStartDelay;
 
-	public Transform LineOfSightEyes = null;
+	public Transform LineOfSightEyes;
 
 	public float SelfDamagePerIgnite = 0.5f;
 
@@ -23,24 +23,32 @@ public class Igniter : IOEntity
 		return PowerConsumption;
 	}
 
-	public override void UpdateHasPower(int inputAmount, int inputSlot)
+	public bool CanIgnite()
 	{
-		base.UpdateHasPower(inputAmount, inputSlot);
-		if (inputAmount > 0)
+		return base.healthFraction >= 0.1f;
+	}
+
+	public override void UpdateFromInput(int inputAmount, int inputSlot)
+	{
+		base.UpdateFromInput(inputAmount, inputSlot);
+		if (inputAmount > 0 && CanIgnite())
 		{
 			((FacepunchBehaviour)this).InvokeRepeating((Action)IgniteInRange, IgniteStartDelay, IgniteFrequency);
+			SetFlag(Flags.On, b: true);
+			return;
 		}
-		else if (((FacepunchBehaviour)this).IsInvoking((Action)IgniteInRange))
+		if (((FacepunchBehaviour)this).IsInvoking((Action)IgniteInRange))
 		{
 			((FacepunchBehaviour)this).CancelInvoke((Action)IgniteInRange);
 		}
+		SetFlag(Flags.On, b: false);
 	}
 
 	private void IgniteInRange()
 	{
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
 		List<BaseEntity> list = Pool.GetList<BaseEntity>();
 		Vis.Entities(LineOfSightEyes.position, IgniteRange, list, 1237019409, (QueryTriggerInteraction)2);
 		int num = 0;
@@ -66,5 +74,27 @@ public class Igniter : IOEntity
 		}
 		Pool.FreeList<BaseEntity>(ref list);
 		Hurt(SelfDamagePerIgnite, DamageType.ElectricShock, this, useProtection: false);
+		if (!CanIgnite())
+		{
+			SendChangedToRoot(forceUpdate: true);
+		}
+	}
+
+	public override int DesiredPower(int inputIndex = 0)
+	{
+		if (!CanIgnite())
+		{
+			return 0;
+		}
+		return base.DesiredPower(inputIndex);
+	}
+
+	public override void OnRepair()
+	{
+		base.OnRepair();
+		if (CanIgnite())
+		{
+			SendChangedToRoot(forceUpdate: true);
+		}
 	}
 }

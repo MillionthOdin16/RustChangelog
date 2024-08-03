@@ -40,23 +40,25 @@ public class LookAtIOEnt : MonoBehaviour
 
 	public Text activeOutputText;
 
+	public Text turretInterferenceText;
+
 	public IOEntityUISlotEntry[] inputEntries;
 
 	public IOEntityUISlotEntry[] outputEntries;
 
 	public Color NoPowerColor;
 
-	public GameObject GravityWarning = null;
+	public GameObject GravityWarning;
 
-	public GameObject DistanceWarning = null;
+	public GameObject DistanceWarning;
 
-	public GameObject LineOfSightWarning = null;
+	public GameObject LineOfSightWarning;
 
-	public GameObject TooManyInputsWarning = null;
+	public GameObject TooManyInputsWarning;
 
-	public GameObject TooManyOutputsWarning = null;
+	public GameObject TooManyOutputsWarning;
 
-	public GameObject BuildPrivilegeWarning = null;
+	public GameObject BuildPrivilegeWarning;
 
 	public CanvasGroup group;
 

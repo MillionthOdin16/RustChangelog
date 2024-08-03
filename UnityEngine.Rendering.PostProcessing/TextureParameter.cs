@@ -9,14 +9,14 @@ public sealed class TextureParameter : ParameterOverride<Texture>
 
 	public override void Interp(Texture from, Texture to, float t)
 	{
-		//IL_00cf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00da: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00df: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ea: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ba: Unknown result type (might be due to invalid IL or missing references)
-		//IL_019d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ad: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ba: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0144: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)from == (Object)null && (Object)(object)to == (Object)null)
 		{
 			value = null;
@@ -29,8 +29,7 @@ public sealed class TextureParameter : ParameterOverride<Texture>
 		}
 		if (defaultState == TextureParameterDefault.Lut2D)
 		{
-			int size = (((Object)(object)from != (Object)null) ? from.height : to.height);
-			Texture lutStrip = (Texture)(object)RuntimeUtilities.GetLutStrip(size);
+			Texture lutStrip = (Texture)(object)RuntimeUtilities.GetLutStrip(((Object)(object)from != (Object)null) ? from.height : to.height);
 			if ((Object)(object)from == (Object)null)
 			{
 				from = lutStrip;
@@ -54,8 +53,7 @@ public sealed class TextureParameter : ParameterOverride<Texture>
 			break;
 		case TextureParameterDefault.Lut2D:
 		{
-			int size2 = (((Object)(object)from != (Object)null) ? from.height : to.height);
-			Texture lutStrip2 = (Texture)(object)RuntimeUtilities.GetLutStrip(size2);
+			Texture lutStrip2 = (Texture)(object)RuntimeUtilities.GetLutStrip(((Object)(object)from != (Object)null) ? from.height : to.height);
 			if ((Object)(object)from == (Object)null)
 			{
 				from = lutStrip2;

@@ -6,7 +6,7 @@ using UnityEngine;
 public class PetBrain : BaseAIBrain
 {
 	[Header("Audio")]
-	public SoundDefinition CommandGivenVocalSFX = null;
+	public SoundDefinition CommandGivenVocalSFX;
 
 	[ServerVar]
 	public static bool DrownInDeepWater = true;
@@ -75,8 +75,8 @@ public class PetBrain : BaseAIBrain
 
 	private bool EvaluateLoadDefaultDesignTriggers()
 	{
-		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
 		if (loadedDesignIndex == 0)
 		{
 			return true;
@@ -113,7 +113,7 @@ public class PetBrain : BaseAIBrain
 			{
 				basePlayer.SendClientPetStateIndex();
 			}
-			baseEntity.ClientRPC(null, "OnCommandGiven");
+			baseEntity.ClientRPC(RpcTarget.NetworkGroup("OnCommandGiven"));
 		}
 	}
 }

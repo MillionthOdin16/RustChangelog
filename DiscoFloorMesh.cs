@@ -9,15 +9,15 @@ public class DiscoFloorMesh : MonoBehaviour, IClientComponent
 	public float GridSize = 1f;
 
 	[Range(0f, 10f)]
-	public float TestOffset = 0f;
+	public float TestOffset;
 
 	public Color OffColor = Color.grey;
 
-	public MeshRenderer Renderer = null;
+	public MeshRenderer Renderer;
 
-	public bool DrawInEditor = false;
+	public bool DrawInEditor;
 
-	public MeshFilter Filter = null;
+	public MeshFilter Filter;
 
 	public AnimationCurve customCurveX = AnimationCurve.Linear(0f, 0f, 1f, 1f);
 

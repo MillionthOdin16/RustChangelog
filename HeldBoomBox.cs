@@ -6,9 +6,9 @@ using UnityEngine.Assertions;
 
 public class HeldBoomBox : HeldEntity, ICassettePlayer
 {
-	public BoomBox BoxController = null;
+	public BoomBox BoxController;
 
-	public SwapKeycard cassetteSwapper = null;
+	public SwapKeycard cassetteSwapper;
 
 	public BaseEntity ToBaseEntity => this;
 
@@ -22,7 +22,7 @@ public class HeldBoomBox : HeldEntity, ICassettePlayer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_UpdateRadioIP "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_UpdateRadioIP "));
 				}
 				TimeWarning val2 = TimeWarning.New("Server_UpdateRadioIP", 0);
 				try
@@ -45,7 +45,7 @@ public class HeldBoomBox : HeldEntity, ICassettePlayer
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -57,7 +57,7 @@ public class HeldBoomBox : HeldEntity, ICassettePlayer
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -77,12 +77,12 @@ public class HeldBoomBox : HeldEntity, ICassettePlayer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ServerTogglePlay "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ServerTogglePlay "));
 				}
-				TimeWarning val5 = TimeWarning.New("ServerTogglePlay", 0);
+				TimeWarning val2 = TimeWarning.New("ServerTogglePlay", 0);
 				try
 				{
-					TimeWarning val6 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsActiveItem.Test(1785864031u, "ServerTogglePlay", this, player))
@@ -92,11 +92,11 @@ public class HeldBoomBox : HeldEntity, ICassettePlayer
 					}
 					finally
 					{
-						((IDisposable)val6)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val7 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -108,7 +108,7 @@ public class HeldBoomBox : HeldEntity, ICassettePlayer
 						}
 						finally
 						{
-							((IDisposable)val7)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -119,7 +119,7 @@ public class HeldBoomBox : HeldEntity, ICassettePlayer
 				}
 				finally
 				{
-					((IDisposable)val5)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}

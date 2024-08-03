@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class ItemIcon : BaseMonoBehaviour, IPointerClickHandler, IEventSystemHandler, IPointerEnterHandler, IPointerExitHandler, IDraggable, IInventoryChanged, IItemAmountChanged, IItemIconChanged
+public class ItemIcon : BaseMonoBehaviour, IPointerClickHandler, IEventSystemHandler, IPointerEnterHandler, IPointerExitHandler, IDraggable, IPreInventoryChanged, IItemAmountChanged, IItemIconChanged
 {
 	private Color backgroundColor;
 
@@ -15,7 +15,7 @@ public class ItemIcon : BaseMonoBehaviour, IPointerClickHandler, IEventSystemHan
 
 	public ItemContainerSource containerSource;
 
-	public int slotOffset = 0;
+	public int slotOffset;
 
 	[Range(0f, 64f)]
 	public int slot;
@@ -60,19 +60,21 @@ public class ItemIcon : BaseMonoBehaviour, IPointerClickHandler, IEventSystemHan
 
 	public GameObject lightEnabled;
 
+	public GameObject burstEnabled;
+
 	public bool allowSelection = true;
 
 	public bool allowDropping = true;
 
 	public bool allowMove = true;
 
-	public bool showCountDropShadow = false;
+	public bool showCountDropShadow;
 
 	[NonSerialized]
-	public Item item = null;
+	public Item item;
 
 	[NonSerialized]
-	public bool invalidSlot = false;
+	public bool invalidSlot;
 
 	public SoundDefinition hoverSound;
 

@@ -34,11 +34,11 @@ public class VisualStorageContainer : LootContainer
 
 	public override void PopulateLoot()
 	{
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
 		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
 		base.PopulateLoot();
 		for (int i = 0; i < inventorySlots; i++)
 		{
@@ -72,16 +72,15 @@ public class VisualStorageContainer : LootContainer
 		{
 			if (displayModel != null)
 			{
-				Rigidbody componentInChildren = displayModel.displayModel.GetComponentInChildren<Rigidbody>();
-				Object.Destroy((Object)(object)componentInChildren);
+				Object.Destroy((Object)(object)displayModel.displayModel.GetComponentInChildren<Rigidbody>());
 			}
 		}
 	}
 
 	public void SetItemsVisible(bool vis)
 	{
-		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
 		if (displayModels == null)
 		{
 			return;
@@ -112,10 +111,10 @@ public class VisualStorageContainer : LootContainer
 
 	public void UpdateVisibleItems(ItemContainer msg)
 	{
-		//IL_00e8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e5: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00fc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0101: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0119: Unknown result type (might be due to invalid IL or missing references)
 		for (int i = 0; i < displayModels.Length; i++)
 		{
 			DisplayModel displayModel = displayModels[i];
@@ -133,16 +132,16 @@ public class VisualStorageContainer : LootContainer
 		{
 			ItemDefinition itemDefinition = ItemManager.FindItemDefinition(content.itemid);
 			GameObject val = null;
-			val = ((itemDefinition.worldModelPrefab == null || !itemDefinition.worldModelPrefab.isValid) ? Object.Instantiate<GameObject>(defaultDisplayModel) : itemDefinition.worldModelPrefab.Instantiate());
+			val = ((itemDefinition.GetWorldModel(content.amount) == null || !itemDefinition.GetWorldModel(content.amount).isValid) ? Object.Instantiate<GameObject>(defaultDisplayModel) : itemDefinition.GetWorldModel(content.amount).Instantiate());
 			if (Object.op_Implicit((Object)(object)val))
 			{
 				val.transform.SetPositionAndRotation(((Component)displayNodes[content.slot]).transform.position + new Vector3(0f, 0.25f, 0f), ((Component)displayNodes[content.slot]).transform.rotation);
-				Rigidbody val2 = val.AddComponent<Rigidbody>();
-				val2.mass = 1f;
-				val2.drag = 0.1f;
-				val2.angularDrag = 0.1f;
-				val2.interpolation = (RigidbodyInterpolation)1;
-				val2.constraints = (RigidbodyConstraints)10;
+				Rigidbody obj = val.AddComponent<Rigidbody>();
+				obj.mass = 1f;
+				obj.drag = 0.1f;
+				obj.angularDrag = 0.1f;
+				obj.interpolation = (RigidbodyInterpolation)1;
+				obj.constraints = (RigidbodyConstraints)10;
 				displayModels[content.slot].displayModel = val;
 				displayModels[content.slot].slot = content.slot;
 				displayModels[content.slot].def = itemDefinition;

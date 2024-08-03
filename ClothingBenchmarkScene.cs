@@ -2,5 +2,5 @@ public class ClothingBenchmarkScene : BenchmarkScene
 {
 	public GameObjectRef PlayerModelPrefab;
 
-	public bool ChangeClothingEveryFrame = false;
+	public bool ChangeClothingEveryFrame;
 }

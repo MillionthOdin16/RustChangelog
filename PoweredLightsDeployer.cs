@@ -50,7 +50,7 @@ public class PoweredLightsDeployer : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - AddPoint "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - AddPoint "));
 				}
 				TimeWarning val2 = TimeWarning.New("AddPoint", 0);
 				try
@@ -69,7 +69,7 @@ public class PoweredLightsDeployer : HeldEntity
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -81,7 +81,7 @@ public class PoweredLightsDeployer : HeldEntity
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -101,12 +101,12 @@ public class PoweredLightsDeployer : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Finish "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Finish "));
 				}
-				TimeWarning val5 = TimeWarning.New("Finish", 0);
+				TimeWarning val2 = TimeWarning.New("Finish", 0);
 				try
 				{
-					TimeWarning val6 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsActiveItem.Test(1975273522u, "Finish", this, player))
@@ -116,11 +116,11 @@ public class PoweredLightsDeployer : HeldEntity
 					}
 					finally
 					{
-						((IDisposable)val6)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val7 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -132,7 +132,7 @@ public class PoweredLightsDeployer : HeldEntity
 						}
 						finally
 						{
-							((IDisposable)val7)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -143,7 +143,7 @@ public class PoweredLightsDeployer : HeldEntity
 				}
 				finally
 				{
-					((IDisposable)val5)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -157,7 +157,7 @@ public class PoweredLightsDeployer : HeldEntity
 
 	private bool CheckValidPlacement(Vector3 position, float radius, int layerMask)
 	{
-		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
 		bool result = true;
 		List<BaseEntity> list = Pool.GetList<BaseEntity>();
 		Vis.Entities(position, radius, list, 10551297, (QueryTriggerInteraction)2);
@@ -175,43 +175,48 @@ public class PoweredLightsDeployer : HeldEntity
 
 	public static bool CanPlayerUse(BasePlayer player)
 	{
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		return player.CanBuild() && !GamePhysics.CheckSphere(player.eyes.position, 0.1f, 536870912, (QueryTriggerInteraction)2);
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		if (player.CanBuild())
+		{
+			return !GamePhysics.CheckSphere(player.eyes.position, 0.1f, 536870912, (QueryTriggerInteraction)2);
+		}
+		return false;
 	}
 
 	[RPC_Server]
 	[RPC_Server.IsActiveItem]
 	public void AddPoint(RPCMessage msg)
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00eb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0144: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0149: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0207: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0208: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0187: Unknown result type (might be due to invalid IL or missing references)
-		//IL_018c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_018e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_018f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ce: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01d0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01d1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01d3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01da: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01df: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01e4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0118: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0154: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0159: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ab: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ac: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ae: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ba: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01bf: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 val = msg.read.Vector3();
 		Vector3 val2 = msg.read.Vector3();
+		float slackLevel = msg.read.Float();
 		BasePlayer player = msg.player;
 		if (GetItem() == null || GetItem().amount < 1 || !IsVisible(val) || !CanPlayerUse(player) || Vector3.Distance(val, player.eyes.position) > maxPlaceDistance || !CheckValidPlacement(val, 0.1f, 10551297))
 		{
@@ -224,6 +229,10 @@ public class PoweredLightsDeployer : HeldEntity
 			component.Spawn();
 			active = component;
 			num = 1;
+			if (player.IsInCreativeMode && Creative.unlimitedIo)
+			{
+				num = 0;
+			}
 		}
 		else
 		{
@@ -240,6 +249,10 @@ public class PoweredLightsDeployer : HeldEntity
 			}
 			num2 = Mathf.Max(num2, lengthPerAmount);
 			float num3 = (float)GetItem().amount * lengthPerAmount;
+			if (player.IsInCreativeMode && Creative.unlimitedIo)
+			{
+				num3 = 200f;
+			}
 			if (num2 > num3)
 			{
 				num2 = num3;
@@ -247,8 +260,12 @@ public class PoweredLightsDeployer : HeldEntity
 			}
 			num2 = Mathf.Min(num3, num2);
 			num = Mathf.CeilToInt(num2 / lengthPerAmount);
+			if (player.IsInCreativeMode && Creative.unlimitedIo)
+			{
+				num = 0;
+			}
 		}
-		active.AddPoint(val, val2);
+		active.AddPoint(val, val2, slackLevel);
 		SetFlag(Flags.Reserved8, (Object)(object)active != (Object)null);
 		int iAmount = num;
 		UseItemAmount(iAmount);
@@ -282,8 +299,8 @@ public class PoweredLightsDeployer : HeldEntity
 
 	public override void Save(SaveInfo info)
 	{
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
 		base.Save(info);
 		if (!info.forDisk)
 		{

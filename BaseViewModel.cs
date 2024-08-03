@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class BaseViewModel : MonoBehaviour
+public class BaseViewModel : FacepunchBehaviour, IPrefabPreProcess
 {
 	[Header("BaseViewModel")]
 	public LazyAimProperties lazyaimRegular;
@@ -15,10 +15,14 @@ public class BaseViewModel : MonoBehaviour
 
 	public GameObject[] hideSightMeshes;
 
-	public bool isGestureViewModel = false;
+	public bool isGestureViewModel;
 
 	public Transform MuzzlePoint;
 
 	[Header("Skin")]
 	public SubsurfaceProfile subsurfaceProfile;
+
+	public void PreProcess(IPrefabProcessor preProcess, GameObject rootObj, string name, bool serverside, bool clientside, bool bundling)
+	{
+	}
 }

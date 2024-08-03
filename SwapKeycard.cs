@@ -7,9 +7,9 @@ public class SwapKeycard : MonoBehaviour
 	public void UpdateAccessLevel(int level)
 	{
 		GameObject[] array = accessLevels;
-		foreach (GameObject val in array)
+		for (int i = 0; i < array.Length; i++)
 		{
-			val.SetActive(false);
+			array[i].SetActive(false);
 		}
 		accessLevels[level - 1].SetActive(true);
 	}

@@ -1,12 +1,11 @@
 using System;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 public class DeferredAction
 {
-	private Object sender = null;
+	private Object sender;
 
-	private Action action = null;
+	private Action action;
 
 	private ActionPriority priority = ActionPriority.Medium;
 
@@ -52,8 +51,6 @@ public class DeferredAction
 
 	public static void Invoke(Object sender, Action action, ActionPriority priority = ActionPriority.Medium)
 	{
-		Profiler.BeginSample("DeferredAction.Invoke");
 		new DeferredAction(sender, action, priority).Invoke();
-		Profiler.EndSample();
 	}
 }

@@ -5,8 +5,8 @@ public static class CommandBufferEx
 {
 	public static void BlitArray(this CommandBuffer cb, Mesh blitMesh, RenderTargetIdentifier source, Material mat, int slice, int pass = 0)
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
 		cb.SetGlobalTexture("_Source", source);
 		cb.SetGlobalFloat("_SourceMip", 0f);
 		if (slice >= 0)
@@ -19,10 +19,10 @@ public static class CommandBufferEx
 
 	public static void BlitArray(this CommandBuffer cb, Mesh blitMesh, RenderTargetIdentifier source, Texture target, Material mat, int slice, int pass = 0)
 	{
-		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
-		cb.SetRenderTarget(RenderTargetIdentifier.op_Implicit(target), 0, (CubemapFace)0, -1);
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
+		cb.SetRenderTarget(RenderTargetIdentifier.op_Implicit(target), 0, (CubemapFace)(-1), -1);
 		cb.SetGlobalTexture("_Source", source);
 		cb.SetGlobalFloat("_SourceMip", 0f);
 		if (slice >= 0)
@@ -35,11 +35,11 @@ public static class CommandBufferEx
 
 	public static void BlitArrayMip(this CommandBuffer cb, Mesh blitMesh, Texture source, int sourceMip, int sourceSlice, Texture target, int targetMip, int targetSlice, Material mat, int pass = 0)
 	{
-		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0093: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ea: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d7: Unknown result type (might be due to invalid IL or missing references)
 		int num = source.width >> sourceMip;
 		int num2 = source.height >> sourceMip;
 		Vector4 val = default(Vector4);
@@ -57,7 +57,7 @@ public static class CommandBufferEx
 			cb.SetGlobalFloat("_SourceSlice", (float)sourceSlice);
 			cb.SetGlobalInt("_TargetSlice", targetSlice);
 		}
-		cb.SetRenderTarget(RenderTargetIdentifier.op_Implicit(target), targetMip, (CubemapFace)0, -1);
+		cb.SetRenderTarget(RenderTargetIdentifier.op_Implicit(target), targetMip, (CubemapFace)(-1), -1);
 		cb.DrawMesh(blitMesh, Matrix4x4.identity, mat, 0, pass);
 	}
 

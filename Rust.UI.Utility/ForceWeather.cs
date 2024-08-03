@@ -8,13 +8,13 @@ internal class ForceWeather : MonoBehaviour
 {
 	private Toggle component;
 
-	public bool Rain = false;
+	public bool Rain;
 
-	public bool Fog = false;
+	public bool Fog;
 
-	public bool Wind = false;
+	public bool Wind;
 
-	public bool Clouds = false;
+	public bool Clouds;
 
 	public void OnEnable()
 	{

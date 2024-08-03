@@ -2,6 +2,8 @@ using UnityEngine;
 
 public class MissionEntity : BaseMonoBehaviour, IOnParentDestroying
 {
+	public string identifier;
+
 	public bool cleanupOnMissionSuccess = true;
 
 	public bool cleanupOnMissionFailed = true;
@@ -11,8 +13,9 @@ public class MissionEntity : BaseMonoBehaviour, IOnParentDestroying
 		Object.Destroy((Object)(object)this);
 	}
 
-	public virtual void Setup(BasePlayer assignee, BaseMission.MissionInstance instance, bool wantsSuccessCleanup, bool wantsFailedCleanup)
+	public virtual void Setup(BasePlayer assignee, BaseMission.MissionInstance instance, string identifier, bool wantsSuccessCleanup, bool wantsFailedCleanup)
 	{
+		this.identifier = identifier;
 		cleanupOnMissionFailed = wantsFailedCleanup;
 		cleanupOnMissionSuccess = wantsSuccessCleanup;
 		BaseEntity entity = GetEntity();
@@ -25,25 +28,20 @@ public class MissionEntity : BaseMonoBehaviour, IOnParentDestroying
 	public virtual void MissionStarted(BasePlayer assignee, BaseMission.MissionInstance instance)
 	{
 		IMissionEntityListener[] componentsInChildren = ((Component)this).GetComponentsInChildren<IMissionEntityListener>();
-		IMissionEntityListener[] array = componentsInChildren;
-		foreach (IMissionEntityListener missionEntityListener in array)
+		for (int i = 0; i < componentsInChildren.Length; i++)
 		{
-			missionEntityListener.MissionStarted(assignee, instance);
+			componentsInChildren[i].MissionStarted(assignee, instance);
 		}
 	}
 
 	public virtual void MissionEnded(BasePlayer assignee, BaseMission.MissionInstance instance)
 	{
 		IMissionEntityListener[] componentsInChildren = ((Component)this).GetComponentsInChildren<IMissionEntityListener>();
-		IMissionEntityListener[] array = componentsInChildren;
-		foreach (IMissionEntityListener missionEntityListener in array)
+		for (int i = 0; i < componentsInChildren.Length; i++)
 		{
-			missionEntityListener.MissionEnded(assignee, instance);
+			componentsInChildren[i].MissionEnded(assignee, instance);
 		}
-		if (instance.createdEntities.Contains(this))
-		{
-			instance.createdEntities.Remove(this);
-		}
+		instance.missionEntities.Remove(identifier);
 		if ((cleanupOnMissionSuccess && (instance.status == BaseMission.MissionStatus.Completed || instance.status == BaseMission.MissionStatus.Accomplished)) || (cleanupOnMissionFailed && instance.status == BaseMission.MissionStatus.Failed))
 		{
 			BaseEntity entity = GetEntity();

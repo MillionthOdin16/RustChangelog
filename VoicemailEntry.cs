@@ -3,11 +3,11 @@ using UnityEngine;
 
 public class VoicemailEntry : MonoBehaviour
 {
-	public GameObject PlayingRoot = null;
+	public GameObject PlayingRoot;
 
-	public RustText DisplayName = null;
+	public RustText DisplayName;
 
-	public RustIcon PlayIcon = null;
+	public RustIcon PlayIcon;
 
-	public RustSlider ProgressSlider = null;
+	public RustSlider ProgressSlider;
 }

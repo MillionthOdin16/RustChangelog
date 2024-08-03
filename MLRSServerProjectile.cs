@@ -10,6 +10,10 @@ public class MLRSServerProjectile : ServerProjectile
 		{
 			return false;
 		}
-		return !hitEnt.IsValid() || !(hitEnt is MLRS);
+		if (hitEnt.IsValid())
+		{
+			return !(hitEnt is MLRS);
+		}
+		return true;
 	}
 }

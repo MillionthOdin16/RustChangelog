@@ -9,11 +9,21 @@ public class SleepingBagButton : MonoBehaviour
 
 	public GameObject LockRoot;
 
-	public GameObject OccupiedRoot = null;
+	public GameObject UnavailableRoot;
+
+	public Tooltip unavailableTooltip;
+
+	public Phrase occupied;
+
+	public Phrase underwater;
+
+	public Phrase noRespawnZone;
 
 	public Button ClickButton;
 
 	public TextMeshProUGUI BagName;
+
+	public TextMeshProUGUI ZoneName;
 
 	public TextMeshProUGUI LockTime;
 
@@ -33,9 +43,9 @@ public class SleepingBagButton : MonoBehaviour
 
 	public Image Background;
 
-	public RustButton DeleteButton = null;
+	public RustButton DeleteButton;
 
-	public Image ConfirmSlider = null;
+	public Image ConfirmSlider;
 
 	public static Phrase toastHoldToUnclaimBag = new Phrase("hold_unclaim_bag", "Hold down the delete button to unclaim a sleeping bag");
 }

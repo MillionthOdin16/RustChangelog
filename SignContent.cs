@@ -24,8 +24,8 @@ public class SignContent : ImageStorageEntity, IUGCBrowserEntity
 
 	public void CopyInfoFromSign(ISignage s, IUGCBrowserEntity b)
 	{
-		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
 		uint[] textureCRCs = s.GetTextureCRCs();
 		textureIDs = new uint[textureCRCs.Length];
 		textureCRCs.CopyTo(textureIDs, 0);
@@ -39,8 +39,8 @@ public class SignContent : ImageStorageEntity, IUGCBrowserEntity
 
 	public void CopyInfoToSign(ISignage s, IUGCBrowserEntity b)
 	{
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
 		FileStorage.server.ReassignEntityId(net.ID, s.NetworkID);
 		s.SetTextureCRCs(textureIDs);
 		b.EditingHistory.Clear();
@@ -67,7 +67,7 @@ public class SignContent : ImageStorageEntity, IUGCBrowserEntity
 
 	internal override void DoServerDestroy()
 	{
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
 		base.DoServerDestroy();
 		FileStorage.server.RemoveAllByEntity(net.ID);
 	}

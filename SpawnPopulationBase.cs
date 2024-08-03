@@ -1,19 +1,60 @@
+using System.Collections.Generic;
 using System.Text;
 using ConVar;
 using UnityEngine;
 
 public abstract class SpawnPopulationBase : BaseScriptableObject
 {
-	[Header("Spawnables")]
+	public string ResourceFolder = string.Empty;
+
+	public GameObjectRef[] ResourceList;
+
 	public bool EnforcePopulationLimits = true;
 
 	public float SpawnRate = 1f;
 
 	public bool ScaleWithServerPopulation;
 
+	protected Prefab<Spawnable>[] Prefabs;
+
+	protected int[] numToSpawn;
+
 	protected bool haveInitialized;
 
-	public abstract bool Initialize();
+	private bool Initialize()
+	{
+		if (Prefabs == null || Prefabs.Length == 0)
+		{
+			if (!string.IsNullOrEmpty(ResourceFolder))
+			{
+				Prefabs = Prefab.Load<Spawnable>("assets/bundled/prefabs/autospawn/" + ResourceFolder, GameManager.server, PrefabAttribute.server, useProbabilities: false, useWorldConfig: true);
+			}
+			if (ResourceList != null && ResourceList.Length != 0)
+			{
+				List<string> list = new List<string>();
+				GameObjectRef[] resourceList = ResourceList;
+				foreach (GameObjectRef gameObjectRef in resourceList)
+				{
+					string resourcePath = gameObjectRef.resourcePath;
+					if (string.IsNullOrEmpty(resourcePath))
+					{
+						Debug.LogWarning((object)(((Object)this).name + " resource list contains invalid resource path for GUID " + gameObjectRef.guid), (Object)(object)this);
+					}
+					else
+					{
+						list.Add(resourcePath);
+					}
+				}
+				Prefabs = Prefab.Load<Spawnable>(list.ToArray(), GameManager.server, PrefabAttribute.server);
+			}
+			if (Prefabs == null || Prefabs.Length == 0)
+			{
+				return false;
+			}
+			numToSpawn = new int[Prefabs.Length];
+		}
+		return true;
+	}
 
 	public float GetCurrentSpawnRate()
 	{
@@ -50,5 +91,32 @@ public abstract class SpawnPopulationBase : BaseScriptableObject
 
 	public abstract SpawnFilter GetSpawnFilter();
 
-	public abstract void GetReportString(StringBuilder sb, bool detailed);
+	public void GetReportString(StringBuilder sb, bool detailed)
+	{
+		if (!string.IsNullOrEmpty(ResourceFolder))
+		{
+			sb.AppendLine(((Object)this).name + " (autospawn/" + ResourceFolder + ")");
+		}
+		else
+		{
+			sb.AppendLine(((Object)this).name);
+		}
+		if (!detailed)
+		{
+			return;
+		}
+		sb.AppendLine("\tPrefabs:");
+		if (Prefabs != null)
+		{
+			Prefab<Spawnable>[] prefabs = Prefabs;
+			foreach (Prefab<Spawnable> prefab in prefabs)
+			{
+				sb.AppendLine("\t\t" + prefab.Name + " - " + (object)prefab.Object);
+			}
+		}
+		else
+		{
+			sb.AppendLine("\t\tN/A");
+		}
+	}
 }

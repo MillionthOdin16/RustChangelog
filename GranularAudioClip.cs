@@ -11,27 +11,27 @@ public class GranularAudioClip : MonoBehaviour
 
 		private int sourceDataLength;
 
-		private int startSample = 0;
+		private int startSample;
 
-		private int currentSample = 0;
+		private int currentSample;
 
-		private int attackTimeSamples = 0;
+		private int attackTimeSamples;
 
-		private int sustainTimeSamples = 0;
+		private int sustainTimeSamples;
 
-		private int releaseTimeSamples = 0;
+		private int releaseTimeSamples;
 
-		private float gain = 0f;
+		private float gain;
 
-		private float gainPerSampleAttack = 0f;
+		private float gainPerSampleAttack;
 
-		private float gainPerSampleRelease = 0f;
+		private float gainPerSampleRelease;
 
-		private int attackEndSample = 0;
+		private int attackEndSample;
 
-		private int releaseStartSample = 0;
+		private int releaseStartSample;
 
-		private int endSample = 0;
+		private int endSample;
 
 		public bool finished => currentSample >= endSample;
 
@@ -95,26 +95,26 @@ public class GranularAudioClip : MonoBehaviour
 
 	public float grainFrequency = 0.1f;
 
-	public int grainAttackSamples = 0;
+	public int grainAttackSamples;
 
-	public int grainSustainSamples = 0;
+	public int grainSustainSamples;
 
-	public int grainReleaseSamples = 0;
+	public int grainReleaseSamples;
 
-	public int grainFrequencySamples = 0;
+	public int grainFrequencySamples;
 
-	public int samplesUntilNextGrain = 0;
+	public int samplesUntilNextGrain;
 
 	public List<Grain> grains = new List<Grain>();
 
 	private Random random = new Random();
 
-	private bool inited = false;
+	private bool inited;
 
 	private void Update()
 	{
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0015: Invalid comparison between Unknown and I4
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Invalid comparison between Unknown and I4
 		if (!inited && (int)sourceClip.loadState == 2)
 		{
 			sampleRate = sourceClip.frequency;
@@ -140,8 +140,8 @@ public class GranularAudioClip : MonoBehaviour
 
 	private void InitAudioClip()
 	{
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0049: Expected O, but got Unknown
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0047: Expected O, but got Unknown
 		int num = 1;
 		int num2 = 1;
 		AudioSettings.GetDSPBufferSize(ref num, ref num2);
@@ -173,8 +173,7 @@ public class GranularAudioClip : MonoBehaviour
 		if (grainFrequencySamples != 0)
 		{
 			float num = (float)(random.NextDouble() * (double)sourceTimeVariation * 2.0) - sourceTimeVariation;
-			float num2 = sourceTime + num;
-			int start = Mathf.FloorToInt(num2 * (float)sampleRate / (float)sourceChannels);
+			int start = Mathf.FloorToInt((sourceTime + num) * (float)sampleRate / (float)sourceChannels);
 			Grain grain = Pool.Get<Grain>();
 			grain.Init(sourceAudioData, start, grainAttackSamples, grainSustainSamples, grainReleaseSamples);
 			grains.Add(grain);

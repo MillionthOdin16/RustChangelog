@@ -28,7 +28,7 @@ public class NexusDock : SingletonComponent<NexusDock>
 
 	public float TraceHeight = 100f;
 
-	public LayerMask TraceLayerMask = LayerMask.op_Implicit(429990145);
+	public LayerMask TraceLayerMask = LayerMask.op_Implicit(1503731969);
 
 	[NonSerialized]
 	public NexusFerry[] QueuedFerries;

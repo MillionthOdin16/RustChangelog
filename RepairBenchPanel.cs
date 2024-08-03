@@ -5,11 +5,15 @@ public class RepairBenchPanel : LootPanel
 {
 	public Text infoText;
 
-	public Button repairButton;
+	public GameObject repairButton;
+
+	public GameObject skinLinkButton;
 
 	public Color gotColor;
 
 	public Color notGotColor;
+
+	public Color skinColour;
 
 	public Phrase phraseEmpty;
 
@@ -25,5 +29,5 @@ public class RepairBenchPanel : LootPanel
 
 	public IconSkinPicker picker;
 
-	public GameObject attachmentSkinBlocker = null;
+	public GameObject attachmentSkinBlocker;
 }

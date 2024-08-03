@@ -19,7 +19,13 @@ public class ReactiveTarget : IOEntity
 
 	private float lastToggleTime = float.NegativeInfinity;
 
+	public const Flags Flag_KnockedDown = Flags.Reserved1;
+
 	private float knockdownHealth = 100f;
+
+	private int inputAmountReset;
+
+	private int inputAmountLower;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -31,7 +37,7 @@ public class ReactiveTarget : IOEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_Lower "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_Lower "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_Lower", 0);
 				try
@@ -67,12 +73,12 @@ public class ReactiveTarget : IOEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_Reset "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_Reset "));
 				}
-				TimeWarning val4 = TimeWarning.New("RPC_Reset", 0);
+				TimeWarning val2 = TimeWarning.New("RPC_Reset", 0);
 				try
 				{
-					TimeWarning val5 = TimeWarning.New("Call", 0);
+					TimeWarning val3 = TimeWarning.New("Call", 0);
 					try
 					{
 						RPCMessage rPCMessage = default(RPCMessage);
@@ -84,7 +90,7 @@ public class ReactiveTarget : IOEntity
 					}
 					finally
 					{
-						((IDisposable)val5)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 				}
 				catch (Exception ex2)
@@ -94,7 +100,7 @@ public class ReactiveTarget : IOEntity
 				}
 				finally
 				{
-					((IDisposable)val4)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -108,43 +114,53 @@ public class ReactiveTarget : IOEntity
 
 	public void OnHitShared(HitInfo info)
 	{
-		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0093: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0129: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e6: Unknown result type (might be due to invalid IL or missing references)
-		if (IsKnockedDown())
+		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
+		if (IsKnockedDown() || IsLowered())
 		{
 			return;
 		}
-		bool flag = info.HitBone == StringPool.Get("target_collider");
-		bool flag2 = info.HitBone == StringPool.Get("target_collider_bullseye");
-		if ((flag || flag2) && base.isServer)
+		bool num = info.HitBone == StringPool.Get("target_collider");
+		bool flag = info.HitBone == StringPool.Get("target_collider_bullseye");
+		if ((num || flag) && base.isServer)
 		{
-			float num = info.damageTypes.Total();
-			if (flag2)
+			float num2 = info.damageTypes.Total();
+			if (flag)
 			{
-				num *= 2f;
+				num2 *= 2f;
 				Effect.server.Run(bullseyeEffect.resourcePath, this, StringPool.Get("target_collider_bullseye"), Vector3.zero, Vector3.zero);
 			}
-			knockdownHealth -= num;
+			knockdownHealth -= num2;
 			if (knockdownHealth <= 0f)
 			{
 				Effect.server.Run(knockdownEffect.resourcePath, this, StringPool.Get("target_collider_bullseye"), Vector3.zero, Vector3.zero);
 				SetFlag(Flags.On, b: false);
+				SetFlag(Flags.Reserved1, b: true);
 				QueueReset();
 				SendPowerBurst();
 				SendNetworkUpdate();
 			}
 			else
 			{
-				ClientRPC<NetworkableId>(null, "HitEffect", info.Initiator.net.ID);
+				ClientRPC<NetworkableId>(RpcTarget.NetworkGroup("HitEffect"), info.Initiator.net.ID);
 			}
 			Hurt(1f, DamageType.Suicide, info.Initiator, useProtection: false);
 		}
 	}
 
 	public bool IsKnockedDown()
+	{
+		if (IsLowered())
+		{
+			return HasFlag(Flags.Reserved1);
+		}
+		return false;
+	}
+
+	public bool IsLowered()
 	{
 		return !HasFlag(Flags.On);
 	}
@@ -155,27 +171,44 @@ public class ReactiveTarget : IOEntity
 		base.OnAttacked(info);
 	}
 
-	public override bool CanPickup(BasePlayer player)
-	{
-		return base.CanPickup(player) && CanToggle();
-	}
-
 	public bool CanToggle()
 	{
-		return Time.time > lastToggleTime + 1f;
+		float num = 1f;
+		num = ((inputAmountReset > 0) ? 0.25f : 1f);
+		return Time.time > lastToggleTime + num;
+	}
+
+	public bool CanLower()
+	{
+		if (inputAmountLower <= inputAmountReset)
+		{
+			return inputAmountReset == 0;
+		}
+		return true;
+	}
+
+	public bool CanReset()
+	{
+		if (inputAmountReset <= inputAmountLower)
+		{
+			return inputAmountLower == 0;
+		}
+		return true;
 	}
 
 	public void QueueReset()
 	{
-		((FacepunchBehaviour)this).Invoke((Action)ResetTarget, 6f);
+		float num = ((inputAmountReset > 0) ? 0.25f : 6f);
+		((FacepunchBehaviour)this).Invoke((Action)ResetTarget, num);
 	}
 
 	public void ResetTarget()
 	{
-		if (IsKnockedDown() && CanToggle())
+		if (IsLowered() && CanToggle() && CanReset())
 		{
 			((FacepunchBehaviour)this).CancelInvoke((Action)ResetTarget);
 			SetFlag(Flags.On, b: true);
+			SetFlag(Flags.Reserved1, b: false);
 			knockdownHealth = 100f;
 			SendPowerBurst();
 		}
@@ -183,7 +216,7 @@ public class ReactiveTarget : IOEntity
 
 	private void LowerTarget()
 	{
-		if (!IsKnockedDown() && CanToggle())
+		if (!IsKnockedDown() && CanToggle() && CanLower())
 		{
 			SetFlag(Flags.On, b: false);
 			SendPowerBurst();
@@ -209,33 +242,37 @@ public class ReactiveTarget : IOEntity
 
 	public override void UpdateFromInput(int inputAmount, int inputSlot)
 	{
-		if (inputSlot == 0)
+		switch (inputSlot)
 		{
+		case 0:
 			base.UpdateFromInput(inputAmount, inputSlot);
-		}
-		else if (inputAmount > 0)
-		{
-			switch (inputSlot)
+			break;
+		case 1:
+			inputAmountReset = inputAmount;
+			if (inputAmount > 0)
 			{
-			case 1:
 				ResetTarget();
-				break;
-			case 2:
-				LowerTarget();
-				break;
 			}
+			break;
+		case 2:
+			inputAmountLower = inputAmount;
+			if (inputAmount > 0)
+			{
+				LowerTarget();
+			}
+			break;
 		}
 	}
 
 	public override int GetPassthroughAmount(int outputSlot = 0)
 	{
-		if (IsKnockedDown())
+		if (IsLowered())
 		{
 			if (IsPowered())
 			{
 				return base.GetPassthroughAmount();
 			}
-			if (Time.time < lastToggleTime + activationPowerTime)
+			if (IsKnockedDown() && Time.time < lastToggleTime + activationPowerTime)
 			{
 				return activationPowerAmount;
 			}

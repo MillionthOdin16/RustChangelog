@@ -6,25 +6,33 @@ using UnityEngine.Assertions;
 
 public class CustomDoorManipulator : DoorManipulator
 {
+	public static Phrase pairAttemptPhrase = new Phrase("doorcontroller.unlock", "Door must be unlocked for pairing!");
+
+	private int inputOpenAmount;
+
+	private int inputCloseAmount;
+
+	private DoorEffect delayedAction;
+
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
 		TimeWarning val = TimeWarning.New("CustomDoorManipulator.OnRpcMessage", 0);
 		try
 		{
-			if (rpc == 1224330484 && (Object)(object)player != (Object)null)
+			if (rpc == 114855818 && (Object)(object)player != (Object)null)
 			{
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - DoPair "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_DoPair "));
 				}
-				TimeWarning val2 = TimeWarning.New("DoPair", 0);
+				TimeWarning val2 = TimeWarning.New("RPC_DoPair", 0);
 				try
 				{
 					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
-						if (!RPC_Server.IsVisible.Test(1224330484u, "DoPair", this, player, 3f))
+						if (!RPC_Server.IsVisible.Test(114855818u, "RPC_DoPair", this, player, 3f))
 						{
 							return true;
 						}
@@ -35,7 +43,7 @@ public class CustomDoorManipulator : DoorManipulator
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -43,73 +51,22 @@ public class CustomDoorManipulator : DoorManipulator
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
 							RPCMessage msg2 = rPCMessage;
-							DoPair(msg2);
+							RPC_DoPair(msg2);
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
 					{
 						Debug.LogException(ex);
-						player.Kick("RPC Error in DoPair");
+						player.Kick("RPC Error in RPC_DoPair");
 					}
 				}
 				finally
 				{
 					((IDisposable)val2)?.Dispose();
-				}
-				return true;
-			}
-			if (rpc == 3800726972u && (Object)(object)player != (Object)null)
-			{
-				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
-				if (Global.developer > 2)
-				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ServerActionChange "));
-				}
-				TimeWarning val5 = TimeWarning.New("ServerActionChange", 0);
-				try
-				{
-					TimeWarning val6 = TimeWarning.New("Conditions", 0);
-					try
-					{
-						if (!RPC_Server.IsVisible.Test(3800726972u, "ServerActionChange", this, player, 3f))
-						{
-							return true;
-						}
-					}
-					finally
-					{
-						((IDisposable)val6)?.Dispose();
-					}
-					try
-					{
-						TimeWarning val7 = TimeWarning.New("Call", 0);
-						try
-						{
-							RPCMessage rPCMessage = default(RPCMessage);
-							rPCMessage.connection = msg.connection;
-							rPCMessage.player = player;
-							rPCMessage.read = msg.read;
-							RPCMessage msg3 = rPCMessage;
-							ServerActionChange(msg3);
-						}
-						finally
-						{
-							((IDisposable)val7)?.Dispose();
-						}
-					}
-					catch (Exception ex2)
-					{
-						Debug.LogException(ex2);
-						player.Kick("RPC Error in ServerActionChange");
-					}
-				}
-				finally
-				{
-					((IDisposable)val5)?.Dispose();
 				}
 				return true;
 			}
@@ -121,38 +78,54 @@ public class CustomDoorManipulator : DoorManipulator
 		return base.OnRpcMessage(player, rpc, msg);
 	}
 
-	public override bool PairWithLockedDoors()
-	{
-		return false;
-	}
-
-	public bool CanPlayerAdmin(BasePlayer player)
-	{
-		return (Object)(object)player != (Object)null && player.CanBuild() && !IsOn();
-	}
-
 	public bool IsPaired()
 	{
 		return (Object)(object)targetDoor != (Object)null;
 	}
 
-	public void RefreshDoor()
-	{
-		SetTargetDoor(targetDoor);
-	}
-
-	private void OnPhysicsNeighbourChanged()
-	{
-		SetTargetDoor(targetDoor);
-		((FacepunchBehaviour)this).Invoke((Action)RefreshDoor, 0.1f);
-	}
-
 	public override void SetupInitialDoorConnection()
 	{
-		if (entityRef.IsValid(serverside: true) && (Object)(object)targetDoor == (Object)null)
+		if (entityRef.IsValid(serverside: true) && !IsPaired())
 		{
-			SetTargetDoor(((Component)entityRef.Get(serverside: true)).GetComponent<Door>());
+			Door component = ((Component)entityRef.Get(serverside: true)).GetComponent<Door>();
+			SetTargetDoor(component);
 		}
+	}
+
+	public override void SetTargetDoor(Door newTargetDoor)
+	{
+		targetDoor = newTargetDoor;
+		SetFlag(Flags.On, (Object)(object)targetDoor != (Object)null);
+		entityRef.Set(newTargetDoor);
+	}
+
+	public override void DoAction(DoorEffect action)
+	{
+		if (!IsPaired())
+		{
+			DoActionDoorMissing();
+			return;
+		}
+		if (targetDoor.IsBusy())
+		{
+			delayedAction = action;
+			((FacepunchBehaviour)this).Invoke((Action)DoDelayedAction, 1f);
+			return;
+		}
+		switch (action)
+		{
+		case DoorEffect.Open:
+			targetDoor.SetOpen(open: true);
+			break;
+		case DoorEffect.Close:
+			targetDoor.SetOpen(open: false);
+			break;
+		}
+	}
+
+	private void DoDelayedAction()
+	{
+		DoAction(delayedAction);
 	}
 
 	public override void DoActionDoorMissing()
@@ -160,21 +133,112 @@ public class CustomDoorManipulator : DoorManipulator
 		SetTargetDoor(null);
 	}
 
-	[RPC_Server]
-	[RPC_Server.IsVisible(3f)]
-	public void DoPair(RPCMessage msg)
+	public override Door FindDoor(bool allowLocked = true)
 	{
-		Door door = targetDoor;
-		Door door2 = FindDoor(PairWithLockedDoors());
-		if ((Object)(object)door2 != (Object)(object)door)
+		if (parentEntity.Get(serverside: true) is Door result)
 		{
-			SetTargetDoor(door2);
+			return result;
 		}
+		return null;
 	}
 
 	[RPC_Server]
 	[RPC_Server.IsVisible(3f)]
-	public void ServerActionChange(RPCMessage msg)
+	public void RPC_DoPair(RPCMessage msg)
 	{
+		Door door = targetDoor;
+		Door door2 = FindDoor();
+		if ((Object)(object)door2 != (Object)null && (Object)(object)door2 != (Object)(object)door)
+		{
+			PairDoorAttempt(door2, msg.player);
+		}
+	}
+
+	private void PairDoorAttempt(Door door, BasePlayer byPlayer)
+	{
+		if (door.GetPlayerLockPermission(byPlayer))
+		{
+			SetTargetDoor(door);
+		}
+		else
+		{
+			byPlayer.ShowToast(GameTip.Styles.Blue_Normal, pairAttemptPhrase);
+		}
+	}
+
+	public override void OnDeployed(BaseEntity parent, BasePlayer deployedBy, Item fromItem)
+	{
+		base.OnDeployed(parent, deployedBy, fromItem);
+		Door door = parent as Door;
+		if ((Object)(object)door != (Object)null)
+		{
+			((FacepunchBehaviour)this).Invoke((Action)delegate
+			{
+				PairDoorAttempt(door, deployedBy);
+			}, 0.25f);
+		}
+	}
+
+	public override void UpdateHasPower(int inputAmount, int inputSlot)
+	{
+		if (inputSlot == 0)
+		{
+			base.UpdateHasPower(inputAmount, inputSlot);
+		}
+	}
+
+	public override void IOStateChanged(int inputAmount, int inputSlot)
+	{
+	}
+
+	public override void UpdateFromInput(int inputAmount, int inputSlot)
+	{
+		if (inputSlot == 0)
+		{
+			bool flag = currentEnergy != 0;
+			base.UpdateFromInput(inputAmount, inputSlot);
+			if (inputAmount == 0 && flag && inputOpenAmount == 0)
+			{
+				DoAction(DoorEffect.Close);
+			}
+			else if (inputAmount > 0 && !flag)
+			{
+				inputCloseAmount = GetPowerAtInput(2);
+				DoAction((inputCloseAmount == 0) ? DoorEffect.Open : DoorEffect.Close);
+			}
+		}
+		if (inputSlot == 1 && inputOpenAmount != inputAmount)
+		{
+			if (inputAmount > 0 && IsPowered())
+			{
+				DoAction(DoorEffect.Open);
+			}
+			inputOpenAmount = inputAmount;
+		}
+		else if (inputSlot == 2 && inputCloseAmount != inputAmount)
+		{
+			if (inputAmount > 0 && IsPowered())
+			{
+				DoAction(DoorEffect.Close);
+			}
+			inputCloseAmount = inputAmount;
+		}
+	}
+
+	private int GetPowerAtInput(int slotIndex)
+	{
+		IOSlot iOSlot = inputs[slotIndex];
+		if (!iOSlot.IsConnected())
+		{
+			return 0;
+		}
+		int connectedToSlot = iOSlot.connectedToSlot;
+		return iOSlot.connectedTo.Get().GetPassthroughAmount(connectedToSlot);
+	}
+
+	public override void Load(LoadInfo info)
+	{
+		base.Load(info);
+		targetDoor = entityRef.Get(base.isServer) as Door;
 	}
 }

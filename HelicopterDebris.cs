@@ -15,7 +15,7 @@ public class HelicopterDebris : ServerGib
 
 	private ResourceDispenser resourceDispenser;
 
-	private float tooHotUntil = 0f;
+	private float tooHotUntil;
 
 	public override void ServerInit()
 	{
@@ -31,8 +31,7 @@ public class HelicopterDebris : ServerGib
 			return;
 		}
 		resourceDispenser = ((Component)this).GetComponent<ResourceDispenser>();
-		Rigidbody component = ((Component)this).GetComponent<Rigidbody>();
-		float num = Mathf.Clamp01(component.mass / massReductionScalar);
+		float num = Mathf.Clamp01(((Component)this).GetComponent<Rigidbody>().mass / massReductionScalar);
 		resourceDispenser.containedItems = new List<ItemAmount>();
 		if (num > 0.75f && (Object)(object)hqMetal != (Object)null)
 		{
@@ -59,10 +58,10 @@ public class HelicopterDebris : ServerGib
 
 	public override void OnAttacked(HitInfo info)
 	{
-		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0095: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
 		if (IsTooHot() && info.WeaponPrefab is BaseMelee)
 		{
 			if (info.Initiator is BasePlayer)

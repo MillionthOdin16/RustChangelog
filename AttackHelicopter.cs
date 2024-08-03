@@ -94,6 +94,25 @@ public class AttackHelicopter : PlayerHelicopter
 	[SerializeField]
 	private float flareLaunchVel = 10f;
 
+	[Header("Heli Pilot Lights")]
+	[SerializeField]
+	private Renderer rocketLightOff;
+
+	[SerializeField]
+	private Renderer rocketLightRed;
+
+	[SerializeField]
+	private Renderer rocketLightGreen;
+
+	[SerializeField]
+	private Renderer flareLightOff;
+
+	[SerializeField]
+	private Renderer flareLightRed;
+
+	[SerializeField]
+	private Renderer flareLightGreen;
+
 	[Header("Heli Turret")]
 	public Vector2 turretPitchClamp = new Vector2(-15f, 70f);
 
@@ -422,10 +441,10 @@ public class AttackHelicopter : PlayerHelicopter
 			}
 			else if (inputState.WasJustPressed(BUTTON.FIRE_PRIMARY))
 			{
-				WeaponFireFailed(rockets.GetAmmoAmount(), player);
+				WeaponFireFailed(rockets.GetRocketAmount(), player);
 			}
 		}
-		if (flag && !TryFireFlare())
+		if (flag && !GetRockets().TryFireFlare())
 		{
 			FlareFireFailed(player);
 		}
@@ -469,7 +488,7 @@ public class AttackHelicopter : PlayerHelicopter
 			}
 			else if (inputState.WasJustPressed(BUTTON.FIRE_SECONDARY))
 			{
-				WeaponFireFailed(rockets.GetAmmoAmount(), player);
+				WeaponFireFailed(rockets.GetRocketAmount(), player);
 			}
 		}
 	}
@@ -477,11 +496,11 @@ public class AttackHelicopter : PlayerHelicopter
 	private void WeaponFireFailed(int ammo, BasePlayer player)
 	{
 		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
 		if (!(TimeSince.op_Implicit(timeSinceFailedWeaponFireRPC) <= 1f) && ammo <= 0)
 		{
-			ClientRPCPlayer(null, player, "WeaponFireFailed");
+			ClientRPC(RpcTarget.Player("WeaponFireFailed", player));
 			timeSinceFailedWeaponFireRPC = TimeSince.op_Implicit(0f);
 		}
 	}
@@ -489,11 +508,11 @@ public class AttackHelicopter : PlayerHelicopter
 	private void FlareFireFailed(BasePlayer player)
 	{
 		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
 		if (!(TimeSince.op_Implicit(timeSinceFailedFlareRPC) <= 1f))
 		{
-			ClientRPCPlayer(null, player, "FlareFireFailed");
+			ClientRPC(RpcTarget.Player("FlareFireFailed", player));
 			timeSinceFailedFlareRPC = TimeSince.op_Implicit(0f);
 		}
 	}
@@ -626,11 +645,11 @@ public class AttackHelicopter : PlayerHelicopter
 				_ => ItemManager.FindItemDefinition("ammo.rocket.fire"), 
 			};
 			int num4 = itemDefinition2.stackable * 2;
-			int ammoAmount = rockets.GetAmmoAmount();
+			int rocketAmount = rockets.GetRocketAmount();
 			int num5 = itemDefinition3.stackable * (rockets.inventory.capacity - num4);
-			if (ammoAmount < num5)
+			if (rocketAmount < num5)
 			{
-				int num6 = num5 - ammoAmount;
+				int num6 = num5 - rocketAmount;
 				while (num6 > 0)
 				{
 					int num7 = Mathf.Min(num6, itemDefinition3.stackable);
@@ -643,18 +662,7 @@ public class AttackHelicopter : PlayerHelicopter
 		return true;
 	}
 
-	private bool TryFireFlare()
-	{
-		AttackHelicopterRockets rockets = GetRockets();
-		if ((Object)(object)rockets != (Object)null && rockets.TryTakeFlare())
-		{
-			LaunchFlare();
-			return true;
-		}
-		return false;
-	}
-
-	private void LaunchFlare()
+	public void LaunchFlare()
 	{
 		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
 		//IL_001b: Unknown result type (might be due to invalid IL or missing references)

@@ -7,7 +7,7 @@ public class BoundsCheck : PrefabAttribute
 		Tree
 	}
 
-	public BlockType IsType = BlockType.Tree;
+	public BlockType IsType;
 
 	protected override Type GetIndexedType()
 	{

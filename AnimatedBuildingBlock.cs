@@ -7,7 +7,10 @@ public class AnimatedBuildingBlock : StabilityEntity
 
 	private bool animatorIsOpen = true;
 
-	private bool isAnimating = false;
+	[HideInInspector]
+	public bool isAnimating;
+
+	private static readonly int Open = Animator.StringToHash("open");
 
 	public override void ServerInit()
 	{
@@ -30,20 +33,25 @@ public class AnimatedBuildingBlock : StabilityEntity
 		UpdateAnimationParameters(init: false);
 	}
 
+	protected virtual void ApplySubAnimationParameters(bool init, Animator toAnimator)
+	{
+	}
+
 	protected void UpdateAnimationParameters(bool init)
 	{
 		if (!Object.op_Implicit((Object)(object)model) || !Object.op_Implicit((Object)(object)model.animator) || !model.animator.isInitialized)
 		{
 			return;
 		}
-		bool flag = animatorNeedsInitializing || animatorIsOpen != IsOpen() || (init && isAnimating);
-		bool flag2 = animatorNeedsInitializing || init;
-		if (flag)
+		bool num = animatorNeedsInitializing || animatorIsOpen != IsOpen() || (init && isAnimating);
+		bool flag = animatorNeedsInitializing || init;
+		if (num)
 		{
 			isAnimating = true;
 			((Behaviour)model.animator).enabled = true;
-			model.animator.SetBool("open", animatorIsOpen = IsOpen());
-			if (flag2)
+			model.animator.SetBool(Open, animatorIsOpen = IsOpen());
+			ApplySubAnimationParameters(init, model.animator);
+			if (flag)
 			{
 				model.animator.fireEvents = false;
 				if (((Behaviour)model.animator).isActiveAndEnabled)
@@ -52,6 +60,7 @@ public class AnimatedBuildingBlock : StabilityEntity
 					model.animator.Update(20f);
 				}
 				PutAnimatorToSleep();
+				isAnimating = false;
 			}
 			else
 			{
@@ -62,14 +71,14 @@ public class AnimatedBuildingBlock : StabilityEntity
 				}
 			}
 		}
-		else if (flag2)
+		else if (flag)
 		{
 			PutAnimatorToSleep();
 		}
 		animatorNeedsInitializing = false;
 	}
 
-	protected void OnAnimatorFinished()
+	protected virtual void OnAnimatorFinished()
 	{
 		if (!isAnimating)
 		{

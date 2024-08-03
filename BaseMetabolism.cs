@@ -2,7 +2,6 @@ using System;
 using ConVar;
 using Rust;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 public static class BaseMetabolism
 {
@@ -48,12 +47,8 @@ public abstract class BaseMetabolism<T> : EntityComponent<T> where T : BaseComba
 		{
 			if (Object.op_Implicit((Object)(object)owner) && !owner.IsDead())
 			{
-				Profiler.BeginSample("RunMetabolism");
 				RunMetabolism(ownerEntity, timeSinceLastMetabolism);
-				Profiler.EndSample();
-				Profiler.BeginSample("DoMetabolismDamage");
 				DoMetabolismDamage(ownerEntity, timeSinceLastMetabolism);
-				Profiler.EndSample();
 			}
 			timeSinceLastMetabolism = 0f;
 		}
@@ -75,14 +70,14 @@ public abstract class BaseMetabolism<T> : EntityComponent<T> where T : BaseComba
 		}
 		if (hydration.value <= 20f)
 		{
-			TimeWarning val2 = TimeWarning.New("Hyration Hurt", 0);
+			TimeWarning val = TimeWarning.New("Hyration Hurt", 0);
 			try
 			{
 				ownerEntity.Hurt(Mathf.InverseLerp(20f, 0f, hydration.value) * delta * (2f / 15f), DamageType.Thirst);
 			}
 			finally
 			{
-				((IDisposable)val2)?.Dispose();
+				((IDisposable)val)?.Dispose();
 			}
 		}
 	}
@@ -102,14 +97,18 @@ public abstract class BaseMetabolism<T> : EntityComponent<T> where T : BaseComba
 		heartrate.MoveTowards(0.05f, delta * (1f / 60f));
 	}
 
-	public void ApplyChange(MetabolismAttribute.Type type, float amount, float time)
+	public virtual void ApplyChange(MetabolismAttribute.Type type, float amount, float time)
 	{
 		FindAttribute(type)?.Add(amount);
 	}
 
 	public bool ShouldDie()
 	{
-		return Object.op_Implicit((Object)(object)owner) && owner.Health() <= 0f;
+		if (Object.op_Implicit((Object)(object)owner))
+		{
+			return owner.Health() <= 0f;
+		}
+		return false;
 	}
 
 	public virtual MetabolismAttribute FindAttribute(MetabolismAttribute.Type type)

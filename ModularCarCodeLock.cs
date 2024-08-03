@@ -22,7 +22,9 @@ public class ModularCarCodeLock
 
 	public const float LOCK_DESTROY_HEALTH = 0.2f;
 
-	private int wrongCodes = 0;
+	private List<ulong> whitelistPlayers = new List<ulong>();
+
+	private int wrongCodes;
 
 	private float lastWrongTime = float.NegativeInfinity;
 
@@ -38,10 +40,19 @@ public class ModularCarCodeLock
 		}
 	}
 
-	public bool CentralLockingIsOn => (Object)(object)owner != (Object)null && owner.HasFlag(BaseEntity.Flags.Reserved2);
+	public bool CentralLockingIsOn
+	{
+		get
+		{
+			if ((Object)(object)owner != (Object)null)
+			{
+				return owner.HasFlag(BaseEntity.Flags.Reserved2);
+			}
+			return false;
+		}
+	}
 
-	public List<ulong> WhitelistPlayers { get; private set; } = new List<ulong>();
-
+	public IList<ulong> WhitelistPlayers => whitelistPlayers.AsReadOnly();
 
 	public string Code { get; private set; } = "";
 
@@ -67,11 +78,19 @@ public class ModularCarCodeLock
 
 	public bool CodeEntryBlocked(BasePlayer player)
 	{
+		if (!HasALock)
+		{
+			return true;
+		}
 		if (HasLockPermission(player))
 		{
 			return false;
 		}
-		return (Object)(object)owner != (Object)null && owner.HasFlag(BaseEntity.Flags.Reserved10);
+		if ((Object)(object)owner != (Object)null)
+		{
+			return owner.HasFlag(BaseEntity.Flags.Reserved10);
+		}
+		return false;
 	}
 
 	public void Load(BaseNetworkable.LoadInfo info)
@@ -81,8 +100,8 @@ public class ModularCarCodeLock
 		{
 			Code = "";
 		}
-		WhitelistPlayers.Clear();
-		WhitelistPlayers.AddRange(info.msg.modularCar.whitelistUsers);
+		whitelistPlayers.Clear();
+		whitelistPlayers.AddRange(info.msg.modularCar.whitelistUsers);
 	}
 
 	public bool HasLockPermission(BasePlayer player)
@@ -95,7 +114,7 @@ public class ModularCarCodeLock
 		{
 			return false;
 		}
-		return WhitelistPlayers.Contains(player.userID);
+		return whitelistPlayers.Contains(player.userID);
 	}
 
 	public bool PlayerCanUseThis(BasePlayer player, LockType lockType)
@@ -115,7 +134,11 @@ public class ModularCarCodeLock
 
 	public bool CanHaveALock()
 	{
-		return !owner.IsDead() && owner.HasDriverMountPoints();
+		if (!owner.IsDead())
+		{
+			return owner.HasDriverMountPoints();
+		}
+		return false;
 	}
 
 	public bool TryAddALock(string code, ulong userID)
@@ -134,7 +157,11 @@ public class ModularCarCodeLock
 
 	public bool IsValidLockCode(string code)
 	{
-		return code != null && code.Length == 4 && StringEx.IsNumeric(code);
+		if (code != null && code.Length == 4)
+		{
+			return StringEx.IsNumeric(code);
+		}
+		return false;
 	}
 
 	public bool TrySetNewCode(string newCode, ulong userID)
@@ -144,8 +171,8 @@ public class ModularCarCodeLock
 			return false;
 		}
 		Code = newCode;
-		WhitelistPlayers.Clear();
-		WhitelistPlayers.Add(userID);
+		whitelistPlayers.Clear();
+		whitelistPlayers.Add(userID);
 		owner.SendNetworkUpdate();
 		return true;
 	}
@@ -185,9 +212,8 @@ public class ModularCarCodeLock
 			lastWrongTime = Time.realtimeSinceStartup;
 			return false;
 		}
-		if (!WhitelistPlayers.Contains(player.userID))
+		if (TryAddPlayer(player.userID))
 		{
-			WhitelistPlayers.Add(player.userID);
 			wrongCodes = 0;
 		}
 		owner.SendNetworkUpdate();
@@ -234,6 +260,21 @@ public class ModularCarCodeLock
 			info.msg.modularCar.lockCode = Code;
 		}
 		info.msg.modularCar.whitelistUsers = Pool.Get<List<ulong>>();
-		info.msg.modularCar.whitelistUsers.AddRange(WhitelistPlayers);
+		info.msg.modularCar.whitelistUsers.AddRange(whitelistPlayers);
+	}
+
+	public bool TryAddPlayer(ulong userID)
+	{
+		if (!whitelistPlayers.Contains(userID))
+		{
+			whitelistPlayers.Add(userID);
+			return true;
+		}
+		return false;
+	}
+
+	public bool TryRemovePlayer(ulong userID)
+	{
+		return whitelistPlayers.Remove(userID);
 	}
 }

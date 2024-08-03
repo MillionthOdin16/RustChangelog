@@ -23,6 +23,8 @@ public class GPUInstancedCulling
 
 		public GPUBuffer<float4> frustumPlanes;
 
+		public bool frustumCulling;
+
 		public GPUBuffer<InstancedCullData> inputBuffer;
 
 		public int inputLength;
@@ -76,6 +78,8 @@ public class GPUInstancedCulling
 
 	private static readonly int Param_Multidraw_Enabled = Shader.PropertyToID("_Multidraw_Enabled");
 
+	private static readonly int Param_FrustumCullingEnabled = Shader.PropertyToID("_FrustumCullingEnabled");
+
 	private GPUBuffer<uint> tempBuffer;
 
 	private GPUBuffer<uint> postCullMeshCounts;
@@ -124,12 +128,12 @@ public class GPUInstancedCulling
 		ClearBuffer(SingletonComponent<InstancedScheduler>.Instance.ClearBufferShader, options.renderBuffer);
 		ClearBuffer(SingletonComponent<InstancedScheduler>.Instance.ClearBufferShader, options.indirectArgs);
 		ClearBuffer(SingletonComponent<InstancedScheduler>.Instance.ClearBufferShader, options.indirectExtraArgs);
-		CullingShader(options.cullShader, options.inputBuffer, options.inputLength, tempBuffer, options.renderSlices, options.frustumPlanes, options.shadowCameras, options.cameraPosition, options.maxDistance, options.distanceScale);
+		CullingShader(options.cullShader, options.inputBuffer, options.inputLength, tempBuffer, options.renderSlices, options.frustumPlanes, options.shadowCameras, options.cameraPosition, options.maxDistance, options.distanceScale, options.frustumCulling);
 		SimplePostCull(options.postCullShader, tempBuffer, options.renderBuffer, options.renderSlices, options.sliceCount, postCullMeshCounts);
 		WriteIndirectArgs(SingletonComponent<InstancedScheduler>.Instance.WriteIndirectArgsShader, postCullMeshCounts, options.renderSlices, options.drawCalls, options.drawCallCount, options.indirectArgs, options.indirectExtraArgs);
 	}
 
-	private static void CullingShader(ComputeShader shader, GPUBuffer<InstancedCullData> inputBuffer, int inputLength, GPUBuffer<uint> outputBuffer, GPUBuffer<RenderSlice> renderSlices, GPUBuffer<float4> frustumPlanes, int shadowCameras, Vector3 cameraPosition, float maxDistance, float distanceScale)
+	private static void CullingShader(ComputeShader shader, GPUBuffer<InstancedCullData> inputBuffer, int inputLength, GPUBuffer<uint> outputBuffer, GPUBuffer<RenderSlice> renderSlices, GPUBuffer<float4> frustumPlanes, int shadowCameras, Vector3 cameraPosition, float maxDistance, float distanceScale, bool frustumCulling)
 	{
 		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
@@ -148,6 +152,7 @@ public class GPUInstancedCulling
 			shader.SetVector(Param_CameraPosition, Vector4.op_Implicit(cameraPosition));
 			shader.SetFloat(Param_MaxDistance, maxDistance);
 			shader.SetFloat(Param_DistanceScale, distanceScale);
+			shader.SetFloat(Param_FrustumCullingEnabled, frustumCulling ? 1f : 0f);
 			shader.SetInt(Param_ShadowFrustumCount, shadowCameras);
 			shader.Dispatch(num, iterationCount, 1, 1);
 		}

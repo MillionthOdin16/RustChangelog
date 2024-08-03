@@ -8,7 +8,6 @@ using ProtoBuf;
 using Rust;
 using UnityEngine;
 using UnityEngine.Assertions;
-using UnityEngine.Profiling;
 
 public class BaseRidableAnimal : BaseVehicle
 {
@@ -28,7 +27,8 @@ public class BaseRidableAnimal : BaseVehicle
 
 	public enum RunState
 	{
-		stopped = 1,
+		reverse,
+		stopped,
 		walk,
 		run,
 		sprint,
@@ -41,15 +41,21 @@ public class BaseRidableAnimal : BaseVehicle
 
 	public int maxStackSize = 1;
 
-	public int numSlots;
+	public int numStorageSlots;
+
+	public int equipmentSlots = 4;
 
 	public string lootPanelName = "generic";
 
-	public bool needsBuildingPrivilegeToUse = false;
+	public string storagePanelName = "generic";
+
+	public bool needsBuildingPrivilegeToUse;
 
 	public bool isLootable = true;
 
-	public ItemContainer inventory;
+	public ItemContainer storageInventory;
+
+	public ItemContainer equipmentInventory;
 
 	public const Flags Flag_ForSale = Flags.Reserved2;
 
@@ -89,7 +95,15 @@ public class BaseRidableAnimal : BaseVehicle
 	[Header("Obstacles")]
 	public Transform animalFront;
 
-	public float obstacleDetectionRadius = 0.25f;
+	public Transform animalNeck;
+
+	public Transform animalRear;
+
+	public Transform animalHead;
+
+	public float obstacleDetectionRadius = 0.2f;
+
+	public float obstacleHeadDetectionRadius = 0.35f;
 
 	public float maxWaterDepth = 1.5f;
 
@@ -123,9 +137,9 @@ public class BaseRidableAnimal : BaseVehicle
 
 	public float DungProducedPerCalorie = 0.001f;
 
-	private float pendingDungCalories = 0f;
+	private float pendingDungCalories;
 
-	private float dungProduction = 0f;
+	private float dungProduction;
 
 	protected float prevStamina;
 
@@ -174,13 +188,13 @@ public class BaseRidableAnimal : BaseVehicle
 	[ServerVar(Help = "How long before a horse dies unattended")]
 	public static float decayminutes = 180f;
 
-	public float currentSpeed = 0f;
+	public float currentSpeed;
 
-	public float desiredRotation = 0f;
+	public float desiredRotation;
 
 	public float animalPitchClamp = 90f;
 
-	public float animalRollClamp = 0f;
+	public float animalRollClamp;
 
 	public static Queue<BaseRidableAnimal> _processQueue = new Queue<BaseRidableAnimal>();
 
@@ -192,39 +206,41 @@ public class BaseRidableAnimal : BaseVehicle
 	[Help("Scale all ridable animal dung production rates by this value. 0 will disable dung production.")]
 	public static float dungTimeScale = 1f;
 
-	private BaseEntity leadTarget = null;
+	private BaseEntity leadTarget;
 
-	private float nextDecayTime = 0f;
+	private float nextDecayTime;
 
 	private float lastMovementUpdateTime = -1f;
 
-	private bool inQueue = false;
+	private bool inQueue;
 
-	protected float nextEatTime = 0f;
+	protected float nextEatTime;
 
 	private float lastEatTime = float.NegativeInfinity;
 
-	private float lastInputTime = 0f;
+	private float lastInputTime;
 
-	private float forwardHeldSeconds = 0f;
+	private float forwardHeldSeconds;
 
-	private float backwardHeldSeconds = 0f;
+	private float backwardHeldSeconds;
 
-	private float sprintHeldSeconds = 0f;
+	private float sprintHeldSeconds;
 
-	private float lastSprintPressedTime = 0f;
+	private float noHeldSeconds;
 
-	private float lastForwardPressedTime = 0f;
+	private float lastSprintPressedTime;
 
-	private float lastBackwardPressedTime = 0f;
+	private float lastForwardPressedTime;
 
-	private float timeInMoveState = 0f;
+	private float lastBackwardPressedTime;
 
-	protected bool onIdealTerrain = false;
+	private float timeInMoveState;
 
-	private float nextIdealTerrainCheckTime = 0f;
+	protected bool onIdealTerrain;
 
-	private float nextStandTime = 0f;
+	private float nextIdealTerrainCheckTime;
+
+	private float nextStandTime;
 
 	private InputState aiInputState;
 
@@ -232,17 +248,17 @@ public class BaseRidableAnimal : BaseVehicle
 
 	private Vector3 averagedUp = Vector3.up;
 
-	private float nextGroundNormalUpdateTime = 0f;
+	private float nextGroundNormalUpdateTime;
 
 	private Vector3 targetUp = Vector3.up;
 
-	private float nextObstacleCheckTime = 0f;
+	private float nextObstacleCheckTime;
 
 	private float cachedObstacleDistance = float.PositiveInfinity;
 
 	private const int maxObstacleCheckSpeed = 10;
 
-	private float timeAlive = 0f;
+	private float timeAlive;
 
 	private TimeUntil dropUntilTime;
 
@@ -258,7 +274,7 @@ public class BaseRidableAnimal : BaseVehicle
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_Claim "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_Claim "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_Claim", 0);
 				try
@@ -277,7 +293,7 @@ public class BaseRidableAnimal : BaseVehicle
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -289,7 +305,7 @@ public class BaseRidableAnimal : BaseVehicle
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -309,12 +325,12 @@ public class BaseRidableAnimal : BaseVehicle
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_Lead "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_Lead "));
 				}
-				TimeWarning val5 = TimeWarning.New("RPC_Lead", 0);
+				TimeWarning val2 = TimeWarning.New("RPC_Lead", 0);
 				try
 				{
-					TimeWarning val6 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsVisible.Test(3653170552u, "RPC_Lead", this, player, 3f))
@@ -324,11 +340,11 @@ public class BaseRidableAnimal : BaseVehicle
 					}
 					finally
 					{
-						((IDisposable)val6)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val7 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -340,7 +356,7 @@ public class BaseRidableAnimal : BaseVehicle
 						}
 						finally
 						{
-							((IDisposable)val7)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -351,7 +367,7 @@ public class BaseRidableAnimal : BaseVehicle
 				}
 				finally
 				{
-					((IDisposable)val5)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -360,12 +376,12 @@ public class BaseRidableAnimal : BaseVehicle
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_OpenLoot "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_OpenLoot "));
 				}
-				TimeWarning val8 = TimeWarning.New("RPC_OpenLoot", 0);
+				TimeWarning val2 = TimeWarning.New("RPC_OpenLoot", 0);
 				try
 				{
-					TimeWarning val9 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsVisible.Test(331989034u, "RPC_OpenLoot", this, player, 3f))
@@ -375,11 +391,11 @@ public class BaseRidableAnimal : BaseVehicle
 					}
 					finally
 					{
-						((IDisposable)val9)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val10 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -391,7 +407,7 @@ public class BaseRidableAnimal : BaseVehicle
 						}
 						finally
 						{
-							((IDisposable)val10)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex3)
@@ -402,7 +418,7 @@ public class BaseRidableAnimal : BaseVehicle
 				}
 				finally
 				{
-					((IDisposable)val8)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -421,42 +437,65 @@ public class BaseRidableAnimal : BaseVehicle
 
 	public void ContainerServerInit()
 	{
-		if (inventory == null)
+		if (storageInventory == null)
 		{
-			CreateInventory(giveUID: true);
-			OnInventoryFirstCreated(inventory);
+			CreateStorageInventory(giveUID: true);
+			OnInventoryFirstCreated(storageInventory);
+		}
+		if (equipmentInventory == null)
+		{
+			CreateEquipmentInventory(giveUID: true);
+			OnInventoryFirstCreated(equipmentInventory);
 		}
 	}
 
-	public void CreateInventory(bool giveUID)
+	private void CreateInventories(bool giveUID)
 	{
-		inventory = new ItemContainer();
-		inventory.entityOwner = this;
-		inventory.allowedContents = ((allowedContents == (ItemContainer.ContentsType)0) ? ItemContainer.ContentsType.Generic : allowedContents);
-		inventory.SetOnlyAllowedItem(onlyAllowedItem);
-		inventory.maxStackSize = maxStackSize;
-		inventory.ServerInitialize(null, numSlots);
-		inventory.canAcceptItem = ItemFilter;
+		CreateStorageInventory(giveUID);
+		CreateEquipmentInventory(giveUID);
+	}
+
+	private void CreateEquipmentInventory(bool giveUID)
+	{
+		equipmentInventory = CreateInventory(giveUID, equipmentSlots);
+		equipmentInventory.canAcceptItem = CanAnimalAcceptItem;
+	}
+
+	private void CreateStorageInventory(bool giveUID)
+	{
+		storageInventory = CreateInventory(giveUID, 48);
+		storageInventory.canAcceptItem = ItemFilter;
+	}
+
+	public ItemContainer CreateInventory(bool giveUID, int slots)
+	{
+		ItemContainer itemContainer = new ItemContainer();
+		itemContainer.entityOwner = this;
+		itemContainer.allowedContents = ((allowedContents == (ItemContainer.ContentsType)0) ? ItemContainer.ContentsType.Generic : allowedContents);
+		itemContainer.SetOnlyAllowedItem(onlyAllowedItem);
+		itemContainer.maxStackSize = maxStackSize;
+		itemContainer.ServerInitialize(null, slots);
 		if (giveUID)
 		{
-			inventory.GiveUID();
+			itemContainer.GiveUID();
 		}
-		inventory.onItemAddedRemoved = OnItemAddedOrRemoved;
-		inventory.onDirty += OnInventoryDirty;
+		itemContainer.onItemAddedRemoved = OnItemAddedOrRemoved;
+		itemContainer.onDirty += OnInventoryDirty;
+		return itemContainer;
 	}
 
 	public void SaveContainer(SaveInfo info)
 	{
 		if (info.forDisk)
 		{
-			if (inventory != null)
+			info.msg.ridableAnimal = Pool.Get<RidableAnimal>();
+			if (storageInventory != null)
 			{
-				info.msg.storageBox = Pool.Get<StorageBox>();
-				info.msg.storageBox.contents = inventory.Save();
+				info.msg.ridableAnimal.storageContainer = storageInventory.Save();
 			}
-			else
+			if (equipmentInventory != null)
 			{
-				Debug.LogWarning((object)("Storage container without inventory: " + ((object)this).ToString()));
+				info.msg.ridableAnimal.equipmentContainer = equipmentInventory.Save();
 			}
 		}
 	}
@@ -475,7 +514,7 @@ public class BaseRidableAnimal : BaseVehicle
 
 	public bool ItemFilter(Item item, int targetSlot)
 	{
-		return CanAnimalAcceptItem(item, targetSlot);
+		return true;
 	}
 
 	public virtual bool CanAnimalAcceptItem(Item item, int targetSlot)
@@ -487,16 +526,25 @@ public class BaseRidableAnimal : BaseVehicle
 	[RPC_Server.IsVisible(3f)]
 	private void RPC_OpenLoot(RPCMessage rpc)
 	{
-		if (inventory != null)
+		if (storageInventory == null)
 		{
-			BasePlayer player = rpc.player;
-			if (Object.op_Implicit((Object)(object)player) && player.CanInteract() && CanOpenStorage(player) && (!needsBuildingPrivilegeToUse || player.CanBuild()) && player.inventory.loot.StartLootingEntity(this))
+			return;
+		}
+		BasePlayer player = rpc.player;
+		string text = rpc.read.String(256, false);
+		if (Object.op_Implicit((Object)(object)player) && player.CanInteract() && CanOpenStorage(player) && (!needsBuildingPrivilegeToUse || player.CanBuild()) && player.inventory.loot.StartLootingEntity(this))
+		{
+			ItemContainer container = equipmentInventory;
+			string arg = lootPanelName;
+			if (text == "storage")
 			{
-				player.inventory.loot.AddContainer(inventory);
-				player.inventory.loot.SendImmediate();
-				player.ClientRPCPlayer(null, player, "RPC_OpenLootPanel", lootPanelName);
-				SendNetworkUpdate();
+				arg = storagePanelName;
+				container = storageInventory;
 			}
+			player.inventory.loot.AddContainer(container);
+			player.inventory.loot.SendImmediate();
+			player.ClientRPC(RpcTarget.Player("RPC_OpenLootPanel", player), arg);
+			SendNetworkUpdate();
 		}
 	}
 
@@ -519,16 +567,25 @@ public class BaseRidableAnimal : BaseVehicle
 
 	public void LoadContainer(LoadInfo info)
 	{
-		if (info.fromDisk && info.msg.storageBox != null)
+		if (info.fromDisk && info.msg.ridableAnimal != null)
 		{
-			if (inventory != null)
+			if (equipmentInventory != null && info.msg.ridableAnimal.equipmentContainer != null)
 			{
-				inventory.Load(info.msg.storageBox.contents);
-				inventory.capacity = numSlots;
+				equipmentInventory.Load(info.msg.ridableAnimal.equipmentContainer);
+				equipmentInventory.capacity = equipmentSlots;
 			}
 			else
 			{
-				Debug.LogWarning((object)("Storage container without inventory: " + ((object)this).ToString()));
+				Debug.LogWarning((object)("Horse didn't have saved equipment inventory: " + ((object)this).ToString()));
+			}
+			if (storageInventory != null && info.msg.ridableAnimal.storageContainer != null)
+			{
+				storageInventory.Load(info.msg.ridableAnimal.storageContainer);
+				storageInventory.capacity = numStorageSlots;
+			}
+			else
+			{
+				Debug.LogWarning((object)("Horse didn't have savevd storage inventorry: " + ((object)this).ToString()));
 			}
 		}
 	}
@@ -537,10 +594,11 @@ public class BaseRidableAnimal : BaseVehicle
 	{
 		return currentRunState switch
 		{
+			RunState.stopped => -1f, 
 			RunState.walk => 8f, 
 			RunState.run => 5f, 
 			RunState.sprint => 2.5f, 
-			_ => -1f, 
+			_ => 12f, 
 		};
 	}
 
@@ -593,7 +651,7 @@ public class BaseRidableAnimal : BaseVehicle
 
 	public void DelayedDropToGround()
 	{
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
 		DropToGround(((Component)this).transform.position, force: true);
 		UpdateGroundNormal(force: true);
 	}
@@ -654,11 +712,11 @@ public class BaseRidableAnimal : BaseVehicle
 		BasePlayer player = msg.player;
 		if (!((Object)(object)player == (Object)null) && !AnyMounted() && !IsForSale())
 		{
-			bool flag = IsLeading();
-			bool flag2 = msg.read.Bit();
-			if (flag != flag2)
+			bool num = IsLeading();
+			bool flag = msg.read.Bit();
+			if (num != flag)
 			{
-				SetLeading(flag2 ? player : null);
+				SetLeading(flag ? player : null);
 				LeadingChanged();
 			}
 		}
@@ -797,7 +855,7 @@ public class BaseRidableAnimal : BaseVehicle
 
 	public void UpdateStamina(float delta)
 	{
-		if (currentRunState == RunState.sprint)
+		if (currentRunState == RunState.sprint && currentSpeed > 0f)
 		{
 			UseStamina(delta);
 		}
@@ -840,12 +898,15 @@ public class BaseRidableAnimal : BaseVehicle
 
 	public BaseMountable GetSaddle()
 	{
-		return saddleRef.IsValid(base.isServer) ? ((Component)saddleRef.Get(base.isServer)).GetComponent<BaseMountable>() : null;
+		if (!saddleRef.IsValid(base.isServer))
+		{
+			return null;
+		}
+		return ((Component)saddleRef.Get(base.isServer)).GetComponent<BaseMountable>();
 	}
 
 	public void BudgetedUpdate()
 	{
-		Profiler.BeginSample("BaseRidableAnimal.BudgetedUpdate");
 		DismountHeavyPlayers();
 		UpdateOnIdealTerrain();
 		UpdateStamina(Time.fixedDeltaTime);
@@ -861,7 +922,6 @@ public class BaseRidableAnimal : BaseVehicle
 		UpdateMovement(delta);
 		lastMovementUpdateTime = Time.realtimeSinceStartup;
 		UpdateDung(delta);
-		Profiler.EndSample();
 	}
 
 	public void ApplyDungCalories(float calories)
@@ -873,10 +933,9 @@ public class BaseRidableAnimal : BaseVehicle
 	{
 		if (!((Object)(object)Dung == (Object)null) && !Mathf.Approximately(dungTimeScale, 0f))
 		{
-			float num = Mathf.Min(pendingDungCalories * delta, CaloriesToDigestPerHour / 3600f * delta);
-			float num2 = num * DungProducedPerCalorie;
-			dungProduction += num2;
-			pendingDungCalories -= num2;
+			float num = Mathf.Min(pendingDungCalories * delta, CaloriesToDigestPerHour / 3600f * delta) * DungProducedPerCalorie;
+			dungProduction += num;
+			pendingDungCalories -= num;
 			if (dungProduction >= 1f)
 			{
 				DoDung();
@@ -886,23 +945,22 @@ public class BaseRidableAnimal : BaseVehicle
 
 	private void DoDung()
 	{
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
 		dungProduction -= 1f;
-		Item item = ItemManager.Create(Dung, 1, 0uL);
-		item.Drop(((Component)this).transform.position + -((Component)this).transform.forward + Vector3.up * 1.1f + Random.insideUnitSphere * 0.1f, -((Component)this).transform.forward);
+		ItemManager.Create(Dung, 1, 0uL).Drop(((Component)this).transform.position + -((Component)this).transform.forward + Vector3.up * 1.1f + Random.insideUnitSphere * 0.1f, -((Component)this).transform.forward);
 	}
 
 	public override void VehicleFixedUpdate()
@@ -923,14 +981,14 @@ public class BaseRidableAnimal : BaseVehicle
 
 	public void DoEatEvent()
 	{
-		ClientRPC(null, "Eat");
+		ClientRPC(RpcTarget.NetworkGroup("Eat"));
 	}
 
 	public void ReplenishFromFood(ItemModConsumable consumable)
 	{
 		if (Object.op_Implicit((Object)(object)consumable))
 		{
-			ClientRPC(null, "Eat");
+			ClientRPC(RpcTarget.NetworkGroup("Eat"));
 			lastEatTime = Time.time;
 			float ifType = consumable.GetIfType(MetabolismAttribute.Type.Calories);
 			float ifType2 = consumable.GetIfType(MetabolismAttribute.Type.Hydration);
@@ -943,10 +1001,10 @@ public class BaseRidableAnimal : BaseVehicle
 
 	public virtual void EatNearbyFood()
 	{
-		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
 		if (Time.time < nextEatTime)
 		{
 			return;
@@ -958,7 +1016,7 @@ public class BaseRidableAnimal : BaseVehicle
 			return;
 		}
 		List<BaseEntity> list = Pool.GetList<BaseEntity>();
-		Vis.Entities(((Component)this).transform.position + ((Component)this).transform.forward * 1.5f, 2f, list, 67109377, (QueryTriggerInteraction)2);
+		Vis.Entities(((Component)this).transform.position + ((Component)this).transform.forward * 1.5f, 2f, list, -2147483135, (QueryTriggerInteraction)2);
 		list.Sort((BaseEntity a, BaseEntity b) => (b is DroppedItem).CompareTo(a is DroppedItem));
 		foreach (BaseEntity item in list)
 		{
@@ -988,12 +1046,11 @@ public class BaseRidableAnimal : BaseVehicle
 				break;
 			}
 			GrowableEntity growableEntity = item as GrowableEntity;
-			if (!Object.op_Implicit((Object)(object)growableEntity) || !growableEntity.CanPick())
+			if (Object.op_Implicit((Object)(object)growableEntity) && growableEntity.CanPick())
 			{
-				continue;
+				growableEntity.PickFruit(null);
+				break;
 			}
-			growableEntity.PickFruit(null);
-			break;
 		}
 		Pool.FreeList<BaseEntity>(ref list);
 	}
@@ -1011,17 +1068,12 @@ public class BaseRidableAnimal : BaseVehicle
 
 	public void UpdateOnIdealTerrain()
 	{
-		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
-		if (Time.time < nextIdealTerrainCheckTime)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+		if (!(Time.time < nextIdealTerrainCheckTime))
 		{
-			return;
-		}
-		nextIdealTerrainCheckTime = Time.time + Random.Range(1f, 2f);
-		onIdealTerrain = false;
-		if ((Object)(object)TerrainMeta.TopologyMap != (Object)null)
-		{
-			int topology = TerrainMeta.TopologyMap.GetTopology(((Component)this).transform.position);
-			if (((uint)topology & 0x80800u) != 0)
+			nextIdealTerrainCheckTime = Time.time + Random.Range(1f, 2f);
+			onIdealTerrain = false;
+			if ((Object)(object)TerrainMeta.TopologyMap != (Object)null && ((uint)TerrainMeta.TopologyMap.GetTopology(((Component)this).transform.position) & 0x80800u) != 0)
 			{
 				onIdealTerrain = true;
 			}
@@ -1033,6 +1085,7 @@ public class BaseRidableAnimal : BaseVehicle
 		float num = 0f;
 		return stateToCheck switch
 		{
+			RunState.reverse => walkSpeed * -0.5f, 
 			RunState.walk => GetWalkSpeed(), 
 			RunState.run => GetTrotSpeed(), 
 			RunState.sprint => GetRunSpeed(), 
@@ -1064,7 +1117,7 @@ public class BaseRidableAnimal : BaseVehicle
 
 	public void ModifyRunState(int dir)
 	{
-		if ((currentRunState != RunState.stopped || dir >= 0) && (currentRunState != RunState.sprint || dir <= 0))
+		if ((currentRunState != 0 || dir >= 0) && (currentRunState != RunState.sprint || dir <= 0))
 		{
 			RunState newState = currentRunState + dir;
 			SwitchMoveState(newState);
@@ -1086,15 +1139,15 @@ public class BaseRidableAnimal : BaseVehicle
 
 	public virtual bool IsStandCollisionClear()
 	{
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
 		List<Collider> list = Pool.GetList<Collider>();
 		Vis.Colliders<Collider>(((Component)mountPoints[0].mountable.eyePositionOverride).transform.position - ((Component)this).transform.forward * 1f, 2f, list, 2162689, (QueryTriggerInteraction)2);
-		bool flag = list.Count > 0;
+		bool num = list.Count > 0;
 		Pool.FreeList<Collider>(ref list);
-		return !flag;
+		return !num;
 	}
 
 	public void DoDebugMovement()
@@ -1126,12 +1179,11 @@ public class BaseRidableAnimal : BaseVehicle
 
 	public virtual void RiderInput(InputState inputState, BasePlayer player)
 	{
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
 		float num = Time.time - lastInputTime;
 		lastInputTime = Time.time;
 		num = Mathf.Clamp(num, 0f, 1f);
-		Vector3 zero = Vector3.zero;
+		_ = Vector3.zero;
 		timeInMoveState += num;
 		if (inputState == null)
 		{
@@ -1141,6 +1193,7 @@ public class BaseRidableAnimal : BaseVehicle
 		{
 			lastForwardPressedTime = Time.time;
 			forwardHeldSeconds += num;
+			noHeldSeconds = 0f;
 		}
 		else
 		{
@@ -1150,6 +1203,7 @@ public class BaseRidableAnimal : BaseVehicle
 		{
 			lastBackwardPressedTime = Time.time;
 			backwardHeldSeconds += num;
+			noHeldSeconds = 0f;
 		}
 		else
 		{
@@ -1159,6 +1213,7 @@ public class BaseRidableAnimal : BaseVehicle
 		{
 			lastSprintPressedTime = Time.time;
 			sprintHeldSeconds += num;
+			noHeldSeconds = 0f;
 		}
 		else
 		{
@@ -1166,7 +1221,7 @@ public class BaseRidableAnimal : BaseVehicle
 		}
 		if (inputState.IsDown(BUTTON.DUCK) && CanStand() && (currentRunState == RunState.stopped || (currentRunState == RunState.walk && currentSpeed < 1f)))
 		{
-			ClientRPC(null, "Stand");
+			ClientRPC(RpcTarget.NetworkGroup("Stand"));
 			nextStandTime = Time.time + 3f;
 			currentSpeed = 0f;
 		}
@@ -1174,6 +1229,10 @@ public class BaseRidableAnimal : BaseVehicle
 		{
 			forwardHeldSeconds = 0f;
 			backwardHeldSeconds = 0f;
+		}
+		if (forwardHeldSeconds == 0f && backwardHeldSeconds == 0f && sprintHeldSeconds == 0f)
+		{
+			noHeldSeconds += num;
 		}
 		if (forwardHeldSeconds > 0f)
 		{
@@ -1188,19 +1247,38 @@ public class BaseRidableAnimal : BaseVehicle
 					SwitchMoveState(RunState.run);
 				}
 			}
-			else if (currentRunState == RunState.run && sprintHeldSeconds > 1f && CanInitiateSprint())
+			else if (currentRunState == RunState.run)
 			{
-				SwitchMoveState(RunState.sprint);
+				if (sprintHeldSeconds > 1f && CanInitiateSprint())
+				{
+					SwitchMoveState(RunState.sprint);
+				}
+			}
+			else if (currentRunState == RunState.reverse)
+			{
+				SwitchMoveState(RunState.stopped);
 			}
 		}
-		else if (backwardHeldSeconds > 1f)
+		else if (backwardHeldSeconds > 0.5f)
 		{
-			ModifyRunState(-1);
-			backwardHeldSeconds = 0.1f;
+			float num2 = ((currentRunState > RunState.walk) ? 1f : 0.5f);
+			if (currentRunState != 0 && timeInMoveState > num2)
+			{
+				ModifyRunState(-1);
+			}
 		}
-		else if (backwardHeldSeconds == 0f && forwardHeldSeconds == 0f && timeInMoveState > 1f && currentRunState != RunState.stopped)
+		else if (backwardHeldSeconds == 0f && forwardHeldSeconds == 0f)
 		{
-			ModifyRunState(-1);
+			if ((timeInMoveState > 1f && currentRunState > RunState.stopped) || (currentRunState == RunState.reverse && noHeldSeconds > 1f))
+			{
+				int dir = ((currentRunState == RunState.reverse) ? 1 : (-1));
+				ModifyRunState(dir);
+			}
+		}
+		else if (currentSpeed == 0f && timeInMoveState > 0.1f && currentRunState > RunState.stopped)
+		{
+			int dir2 = ((currentRunState == RunState.reverse) ? 1 : (-1));
+			ModifyRunState(dir2);
 		}
 		if (currentRunState == RunState.sprint && (!CanSprint() || Time.time - lastSprintPressedTime > 5f))
 		{
@@ -1208,19 +1286,23 @@ public class BaseRidableAnimal : BaseVehicle
 		}
 		if (inputState.IsDown(BUTTON.RIGHT))
 		{
+			noHeldSeconds = 0f;
 			if (currentRunState == RunState.stopped)
 			{
-				ModifyRunState(1);
+				int dir3 = ((!(backwardHeldSeconds > 0f) || forwardHeldSeconds != 0f) ? 1 : (-1));
+				ModifyRunState(dir3);
 			}
-			desiredRotation = 1f;
+			desiredRotation = ((currentRunState == RunState.reverse && currentSpeed < 0f) ? (-1f) : 1f);
 		}
 		else if (inputState.IsDown(BUTTON.LEFT))
 		{
+			noHeldSeconds = 0f;
 			if (currentRunState == RunState.stopped)
 			{
-				ModifyRunState(1);
+				int dir4 = ((!(backwardHeldSeconds > 0f) || forwardHeldSeconds != 0f) ? 1 : (-1));
+				ModifyRunState(dir4);
 			}
-			desiredRotation = -1f;
+			desiredRotation = ((currentRunState == RunState.reverse && currentSpeed < 0f) ? 1f : (-1f));
 		}
 		else
 		{
@@ -1244,40 +1326,36 @@ public class BaseRidableAnimal : BaseVehicle
 
 	public void UpdateGroundNormal(bool force = false)
 	{
-		//IL_00f8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fe: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0113: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ea: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00be: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ed: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a0: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
 		if (Time.time >= nextGroundNormalUpdateTime || force)
 		{
 			nextGroundNormalUpdateTime = Time.time + Random.Range(0.2f, 0.3f);
-			Profiler.BeginSample("BaseRidableAnimal.UpdateGroundNormal");
 			targetUp = averagedUp;
 			Transform[] array = groundSampleOffsets;
-			foreach (Transform val in array)
+			for (int i = 0; i < array.Length; i++)
 			{
-				Vector3 position = val.position;
-				if (TransformUtil.GetGroundInfo(position + Vector3.up * 2f, out var _, out var normal, 4f, LayerMask.op_Implicit(295763969)))
+				if (TransformUtil.GetGroundInfo(array[i].position + Vector3.up * 2f, out var _, out var normal, 4f, LayerMask.op_Implicit(429981697)))
 				{
 					targetUp += normal;
 				}
@@ -1287,7 +1365,6 @@ public class BaseRidableAnimal : BaseVehicle
 				}
 			}
 			targetUp /= (float)(groundSampleOffsets.Length + 1);
-			Profiler.EndSample();
 		}
 		averagedUp = Vector3.Lerp(averagedUp, targetUp, Time.deltaTime * 2f);
 	}
@@ -1302,7 +1379,7 @@ public class BaseRidableAnimal : BaseVehicle
 		if (Time.time >= nextObstacleCheckTime)
 		{
 			float desiredVelocity = GetDesiredVelocity();
-			if (currentSpeed > 0f || desiredVelocity > 0f)
+			if (Mathf.Abs(desiredVelocity) > 0f)
 			{
 				cachedObstacleDistance = ObstacleDistanceCheck(Mathf.Max(desiredVelocity, 2f));
 			}
@@ -1313,140 +1390,138 @@ public class BaseRidableAnimal : BaseVehicle
 
 	public float ObstacleDistanceCheck(float speed = 10f)
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0089: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ac: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ba: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00be: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00dc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00de: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ee: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ff: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0107: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0129: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0132: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0137: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0158: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0093: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ce: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ea: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ec: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0110: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0115: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0117: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0119: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0122: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0127: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0138: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0140: Unknown result type (might be due to invalid IL or missing references)
 		//IL_015d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0173: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03a3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03a8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03aa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03af: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03b4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03b9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03bb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03bd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01fa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01fc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0205: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0207: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0162: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0166: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0174: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0176: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0180: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0185: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0187: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0190: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0192: Unknown result type (might be due to invalid IL or missing references)
-		//IL_019d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01bc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0234: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0236: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0238: Unknown result type (might be due to invalid IL or missing references)
-		//IL_024d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_024f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0251: Unknown result type (might be due to invalid IL or missing references)
-		//IL_026b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0270: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0275: Unknown result type (might be due to invalid IL or missing references)
-		//IL_027a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_028a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_028c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0293: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0298: Unknown result type (might be due to invalid IL or missing references)
-		//IL_029d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_029f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02b9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02be: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02c3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02c8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02ca: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02da: Unknown result type (might be due to invalid IL or missing references)
-		//IL_033a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_033c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0345: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0338: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0339: Unknown result type (might be due to invalid IL or missing references)
+		//IL_033b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0340: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0342: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0347: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02f2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02f4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02f6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02fb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02ff: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0369: Unknown result type (might be due to invalid IL or missing references)
-		Vector3 position = ((Component)this).transform.position;
+		//IL_0349: Unknown result type (might be due to invalid IL or missing references)
+		//IL_034b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ec: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ee: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01aa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0218: Unknown result type (might be due to invalid IL or missing references)
+		//IL_021a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_021c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01da: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0230: Unknown result type (might be due to invalid IL or missing references)
+		//IL_024a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_024f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0254: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0267: Unknown result type (might be due to invalid IL or missing references)
+		//IL_026e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0273: Unknown result type (might be due to invalid IL or missing references)
+		//IL_028a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_028b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0290: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02a3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02f1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02f3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02fa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02fc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02b6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02b8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02ba: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02bf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02c3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_031c: Unknown result type (might be due to invalid IL or missing references)
+		_ = ((Component)this).transform.position;
 		int num = Mathf.Max(2, Mathf.Min((int)speed, 10));
 		float num2 = 0.5f;
 		int num3 = Mathf.CeilToInt((float)num / num2);
 		float num4 = 0f;
-		Vector3 val = QuaternionEx.LookRotationForcedUp(((Component)this).transform.forward, Vector3.up) * Vector3.forward;
-		Vector3 val2 = ((Component)movementLOSOrigin).transform.position;
-		val2.y = ((Component)this).transform.position.y;
+		Vector3 val = ((currentRunState == RunState.reverse) ? (-((Component)this).transform.forward) : ((Component)this).transform.forward);
+		Vector3 val2 = ((currentRunState == RunState.reverse) ? Vector3.back : Vector3.forward);
+		Vector3 val3 = QuaternionEx.LookRotationForcedUp(val, Vector3.up) * val2;
+		Vector3 val4 = ((currentRunState == RunState.reverse) ? ((Component)animalRear).transform.position : ((Component)movementLOSOrigin).transform.position);
+		val4.y = ((Component)this).transform.position.y;
 		Vector3 up = ((Component)this).transform.up;
-		RaycastHit val6 = default(RaycastHit);
+		RaycastHit val8 = default(RaycastHit);
 		for (int i = 0; i < num3; i++)
 		{
-			Profiler.BeginSample("BaseRidableAnimal.ObstacleSegment");
 			float num5 = num2;
 			bool flag = false;
 			float num6 = 0f;
 			Vector3 pos = Vector3.zero;
 			Vector3 normal = Vector3.up;
-			Vector3 val3 = val2;
-			Vector3 val4 = val3 + Vector3.up * (maxStepHeight + obstacleDetectionRadius);
-			Vector3 val5 = val3 + val * num5;
+			Vector3 val5 = val4;
+			Vector3 val6 = val5 + Vector3.up * (maxStepHeight + obstacleDetectionRadius);
+			Vector3 val7 = val5 + val3 * num5;
 			float num7 = maxStepDownHeight + obstacleDetectionRadius;
-			if (Physics.SphereCast(val4, obstacleDetectionRadius, val, ref val6, num5, 1486954753))
+			if (Physics.SphereCast(val6, obstacleDetectionRadius, val3, ref val8, num5, 1486954753))
 			{
-				num6 = ((RaycastHit)(ref val6)).distance;
-				pos = ((RaycastHit)(ref val6)).point;
-				normal = ((RaycastHit)(ref val6)).normal;
+				num6 = ((RaycastHit)(ref val8)).distance;
+				pos = ((RaycastHit)(ref val8)).point;
+				normal = ((RaycastHit)(ref val8)).normal;
 				flag = true;
 			}
 			if (!flag)
 			{
-				if (!TransformUtil.GetGroundInfo(val5 + Vector3.up * 2f, out pos, out normal, 2f + num7, LayerMask.op_Implicit(295763969)))
+				if (!TransformUtil.GetGroundInfo(val7 + Vector3.up * 2f, out pos, out normal, 2f + num7, LayerMask.op_Implicit(429981697)))
 				{
-					Profiler.EndSample();
 					return num4;
 				}
-				num6 = Vector3.Distance(val3, pos);
+				num6 = Vector3.Distance(val5, pos);
 				if (WaterLevel.Test(pos + Vector3.one * maxWaterDepth, waves: true, volumes: true, this))
 				{
-					normal = -((Component)this).transform.forward;
-					Profiler.EndSample();
+					normal = -val;
 					return num4;
 				}
 				flag = true;
@@ -1457,38 +1532,33 @@ public class BaseRidableAnimal : BaseVehicle
 				float num9 = Vector3.Angle(normal, Vector3.up);
 				if (num8 > maxWallClimbSlope || num9 > maxWallClimbSlope)
 				{
-					Vector3 val7 = normal;
+					Vector3 val9 = normal;
 					float num10 = pos.y;
 					int num11 = 1;
 					for (int j = 0; j < normalOffsets.Length; j++)
 					{
-						Vector3 val8 = val5;
-						val8 += normalOffsets[j].x * ((Component)this).transform.right;
+						Vector3 val10 = val7 + normalOffsets[j].x * ((Component)this).transform.right;
 						float num12 = maxStepHeight * 2.5f;
-						val8 += Vector3.up * num12;
-						val8 += normalOffsets[j].z * ((Component)this).transform.forward;
-						if (TransformUtil.GetGroundInfo(val8, out var pos2, out var normal2, num7 + num12, LayerMask.op_Implicit(295763969)))
+						if (TransformUtil.GetGroundInfo(val10 + Vector3.up * num12 + normalOffsets[j].z * val, out var pos2, out var normal2, num7 + num12, LayerMask.op_Implicit(429981697)))
 						{
 							num11++;
-							val7 += normal2;
+							val9 += normal2;
 							num10 += pos2.y;
 						}
 					}
 					num10 /= (float)num11;
-					((Vector3)(ref val7)).Normalize();
-					num8 = Vector3.Angle(up, val7);
-					num9 = Vector3.Angle(val7, Vector3.up);
-					if (num8 > maxWallClimbSlope || num9 > maxWallClimbSlope || Mathf.Abs(num10 - val5.y) > maxStepHeight)
+					((Vector3)(ref val9)).Normalize();
+					float num13 = Vector3.Angle(up, val9);
+					num9 = Vector3.Angle(val9, Vector3.up);
+					if (num13 > maxWallClimbSlope || num9 > maxWallClimbSlope || Mathf.Abs(num10 - val7.y) > maxStepHeight)
 					{
-						Profiler.EndSample();
 						return num4;
 					}
 				}
 			}
 			num4 += num6;
-			val = QuaternionEx.LookRotationForcedUp(((Component)this).transform.forward, normal) * Vector3.forward;
-			val2 = pos;
-			Profiler.EndSample();
+			val3 = QuaternionEx.LookRotationForcedUp(val, normal) * val2;
+			val4 = pos;
 		}
 		return num4;
 	}
@@ -1499,85 +1569,93 @@ public class BaseRidableAnimal : BaseVehicle
 
 	public void UpdateMovement(float delta)
 	{
-		//IL_0114: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0119: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0121: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0136: Unknown result type (might be due to invalid IL or missing references)
-		//IL_013b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0146: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0150: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0158: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0163: Unknown result type (might be due to invalid IL or missing references)
-		//IL_016d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0172: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ee: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fe: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0103: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0108: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0110: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0125: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0135: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0147: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0151: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0153: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0155: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0167: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0182: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0187: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0189: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0191: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0196: Unknown result type (might be due to invalid IL or missing references)
-		//IL_019b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_019d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_019f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01aa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01bb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ce: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01d6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_031b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0326: Unknown result type (might be due to invalid IL or missing references)
-		//IL_032b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0360: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0366: Unknown result type (might be due to invalid IL or missing references)
-		//IL_051b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_051d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0522: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0526: Unknown result type (might be due to invalid IL or missing references)
-		//IL_052b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_053d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0542: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0546: Unknown result type (might be due to invalid IL or missing references)
+		//IL_018a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_028e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0299: Unknown result type (might be due to invalid IL or missing references)
+		//IL_029e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02d3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02d9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_054b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_054d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0552: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0556: Unknown result type (might be due to invalid IL or missing references)
 		//IL_055b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0560: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0563: Unknown result type (might be due to invalid IL or missing references)
-		//IL_056b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0570: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0495: Unknown result type (might be due to invalid IL or missing references)
-		//IL_049a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_04a2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_04a7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_04af: Unknown result type (might be due to invalid IL or missing references)
-		//IL_04df: Unknown result type (might be due to invalid IL or missing references)
-		//IL_05a3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_056d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0572: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0576: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0586: Unknown result type (might be due to invalid IL or missing references)
+		//IL_058b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0590: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0593: Unknown result type (might be due to invalid IL or missing references)
+		//IL_059b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_05a0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03e1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03ed: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03f2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03fa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03ff: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0407: Unknown result type (might be due to invalid IL or missing references)
+		//IL_042e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0451: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0478: Unknown result type (might be due to invalid IL or missing references)
+		//IL_049b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04f1: Unknown result type (might be due to invalid IL or missing references)
 		//IL_05c7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_05dd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_05e2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_05f2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_05f7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_05fc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0601: Unknown result type (might be due to invalid IL or missing references)
-		//IL_060e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0619: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0631: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0647: Unknown result type (might be due to invalid IL or missing references)
-		//IL_064c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_065c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0661: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0666: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0671: Unknown result type (might be due to invalid IL or missing references)
-		//IL_068e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0693: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0697: Unknown result type (might be due to invalid IL or missing references)
-		//IL_069c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_050b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_06cc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_06ce: Unknown result type (might be due to invalid IL or missing references)
-		//IL_06d9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_06de: Unknown result type (might be due to invalid IL or missing references)
+		//IL_053e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_051a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04d2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04df: Unknown result type (might be due to invalid IL or missing references)
+		//IL_05fa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0607: Unknown result type (might be due to invalid IL or missing references)
+		//IL_060c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_061c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0621: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0626: Unknown result type (might be due to invalid IL or missing references)
+		//IL_062b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_063d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0642: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0646: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0690: Unknown result type (might be due to invalid IL or missing references)
+		//IL_069b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_06b8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_066b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_075f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0767: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0784: Unknown result type (might be due to invalid IL or missing references)
+		//IL_07a9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_07ae: Unknown result type (might be due to invalid IL or missing references)
+		//IL_07b2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_07b7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_07f6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_07f8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0803: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0808: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0728: Unknown result type (might be due to invalid IL or missing references)
 		float num = WaterFactor();
 		if (num > 1f && !base.IsDestroyed)
 		{
@@ -1614,14 +1692,14 @@ public class BaseRidableAnimal : BaseVehicle
 			float num2 = Vector3.Dot(val, val3);
 			float num3 = Vector3.Dot(val2, val3);
 			bool flag = Vector3Ex.Distance2D(position, ((Component)this).transform.position) > 2.5f;
-			bool flag2 = Vector3Ex.Distance2D(position, ((Component)this).transform.position) > 10f;
+			bool num4 = Vector3Ex.Distance2D(position, ((Component)this).transform.position) > 10f;
 			if (flag || num3 < 0.95f)
 			{
-				float num4 = Mathf.InverseLerp(0f, 1f, num2);
-				float num5 = 1f - Mathf.InverseLerp(-1f, 0f, num2);
+				float num5 = Mathf.InverseLerp(0f, 1f, num2);
+				float num6 = 1f - Mathf.InverseLerp(-1f, 0f, num2);
 				desiredRotation = 0f;
-				desiredRotation += num4 * 1f;
-				desiredRotation += num5 * -1f;
+				desiredRotation += num5 * 1f;
+				desiredRotation += num6 * -1f;
 				if (Mathf.Abs(desiredRotation) < 0.001f)
 				{
 					desiredRotation = 0f;
@@ -1640,15 +1718,13 @@ public class BaseRidableAnimal : BaseVehicle
 				desiredRotation = 0f;
 				SwitchMoveState(RunState.stopped);
 			}
-			if (flag2)
+			if (num4)
 			{
 				SetLeading(null);
 				SwitchMoveState(RunState.stopped);
 			}
 		}
-		Profiler.BeginSample("BaseRidableAnimal.ObstacleDistanceCheck");
 		float obstacleDistance = GetObstacleDistance();
-		Profiler.EndSample();
 		RunState runState = StateFromSpeed(obstacleDistance * GetRunSpeed());
 		if (runState < currentRunState)
 		{
@@ -1656,13 +1732,11 @@ public class BaseRidableAnimal : BaseVehicle
 		}
 		float desiredVelocity = GetDesiredVelocity();
 		Vector3 val4 = Vector3.forward * Mathf.Sign(desiredVelocity);
-		float num6 = Mathf.InverseLerp(0.85f, 1f, obstacleDistance);
-		float num7 = Mathf.InverseLerp(1.25f, 10f, obstacleDistance);
-		float num8 = 1f - Mathf.InverseLerp(20f, 45f, Vector3.Angle(Vector3.up, averagedUp));
-		num7 = num6 * 0.1f + num7 * 0.9f;
-		float num9 = Mathf.Min(num8 + 0.2f, num7);
-		num9 = Mathf.Clamp01(num9);
-		float num10 = Mathf.Min(num9 * GetRunSpeed(), desiredVelocity);
+		float num7 = Mathf.InverseLerp(0.85f, 1f, obstacleDistance);
+		float num8 = Mathf.InverseLerp(1.25f, 10f, obstacleDistance);
+		float num9 = 1f - Mathf.InverseLerp(20f, 45f, Vector3.Angle(Vector3.up, averagedUp));
+		num8 = num7 * 0.1f + num8 * 0.9f;
+		float num10 = Mathf.Min(Mathf.Clamp01(Mathf.Min(num9 + 0.2f, num8)) * GetRunSpeed(), desiredVelocity);
 		float num11 = ((num10 < currentSpeed) ? 3f : 1f);
 		if (Mathf.Abs(currentSpeed) < 2f && desiredVelocity == 0f)
 		{
@@ -1672,7 +1746,7 @@ public class BaseRidableAnimal : BaseVehicle
 		{
 			currentSpeed = Mathf.Lerp(currentSpeed, num10, delta * num11);
 		}
-		if (num7 == 0f)
+		if (num8 == 0f)
 		{
 			currentSpeed = 0f;
 		}
@@ -1680,70 +1754,117 @@ public class BaseRidableAnimal : BaseVehicle
 		num12 = (num12 + 1f) / 2f;
 		if (desiredRotation != 0f)
 		{
-			Vector3 position2 = ((Component)animalFront).transform.position;
+			_ = ((Component)animalFront).transform.position;
 			Quaternion rotation = ((Component)this).transform.rotation;
+			Vector3 position2 = ((Component)this).transform.position;
 			((Component)this).transform.Rotate(Vector3.up, desiredRotation * delta * turnSpeed * num12);
-			if (!IsLeading() && Vis.AnyColliders(((Component)animalFront).transform.position, obstacleDetectionRadius * 0.25f, 1503731969, (QueryTriggerInteraction)1))
+			bool flag2 = GamePhysics.OverlapSphere(((Component)animalHead).transform.position, obstacleHeadDetectionRadius, 2162688, (QueryTriggerInteraction)1);
+			bool num13 = GamePhysics.OverlapSphere(((Component)animalNeck).transform.position, obstacleDetectionRadius * 1.8f, 2097152, (QueryTriggerInteraction)1);
+			bool flag3 = GamePhysics.OverlapSphere(((Component)animalRear).transform.position, obstacleDetectionRadius, 65536, (QueryTriggerInteraction)1);
+			bool flag4 = GamePhysics.OverlapSphere(((Component)animalRear).transform.position, obstacleDetectionRadius * 1.8f, 2097152, (QueryTriggerInteraction)1);
+			if ((num13 || flag2 || flag3 || flag4) && !IsLeading())
+			{
+				((Component)this).transform.rotation = rotation;
+				((Component)this).transform.position = position2;
+			}
+			if (Vis.AnyColliders(((Component)animalNeck).transform.position, obstacleHeadDetectionRadius * 0.25f, 1503731969, (QueryTriggerInteraction)1) || Vis.AnyColliders(((Component)animalFront).transform.position, obstacleHeadDetectionRadius * 0.25f, 1503731969, (QueryTriggerInteraction)1))
 			{
 				((Component)this).transform.rotation = rotation;
 			}
 		}
 		Vector3 val5 = ((Component)this).transform.TransformDirection(val4);
 		Vector3 normalized = ((Vector3)(ref val5)).normalized;
-		float num13 = currentSpeed * delta;
-		Vector3 val6 = ((Component)this).transform.position + normalized * num13 * Mathf.Sign(currentSpeed);
+		float num14 = currentSpeed * delta;
+		Vector3 val6 = ((Component)this).transform.position + normalized * num14 * Mathf.Sign(currentSpeed);
 		currentVelocity = val5 * currentSpeed;
 		UpdateGroundNormal();
-		Profiler.BeginSample("BaseRidableAnimal.MovementCheck");
-		if (currentSpeed > 0f || timeAlive < 2f || TimeUntil.op_Implicit(dropUntilTime) > 0f)
+		if (currentSpeed == 0f && !(timeAlive < 2f) && !(TimeUntil.op_Implicit(dropUntilTime) > 0f))
 		{
-			Vector3 val7 = ((Component)this).transform.position + ((Component)this).transform.InverseTransformPoint(((Component)animalFront).transform.position).y * ((Component)this).transform.up;
-			RaycastHit val8 = default(RaycastHit);
-			bool flag3 = Physics.SphereCast(((Component)animalFront).transform.position, obstacleDetectionRadius, normalized, ref val8, num13, 1503731969);
-			bool flag4 = Physics.SphereCast(((Component)this).transform.position + ((Component)this).transform.InverseTransformPoint(((Component)animalFront).transform.position).y * ((Component)this).transform.up, obstacleDetectionRadius, normalized, ref val8, num13, 1503731969);
-			if (!Vis.AnyColliders(((Component)animalFront).transform.position + normalized * num13, obstacleDetectionRadius, 1503731969, (QueryTriggerInteraction)1) && !flag3 && !flag4)
+			return;
+		}
+		Transform val7 = ((currentRunState > RunState.reverse) ? animalFront : animalRear);
+		Vector3 val8 = ((Component)this).transform.position + ((Component)this).transform.InverseTransformPoint(val7.position).y * ((Component)this).transform.up;
+		bool flag5 = false;
+		bool flag6 = false;
+		bool flag7 = false;
+		bool flag8 = false;
+		bool flag9 = false;
+		OBB val9 = WorldSpaceBounds();
+		bool flag10 = GamePhysics.CheckBounds(((OBB)(ref val9)).ToBounds(), 2097152, (QueryTriggerInteraction)0);
+		RaycastHit val10 = default(RaycastHit);
+		if (currentRunState == RunState.reverse)
+		{
+			flag9 = GamePhysics.OverlapSphere(((Component)animalRear).transform.position, obstacleDetectionRadius, 2162688, (QueryTriggerInteraction)1);
+		}
+		else
+		{
+			flag5 = Physics.SphereCast(((Component)animalFront).transform.position, obstacleHeadDetectionRadius, normalized, ref val10, num14, 1503731969);
+			flag7 = GamePhysics.OverlapSphere(((Component)animalHead).transform.position, obstacleHeadDetectionRadius, 2162688, (QueryTriggerInteraction)1);
+		}
+		bool flag11 = false;
+		if (AnyMounted())
+		{
+			foreach (MountPointInfo allMountPoint in base.allMountPoints)
 			{
-				if (DropToGround(val6 + Vector3.up * maxStepHeight))
+				if ((Object)(object)allMountPoint.mountable == (Object)null)
 				{
-					MarkDistanceTravelled(num13);
+					continue;
 				}
-				else
+				BasePlayer mounted = allMountPoint.mountable.GetMounted();
+				if (!((Object)(object)mounted == (Object)null))
 				{
-					currentSpeed = 0f;
+					flag11 = GamePhysics.OverlapSphere(mounted.eyes.position, obstacleHeadDetectionRadius, 65536, (QueryTriggerInteraction)1);
+					if (flag11)
+					{
+						break;
+					}
 				}
+			}
+		}
+		flag6 = Physics.SphereCast(val8, obstacleDetectionRadius, normalized, ref val10, num14, 1503731969);
+		flag8 = GamePhysics.OverlapSphere(((Component)animalNeck).transform.position, obstacleDetectionRadius * 2.3f, 2097152, (QueryTriggerInteraction)1);
+		bool flag12 = Vis.AnyColliders(((Component)val7).transform.position + normalized * num14, obstacleHeadDetectionRadius, 1503731969, (QueryTriggerInteraction)1);
+		if (!flag10 && !flag11 && !flag9 && !flag7 && !flag8 && !flag12 && !flag5 && !flag6)
+		{
+			if (DropToGround(val6 + Vector3.up * maxStepHeight))
+			{
+				MarkDistanceTravelled(num14);
 			}
 			else
 			{
 				currentSpeed = 0f;
 			}
 		}
-		Profiler.EndSample();
+		else
+		{
+			currentSpeed = 0f;
+		}
 	}
 
 	public bool DropToGround(Vector3 targetPos, bool force = false)
 	{
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0108: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e6: Unknown result type (might be due to invalid IL or missing references)
 		float range = (force ? 10000f : (maxStepHeight + maxStepDownHeight));
-		if (TransformUtil.GetGroundInfo(targetPos, out var pos, out var _, range, LayerMask.op_Implicit(295763969)))
+		if (TransformUtil.GetGroundInfo(targetPos, out var pos, out var _, range, LayerMask.op_Implicit(429981697)))
 		{
-			if (Physics.CheckSphere(pos + Vector3.up * 1f, 0.2f, 295763969))
+			if (Physics.CheckSphere(pos + Vector3.up * 1f, 0.2f, 429981697))
 			{
 				return false;
 			}
@@ -1767,12 +1888,12 @@ public class BaseRidableAnimal : BaseVehicle
 
 	public virtual void DoNetworkUpdate()
 	{
-		bool flag = false || prevStamina != staminaSeconds || prevMaxStamina != currentMaxStaminaSeconds || prevRunState != (int)currentRunState || prevMaxSpeed != GetRunSpeed();
+		bool num = false || prevStamina != staminaSeconds || prevMaxStamina != currentMaxStaminaSeconds || prevRunState != (int)currentRunState || prevMaxSpeed != GetRunSpeed();
 		prevStamina = staminaSeconds;
 		prevMaxStamina = currentMaxStaminaSeconds;
 		prevRunState = (int)currentRunState;
 		prevMaxSpeed = GetRunSpeed();
-		if (flag)
+		if (num)
 		{
 			SendNetworkUpdate();
 		}
@@ -1781,7 +1902,7 @@ public class BaseRidableAnimal : BaseVehicle
 	public override void PreServerLoad()
 	{
 		base.PreServerLoad();
-		CreateInventory(giveUID: false);
+		CreateInventories(giveUID: false);
 	}
 
 	public override void ServerInit()
@@ -1816,22 +1937,20 @@ public class BaseRidableAnimal : BaseVehicle
 		LootableCorpse component = ((Component)corpse).GetComponent<LootableCorpse>();
 		if (Object.op_Implicit((Object)(object)component))
 		{
-			component.TakeFrom(inventory);
+			component.TakeFrom(this, storageInventory);
 		}
 	}
 
 	public override Vector3 GetLocalVelocityServer()
 	{
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
 		return currentVelocity;
 	}
 
 	public void UpdateDropToGroundForDuration(float duration)
 	{
-		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
 		dropUntilTime = TimeUntil.op_Implicit(duration);
 	}
 
@@ -1847,7 +1966,7 @@ public class BaseRidableAnimal : BaseVehicle
 
 	public Item GetPurchaseToken(BasePlayer player, int tokenItemID)
 	{
-		return player.inventory.FindItemID(tokenItemID);
+		return player.inventory.FindItemByItemID(tokenItemID);
 	}
 
 	public virtual float GetWalkSpeed()
@@ -1864,10 +1983,10 @@ public class BaseRidableAnimal : BaseVehicle
 	{
 		if (base.isServer)
 		{
-			float num = runSpeed;
-			float num2 = Mathf.InverseLerp(maxStaminaSeconds * 0.5f, maxStaminaSeconds, currentMaxStaminaSeconds) * staminaCoreSpeedBonus;
-			float num3 = (onIdealTerrain ? roadSpeedBonus : 0f);
-			return runSpeed + num2 + num3;
+			_ = runSpeed;
+			float num = Mathf.InverseLerp(maxStaminaSeconds * 0.5f, maxStaminaSeconds, currentMaxStaminaSeconds) * staminaCoreSpeedBonus;
+			float num2 = (onIdealTerrain ? roadSpeedBonus : 0f);
+			return runSpeed + num + num2;
 		}
 		return runSpeed;
 	}

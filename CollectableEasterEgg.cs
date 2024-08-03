@@ -4,7 +4,7 @@ using Network;
 using UnityEngine;
 using UnityEngine.Assertions;
 
-public class CollectableEasterEgg : BaseEntity
+public class CollectableEasterEgg : BaseEntity, INotifyLOD
 {
 	public Transform artwork;
 
@@ -16,7 +16,10 @@ public class CollectableEasterEgg : BaseEntity
 
 	public ItemDefinition itemToGive;
 
-	private float lastPickupStartTime = 0f;
+	[NonSerialized]
+	public ulong ownerUserID;
+
+	private float lastPickupStartTime;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -28,7 +31,7 @@ public class CollectableEasterEgg : BaseEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_PickUp "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_PickUp "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_PickUp", 0);
 				try
@@ -47,7 +50,7 @@ public class CollectableEasterEgg : BaseEntity
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -59,7 +62,7 @@ public class CollectableEasterEgg : BaseEntity
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -79,12 +82,12 @@ public class CollectableEasterEgg : BaseEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_StartPickUp "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_StartPickUp "));
 				}
-				TimeWarning val5 = TimeWarning.New("RPC_StartPickUp", 0);
+				TimeWarning val2 = TimeWarning.New("RPC_StartPickUp", 0);
 				try
 				{
-					TimeWarning val6 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsVisible.Test(2243088389u, "RPC_StartPickUp", this, player, 3f))
@@ -94,11 +97,11 @@ public class CollectableEasterEgg : BaseEntity
 					}
 					finally
 					{
-						((IDisposable)val6)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val7 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -110,7 +113,7 @@ public class CollectableEasterEgg : BaseEntity
 						}
 						finally
 						{
-							((IDisposable)val7)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -121,7 +124,7 @@ public class CollectableEasterEgg : BaseEntity
 				}
 				finally
 				{
-					((IDisposable)val5)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -156,18 +159,17 @@ public class CollectableEasterEgg : BaseEntity
 	[RPC_Server.IsVisible(3f)]
 	public void RPC_PickUp(RPCMessage msg)
 	{
-		//IL_00d2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00eb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)msg.player == (Object)null)
 		{
 			return;
 		}
 		float num = Time.realtimeSinceStartup - lastPickupStartTime;
-		EasterBasket easterBasket = msg.player.GetHeldEntity() as EasterBasket;
-		if (!Object.op_Implicit((Object)(object)easterBasket) && (num > 2f || num < 0.8f))
+		if (!Object.op_Implicit((Object)(object)(msg.player.GetHeldEntity() as EasterBasket)) && (num > 2f || num < 0.8f))
 		{
 			return;
 		}
@@ -177,7 +179,7 @@ public class CollectableEasterEgg : BaseEntity
 			{
 				return;
 			}
-			EggHuntEvent.serverEvent.EggCollected(msg.player);
+			EggHuntEvent.serverEvent.OnEggCollected(msg.player, this);
 			int iAmount = 1;
 			msg.player.GiveItem(ItemManager.Create(itemToGive, iAmount, 0uL));
 		}

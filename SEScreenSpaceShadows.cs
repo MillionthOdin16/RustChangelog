@@ -4,7 +4,7 @@ using UnityEngine.Rendering;
 [RequireComponent(typeof(Camera))]
 [AddComponentMenu("Image Effects/Sonic Ether/SE Screen-Space Shadows")]
 [ExecuteInEditMode]
-public class SEScreenSpaceShadows : MonoBehaviour
+public class SEScreenSpaceShadows : SingletonComponent<SEScreenSpaceShadows>, IClientComponent
 {
 	private CommandBuffer blendShadowsCommandBuffer;
 
@@ -40,7 +40,7 @@ public class SEScreenSpaceShadows : MonoBehaviour
 
 	public bool stochasticSampling = true;
 
-	public bool leverageTemporalAA = false;
+	public bool leverageTemporalAA;
 
 	public bool bilateralBlur = true;
 

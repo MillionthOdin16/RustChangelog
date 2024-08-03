@@ -5,11 +5,11 @@ public class TerrainPathChildObjects : MonoBehaviour
 {
 	public bool Spline = true;
 
-	public float Width = 0f;
+	public float Width;
 
-	public float Offset = 0f;
+	public float Offset;
 
-	public float Fade = 0f;
+	public float Fade;
 
 	[InspectorFlags]
 	public Enum Splat = (Enum)1;
@@ -17,21 +17,21 @@ public class TerrainPathChildObjects : MonoBehaviour
 	[InspectorFlags]
 	public Enum Topology = (Enum)2048;
 
-	public InfrastructureType Type = InfrastructureType.Road;
+	public InfrastructureType Type;
 
 	protected void Awake()
 	{
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Expected O, but got Unknown
 		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003c: Expected O, but got Unknown
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0126: Expected I4, but got Unknown
-		//IL_0129: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0133: Expected I4, but got Unknown
-		//IL_01e5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ef: Expected I4, but got Unknown
-		//IL_01f2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01fc: Expected I4, but got Unknown
+		//IL_0105: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010f: Expected I4, but got Unknown
+		//IL_0112: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011c: Expected I4, but got Unknown
+		//IL_01d0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01da: Expected I4, but got Unknown
+		//IL_01dd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01e7: Expected I4, but got Unknown
 		if (!World.Cached && !World.Networked)
 		{
 			List<Vector3> list = new List<Vector3>();
@@ -82,23 +82,21 @@ public class TerrainPathChildObjects : MonoBehaviour
 
 	protected void OnDrawGizmos()
 	{
-		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0024: Expected O, but got Unknown
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
 		bool flag = false;
 		Vector3 a = Vector3.zero;
 		foreach (Transform item in ((Component)this).transform)
 		{
-			Transform val = item;
-			Vector3 position = val.position;
+			Vector3 position = item.position;
 			if (flag)
 			{
 				Gizmos.color = new Color(0.5f, 0.5f, 0.5f, 1f);

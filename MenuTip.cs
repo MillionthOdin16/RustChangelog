@@ -44,9 +44,9 @@ public class MenuTip : MonoBehaviour
 		new TokenisedPhrase("menutip_gestures", "Cheer on your friends by pressing [+gestures] to open the gesture menu")
 	};
 
-	private int currentTipIndex = 0;
+	private int currentTipIndex;
 
-	private float nextTipTime = 0f;
+	private float nextTipTime;
 
 	public void OnEnable()
 	{

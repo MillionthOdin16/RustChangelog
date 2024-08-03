@@ -28,6 +28,10 @@ public class Chainsaw : BaseMelee
 
 	private Vector2 saveST;
 
+	public static readonly Phrase UnloadAmmoTitle = new Phrase("unload_ammo", "Unload Ammo");
+
+	public static readonly Phrase UnloadAmmoDesc = new Phrase("unload_ammo_desc", "Unload the ammunition in this weapon and place it in your inventory.");
+
 	[Header("Chainsaw")]
 	public float fuelPerSec = 1f;
 
@@ -50,11 +54,13 @@ public class Chainsaw : BaseMelee
 
 	public SoundPlayer offSound;
 
-	private int failedAttempts = 0;
+	private int failedAttempts;
 
 	public float engineStartChance = 0.33f;
 
-	private float ammoRemainder = 0f;
+	private TimeSince lastReloadSignalFromClient;
+
+	private float ammoRemainder;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -66,7 +72,7 @@ public class Chainsaw : BaseMelee
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - DoReload "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - DoReload "));
 				}
 				TimeWarning val2 = TimeWarning.New("DoReload", 0);
 				try
@@ -85,7 +91,7 @@ public class Chainsaw : BaseMelee
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -97,7 +103,7 @@ public class Chainsaw : BaseMelee
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -117,12 +123,12 @@ public class Chainsaw : BaseMelee
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_SetAttacking "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_SetAttacking "));
 				}
-				TimeWarning val5 = TimeWarning.New("Server_SetAttacking", 0);
+				TimeWarning val2 = TimeWarning.New("Server_SetAttacking", 0);
 				try
 				{
-					TimeWarning val6 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsActiveItem.Test(706698034u, "Server_SetAttacking", this, player))
@@ -132,11 +138,11 @@ public class Chainsaw : BaseMelee
 					}
 					finally
 					{
-						((IDisposable)val6)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val7 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -148,7 +154,7 @@ public class Chainsaw : BaseMelee
 						}
 						finally
 						{
-							((IDisposable)val7)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -159,7 +165,7 @@ public class Chainsaw : BaseMelee
 				}
 				finally
 				{
-					((IDisposable)val5)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -168,12 +174,12 @@ public class Chainsaw : BaseMelee
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_StartEngine "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_StartEngine "));
 				}
-				TimeWarning val8 = TimeWarning.New("Server_StartEngine", 0);
+				TimeWarning val2 = TimeWarning.New("Server_StartEngine", 0);
 				try
 				{
-					TimeWarning val9 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsActiveItem.Test(3881794867u, "Server_StartEngine", this, player))
@@ -183,11 +189,11 @@ public class Chainsaw : BaseMelee
 					}
 					finally
 					{
-						((IDisposable)val9)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val10 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -199,7 +205,7 @@ public class Chainsaw : BaseMelee
 						}
 						finally
 						{
-							((IDisposable)val10)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex3)
@@ -210,7 +216,7 @@ public class Chainsaw : BaseMelee
 				}
 				finally
 				{
-					((IDisposable)val8)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -219,12 +225,12 @@ public class Chainsaw : BaseMelee
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_StopEngine "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_StopEngine "));
 				}
-				TimeWarning val11 = TimeWarning.New("Server_StopEngine", 0);
+				TimeWarning val2 = TimeWarning.New("Server_StopEngine", 0);
 				try
 				{
-					TimeWarning val12 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsActiveItem.Test(841093980u, "Server_StopEngine", this, player))
@@ -234,11 +240,11 @@ public class Chainsaw : BaseMelee
 					}
 					finally
 					{
-						((IDisposable)val12)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val13 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -250,7 +256,7 @@ public class Chainsaw : BaseMelee
 						}
 						finally
 						{
-							((IDisposable)val13)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex4)
@@ -261,7 +267,7 @@ public class Chainsaw : BaseMelee
 				}
 				finally
 				{
-					((IDisposable)val11)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -281,6 +287,17 @@ public class Chainsaw : BaseMelee
 	public bool IsAttacking()
 	{
 		return HasFlag(Flags.Busy);
+	}
+
+	protected override void OnReceivedSignalServer(Signal signal, string arg)
+	{
+		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		base.OnReceivedSignalServer(signal, arg);
+		if (signal == Signal.Reload && base.isServer)
+		{
+			lastReloadSignalFromClient = TimeSince.op_Implicit(0f);
+		}
 	}
 
 	public void ServerNPCStart()
@@ -371,8 +388,10 @@ public class Chainsaw : BaseMelee
 	[RPC_Server.IsActiveItem]
 	public void DoReload(RPCMessage msg)
 	{
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer ownerPlayer = GetOwnerPlayer();
-		if (!((Object)(object)ownerPlayer == (Object)null) && !IsAttacking())
+		if (!((Object)(object)ownerPlayer == (Object)null) && !IsAttacking() && (ownerPlayer.IsNpc || (!(TimeSince.op_Implicit(lastReloadSignalFromClient) < reloadDuration * 0.25f) && !(TimeSince.op_Implicit(lastReloadSignalFromClient) > reloadDuration * 2f))))
 		{
 			Item item;
 			while (ammo < maxAmmo && (item = GetAmmo()) != null && item.amount > 0)
@@ -426,6 +445,12 @@ public class Chainsaw : BaseMelee
 	public void EngineTick()
 	{
 		ReduceAmmo(0.05f);
+		BasePlayer ownerPlayer = GetOwnerPlayer();
+		if ((Object)(object)ownerPlayer != (Object)null && ownerPlayer.IsSleeping())
+		{
+			SetEngineStatus(status: false);
+			SetAttackStatus(status: false);
+		}
 	}
 
 	public void AttackTick()
@@ -440,12 +465,12 @@ public class Chainsaw : BaseMelee
 		if (ammo > 0 && !EngineOn())
 		{
 			ReduceAmmo(0.25f);
-			bool flag = Random.Range(0f, 1f) <= engineStartChance;
-			if (!flag)
+			bool num = Random.Range(0f, 1f) <= engineStartChance;
+			if (!num)
 			{
 				failedAttempts++;
 			}
-			if (flag || failedAttempts >= 3)
+			if (num || failedAttempts >= 3)
 			{
 				failedAttempts = 0;
 				SetEngineStatus(status: true);
@@ -476,10 +501,10 @@ public class Chainsaw : BaseMelee
 
 	public override void ServerCommand(Item item, string command, BasePlayer player)
 	{
-		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
 		if (item == null || !(command == "unload_ammo"))
 		{
 			return;
@@ -557,11 +582,6 @@ public class Chainsaw : BaseMelee
 		{
 			return null;
 		}
-		Item item = ownerPlayer.inventory.containerMain.FindItemsByItemName(fuelType.shortname);
-		if (item == null)
-		{
-			item = ownerPlayer.inventory.containerBelt.FindItemsByItemName(fuelType.shortname);
-		}
-		return item;
+		return ownerPlayer.inventory.FindItemByItemName(fuelType.shortname);
 	}
 }

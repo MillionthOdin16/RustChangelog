@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class LightEx : UpdateBehaviour, IClientComponent
 {
-	public bool alterColor = false;
+	public bool alterColor;
 
 	public float colorTimeScale = 1f;
 
@@ -15,7 +15,7 @@ public class LightEx : UpdateBehaviour, IClientComponent
 
 	public bool loopColor = true;
 
-	public bool alterIntensity = false;
+	public bool alterIntensity;
 
 	public float intensityTimeScale = 1f;
 
@@ -25,7 +25,7 @@ public class LightEx : UpdateBehaviour, IClientComponent
 
 	public bool loopIntensity = true;
 
-	public bool randomOffset = false;
+	public bool randomOffset;
 
 	public float randomIntensityStartScale = -1f;
 

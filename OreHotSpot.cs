@@ -39,8 +39,8 @@ public class OreHotSpot : BaseCombatEntity, ILOD
 
 	public void FireFinishEffect()
 	{
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
 		if (finishEffect.isValid)
 		{
 			Effect.server.Run(finishEffect.resourcePath, ((Component)this).transform.position, ((Component)this).transform.forward);

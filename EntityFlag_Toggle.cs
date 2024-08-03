@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.Profiling;
 
 public class EntityFlag_Toggle : EntityComponent<BaseEntity>, IOnPostNetworkUpdate, IOnSendNetworkUpdate, IPrefabPreProcess
 {
@@ -19,7 +18,7 @@ public class EntityFlag_Toggle : EntityComponent<BaseEntity>, IOnPostNetworkUpda
 
 	[SerializeField]
 	[Tooltip("If multiple flags are defined in 'flag', should they all be set, or any?")]
-	private FlagCheck flagCheck = FlagCheck.All;
+	private FlagCheck flagCheck;
 
 	[SerializeField]
 	[Tooltip("Specify any flags that must NOT be on for this toggle to be on")]
@@ -31,9 +30,9 @@ public class EntityFlag_Toggle : EntityComponent<BaseEntity>, IOnPostNetworkUpda
 	[SerializeField]
 	private UnityEvent onFlagDisabled = new UnityEvent();
 
-	internal bool hasRunOnce = false;
+	internal bool hasRunOnce;
 
-	internal bool lastToggleOn = false;
+	internal bool lastToggleOn;
 
 	protected void OnDisable()
 	{
@@ -43,29 +42,25 @@ public class EntityFlag_Toggle : EntityComponent<BaseEntity>, IOnPostNetworkUpda
 
 	public void DoUpdate(BaseEntity entity)
 	{
-		Profiler.BeginSample("EntityFlag.DoUpdate");
 		bool flag = ((flagCheck == FlagCheck.All) ? entity.HasFlag(this.flag) : entity.HasAny(this.flag));
 		if (entity.HasAny(notFlag))
 		{
 			flag = false;
 		}
-		if (hasRunOnce && flag == lastToggleOn)
+		if (!hasRunOnce || flag != lastToggleOn)
 		{
-			Profiler.EndSample();
-			return;
+			hasRunOnce = true;
+			lastToggleOn = flag;
+			if (flag)
+			{
+				onFlagEnabled.Invoke();
+			}
+			else
+			{
+				onFlagDisabled.Invoke();
+			}
+			OnStateToggled(flag);
 		}
-		hasRunOnce = true;
-		lastToggleOn = flag;
-		if (flag)
-		{
-			onFlagEnabled.Invoke();
-		}
-		else
-		{
-			onFlagDisabled.Invoke();
-		}
-		OnStateToggled(flag);
-		Profiler.EndSample();
 	}
 
 	protected virtual void OnStateToggled(bool state)

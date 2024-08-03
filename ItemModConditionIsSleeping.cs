@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class ItemModConditionIsSleeping : ItemMod
 {
-	public bool requiredState = false;
+	public bool requiredState;
 
 	public override bool Passes(Item item)
 	{

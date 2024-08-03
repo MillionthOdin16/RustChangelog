@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[ExecuteInEditMode]
 public class EnvironmentVolume : MonoBehaviour
 {
 	[InspectorFlags]
@@ -34,8 +35,8 @@ public class EnvironmentVolume : MonoBehaviour
 
 	public void UpdateTrigger()
 	{
-		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
 		if (!Object.op_Implicit((Object)(object)trigger))
 		{
 			trigger = ((Component)this).gameObject.GetComponent<Collider>();

@@ -1,12 +1,11 @@
 using Facepunch;
 using ProtoBuf;
-using UnityEngine.Profiling;
 
 namespace CompanionServer.Handlers;
 
 public abstract class BaseHandler<T> : IHandler, IPooled where T : class
 {
-	private TokenBucketList<ulong> _playerBuckets;
+	protected TokenBucketList<ulong> PlayerBuckets { get; private set; }
 
 	protected virtual double TokenCost => 1.0;
 
@@ -16,13 +15,9 @@ public abstract class BaseHandler<T> : IHandler, IPooled where T : class
 
 	public T Proto { get; private set; }
 
-	protected ulong UserId { get; private set; }
-
-	protected BasePlayer Player { get; private set; }
-
 	public void Initialize(TokenBucketList<ulong> playerBuckets, IConnection client, AppRequest request, T proto)
 	{
-		_playerBuckets = playerBuckets;
+		PlayerBuckets = playerBuckets;
 		Client = client;
 		Request = request;
 		Proto = proto;
@@ -30,7 +25,7 @@ public abstract class BaseHandler<T> : IHandler, IPooled where T : class
 
 	public virtual void EnterPool()
 	{
-		_playerBuckets = null;
+		PlayerBuckets = null;
 		Client = null;
 		if (Request != null)
 		{
@@ -38,8 +33,6 @@ public abstract class BaseHandler<T> : IHandler, IPooled where T : class
 			Request = null;
 		}
 		Proto = null;
-		UserId = 0uL;
-		Player = null;
 	}
 
 	public void LeavePool()
@@ -48,35 +41,6 @@ public abstract class BaseHandler<T> : IHandler, IPooled where T : class
 
 	public virtual ValidationResult Validate()
 	{
-		Profiler.BeginSample("AppHandler.Validate");
-		bool locked;
-		int orGenerateAppToken = SingletonComponent<ServerMgr>.Instance.persistance.GetOrGenerateAppToken(Request.playerId, out locked);
-		if (Request.playerId == 0L || Request.playerToken != orGenerateAppToken)
-		{
-			Profiler.EndSample();
-			return ValidationResult.NotFound;
-		}
-		if (locked)
-		{
-			Profiler.EndSample();
-			return ValidationResult.Banned;
-		}
-		ServerUsers.UserGroup userGroup = ServerUsers.Get(Request.playerId)?.group ?? ServerUsers.UserGroup.None;
-		if (userGroup == ServerUsers.UserGroup.Banned)
-		{
-			Profiler.EndSample();
-			return ValidationResult.Banned;
-		}
-		TokenBucket tokenBucket = _playerBuckets?.Get(Request.playerId);
-		if (tokenBucket == null || !tokenBucket.TryTake(TokenCost))
-		{
-			Profiler.EndSample();
-			return (tokenBucket != null && tokenBucket.IsNaughty) ? ValidationResult.Rejected : ValidationResult.RateLimit;
-		}
-		UserId = Request.playerId;
-		Player = BasePlayer.FindByID(UserId) ?? BasePlayer.FindSleeping(UserId);
-		Client.Subscribe(new PlayerTarget(UserId));
-		Profiler.EndSample();
 		return ValidationResult.Success;
 	}
 

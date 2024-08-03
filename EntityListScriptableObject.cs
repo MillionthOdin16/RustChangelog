@@ -6,8 +6,7 @@ public class EntityListScriptableObject : ScriptableObject
 	[SerializeField]
 	public BaseEntity[] entities;
 
-	[SerializeField]
-	public bool whitelist;
+	public bool blockIfAny;
 
 	public bool IsInList(uint prefabId)
 	{
@@ -16,9 +15,9 @@ public class EntityListScriptableObject : ScriptableObject
 			return false;
 		}
 		BaseEntity[] array = entities;
-		foreach (BaseEntity baseEntity in array)
+		for (int i = 0; i < array.Length; i++)
 		{
-			if (baseEntity.prefabID == prefabId)
+			if (array[i].prefabID == prefabId)
 			{
 				return true;
 			}

@@ -85,7 +85,7 @@ public class EngineStorage : StorageContainer
 		return false;
 	}
 
-	public override int GetIdealSlot(BasePlayer player, Item item)
+	public override int GetIdealSlot(BasePlayer player, ItemContainer container, Item item)
 	{
 		return GetValidSlot(item);
 	}
@@ -111,10 +111,6 @@ public class EngineStorage : StorageContainer
 	public override void OnInventoryFirstCreated(ItemContainer container)
 	{
 		RefreshLoadoutData();
-	}
-
-	public void NonUserSpawn()
-	{
 	}
 
 	public override void OnItemAddedOrRemoved(Item item, bool added)
@@ -204,8 +200,7 @@ public class EngineStorage : StorageContainer
 		}
 		for (int j = 0; j < base.inventory.capacity; j++)
 		{
-			Item slot2 = base.inventory.GetSlot(j);
-			if (slot2 == null && allEngineItems.TryGetItem(tier, slotTypes[j], out var output))
+			if (base.inventory.GetSlot(j) == null && allEngineItems.TryGetItem(tier, slotTypes[j], out var output))
 			{
 				ItemDefinition component = ((Component)output).GetComponent<ItemDefinition>();
 				Item item = ItemManager.Create(component, 1, 0uL);

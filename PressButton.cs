@@ -14,27 +14,27 @@ public class PressButton : IOEntity
 
 	public const Flags Flag_EmittingPower = Flags.Reserved3;
 
-	public bool smallBurst = false;
+	public bool smallBurst;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
 		TimeWarning val = TimeWarning.New("PressButton.OnRpcMessage", 0);
 		try
 		{
-			if (rpc == 3778543711u && (Object)(object)player != (Object)null)
+			if (rpc == 4188121069u && (Object)(object)player != (Object)null)
 			{
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Press "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_Press "));
 				}
-				TimeWarning val2 = TimeWarning.New("Press", 0);
+				TimeWarning val2 = TimeWarning.New("RPC_Press", 0);
 				try
 				{
 					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
-						if (!RPC_Server.IsVisible.Test(3778543711u, "Press", this, player, 3f))
+						if (!RPC_Server.IsVisible.Test(4188121069u, "RPC_Press", this, player, 3f))
 						{
 							return true;
 						}
@@ -45,7 +45,7 @@ public class PressButton : IOEntity
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -53,17 +53,17 @@ public class PressButton : IOEntity
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
 							RPCMessage msg2 = rPCMessage;
-							Press(msg2);
+							RPC_Press(msg2);
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
 					{
 						Debug.LogException(ex);
-						player.Kick("RPC Error in Press");
+						player.Kick("RPC Error in RPC_Press");
 					}
 				}
 				finally
@@ -78,6 +78,11 @@ public class PressButton : IOEntity
 			((IDisposable)val)?.Dispose();
 		}
 		return base.OnRpcMessage(player, rpc, msg);
+	}
+
+	public override int ConsumptionAmount()
+	{
+		return 0;
 	}
 
 	public override void ResetIOState()
@@ -120,7 +125,12 @@ public class PressButton : IOEntity
 
 	[RPC_Server]
 	[RPC_Server.IsVisible(3f)]
-	public void Press(RPCMessage msg)
+	public void RPC_Press(RPCMessage msg)
+	{
+		Press();
+	}
+
+	public void Press()
 	{
 		if (!IsOn())
 		{

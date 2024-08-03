@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using ConVar;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 public class SteamStatistics
 {
@@ -22,7 +21,7 @@ public class SteamStatistics
 	{
 		if (PlatformService.Instance.IsValid)
 		{
-			refresh = PlatformService.Instance.LoadPlayerStats(player.userID);
+			refresh = PlatformService.Instance.LoadPlayerStats((ulong)player.userID);
 			intStats.Clear();
 		}
 	}
@@ -31,9 +30,7 @@ public class SteamStatistics
 	{
 		if (PlatformService.Instance.IsValid)
 		{
-			Profiler.BeginSample("PlayerStats.Save");
-			PlatformService.Instance.SavePlayerStats(player.userID);
-			Profiler.EndSample();
+			PlatformService.Instance.SavePlayerStats((ulong)player.userID);
 		}
 	}
 
@@ -50,11 +47,11 @@ public class SteamStatistics
 			if (intStats.TryGetValue(name, out value))
 			{
 				intStats[name] += var;
-				PlatformService.Instance.SetPlayerStatInt(player.userID, name, (long)intStats[name]);
+				PlatformService.Instance.SetPlayerStatInt((ulong)player.userID, name, (long)intStats[name]);
 				return;
 			}
-			value = (int)PlatformService.Instance.GetPlayerStatInt(player.userID, name, 0L);
-			if (!PlatformService.Instance.SetPlayerStatInt(player.userID, name, (long)(value + var)))
+			value = (int)PlatformService.Instance.GetPlayerStatInt((ulong)player.userID, name, 0L);
+			if (!PlatformService.Instance.SetPlayerStatInt((ulong)player.userID, name, (long)(value + var)))
 			{
 				if (Global.developer > 0)
 				{
@@ -89,7 +86,7 @@ public class SteamStatistics
 			{
 				return value;
 			}
-			return (int)PlatformService.Instance.GetPlayerStatInt(player.userID, name, 0L);
+			return (int)PlatformService.Instance.GetPlayerStatInt((ulong)player.userID, name, 0L);
 		}
 		finally
 		{

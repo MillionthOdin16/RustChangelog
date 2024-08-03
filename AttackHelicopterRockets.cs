@@ -18,6 +18,9 @@ public class AttackHelicopterRockets : StorageContainer
 	private float timeBetweenRockets = 0.5f;
 
 	[SerializeField]
+	private float timeBetweenFlares = 30f;
+
+	[SerializeField]
 	private float reloadTime = 8f;
 
 	[SerializeField]
@@ -39,18 +42,22 @@ public class AttackHelicopterRockets : StorageContainer
 
 	private TimeSince timeSinceRocketFired;
 
+	private TimeSince timeSinceFlareFired;
+
+	private const float ROCKET_LAUNCH_OFFSET = 1f;
+
 	private int rocketsSinceReload;
 
 	private bool leftSide;
 
-	public bool CanFireNow
+	public bool CanFireRocket
 	{
 		get
 		{
 			//IL_0009: Unknown result type (might be due to invalid IL or missing references)
 			if (!IsReloading && TimeSince.op_Implicit(timeSinceRocketFired) >= timeBetweenRockets)
 			{
-				return GetAmmoAmount() > 0;
+				return GetRocketAmount() > 0;
 			}
 			return false;
 		}
@@ -63,7 +70,20 @@ public class AttackHelicopterRockets : StorageContainer
 			//IL_000f: Unknown result type (might be due to invalid IL or missing references)
 			if (rocketsSinceReload >= rocketsPerReload && TimeSince.op_Implicit(timeSinceRocketFired) < reloadTime)
 			{
-				return GetAmmoAmount() > 0;
+				return GetRocketAmount() > 0;
+			}
+			return false;
+		}
+	}
+
+	public bool CanFireFlare
+	{
+		get
+		{
+			//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+			if (TimeSince.op_Implicit(timeSinceFlareFired) >= timeBetweenFlares)
+			{
+				return HasFlareAmmo();
 			}
 			return false;
 		}
@@ -84,7 +104,13 @@ public class AttackHelicopterRockets : StorageContainer
 		return base.OnRpcMessage(player, rpc, msg);
 	}
 
-	public int GetAmmoAmount()
+	public override void InitShared()
+	{
+		base.InitShared();
+		ResetFiringTimes();
+	}
+
+	public int GetRocketAmount()
 	{
 		if (base.isServer)
 		{
@@ -93,10 +119,19 @@ public class AttackHelicopterRockets : StorageContainer
 		return 0;
 	}
 
+	public bool HasFlareAmmo()
+	{
+		if (base.isServer)
+		{
+			return base.inventory.HasAny(flareItemDef);
+		}
+		return false;
+	}
+
 	public int GetAmmoBeforeReload()
 	{
 		int num = ((rocketsSinceReload >= rocketsPerReload) ? rocketsSinceReload : (rocketsPerReload - rocketsSinceReload));
-		return Mathf.Min(GetAmmoAmount(), num);
+		return Mathf.Min(GetRocketAmount(), num);
 	}
 
 	public bool TryGetAmmoDef(out ItemDefinition ammoDef)
@@ -129,64 +164,79 @@ public class AttackHelicopterRockets : StorageContainer
 		return owner.GetSpeed() + 2f;
 	}
 
-	public bool TryGetProjectedHitPos(out Vector3 result)
+	public Vector3 GetProjectedHitPos()
 	{
 		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ee: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0106: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0107: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0112: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0097: Unknown result type (might be due to invalid IL or missing references)
 		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
-		result = Vector3.zero;
-		if (!TryGetAmmoDef(out var ammoDef))
+		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ac: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0103: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d2: Unknown result type (might be due to invalid IL or missing references)
+		Vector3 val = MuzzleMidPoint() + rocketMuzzlePositions[0].forward * 1f;
+		Vector3 forward = ((Component)owner).transform.forward;
+		if (TryGetAmmoDef(out var ammoDef))
 		{
-			return false;
-		}
-		ItemModProjectile component = ((Component)ammoDef).GetComponent<ItemModProjectile>();
-		ServerProjectile component2 = component.projectileObject.Get().GetComponent<ServerProjectile>();
-		if ((Object)(object)component != (Object)null && (Object)(object)component2 != (Object)null)
-		{
-			Vector3 origin = MuzzleMidPoint();
-			Vector3 forward = ((Component)owner).transform.forward;
-			float minRocketSpeed = GetMinRocketSpeed();
-			float gravity = Physics.gravity.y * component2.gravityModifier;
-			Vector3 val = component2.initialVelocity + forward * component2.speed;
-			if (minRocketSpeed > 0f)
+			ItemModProjectile component = ((Component)ammoDef).GetComponent<ItemModProjectile>();
+			ServerProjectile component2 = component.projectileObject.Get().GetComponent<ServerProjectile>();
+			if ((Object)(object)component != (Object)null && (Object)(object)component2 != (Object)null)
 			{
-				float num = Vector3.Dot(val, forward) - minRocketSpeed;
-				if (num < 0f)
+				float minRocketSpeed = GetMinRocketSpeed();
+				float gravity = Physics.gravity.y * component2.gravityModifier;
+				Vector3 val2 = component2.initialVelocity + forward * component2.speed;
+				if (minRocketSpeed > 0f)
 				{
-					val += forward * (0f - num);
+					float num = Vector3.Dot(val2, forward) - minRocketSpeed;
+					if (num < 0f)
+					{
+						val2 += forward * (0f - num);
+					}
+				}
+				if (Ballistics.TryGetPhysicsProjectileHitPos(val, ((Vector3)(ref val2)).normalized, ((Vector3)(ref val2)).magnitude, gravity, out var result, 1.5f, 0.5f, 32f, owner))
+				{
+					return result;
 				}
 			}
-			result = Ballistics.GetPhysicsProjectileHitPos(origin, ((Vector3)(ref val)).normalized, ((Vector3)(ref val)).magnitude, gravity, 1.5f, 0.5f, 32f, owner);
-			return true;
 		}
-		return false;
+		return val + forward * 1000f;
+	}
+
+	private void ResetFiringTimes()
+	{
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		timeSinceRocketFired = TimeSince.op_Implicit(9999f);
+		timeSinceFlareFired = TimeSince.op_Implicit(9999f);
 	}
 
 	public override void Save(SaveInfo info)
 	{
 		base.Save(info);
 		info.msg.attackHeliRockets = Pool.Get<AttackHeliRockets>();
-		info.msg.attackHeliRockets.totalAmmo = GetAmmoAmount();
+		info.msg.attackHeliRockets.totalAmmo = GetRocketAmount();
+		info.msg.attackHeliRockets.hasFlares = HasFlareAmmo();
 		info.msg.attackHeliRockets.rocketsSinceReload = rocketsSinceReload;
 		if (TryGetAmmoDef(out var ammoDef))
 		{
@@ -259,9 +309,16 @@ public class AttackHelicopterRockets : StorageContainer
 
 	public override void OnItemAddedOrRemoved(Item item, bool added)
 	{
+		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
 		if (added)
 		{
 			rocketsSinceReload = 0;
+			if (TimeSince.op_Implicit(timeSinceFlareFired) < timeBetweenFlares || TimeSince.op_Implicit(timeSinceRocketFired) < timeBetweenRockets)
+			{
+				ResetFiringTimes();
+				ClientRPC(RpcTarget.NetworkGroup("ResetFiringTimes"));
+			}
 		}
 		SendNetworkUpdate();
 	}
@@ -292,7 +349,7 @@ public class AttackHelicopterRockets : StorageContainer
 		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00d1: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00d6: Unknown result type (might be due to invalid IL or missing references)
-		if (!CanFireNow)
+		if (!CanFireRocket)
 		{
 			return false;
 		}
@@ -323,19 +380,32 @@ public class AttackHelicopterRockets : StorageContainer
 			{
 				rocketsSinceReload = 1;
 			}
-			ClientRPC(null, "RPCUpdateAmmo", (short)GetAmmoAmount(), arg, rocketsSinceReload);
+			ClientRPC(RpcTarget.NetworkGroup("RPCRocketFired"), (short)GetRocketAmount(), arg, rocketsSinceReload);
 			return true;
 		}
 		return false;
 	}
 
-	public bool TryTakeFlare()
+	public bool TryFireFlare()
 	{
-		if (base.inventory.TryTakeOne(flareItemDef.itemid, out var item))
+		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		if (!CanFireFlare)
 		{
-			item.Remove();
-			return true;
+			return false;
 		}
-		return false;
+		if ((Object)(object)owner == (Object)null)
+		{
+			return false;
+		}
+		if (!base.inventory.TryTakeOne(flareItemDef.itemid, out var item))
+		{
+			return false;
+		}
+		item.Remove();
+		timeSinceFlareFired = TimeSince.op_Implicit(0f);
+		owner.LaunchFlare();
+		ClientRPC(RpcTarget.NetworkGroup("RPCFlareFired"), HasFlareAmmo());
+		return true;
 	}
 }

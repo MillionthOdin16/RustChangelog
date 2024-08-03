@@ -53,19 +53,15 @@ public static class ArgEx
 
 	public static NetworkableId GetEntityID(this Arg arg, int iArg, NetworkableId def = default(NetworkableId))
 	{
-		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
 		return new NetworkableId(arg.GetUInt64(iArg, def.Value));
 	}
 
 	public static ItemId GetItemID(this Arg arg, int iArg, ItemId def = default(ItemId))
 	{
-		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
 		return new ItemId(arg.GetUInt64(iArg, def.Value));
 	}
 }

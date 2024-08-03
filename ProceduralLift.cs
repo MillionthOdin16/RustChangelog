@@ -6,7 +6,6 @@ using ProtoBuf;
 using Rust;
 using UnityEngine;
 using UnityEngine.Assertions;
-using UnityEngine.Profiling;
 
 public class ProceduralLift : BaseEntity
 {
@@ -14,9 +13,9 @@ public class ProceduralLift : BaseEntity
 
 	public float resetDelay = 5f;
 
-	public ProceduralLiftCabin cabin = null;
+	public ProceduralLiftCabin cabin;
 
-	public ProceduralLiftStop[] stops = null;
+	public ProceduralLiftStop[] stops;
 
 	public GameObjectRef triggerPrefab;
 
@@ -42,7 +41,7 @@ public class ProceduralLift : BaseEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_UseLift "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_UseLift "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_UseLift", 0);
 				try
@@ -61,7 +60,7 @@ public class ProceduralLift : BaseEntity
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -73,7 +72,7 @@ public class ProceduralLift : BaseEntity
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -98,8 +97,8 @@ public class ProceduralLift : BaseEntity
 
 	public override void Spawn()
 	{
-		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
 		base.Spawn();
 		if (!Application.isLoadingSave)
 		{
@@ -128,10 +127,8 @@ public class ProceduralLift : BaseEntity
 	public override void Save(SaveInfo info)
 	{
 		base.Save(info);
-		Profiler.BeginSample("ProceduralLift.Save");
 		info.msg.lift = Pool.Get<Lift>();
 		info.msg.lift.floor = floorIndex;
-		Profiler.EndSample();
 	}
 
 	public override void Load(LoadInfo info)
@@ -168,7 +165,7 @@ public class ProceduralLift : BaseEntity
 
 	private void SnapToFloor(int floor)
 	{
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
 		floorIndex = Mathf.Clamp(floor, 0, stops.Length - 1);
 		ProceduralLiftStop proceduralLiftStop = stops[floorIndex];
 		((Component)cabin).transform.position = ((Component)proceduralLiftStop).transform.position;
@@ -195,13 +192,13 @@ public class ProceduralLift : BaseEntity
 
 	protected void Update()
 	{
-		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00af: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009f: Unknown result type (might be due to invalid IL or missing references)
 		if (floorIndex < 0 || floorIndex > stops.Length - 1)
 		{
 			return;

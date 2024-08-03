@@ -84,6 +84,8 @@ public class CarPhysics<TCar> where TCar : BaseVehicle, CarPhysics<TCar>.ICar
 
 	private bool hadDriver;
 
+	private float steerLerpSpeed;
+
 	private float lastMovingTime = float.MinValue;
 
 	private WheelFrictionCurve zeroFriction;
@@ -122,18 +124,28 @@ public class CarPhysics<TCar> where TCar : BaseVehicle, CarPhysics<TCar>.ICar
 
 	public float TankThrottleRight { get; private set; }
 
-	private bool InSlowSpeedExitMode => !hasDriver && slowSpeedExitFlag;
+	private bool InSlowSpeedExitMode
+	{
+		get
+		{
+			if (!hasDriver)
+			{
+				return slowSpeedExitFlag;
+			}
+			return false;
+		}
+	}
 
 	public CarPhysics(TCar car, Transform transform, Rigidbody rBody, CarSettings vehicleSettings)
 	{
 		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
 		WheelFrictionCurve val = default(WheelFrictionCurve);
 		((WheelFrictionCurve)(ref val)).stiffness = 0f;
 		zeroFriction = val;
@@ -158,45 +170,46 @@ public class CarPhysics<TCar> where TCar : BaseVehicle, CarPhysics<TCar>.ICar
 		lastMovingTime = Time.realtimeSinceStartup;
 		ServerWheelData AddWheel(CarWheel wheel)
 		{
-			//IL_0044: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0056: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0072: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0077: Unknown result type (might be due to invalid IL or missing references)
-			//IL_007c: Unknown result type (might be due to invalid IL or missing references)
-			//IL_007e: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0091: Unknown result type (might be due to invalid IL or missing references)
-			ServerWheelData serverWheelData = new ServerWheelData
+			//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0053: Unknown result type (might be due to invalid IL or missing references)
+			//IL_006e: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0073: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0078: Unknown result type (might be due to invalid IL or missing references)
+			//IL_007a: Unknown result type (might be due to invalid IL or missing references)
+			//IL_008d: Unknown result type (might be due to invalid IL or missing references)
+			ServerWheelData obj = new ServerWheelData
 			{
 				wheelCollider = wheel.wheelCollider,
 				wheelColliderTransform = ((Component)wheel.wheelCollider).transform,
 				forceDistance = GetWheelForceDistance(wheel.wheelCollider),
 				wheel = wheel
 			};
-			serverWheelData.wheelCollider.sidewaysFriction = zeroFriction;
-			serverWheelData.wheelCollider.forwardFriction = zeroFriction;
+			obj.wheelCollider.sidewaysFriction = zeroFriction;
+			obj.wheelCollider.forwardFriction = zeroFriction;
 			Vector3 val2 = transform2.InverseTransformPoint(((Component)wheel.wheelCollider).transform.position);
-			serverWheelData.isFrontWheel = val2.z > 0f;
-			serverWheelData.isLeftWheel = val2.x < 0f;
-			return serverWheelData;
+			obj.isFrontWheel = val2.z > 0f;
+			obj.isLeftWheel = val2.x < 0f;
+			return obj;
 		}
 	}
 
 	public void FixedUpdate(float dt, float speed)
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0107: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0218: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0223: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0233: Unknown result type (might be due to invalid IL or missing references)
-		//IL_023e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_033f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0423: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0428: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0443: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0400: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0405: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ce: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02be: Unknown result type (might be due to invalid IL or missing references)
+		//IL_038e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0393: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03ad: Unknown result type (might be due to invalid IL or missing references)
+		//IL_036c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0371: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03f9: Unknown result type (might be due to invalid IL or missing references)
 		if (rBody.centerOfMass != prevLocalCOM)
 		{
 			COMChanged();
@@ -226,26 +239,99 @@ public class CarPhysics<TCar> where TCar : BaseVehicle, CarPhysics<TCar>.ICar
 				val = rBody.angularVelocity;
 				if (!(Mathf.Abs(((Vector3)(ref val)).magnitude) > 0.25f))
 				{
-					goto IL_0137;
+					goto IL_00f7;
 				}
 			}
 			lastMovingTime = Time.time;
-			goto IL_0137;
+			goto IL_00f7;
 		}
 		wasSleeping = true;
-		goto IL_05e5;
-		IL_0457:
-		int num2;
-		bool flag = (byte)num2 != 0;
-		int num3;
-		float num4;
-		for (int i = 0; i < wheelData.Length; i++)
+		goto IL_0576;
+		IL_0566:
+		wasSleeping = false;
+		goto IL_0576;
+		IL_00f7:
+		bool flag = vehicleSettings.canSleep && !hasDriver && Time.time > lastMovingTime + 10f;
+		if (flag && (car.GetParentEntity() as BaseVehicle).IsValid())
 		{
-			ServerWheelData serverWheelData = wheelData[i];
+			flag = false;
+		}
+		if (flag)
+		{
+			for (int i = 0; i < wheelData.Length; i++)
+			{
+				ServerWheelData obj = wheelData[i];
+				obj.wheelCollider.motorTorque = 0f;
+				obj.wheelCollider.brakeTorque = 0f;
+				obj.wheelCollider.steerAngle = 0f;
+			}
+			rBody.Sleep();
+			goto IL_0566;
+		}
+		speedAngle = Vector3.Angle(rBody.velocity, transform.forward) * Mathf.Sign(Vector3.Dot(rBody.velocity, transform.right));
+		float maxDriveForce = car.GetMaxDriveForce();
+		float maxForwardSpeed = car.GetMaxForwardSpeed();
+		float num2 = (car.IsOn() ? car.GetThrottleInput() : 0f);
+		float steerInput = car.GetSteerInput();
+		float brakeInput = (InSlowSpeedExitMode ? 1f : car.GetBrakeInput());
+		float num3 = 1f;
+		if (num < 3f)
+		{
+			num3 = 2.75f;
+		}
+		else if (num < 9f)
+		{
+			float num4 = Mathf.InverseLerp(9f, 3f, num);
+			num3 = Mathf.Lerp(1f, 2.75f, num4);
+		}
+		maxDriveForce *= num3;
+		ComputeSteerAngle(num2, steerInput, dt, speed);
+		if (TimeSince.op_Implicit(timeSinceWaterCheck) > 0.25f)
+		{
+			float num5 = car.WaterFactor();
+			float num6 = 0f;
+			if (car.FindTrigger<TriggerVehicleDrag>(out var result))
+			{
+				num6 = result.vehicleDrag;
+			}
+			float num7 = ((num2 != 0f) ? 0f : 0.25f);
+			float num8 = Mathf.Max(num5, num6);
+			num8 = Mathf.Max(num8, car.GetModifiedDrag());
+			rBody.drag = Mathf.Max(num7, num8);
+			rBody.angularDrag = num8 * 0.5f;
+			timeSinceWaterCheck = TimeSince.op_Implicit(0f);
+		}
+		int num9 = 0;
+		float num10 = 0f;
+		int num11;
+		if (!hasDriver)
+		{
+			val = rBody.velocity;
+			if (((Vector3)(ref val)).magnitude < 2.5f && TimeSince.op_Implicit(car.timeSinceLastPush) > 2f)
+			{
+				num11 = ((car.OnSurface != VehicleTerrainHandler.Surface.Frictionless) ? 1 : 0);
+				goto IL_03d7;
+			}
+		}
+		num11 = 0;
+		goto IL_03d7;
+		IL_0576:
+		hadDriver = hasDriver;
+		return;
+		IL_03d7:
+		bool flag2 = (byte)num11 != 0;
+		bool flag3 = !flag2 && num2 == 0f && num < 0.2f && TimeSince.op_Implicit(car.timeSinceLastPush) > 2f && car.OnSurface != VehicleTerrainHandler.Surface.Frictionless;
+		for (int j = 0; j < wheelData.Length; j++)
+		{
+			ServerWheelData serverWheelData = wheelData[j];
 			serverWheelData.wheelCollider.motorTorque = 1E-05f;
-			if (flag && car.OnSurface != VehicleTerrainHandler.Surface.Frictionless)
+			if (flag2)
 			{
 				serverWheelData.wheelCollider.brakeTorque = 10000f;
+			}
+			else if (flag3)
+			{
+				serverWheelData.wheelCollider.brakeTorque = 1000f;
 			}
 			else
 			{
@@ -258,100 +344,20 @@ public class CarPhysics<TCar> where TCar : BaseVehicle, CarPhysics<TCar>.ICar
 			UpdateSuspension(serverWheelData);
 			if (serverWheelData.isGrounded)
 			{
-				num3++;
-				num4 += wheelData[i].downforce;
+				num9++;
+				num10 += wheelData[j].downforce;
 			}
 		}
-		AdjustHitForces(num3, num4 / (float)num3);
-		float maxForwardSpeed;
-		float num5;
-		float steerInput;
-		float brakeInput;
-		float num6;
-		float maxDriveForce;
-		for (int j = 0; j < wheelData.Length; j++)
+		AdjustHitForces(num9, num10 / (float)num9);
+		for (int k = 0; k < wheelData.Length; k++)
 		{
-			ServerWheelData wd = wheelData[j];
+			ServerWheelData wd = wheelData[k];
 			UpdateLocalFrame(wd, dt);
-			ComputeTyreForces(wd, speed, maxDriveForce, maxForwardSpeed, num5, steerInput, brakeInput, num6);
-			ApplyTyreForces(wd, num5, steerInput, speed);
+			ComputeTyreForces(wd, speed, maxDriveForce, maxForwardSpeed, num2, steerInput, brakeInput, num3);
+			ApplyTyreForces(wd);
 		}
 		ComputeOverallForces();
-		goto IL_05d2;
-		IL_0137:
-		bool flag2 = vehicleSettings.canSleep && !hasDriver && Time.time > lastMovingTime + 10f;
-		if (flag2)
-		{
-			BaseVehicle ent = car.GetParentEntity() as BaseVehicle;
-			if (ent.IsValid())
-			{
-				flag2 = false;
-			}
-		}
-		if (flag2)
-		{
-			for (int k = 0; k < wheelData.Length; k++)
-			{
-				ServerWheelData serverWheelData2 = wheelData[k];
-				serverWheelData2.wheelCollider.motorTorque = 0f;
-				serverWheelData2.wheelCollider.brakeTorque = 0f;
-				serverWheelData2.wheelCollider.steerAngle = 0f;
-			}
-			rBody.Sleep();
-			goto IL_05d2;
-		}
-		speedAngle = Vector3.Angle(rBody.velocity, transform.forward) * Mathf.Sign(Vector3.Dot(rBody.velocity, transform.right));
-		maxDriveForce = car.GetMaxDriveForce();
-		maxForwardSpeed = car.GetMaxForwardSpeed();
-		num5 = (car.IsOn() ? car.GetThrottleInput() : 0f);
-		steerInput = car.GetSteerInput();
-		brakeInput = (InSlowSpeedExitMode ? 1f : car.GetBrakeInput());
-		num6 = 1f;
-		if (num < 3f)
-		{
-			num6 = 2.75f;
-		}
-		else if (num < 9f)
-		{
-			float num7 = Mathf.InverseLerp(9f, 3f, num);
-			num6 = Mathf.Lerp(1f, 2.75f, num7);
-		}
-		maxDriveForce *= num6;
-		ComputeSteerAngle(num5, steerInput, dt, speed);
-		if (TimeSince.op_Implicit(timeSinceWaterCheck) > 0.25f)
-		{
-			float num8 = car.WaterFactor();
-			float num9 = 0f;
-			if (car.FindTrigger<TriggerVehicleDrag>(out var result))
-			{
-				num9 = result.vehicleDrag;
-			}
-			float num10 = ((num5 != 0f) ? 0f : 0.25f);
-			float num11 = Mathf.Max(num8, num9);
-			num11 = Mathf.Max(num11, car.GetModifiedDrag());
-			rBody.drag = Mathf.Max(num10, num11);
-			rBody.angularDrag = num11 * 0.5f;
-			timeSinceWaterCheck = TimeSince.op_Implicit(0f);
-		}
-		num3 = 0;
-		num4 = 0f;
-		if (!hasDriver)
-		{
-			val = rBody.velocity;
-			if (((Vector3)(ref val)).magnitude < 2.5f)
-			{
-				num2 = ((TimeSince.op_Implicit(car.timeSinceLastPush) > 2f) ? 1 : 0);
-				goto IL_0457;
-			}
-		}
-		num2 = 0;
-		goto IL_0457;
-		IL_05e5:
-		hadDriver = hasDriver;
-		return;
-		IL_05d2:
-		wasSleeping = false;
-		goto IL_05e5;
+		goto IL_0566;
 	}
 
 	public bool IsGrounded()
@@ -363,7 +369,7 @@ public class CarPhysics<TCar> where TCar : BaseVehicle, CarPhysics<TCar>.ICar
 			{
 				num++;
 			}
-			if (num >= 2)
+			if (num >= Mathf.FloorToInt((float)wheelData.Length * 0.5f))
 			{
 				return true;
 			}
@@ -373,8 +379,8 @@ public class CarPhysics<TCar> where TCar : BaseVehicle, CarPhysics<TCar>.ICar
 
 	private void COMChanged()
 	{
-		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
 		for (int i = 0; i < wheelData.Length; i++)
 		{
 			ServerWheelData serverWheelData = wheelData[i];
@@ -405,47 +411,57 @@ public class CarPhysics<TCar> where TCar : BaseVehicle, CarPhysics<TCar>.ICar
 			num4 = speedAngle * vehicleSettings.steeringAssistRatio * num5 * Mathf.InverseLerp(2f, 3f, Mathf.Abs(speedAngle));
 		}
 		float num6 = Mathf.Clamp(num + num4, 0f - vehicleSettings.maxSteerAngle, vehicleSettings.maxSteerAngle);
-		if (SteerAngle != num6)
+		if (SteerAngle == num6)
 		{
-			float num7 = 1f - num2 * 0.7f;
-			float num9;
-			if ((SteerAngle == 0f || Mathf.Sign(num6) == Mathf.Sign(SteerAngle)) && Mathf.Abs(num6) > Mathf.Abs(SteerAngle))
-			{
-				float num8 = SteerAngle / vehicleSettings.maxSteerAngle;
-				num9 = Mathf.Lerp(vehicleSettings.steerMinLerpSpeed * num7, vehicleSettings.steerMaxLerpSpeed * num7, num8 * num8);
-			}
-			else
-			{
-				num9 = vehicleSettings.steerReturnLerpSpeed * num7;
-			}
-			if (car.GetSteerModInput())
-			{
-				num9 *= 1.5f;
-			}
-			SteerAngle = Mathf.MoveTowards(SteerAngle, num6, dt * num9);
+			steerLerpSpeed = 0f;
+			return;
 		}
+		float num7 = Mathf.Abs(SteerAngle / num6);
+		float num8 = 1f - num2 * 0.7f;
+		if ((SteerAngle == 0f || Mathf.Sign(num6) == Mathf.Sign(SteerAngle)) && Mathf.Abs(num6) > Mathf.Abs(SteerAngle))
+		{
+			float num9 = SteerAngle / vehicleSettings.maxSteerAngle;
+			float num10 = Mathf.Lerp(vehicleSettings.steerMinLerpSpeed * num8, vehicleSettings.steerMaxLerpSpeed * num8, num9 * num9);
+			if (Mathf.Abs(num6) > Mathf.Abs(SteerAngle) && num7 > 0.85f)
+			{
+				num10 = Mathf.Lerp(num10, 0f, num7);
+			}
+			if (!vehicleSettings.retainLerpSpeed || num10 > steerLerpSpeed)
+			{
+				steerLerpSpeed = num10;
+			}
+		}
+		else
+		{
+			steerLerpSpeed = vehicleSettings.steerReturnLerpSpeed * num8;
+		}
+		if (car.GetSteerModInput())
+		{
+			steerLerpSpeed *= 1.5f;
+		}
+		SteerAngle = Mathf.MoveTowards(SteerAngle, num6, dt * steerLerpSpeed);
 	}
 
 	private float GetWheelForceDistance(WheelCollider col)
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
 		return rBody.centerOfMass.y - transform.InverseTransformPoint(((Component)col).transform.position).y + col.radius + (1f - col.suspensionSpring.targetPosition) * col.suspensionDistance;
 	}
 
 	private void UpdateSuspension(ServerWheelData wd)
 	{
-		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0093: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
 		wd.isGrounded = wd.wheelCollider.GetGroundHit(ref wd.hit);
 		wd.origin = wd.wheelColliderTransform.TransformPoint(wd.wheelCollider.center);
 		if (wd.isGrounded && GamePhysics.Trace(new Ray(wd.origin, -wd.wheelColliderTransform.up), 0f, out var hitInfo, wd.wheelCollider.suspensionDistance + wd.wheelCollider.radius, 1235321089, (QueryTriggerInteraction)1))
@@ -498,59 +514,57 @@ public class CarPhysics<TCar> where TCar : BaseVehicle, CarPhysics<TCar>.ICar
 
 	private void UpdateLocalFrame(ServerWheelData wd, float dt)
 	{
+		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
 		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ba: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00db: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0100: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01e6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01eb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ad: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ce: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00eb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ba: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0117: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0122: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ea: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ef: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01fa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01fc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01fd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01fe: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0203: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0168: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0172: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0177: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0137: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0142: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01f3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_021e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0223: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0229: Unknown result type (might be due to invalid IL or missing references)
-		//IL_022e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0231: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0233: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0234: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0239: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0196: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0169: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0170: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0175: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0177: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0179: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0149: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0155: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0164: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0181: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0186: Unknown result type (might be due to invalid IL or missing references)
-		//IL_018b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0190: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ce: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01da: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01dc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01e1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ab: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ad: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b2: Unknown result type (might be due to invalid IL or missing references)
 		if (!wd.isGrounded)
 		{
 			((WheelHit)(ref wd.hit)).point = wd.origin - wd.wheelColliderTransform.up * (wd.wheelCollider.suspensionDistance + wd.wheelCollider.radius);
@@ -589,27 +603,26 @@ public class CarPhysics<TCar> where TCar : BaseVehicle, CarPhysics<TCar>.ICar
 		{
 			val3 = Vector2.zero;
 		}
-		float num3 = Mathf.Clamp(wd.downforce / (0f - Physics.gravity.y), 0f, wd.wheelCollider.sprungMass) * 0.5f;
-		Vector2 val4 = (0f - num3) * wd.localVelocity / dt;
+		Vector2 val4 = (0f - Mathf.Clamp(wd.downforce / (0f - Physics.gravity.y), 0f, wd.wheelCollider.sprungMass) * 0.5f) * wd.localVelocity / dt;
 		wd.localRigForce = val4 + val3;
 	}
 
 	private void ComputeTyreForces(ServerWheelData wd, float speed, float maxDriveForce, float maxSpeed, float throttleInput, float steerInput, float brakeInput, float driveForceMultiplier)
 	{
-		//IL_03e3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03e8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03ee: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03f3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0319: Unknown result type (might be due to invalid IL or missing references)
-		//IL_031e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0323: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0327: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0340: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0362: Unknown result type (might be due to invalid IL or missing references)
-		//IL_036a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03c4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03cc: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0388: Unknown result type (might be due to invalid IL or missing references)
+		//IL_038d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0393: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0398: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02c8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02cd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02d2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02d6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02ef: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0311: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0319: Unknown result type (might be due to invalid IL or missing references)
+		//IL_036c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0374: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0332: Unknown result type (might be due to invalid IL or missing references)
 		float absSpeed = Mathf.Abs(speed);
 		if (vehicleSettings.tankSteering && brakeInput == 0f)
 		{
@@ -699,23 +712,22 @@ public class CarPhysics<TCar> where TCar : BaseVehicle, CarPhysics<TCar>.ICar
 			else
 			{
 				float driveForceToMaxSlip = vehicleSettings.driveForceToMaxSlip;
-				float num12 = Mathf.Clamp01((Mathf.Abs(num6) - Mathf.Abs(wd.tyreForce.y)) / driveForceToMaxSlip);
-				num11 = num12 * num2 * Mathf.Sign(num6);
+				num11 = Mathf.Clamp01((Mathf.Abs(num6) - Mathf.Abs(wd.tyreForce.y)) / driveForceToMaxSlip) * num2 * Mathf.Sign(num6);
 			}
 			wd.angularVelocity = (wd.localVelocity.y + num11) / wd.wheelCollider.radius;
 			return;
 		}
-		float num13 = 50f;
-		float num14 = 10f;
+		float num12 = 50f;
+		float num13 = 10f;
 		if (num > 0f)
 		{
-			wd.angularVelocity += num13 * num;
+			wd.angularVelocity += num12 * num;
 		}
 		else
 		{
-			wd.angularVelocity -= num14;
+			wd.angularVelocity -= num13;
 		}
-		wd.angularVelocity -= num13 * brakeInput;
+		wd.angularVelocity -= num12 * brakeInput;
 		wd.angularVelocity = Mathf.Clamp(wd.angularVelocity, 0f, maxSpeed / wd.wheelCollider.radius);
 	}
 
@@ -762,8 +774,8 @@ public class CarPhysics<TCar> where TCar : BaseVehicle, CarPhysics<TCar>.ICar
 
 	private void ComputeOverallForces()
 	{
-		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
 		DriveWheelVelocity = 0f;
 		DriveWheelSlip = 0f;
 		int num = 0;
@@ -790,9 +802,9 @@ public class CarPhysics<TCar> where TCar : BaseVehicle, CarPhysics<TCar>.ICar
 
 	private static float ComputeCombinedSlip(Vector2 localVelocity, Vector2 tyreSlip)
 	{
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
 		float magnitude = ((Vector2)(ref localVelocity)).magnitude;
 		if (magnitude > 0.01f)
 		{
@@ -803,21 +815,21 @@ public class CarPhysics<TCar> where TCar : BaseVehicle, CarPhysics<TCar>.ICar
 		return ((Vector2)(ref tyreSlip)).magnitude;
 	}
 
-	private void ApplyTyreForces(ServerWheelData wd, float throttleInput, float steerInput, float speed)
+	private void ApplyTyreForces(ServerWheelData wd)
 	{
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
 		if (wd.isGrounded)
 		{
 			Vector3 val = ((WheelHit)(ref wd.hit)).forwardDir * wd.tyreForce.y;
@@ -830,21 +842,19 @@ public class CarPhysics<TCar> where TCar : BaseVehicle, CarPhysics<TCar>.ICar
 
 	private Vector3 GetSidewaysForceAppPoint(ServerWheelData wd, Vector3 contactPoint)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ac: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0095: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 val = contactPoint + wd.wheelColliderTransform.up * vehicleSettings.antiRoll * wd.forceDistance;
 		float num = (wd.wheel.steerWheel ? SteerAngle : 0f);
 		if (num != 0f && Mathf.Sign(num) != Mathf.Sign(wd.tyreSlip.x))

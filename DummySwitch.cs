@@ -8,7 +8,7 @@ public class DummySwitch : IOEntity
 
 	public float duration = -1f;
 
-	public override bool WantsPower()
+	public override bool WantsPower(int inputIndex)
 	{
 		return IsOn();
 	}
@@ -20,7 +20,11 @@ public class DummySwitch : IOEntity
 
 	public override int GetPassthroughAmount(int outputSlot = 0)
 	{
-		return IsOn() ? GetCurrentEnergy() : 0;
+		if (!IsOn())
+		{
+			return 0;
+		}
+		return GetCurrentEnergy();
 	}
 
 	public void SetOn(bool wantsOn)

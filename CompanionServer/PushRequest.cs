@@ -23,11 +23,7 @@ public class PushRequest : IPooled
 		Channel = (NotificationChannel)0;
 		Title = null;
 		Body = null;
-		if (Data != null)
-		{
-			Data.Clear();
-			Pool.Free<Dictionary<string, string>>(ref Data);
-		}
+		Data = null;
 	}
 
 	public void LeavePool()

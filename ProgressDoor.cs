@@ -2,13 +2,13 @@ using UnityEngine;
 
 public class ProgressDoor : IOEntity
 {
-	public float storedEnergy = 0f;
+	public float storedEnergy;
 
 	public float energyForOpen = 1f;
 
 	public float secondsToClose = 1f;
 
-	public float openProgress = 0f;
+	public float openProgress;
 
 	public override void ResetIOState()
 	{

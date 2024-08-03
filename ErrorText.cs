@@ -27,11 +27,11 @@ public class ErrorText : MonoBehaviour
 
 	internal void CaptureLog(string error, string stacktrace, LogType type)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0004: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0006: Invalid comparison between Unknown and I4
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000a: Invalid comparison between Unknown and I4
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0005: Invalid comparison between Unknown and I4
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0009: Invalid comparison between Unknown and I4
 		if (((int)type == 0 || (int)type == 4 || (int)type == 1) && !((Object)(object)text == (Object)null))
 		{
 			TextMeshProUGUI val = text;

@@ -22,19 +22,19 @@ public class NpcWalkAnimation : MonoBehaviour, IClientComponent
 
 	public bool LaggyAss = true;
 
-	public bool LookAtTarget = false;
+	public bool LookAtTarget;
 
 	public float MaxLaggyAssRotation = 70f;
 
 	public float MaxWalkAnimSpeed = 25f;
 
-	public bool UseDirectionBlending = false;
+	public bool UseDirectionBlending;
 
-	public bool useTurnPosing = false;
+	public bool useTurnPosing;
 
 	public float turnPoseScale = 0.5f;
 
 	public float laggyAssLerpScale = 15f;
 
-	public bool skeletonChainInverted = false;
+	public bool skeletonChainInverted;
 }

@@ -25,24 +25,20 @@ public class CeilingLight : IOEntity
 
 	public override int ConsumptionAmount()
 	{
-		if (IsOn())
-		{
-			return 2;
-		}
-		return base.ConsumptionAmount();
+		return 2;
 	}
 
 	public override void Hurt(HitInfo info)
 	{
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
 		if (base.isServer)
 		{
 			if (info.damageTypes.Has(DamageType.Explosion))
 			{
-				ClientRPC<int, Vector3, Vector3>(null, "ClientPhysPush", 0, info.attackNormal * 3f * (info.damageTypes.Total() / 50f), info.HitPositionWorld);
+				ClientRPC<int, Vector3, Vector3>(RpcTarget.NetworkGroup("ClientPhysPush"), 0, info.attackNormal * 3f * (info.damageTypes.Total() / 50f), info.HitPositionWorld);
 			}
 			base.Hurt(info);
 		}
@@ -50,9 +46,9 @@ public class CeilingLight : IOEntity
 
 	public void RefreshGrowables()
 	{
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
 		List<GrowableEntity> list = Pool.GetList<GrowableEntity>();
 		Vis.Entities(((Component)this).transform.position + new Vector3(0f, 0f - ConVar.Server.ceilingLightHeightOffset, 0f), ConVar.Server.ceilingLightGrowableRange, list, 524288, (QueryTriggerInteraction)2);
 		List<PlanterBox> list2 = Pool.GetList<PlanterBox>();
@@ -77,9 +73,9 @@ public class CeilingLight : IOEntity
 	public override void IOStateChanged(int inputAmount, int inputSlot)
 	{
 		base.IOStateChanged(inputAmount, inputSlot);
-		bool flag = IsOn();
+		bool num = IsOn();
 		SetFlag(Flags.On, IsPowered());
-		if (flag != IsOn())
+		if (num != IsOn())
 		{
 			if (IsOn())
 			{
@@ -110,14 +106,14 @@ public class CeilingLight : IOEntity
 
 	public override void OnAttacked(HitInfo info)
 	{
-		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
 		float num = 3f * (info.damageTypes.Total() / 50f);
-		ClientRPC<NetworkableId, Vector3, Vector3>(null, "ClientPhysPush", (NetworkableId)(((Object)(object)info.Initiator != (Object)null && info.Initiator is BasePlayer && !info.IsPredicting) ? info.Initiator.net.ID : default(NetworkableId)), info.attackNormal * num, info.HitPositionWorld);
+		ClientRPC<NetworkableId, Vector3, Vector3>(RpcTarget.NetworkGroup("ClientPhysPush"), (NetworkableId)(((Object)(object)info.Initiator != (Object)null && info.Initiator is BasePlayer && !info.IsPredicting) ? info.Initiator.net.ID : default(NetworkableId)), info.attackNormal * num, info.HitPositionWorld);
 		base.OnAttacked(info);
 	}
 }

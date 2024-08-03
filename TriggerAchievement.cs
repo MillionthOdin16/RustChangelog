@@ -13,6 +13,8 @@ public class TriggerAchievement : TriggerBase
 	[Tooltip("Always set to true, clientside does not work, currently")]
 	public bool serverSide = true;
 
+	public bool allowDuringTutorial;
+
 	[NonSerialized]
 	private List<ulong> triggeredPlayers = new List<ulong>();
 
@@ -64,12 +66,7 @@ public class TriggerAchievement : TriggerBase
 		if (!string.IsNullOrEmpty(requiredVehicleName))
 		{
 			BaseVehicle mountedVehicle = component.GetMountedVehicle();
-			if ((Object)(object)mountedVehicle == (Object)null)
-			{
-				return;
-			}
-			string shortPrefabName = mountedVehicle.ShortPrefabName;
-			if (!shortPrefabName.Contains(requiredVehicleName))
+			if ((Object)(object)mountedVehicle == (Object)null || !mountedVehicle.ShortPrefabName.Contains(requiredVehicleName))
 			{
 				return;
 			}
@@ -78,7 +75,7 @@ public class TriggerAchievement : TriggerBase
 		{
 			if (!string.IsNullOrEmpty(achievementOnEnter))
 			{
-				component.GiveAchievement(achievementOnEnter);
+				component.GiveAchievement(achievementOnEnter, allowDuringTutorial);
 			}
 			if (!string.IsNullOrEmpty(statToIncrease))
 			{

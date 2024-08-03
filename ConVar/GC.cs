@@ -1,6 +1,5 @@
 using Rust;
 using UnityEngine;
-using UnityEngine.Profiling;
 using UnityEngine.Scripting;
 
 namespace ConVar;
@@ -14,18 +13,18 @@ public class GC : ConsoleSystem
 	[ClientVar]
 	public static int debuglevel = 1;
 
-	private static int m_buffer = 256;
+	[ClientVar(Saved = true)]
+	public static int buffer = Rust.GC.gcDefaultValue;
 
-	[ClientVar]
-	public static int buffer
+	public static int safeBuffer
 	{
 		get
 		{
-			return m_buffer;
+			return Rust.GC.GetSafeGCValue(buffer);
 		}
 		set
 		{
-			m_buffer = Mathf.Clamp(value, 64, 4096);
+			buffer = value;
 		}
 	}
 
@@ -75,27 +74,21 @@ public class GC : ConsoleSystem
 	[ClientVar]
 	public static void collect()
 	{
-		Profiler.BeginSample("gc.collect");
 		Rust.GC.Collect();
-		Profiler.EndSample();
 	}
 
 	[ServerVar]
 	[ClientVar]
 	public static void unload()
 	{
-		Profiler.BeginSample("UnloadUnusedAssets");
 		Resources.UnloadUnusedAssets();
-		Profiler.EndSample();
 	}
 
 	[ServerVar]
 	[ClientVar]
 	public static void alloc(Arg args)
 	{
-		Profiler.BeginSample("gc.alloc");
 		byte[] array = new byte[args.GetInt(0, 1048576)];
-		Profiler.EndSample();
 		args.ReplyWith("Allocated " + array.Length + " bytes");
 	}
 }

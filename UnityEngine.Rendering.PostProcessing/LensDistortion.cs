@@ -54,6 +54,10 @@ public sealed class LensDistortion : PostProcessEffectSettings
 
 	public override bool IsEnabledAndSupported(PostProcessRenderContext context)
 	{
-		return enabled.value && !Mathf.Approximately((float)intensity, 0f) && ((float)intensityX > 0f || (float)intensityY > 0f) && !RuntimeUtilities.isVREnabled;
+		if (enabled.value && !Mathf.Approximately((float)intensity, 0f) && ((float)intensityX > 0f || (float)intensityY > 0f))
+		{
+			return !RuntimeUtilities.isVREnabled;
+		}
+		return false;
 	}
 }

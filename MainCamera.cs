@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 [ExecuteInEditMode]
@@ -7,7 +8,19 @@ public class MainCamera : RustCamera<MainCamera>
 
 	public static Transform mainCameraTransform;
 
-	public static bool isValid => (Object)(object)mainCamera != (Object)null && ((Behaviour)mainCamera).enabled;
+	public static Action PreCullCallback;
+
+	public static bool isValid
+	{
+		get
+		{
+			if ((Object)(object)mainCamera != (Object)null)
+			{
+				return ((Behaviour)mainCamera).enabled;
+			}
+			return false;
+		}
+	}
 
 	public static Vector3 velocity { get; private set; }
 
@@ -34,7 +47,7 @@ public class MainCamera : RustCamera<MainCamera>
 		}
 		set
 		{
-			//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0013: Unknown result type (might be due to invalid IL or missing references)
 			if (((Vector3)(ref value)).sqrMagnitude > 0f)
 			{
 				mainCameraTransform.forward = value;
@@ -51,7 +64,7 @@ public class MainCamera : RustCamera<MainCamera>
 		}
 		set
 		{
-			//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0013: Unknown result type (might be due to invalid IL or missing references)
 			if (((Vector3)(ref value)).sqrMagnitude > 0f)
 			{
 				mainCameraTransform.right = value;
@@ -68,7 +81,7 @@ public class MainCamera : RustCamera<MainCamera>
 		}
 		set
 		{
-			//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0018: Unknown result type (might be due to invalid IL or missing references)
 			if (((Vector3)(ref value)).sqrMagnitude > 0f)
 			{
 				((Component)mainCamera).transform.up = value;

@@ -1,21 +1,14 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using ConVar;
-using Facepunch;
 using Facepunch.Rust;
 using Network;
 using ProtoBuf;
 using UnityEngine;
 using UnityEngine.Assertions;
-using UnityEngine.Profiling;
 
-public class VehiclePrivilege : BaseEntity
+public class VehiclePrivilege : SimplePrivilege
 {
-	public List<PlayerNameID> authorizedPlayers = new List<PlayerNameID>();
-
-	public const Flags Flag_MaxAuths = Flags.Reserved5;
-
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
 		TimeWarning val = TimeWarning.New("VehiclePrivilege.OnRpcMessage", 0);
@@ -26,7 +19,7 @@ public class VehiclePrivilege : BaseEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - AddSelfAuthorize "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - AddSelfAuthorize "));
 				}
 				TimeWarning val2 = TimeWarning.New("AddSelfAuthorize", 0);
 				try
@@ -45,7 +38,7 @@ public class VehiclePrivilege : BaseEntity
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -57,7 +50,7 @@ public class VehiclePrivilege : BaseEntity
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -77,12 +70,12 @@ public class VehiclePrivilege : BaseEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ClearList "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ClearList "));
 				}
-				TimeWarning val5 = TimeWarning.New("ClearList", 0);
+				TimeWarning val2 = TimeWarning.New("ClearList", 0);
 				try
 				{
-					TimeWarning val6 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.MaxDistance.Test(253307592u, "ClearList", this, player, 3f))
@@ -92,11 +85,11 @@ public class VehiclePrivilege : BaseEntity
 					}
 					finally
 					{
-						((IDisposable)val6)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val7 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -108,7 +101,7 @@ public class VehiclePrivilege : BaseEntity
 						}
 						finally
 						{
-							((IDisposable)val7)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -119,7 +112,7 @@ public class VehiclePrivilege : BaseEntity
 				}
 				finally
 				{
-					((IDisposable)val5)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -128,12 +121,12 @@ public class VehiclePrivilege : BaseEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RemoveSelfAuthorize "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RemoveSelfAuthorize "));
 				}
-				TimeWarning val8 = TimeWarning.New("RemoveSelfAuthorize", 0);
+				TimeWarning val2 = TimeWarning.New("RemoveSelfAuthorize", 0);
 				try
 				{
-					TimeWarning val9 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.MaxDistance.Test(3617985969u, "RemoveSelfAuthorize", this, player, 3f))
@@ -143,11 +136,11 @@ public class VehiclePrivilege : BaseEntity
 					}
 					finally
 					{
-						((IDisposable)val9)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val10 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -159,7 +152,7 @@ public class VehiclePrivilege : BaseEntity
 						}
 						finally
 						{
-							((IDisposable)val10)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex3)
@@ -170,7 +163,7 @@ public class VehiclePrivilege : BaseEntity
 				}
 				finally
 				{
-					((IDisposable)val8)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -180,52 +173,6 @@ public class VehiclePrivilege : BaseEntity
 			((IDisposable)val)?.Dispose();
 		}
 		return base.OnRpcMessage(player, rpc, msg);
-	}
-
-	public override void ResetState()
-	{
-		base.ResetState();
-		authorizedPlayers.Clear();
-	}
-
-	public bool IsAuthed(BasePlayer player)
-	{
-		return authorizedPlayers.Any((PlayerNameID x) => x.userid == player.userID);
-	}
-
-	public bool IsAuthed(ulong userID)
-	{
-		return authorizedPlayers.Any((PlayerNameID x) => x.userid == userID);
-	}
-
-	public bool AnyAuthed()
-	{
-		return authorizedPlayers.Count > 0;
-	}
-
-	public override void Save(SaveInfo info)
-	{
-		base.Save(info);
-		Profiler.BeginSample("VehicleAuthPrivilege.Save");
-		info.msg.buildingPrivilege = Pool.Get<BuildingPrivilege>();
-		info.msg.buildingPrivilege.users = authorizedPlayers;
-		Profiler.EndSample();
-	}
-
-	public override void PostSave(SaveInfo info)
-	{
-		info.msg.buildingPrivilege.users = null;
-	}
-
-	public override void Load(LoadInfo info)
-	{
-		base.Load(info);
-		authorizedPlayers.Clear();
-		if (info.msg.buildingPrivilege != null && info.msg.buildingPrivilege.users != null)
-		{
-			authorizedPlayers = info.msg.buildingPrivilege.users;
-			info.msg.buildingPrivilege.users = null;
-		}
 	}
 
 	public bool IsDriver(BasePlayer player)
@@ -243,20 +190,6 @@ public class VehiclePrivilege : BaseEntity
 		return baseVehicle.IsDriver(player);
 	}
 
-	public bool AtMaxAuthCapacity()
-	{
-		return HasFlag(Flags.Reserved5);
-	}
-
-	public void UpdateMaxAuthCapacity()
-	{
-		BaseGameMode activeGameMode = BaseGameMode.GetActiveGameMode(serverside: true);
-		if (Object.op_Implicit((Object)(object)activeGameMode) && activeGameMode.limitTeamAuths)
-		{
-			SetFlag(Flags.Reserved5, authorizedPlayers.Count >= activeGameMode.GetMaxRelationshipTeamSize());
-		}
-	}
-
 	[RPC_Server]
 	[RPC_Server.MaxDistance(3f)]
 	private void AddSelfAuthorize(RPCMessage rpc)
@@ -270,11 +203,11 @@ public class VehiclePrivilege : BaseEntity
 
 	public void AddPlayer(BasePlayer player)
 	{
-		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003b: Expected O, but got Unknown
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Expected O, but got Unknown
 		if (!AtMaxAuthCapacity())
 		{
-			authorizedPlayers.RemoveAll((PlayerNameID x) => x.userid == player.userID);
+			authorizedPlayers.RemoveAll((PlayerNameID x) => x.userid == (ulong)player.userID);
 			PlayerNameID val = new PlayerNameID();
 			val.userid = player.userID;
 			val.username = player.displayName;
@@ -290,7 +223,7 @@ public class VehiclePrivilege : BaseEntity
 	{
 		if (rpc.player.CanInteract() && IsDriver(rpc.player))
 		{
-			authorizedPlayers.RemoveAll((PlayerNameID x) => x.userid == rpc.player.userID);
+			authorizedPlayers.RemoveAll((PlayerNameID x) => x.userid == (ulong)rpc.player.userID);
 			Analytics.Azure.OnEntityAuthChanged(this, rpc.player, authorizedPlayers.Select((PlayerNameID x) => x.userid), "removed", rpc.player.userID);
 			UpdateMaxAuthCapacity();
 			SendNetworkUpdate();

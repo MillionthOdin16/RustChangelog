@@ -46,7 +46,7 @@ public class VehicleModuleCamper : VehicleModuleSeating
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_OpenLocker "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_OpenLocker "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_OpenLocker", 0);
 				try
@@ -65,7 +65,7 @@ public class VehicleModuleCamper : VehicleModuleSeating
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -77,7 +77,7 @@ public class VehicleModuleCamper : VehicleModuleSeating
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -97,12 +97,12 @@ public class VehicleModuleCamper : VehicleModuleSeating
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_OpenStorage "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_OpenStorage "));
 				}
-				TimeWarning val5 = TimeWarning.New("RPC_OpenStorage", 0);
+				TimeWarning val2 = TimeWarning.New("RPC_OpenStorage", 0);
 				try
 				{
-					TimeWarning val6 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.MaxDistance.Test(4185921214u, "RPC_OpenStorage", this, player, 3f))
@@ -112,11 +112,11 @@ public class VehicleModuleCamper : VehicleModuleSeating
 					}
 					finally
 					{
-						((IDisposable)val6)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val7 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -128,7 +128,7 @@ public class VehicleModuleCamper : VehicleModuleSeating
 						}
 						finally
 						{
-							((IDisposable)val7)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -139,7 +139,7 @@ public class VehicleModuleCamper : VehicleModuleSeating
 				}
 				finally
 				{
-					((IDisposable)val5)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -162,8 +162,8 @@ public class VehicleModuleCamper : VehicleModuleSeating
 
 	public override void ModuleAdded(BaseModularVehicle vehicle, int firstSocketIndex)
 	{
-		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
 		base.ModuleAdded(vehicle, firstSocketIndex);
 		if (!base.isServer)
 		{
@@ -201,12 +201,9 @@ public class VehicleModuleCamper : VehicleModuleSeating
 
 	protected override Vector3 ModifySeatPositionLocalSpace(int index, Vector3 desiredPos)
 	{
-		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
 		CamperSeatConfig seatConfig = GetSeatConfig();
 		if ((Object)(object)seatConfig != (Object)null && seatConfig.SeatPositions.Length > index)
 		{
@@ -223,12 +220,12 @@ public class VehicleModuleCamper : VehicleModuleSeating
 
 	public override void Spawn()
 	{
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0111: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011c: Unknown result type (might be due to invalid IL or missing references)
 		base.Spawn();
 		if (!Application.isLoadingSave)
 		{
@@ -273,11 +270,11 @@ public class VehicleModuleCamper : VehicleModuleSeating
 
 	protected override void PostConditionalRefresh()
 	{
-		//IL_00f9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0111: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_016a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0182: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00df: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0128: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
 		base.PostConditionalRefresh();
 		if (base.isClient)
 		{
@@ -328,12 +325,12 @@ public class VehicleModuleCamper : VehicleModuleSeating
 
 	public override void Save(SaveInfo info)
 	{
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
 		base.Save(info);
 		if (info.msg.camperModule == null)
 		{
@@ -443,13 +440,17 @@ public class VehicleModuleCamper : VehicleModuleSeating
 		{
 			return base.CanBeLooted(player);
 		}
-		return base.CanBeLooted(player) && IsOnThisModule(player);
+		if (base.CanBeLooted(player))
+		{
+			return IsOnThisModule(player);
+		}
+		return false;
 	}
 
 	public override bool IsOnThisModule(BasePlayer player)
 	{
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
 		if (base.IsOnThisModule(player))
 		{
 			return true;
@@ -465,9 +466,9 @@ public class VehicleModuleCamper : VehicleModuleSeating
 
 	public override void Load(LoadInfo info)
 	{
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
 		base.Load(info);
 		if (info.msg.camperModule != null)
 		{

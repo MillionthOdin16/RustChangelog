@@ -1,11 +1,28 @@
 using System;
 using Network;
+using UnityEngine;
 
 public class CommunityEntity : PointEntity
 {
-	public static CommunityEntity ServerInstance = null;
+	private class Countdown : MonoBehaviour
+	{
+		public string command = "";
 
-	public static CommunityEntity ClientInstance = null;
+		public int endTime;
+
+		public int startTime;
+
+		public int step = 1;
+	}
+
+	private class FadeOut : MonoBehaviour
+	{
+		public float duration;
+	}
+
+	public static CommunityEntity ServerInstance;
+
+	public static CommunityEntity ClientInstance;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{

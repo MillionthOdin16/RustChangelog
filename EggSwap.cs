@@ -13,9 +13,9 @@ public class EggSwap : MonoBehaviour
 	public void HideAll()
 	{
 		Renderer[] array = eggRenderers;
-		foreach (Renderer val in array)
+		for (int i = 0; i < array.Length; i++)
 		{
-			val.enabled = false;
+			array[i].enabled = false;
 		}
 	}
 }

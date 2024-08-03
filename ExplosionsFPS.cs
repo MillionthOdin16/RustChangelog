@@ -12,14 +12,14 @@ public class ExplosionsFPS : MonoBehaviour
 
 	private void Awake()
 	{
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
 		guiStyleHeader.fontSize = 14;
 		guiStyleHeader.normal.textColor = new Color(1f, 1f, 1f);
 	}
 
 	private void OnGUI()
 	{
-		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
 		GUI.Label(new Rect(0f, 0f, 30f, 30f), "FPS: " + (int)fps, guiStyleHeader);
 	}
 

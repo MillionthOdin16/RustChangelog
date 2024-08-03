@@ -4,7 +4,7 @@ public class CrushTrigger : TriggerHurt
 {
 	public bool includeNPCs = true;
 
-	public bool requireCentreBelowPosition = false;
+	public bool requireCentreBelowPosition;
 
 	internal override GameObject InterestedInObject(GameObject obj)
 	{
@@ -31,8 +31,8 @@ public class CrushTrigger : TriggerHurt
 
 	protected override bool CanHurt(BaseCombatEntity ent)
 	{
-		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
 		if (requireCentreBelowPosition && ent.CenterPoint().y > ((Component)this).transform.position.y)
 		{
 			return false;

@@ -20,7 +20,7 @@ public class RFTimedExplosive : TimedExplosive, IRFObject
 
 	private float decayTickDuration = 3600f;
 
-	private float minutesDecayed = 0f;
+	private float minutesDecayed;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -32,7 +32,7 @@ public class RFTimedExplosive : TimedExplosive, IRFObject
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Pickup "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Pickup "));
 				}
 				TimeWarning val2 = TimeWarning.New("Pickup", 0);
 				try
@@ -51,7 +51,7 @@ public class RFTimedExplosive : TimedExplosive, IRFObject
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -63,7 +63,7 @@ public class RFTimedExplosive : TimedExplosive, IRFObject
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -88,9 +88,7 @@ public class RFTimedExplosive : TimedExplosive, IRFObject
 
 	public Vector3 GetPosition()
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
 		return ((Component)this).transform.position;
 	}
 

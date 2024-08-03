@@ -81,10 +81,10 @@ public class EntityLink : IPooled
 
 	public bool CanConnect(EntityLink link)
 	{
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
 		if (IsOccupied())
 		{
 			return false;

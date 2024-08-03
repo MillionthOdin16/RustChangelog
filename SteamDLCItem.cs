@@ -3,13 +3,11 @@ using UnityEngine;
 [CreateAssetMenu(menuName = "Rust/Steam DLC Item")]
 public class SteamDLCItem : ScriptableObject
 {
-	public int id;
-
 	public Phrase dlcName;
 
 	public int dlcAppID;
 
-	public bool bypassLicenseCheck = false;
+	public bool bypassLicenseCheck;
 
 	public bool HasLicense(ulong steamid)
 	{
@@ -28,7 +26,11 @@ public class SteamDLCItem : ScriptableObject
 	{
 		if (player.isServer)
 		{
-			return HasLicense(player.userID) || player.userID < 10000000;
+			if (!HasLicense(player.userID))
+			{
+				return (ulong)player.userID < 10000000;
+			}
+			return true;
 		}
 		return false;
 	}

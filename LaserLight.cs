@@ -21,7 +21,7 @@ public class LaserLight : AudioVisualisationEntity
 
 	public MeshRenderer[] DotRenderers;
 
-	public MeshRenderer FlareRenderer = null;
+	public MeshRenderer FlareRenderer;
 
 	public Light[] LightSources;
 

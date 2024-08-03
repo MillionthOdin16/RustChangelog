@@ -73,18 +73,18 @@ public class ch47Animator : MonoBehaviour
 
 	private void LateUpdate()
 	{
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
 		float num = Time.deltaTime * rotorBladeSpeed * 15f;
 		Vector3 localEulerAngles = frontRotorBlade.localEulerAngles;
 		frontRotorBlade.localEulerAngles = new Vector3(localEulerAngles.x, localEulerAngles.y + num, localEulerAngles.z);
@@ -96,14 +96,14 @@ public class ch47Animator : MonoBehaviour
 	{
 		blurredRotorBladesEnabled = enabled;
 		SkinnedMeshRenderer[] array = blurredRotorBlades;
-		foreach (SkinnedMeshRenderer val in array)
+		for (int i = 0; i < array.Length; i++)
 		{
-			((Renderer)val).enabled = enabled;
+			((Renderer)array[i]).enabled = enabled;
 		}
-		SkinnedMeshRenderer[] rotorBlades = RotorBlades;
-		foreach (SkinnedMeshRenderer val2 in rotorBlades)
+		array = RotorBlades;
+		for (int i = 0; i < array.Length; i++)
 		{
-			((Renderer)val2).enabled = !enabled;
+			((Renderer)array[i]).enabled = !enabled;
 		}
 	}
 }

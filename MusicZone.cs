@@ -5,7 +5,7 @@ public class MusicZone : MonoBehaviour, IClientComponent
 {
 	public List<MusicTheme> themes;
 
-	public float priority = 0f;
+	public float priority;
 
-	public bool suppressAutomaticMusic = false;
+	public bool suppressAutomaticMusic;
 }

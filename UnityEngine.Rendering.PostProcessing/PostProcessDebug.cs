@@ -16,7 +16,7 @@ public sealed class PostProcessDebug : MonoBehaviour
 
 	public bool vectorscope;
 
-	public DebugOverlay debugOverlay = DebugOverlay.None;
+	public DebugOverlay debugOverlay;
 
 	private Camera m_CurrentCamera;
 
@@ -24,9 +24,9 @@ public sealed class PostProcessDebug : MonoBehaviour
 
 	private void OnEnable()
 	{
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0018: Expected O, but got Unknown
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Expected O, but got Unknown
 		m_CmdAfterEverything = new CommandBuffer
 		{
 			name = "Post-processing Debug Overlay"
@@ -93,7 +93,7 @@ public sealed class PostProcessDebug : MonoBehaviour
 
 	private void OnPostRender()
 	{
-		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
 		m_CmdAfterEverything.Clear();
 		if (!((Object)(object)postProcessLayer == (Object)null) && ((Behaviour)postProcessLayer).enabled && postProcessLayer.debugLayer.debugOverlayActive)
 		{
@@ -118,7 +118,7 @@ public sealed class PostProcessDebug : MonoBehaviour
 
 	private void DrawMonitor(ref Rect rect, Monitor monitor, bool enabled)
 	{
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
 		if (enabled && !((Object)(object)monitor.output == (Object)null))
 		{
 			((Rect)(ref rect)).width = ((Texture)monitor.output).width;

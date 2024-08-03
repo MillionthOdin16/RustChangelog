@@ -1,46 +1,28 @@
-using System.Collections.Generic;
-using ConVar;
 using Facepunch.Rust;
-using UnityEngine;
 
 public class HalloweenHunt : EggHuntEvent
 {
-	public override void PrintWinnersAndAward()
+	public static Phrase topCreepPhrase = new Phrase("candyhunt.result.topcreeps", "{0} is the top creep with with {1} candies collected.");
+
+	public static Phrase placeCreepPhrase = new Phrase("candyhunt.result.topcreeps", "{0} is the top creep with with {1} candies collected.");
+
+	protected override Phrase GetTopBunnyPhrase()
 	{
-		List<EggHunter> topHunters = GetTopHunters();
-		if (topHunters.Count > 0)
-		{
-			EggHunter eggHunter = topHunters[0];
-			string message = eggHunter.displayName + " is the top creep with " + eggHunter.numEggs + " candies collected.";
-			Chat.Broadcast(message, "", "#eee", 0uL);
-			for (int i = 0; i < topHunters.Count; i++)
-			{
-				EggHunter eggHunter2 = topHunters[i];
-				BasePlayer basePlayer = BasePlayer.FindByID(eggHunter2.userid);
-				if (Object.op_Implicit((Object)(object)basePlayer))
-				{
-					basePlayer.ChatMessage("You placed " + (i + 1) + " of " + topHunters.Count + " with " + topHunters[i].numEggs + " candies collected.");
-					Analytics.Server.ReportCandiesCollectedByPlayer(topHunters[i].numEggs);
-				}
-				else
-				{
-					Debug.LogWarning((object)("EggHuntEvent Printwinners could not find player with id :" + eggHunter2.userid));
-				}
-			}
-			Analytics.Server.ReportPlayersParticipatedInHalloweenEvent(topHunters.Count);
-			for (int j = 0; j < placementAwards.Length && j < topHunters.Count; j++)
-			{
-				BasePlayer basePlayer2 = BasePlayer.FindByID(topHunters[j].userid);
-				if (Object.op_Implicit((Object)(object)basePlayer2))
-				{
-					basePlayer2.inventory.GiveItem(ItemManager.Create(placementAwards[j].itemDef, (int)placementAwards[j].amount, 0uL), basePlayer2.inventory.containerMain);
-					basePlayer2.ChatMessage("You received " + (int)placementAwards[j].amount + "x " + placementAwards[j].itemDef.displayName.english + " as an award!");
-				}
-			}
-		}
-		else
-		{
-			Chat.Broadcast("Wow, no one played so no one won.", "", "#eee", 0uL);
-		}
+		return topCreepPhrase;
+	}
+
+	protected override Phrase GetPlacePhrase()
+	{
+		return placeCreepPhrase;
+	}
+
+	protected override void ReportPlayerParticipated(int topCount)
+	{
+		Analytics.Server.ReportPlayersParticipatedInHalloweenEvent(topCount);
+	}
+
+	protected override void ReportEggsCollected(int numEggs)
+	{
+		Analytics.Server.ReportCandiesCollectedByPlayer(numEggs);
 	}
 }

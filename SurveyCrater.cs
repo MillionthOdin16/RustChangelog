@@ -18,7 +18,7 @@ public class SurveyCrater : BaseCombatEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - AnalysisComplete "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - AnalysisComplete "));
 				}
 				TimeWarning val2 = TimeWarning.New("AnalysisComplete", 0);
 				try
@@ -65,9 +65,7 @@ public class SurveyCrater : BaseCombatEntity
 
 	public override void OnAttacked(HitInfo info)
 	{
-		if (base.isServer)
-		{
-		}
+		_ = base.isServer;
 		base.OnAttacked(info);
 	}
 

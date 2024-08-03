@@ -37,9 +37,11 @@ public class VendingMachine : StorageContainer
 
 	public string shopName = "A Shop";
 
+	public int maxCurrencyVolume = 1;
+
 	public GameObjectRef mapMarkerPrefab;
 
-	public ItemDefinition blueprintBaseDef;
+	public bool IsLocalized;
 
 	private Action fullUpdateCached;
 
@@ -49,11 +51,13 @@ public class VendingMachine : StorageContainer
 
 	private int vend_numberOfTransactions;
 
-	protected bool transactionActive = false;
+	protected bool transactionActive;
 
-	private VendingMachineMapMarker myMarker = null;
+	private VendingMachineMapMarker myMarker;
 
-	private bool industrialItemIncoming = false;
+	private bool industrialItemIncoming;
+
+	protected ItemDefinition blueprintBaseDef => ItemManager.blueprintBaseDef;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -65,7 +69,7 @@ public class VendingMachine : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - BuyItem "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - BuyItem "));
 				}
 				TimeWarning val2 = TimeWarning.New("BuyItem", 0);
 				try
@@ -88,7 +92,7 @@ public class VendingMachine : StorageContainer
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -100,7 +104,7 @@ public class VendingMachine : StorageContainer
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -120,12 +124,12 @@ public class VendingMachine : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_AddSellOrder "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_AddSellOrder "));
 				}
-				TimeWarning val5 = TimeWarning.New("RPC_AddSellOrder", 0);
+				TimeWarning val2 = TimeWarning.New("RPC_AddSellOrder", 0);
 				try
 				{
-					TimeWarning val6 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsVisible.Test(1626480840u, "RPC_AddSellOrder", this, player, 3f))
@@ -135,11 +139,11 @@ public class VendingMachine : StorageContainer
 					}
 					finally
 					{
-						((IDisposable)val6)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val7 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -151,7 +155,7 @@ public class VendingMachine : StorageContainer
 						}
 						finally
 						{
-							((IDisposable)val7)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -162,7 +166,7 @@ public class VendingMachine : StorageContainer
 				}
 				finally
 				{
-					((IDisposable)val5)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -171,12 +175,12 @@ public class VendingMachine : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_Broadcast "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_Broadcast "));
 				}
-				TimeWarning val8 = TimeWarning.New("RPC_Broadcast", 0);
+				TimeWarning val2 = TimeWarning.New("RPC_Broadcast", 0);
 				try
 				{
-					TimeWarning val9 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsVisible.Test(169239598u, "RPC_Broadcast", this, player, 3f))
@@ -186,11 +190,11 @@ public class VendingMachine : StorageContainer
 					}
 					finally
 					{
-						((IDisposable)val9)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val10 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -202,7 +206,7 @@ public class VendingMachine : StorageContainer
 						}
 						finally
 						{
-							((IDisposable)val10)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex3)
@@ -213,7 +217,7 @@ public class VendingMachine : StorageContainer
 				}
 				finally
 				{
-					((IDisposable)val8)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -222,12 +226,12 @@ public class VendingMachine : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_DeleteSellOrder "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_DeleteSellOrder "));
 				}
-				TimeWarning val11 = TimeWarning.New("RPC_DeleteSellOrder", 0);
+				TimeWarning val2 = TimeWarning.New("RPC_DeleteSellOrder", 0);
 				try
 				{
-					TimeWarning val12 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsVisible.Test(3680901137u, "RPC_DeleteSellOrder", this, player, 3f))
@@ -237,11 +241,11 @@ public class VendingMachine : StorageContainer
 					}
 					finally
 					{
-						((IDisposable)val12)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val13 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -253,7 +257,7 @@ public class VendingMachine : StorageContainer
 						}
 						finally
 						{
-							((IDisposable)val13)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex4)
@@ -264,7 +268,7 @@ public class VendingMachine : StorageContainer
 				}
 				finally
 				{
-					((IDisposable)val11)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -273,12 +277,12 @@ public class VendingMachine : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_OpenAdmin "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_OpenAdmin "));
 				}
-				TimeWarning val14 = TimeWarning.New("RPC_OpenAdmin", 0);
+				TimeWarning val2 = TimeWarning.New("RPC_OpenAdmin", 0);
 				try
 				{
-					TimeWarning val15 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsVisible.Test(2555993359u, "RPC_OpenAdmin", this, player, 3f))
@@ -288,11 +292,11 @@ public class VendingMachine : StorageContainer
 					}
 					finally
 					{
-						((IDisposable)val15)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val16 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -304,7 +308,7 @@ public class VendingMachine : StorageContainer
 						}
 						finally
 						{
-							((IDisposable)val16)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex5)
@@ -315,7 +319,7 @@ public class VendingMachine : StorageContainer
 				}
 				finally
 				{
-					((IDisposable)val14)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -324,12 +328,12 @@ public class VendingMachine : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_OpenShop "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_OpenShop "));
 				}
-				TimeWarning val17 = TimeWarning.New("RPC_OpenShop", 0);
+				TimeWarning val2 = TimeWarning.New("RPC_OpenShop", 0);
 				try
 				{
-					TimeWarning val18 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsVisible.Test(36164441u, "RPC_OpenShop", this, player, 3f))
@@ -339,11 +343,11 @@ public class VendingMachine : StorageContainer
 					}
 					finally
 					{
-						((IDisposable)val18)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val19 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -355,7 +359,7 @@ public class VendingMachine : StorageContainer
 						}
 						finally
 						{
-							((IDisposable)val19)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex6)
@@ -366,7 +370,58 @@ public class VendingMachine : StorageContainer
 				}
 				finally
 				{
-					((IDisposable)val17)?.Dispose();
+					((IDisposable)val2)?.Dispose();
+				}
+				return true;
+			}
+			if (rpc == 2947824655u && (Object)(object)player != (Object)null)
+			{
+				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
+				if (Global.developer > 2)
+				{
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_OpenShopNoLOS "));
+				}
+				TimeWarning val2 = TimeWarning.New("RPC_OpenShopNoLOS", 0);
+				try
+				{
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					try
+					{
+						if (!RPC_Server.MaxDistance.Test(2947824655u, "RPC_OpenShopNoLOS", this, player, 3f))
+						{
+							return true;
+						}
+					}
+					finally
+					{
+						((IDisposable)val3)?.Dispose();
+					}
+					try
+					{
+						val3 = TimeWarning.New("Call", 0);
+						try
+						{
+							RPCMessage rPCMessage = default(RPCMessage);
+							rPCMessage.connection = msg.connection;
+							rPCMessage.player = player;
+							rPCMessage.read = msg.read;
+							RPCMessage msg7 = rPCMessage;
+							RPC_OpenShopNoLOS(msg7);
+						}
+						finally
+						{
+							((IDisposable)val3)?.Dispose();
+						}
+					}
+					catch (Exception ex7)
+					{
+						Debug.LogException(ex7);
+						player.Kick("RPC Error in RPC_OpenShopNoLOS");
+					}
+				}
+				finally
+				{
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -375,12 +430,12 @@ public class VendingMachine : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_RotateVM "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_RotateVM "));
 				}
-				TimeWarning val20 = TimeWarning.New("RPC_RotateVM", 0);
+				TimeWarning val2 = TimeWarning.New("RPC_RotateVM", 0);
 				try
 				{
-					TimeWarning val21 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsVisible.Test(3346513099u, "RPC_RotateVM", this, player, 3f))
@@ -390,34 +445,34 @@ public class VendingMachine : StorageContainer
 					}
 					finally
 					{
-						((IDisposable)val21)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val22 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg7 = rPCMessage;
-							RPC_RotateVM(msg7);
+							RPCMessage msg8 = rPCMessage;
+							RPC_RotateVM(msg8);
 						}
 						finally
 						{
-							((IDisposable)val22)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex7)
+					catch (Exception ex8)
 					{
-						Debug.LogException(ex7);
+						Debug.LogException(ex8);
 						player.Kick("RPC Error in RPC_RotateVM");
 					}
 				}
 				finally
 				{
-					((IDisposable)val20)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -426,12 +481,12 @@ public class VendingMachine : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_UpdateShopName "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_UpdateShopName "));
 				}
-				TimeWarning val23 = TimeWarning.New("RPC_UpdateShopName", 0);
+				TimeWarning val2 = TimeWarning.New("RPC_UpdateShopName", 0);
 				try
 				{
-					TimeWarning val24 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsVisible.Test(1012779214u, "RPC_UpdateShopName", this, player, 3f))
@@ -441,34 +496,34 @@ public class VendingMachine : StorageContainer
 					}
 					finally
 					{
-						((IDisposable)val24)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val25 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg8 = rPCMessage;
-							RPC_UpdateShopName(msg8);
+							RPCMessage msg9 = rPCMessage;
+							RPC_UpdateShopName(msg9);
 						}
 						finally
 						{
-							((IDisposable)val25)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex8)
+					catch (Exception ex9)
 					{
-						Debug.LogException(ex8);
+						Debug.LogException(ex9);
 						player.Kick("RPC Error in RPC_UpdateShopName");
 					}
 				}
 				finally
 				{
-					((IDisposable)val23)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -477,12 +532,12 @@ public class VendingMachine : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - TransactionStart "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - TransactionStart "));
 				}
-				TimeWarning val26 = TimeWarning.New("TransactionStart", 0);
+				TimeWarning val2 = TimeWarning.New("TransactionStart", 0);
 				try
 				{
-					TimeWarning val27 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsVisible.Test(3559014831u, "TransactionStart", this, player, 3f))
@@ -492,11 +547,11 @@ public class VendingMachine : StorageContainer
 					}
 					finally
 					{
-						((IDisposable)val27)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val28 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -508,18 +563,18 @@ public class VendingMachine : StorageContainer
 						}
 						finally
 						{
-							((IDisposable)val28)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex9)
+					catch (Exception ex10)
 					{
-						Debug.LogException(ex9);
+						Debug.LogException(ex10);
 						player.Kick("RPC Error in TransactionStart");
 					}
 				}
 				finally
 				{
-					((IDisposable)val26)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -536,7 +591,10 @@ public class VendingMachine : StorageContainer
 		base.Load(info);
 		if (info.msg.vendingMachine != null)
 		{
-			shopName = info.msg.vendingMachine.shopName;
+			if (!IsLocalized)
+			{
+				shopName = info.msg.vendingMachine.shopName;
+			}
 			if (info.msg.vendingMachine.sellOrderContainer != null)
 			{
 				sellOrders = info.msg.vendingMachine.sellOrderContainer;
@@ -549,18 +607,33 @@ public class VendingMachine : StorageContainer
 		}
 	}
 
+	public static int GetTotalPriceForOrder(SellOrder order)
+	{
+		return GetTotalPriceForOrder(order.currencyAmountPerItem, order.priceMultiplier);
+	}
+
+	public static int GetTotalPriceForOrder(int currencyAmountPerItem, float multiplier)
+	{
+		float num = ((multiplier != 0f) ? multiplier : 1f);
+		return Mathf.Max(Mathf.RoundToInt((float)currencyAmountPerItem * num), 1);
+	}
+
 	public override void Save(SaveInfo info)
 	{
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0019: Expected O, but got Unknown
-		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0066: Expected O, but got Unknown
-		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b9: Expected O, but got Unknown
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Expected O, but got Unknown
+		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007c: Expected O, but got Unknown
+		//IL_00c6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cc: Expected O, but got Unknown
 		base.Save(info);
 		info.msg.vendingMachine = new VendingMachine();
 		info.msg.vendingMachine.ShouldPool = false;
 		info.msg.vendingMachine.shopName = shopName;
+		if (this is NPCVendingMachine)
+		{
+			info.msg.vendingMachine.translationToken = GetTranslationToken();
+		}
 		if (sellOrders == null)
 		{
 			return;
@@ -624,6 +697,7 @@ public class VendingMachine : StorageContainer
 
 	public void RefreshSellOrderStockLevel(ItemDefinition itemDef = null)
 	{
+		int num = 0;
 		foreach (SellOrder sellOrder in sellOrders.sellOrders)
 		{
 			if (!((Object)(object)itemDef == (Object)null) && itemDef.itemid != sellOrder.itemToSellID)
@@ -636,6 +710,8 @@ public class VendingMachine : StorageContainer
 			float itemCondition = 0f;
 			float itemConditionMax = 0f;
 			int instanceData = 0;
+			List<int> list2 = Pool.GetList<int>();
+			int totalAttachmentSlots = 0;
 			if (list.Count > 0)
 			{
 				if (list[0].hasCondition)
@@ -648,12 +724,29 @@ public class VendingMachine : StorageContainer
 					instanceData = list[0].instanceData.dataInt;
 					sellOrder.inStock = list[0].amount;
 				}
+				if (list[0].contents != null && list[0].contents.capacity > 0 && list[0].contents.HasFlag(ItemContainer.Flag.ShowSlotsOnIcon))
+				{
+					foreach (Item item in list[0].contents.itemList)
+					{
+						list2.Add(item.info.itemid);
+					}
+					totalAttachmentSlots = list[0].contents.capacity;
+				}
 			}
 			sellOrder.itemCondition = itemCondition;
 			sellOrder.itemConditionMax = itemConditionMax;
 			sellOrder.instanceData = instanceData;
+			sellOrder.attachmentsList = list2;
+			sellOrder.totalAttachmentSlots = totalAttachmentSlots;
+			sellOrder.priceMultiplier = GetDiscountForSlot(num, sellOrder);
+			num++;
 			Pool.FreeList<Item>(ref list);
 		}
+	}
+
+	protected virtual float GetDiscountForSlot(int sellOrderSlot, SellOrder forOrder)
+	{
+		return 1f;
 	}
 
 	public bool OutOfStock()
@@ -693,8 +786,8 @@ public class VendingMachine : StorageContainer
 
 	public virtual void InstallDefaultSellOrders()
 	{
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Expected O, but got Unknown
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000b: Expected O, but got Unknown
 		sellOrders = new SellOrderContainer();
 		sellOrders.ShouldPool = false;
 		sellOrders.sellOrders = new List<SellOrder>();
@@ -719,7 +812,7 @@ public class VendingMachine : StorageContainer
 		SetFlag(Flags.Reserved2, b: true);
 		if (HasVendingSounds())
 		{
-			ClientRPC(null, "CLIENT_StartVendingSounds", sellOrderId);
+			ClientRPC(RpcTarget.NetworkGroup("CLIENT_StartVendingSounds"), sellOrderId);
 		}
 	}
 
@@ -730,7 +823,7 @@ public class VendingMachine : StorageContainer
 		vend_sellOrderID = -1;
 		vend_numberOfTransactions = -1;
 		SetFlag(Flags.Reserved2, b: false);
-		ClientRPC(null, "CLIENT_CancelVendingSounds");
+		ClientRPC(RpcTarget.NetworkGroup("CLIENT_CancelVendingSounds"));
 	}
 
 	[RPC_Server]
@@ -754,7 +847,7 @@ public class VendingMachine : StorageContainer
 
 	public virtual void CompletePendingOrder()
 	{
-		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
 		DoTransaction(vend_Player, vend_sellOrderID, vend_numberOfTransactions);
 		ClearPendingOrder();
 		Decay.RadialDecayTouch(((Component)this).transform.position, 40f, 2097408);
@@ -790,12 +883,12 @@ public class VendingMachine : StorageContainer
 
 	public bool DoTransaction(BasePlayer buyer, int sellOrderId, int numberOfTransactions = 1, ItemContainer targetContainer = null, Action<BasePlayer, Item> onCurrencyRemoved = null, Action<BasePlayer, Item> onItemPurchased = null, MarketTerminal droneMarketTerminal = null)
 	{
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03c3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03ca: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03d1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03d7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_032f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0336: Unknown result type (might be due to invalid IL or missing references)
+		//IL_033d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0343: Unknown result type (might be due to invalid IL or missing references)
 		if (sellOrderId < 0 || sellOrderId >= sellOrders.sellOrders.Count)
 		{
 			return false;
@@ -820,21 +913,24 @@ public class VendingMachine : StorageContainer
 			Pool.FreeList<Item>(ref list);
 			return false;
 		}
-		List<Item> source = buyer.inventory.FindItemIDs(sellOrder.currencyID);
+		List<Item> source = buyer.inventory.FindItemsByItemID(sellOrder.currencyID);
 		if (sellOrder.currencyIsBP)
 		{
-			source = (from x in buyer.inventory.FindItemIDs(blueprintBaseDef.itemid)
+			source = (from x in buyer.inventory.FindItemsByItemID(blueprintBaseDef.itemid)
 				where x.blueprintTarget == sellOrder.currencyID
 				select x).ToList();
 		}
-		source = source.Where((Item x) => !x.hasCondition || (x.conditionNormalized >= 0.5f && x.maxConditionNormalized > 0.5f)).ToList();
+		source = (from x in source
+			where !x.hasCondition || (x.conditionNormalized >= 0.5f && x.maxConditionNormalized > 0.5f)
+			where x.GetItemVolume() <= maxCurrencyVolume
+			select x).ToList();
 		if (source.Count == 0)
 		{
 			Pool.FreeList<Item>(ref list);
 			return false;
 		}
 		int num3 = source.Sum((Item x) => x.amount);
-		int num4 = sellOrder.currencyAmountPerItem * numberOfTransactions;
+		int num4 = GetTotalPriceForOrder(sellOrder) * numberOfTransactions;
 		if (num3 < num4)
 		{
 			Pool.FreeList<Item>(ref list);
@@ -854,7 +950,7 @@ public class VendingMachine : StorageContainer
 				break;
 			}
 		}
-		Analytics.Azure.OnBuyFromVendingMachine(buyer, this, sellOrder.itemToSellID, sellOrder.itemToSellAmount * numberOfTransactions, sellOrder.itemToSellIsBP, sellOrder.currencyID, sellOrder.currencyAmountPerItem * numberOfTransactions, sellOrder.currencyIsBP, numberOfTransactions, droneMarketTerminal);
+		Analytics.Azure.OnBuyFromVendingMachine(buyer, this, sellOrder.itemToSellID, sellOrder.itemToSellAmount * numberOfTransactions, sellOrder.itemToSellIsBP, sellOrder.currencyID, num4, sellOrder.currencyIsBP, numberOfTransactions, sellOrder.priceMultiplier, droneMarketTerminal);
 		int num7 = 0;
 		foreach (Item item4 in list)
 		{
@@ -867,7 +963,7 @@ public class VendingMachine : StorageContainer
 			else
 			{
 				num7 += item2.amount;
-				RecordSaleAnalytics(item2);
+				RecordSaleAnalytics(item2, sellOrderId);
 				if (targetContainer == null)
 				{
 					GiveSoldItem(item2, buyer);
@@ -889,17 +985,17 @@ public class VendingMachine : StorageContainer
 		return true;
 	}
 
-	protected virtual void RecordSaleAnalytics(Item itemSold)
+	protected virtual void RecordSaleAnalytics(Item itemSold, int orderId)
 	{
 		Analytics.Server.VendingMachineTransaction(null, itemSold.info, itemSold.amount);
 	}
 
 	public virtual void TakeCurrencyItem(Item takenCurrencyItem)
 	{
-		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
 		if (!takenCurrencyItem.MoveToContainer(base.inventory))
 		{
 			takenCurrencyItem.Drop(base.inventory.dropPosition, Vector3.zero);
@@ -920,11 +1016,11 @@ public class VendingMachine : StorageContainer
 	{
 		if (Object.op_Implicit((Object)(object)player))
 		{
-			ClientRPCPlayer<SellOrderContainer>(null, player, "CLIENT_ReceiveSellOrders", sellOrders);
+			ClientRPC<SellOrderContainer>(RpcTarget.Player("CLIENT_ReceiveSellOrders", player), sellOrders);
 		}
 		else
 		{
-			ClientRPC<SellOrderContainer>(null, "CLIENT_ReceiveSellOrders", sellOrders);
+			ClientRPC<SellOrderContainer>(RpcTarget.NetworkGroup("CLIENT_ReceiveSellOrders"), sellOrders);
 		}
 	}
 
@@ -946,7 +1042,7 @@ public class VendingMachine : StorageContainer
 	public void RPC_UpdateShopName(RPCMessage msg)
 	{
 		BasePlayer player = msg.player;
-		string text = msg.read.String(32);
+		string text = msg.read.String(32, false);
 		if (CanPlayerAdmin(player))
 		{
 			shopName = text;
@@ -954,10 +1050,23 @@ public class VendingMachine : StorageContainer
 		}
 	}
 
-	public void UpdateMapMarker()
+	public void UpdateMapMarkerPosition()
 	{
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		if (!((Object)(object)myMarker == (Object)null))
+		{
+			myMarker.TryUpdatePosition();
+		}
+	}
+
+	public void SetupPositionUpdate()
+	{
+		myMarker.SetupPositionUpdate();
+	}
+
+	public void UpdateMapMarker(bool updatePosition = false)
+	{
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
 		if (IsBroadcasting())
 		{
 			bool flag = false;
@@ -984,14 +1093,29 @@ public class VendingMachine : StorageContainer
 		}
 	}
 
+	public void OpenShop(BasePlayer ply)
+	{
+		SendSellOrders(ply);
+		PlayerOpenLoot(ply, customerPanel);
+	}
+
+	[RPC_Server]
+	[RPC_Server.MaxDistance(3f)]
+	public void RPC_OpenShopNoLOS(RPCMessage msg)
+	{
+		if (OccupiedCheck(msg.player))
+		{
+			OpenShop(msg.player);
+		}
+	}
+
 	[RPC_Server]
 	[RPC_Server.IsVisible(3f)]
 	public void RPC_OpenShop(RPCMessage msg)
 	{
 		if (OccupiedCheck(msg.player))
 		{
-			SendSellOrders(msg.player);
-			PlayerOpenLoot(msg.player, customerPanel);
+			OpenShop(msg.player);
 		}
 	}
 
@@ -1002,9 +1126,8 @@ public class VendingMachine : StorageContainer
 		BasePlayer player = msg.player;
 		if (CanPlayerAdmin(player))
 		{
-			SendSellOrders(player);
-			PlayerOpenLoot(player);
-			ClientRPCPlayer(null, player, "CLIENT_OpenAdminMenu");
+			OpenShop(player);
+			ClientRPC(RpcTarget.Player("CLIENT_OpenAdminMenu", player));
 		}
 	}
 
@@ -1020,7 +1143,7 @@ public class VendingMachine : StorageContainer
 
 	public bool CanAcceptItem(Item item, int targetSlot)
 	{
-		BasePlayer ownerPlayer = item.GetOwnerPlayer();
+		BasePlayer basePlayer = item.GetRootContainer()?.GetOwnerPlayer();
 		if (transactionActive || industrialItemIncoming)
 		{
 			return true;
@@ -1033,11 +1156,11 @@ public class VendingMachine : StorageContainer
 		{
 			return true;
 		}
-		if ((Object)(object)ownerPlayer == (Object)null)
+		if ((Object)(object)basePlayer == (Object)null)
 		{
 			return false;
 		}
-		return CanPlayerAdmin(ownerPlayer);
+		return CanPlayerAdmin(basePlayer);
 	}
 
 	public override bool CanMoveFrom(BasePlayer player, Item item)
@@ -1051,7 +1174,11 @@ public class VendingMachine : StorageContainer
 		{
 			return true;
 		}
-		return base.CanOpenLootPanel(player, panelName) && CanPlayerAdmin(player);
+		if (base.CanOpenLootPanel(player, panelName))
+		{
+			return CanPlayerAdmin(player);
+		}
+		return false;
 	}
 
 	[RPC_Server]
@@ -1078,15 +1205,14 @@ public class VendingMachine : StorageContainer
 	[RPC_Server.IsVisible(3f)]
 	public void RPC_RotateVM(RPCMessage msg)
 	{
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
 		if (CanRotate())
 		{
 			UpdateEmptyFlag();
-			BasePlayer player = msg.player;
-			if (player.CanBuild() && IsInventoryEmpty())
+			if (msg.player.CanBuild() && IsInventoryEmpty())
 			{
 				((Component)this).transform.rotation = Quaternion.LookRotation(-((Component)this).transform.forward, ((Component)this).transform.up);
 				SendNetworkUpdate();
@@ -1118,8 +1244,8 @@ public class VendingMachine : StorageContainer
 
 	public void AddSellOrder(int itemToSellID, int itemToSellAmount, int currencyToUseID, int currencyAmount, byte bpState)
 	{
-		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004f: Expected O, but got Unknown
+		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0045: Expected O, but got Unknown
 		ItemDefinition itemDefinition = ItemManager.FindItemDefinition(itemToSellID);
 		ItemDefinition itemDefinition2 = ItemManager.FindItemDefinition(currencyToUseID);
 		if (!((Object)(object)itemDefinition == (Object)null) && !((Object)(object)itemDefinition2 == (Object)null))
@@ -1149,10 +1275,10 @@ public class VendingMachine : StorageContainer
 
 	public void UpdateOrCreateSalesSheet()
 	{
-		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00df: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b6: Unknown result type (might be due to invalid IL or missing references)
 		ItemDefinition itemDefinition = ItemManager.FindItemDefinition("note");
 		List<Item> list = base.inventory.FindItemsByItemID(itemDefinition.itemid);
 		Item item = null;
@@ -1213,12 +1339,12 @@ public class VendingMachine : StorageContainer
 
 	public bool PlayerBehind(BasePlayer player)
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 forward = ((Component)this).transform.forward;
 		Vector3 val = ((Component)player).transform.position - ((Component)this).transform.position;
 		return Vector3.Dot(forward, ((Vector3)(ref val)).normalized) <= -0.7f;
@@ -1226,12 +1352,12 @@ public class VendingMachine : StorageContainer
 
 	public bool PlayerInfront(BasePlayer player)
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 forward = ((Component)this).transform.forward;
 		Vector3 val = ((Component)player).transform.position - ((Component)this).transform.position;
 		return Vector3.Dot(forward, ((Vector3)(ref val)).normalized) >= 0.7f;
@@ -1239,11 +1365,20 @@ public class VendingMachine : StorageContainer
 
 	public virtual bool CanPlayerAdmin(BasePlayer player)
 	{
-		return PlayerBehind(player) && OccupiedCheck(player);
+		if (PlayerBehind(player))
+		{
+			return OccupiedCheck(player);
+		}
+		return false;
 	}
 
 	public override bool SupportsChildDeployables()
 	{
 		return true;
+	}
+
+	public virtual string GetTranslationToken()
+	{
+		return "";
 	}
 }

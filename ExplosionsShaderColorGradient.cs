@@ -4,7 +4,7 @@ public class ExplosionsShaderColorGradient : MonoBehaviour
 {
 	public string ShaderProperty = "_TintColor";
 
-	public int MaterialID = 0;
+	public int MaterialID;
 
 	public Gradient Color = new Gradient();
 
@@ -22,8 +22,8 @@ public class ExplosionsShaderColorGradient : MonoBehaviour
 
 	private void Start()
 	{
-		//IL_0089: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
 		Material[] materials = ((Component)this).GetComponent<Renderer>().materials;
 		if (MaterialID >= materials.Length)
 		{
@@ -46,11 +46,11 @@ public class ExplosionsShaderColorGradient : MonoBehaviour
 
 	private void Update()
 	{
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
 		float num = Time.time - startTime;
 		if (canUpdate)
 		{

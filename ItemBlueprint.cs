@@ -8,27 +8,27 @@ public class ItemBlueprint : MonoBehaviour
 
 	public List<ItemDefinition> additionalUnlocks = new List<ItemDefinition>();
 
-	public bool defaultBlueprint = false;
+	public bool defaultBlueprint;
 
 	public bool userCraftable = true;
 
 	public bool isResearchable = true;
 
-	public bool forceShowInConveyorFilter = false;
+	public bool forceShowInConveyorFilter;
 
 	public Rarity rarity;
 
 	[Header("Workbench")]
-	public int workbenchLevelRequired = 0;
+	public int workbenchLevelRequired;
 
 	[Header("Scrap")]
-	public int scrapRequired = 0;
+	public int scrapRequired;
 
-	public int scrapFromRecycle = 0;
+	public int scrapFromRecycle;
 
 	[Header("Unlocking")]
 	[Tooltip("This item won't show anywhere unless you have the corresponding SteamItem in your inventory - which is defined on the ItemDefinition")]
-	public bool NeedsSteamItem = false;
+	public bool NeedsSteamItem;
 
 	public int blueprintStackSize = -1;
 

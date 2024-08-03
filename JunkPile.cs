@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using Facepunch;
 using Network;
 using UnityEngine;
 
@@ -14,7 +12,9 @@ public class JunkPile : BaseEntity
 
 	private const float lifetimeMinutes = 30f;
 
-	protected bool isSinking = false;
+	protected bool isSinking;
+
+	private float sunkAmount;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -38,21 +38,32 @@ public class JunkPile : BaseEntity
 		isSinking = false;
 	}
 
+	internal override void DoServerDestroy()
+	{
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		base.DoServerDestroy();
+		StabilityEntity.UpdateSurroundingsQueue updateSurroundingsQueue = StabilityEntity.updateSurroundingsQueue;
+		OBB val = WorldSpaceBounds();
+		((ObjectWorkQueue<Bounds>)updateSurroundingsQueue).Add(((OBB)(ref val)).ToBounds());
+	}
+
 	private void SpawnInitial()
 	{
 		SpawnGroup[] array = spawngroups;
-		foreach (SpawnGroup spawnGroup in array)
+		for (int i = 0; i < array.Length; i++)
 		{
-			spawnGroup.SpawnInitial();
+			array[i].SpawnInitial();
 		}
 	}
 
 	public bool SpawnGroupsEmpty()
 	{
 		SpawnGroup[] array = spawngroups;
-		foreach (SpawnGroup spawnGroup in array)
+		for (int i = 0; i < array.Length; i++)
 		{
-			if (spawnGroup.currentPopulation > 0)
+			if (array[i].currentPopulation > 0)
 			{
 				return false;
 			}
@@ -66,29 +77,12 @@ public class JunkPile : BaseEntity
 
 	public void CheckEmpty()
 	{
-		if (SpawnGroupsEmpty() && !PlayersNearby())
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		if (SpawnGroupsEmpty() && !BaseNetworkable.HasCloseConnections(((Component)this).transform.position, TimeoutPlayerCheckRadius()))
 		{
 			((FacepunchBehaviour)this).CancelInvoke((Action)CheckEmpty);
 			SinkAndDestroy();
 		}
-	}
-
-	public bool PlayersNearby()
-	{
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		List<BasePlayer> list = Pool.GetList<BasePlayer>();
-		Vis.Entities(((Component)this).transform.position, TimeoutPlayerCheckRadius(), list, 131072, (QueryTriggerInteraction)2);
-		bool result = false;
-		foreach (BasePlayer item in list)
-		{
-			if (!item.IsSleeping() && item.IsAlive() && !(item is HumanNPC))
-			{
-				result = true;
-				break;
-			}
-		}
-		Pool.FreeList<BasePlayer>(ref list);
-		return result;
 	}
 
 	public virtual float TimeoutPlayerCheckRadius()
@@ -98,41 +92,50 @@ public class JunkPile : BaseEntity
 
 	public void TimeOut()
 	{
-		if (PlayersNearby())
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		if (BaseNetworkable.HasCloseConnections(((Component)this).transform.position, TimeoutPlayerCheckRadius()))
 		{
 			((FacepunchBehaviour)this).Invoke((Action)TimeOut, 30f);
+			return;
 		}
-		else if (SpawnGroupsEmpty())
-		{
-			SinkAndDestroy();
-		}
-		else
-		{
-			SinkAndDestroy();
-		}
+		SpawnGroupsEmpty();
+		SinkAndDestroy();
 	}
 
 	public void SinkAndDestroy()
 	{
-		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
-		((FacepunchBehaviour)this).CancelInvoke((Action)SinkAndDestroy);
-		SpawnGroup[] array = spawngroups;
-		foreach (SpawnGroup spawnGroup in array)
+		if (base.isServer)
 		{
-			spawnGroup.Clear();
+			((FacepunchBehaviour)this).CancelInvoke((Action)SinkAndDestroy);
+			SpawnGroup[] array = spawngroups;
+			for (int i = 0; i < array.Length; i++)
+			{
+				array[i].Clear();
+			}
+			SetFlag(Flags.Reserved8, b: true, recursive: true);
+			if ((Object)(object)NPCSpawn != (Object)null)
+			{
+				NPCSpawn.Clear();
+			}
+			ClientRPC(RpcTarget.NetworkGroup("CLIENT_StartSink"));
+			isSinking = true;
+			((FacepunchBehaviour)this).InvokeRepeating((Action)SinkThink, 0.75f, 0.01f);
+			((FacepunchBehaviour)this).Invoke((Action)KillMe, 22f);
 		}
-		SetFlag(Flags.Reserved8, b: true, recursive: true);
-		if ((Object)(object)NPCSpawn != (Object)null)
+	}
+
+	public void SinkThink()
+	{
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		if (!(sunkAmount >= 10f))
 		{
-			NPCSpawn.Clear();
+			float num = 0.5f * Time.deltaTime;
+			sunkAmount += num;
+			Transform transform = ((Component)this).transform;
+			transform.position -= new Vector3(0f, num, 0f);
 		}
-		ClientRPC(null, "CLIENT_StartSink");
-		Transform transform = ((Component)this).transform;
-		transform.position -= new Vector3(0f, 5f, 0f);
-		isSinking = true;
-		((FacepunchBehaviour)this).Invoke((Action)KillMe, 22f);
 	}
 
 	public void KillMe()

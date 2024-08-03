@@ -37,13 +37,13 @@ public class LiquidWeapon : BaseLiquidVessel
 
 	public LiquidWeaponEffects EntityWeaponEffects;
 
-	public bool RequiresPumping = false;
+	public bool RequiresPumping;
 
-	public bool AutoPump = false;
+	public bool AutoPump;
 
-	public bool WaitForFillAnim = false;
+	public bool WaitForFillAnim;
 
-	public bool UseFalloffCurve = false;
+	public bool UseFalloffCurve;
 
 	public AnimationCurve FalloffCurve;
 
@@ -53,9 +53,11 @@ public class LiquidWeapon : BaseLiquidVessel
 
 	public float StopFillingBlockDuration = 1f;
 
-	private float cooldownTime = 0f;
+	private float cooldownTime;
 
-	private int pressure = 0;
+	public bool HoldFireInput;
+
+	private int pressure;
 
 	public const string RadiationFightAchievement = "SUMMER_RADICAL";
 
@@ -69,7 +71,17 @@ public class LiquidWeapon : BaseLiquidVessel
 
 	public float MinimumPressureFraction => (float)PressureGainedPerPump / (float)MaxPressure;
 
-	public float CurrentRange => UseFalloffCurve ? (MaxRange * FalloffCurve.Evaluate((float)(MaxPressure - pressure) / (float)MaxPressure)) : MaxRange;
+	public float CurrentRange
+	{
+		get
+		{
+			if (!UseFalloffCurve)
+			{
+				return MaxRange;
+			}
+			return MaxRange * FalloffCurve.Evaluate((float)(MaxPressure - pressure) / (float)MaxPressure);
+		}
+	}
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -81,7 +93,7 @@ public class LiquidWeapon : BaseLiquidVessel
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - PumpWater "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - PumpWater "));
 				}
 				TimeWarning val2 = TimeWarning.New("PumpWater", 0);
 				try
@@ -100,7 +112,7 @@ public class LiquidWeapon : BaseLiquidVessel
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -112,7 +124,7 @@ public class LiquidWeapon : BaseLiquidVessel
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -132,12 +144,12 @@ public class LiquidWeapon : BaseLiquidVessel
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - StartFiring "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - StartFiring "));
 				}
-				TimeWarning val5 = TimeWarning.New("StartFiring", 0);
+				TimeWarning val2 = TimeWarning.New("StartFiring", 0);
 				try
 				{
-					TimeWarning val6 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsActiveItem.Test(3724096303u, "StartFiring", this, player))
@@ -147,11 +159,11 @@ public class LiquidWeapon : BaseLiquidVessel
 					}
 					finally
 					{
-						((IDisposable)val6)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val7 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -163,7 +175,7 @@ public class LiquidWeapon : BaseLiquidVessel
 						}
 						finally
 						{
-							((IDisposable)val7)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -174,7 +186,7 @@ public class LiquidWeapon : BaseLiquidVessel
 				}
 				finally
 				{
-					((IDisposable)val5)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -183,12 +195,12 @@ public class LiquidWeapon : BaseLiquidVessel
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - StopFiring "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - StopFiring "));
 				}
-				TimeWarning val8 = TimeWarning.New("StopFiring", 0);
+				TimeWarning val2 = TimeWarning.New("StopFiring", 0);
 				try
 				{
-					TimeWarning val9 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsActiveItem.Test(789289044u, "StopFiring", this, player))
@@ -198,18 +210,18 @@ public class LiquidWeapon : BaseLiquidVessel
 					}
 					finally
 					{
-						((IDisposable)val9)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val10 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							StopFiring();
 						}
 						finally
 						{
-							((IDisposable)val10)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex3)
@@ -220,7 +232,7 @@ public class LiquidWeapon : BaseLiquidVessel
 				}
 				finally
 				{
-					((IDisposable)val8)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -247,8 +259,8 @@ public class LiquidWeapon : BaseLiquidVessel
 		}
 		if (CanFire(player))
 		{
-			((MonoBehaviour)this).CancelInvoke("FireTick");
-			((MonoBehaviour)this).InvokeRepeating("FireTick", 0f, FireRate);
+			((FacepunchBehaviour)this).CancelInvoke((Action)FireTick);
+			((FacepunchBehaviour)this).InvokeRepeating((Action)FireTick, 0f, FireRate);
 			SetFlag(Flags.On, b: true);
 			StartCooldown(FireRate);
 			if (base.isServer)
@@ -262,7 +274,7 @@ public class LiquidWeapon : BaseLiquidVessel
 	[RPC_Server.IsActiveItem]
 	private void StopFiring()
 	{
-		((MonoBehaviour)this).CancelInvoke("FireTick");
+		((FacepunchBehaviour)this).CancelInvoke((Action)FireTick);
 		if (!RequiresPumping)
 		{
 			pressure = MaxPressure;
@@ -317,8 +329,7 @@ public class LiquidWeapon : BaseLiquidVessel
 
 	private void PumpWater()
 	{
-		BasePlayer ownerPlayer = GetOwnerPlayer();
-		if (!((Object)(object)ownerPlayer == (Object)null) && !OnCooldown() && !Firing())
+		if (!((Object)(object)GetOwnerPlayer() == (Object)null) && !OnCooldown() && !Firing())
 		{
 			pressure += PressureGainedPerPump;
 			pressure = Mathf.Min(pressure, MaxPressure);
@@ -330,17 +341,17 @@ public class LiquidWeapon : BaseLiquidVessel
 
 	private void FireTick()
 	{
-		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0089: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ad: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer ownerPlayer = GetOwnerPlayer();
 		if (!CanFire(ownerPlayer))
 		{
@@ -353,7 +364,6 @@ public class LiquidWeapon : BaseLiquidVessel
 			StopFiring();
 			return;
 		}
-		LoseWater(num);
 		float currentRange = CurrentRange;
 		pressure -= PressureLossPerTick;
 		if (pressure <= 0)
@@ -367,13 +377,14 @@ public class LiquidWeapon : BaseLiquidVessel
 		{
 			DoSplash(ownerPlayer, ((RaycastHit)(ref val2)).point, ((Ray)(ref val)).direction, num);
 		}
+		LoseWater(num);
 		SendNetworkUpdate();
 	}
 
 	private void DoSplash(BasePlayer attacker, Vector3 position, Vector3 direction, int amount)
 	{
-		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
 		Item item = GetItem();
 		if (item != null && item.contents != null)
 		{

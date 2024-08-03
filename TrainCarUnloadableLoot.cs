@@ -18,8 +18,8 @@ public class TrainCarUnloadableLoot : TrainCarUnloadable
 
 	public override void Spawn()
 	{
-		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
 		base.Spawn();
 		if (Application.isLoadingSave)
 		{

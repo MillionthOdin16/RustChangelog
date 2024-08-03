@@ -26,6 +26,8 @@ public class UIClanRankEditor : BaseMonoBehaviour
 
 	public RustButton AccessLogs;
 
+	public RustButton AccessScoreEvents;
+
 	public RustButton CancelButton;
 
 	public RustButton SubmitButton;

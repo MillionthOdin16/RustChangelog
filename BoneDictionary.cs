@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 public class BoneDictionary
 {
@@ -21,7 +20,6 @@ public class BoneDictionary
 
 	public BoneDictionary(Transform rootBone)
 	{
-		Profiler.BeginSample("BuildBoneDictionary");
 		transform = rootBone;
 		transforms = ((Component)rootBone).GetComponentsInChildren<Transform>(true);
 		names = new string[transforms.Length];
@@ -34,17 +32,14 @@ public class BoneDictionary
 			}
 		}
 		BuildBoneDictionary();
-		Profiler.EndSample();
 	}
 
 	public BoneDictionary(Transform rootBone, Transform[] boneTransforms, string[] boneNames)
 	{
-		Profiler.BeginSample("BuildBoneDictionary");
 		transform = rootBone;
 		transforms = boneTransforms;
 		names = boneNames;
 		BuildBoneDictionary();
-		Profiler.EndSample();
 	}
 
 	private void BuildBoneDictionary()
@@ -76,7 +71,11 @@ public class BoneDictionary
 		{
 			return value;
 		}
-		return defaultToRoot ? transform : null;
+		if (!defaultToRoot)
+		{
+			return null;
+		}
+		return transform;
 	}
 
 	public Transform FindBone(uint hash, bool defaultToRoot = true)
@@ -86,12 +85,19 @@ public class BoneDictionary
 		{
 			return value;
 		}
-		return defaultToRoot ? transform : null;
+		if (!defaultToRoot)
+		{
+			return null;
+		}
+		return transform;
 	}
 
 	public uint FindBoneID(Transform transform)
 	{
-		uint value;
-		return transformDict.TryGetValue(transform, out value) ? value : StringPool.closest;
+		if (!transformDict.TryGetValue(transform, out var value))
+		{
+			return StringPool.closest;
+		}
+		return value;
 	}
 }

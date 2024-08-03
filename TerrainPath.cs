@@ -5,6 +5,12 @@ public class TerrainPath : TerrainExtension
 {
 	internal List<PathList> Roads = new List<PathList>();
 
+	internal List<PathList> MainRoads = new List<PathList>();
+
+	internal List<PathList> SideRoads = new List<PathList>();
+
+	internal List<PathList> TrailRoads = new List<PathList>();
+
 	internal List<PathList> Rails = new List<PathList>();
 
 	internal List<PathList> Rivers = new List<PathList>();
@@ -19,15 +25,17 @@ public class TerrainPath : TerrainExtension
 
 	internal List<LakeInfo> LakeObjs = new List<LakeInfo>();
 
-	internal GameObject DungeonGridRoot = null;
+	internal GameObject DungeonGridRoot;
 
 	internal List<DungeonGridInfo> DungeonGridEntrances = new List<DungeonGridInfo>();
 
 	internal List<DungeonGridCell> DungeonGridCells = new List<DungeonGridCell>();
 
-	internal GameObject DungeonBaseRoot = null;
+	internal GameObject DungeonBaseRoot;
 
 	internal List<DungeonBaseInfo> DungeonBaseEntrances = new List<DungeonBaseInfo>();
+
+	internal List<DungeonBaseLink> DungeonBaseLinks = new List<DungeonBaseLink>();
 
 	internal List<Vector3> OceanPatrolClose = new List<Vector3>();
 
@@ -69,8 +77,8 @@ public class TerrainPath : TerrainExtension
 
 	public T FindClosest<T>(List<T> list, Vector3 pos) where T : MonoBehaviour
 	{
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
 		T result = default(T);
 		float num = float.MaxValue;
 		foreach (T item in list)
@@ -101,9 +109,9 @@ public class TerrainPath : TerrainExtension
 				float normX = ((float)j + 0.5f) / (float)num;
 				float slope = heightMap.GetSlope(normX, normZ);
 				int topology = topologyMap.GetTopology(normX, normZ, radius);
-				int num2 = 2295174;
+				int num2 = 2295172;
 				int num3 = 1628160;
-				int num4 = 512;
+				int num4 = 514;
 				if ((topology & num2) != 0)
 				{
 					array[j, i] = int.MaxValue;
@@ -128,6 +136,7 @@ public class TerrainPath : TerrainExtension
 	public static int[,] CreateRoadCostmap(ref uint seed)
 	{
 		float radius = 5f;
+		float radius2 = 15f;
 		int num = (int)((float)World.Size / 7.5f);
 		TerrainPlacementMap placementMap = TerrainMeta.PlacementMap;
 		TerrainHeightMap heightMap = TerrainMeta.HeightMap;
@@ -142,13 +151,15 @@ public class TerrainPath : TerrainExtension
 				int num2 = SeedRandom.Range(ref seed, 100, 200);
 				float slope = heightMap.GetSlope(normX, normZ);
 				int topology = topologyMap.GetTopology(normX, normZ, radius);
-				int num3 = 2295686;
-				int num4 = 49152;
-				if (slope > 20f || (topology & num3) != 0)
+				int topology2 = topologyMap.GetTopology(normX, normZ, radius2);
+				int num3 = 196996;
+				int num4 = 2098176;
+				int num5 = 49666;
+				if (slope > 20f || (topology & num3) != 0 || (topology2 & num4) != 0)
 				{
 					array[j, i] = int.MaxValue;
 				}
-				else if ((topology & num4) != 0 || placementMap.GetBlocked(normX, normZ, radius))
+				else if ((topology & num5) != 0 || placementMap.GetBlocked(normX, normZ, radius))
 				{
 					array[j, i] = 5000;
 				}
@@ -164,6 +175,7 @@ public class TerrainPath : TerrainExtension
 	public static int[,] CreateRailCostmap(ref uint seed)
 	{
 		float radius = 5f;
+		float radius2 = 25f;
 		int num = (int)((float)World.Size / 7.5f);
 		TerrainPlacementMap placementMap = TerrainMeta.PlacementMap;
 		TerrainHeightMap heightMap = TerrainMeta.HeightMap;
@@ -177,13 +189,15 @@ public class TerrainPath : TerrainExtension
 				float normX = ((float)j + 0.5f) / (float)num;
 				float slope = heightMap.GetSlope(normX, normZ);
 				int topology = topologyMap.GetTopology(normX, normZ, radius);
-				int num2 = 2295686;
-				int num3 = 49152;
-				if (slope > 20f || (topology & num2) != 0)
+				int topology2 = topologyMap.GetTopology(normX, normZ, radius2);
+				int num2 = 196996;
+				int num3 = 2098176;
+				int num4 = 49666;
+				if (slope > 30f || (topology & num2) != 0 || (topology2 & num3) != 0)
 				{
 					array[j, i] = int.MaxValue;
 				}
-				else if ((topology & num3) != 0 || placementMap.GetBlocked(normX, normZ, radius))
+				else if (slope > 20f || (topology & num4) != 0 || placementMap.GetBlocked(normX, normZ, radius))
 				{
 					array[j, i] = 5000;
 				}
@@ -204,18 +218,16 @@ public class TerrainPath : TerrainExtension
 	{
 		TerrainHeightMap heightMap = TerrainMeta.HeightMap;
 		TerrainWaterMap waterMap = TerrainMeta.WaterMap;
-		int res = heightMap.res;
-		int[,] array = new int[res, res];
-		for (int i = 0; i < res; i++)
+		int num = (int)((float)World.Size / 7.5f);
+		int[,] array = new int[num, num];
+		for (int i = 0; i < num; i++)
 		{
-			float normZ = ((float)i + 0.5f) / (float)res;
-			for (int j = 0; j < res; j++)
+			float normZ = ((float)i + 0.5f) / (float)num;
+			for (int j = 0; j < num; j++)
 			{
-				float normX = ((float)j + 0.5f) / (float)res;
+				float normX = ((float)j + 0.5f) / (float)num;
 				float height = heightMap.GetHeight(normX, normZ);
-				float height2 = waterMap.GetHeight(normX, normZ);
-				float num = height2 - height;
-				if (num < depth)
+				if (waterMap.GetHeight(normX, normZ) - height < depth)
 				{
 					array[j, i] = int.MaxValue;
 				}
@@ -240,10 +252,10 @@ public class TerrainPath : TerrainExtension
 
 	public void CreateWires()
 	{
-		//IL_00d0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00dc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d2: Unknown result type (might be due to invalid IL or missing references)
 		List<GameObject> list = new List<GameObject>();
 		int num = 0;
 		GameObjectRef gameObjectRef = null;
@@ -269,14 +281,14 @@ public class TerrainPath : TerrainExtension
 						Vector3 val2 = val.transform.position - ((Component)item).transform.position;
 						if (!(((Vector3)(ref val2)).sqrMagnitude > item.MaxDistance * item.MaxDistance))
 						{
-							goto IL_0123;
+							goto IL_0101;
 						}
 					}
 					CreateWire(wire.Key, list, gameObjectRef);
 					list.Clear();
 				}
-				goto IL_0123;
-				IL_0123:
+				goto IL_0101;
+				IL_0101:
 				list.Add(((Component)item).gameObject);
 			}
 			CreateWire(wire.Key, list, gameObjectRef);
@@ -299,7 +311,7 @@ public class TerrainPath : TerrainExtension
 
 	public MonumentInfo FindMonumentWithBoundsOverlap(Vector3 position)
 	{
-		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
 		if (TerrainMeta.Path.Monuments == null)
 		{
 			return null;
@@ -312,5 +324,36 @@ public class TerrainPath : TerrainExtension
 			}
 		}
 		return null;
+	}
+
+	public void AddRoad(List<PathList> newRoadList, bool addToMaster = true)
+	{
+		foreach (PathList newRoad in newRoadList)
+		{
+			AddRoad(newRoad, addToMaster);
+		}
+	}
+
+	public void AddRoad(PathList newRoad, bool addToMaster = true)
+	{
+		switch (newRoad?.Hierarchy)
+		{
+		case 0:
+			MainRoads.Add(newRoad);
+			break;
+		case 1:
+			SideRoads.Add(newRoad);
+			break;
+		case 2:
+			TrailRoads.Add(newRoad);
+			break;
+		default:
+			MainRoads.Add(newRoad);
+			break;
+		}
+		if (addToMaster && newRoad != null)
+		{
+			Roads.Add(newRoad);
+		}
 	}
 }

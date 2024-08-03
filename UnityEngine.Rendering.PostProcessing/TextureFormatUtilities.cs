@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using UnityEngine.Assertions;
 
 namespace UnityEngine.Rendering.PostProcessing;
@@ -15,8 +14,8 @@ public static class TextureFormatUtilities
 
 	static TextureFormatUtilities()
 	{
-		//IL_01d6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0269: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0211: Unknown result type (might be due to invalid IL or missing references)
 		s_FormatAliasMap = new Dictionary<int, RenderTextureFormat>
 		{
 			{
@@ -173,47 +172,44 @@ public static class TextureFormatUtilities
 			}
 		};
 		s_SupportedRenderTextureFormats = new Dictionary<int, bool>();
-		Array values = Enum.GetValues(typeof(RenderTextureFormat));
-		foreach (object item in values)
+		foreach (object value3 in Enum.GetValues(typeof(RenderTextureFormat)))
 		{
-			if ((int)item >= 0 && !IsObsolete(item))
+			if ((int)value3 >= 0 && !IsObsolete(value3))
 			{
-				bool value = SystemInfo.SupportsRenderTextureFormat((RenderTextureFormat)item);
-				s_SupportedRenderTextureFormats[(int)item] = value;
+				bool value = SystemInfo.SupportsRenderTextureFormat((RenderTextureFormat)value3);
+				s_SupportedRenderTextureFormats[(int)value3] = value;
 			}
 		}
 		s_SupportedTextureFormats = new Dictionary<int, bool>();
-		Array values2 = Enum.GetValues(typeof(TextureFormat));
-		foreach (object item2 in values2)
+		foreach (object value4 in Enum.GetValues(typeof(TextureFormat)))
 		{
-			if ((int)item2 >= 0 && !IsObsolete(item2))
+			if ((int)value4 >= 0 && !IsObsolete(value4))
 			{
-				bool value2 = SystemInfo.SupportsTextureFormat((TextureFormat)item2);
-				s_SupportedTextureFormats[(int)item2] = value2;
+				bool value2 = SystemInfo.SupportsTextureFormat((TextureFormat)value4);
+				s_SupportedTextureFormats[(int)value4] = value2;
 			}
 		}
 	}
 
 	private static bool IsObsolete(object value)
 	{
-		FieldInfo field = value.GetType().GetField(value.ToString());
-		ObsoleteAttribute[] array = (ObsoleteAttribute[])field.GetCustomAttributes(typeof(ObsoleteAttribute), inherit: false);
-		return array != null && array.Length != 0;
+		ObsoleteAttribute[] array = (ObsoleteAttribute[])value.GetType().GetField(value.ToString()).GetCustomAttributes(typeof(ObsoleteAttribute), inherit: false);
+		if (array != null)
+		{
+			return array.Length != 0;
+		}
+		return false;
 	}
 
 	public static RenderTextureFormat GetUncompressedRenderTextureFormat(Texture texture)
 	{
-		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004a: Expected I4, but got Unknown
-		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Expected I4, but got Unknown
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
 		Assert.IsNotNull<Texture>(texture);
 		if (texture is RenderTexture)
 		{
@@ -233,16 +229,16 @@ public static class TextureFormatUtilities
 
 	internal static bool IsSupported(this RenderTextureFormat format)
 	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000e: Expected I4, but got Unknown
+		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Expected I4, but got Unknown
 		s_SupportedRenderTextureFormats.TryGetValue((int)format, out var value);
 		return value;
 	}
 
 	internal static bool IsSupported(this TextureFormat format)
 	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000e: Expected I4, but got Unknown
+		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Expected I4, but got Unknown
 		s_SupportedTextureFormats.TryGetValue((int)format, out var value);
 		return value;
 	}

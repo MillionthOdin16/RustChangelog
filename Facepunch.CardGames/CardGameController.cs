@@ -29,9 +29,9 @@ public abstract class CardGameController : IDisposable
 
 	public const int IDLE_KICK_SECONDS = 240;
 
-	private CardList localPlayerCards;
+	private readonly CardList localPlayerCards;
 
-	protected int activePlayerIndex = 0;
+	protected int activePlayerIndex;
 
 	public const int STD_RAISE_INCREMENTS = 5;
 
@@ -41,7 +41,17 @@ public abstract class CardGameController : IDisposable
 
 	public bool HasGameInProgress => State >= CardGameState.InGameBetweenRounds;
 
-	public bool HasRoundInProgressOrEnding => State == CardGameState.InGameRound || State == CardGameState.InGameRoundEnding;
+	public bool HasRoundInProgressOrEnding
+	{
+		get
+		{
+			if (State != CardGameState.InGameRound)
+			{
+				return State == CardGameState.InGameRoundEnding;
+			}
+			return true;
+		}
+	}
 
 	public bool HasActiveRound => State == CardGameState.InGameRound;
 
@@ -231,9 +241,9 @@ public abstract class CardGameController : IDisposable
 	{
 		int num = 0;
 		CardPlayerData[] playerData = PlayerData;
-		foreach (CardPlayerData cardPlayerData in playerData)
+		for (int i = 0; i < playerData.Length; i++)
 		{
-			if (cardPlayerData.HasUserInGame)
+			if (playerData[i].HasUserInGame)
 			{
 				num++;
 			}
@@ -245,9 +255,9 @@ public abstract class CardGameController : IDisposable
 	{
 		int num = 0;
 		CardPlayerData[] playerData = PlayerData;
-		foreach (CardPlayerData cardPlayerData in playerData)
+		for (int i = 0; i < playerData.Length; i++)
 		{
-			if (cardPlayerData.HasUserInCurrentRound)
+			if (playerData[i].HasUserInCurrentRound)
 			{
 				num++;
 			}
@@ -262,7 +272,7 @@ public abstract class CardGameController : IDisposable
 
 	public bool PlayerIsInGame(BasePlayer player)
 	{
-		return PlayerData.Any((CardPlayerData data) => data.HasUserInGame && data.UserID == player.userID);
+		return PlayerData.Any((CardPlayerData data) => data.HasUserInGame && data.UserID == (ulong)player.userID);
 	}
 
 	public bool IsAtTable(BasePlayer player)
@@ -280,7 +290,7 @@ public abstract class CardGameController : IDisposable
 		if (IsServer)
 		{
 			pData.StartTurnTimer(OnTurnTimeout, turnTime);
-			Owner.ClientRPC(null, "ClientStartTurnTimer", pData.mountIndex, turnTime);
+			Owner.ClientRPC(RpcTarget.NetworkGroup("ClientStartTurnTimer"), pData.mountIndex, turnTime);
 		}
 	}
 
@@ -333,7 +343,7 @@ public abstract class CardGameController : IDisposable
 	{
 		for (int i = 0; i < PlayerData.Length; i++)
 		{
-			if (PlayerData[i].UserID == forPlayer.userID)
+			if (PlayerData[i].UserID == (ulong)forPlayer.userID)
 			{
 				cardPlayer = PlayerData[i];
 				return true;
@@ -374,7 +384,7 @@ public abstract class CardGameController : IDisposable
 
 	protected abstract int GetAvailableInputsForPlayer(CardPlayerData playerData);
 
-	protected abstract void HandlePlayerLeavingDuringTheirTurn(CardPlayerData pData);
+	protected abstract void HandlePlayerLeavingTable(CardPlayerData pData);
 
 	protected abstract void SubEndRound();
 
@@ -405,7 +415,7 @@ public abstract class CardGameController : IDisposable
 	protected void SyncLocalPlayerCards(CardPlayerData pData)
 	{
 		BasePlayer basePlayer = BasePlayer.FindByID(pData.UserID);
-		if ((Object)(object)basePlayer == (Object)null)
+		if ((Object)(object)basePlayer == (Object)null || !pData.HasUserInGame)
 		{
 			return;
 		}
@@ -414,7 +424,7 @@ public abstract class CardGameController : IDisposable
 		{
 			localPlayerCards.cards.Add(card.GetIndex());
 		}
-		Owner.ClientRPCPlayer<CardList>(null, basePlayer, "ReceiveCardsForPlayer", localPlayerCards);
+		Owner.ClientRPC<CardList>(RpcTarget.Player("ReceiveCardsForPlayer", basePlayer), localPlayerCards);
 	}
 
 	private void JoinTable(ulong userID)
@@ -452,16 +462,9 @@ public abstract class CardGameController : IDisposable
 
 	public void LeaveTable(CardPlayerData pData)
 	{
-		if (HasActiveRound && TryGetActivePlayer(out var activePlayer))
+		if (HasActiveRound)
 		{
-			if (pData == activePlayer)
-			{
-				HandlePlayerLeavingDuringTheirTurn(activePlayer);
-			}
-			else if (pData.HasUserInCurrentRound && pData.mountIndex < activePlayer.mountIndex && activePlayerIndex > 0)
-			{
-				activePlayerIndex--;
-			}
+			HandlePlayerLeavingTable(pData);
 		}
 		pData.ClearAllData();
 		if (HasActiveRound && NumPlayersInCurrentRound() < MinPlayers)
@@ -470,7 +473,7 @@ public abstract class CardGameController : IDisposable
 		}
 		if (pData.HasUserInGame)
 		{
-			Owner.ClientRPC(null, "ClientOnPlayerLeft", pData.UserID);
+			Owner.ClientRPC(RpcTarget.NetworkGroup("ClientOnPlayerLeft"), pData.UserID);
 		}
 		Owner.SendNetworkUpdate();
 	}
@@ -591,9 +594,9 @@ public abstract class CardGameController : IDisposable
 		syncData.state = (int)State;
 		syncData.activePlayerIndex = activePlayerIndex;
 		CardPlayerData[] playerData = PlayerData;
-		foreach (CardPlayerData cardPlayerData in playerData)
+		for (int i = 0; i < playerData.Length; i++)
 		{
-			cardPlayerData.Save(syncData);
+			playerData[i].Save(syncData);
 		}
 		syncData.pot = GetScrapInPot();
 	}
@@ -619,18 +622,16 @@ public abstract class CardGameController : IDisposable
 			}
 			else if (cardPlayerData.HasBeenIdleFor(240) && BasePlayer.TryFindByID(cardPlayerData.UserID, out basePlayer))
 			{
-				BaseMountable mounted = basePlayer.GetMounted();
-				mounted.DismountPlayer(basePlayer);
+				basePlayer.GetMounted().DismountPlayer(basePlayer);
 			}
 		}
-		int num = NumPlayersAllowedToPlay();
-		if (num < MinPlayers)
+		if (NumPlayersAllowedToPlay() < MinPlayers)
 		{
 			EndGameplay();
 			return false;
 		}
-		CardPlayerData[] playerData2 = PlayerData;
-		foreach (CardPlayerData cardPlayerData2 in playerData2)
+		playerData = PlayerData;
+		foreach (CardPlayerData cardPlayerData2 in playerData)
 		{
 			if (IsAllowedToPlay(cardPlayerData2))
 			{
@@ -709,9 +710,9 @@ public abstract class CardGameController : IDisposable
 			SubEndGameplay();
 			State = CardGameState.NotPlaying;
 			CardPlayerData[] playerData = PlayerData;
-			foreach (CardPlayerData cardPlayerData in playerData)
+			for (int i = 0; i < playerData.Length; i++)
 			{
-				cardPlayerData.LeaveGame();
+				playerData[i].LeaveGame();
 			}
 			SyncAllLocalPlayerCards();
 			Owner.SendNetworkUpdate();
@@ -765,7 +766,7 @@ public abstract class CardGameController : IDisposable
 
 	protected void ServerPlaySound(CardGameSounds.SoundType type)
 	{
-		Owner.ClientRPC(null, "ClientPlaySound", (int)type);
+		Owner.ClientRPC(RpcTarget.NetworkGroup("ClientPlaySound"), (int)type);
 	}
 
 	public void GetConnectionsInGame(List<Connection> connections)
@@ -782,9 +783,10 @@ public abstract class CardGameController : IDisposable
 
 	public virtual void OnTableDestroyed()
 	{
+		CardPlayerData[] playerData;
 		if (HasGameInProgress)
 		{
-			CardPlayerData[] playerData = PlayerData;
+			playerData = PlayerData;
 			foreach (CardPlayerData cardPlayerData in playerData)
 			{
 				if (cardPlayerData.HasUserInGame)
@@ -795,8 +797,8 @@ public abstract class CardGameController : IDisposable
 			if (GetScrapInPot() > 0)
 			{
 				int maxAmount = GetScrapInPot() / NumPlayersInGame();
-				CardPlayerData[] playerData2 = PlayerData;
-				foreach (CardPlayerData cardPlayerData2 in playerData2)
+				playerData = PlayerData;
+				foreach (CardPlayerData cardPlayerData2 in playerData)
 				{
 					if (cardPlayerData2.HasUserInGame)
 					{
@@ -805,8 +807,8 @@ public abstract class CardGameController : IDisposable
 				}
 			}
 		}
-		CardPlayerData[] playerData3 = PlayerData;
-		foreach (CardPlayerData cardPlayerData3 in playerData3)
+		playerData = PlayerData;
+		foreach (CardPlayerData cardPlayerData3 in playerData)
 		{
 			if (cardPlayerData3.HasUser)
 			{

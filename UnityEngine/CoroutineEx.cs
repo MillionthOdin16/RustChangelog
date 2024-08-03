@@ -14,8 +14,8 @@ public static class CoroutineEx
 
 	public static WaitForSeconds waitForSeconds(float seconds)
 	{
-		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001d: Expected O, but got Unknown
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Expected O, but got Unknown
 		if (!waitForSecondsBuffer.TryGetValue(seconds, out var value))
 		{
 			value = new WaitForSeconds(seconds);
@@ -26,24 +26,24 @@ public static class CoroutineEx
 
 	public static WaitForSecondsRealtimeEx waitForSecondsRealtime(float seconds)
 	{
-		WaitForSecondsRealtimeEx val = Pool.Get<WaitForSecondsRealtimeEx>();
-		val.WaitTime = seconds;
-		return val;
+		WaitForSecondsRealtimeEx obj = Pool.Get<WaitForSecondsRealtimeEx>();
+		obj.WaitTime = seconds;
+		return obj;
 	}
 
 	public static IEnumerator Combine(params IEnumerator[] coroutines)
 	{
 		while (true)
 		{
-			bool completed = true;
-			foreach (IEnumerator coroutine in coroutines)
+			bool flag = true;
+			foreach (IEnumerator enumerator in coroutines)
 			{
-				if (coroutine != null && coroutine.MoveNext())
+				if (enumerator != null && enumerator.MoveNext())
 				{
-					completed = false;
+					flag = false;
 				}
 			}
-			if (completed)
+			if (flag)
 			{
 				break;
 			}

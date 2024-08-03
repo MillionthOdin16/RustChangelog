@@ -2,7 +2,7 @@ using UnityEngine.Rendering;
 
 public class FoliageGrid : SingletonComponent<FoliageGrid>, IClientComponent
 {
-	public static bool Paused = false;
+	public static bool Paused;
 
 	public GameObjectRef BatchPrefab;
 
@@ -10,5 +10,5 @@ public class FoliageGrid : SingletonComponent<FoliageGrid>, IClientComponent
 
 	public LayerSelect FoliageLayer = 0;
 
-	public ShadowCastingMode FoliageShadows = (ShadowCastingMode)0;
+	public ShadowCastingMode FoliageShadows;
 }

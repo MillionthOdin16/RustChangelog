@@ -2,15 +2,15 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(menuName = "Rust/Player Inventory Properties")]
-public class PlayerInventoryProperties : ScriptableObject
+[CreateAssetMenu(menuName = "Rust/Player/Player Inventory Properties")]
+public class PlayerInventoryProperties : BaseScriptableObject
 {
 	[Serializable]
 	public class ItemAmountSkinned : ItemAmount
 	{
-		public ulong skinOverride = 0uL;
+		public ulong skinOverride;
 
-		public bool blueprint = false;
+		public bool blueprint;
 	}
 
 	public string niceName;
@@ -25,7 +25,7 @@ public class PlayerInventoryProperties : ScriptableObject
 
 	public PlayerInventoryProperties giveBase;
 
-	private static PlayerInventoryProperties[] allInventories = null;
+	private static PlayerInventoryProperties[] allInventories;
 
 	public void GiveToPlayer(BasePlayer player)
 	{
@@ -34,7 +34,7 @@ public class PlayerInventoryProperties : ScriptableObject
 			return;
 		}
 		player.inventory.Strip();
-		if ((Object)(object)giveBase != (Object)null)
+		if (giveBase != null)
 		{
 			giveBase.GiveToPlayer(player);
 		}

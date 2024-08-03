@@ -3,10 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Facepunch.Extend;
+using Facepunch.Rust;
 using Network;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 [Factory("global")]
 public class DiagnosticsConSys : ConsoleSystem
@@ -50,18 +49,65 @@ public class DiagnosticsConSys : ConsoleSystem
 		WriteTextToFile(targetFolder + "UnityEngine.Animators.Counts.Enabled.txt", stringBuilder3.ToString());
 	}
 
+	[ServerVar]
+	[ClientVar]
+	public static void dump(Arg args)
+	{
+		if (Directory.Exists("diagnostics"))
+		{
+			Directory.CreateDirectory("diagnostics");
+		}
+		int num = 1;
+		while (Directory.Exists("diagnostics/" + num))
+		{
+			num++;
+		}
+		Directory.CreateDirectory("diagnostics/" + num);
+		string targetFolder = "diagnostics/" + num + "/";
+		DumpLODGroups(targetFolder);
+		DumpSystemInformation(targetFolder);
+		DumpGameObjects(targetFolder);
+		DumpObjects(targetFolder);
+		DumpEntities(targetFolder);
+		DumpNetwork(targetFolder);
+		DumpPhysics(targetFolder);
+		DumpAnimators(targetFolder);
+		DumpWarmup(targetFolder);
+	}
+
+	private static void DumpSystemInformation(string targetFolder)
+	{
+		WriteTextToFile(targetFolder + "System.Info.txt", SystemInfoGeneralText.currentInfo);
+	}
+
+	private static void WriteTextToFile(string file, string text)
+	{
+		File.WriteAllText(file, text);
+	}
+
 	private static void DumpEntities(string targetFolder)
 	{
-		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
 		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
 		StringBuilder stringBuilder = new StringBuilder();
 		stringBuilder.AppendLine("All entities");
 		stringBuilder.AppendLine();
-		foreach (BaseNetworkable serverEntity in BaseNetworkable.serverEntities)
+		Enumerator<BaseNetworkable> enumerator = BaseNetworkable.serverEntities.GetEnumerator();
+		try
 		{
-			stringBuilder.AppendFormat("{1}\t{0}", serverEntity.PrefabName, ((NetworkableId)(((_003F?)serverEntity.net?.ID) ?? default(NetworkableId))).Value);
-			stringBuilder.AppendLine();
+			while (enumerator.MoveNext())
+			{
+				BaseNetworkable current = enumerator.Current;
+				stringBuilder.AppendFormat("{1}\t{0}", current.PrefabName, ((NetworkableId)(((_003F?)current.net?.ID) ?? default(NetworkableId))).Value);
+				stringBuilder.AppendLine();
+			}
+		}
+		finally
+		{
+			((IDisposable)enumerator).Dispose();
 		}
 		WriteTextToFile(targetFolder + "UnityEngine.Entity.SV.List.txt", stringBuilder.ToString());
 		StringBuilder stringBuilder2 = new StringBuilder();
@@ -114,8 +160,8 @@ public class DiagnosticsConSys : ConsoleSystem
 
 	private static void DumpNetwork(string targetFolder)
 	{
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
 		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
 		if (!((BaseNetwork)Net.sv).IsConnected())
 		{
 			return;
@@ -132,7 +178,8 @@ public class DiagnosticsConSys : ConsoleSystem
 			{
 				BasePlayer current = enumerator.Current;
 				stringBuilder.AppendLine("Name: " + current.displayName);
-				stringBuilder.AppendLine("SteamID: " + current.userID);
+				BasePlayer.EncryptedValue<ulong> userID = current.userID;
+				stringBuilder.AppendLine("SteamID: " + userID.ToString());
 				stringBuilder.Append((current.net == null) ? "INVALID - NET IS NULL" : ((BaseNetwork)Net.sv).GetDebug(current.net.connection).Replace("\n", "\r\n"));
 				stringBuilder.AppendLine();
 				stringBuilder.AppendLine();
@@ -175,18 +222,6 @@ public class DiagnosticsConSys : ConsoleSystem
 			stringBuilder2.AppendLine();
 		}
 		WriteTextToFile(targetFolder + "UnityEngine.ScriptableObject.Count.txt", stringBuilder2.ToString());
-		StringBuilder stringBuilder3 = new StringBuilder();
-		stringBuilder3.AppendLine("All active UnityEngine.Object, ordered by memory");
-		stringBuilder3.AppendLine();
-		foreach (IGrouping<Type, Object> item3 in from x in source
-			group x by ((object)x).GetType() into x
-			orderby x.Sum((Object y) => Profiler.GetRuntimeMemorySize(y)) descending
-			select x)
-		{
-			stringBuilder3.AppendFormat("{2}{1}{0}", ((object)item3.First()).GetType().Name, item3.Count().ToString("N0").PadRight(12), NumberExtensions.FormatBytes<int>(item3.Sum((Object y) => Profiler.GetRuntimeMemorySize(y)), false).PadRight(20));
-			stringBuilder3.AppendLine();
-		}
-		WriteTextToFile(targetFolder + "UnityEngine.Object.Memory.txt", stringBuilder3.ToString());
 	}
 
 	private static void DumpPhysics(string targetFolder)
@@ -240,7 +275,7 @@ public class DiagnosticsConSys : ConsoleSystem
 
 	private static void DumpRigidBodies(string targetFolder)
 	{
-		//IL_01eb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01dc: Unknown result type (might be due to invalid IL or missing references)
 		Rigidbody[] source = Object.FindObjectsOfType<Rigidbody>();
 		StringBuilder stringBuilder = new StringBuilder();
 		stringBuilder.AppendLine("RigidBody");
@@ -284,8 +319,8 @@ public class DiagnosticsConSys : ConsoleSystem
 		stringBuilder = new StringBuilder();
 		stringBuilder.AppendLine("All active game objects including components");
 		stringBuilder.AppendLine();
-		Transform[] array2 = rootObjects;
-		foreach (Transform tx2 in array2)
+		array = rootObjects;
+		foreach (Transform tx2 in array)
 		{
 			DumpGameObjectRecursive(stringBuilder, tx2, 0, includeComponents: true);
 			stringBuilder.AppendLine();
@@ -325,11 +360,10 @@ public class DiagnosticsConSys : ConsoleSystem
 		{
 			return;
 		}
-		for (int i = 0; i < indent; i++)
-		{
-			str.Append(" ");
-		}
-		str.AppendFormat("{0} {1:N0}", ((Object)tx).name, ((Component)tx).GetComponents<Component>().Length - 1);
+		str.Append(' ', indent);
+		str.Append(((Component)tx).gameObject.activeSelf ? "+ " : "- ");
+		str.Append(((Object)tx).name);
+		str.Append(" [").Append(((Component)tx).GetComponents<Component>().Length - 1).Append(']');
 		str.AppendLine();
 		if (includeComponents)
 		{
@@ -338,52 +372,86 @@ public class DiagnosticsConSys : ConsoleSystem
 			{
 				if (!(val is Transform))
 				{
-					for (int k = 0; k < indent + 1; k++)
+					str.Append(' ', indent + 3);
+					bool? flag = val.IsEnabled();
+					if (!flag.HasValue)
 					{
-						str.Append(" ");
+						str.Append("[~] ");
 					}
-					str.AppendFormat("[c] {0}", ((Object)(object)val == (Object)null) ? "NULL" : ((object)val).GetType().ToString());
+					else if (flag == true)
+					{
+						str.Append("[✓] ");
+					}
+					else
+					{
+						str.Append("[ ] ");
+					}
+					str.Append(((Object)(object)val == (Object)null) ? "NULL" : ((object)val).GetType().ToString());
 					str.AppendLine();
 				}
 			}
 		}
-		for (int l = 0; l < tx.childCount; l++)
+		for (int j = 0; j < tx.childCount; j++)
 		{
-			DumpGameObjectRecursive(str, tx.GetChild(l), indent + 2, includeComponents);
+			DumpGameObjectRecursive(str, tx.GetChild(j), indent + 4, includeComponents);
 		}
 	}
 
-	[ServerVar]
-	[ClientVar]
-	public static void dump(Arg args)
+	private static void DumpWarmup(string targetFolder)
 	{
-		if (Directory.Exists("diagnostics"))
-		{
-			Directory.CreateDirectory("diagnostics");
-		}
-		int i;
-		for (i = 1; Directory.Exists("diagnostics/" + i); i++)
-		{
-		}
-		Directory.CreateDirectory("diagnostics/" + i);
-		string targetFolder = "diagnostics/" + i + "/";
-		DumpLODGroups(targetFolder);
-		DumpSystemInformation(targetFolder);
-		DumpGameObjects(targetFolder);
-		DumpObjects(targetFolder);
-		DumpEntities(targetFolder);
-		DumpNetwork(targetFolder);
-		DumpPhysics(targetFolder);
-		DumpAnimators(targetFolder);
+		DumpWarmupTimings(targetFolder);
+		DumpWorldSpawnTimings(targetFolder);
 	}
 
-	private static void DumpSystemInformation(string targetFolder)
+	private static void DumpWarmupTimings(string targetFolder)
 	{
-		WriteTextToFile(targetFolder + "System.Info.txt", SystemInfoGeneralText.currentInfo);
+		if (!FileSystem_Warmup.GetWarmupTimes().Any())
+		{
+			return;
+		}
+		StringBuilder stringBuilder = new StringBuilder();
+		stringBuilder.AppendLine("index,prefab,time");
+		int num = 0;
+		foreach (var warmupTime in FileSystem_Warmup.GetWarmupTimes())
+		{
+			object arg = num;
+			var (arg2, timeSpan) = warmupTime;
+			stringBuilder.AppendLine($"{arg},{arg2},{timeSpan.Ticks * EventRecord.TicksToNS}");
+			num++;
+		}
+		WriteTextToFile(targetFolder + "Asset.Warmup.csv", stringBuilder.ToString());
 	}
 
-	private static void WriteTextToFile(string file, string text)
+	private static void DumpWorldSpawnTimings(string targetFolder)
 	{
-		File.WriteAllText(file, text);
+		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
+		if (!World.GetSpawnTimings().Any())
+		{
+			return;
+		}
+		StringBuilder stringBuilder = new StringBuilder();
+		stringBuilder.AppendLine("index,prefab,time,category,position,rotation");
+		int num = 0;
+		foreach (World.SpawnTiming spawnTiming in World.GetSpawnTimings())
+		{
+			object[] obj = new object[6]
+			{
+				num,
+				spawnTiming.prefab.Name,
+				null,
+				null,
+				null,
+				null
+			};
+			TimeSpan time = spawnTiming.time;
+			obj[2] = time.Ticks * EventRecord.TicksToNS;
+			obj[3] = spawnTiming.category;
+			obj[4] = spawnTiming.position;
+			obj[5] = spawnTiming.rotation;
+			stringBuilder.AppendLine(string.Format("{0},{1},{2},{3},{4},{5}", obj));
+			num++;
+		}
+		WriteTextToFile(targetFolder + "World.Spawn.csv", stringBuilder.ToString());
 	}
 }

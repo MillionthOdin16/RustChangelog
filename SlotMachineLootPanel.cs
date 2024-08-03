@@ -6,5 +6,5 @@ public class SlotMachineLootPanel : LootPanel
 
 	public Text multiplierText;
 
-	public LocalizeText ScrapCostText = null;
+	public LocalizeText ScrapCostText;
 }

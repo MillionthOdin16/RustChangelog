@@ -19,6 +19,8 @@ public class MeshRendererBatch : MeshBatch
 
 	private MeshRendererLookup meshLookup;
 
+	private static MaterialPropertyBlock propertyBlock;
+
 	public override int VertexCapacity => Batching.renderer_capacity;
 
 	public override int VertexCutoff => Batching.renderer_vertices;
@@ -32,21 +34,35 @@ public class MeshRendererBatch : MeshBatch
 		meshLookup = new MeshRendererLookup();
 	}
 
-	public void Setup(Vector3 position, Material material, ShadowCastingMode shadows, int layer)
+	public void SetupColor(Color color)
 	{
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Expected O, but got Unknown
+		if (propertyBlock == null)
+		{
+			propertyBlock = new MaterialPropertyBlock();
+		}
+		((Renderer)meshRenderer).GetPropertyBlock(propertyBlock);
+		((Renderer)meshRenderer).SetPropertyBlock(propertyBlock);
+	}
+
+	public void Setup(Vector3 position, Material material, ShadowCastingMode shadows, int layer, Color color)
+	{
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0041: Invalid comparison between Unknown and I4
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Invalid comparison between Unknown and I4
 		Vector3 val2 = (((Component)this).transform.position = position);
 		this.position = val2;
 		((Component)this).gameObject.layer = layer;
 		((Renderer)meshRenderer).sharedMaterial = material;
 		((Renderer)meshRenderer).shadowCastingMode = shadows;
+		SetupColor(color);
 		if ((int)shadows == 3)
 		{
 			((Renderer)meshRenderer).receiveShadows = false;
@@ -65,10 +81,10 @@ public class MeshRendererBatch : MeshBatch
 
 	public void Add(MeshRendererInstance instance)
 	{
-		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
 		ref Vector3 reference = ref instance.position;
 		reference -= position;
 		meshGroup.data.Add(instance);

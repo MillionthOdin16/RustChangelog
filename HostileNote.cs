@@ -1,3 +1,4 @@
+using Rust.UI;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -13,11 +14,11 @@ public class HostileNote : MonoBehaviour, IClientComponent
 
 	public Text timerText;
 
-	public Text smallWarningText;
+	public RustText smallWarningText;
 
-	public static float unhostileTime = 0f;
+	public static float unhostileTime;
 
-	public static float weaponDrawnDuration = 0f;
+	public static float weaponDrawnDuration;
 
 	public Color warnColor;
 

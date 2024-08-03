@@ -5,7 +5,6 @@ using Network;
 using Network.Visibility;
 using Rust;
 using UnityEngine;
-using UnityEngine.Profiling;
 using UnityEngine.Serialization;
 
 public class NetworkVisibilityGrid : MonoBehaviour, Provider
@@ -15,6 +14,8 @@ public class NetworkVisibilityGrid : MonoBehaviour, Provider
 	public const int cavesLayer = 1;
 
 	public const int tunnelsLayer = 2;
+
+	public const int tutorialsLayer = 3;
 
 	public const int dynamicDungeonsFirstLayer = 10;
 
@@ -49,8 +50,8 @@ public class NetworkVisibilityGrid : MonoBehaviour, Provider
 
 	private void Awake()
 	{
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003c: Expected O, but got Unknown
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Expected O, but got Unknown
 		Debug.Assert(Net.sv != null, "Network.Net.sv is NULL when creating Visibility Grid");
 		Debug.Assert(Net.sv.visibility == null, "Network.Net.sv.visibility is being set multiple times");
 		Net.sv.visibility = new Manager((Provider)(object)this);
@@ -75,17 +76,17 @@ public class NetworkVisibilityGrid : MonoBehaviour, Provider
 
 	private void OnDrawGizmosSelected()
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
 		Gizmos.color = Color.blue;
 		Vector3 position = ((Component)this).transform.position;
 		for (int i = 0; i <= cellCount; i++)
@@ -98,7 +99,7 @@ public class NetworkVisibilityGrid : MonoBehaviour, Provider
 
 	private int PositionToGrid(float value)
 	{
-		return Mathf.RoundToInt((value + halfGridSize) / cellSize);
+		return Mathf.Clamp(Mathf.RoundToInt((value + halfGridSize) / cellSize), 0, cellCount - 1);
 	}
 
 	private float GridToPosition(int value)
@@ -106,8 +107,9 @@ public class NetworkVisibilityGrid : MonoBehaviour, Provider
 		return (float)value * cellSize - halfGridSize;
 	}
 
-	private int PositionToLayer(float y)
+	private int PositionToLayer(float x, float y, float z)
 	{
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
 		if (y < tunnelsThreshold)
 		{
 			return 2;
@@ -120,6 +122,10 @@ public class NetworkVisibilityGrid : MonoBehaviour, Provider
 		{
 			return 10 + Mathf.FloorToInt((y - dynamicDungeonsThreshold) / dynamicDungeonsInterval);
 		}
+		if (TerrainMeta.IsPointWithinTutorialBounds(new Vector3(x, 0f, z)))
+		{
+			return 3;
+		}
 		return 0;
 	}
 
@@ -130,27 +136,35 @@ public class NetworkVisibilityGrid : MonoBehaviour, Provider
 
 	private uint GetID(Vector3 vPos)
 	{
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
 		int num = PositionToGrid(vPos.x);
 		int num2 = PositionToGrid(vPos.z);
-		int num3 = PositionToLayer(vPos.y);
-		if (num < 0)
+		int num3 = PositionToLayer(vPos.x, vPos.y, vPos.z);
+		if (num3 == 3)
 		{
-			return 0u;
-		}
-		if (num >= cellCount)
-		{
-			return 0u;
-		}
-		if (num2 < 0)
-		{
-			return 0u;
-		}
-		if (num2 >= cellCount)
-		{
-			return 0u;
+			Enumerator<TutorialIsland.IslandBounds> enumerator = TutorialIsland.BoundsListServer.GetEnumerator();
+			try
+			{
+				while (enumerator.MoveNext())
+				{
+					TutorialIsland.IslandBounds current = enumerator.Current;
+					if (current.Contains(vPos))
+					{
+						return current.Id;
+					}
+				}
+			}
+			finally
+			{
+				((IDisposable)enumerator).Dispose();
+			}
 		}
 		uint num4 = CoordToID(num, num2, num3);
 		if (num4 < startID)
@@ -166,27 +180,24 @@ public class NetworkVisibilityGrid : MonoBehaviour, Provider
 		int result;
 		int item = Math.DivRem(groupId, numIDsPerLayer, out result);
 		int result2;
-		int item2 = Math.DivRem(result, cellCount, out result2);
-		return (item2, result2, item);
+		return (Math.DivRem(result, cellCount, out result2), result2, item);
 	}
 
 	private Bounds GetBounds(uint uid)
 	{
-		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0158: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0160: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0169: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0171: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0173: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0177: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0128: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0131: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0139: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0141: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0148: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0105: Unknown result type (might be due to invalid IL or missing references)
 		var (value, value2, num) = DeconstructGroupId((int)uid);
 		Vector3 val = default(Vector3);
 		((Vector3)(ref val))._002Ector(GridToPosition(value) - halfCellSize, 0f, GridToPosition(value2) - halfCellSize);
 		Vector3 max = default(Vector3);
 		((Vector3)(ref max))._002Ector(val.x + cellSize, 0f, val.z + cellSize);
-		if (num == 0)
+		if (num == 0 || num == 3)
 		{
 			val.y = cavesThreshold;
 			max.y = dynamicDungeonsThreshold;
@@ -219,65 +230,80 @@ public class NetworkVisibilityGrid : MonoBehaviour, Provider
 
 	public void OnGroupAdded(Group group)
 	{
-		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
-		group.bounds = GetBounds(group.ID);
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		if (!group.restricted)
+		{
+			group.bounds = GetBounds(group.ID);
+		}
 	}
 
 	public bool IsInside(Group group, Vector3 vPos)
 	{
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-		Profiler.BeginSample("IsInside");
-		bool result = false || group.ID == 0 || ((Bounds)(ref group.bounds)).Contains(vPos) || ((Bounds)(ref group.bounds)).SqrDistance(vPos) < switchTolerance;
-		Profiler.EndSample();
-		return result;
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		bool flag = false || group.ID == 0 || ((Bounds)(ref group.bounds)).Contains(vPos);
+		if (!group.restricted)
+		{
+			flag = flag || ((Bounds)(ref group.bounds)).SqrDistance(vPos) < switchTolerance;
+		}
+		return flag;
 	}
 
 	public Group GetGroup(Vector3 vPos)
 	{
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
-		Profiler.BeginSample("GetGroup");
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
 		uint iD = GetID(vPos);
 		if (iD == 0)
 		{
-			Profiler.EndSample();
 			return null;
 		}
 		Group val = Net.sv.visibility.Get(iD);
-		if (!IsInside(val, vPos))
+		if (Net.network_group_debug && !IsInside(val, vPos))
 		{
 			float num = ((Bounds)(ref val.bounds)).SqrDistance(vPos);
-			Debug.Log((object)("Group is inside is all fucked " + iD + "/" + num + "/" + vPos));
+			string[] obj = new string[6]
+			{
+				"Group is inside is all fucked ",
+				iD.ToString(),
+				"/",
+				num.ToString(),
+				"/",
+				null
+			};
+			Vector3 val2 = vPos;
+			obj[5] = ((object)(Vector3)(ref val2)).ToString();
+			Debug.Log((object)string.Concat(obj));
 		}
-		Profiler.EndSample();
 		return val;
 	}
 
 	public void GetVisibleFromFar(Group group, List<Group> groups)
 	{
-		Profiler.BeginSample("GetVisibleFromFar");
 		int visibilityRadiusFarOverride = Net.visibilityRadiusFarOverride;
 		int radius = ((visibilityRadiusFarOverride > 0) ? visibilityRadiusFarOverride : visibilityRadiusFar);
 		GetVisibleFrom(group, groups, radius);
-		Profiler.EndSample();
 	}
 
 	public void GetVisibleFromNear(Group group, List<Group> groups)
 	{
-		Profiler.BeginSample("GetVisibleFromNear");
 		int visibilityRadiusNearOverride = Net.visibilityRadiusNearOverride;
 		int radius = ((visibilityRadiusNearOverride > 0) ? visibilityRadiusNearOverride : visibilityRadiusNear);
 		GetVisibleFrom(group, groups, radius);
-		Profiler.EndSample();
 	}
 
 	private void GetVisibleFrom(Group group, List<Group> groups, int radius)
 	{
 		groups.Add(Net.sv.visibility.Get(0u));
+		if (group.restricted)
+		{
+			groups.Add(group);
+			return;
+		}
 		int iD = (int)group.ID;
 		if (iD < startID)
 		{

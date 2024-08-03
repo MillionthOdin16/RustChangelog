@@ -24,15 +24,14 @@ public class HorseSpawner : VehicleSpawner
 
 	public void RespawnHorse()
 	{
-		BaseVehicle vehicleOccupying = GetVehicleOccupying();
-		if ((Object)(object)vehicleOccupying != (Object)null)
+		if (GetVehicleOccupying() != null)
 		{
 			return;
 		}
-		BaseVehicle baseVehicle = SpawnVehicle(objectsToSpawn[0].prefabToSpawn.resourcePath, null);
+		IVehicleSpawnUser vehicleSpawnUser = SpawnVehicle(objectsToSpawn[0].prefabToSpawn.resourcePath, null);
 		if (spawnForSale)
 		{
-			RidableHorse ridableHorse = baseVehicle as RidableHorse;
+			RidableHorse ridableHorse = vehicleSpawnUser as RidableHorse;
 			if ((Object)(object)ridableHorse != (Object)null)
 			{
 				ridableHorse.SetForSale();

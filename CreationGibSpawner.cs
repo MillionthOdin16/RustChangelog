@@ -35,7 +35,7 @@ public class CreationGibSpawner : BaseMonoBehaviour
 
 	public GameObject gibsInstance;
 
-	public float startTime = 0f;
+	public float startTime;
 
 	public float duration = 1f;
 
@@ -66,7 +66,7 @@ public class CreationGibSpawner : BaseMonoBehaviour
 
 	public List<Transform> gibs;
 
-	public bool started = false;
+	public bool started;
 
 	public GameObjectRef placeEffect;
 
@@ -74,16 +74,16 @@ public class CreationGibSpawner : BaseMonoBehaviour
 
 	public float effectSpacing = 0.2f;
 
-	public bool invert = false;
+	public bool invert;
 
 	public Vector3 buildDirection;
 
 	[Horizontal(1, 0)]
-	public GibReplacement[] GibReplacements = null;
+	public GibReplacement[] GibReplacements;
 
 	public EffectMaterialPair[] effectLookup;
 
-	private float startDelay = 0f;
+	private float startDelay;
 
 	public List<ConditionalGibSource> conditionalGibSources = new List<ConditionalGibSource>();
 
@@ -134,10 +134,10 @@ public class CreationGibSpawner : BaseMonoBehaviour
 
 	public void AddConditionalGibSource(GameObject cGibSource, Vector3 pos, Quaternion rot)
 	{
-		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
 		Debug.Log((object)"Adding conditional gib source");
 		ConditionalGibSource item = default(ConditionalGibSource);
 		item.source = cGibSource;
@@ -162,22 +162,22 @@ public class CreationGibSpawner : BaseMonoBehaviour
 
 	private int SortsGibs(Transform a, Transform b)
 	{
-		//IL_00a2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0095: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ce: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00c1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
 		MeshRenderer component = ((Component)a).GetComponent<MeshRenderer>();
 		MeshRenderer component2 = ((Component)b).GetComponent<MeshRenderer>();
 		Bounds bounds;
@@ -234,32 +234,31 @@ public class CreationGibSpawner : BaseMonoBehaviour
 
 	public void Init()
 	{
-		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d3: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00d8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00dd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0146: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0151: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0169: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_018e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0193: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0109: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0132: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0155: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_017a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_017f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0190: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_01b0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ca: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01dc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01e7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01fc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0201: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01e6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01eb: Unknown result type (might be due to invalid IL or missing references)
 		started = true;
 		startTime = Time.time;
 		gibsInstance = Object.Instantiate<GameObject>(gibSource, ((Component)this).transform.position, ((Component)this).transform.rotation);
-		Transform[] componentsInChildren = gibsInstance.GetComponentsInChildren<Transform>();
-		List<Transform> list = componentsInChildren.ToList();
+		List<Transform> list = gibsInstance.GetComponentsInChildren<Transform>().ToList();
 		list.Remove(gibsInstance.transform);
 		list.Sort(SortsGibs);
 		gibs = list;
@@ -273,7 +272,8 @@ public class CreationGibSpawner : BaseMonoBehaviour
 			gibProgress[i] = 0f;
 			particles[i] = null;
 			val.localScale = Vector3.one * scaleCurve.Evaluate(0f);
-			float num = ((spawnPositions[i].x >= 0f) ? (-1f) : 1f);
+			_ = spawnPositions[i].x;
+			_ = 0f;
 			Transform transform = ((Component)val).transform;
 			transform.position += ((Component)this).transform.right * GetPushDir(spawnPositions[i], val) * buildCurve.Evaluate(0f) * buildDirection.x;
 			Transform transform2 = ((Component)val).transform;
@@ -286,8 +286,12 @@ public class CreationGibSpawner : BaseMonoBehaviour
 
 	public float GetPushDir(Vector3 spawnPos, Transform theGib)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		return (spawnPos.x >= 0f) ? (-1f) : 1f;
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		if (!(spawnPos.x >= 0f))
+		{
+			return 1f;
+		}
+		return -1f;
 	}
 
 	public void DestroyMe()
@@ -302,42 +306,42 @@ public class CreationGibSpawner : BaseMonoBehaviour
 
 	public void Update()
 	{
-		//IL_0256: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0269: Unknown result type (might be due to invalid IL or missing references)
-		//IL_026f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0281: Unknown result type (might be due to invalid IL or missing references)
-		//IL_028c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0291: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02aa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02bd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02c8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02d5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02e1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02f3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0303: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0308: Unknown result type (might be due to invalid IL or missing references)
-		//IL_031b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0326: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0338: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0348: Unknown result type (might be due to invalid IL or missing references)
-		//IL_034d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0360: Unknown result type (might be due to invalid IL or missing references)
-		//IL_036b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_037d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_038d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0392: Unknown result type (might be due to invalid IL or missing references)
-		//IL_013e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0143: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0147: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_018a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_019c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ae: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01cd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01d2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01e1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01e6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ea: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0210: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0221: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0227: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0239: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0244: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0249: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0260: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0271: Unknown result type (might be due to invalid IL or missing references)
+		//IL_027c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0289: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0294: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02a6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02b6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02bb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02cc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02d7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02e9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02f9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02fe: Unknown result type (might be due to invalid IL or missing references)
+		//IL_030f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_031a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_032c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_033c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0341: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0112: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0116: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0160: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0171: Unknown result type (might be due to invalid IL or missing references)
+		//IL_018b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0190: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a7: Unknown result type (might be due to invalid IL or missing references)
 		if (!started)
 		{
 			return;
@@ -358,17 +362,16 @@ public class CreationGibSpawner : BaseMonoBehaviour
 			float num2 = 0.33f;
 			float num3 = num2 / ((float)gibs.Count * num2) * (duration - num2);
 			float num4 = (float)i * num3;
-			float num5 = Time.time - startTime;
-			if (num5 < num4)
+			if (Time.time - startTime < num4)
 			{
 				continue;
 			}
 			MeshFilter component = ((Component)val).GetComponent<MeshFilter>();
 			int seed = Random.seed;
 			Random.seed = i + gibs.Count;
-			bool flag = num <= 1 || Random.Range(0, num) == 0;
+			bool num5 = num <= 1 || Random.Range(0, num) == 0;
 			Random.seed = seed;
-			if (flag && (Object)(object)particles[i] == (Object)null && (Object)(object)component != (Object)null && (Object)(object)component.sharedMesh != (Object)null)
+			if (num5 && (Object)(object)particles[i] == (Object)null && (Object)(object)component != (Object)null && (Object)(object)component.sharedMesh != (Object)null)
 			{
 				Bounds bounds = component.sharedMesh.bounds;
 				Vector3 size = ((Bounds)(ref bounds)).size;
@@ -408,7 +411,7 @@ public class CreationGibSpawner : BaseMonoBehaviour
 				nextEffectTime = Time.time + effectSpacing;
 				if ((Object)(object)particles[i] != (Object)null)
 				{
-					ParticleSystem component4 = particles[i].GetComponent<ParticleSystem>();
+					particles[i].GetComponent<ParticleSystem>();
 					particles[i].transform.SetParent((Transform)null, true);
 					particles[i].BroadcastOnParentDestroying();
 				}

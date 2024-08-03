@@ -1,6 +1,5 @@
 using System.Collections;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 namespace Rust.Ai;
 
@@ -15,7 +14,7 @@ public class CoverPoint
 
 	public CoverType NormalCoverType;
 
-	public bool IsDynamic = false;
+	public bool IsDynamic;
 
 	public Transform SourceTransform;
 
@@ -29,11 +28,8 @@ public class CoverPoint
 	{
 		get
 		{
-			//IL_002d: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0035: Unknown result type (might be due to invalid IL or missing references)
 			//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+			//IL_001c: Unknown result type (might be due to invalid IL or missing references)
 			if (IsDynamic && (Object)(object)SourceTransform != (Object)null)
 			{
 				return SourceTransform.position;
@@ -42,8 +38,8 @@ public class CoverPoint
 		}
 		set
 		{
+			//IL_0001: Unknown result type (might be due to invalid IL or missing references)
 			//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0003: Unknown result type (might be due to invalid IL or missing references)
 			_staticPosition = value;
 		}
 	}
@@ -52,11 +48,8 @@ public class CoverPoint
 	{
 		get
 		{
-			//IL_002d: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0035: Unknown result type (might be due to invalid IL or missing references)
 			//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+			//IL_001c: Unknown result type (might be due to invalid IL or missing references)
 			if (IsDynamic && (Object)(object)SourceTransform != (Object)null)
 			{
 				return SourceTransform.forward;
@@ -65,8 +58,8 @@ public class CoverPoint
 		}
 		set
 		{
+			//IL_0001: Unknown result type (might be due to invalid IL or missing references)
 			//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0003: Unknown result type (might be due to invalid IL or missing references)
 			_staticNormal = value;
 		}
 	}
@@ -81,7 +74,15 @@ public class CoverPoint
 
 	public bool IsValidFor(BaseEntity entity)
 	{
-		return !IsCompromised && ((Object)(object)ReservedFor == (Object)null || (Object)(object)ReservedFor == (Object)(object)entity);
+		if (!IsCompromised)
+		{
+			if (!((Object)(object)ReservedFor == (Object)null))
+			{
+				return (Object)(object)ReservedFor == (Object)(object)entity;
+			}
+			return true;
+		}
+		return false;
 	}
 
 	public CoverPoint(CoverPointVolume volume, float score)
@@ -107,19 +108,16 @@ public class CoverPoint
 
 	public bool ProvidesCoverFromPoint(Vector3 point, float arcThreshold)
 	{
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
 		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		Profiler.BeginSample("ProvidesCoverFromPoint");
 		Vector3 val = Position - point;
 		Vector3 normalized = ((Vector3)(ref val)).normalized;
-		float num = Vector3.Dot(Normal, normalized);
-		Profiler.EndSample();
-		return num < arcThreshold;
+		return Vector3.Dot(Normal, normalized) < arcThreshold;
 	}
 }

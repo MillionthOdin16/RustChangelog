@@ -6,7 +6,7 @@ public class FixedRateStepped
 
 	public int maxSteps = 3;
 
-	internal float nextCall = 0f;
+	internal float nextCall;
 
 	public bool ShouldStep()
 	{

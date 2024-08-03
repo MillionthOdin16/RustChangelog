@@ -16,11 +16,13 @@ public class UIChat : PriorityListComponent<UIChat>
 
 	public CanvasGroup canvasGroup;
 
+	public bool allowOpeningWhileCursorVisible;
+
 	public GameObjectRef chatItemPlayer;
 
 	public GameObject userPopup;
 
 	public EmojiGallery emojiGallery;
 
-	public static bool isOpen = false;
+	public static bool isOpen;
 }

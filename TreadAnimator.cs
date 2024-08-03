@@ -22,9 +22,21 @@ public class TreadAnimator : MonoBehaviour, IClientComponent
 
 	public float heightFudge = 0.13f;
 
-	public bool useWheelYOrigin = false;
+	public bool useWheelYOrigin;
 
 	public Vector2 treadTextureDirection = new Vector2(1f, 0f);
 
-	public bool isMetallic = false;
+	public bool isMetallic;
+
+	public float angularTreadConstant = 0.05f;
+
+	public float treadConstant = 0.14f;
+
+	public float wheelSpinConstant = 80f;
+
+	public float traceLineMin = 0.55f;
+
+	public float traceLineMax = 0.79f;
+
+	public float maxShockDist = 0.26f;
 }

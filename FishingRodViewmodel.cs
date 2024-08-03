@@ -11,9 +11,9 @@ public class FishingRodViewmodel : MonoBehaviour
 		public GameObject Root;
 	}
 
-	public Transform PitchTransform = null;
+	public Transform PitchTransform;
 
-	public Transform YawTransform = null;
+	public Transform YawTransform;
 
 	public float YawLerpSpeed = 1f;
 
@@ -25,9 +25,9 @@ public class FishingRodViewmodel : MonoBehaviour
 
 	public bool ApplyTransformRotation = true;
 
-	public GameObject CatchRoot = null;
+	public GameObject CatchRoot;
 
-	public Transform CatchLinePoint = null;
+	public Transform CatchLinePoint;
 
 	public FishViewmodel[] FishViewmodels;
 

@@ -14,4 +14,6 @@ public class LootPanelMixingTable : LootPanel, IInventoryChanged
 	public GameObject recipeItemPrefab;
 
 	public RectTransform recipeContentRect;
+
+	public ScrollRect ScrollView;
 }

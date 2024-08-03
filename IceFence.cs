@@ -4,7 +4,7 @@ public class IceFence : GraveyardFence
 {
 	public GameObject[] styles;
 
-	private bool init = false;
+	private bool init;
 
 	public AdaptMeshToTerrain snowMesh;
 
@@ -32,9 +32,9 @@ public class IceFence : GraveyardFence
 	public void SetStyle(int style)
 	{
 		GameObject[] array = styles;
-		foreach (GameObject val in array)
+		for (int i = 0; i < array.Length; i++)
 		{
-			val.gameObject.SetActive(false);
+			array[i].gameObject.SetActive(false);
 		}
 		styles[style].gameObject.SetActive(true);
 	}

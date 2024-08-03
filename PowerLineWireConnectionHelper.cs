@@ -6,5 +6,5 @@ public class PowerLineWireConnectionHelper : MonoBehaviour
 {
 	public List<PowerLineWireConnectionDef> connections = new List<PowerLineWireConnectionDef>();
 
-	public bool showgizmo = false;
+	public bool showgizmo;
 }

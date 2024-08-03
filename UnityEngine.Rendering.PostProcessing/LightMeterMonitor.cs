@@ -13,17 +13,21 @@ public sealed class LightMeterMonitor : Monitor
 
 	internal override bool ShaderResourcesAvailable(PostProcessRenderContext context)
 	{
-		return Object.op_Implicit((Object)(object)context.resources.shaders.lightMeter) && context.resources.shaders.lightMeter.isSupported;
+		if (Object.op_Implicit((Object)(object)context.resources.shaders.lightMeter))
+		{
+			return context.resources.shaders.lightMeter.isSupported;
+		}
+		return false;
 	}
 
 	internal override void Render(PostProcessRenderContext context)
 	{
-		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ad: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_018c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0190: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0176: Unknown result type (might be due to invalid IL or missing references)
 		CheckOutput(width, height);
 		LogHistogram logHistogram = context.logHistogram;
 		PropertySheet propertySheet = context.propertySheets.Get(context.resources.shaders.lightMeter);

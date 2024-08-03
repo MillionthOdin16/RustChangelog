@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class DestroyOutsideMonument : FacepunchBehaviour
@@ -37,13 +36,12 @@ public class DestroyOutsideMonument : FacepunchBehaviour
 
 	private MonumentInfo GetOurMonument()
 	{
-		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
-		List<MonumentInfo> monuments = TerrainMeta.Path.Monuments;
-		foreach (MonumentInfo item in monuments)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		foreach (MonumentInfo monument in TerrainMeta.Path.Monuments)
 		{
-			if (item.IsInBounds(OurPos))
+			if (monument.IsInBounds(OurPos))
 			{
-				return item;
+				return monument;
 			}
 		}
 		return null;
@@ -51,7 +49,7 @@ public class DestroyOutsideMonument : FacepunchBehaviour
 
 	private void CheckPosition()
 	{
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)ourMonument == (Object)null)
 		{
 			DoOutsideMonument();

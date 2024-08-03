@@ -57,6 +57,9 @@ public class Tugboat : MotorRowboat
 	[SerializeField]
 	private GameObject heavyDamageLights;
 
+	[SerializeField]
+	private TriggerParent parentTrigger;
+
 	[ServerVar]
 	[Help("how long until boat corpses despawn (excluding tugboat)")]
 	public static float tugcorpseseconds = 7200f;
@@ -68,6 +71,8 @@ public class Tugboat : MotorRowboat
 	public static float tugdecaystartdelayminutes = 1440f;
 
 	public bool LightsAreOn => HasFlag(Flags.Reserved5);
+
+	protected override bool AllowKinematicDrift => true;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -99,9 +104,9 @@ public class Tugboat : MotorRowboat
 		int fuelAmount2 = fuelSystem.GetFuelAmount();
 		if (fuelAmount2 != fuelAmount)
 		{
-			ClientRPC(null, "SetFuelAmount", fuelAmount2);
+			ClientRPC(RpcTarget.NetworkGroup("SetFuelAmount"), fuelAmount2);
 		}
-		if (LightsAreOn && !HasFlag(Flags.Reserved1))
+		if (LightsAreOn && !IsOn())
 		{
 			SetFlag(Flags.Reserved5, b: false);
 		}
@@ -116,7 +121,7 @@ public class Tugboat : MotorRowboat
 
 	public override void BoatDecay()
 	{
-		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
 		if (!base.IsDying)
 		{
 			BaseBoat.WaterVehicleDecay(this, 60f, TimeSince.op_Implicit(timeSinceLastUsedFuel), tugdecayminutes, tugdecayminutes, tugdecaystartdelayminutes, preventDecayIndoors);
@@ -132,7 +137,7 @@ public class Tugboat : MotorRowboat
 	{
 		if (IsDriver(player))
 		{
-			if (!HasFlag(Flags.Reserved1))
+			if (!IsOn())
 			{
 				SetFlag(Flags.Reserved5, b: false);
 			}
@@ -148,6 +153,37 @@ public class Tugboat : MotorRowboat
 		((FacepunchBehaviour)this).Invoke((Action)base.ActualDeath, tugcorpseseconds);
 	}
 
+	public override bool AnyPlayersOnBoat()
+	{
+		if (base.AnyPlayersOnBoat())
+		{
+			return true;
+		}
+		if ((Object)(object)parentTrigger != (Object)null && parentTrigger.HasAnyEntityContents)
+		{
+			foreach (BaseEntity entityContent in parentTrigger.entityContents)
+			{
+				if ((Object)(object)entityContent.ToPlayer() != (Object)null)
+				{
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	public override bool BuoyancySleep(bool inWater)
+	{
+		SetToKinematic();
+		return true;
+	}
+
+	public override bool BuoyancyWake()
+	{
+		SetToNonKinematic();
+		return true;
+	}
+
 	public override bool SupportsChildDeployables()
 	{
 		return true;
@@ -160,12 +196,10 @@ public class Tugboat : MotorRowboat
 
 	protected override bool CanPushNow(BasePlayer pusher)
 	{
-		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
 		if (IsOn())
 		{
 			return false;
@@ -184,8 +218,7 @@ public class Tugboat : MotorRowboat
 		}
 		Vector3 val = ((Component)this).transform.TransformPoint(-Vector3.up);
 		WaterLevel.WaterInfo waterInfo = WaterLevel.GetWaterInfo(val, waves: true, volumes: false, this, noEarlyExit: true);
-		float num = val.y - waterInfo.surfaceLevel;
-		if (num > 2f)
+		if (val.y - waterInfo.surfaceLevel > 2f)
 		{
 			return false;
 		}
@@ -193,6 +226,10 @@ public class Tugboat : MotorRowboat
 		{
 			return false;
 		}
-		return !pusher.isMounted && pusher.IsOnGround() && base.healthFraction > 0f;
+		if (!pusher.isMounted && pusher.IsOnGround())
+		{
+			return base.healthFraction > 0f;
+		}
+		return false;
 	}
 }

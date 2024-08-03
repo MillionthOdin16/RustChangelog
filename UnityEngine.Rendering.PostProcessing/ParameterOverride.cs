@@ -2,6 +2,7 @@ using System;
 
 namespace UnityEngine.Rendering.PostProcessing;
 
+[Serializable]
 public abstract class ParameterOverride
 {
 	public bool overrideState;
@@ -69,9 +70,7 @@ public class ParameterOverride<T> : ParameterOverride
 
 	public override int GetHash()
 	{
-		int num = 17;
-		num = num * 23 + overrideState.GetHashCode();
-		return num * 23 + value.GetHashCode();
+		return (17 * 23 + overrideState.GetHashCode()) * 23 + value.GetHashCode();
 	}
 
 	public static implicit operator T(ParameterOverride<T> prop)

@@ -3,20 +3,37 @@ using System.Collections.Generic;
 using System.Linq;
 using Facepunch.Rust;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 public class BigWheelGame : SpinnerWheel
 {
+	public float baseSpeed = 180f;
+
+	public float offset = 3.852f;
+
+	public AnimationCurve decelerationCurve;
+
+	public AnimationCurve speedCurve;
+
 	public HitNumber[] hitNumbers;
 
-	public GameObject indicator;
+	private float targetAngle;
 
-	public GameObjectRef winEffect;
+	private float minimumSpinTime;
+
+	private bool isSpinning;
+
+	private bool decelerating;
+
+	private float elapsedTime;
+
+	private Random random;
 
 	[ServerVar]
 	public static float spinFrequencySeconds = 45f;
 
-	protected int spinNumber = 0;
+	protected int spinNumber;
+
+	protected int targetNumber;
 
 	protected int lastPaidSpinNumber = -1;
 
@@ -32,11 +49,6 @@ public class BigWheelGame : SpinnerWheel
 		return false;
 	}
 
-	public override float GetMaxSpinSpeed()
-	{
-		return 180f;
-	}
-
 	public override void ServerInit()
 	{
 		base.ServerInit();
@@ -46,12 +58,17 @@ public class BigWheelGame : SpinnerWheel
 
 	public void DoSpin()
 	{
-		if (!(velocity > 0f))
-		{
-			velocity += Random.Range(7f, 16f);
-			spinNumber++;
-			SetTerminalsLocked(isLocked: true);
-		}
+		int seed = Random.Range(int.MinValue, int.MaxValue);
+		random = new Random(seed);
+		targetNumber = random.Next(0, hitNumbers.Length);
+		targetAngle = 0f - 360f / (float)hitNumbers.Length * (float)targetNumber + offset;
+		targetAngle += (float)(random.NextDouble() * 12.0 - 6.0);
+		minimumSpinTime = (float)(random.NextDouble() * 5.0 + 13.0);
+		elapsedTime = 0f;
+		isSpinning = true;
+		decelerating = false;
+		spinNumber++;
+		SetTerminalsLocked(isLocked: true);
 	}
 
 	public void SetTerminalsLocked(bool isLocked)
@@ -69,23 +86,70 @@ public class BigWheelGame : SpinnerWheel
 
 	protected void InitBettingTerminals()
 	{
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
 		terminals.Clear();
 		Vis.Entities(((Component)this).transform.position, 30f, terminals, 256, (QueryTriggerInteraction)2);
 		terminals = terminals.Distinct().ToList();
 	}
 
+	public float GetMaxSpinSpeed(float time)
+	{
+		return baseSpeed * speedCurve.Evaluate(time / minimumSpinTime);
+	}
+
 	public override void Update_Server()
 	{
-		float num = velocity;
-		base.Update_Server();
-		float num2 = velocity;
-		if (num > 0f && num2 == 0f && spinNumber > lastPaidSpinNumber)
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00df: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0089: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0105: Unknown result type (might be due to invalid IL or missing references)
+		if (!isSpinning)
 		{
-			Payout();
-			lastPaidSpinNumber = spinNumber;
-			QueueSpin();
+			return;
 		}
+		float deltaTime = Time.deltaTime;
+		elapsedTime += deltaTime;
+		float num = NormalizeAngle(wheel.localEulerAngles.y);
+		float num2 = NormalizeAngle(targetAngle);
+		float num3 = (num2 - num + 360f) % 360f;
+		if (!decelerating && (elapsedTime < minimumSpinTime || num3 < 120f))
+		{
+			float maxSpinSpeed = GetMaxSpinSpeed(elapsedTime);
+			wheel.Rotate(((Component)this).transform.up, maxSpinSpeed * deltaTime, (Space)0);
+		}
+		else
+		{
+			decelerating = true;
+			float num4 = decelerationCurve.Evaluate(num3 / 180f);
+			float num5 = GetMaxSpinSpeed(elapsedTime) * num4 * deltaTime;
+			if (num5 > num3)
+			{
+				num5 = num3;
+			}
+			wheel.Rotate(((Component)this).transform.up, num5, (Space)0);
+			if (num3 < 0.1f)
+			{
+				wheel.localRotation = Quaternion.Euler(0f, num2, 0f);
+				isSpinning = false;
+				if (spinNumber > lastPaidSpinNumber)
+				{
+					Payout();
+					lastPaidSpinNumber = spinNumber;
+					QueueSpin();
+				}
+			}
+		}
+		SendNetworkUpdate();
+	}
+
+	private float NormalizeAngle(float angle)
+	{
+		angle %= 360f;
+		if (angle < 0f)
+		{
+			angle += 360f;
+		}
+		return angle;
 	}
 
 	public float SpinSpacing()
@@ -97,14 +161,13 @@ public class BigWheelGame : SpinnerWheel
 	{
 		foreach (BigWheelBettingTerminal terminal in terminals)
 		{
-			terminal.ClientRPC(null, "SetTimeUntilNextSpin", SpinSpacing());
+			terminal.ClientRPC(RpcTarget.NetworkGroup("SetTimeUntilNextSpin"), SpinSpacing());
 		}
 		((FacepunchBehaviour)this).Invoke((Action)DoSpin, SpinSpacing());
 	}
 
 	public void Payout()
 	{
-		Profiler.BeginSample("BigWheelGame.Payout");
 		HitNumber currentHitType = GetCurrentHitType();
 		Guid value = Guid.NewGuid();
 		foreach (BigWheelBettingTerminal terminal in terminals)
@@ -138,37 +201,15 @@ public class BigWheelGame : SpinnerWheel
 			}
 			if (flag || flag2)
 			{
-				terminal.ClientRPC(null, "WinOrLoseSound", flag);
+				terminal.ClientRPC(RpcTarget.NetworkGroup("WinOrLoseSound"), flag);
 			}
 		}
 		ItemManager.DoRemoves();
 		SetTerminalsLocked(isLocked: false);
-		Profiler.EndSample();
 	}
 
 	public HitNumber GetCurrentHitType()
 	{
-		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		HitNumber result = null;
-		float num = float.PositiveInfinity;
-		HitNumber[] array = hitNumbers;
-		foreach (HitNumber hitNumber in array)
-		{
-			float num2 = Vector3.Distance(indicator.transform.position, ((Component)hitNumber).transform.position);
-			if (num2 < num)
-			{
-				result = hitNumber;
-				num = num2;
-			}
-		}
-		return result;
-	}
-
-	[ContextMenu("LoadHitNumbers")]
-	private void LoadHitNumbers()
-	{
-		HitNumber[] componentsInChildren = ((Component)this).GetComponentsInChildren<HitNumber>();
-		hitNumbers = componentsInChildren;
+		return hitNumbers[targetNumber];
 	}
 }

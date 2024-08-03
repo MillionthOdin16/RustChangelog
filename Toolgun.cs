@@ -37,7 +37,7 @@ public class Toolgun : Hammer
 		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
 		if (base.isServer)
 		{
-			ClientRPC<Vector3, Vector3>(null, "EffectSpawn", info.HitPositionWorld, info.HitNormalWorld);
+			ClientRPC<Vector3, Vector3>(RpcTarget.NetworkGroup("EffectSpawn"), info.HitPositionWorld, info.HitNormalWorld);
 		}
 		base.DoAttackShared(info);
 	}

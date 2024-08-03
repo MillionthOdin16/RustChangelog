@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class FirstPersonEffect : MonoBehaviour, IEffect
 {
-	public bool isGunShot = false;
+	public bool isGunShot;
 
 	[HideInInspector]
 	public EffectParentToWeaponBone parentToWeaponComponent;

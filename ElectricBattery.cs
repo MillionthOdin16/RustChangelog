@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
 using Facepunch;
-using Network;
 using ProtoBuf;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 public class ElectricBattery : IOEntity, IInstanceDataReceiver
 {
@@ -14,7 +12,7 @@ public class ElectricBattery : IOEntity, IInstanceDataReceiver
 
 	public float rustWattSeconds;
 
-	private int activeDrain = 0;
+	private int activeDrain;
 
 	public bool rechargable;
 
@@ -29,9 +27,13 @@ public class ElectricBattery : IOEntity, IInstanceDataReceiver
 
 	public const Flags Flag_VeryFull = Flags.Reserved6;
 
-	private bool wasLoaded = false;
+	private bool wasLoaded;
 
-	private HashSet<IOEntity> connectedList = new HashSet<IOEntity>();
+	private HashSet<(IOEntity entity, int inputIndex)> connectedList = new HashSet<(IOEntity, int)>();
+
+	private Queue<int> inputHistory = new Queue<int>();
+
+	private const int inputHistorySize = 5;
 
 	public override bool IsRootEntity()
 	{
@@ -50,7 +52,11 @@ public class ElectricBattery : IOEntity, IInstanceDataReceiver
 
 	public int GetActiveDrain()
 	{
-		return IsOn() ? activeDrain : 0;
+		if (!IsOn())
+		{
+			return 0;
+		}
+		return activeDrain;
 	}
 
 	public void ReceiveInstanceData(InstanceData data)
@@ -66,8 +72,8 @@ public class ElectricBattery : IOEntity, IInstanceDataReceiver
 
 	public override void OnPickedUp(Item createdItem, BasePlayer player)
 	{
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0023: Expected O, but got Unknown
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Expected O, but got Unknown
 		base.OnPickedUp(createdItem, player);
 		if (createdItem.instanceData == null)
 		{
@@ -82,19 +88,23 @@ public class ElectricBattery : IOEntity, IInstanceDataReceiver
 		return currentEnergy;
 	}
 
-	public override int DesiredPower()
+	public override int DesiredPower(int inputIndex = 0)
 	{
 		if (rustWattSeconds >= maxCapactiySeconds)
 		{
 			return 0;
 		}
-		return Mathf.FloorToInt((float)maxOutput * maximumInboundEnergyRatio);
+		if (!IsFlickering())
+		{
+			return Mathf.Min(currentEnergy, Mathf.FloorToInt((float)maxOutput * maximumInboundEnergyRatio));
+		}
+		return GetHighestInputFromHistory();
 	}
 
 	public override void SendAdditionalData(BasePlayer player, int slot, bool input)
 	{
 		int passthroughAmountForAnySlot = GetPassthroughAmountForAnySlot(slot, input);
-		ClientRPCPlayer((Connection)null, player, "Client_ReceiveAdditionalData", currentEnergy, passthroughAmountForAnySlot, rustWattSeconds, (float)activeDrain);
+		ClientRPC(RpcTarget.Player("Client_ReceiveAdditionalData", player), currentEnergy, passthroughAmountForAnySlot, rustWattSeconds, (float)activeDrain);
 	}
 
 	public override void ServerInit()
@@ -108,60 +118,53 @@ public class ElectricBattery : IOEntity, IInstanceDataReceiver
 		return 0;
 	}
 
-	public void AddConnectedRecursive(IOEntity root, ref HashSet<IOEntity> listToUse)
+	public void AddConnectedRecursive(IOEntity root, int inputIndex, ref HashSet<(IOEntity, int)> listToUse)
 	{
-		Profiler.BeginSample("AddConnectedRecursive");
-		listToUse.Add(root);
-		if (root.WantsPassthroughPower())
+		listToUse.Add((root, inputIndex));
+		if (!root.WantsPassthroughPower())
 		{
-			for (int i = 0; i < root.outputs.Length; i++)
+			return;
+		}
+		for (int i = 0; i < root.outputs.Length; i++)
+		{
+			if (!root.AllowDrainFrom(i))
 			{
-				if (!root.AllowDrainFrom(i))
-				{
-					continue;
-				}
-				IOSlot iOSlot = root.outputs[i];
-				if (iOSlot.type != 0)
-				{
-					continue;
-				}
+				continue;
+			}
+			IOSlot iOSlot = root.outputs[i];
+			if (iOSlot.type == IOType.Electric)
+			{
 				IOEntity iOEntity = iOSlot.connectedTo.Get();
-				if (!((Object)(object)iOEntity != (Object)null))
+				if ((Object)(object)iOEntity != (Object)null && !listToUse.Contains((iOEntity, iOSlot.connectedToSlot)) && iOEntity.WantsPower(iOSlot.connectedToSlot))
 				{
-					continue;
-				}
-				bool flag = iOEntity.WantsPower();
-				if (!listToUse.Contains(iOEntity))
-				{
-					if (flag)
-					{
-						AddConnectedRecursive(iOEntity, ref listToUse);
-					}
-					else
-					{
-						listToUse.Add(iOEntity);
-					}
+					AddConnectedRecursive(iOEntity, iOSlot.connectedToSlot, ref listToUse);
 				}
 			}
 		}
-		Profiler.EndSample();
 	}
 
 	public int GetDrain()
 	{
-		Profiler.BeginSample("GetDrain");
 		connectedList.Clear();
 		IOEntity iOEntity = outputs[0].connectedTo.Get();
-		if (Object.op_Implicit((Object)(object)iOEntity))
+		if ((Object)(object)iOEntity != (Object)null)
 		{
-			AddConnectedRecursive(iOEntity, ref connectedList);
+			int connectedToSlot = outputs[0].connectedToSlot;
+			if (iOEntity.WantsPower(connectedToSlot))
+			{
+				AddConnectedRecursive(iOEntity, connectedToSlot, ref connectedList);
+			}
+			else
+			{
+				connectedList.Add((iOEntity, connectedToSlot));
+			}
 		}
 		int num = 0;
-		foreach (IOEntity connected in connectedList)
+		foreach (var connected in connectedList)
 		{
-			if (connected.ShouldDrainBattery(this))
+			if (connected.entity.ShouldDrainBattery(this))
 			{
-				num += connected.DesiredPower();
+				num += connected.entity.DesiredPower(connected.inputIndex);
 				if (num >= maxOutput)
 				{
 					num = maxOutput;
@@ -169,7 +172,6 @@ public class ElectricBattery : IOEntity, IInstanceDataReceiver
 				}
 			}
 		}
-		Profiler.EndSample();
 		return num;
 	}
 
@@ -187,19 +189,10 @@ public class ElectricBattery : IOEntity, IInstanceDataReceiver
 			SetDischarging(wantsOn: false);
 			return;
 		}
-		Profiler.BeginSample("ElectricBattery.CheckDischarge");
 		IOEntity iOEntity = outputs[0].connectedTo.Get();
 		int drain = GetDrain();
 		activeDrain = drain;
-		if (Object.op_Implicit((Object)(object)iOEntity))
-		{
-			SetDischarging(iOEntity.WantsPower());
-		}
-		else
-		{
-			SetDischarging(wantsOn: false);
-		}
-		Profiler.EndSample();
+		SetDischarging((Object)(object)iOEntity != (Object)null);
 	}
 
 	public void SetDischarging(bool wantsOn)
@@ -209,65 +202,80 @@ public class ElectricBattery : IOEntity, IInstanceDataReceiver
 
 	public override int GetPassthroughAmount(int outputSlot = 0)
 	{
-		if (IsOn())
+		if (!IsOn())
 		{
-			return Mathf.FloorToInt((float)maxOutput * ((rustWattSeconds >= 1f) ? 1f : 0f));
+			return 0;
 		}
-		return 0;
+		return Mathf.FloorToInt((float)maxOutput * ((rustWattSeconds >= 1f) ? 1f : 0f));
 	}
 
-	public override bool WantsPower()
+	public override bool WantsPower(int inputIndex)
 	{
 		return rustWattSeconds < maxCapactiySeconds;
+	}
+
+	private int GetHighestInputFromHistory()
+	{
+		int num = 0;
+		foreach (int item in inputHistory)
+		{
+			if (item > num)
+			{
+				num = item;
+			}
+		}
+		return num;
 	}
 
 	public override void IOStateChanged(int inputAmount, int inputSlot)
 	{
 		base.IOStateChanged(inputAmount, inputSlot);
-		if (inputSlot != 0)
+		if (IsFlickering())
 		{
-			return;
+			if (inputHistory.Count >= 5)
+			{
+				inputHistory.Dequeue();
+			}
+			inputHistory.Enqueue(inputAmount);
 		}
-		if (!IsPowered())
+		if (inputSlot == 0 && rechargable)
 		{
-			if (rechargable)
+			if (!IsPowered() && !IsFlickering())
 			{
 				((FacepunchBehaviour)this).CancelInvoke((Action)AddCharge);
 			}
-		}
-		else if (rechargable && !((FacepunchBehaviour)this).IsInvoking((Action)AddCharge))
-		{
-			((FacepunchBehaviour)this).InvokeRandomized((Action)AddCharge, 1f, 1f, 0.1f);
+			else if (!((FacepunchBehaviour)this).IsInvoking((Action)AddCharge))
+			{
+				((FacepunchBehaviour)this).InvokeRandomized((Action)AddCharge, 1f, 1f, 0.1f);
+			}
 		}
 	}
 
 	public void TickUsage()
 	{
 		float oldCharge = rustWattSeconds;
-		Profiler.BeginSample("ElectricBattery.TickUsage");
-		bool flag = rustWattSeconds > 0f;
+		bool num = rustWattSeconds > 0f;
 		if (rustWattSeconds >= 1f)
 		{
-			float num = 1f * (float)activeDrain;
-			rustWattSeconds -= num;
+			float num2 = 1f * (float)activeDrain;
+			rustWattSeconds -= num2;
 		}
 		if (rustWattSeconds <= 0f)
 		{
 			rustWattSeconds = 0f;
 		}
-		bool flag2 = rustWattSeconds > 0f;
+		bool flag = rustWattSeconds > 0f;
 		ChargeChanged(oldCharge);
-		if (flag != flag2)
+		if (num != flag)
 		{
 			MarkDirty();
 			SendNetworkUpdate();
 		}
-		Profiler.EndSample();
 	}
 
 	public virtual void ChargeChanged(float oldCharge)
 	{
-		float num = rustWattSeconds;
+		_ = rustWattSeconds;
 		bool flag = rustWattSeconds > maxCapactiySeconds * 0.25f;
 		bool flag2 = rustWattSeconds > maxCapactiySeconds * 0.75f;
 		if (HasFlag(Flags.Reserved5) != flag || HasFlag(Flags.Reserved6) != flag2)
@@ -280,14 +288,14 @@ public class ElectricBattery : IOEntity, IInstanceDataReceiver
 
 	public void AddCharge()
 	{
-		Profiler.BeginSample("ElectricBattery.TickUsage");
 		float oldCharge = rustWattSeconds;
-		int num = Mathf.Min(currentEnergy, DesiredPower());
-		float num2 = (float)num * 1f * chargeRatio;
-		rustWattSeconds += num2;
-		rustWattSeconds = Mathf.Clamp(rustWattSeconds, 0f, maxCapactiySeconds);
-		ChargeChanged(oldCharge);
-		Profiler.EndSample();
+		float num = (float)Mathf.Min(IsFlickering() ? GetHighestInputFromHistory() : currentEnergy, DesiredPower()) * 1f * chargeRatio;
+		if (num > 0f)
+		{
+			rustWattSeconds += num;
+			rustWattSeconds = Mathf.Clamp(rustWattSeconds, 0f, maxCapactiySeconds);
+			ChargeChanged(oldCharge);
+		}
 	}
 
 	public void SetPassthroughOn(bool wantsOn)
@@ -297,7 +305,6 @@ public class ElectricBattery : IOEntity, IInstanceDataReceiver
 			return;
 		}
 		wasLoaded = false;
-		Profiler.BeginSample("ElectricBattery.SetPassthroughOn");
 		SetFlag(Flags.On, wantsOn);
 		if (IsOn())
 		{
@@ -311,7 +318,6 @@ public class ElectricBattery : IOEntity, IInstanceDataReceiver
 			((FacepunchBehaviour)this).CancelInvoke((Action)TickUsage);
 		}
 		MarkDirty();
-		Profiler.EndSample();
 	}
 
 	public void Unbusy()
@@ -335,6 +341,39 @@ public class ElectricBattery : IOEntity, IInstanceDataReceiver
 		if (info.msg.ioEntity != null)
 		{
 			rustWattSeconds = info.msg.ioEntity.genericFloat1;
+		}
+	}
+
+	[ServerVar]
+	public static void batteryid(Arg arg)
+	{
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		ElectricBattery electricBattery = BaseNetworkable.serverEntities.Find(arg.GetEntityID(1)) as ElectricBattery;
+		if ((Object)(object)electricBattery == (Object)null)
+		{
+			arg.ReplyWith("Not a battery");
+			return;
+		}
+		string @string = arg.GetString(0, "");
+		if (!(@string == "charge"))
+		{
+			if (@string == "deplete")
+			{
+				electricBattery.rustWattSeconds = 0f;
+				arg.ReplyWith("Depleted " + electricBattery.GetDisplayName());
+			}
+			else
+			{
+				arg.ReplyWith("Unknown command");
+			}
+		}
+		else
+		{
+			float num = arg.GetInt(2, (int)electricBattery.maxCapactiySeconds / 60);
+			electricBattery.rustWattSeconds = Mathf.Clamp(electricBattery.rustWattSeconds + num * 60f, 0f, electricBattery.maxCapactiySeconds);
+			arg.ReplyWith("Charged " + electricBattery.GetDisplayName());
 		}
 	}
 }

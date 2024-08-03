@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using Facepunch;
+using Facepunch.Extend;
 using Facepunch.Unity;
 using Rust;
 using UnityEngine;
@@ -28,6 +30,12 @@ public class Debugging : ConsoleSystem
 	[ServerVar(Help = "Do not damage any items")]
 	public static bool disablecondition = false;
 
+	[ServerVar]
+	public static int tutorial_start_cooldown = 60;
+
+	[ServerVar]
+	public static bool printMissionSpeakInfo = false;
+
 	[ClientVar]
 	[ServerVar]
 	public static bool callbacks = false;
@@ -47,7 +55,7 @@ public class Debugging : ConsoleSystem
 	}
 
 	[ServerVar]
-	[ClientVar]
+	[ClientVar(ClientAdmin = true)]
 	public static void renderinfo(Arg arg)
 	{
 		RenderInfo.GenerateReport();
@@ -65,7 +73,7 @@ public class Debugging : ConsoleSystem
 				arg.ReplyWith("Must be called from client with player model");
 				return;
 			}
-			basePlayer.ClientRPCPlayer(null, basePlayer, "TogglePlayerMovement", @bool);
+			basePlayer.ClientRPC(RpcTarget.Player("TogglePlayerMovement", basePlayer), @bool);
 			arg.ReplyWith((@bool ? "enabled" : "disabled") + " player movement");
 		}
 	}
@@ -109,6 +117,132 @@ public class Debugging : ConsoleSystem
 		}
 	}
 
+	[ServerVar]
+	public static void spawnParachuteTester(Arg arg)
+	{
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
+		float @float = arg.GetFloat(0, 50f);
+		BasePlayer basePlayer = arg.Player();
+		BasePlayer basePlayer2 = GameManager.server.CreateEntity("assets/prefabs/player/player.prefab", ((Component)basePlayer).transform.position + Vector3.up * @float, Quaternion.LookRotation(basePlayer.eyes.BodyForward())) as BasePlayer;
+		basePlayer2.Spawn();
+		basePlayer2.eyes.rotation = basePlayer.eyes.rotation;
+		basePlayer2.SendNetworkUpdate();
+		Inventory.copyTo(basePlayer, basePlayer2);
+		if (!basePlayer2.HasValidParachuteEquipped())
+		{
+			basePlayer2.inventory.containerWear.GiveItem(ItemManager.CreateByName("parachute", 1, 0uL));
+		}
+		basePlayer2.RequestParachuteDeploy();
+	}
+
+	[ServerVar]
+	public static string testTutorialCinematic(Arg arg)
+	{
+		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
+		BasePlayer basePlayer = arg.Player();
+		if ((Object)(object)basePlayer == (Object)null || !basePlayer.IsInTutorial)
+		{
+			return "Requires a player";
+		}
+		TutorialIsland currentTutorialIsland = basePlayer.GetCurrentTutorialIsland();
+		if ((Object)(object)currentTutorialIsland == (Object)null)
+		{
+			return "Invalid island";
+		}
+		Transform val = TransformEx.FindChildRecursive(((Component)currentTutorialIsland).transform, "KayakMissionPoint");
+		if ((Object)(object)val == (Object)null)
+		{
+			return "Can't find KayakMissionPoint on island";
+		}
+		Kayak obj = GameManager.server.CreateEntity("assets/content/vehicles/boats/kayak/kayak.prefab", val.position, val.rotation) as Kayak;
+		obj.Spawn();
+		obj.WantsMount(basePlayer);
+		currentTutorialIsland.StartEndingCinematic(basePlayer);
+		return "Playing cinematic";
+	}
+
+	[ServerVar(Help = "If a player ends up stuck on a tutorial for any reason this will clear the island and reset the player (will also kill player)")]
+	public static void clearTutorialForPlayer(Arg arg)
+	{
+		BasePlayer player = arg.GetPlayer(0);
+		if ((Object)(object)player == (Object)null)
+		{
+			arg.ReplyWith("Please provide a player");
+		}
+		else if (player.IsInTutorial)
+		{
+			TutorialIsland currentTutorialIsland = player.GetCurrentTutorialIsland();
+			if ((Object)(object)currentTutorialIsland != (Object)null)
+			{
+				currentTutorialIsland.Return();
+			}
+			player.ClearTutorial();
+			player.Hurt(99999f);
+			player.ClearTutorial_PostDeath();
+		}
+	}
+
+	[ServerVar]
+	public static void deleteEntitiesByShortname(Arg arg)
+	{
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		string text = arg.GetString(0, "").ToLower();
+		float @float = arg.GetFloat(1, 0f);
+		BasePlayer basePlayer = arg.Player();
+		List<BaseNetworkable> list = Pool.GetList<BaseNetworkable>();
+		Enumerator<BaseNetworkable> enumerator = BaseNetworkable.serverEntities.GetEnumerator();
+		try
+		{
+			while (enumerator.MoveNext())
+			{
+				BaseNetworkable current = enumerator.Current;
+				if (current.ShortPrefabName == text && (@float == 0f || ((Object)(object)basePlayer != (Object)null && basePlayer.Distance(current as BaseEntity) <= @float)))
+				{
+					list.Add(current);
+				}
+			}
+		}
+		finally
+		{
+			((IDisposable)enumerator).Dispose();
+		}
+		Debug.Log((object)$"Deleting {list.Count} {text}...");
+		foreach (BaseNetworkable item in list)
+		{
+			item.Kill();
+		}
+		Pool.FreeList<BaseNetworkable>(ref list);
+	}
+
+	[ServerVar]
+	public static void printgroups(Arg arg)
+	{
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		Debug.Log((object)"Server");
+		Enumerator<BaseNetworkable> enumerator = BaseNetworkable.serverEntities.GetEnumerator();
+		try
+		{
+			while (enumerator.MoveNext())
+			{
+				BaseNetworkable current = enumerator.Current;
+				Debug.Log((object)string.Format("{0}:{1}{2}", current.PrefabName, current.net.group.ID, current.net.group.restricted ? "/Restricted" : string.Empty));
+			}
+		}
+		finally
+		{
+			((IDisposable)enumerator).Dispose();
+		}
+	}
+
 	[ServerVar(Help = "Takes you in and out of your current network group, causing you to delete and then download all entities in your PVS again")]
 	public static void flushgroup(Arg arg)
 	{
@@ -127,19 +261,30 @@ public class Debugging : ConsoleSystem
 		activeItem?.LoseCondition(activeItem.condition * 2f);
 	}
 
+	[ServerVar(Help = "Almost break the current held object")]
+	public static void breakheld_almost(Arg arg)
+	{
+		Item activeItem = arg.Player().GetActiveItem();
+		if (activeItem != null && activeItem.hasCondition)
+		{
+			activeItem.condition = 1f;
+		}
+	}
+
 	[ServerVar(Help = "reset all puzzles")]
 	public static void puzzlereset(Arg arg)
 	{
-		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
-		BasePlayer basePlayer = arg.Player();
-		if (!((Object)(object)basePlayer == (Object)null))
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		if (!((Object)(object)arg.Player() == (Object)null))
 		{
 			PuzzleReset[] array = Object.FindObjectsOfType<PuzzleReset>();
 			Debug.Log((object)"iterating...");
 			PuzzleReset[] array2 = array;
 			foreach (PuzzleReset puzzleReset in array2)
 			{
-				Debug.Log((object)("resetting puzzle at :" + ((Component)puzzleReset).transform.position));
+				Vector3 position = ((Component)puzzleReset).transform.position;
+				Debug.Log((object)("resetting puzzle at :" + ((object)(Vector3)(ref position)).ToString()));
 				puzzleReset.DoReset();
 				puzzleReset.ResetTimer();
 			}
@@ -149,16 +294,16 @@ public class Debugging : ConsoleSystem
 	[ServerVar(EditorOnly = true, Help = "respawn all puzzles from their prefabs")]
 	public static void puzzleprefabrespawn(Arg arg)
 	{
-		//IL_00dc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ed: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0101: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00dd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ec: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f6: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0106: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_018c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0108: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0166: Unknown result type (might be due to invalid IL or missing references)
 		foreach (BaseNetworkable item in BaseNetworkable.serverEntities.Where((BaseNetworkable x) => x is IOEntity && PrefabAttribute.server.Find<Construction>(x.prefabID) == null).ToList())
 		{
 			item.Kill();
@@ -254,6 +399,7 @@ public class Debugging : ConsoleSystem
 		AdjustHealth(arg.Player(), 1000f);
 		AdjustCalories(arg.Player(), 1000f);
 		AdjustHydration(arg.Player(), 1000f);
+		AdjustRadiation(arg.Player(), -10000f);
 	}
 
 	[ServerVar]
@@ -280,6 +426,59 @@ public class Debugging : ConsoleSystem
 		AdjustHydration(arg.Player(), arg.GetInt(0, 1), arg.GetInt(1, 1));
 	}
 
+	[ServerVar]
+	public static void sethealth(Arg arg)
+	{
+		if (!arg.HasArgs(1))
+		{
+			arg.ReplyWith("Please enter an amount.");
+			return;
+		}
+		int @int = arg.GetInt(0, 0);
+		BasePlayer usePlayer = GetUsePlayer(arg, 1);
+		if (Object.op_Implicit((Object)(object)usePlayer))
+		{
+			usePlayer.SetHealth(@int);
+		}
+	}
+
+	[ServerVar]
+	public static void setdamage(Arg arg)
+	{
+		BasePlayer basePlayer = arg.Player();
+		if (!arg.HasArgs(1))
+		{
+			arg.ReplyWith("Please enter an amount.");
+			return;
+		}
+		int @int = arg.GetInt(0, 0);
+		BasePlayer usePlayer = GetUsePlayer(arg, 1);
+		if (Object.op_Implicit((Object)(object)usePlayer))
+		{
+			float damageAmount = usePlayer.health - (float)@int;
+			HitInfo info = new HitInfo(basePlayer, basePlayer, DamageType.Bullet, damageAmount);
+			usePlayer.OnAttacked(info);
+		}
+	}
+
+	[ServerVar]
+	public static void setfood(Arg arg)
+	{
+		setattribute(arg, MetabolismAttribute.Type.Calories);
+	}
+
+	[ServerVar]
+	public static void setwater(Arg arg)
+	{
+		setattribute(arg, MetabolismAttribute.Type.Hydration);
+	}
+
+	[ServerVar]
+	public static void setradiation(Arg arg)
+	{
+		setattribute(arg, MetabolismAttribute.Type.Radiation);
+	}
+
 	private static void AdjustHealth(BasePlayer player, float amount, string bone = null)
 	{
 		HitInfo hitInfo = new HitInfo(player, player, DamageType.Bullet, 0f - amount);
@@ -300,26 +499,60 @@ public class Debugging : ConsoleSystem
 		player.metabolism.ApplyChange(MetabolismAttribute.Type.Hydration, amount, time);
 	}
 
+	private static void AdjustRadiation(BasePlayer player, float amount, float time = 1f)
+	{
+		player.metabolism.SetAttribute(MetabolismAttribute.Type.Radiation, amount);
+	}
+
+	private static void setattribute(Arg arg, MetabolismAttribute.Type type)
+	{
+		if (!arg.HasArgs(1))
+		{
+			arg.ReplyWith("Please enter an amount.");
+			return;
+		}
+		int @int = arg.GetInt(0, 0);
+		BasePlayer usePlayer = GetUsePlayer(arg, 1);
+		if (Object.op_Implicit((Object)(object)usePlayer))
+		{
+			usePlayer.metabolism.SetAttribute(type, @int);
+		}
+	}
+
+	private static BasePlayer GetUsePlayer(Arg arg, int playerArgument)
+	{
+		BasePlayer basePlayer = null;
+		if (arg.HasArgs(playerArgument + 1))
+		{
+			BasePlayer player = arg.GetPlayer(playerArgument);
+			if (!Object.op_Implicit((Object)(object)player))
+			{
+				return null;
+			}
+			return player;
+		}
+		return arg.Player();
+	}
+
 	[ServerVar]
 	public static void ResetSleepingBagTimers(Arg arg)
 	{
-		BasePlayer player = arg.Player();
-		SleepingBag.ResetTimersForPlayer(player);
+		SleepingBag.ResetTimersForPlayer(arg.Player());
 	}
 
 	[ServerVar(Help = "Spawn lots of IO entities to lag the server")]
 	public static void bench_io(Arg arg)
 	{
-		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0167: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0178: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0182: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0184: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0189: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0194: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0196: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0132: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0143: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0148: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0154: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0161: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer basePlayer = arg.Player();
 		if ((Object)(object)basePlayer == (Object)null || !basePlayer.IsAdmin)
 		{
@@ -376,26 +609,26 @@ public class Debugging : ConsoleSystem
 		}
 		static void Connect(IOEntity InputIOEnt, IOEntity OutputIOEnt)
 		{
-			//IL_0076: Unknown result type (might be due to invalid IL or missing references)
-			//IL_007b: Unknown result type (might be due to invalid IL or missing references)
-			//IL_008f: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0094: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0099: Unknown result type (might be due to invalid IL or missing references)
-			//IL_009e: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0069: Unknown result type (might be due to invalid IL or missing references)
+			//IL_006e: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0082: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0087: Unknown result type (might be due to invalid IL or missing references)
+			//IL_008c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0091: Unknown result type (might be due to invalid IL or missing references)
 			int num = 0;
 			int num2 = 0;
-			WireTool.WireColour wireColour = WireTool.WireColour.Default;
+			WireTool.WireColour wireColour = WireTool.WireColour.Gray;
 			IOEntity.IOSlot iOSlot = InputIOEnt.inputs[num];
-			IOEntity.IOSlot iOSlot2 = OutputIOEnt.outputs[num2];
+			IOEntity.IOSlot obj = OutputIOEnt.outputs[num2];
 			iOSlot.connectedTo.Set(OutputIOEnt);
 			iOSlot.connectedToSlot = num2;
 			iOSlot.wireColour = wireColour;
 			iOSlot.connectedTo.Init();
-			iOSlot2.connectedTo.Set(InputIOEnt);
-			iOSlot2.connectedToSlot = num;
-			iOSlot2.wireColour = wireColour;
-			iOSlot2.connectedTo.Init();
-			iOSlot2.linePoints = (Vector3[])(object)new Vector3[2]
+			obj.connectedTo.Set(InputIOEnt);
+			obj.connectedToSlot = num;
+			obj.wireColour = wireColour;
+			obj.connectedTo.Init();
+			obj.linePoints = (Vector3[])(object)new Vector3[2]
 			{
 				Vector3.zero,
 				((Component)OutputIOEnt).transform.InverseTransformPoint(((Component)InputIOEnt).transform.TransformPoint(iOSlot.handlePosition))
@@ -405,5 +638,133 @@ public class Debugging : ConsoleSystem
 			InputIOEnt.SendNetworkUpdate();
 			OutputIOEnt.SendChangedToRoot(forceUpdate: true);
 		}
+	}
+
+	[ServerVar]
+	public static void completeMissionStage(Arg arg)
+	{
+		int @int = arg.GetInt(0, -1);
+		BasePlayer basePlayer = arg.Player();
+		if (!((Object)(object)basePlayer != (Object)null) || basePlayer.GetActiveMission() == -1)
+		{
+			return;
+		}
+		BaseMission.MissionInstance missionInstance = basePlayer.missions[basePlayer.GetActiveMission()];
+		if (missionInstance == null)
+		{
+			return;
+		}
+		for (int i = 0; i < missionInstance.objectiveStatuses.Length; i++)
+		{
+			if (!missionInstance.objectiveStatuses[i].completed && (i == @int || (@int == -1 && !missionInstance.objectiveStatuses[i].completed)))
+			{
+				missionInstance.GetMission().objectives[i].objective.ObjectiveStarted(basePlayer, i, missionInstance);
+				missionInstance.GetMission().objectives[i].objective.CompleteObjective(i, missionInstance, basePlayer);
+				break;
+			}
+		}
+	}
+
+	[ServerVar]
+	public static void completeMission(Arg arg)
+	{
+		BasePlayer basePlayer = arg.Player();
+		if (!((Object)(object)basePlayer != (Object)null) || basePlayer.GetActiveMission() == -1)
+		{
+			return;
+		}
+		BaseMission.MissionInstance missionInstance = basePlayer.missions[basePlayer.GetActiveMission()];
+		if (missionInstance == null)
+		{
+			return;
+		}
+		for (int i = 0; i < missionInstance.objectiveStatuses.Length; i++)
+		{
+			if (!missionInstance.objectiveStatuses[i].completed)
+			{
+				missionInstance.GetMission().objectives[i].objective.CompleteObjective(i, missionInstance, basePlayer);
+			}
+		}
+	}
+
+	[ServerUserVar]
+	public static void startTutorial(Arg arg)
+	{
+		if (!Server.tutorialEnabled)
+		{
+			arg.ReplyWith("Tutorial is not enabled on this server");
+			return;
+		}
+		BasePlayer basePlayer = arg.Player();
+		if ((Object)(object)basePlayer != (Object)null && !basePlayer.IsInTutorial)
+		{
+			basePlayer.StartTutorial(triggerAnalytics: false);
+		}
+	}
+
+	[ServerVar]
+	public static void completeTutorial(Arg arg)
+	{
+		BasePlayer basePlayer = arg.Player();
+		if ((Object)(object)basePlayer != (Object)null && basePlayer.IsInTutorial)
+		{
+			TutorialIsland currentTutorialIsland = basePlayer.GetCurrentTutorialIsland();
+			if ((Object)(object)currentTutorialIsland != (Object)null)
+			{
+				currentTutorialIsland.OnPlayerCompletedTutorial(basePlayer, isQuit: false, triggerAnalytics: false);
+			}
+		}
+	}
+
+	[ServerUserVar(ServerAdmin = false)]
+	public static void quitTutorial(Arg arg)
+	{
+		BasePlayer basePlayer = arg.Player();
+		if ((Object)(object)basePlayer != (Object)null && basePlayer.IsInTutorial)
+		{
+			TutorialIsland currentTutorialIsland = basePlayer.GetCurrentTutorialIsland();
+			if ((Object)(object)currentTutorialIsland != (Object)null)
+			{
+				currentTutorialIsland.OnPlayerCompletedTutorial(basePlayer, isQuit: true, triggerAnalytics: true);
+			}
+		}
+	}
+
+	[ServerVar]
+	public static void tutorialStatus(Arg arg)
+	{
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Expected O, but got Unknown
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		ListHashSet<TutorialIsland> tutorialList = TutorialIsland.GetTutorialList(isServer: true);
+		TextTable val = new TextTable();
+		val.AddColumns(new string[5] { "Index", "ID", "Player Name", "Duration", "IsConnected" });
+		int num = 0;
+		Enumerator<TutorialIsland> enumerator = tutorialList.GetEnumerator();
+		try
+		{
+			while (enumerator.MoveNext())
+			{
+				TutorialIsland current = enumerator.Current;
+				BasePlayer basePlayer = current.ForPlayer.Get(serverside: true);
+				val.AddRow(new string[5]
+				{
+					num++.ToString(),
+					(current.net.group.ID - 1).ToString(),
+					((Object)(object)basePlayer != (Object)null) ? basePlayer.displayName : "NULL",
+					current.TutorialDuration.ToShortString(),
+					((Object)(object)basePlayer != (Object)null) ? basePlayer.IsConnected.ToString() : "NULL"
+				});
+			}
+		}
+		finally
+		{
+			((IDisposable)enumerator).Dispose();
+		}
+		StringBuilder stringBuilder = new StringBuilder();
+		stringBuilder.AppendLine($"Tutorial islands in use: {num}/{TutorialIsland.MaxTutorialIslandCount}");
+		stringBuilder.AppendLine(((object)val).ToString());
+		arg.ReplyWith(stringBuilder.ToString());
 	}
 }

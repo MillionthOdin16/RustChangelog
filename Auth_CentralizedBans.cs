@@ -22,33 +22,43 @@ public static class Auth_CentralizedBans
 
 	public static IEnumerator Run(Connection connection)
 	{
-		if (!connection.active || connection.rejected || string.IsNullOrWhiteSpace(Server.bansServerEndpoint) || !Server.bansServerEndpoint.StartsWith("http"))
+		connection.authStatusCentralizedBans = string.Empty;
+		if (!connection.active || connection.rejected)
 		{
 			yield break;
 		}
-		connection.authStatus = "";
-		if (!Server.bansServerEndpoint.EndsWith("/"))
+		if (string.IsNullOrWhiteSpace(Server.bansServerEndpoint) || !Server.bansServerEndpoint.StartsWith("http"))
+		{
+			connection.authStatusCentralizedBans = "ok";
+			yield break;
+		}
+		if (!Server.bansServerEndpoint.EndsWith("/") && !Server.bansServerEndpoint.EndsWith("="))
 		{
 			Server.bansServerEndpoint += "/";
 		}
 		if (connection.ownerid != 0L && connection.ownerid != connection.userid)
 		{
-			string ownerUrl = Server.bansServerEndpoint + connection.ownerid;
-			UnityWebRequest ownerRequest = UnityWebRequest.Get(ownerUrl);
+			string text = Server.bansServerEndpoint + connection.ownerid;
+			UnityWebRequest ownerRequest = UnityWebRequest.Get(text);
 			ownerRequest.timeout = Server.bansServerTimeout;
 			yield return ownerRequest.SendWebRequest();
 			if (CheckIfPlayerBanned(connection.ownerid, connection, ownerRequest))
 			{
+				connection.authStatusCentralizedBans = "banned_account_owner";
 				yield break;
 			}
 		}
-		string userUrl = Server.bansServerEndpoint + connection.userid;
-		UnityWebRequest userRequest = UnityWebRequest.Get(userUrl);
+		string text2 = Server.bansServerEndpoint + connection.userid;
+		UnityWebRequest userRequest = UnityWebRequest.Get(text2);
 		userRequest.timeout = Server.bansServerTimeout;
 		yield return userRequest.SendWebRequest();
-		if (!CheckIfPlayerBanned(connection.userid, connection, userRequest))
+		if (CheckIfPlayerBanned(connection.userid, connection, userRequest))
 		{
-			connection.authStatus = "ok";
+			connection.authStatusCentralizedBans = "banned_account_player";
+		}
+		else
+		{
+			connection.authStatusCentralizedBans = "ok";
 		}
 	}
 

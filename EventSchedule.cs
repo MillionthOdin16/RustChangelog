@@ -1,4 +1,8 @@
 using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
 using ConVar;
 using Rust;
 using UnityEngine;
@@ -11,20 +15,73 @@ public class EventSchedule : BaseMonoBehaviour
 	[Tooltip("The maximum amount of hours between events")]
 	public float maxmumHoursBetween = 24f;
 
-	private float hoursRemaining = 0f;
+	public static HashSet<EventSchedule> allEvents = new HashSet<EventSchedule>();
 
-	private long lastRun = 0L;
+	private float hoursRemaining;
+
+	private long lastRun;
+
+	[ServerVar(Name = "triggerevent")]
+	public static void TriggerEvent(Arg arg)
+	{
+		string eventName = arg.GetString(0, "");
+		string[] source = allEvents.Select((EventSchedule x) => x.GetName().ToLower()).ToArray();
+		string[] array = (from x in source
+			where StringEx.Contains(x, eventName, CompareOptions.IgnoreCase)
+			select x.ToLower()).ToArray();
+		if (string.IsNullOrEmpty(eventName) || array.Length == 0)
+		{
+			arg.ReplyWith("Unknown event - event list:\n\n" + string.Join("\n", source.Select(Path.GetFileNameWithoutExtension).ToArray()));
+			return;
+		}
+		if (array.Length > 1)
+		{
+			string text = array.FirstOrDefault((string x) => string.Compare(x, eventName, StringComparison.OrdinalIgnoreCase) == 0);
+			if (text != null)
+			{
+				array[0] = text;
+			}
+		}
+		foreach (EventSchedule allEvent in allEvents)
+		{
+			if (allEvent.GetName() == array[0])
+			{
+				allEvent.Trigger();
+				arg.ReplyWith("Triggered " + allEvent.GetName());
+			}
+		}
+	}
+
+	[ServerVar(Name = "killallevents")]
+	public static void KillAllEvents()
+	{
+		foreach (EventSchedule allEvent in allEvents)
+		{
+			TriggeredEvent[] components = ((Component)allEvent).GetComponents<TriggeredEvent>();
+			for (int i = 0; i < components.Length; i++)
+			{
+				components[i].Kill();
+			}
+		}
+	}
+
+	public string GetName()
+	{
+		return Path.GetFileNameWithoutExtension(((Object)this).name);
+	}
 
 	private void OnEnable()
 	{
 		hoursRemaining = Random.Range(minimumHoursBetween, maxmumHoursBetween);
 		((FacepunchBehaviour)this).InvokeRepeating((Action)RunSchedule, 1f, 1f);
+		allEvents.Add(this);
 	}
 
 	private void OnDisable()
 	{
 		if (!Application.isQuitting)
 		{
+			allEvents.Remove(this);
 			((FacepunchBehaviour)this).CancelInvoke((Action)RunSchedule);
 		}
 	}
@@ -50,7 +107,7 @@ public class EventSchedule : BaseMonoBehaviour
 			TriggeredEvent triggeredEvent = components[Random.Range(0, components.Length)];
 			if (!((Object)(object)triggeredEvent == (Object)null))
 			{
-				((Component)triggeredEvent).SendMessage("RunEvent", (SendMessageOptions)1);
+				triggeredEvent.RunEvent();
 			}
 		}
 	}
@@ -59,7 +116,7 @@ public class EventSchedule : BaseMonoBehaviour
 	{
 		if (Object.op_Implicit((Object)(object)TOD_Sky.Instance))
 		{
-			if (lastRun != 0)
+			if (lastRun != 0L)
 			{
 				hoursRemaining -= (float)TOD_Sky.Instance.Cycle.DateTime.Subtract(DateTime.FromBinary(lastRun)).TotalSeconds / 60f / 60f;
 			}

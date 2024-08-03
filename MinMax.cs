@@ -4,7 +4,7 @@ using UnityEngine;
 [Serializable]
 public class MinMax
 {
-	public float x = 0f;
+	public float x;
 
 	public float y = 1f;
 

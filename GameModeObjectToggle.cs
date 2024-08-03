@@ -9,7 +9,7 @@ public class GameModeObjectToggle : BaseMonoBehaviour
 
 	public GameObject[] toToggle;
 
-	public bool defaultState = false;
+	public bool defaultState;
 
 	public void Awake()
 	{

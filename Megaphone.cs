@@ -7,17 +7,17 @@ using UnityEngine.Assertions;
 public class Megaphone : HeldEntity
 {
 	[Header("Megaphone")]
-	public VoiceProcessor voiceProcessor = null;
+	public VoiceProcessor voiceProcessor;
 
 	public float VoiceDamageMinFrequency = 2f;
 
 	public float VoiceDamageAmount = 1f;
 
-	public AudioSource VoiceSource = null;
+	public AudioSource VoiceSource;
 
-	public SoundDefinition StartBroadcastingSfx = null;
+	public SoundDefinition StartBroadcastingSfx;
 
-	public SoundDefinition StopBroadcastingSfx = null;
+	public SoundDefinition StopBroadcastingSfx;
 
 	[ReplicatedVar(Default = "100")]
 	public static float MegaphoneVoiceRange { get; set; } = 100f;
@@ -33,7 +33,7 @@ public class Megaphone : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_ToggleBroadcasting "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_ToggleBroadcasting "));
 				}
 				TimeWarning val2 = TimeWarning.New("Server_ToggleBroadcasting", 0);
 				try
@@ -52,7 +52,7 @@ public class Megaphone : HeldEntity
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -64,7 +64,7 @@ public class Megaphone : HeldEntity
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)

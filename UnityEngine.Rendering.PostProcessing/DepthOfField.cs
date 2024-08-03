@@ -36,6 +36,10 @@ public sealed class DepthOfField : PostProcessEffectSettings
 
 	public override bool IsEnabledAndSupported(PostProcessRenderContext context)
 	{
-		return enabled.value && SystemInfo.graphicsShaderLevel >= 35;
+		if (enabled.value)
+		{
+			return SystemInfo.graphicsShaderLevel >= 35;
+		}
+		return false;
 	}
 }

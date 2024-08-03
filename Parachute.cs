@@ -110,6 +110,8 @@ public class Parachute : BaseVehicle, SamSite.ISamSiteTarget
 
 	private Vector3 collisionWorldNormal;
 
+	protected override bool BypassClothingMountBlocks => true;
+
 	public SamSite.SamTargetType SAMTargetType => SamSite.targetTypeVehicle;
 
 	public override void PlayerMounted(BasePlayer player, BaseMountable seat)

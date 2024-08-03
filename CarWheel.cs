@@ -9,7 +9,7 @@ public class CarWheel
 	[Range(0.1f, 3f)]
 	public float tyreFriction = 1f;
 
-	public bool steerWheel = false;
+	public bool steerWheel;
 
 	public bool brakeWheel = true;
 

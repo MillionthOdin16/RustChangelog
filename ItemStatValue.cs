@@ -9,7 +9,7 @@ public class ItemStatValue : MonoBehaviour
 
 	public bool selectedItem;
 
-	public bool smallerIsBetter = false;
+	public bool smallerIsBetter;
 
-	public bool asPercentage = false;
+	public bool asPercentage;
 }

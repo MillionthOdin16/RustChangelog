@@ -24,13 +24,13 @@ public abstract class ItemModAssociatedEntity<T> : ItemMod where T : BaseEntity
 
 	public T CreateAssociatedEntity(Item item)
 	{
-		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0062: Expected O, but got Unknown
-		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0056: Expected O, but got Unknown
+		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
 		if (item.instanceData != null)
 		{
 			return null;
@@ -111,17 +111,23 @@ public abstract class ItemModAssociatedEntity<T> : ItemMod where T : BaseEntity
 	{
 		if (item != null)
 		{
-			BasePlayer ownerPlayer = item.GetOwnerPlayer();
+			Item item2 = item;
+			Item parentItem = item.parentItem;
+			if (parentItem != null && parentItem.IsBackpack())
+			{
+				item2 = item.parentItem;
+			}
+			BasePlayer ownerPlayer = item2.GetOwnerPlayer();
 			if (Object.op_Implicit((Object)(object)ownerPlayer))
 			{
 				return ownerPlayer;
 			}
-			BaseEntity baseEntity = ((item.parent == null) ? null : item.parent.entityOwner);
+			BaseEntity baseEntity = ((item2.parent == null) ? null : item2.parent.entityOwner);
 			if ((Object)(object)baseEntity != (Object)null)
 			{
 				return baseEntity;
 			}
-			BaseEntity worldEntity = item.GetWorldEntity();
+			BaseEntity worldEntity = item2.GetWorldEntity();
 			if (Object.op_Implicit((Object)(object)worldEntity))
 			{
 				return worldEntity;
@@ -135,9 +141,15 @@ public abstract class ItemModAssociatedEntity<T> : ItemMod where T : BaseEntity
 		return null;
 	}
 
+	public static bool GetAssociatedEntity(Item item, out T result, bool isServer = true)
+	{
+		result = GetAssociatedEntity(item, isServer);
+		return (Object)(object)result != (Object)null;
+	}
+
 	public static T GetAssociatedEntity(Item item, bool isServer = true)
 	{
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
 		if (item?.instanceData == null)
 		{
 			return null;

@@ -7,11 +7,11 @@ public class DestroyArcadeEntity : BaseMonoBehaviour
 
 	public float TimeToDie = 1f;
 
-	public float TimeToDieVariance = 0f;
+	public float TimeToDieVariance;
 
 	private void Start()
 	{
-		((FacepunchBehaviour)this).Invoke((Action)DestroyAction, TimeToDie + Random.Range(TimeToDieVariance * -0.5f, TimeToDieVariance * 0.5f));
+		((FacepunchBehaviour)this).Invoke((Action)DestroyAction, TimeToDie, TimeToDieVariance * 0.5f);
 	}
 
 	private void DestroyAction()

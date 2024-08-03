@@ -4,5 +4,5 @@ public class HideIfOwnerFirstPerson : EntityComponent<BaseEntity>, IClientCompon
 {
 	public GameObject[] disableGameObjects;
 
-	public bool worldModelEffect = false;
+	public bool worldModelEffect;
 }

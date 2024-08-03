@@ -6,8 +6,8 @@ public class Workshop : ConsoleSystem
 	[ServerVar]
 	public static void print_approved_skins(Arg arg)
 	{
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0033: Expected O, but got Unknown
+		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Expected O, but got Unknown
 		if (!PlatformService.Instance.IsValid || PlatformService.Instance.ItemDefinitions == null)
 		{
 			return;
@@ -25,6 +25,6 @@ public class Workshop : ConsoleSystem
 			string text2 = itemDefinition.WorkshopDownload.ToString();
 			val.AddRow(new string[4] { name, itemShortName, text, text2 });
 		}
-		arg.ReplyWith(arg.HasArg("--json") ? val.ToJson() : ((object)val).ToString());
+		arg.ReplyWith(arg.HasArg("--json", false) ? val.ToJson() : ((object)val).ToString());
 	}
 }

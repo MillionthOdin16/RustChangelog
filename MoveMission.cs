@@ -11,19 +11,19 @@ public class MoveMission : BaseMission
 
 	public override void MissionStart(MissionInstance instance, BasePlayer assignee)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 onUnitSphere = Random.onUnitSphere;
 		onUnitSphere.y = 0f;
 		((Vector3)(ref onUnitSphere)).Normalize();
@@ -50,16 +50,20 @@ public class MoveMission : BaseMission
 
 	public override Sprite GetIcon(MissionInstance instance)
 	{
-		return (instance.status == MissionStatus.Accomplished) ? providerIcon : icon;
+		if (instance.status != MissionStatus.Accomplished)
+		{
+			return icon;
+		}
+		return providerIcon;
 	}
 
 	public override void Think(MissionInstance instance, BasePlayer assignee, float delta)
 	{
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
 		float num = Vector3.Distance(instance.missionLocation, ((Component)assignee).transform.position);
 		if (instance.status == MissionStatus.Active && num <= minDistFromLocation)
 		{
@@ -72,8 +76,9 @@ public class MoveMission : BaseMission
 		}
 		else
 		{
-			if (instance.status != MissionStatus.Accomplished || num < minDistFromLocation)
+			if (instance.status == MissionStatus.Accomplished)
 			{
+				_ = minDistFromLocation;
 			}
 			base.Think(instance, assignee, delta);
 		}

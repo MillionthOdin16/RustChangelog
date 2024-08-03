@@ -14,7 +14,11 @@ public class CopyLODValues : MonoBehaviour, IEditorComponent
 
 	public bool CanCopy()
 	{
-		return (Object)(object)source != (Object)null && (Object)(object)destination != (Object)null;
+		if ((Object)(object)source != (Object)null)
+		{
+			return (Object)(object)destination != (Object)null;
+		}
+		return false;
 	}
 
 	public void Copy()

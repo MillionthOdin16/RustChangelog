@@ -12,7 +12,7 @@ public class Workbench : StorageContainer
 
 	public const int experimentSlot = 1;
 
-	public bool Static = false;
+	public bool Static;
 
 	public int Workbenchlevel;
 
@@ -24,15 +24,13 @@ public class Workbench : StorageContainer
 
 	public ItemDefinition experimentResource;
 
-	public TechTreeData techTree;
-
-	public bool supportsIndustrialCrafter = false;
+	public TechTreeData[] techTrees;
 
 	public static ItemDefinition blueprintBaseDef;
 
-	private ItemDefinition pendingBlueprint = null;
+	private ItemDefinition pendingBlueprint;
 
-	private bool creatingBlueprint = false;
+	private bool creatingBlueprint;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -44,7 +42,7 @@ public class Workbench : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_BeginExperiment "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_BeginExperiment "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_BeginExperiment", 0);
 				try
@@ -63,7 +61,7 @@ public class Workbench : StorageContainer
 					}
 					try
 					{
-						TimeWarning val4 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -75,7 +73,7 @@ public class Workbench : StorageContainer
 						}
 						finally
 						{
-							((IDisposable)val4)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -95,12 +93,12 @@ public class Workbench : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_TechTreeUnlock "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_TechTreeUnlock "));
 				}
-				TimeWarning val5 = TimeWarning.New("RPC_TechTreeUnlock", 0);
+				TimeWarning val2 = TimeWarning.New("RPC_TechTreeUnlock", 0);
 				try
 				{
-					TimeWarning val6 = TimeWarning.New("Conditions", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsVisible.Test(4127240744u, "RPC_TechTreeUnlock", this, player, 3f))
@@ -110,11 +108,11 @@ public class Workbench : StorageContainer
 					}
 					finally
 					{
-						((IDisposable)val6)?.Dispose();
+						((IDisposable)val3)?.Dispose();
 					}
 					try
 					{
-						TimeWarning val7 = TimeWarning.New("Call", 0);
+						val3 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -126,7 +124,7 @@ public class Workbench : StorageContainer
 						}
 						finally
 						{
-							((IDisposable)val7)?.Dispose();
+							((IDisposable)val3)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -137,7 +135,7 @@ public class Workbench : StorageContainer
 				}
 				finally
 				{
-					((IDisposable)val5)?.Dispose();
+					((IDisposable)val2)?.Dispose();
 				}
 				return true;
 			}
@@ -147,6 +145,19 @@ public class Workbench : StorageContainer
 			((IDisposable)val)?.Dispose();
 		}
 		return base.OnRpcMessage(player, rpc, msg);
+	}
+
+	public TechTreeData GetTechTreeForLevel(int level)
+	{
+		TechTreeData[] array = techTrees;
+		foreach (TechTreeData techTreeData in array)
+		{
+			if (techTreeData.techTreeLevel == level)
+			{
+				return techTreeData;
+			}
+		}
+		return null;
 	}
 
 	public int GetScrapForExperiment()
@@ -174,7 +185,11 @@ public class Workbench : StorageContainer
 
 	public override bool CanPickup(BasePlayer player)
 	{
-		return children.Count == 0 && base.CanPickup(player);
+		if (children.Count == 0)
+		{
+			return base.CanPickup(player);
+		}
+		return false;
 	}
 
 	[RPC_Server]
@@ -182,15 +197,21 @@ public class Workbench : StorageContainer
 	public void RPC_TechTreeUnlock(RPCMessage msg)
 	{
 		BasePlayer player = msg.player;
-		int num = msg.read.Int32();
-		TechTreeData.NodeInstance byID = techTree.GetByID(num);
+		int id = msg.read.Int32();
+		int level = msg.read.Int32();
+		TechTreeData techTreeForLevel = GetTechTreeForLevel(level);
+		if ((Object)(object)techTreeForLevel == (Object)null)
+		{
+			return;
+		}
+		TechTreeData.NodeInstance byID = techTreeForLevel.GetByID(id);
 		if (byID == null)
 		{
-			Debug.Log((object)("Node for unlock not found :" + num));
+			Debug.Log((object)("Node for unlock not found :" + id));
 		}
 		else
 		{
-			if (!techTree.PlayerCanUnlock(player, byID))
+			if (!techTreeForLevel.PlayerCanUnlock(player, byID))
 			{
 				return;
 			}
@@ -198,25 +219,25 @@ public class Workbench : StorageContainer
 			{
 				foreach (int output in byID.outputs)
 				{
-					TechTreeData.NodeInstance byID2 = techTree.GetByID(output);
+					TechTreeData.NodeInstance byID2 = techTreeForLevel.GetByID(output);
 					if (byID2 != null && (Object)(object)byID2.itemDef != (Object)null)
 					{
 						player.blueprints.Unlock(byID2.itemDef);
-						Analytics.Azure.OnBlueprintLearned(player, byID2.itemDef, "techtree", this);
+						Analytics.Azure.OnBlueprintLearned(player, byID2.itemDef, "techtree", 0, this);
 					}
 				}
 				Debug.Log((object)("Player unlocked group :" + byID.groupName));
 			}
 			else if ((Object)(object)byID.itemDef != (Object)null)
 			{
-				int num2 = ResearchTable.ScrapForResearch(byID.itemDef, ResearchTable.ResearchType.TechTree);
+				int tax;
+				int num = ScrapForResearch(byID.itemDef, techTreeForLevel.techTreeLevel, out tax);
 				int itemid = ItemManager.FindItemDefinition("scrap").itemid;
-				int amount = player.inventory.GetAmount(itemid);
-				if (amount >= num2)
+				if (player.inventory.GetAmount(itemid) >= num + tax)
 				{
-					player.inventory.Take(null, itemid, num2);
+					player.inventory.Take(null, itemid, num + tax);
 					player.blueprints.Unlock(byID.itemDef);
-					Analytics.Azure.OnBlueprintLearned(player, byID.itemDef, "techtree", this);
+					Analytics.Azure.OnBlueprintLearned(player, byID.itemDef, "techtree", num + tax, this);
 				}
 			}
 		}
@@ -235,12 +256,12 @@ public class Workbench : StorageContainer
 	[RPC_Server.IsVisible(3f)]
 	public void RPC_BeginExperiment(RPCMessage msg)
 	{
-		//IL_021a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_021f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01cd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01d3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01da: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01e0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0161: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0168: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016e: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer player = msg.player;
 		if ((Object)(object)player == (Object)null || IsWorking())
 		{
@@ -315,12 +336,12 @@ public class Workbench : StorageContainer
 
 	public void ExperimentComplete()
 	{
-		//IL_009f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ac: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cb: Unknown result type (might be due to invalid IL or missing references)
 		Item experimentResourceItem = GetExperimentResourceItem();
 		int scrapForExperiment = GetScrapForExperiment();
 		if ((Object)(object)pendingBlueprint == (Object)null)
@@ -372,6 +393,56 @@ public class Workbench : StorageContainer
 			return true;
 		}
 		return false;
+	}
+
+	public static int ScrapForResearch(ItemDefinition info, int workbenchLevel, out int tax)
+	{
+		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0009: Invalid comparison between Unknown and I4
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0015: Invalid comparison between Unknown and I4
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Invalid comparison between Unknown and I4
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Invalid comparison between Unknown and I4
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
+		int num = 0;
+		if ((int)info.rarity == 1)
+		{
+			num = 20;
+		}
+		if ((int)info.rarity == 2)
+		{
+			num = 75;
+		}
+		if ((int)info.rarity == 3)
+		{
+			num = 125;
+		}
+		if ((int)info.rarity == 4 || (int)info.rarity == 0)
+		{
+			num = 500;
+		}
+		BaseGameMode activeGameMode = BaseGameMode.GetActiveGameMode(serverside: true);
+		if ((Object)(object)activeGameMode != (Object)null)
+		{
+			BaseGameMode.ResearchCostResult scrapCostForResearch = activeGameMode.GetScrapCostForResearch(info, ResearchTable.ResearchType.TechTree);
+			if (scrapCostForResearch.Scale.HasValue)
+			{
+				num = Mathf.RoundToInt((float)num * scrapCostForResearch.Scale.Value);
+			}
+			else if (scrapCostForResearch.Amount.HasValue)
+			{
+				num = scrapCostForResearch.Amount.Value;
+			}
+		}
+		float taxRateForWorkbenchUnlock = Server.GetTaxRateForWorkbenchUnlock(workbenchLevel);
+		tax = 0;
+		if (taxRateForWorkbenchUnlock > 0f)
+		{
+			tax = Mathf.CeilToInt((float)num * (taxRateForWorkbenchUnlock / 100f));
+		}
+		return num;
 	}
 
 	public override bool SupportsChildDeployables()

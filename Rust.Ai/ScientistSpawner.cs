@@ -8,17 +8,17 @@ public class ScientistSpawner : SpawnGroup
 	[Header("Scientist Spawner")]
 	public bool Mobile = true;
 
-	public bool NeverMove = false;
+	public bool NeverMove;
 
-	public bool SpawnHostile = false;
+	public bool SpawnHostile;
 
 	public bool OnlyAggroMarkedTargets = true;
 
 	public bool IsPeacekeeper = true;
 
-	public bool IsBandit = false;
+	public bool IsBandit;
 
-	public bool IsMilitaryTunnelLab = false;
+	public bool IsMilitaryTunnelLab;
 
 	public WaypointSet Waypoints;
 
@@ -33,9 +33,9 @@ public class ScientistSpawner : SpawnGroup
 
 	private float _nextForcedRespawn = float.PositiveInfinity;
 
-	private bool _lastSpawnCallHadAliveMembers = false;
+	private bool _lastSpawnCallHadAliveMembers;
 
-	private bool _lastSpawnCallHadMaxAliveMembers = false;
+	private bool _lastSpawnCallHadMaxAliveMembers;
 
 	protected override void Spawn(int numToSpawn)
 	{
@@ -79,12 +79,12 @@ public class ScientistSpawner : SpawnGroup
 
 	protected override void OnDrawGizmos()
 	{
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
 		base.OnDrawGizmos();
 		if (LookAtInterestPointsStationary == null || LookAtInterestPointsStationary.Length == 0)
 		{
