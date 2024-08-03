@@ -207,7 +207,7 @@ public class VehiclePrivilege : SimplePrivilege
 		//IL_0034: Expected O, but got Unknown
 		if (!AtMaxAuthCapacity())
 		{
-			authorizedPlayers.RemoveAll((PlayerNameID x) => x.userid == player.userID);
+			authorizedPlayers.RemoveAll((PlayerNameID x) => x.userid == (ulong)player.userID);
 			PlayerNameID val = new PlayerNameID();
 			val.userid = player.userID;
 			val.username = player.displayName;
@@ -223,7 +223,7 @@ public class VehiclePrivilege : SimplePrivilege
 	{
 		if (rpc.player.CanInteract() && IsDriver(rpc.player))
 		{
-			authorizedPlayers.RemoveAll((PlayerNameID x) => x.userid == rpc.player.userID);
+			authorizedPlayers.RemoveAll((PlayerNameID x) => x.userid == (ulong)rpc.player.userID);
 			Analytics.Azure.OnEntityAuthChanged(this, rpc.player, authorizedPlayers.Select((PlayerNameID x) => x.userid), "removed", rpc.player.userID);
 			UpdateMaxAuthCapacity();
 			SendNetworkUpdate();

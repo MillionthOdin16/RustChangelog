@@ -99,7 +99,7 @@ public class NetworkVisibilityGrid : MonoBehaviour, Provider
 
 	private int PositionToGrid(float value)
 	{
-		return Mathf.RoundToInt((value + halfGridSize) / cellSize);
+		return Mathf.Clamp(Mathf.RoundToInt((value + halfGridSize) / cellSize), 0, cellCount - 1);
 	}
 
 	private float GridToPosition(int value)
@@ -141,16 +141,13 @@ public class NetworkVisibilityGrid : MonoBehaviour, Provider
 		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
 		int num = PositionToGrid(vPos.x);
 		int num2 = PositionToGrid(vPos.z);
 		int num3 = PositionToLayer(vPos.x, vPos.y, vPos.z);
-		float tutorialWorldNetworkThreshold = TutorialIsland.TutorialWorldNetworkThreshold;
-		if (Mathf.Abs(vPos.x) >= tutorialWorldNetworkThreshold || Mathf.Abs(vPos.z) >= tutorialWorldNetworkThreshold)
+		if (num3 == 3)
 		{
 			Enumerator<TutorialIsland.IslandBounds> enumerator = TutorialIsland.BoundsListServer.GetEnumerator();
 			try
@@ -168,22 +165,6 @@ public class NetworkVisibilityGrid : MonoBehaviour, Provider
 			{
 				((IDisposable)enumerator).Dispose();
 			}
-		}
-		if (num < 0)
-		{
-			return 0u;
-		}
-		if (num >= cellCount)
-		{
-			return 0u;
-		}
-		if (num2 < 0)
-		{
-			return 0u;
-		}
-		if (num2 >= cellCount)
-		{
-			return 0u;
 		}
 		uint num4 = CoordToID(num, num2, num3);
 		if (num4 < startID)
@@ -272,17 +253,17 @@ public class NetworkVisibilityGrid : MonoBehaviour, Provider
 	public Group GetGroup(Vector3 vPos)
 	{
 		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
 		uint iD = GetID(vPos);
 		if (iD == 0)
 		{
 			return null;
 		}
 		Group val = Net.sv.visibility.Get(iD);
-		if (!IsInside(val, vPos))
+		if (Net.network_group_debug && !IsInside(val, vPos))
 		{
 			float num = ((Bounds)(ref val.bounds)).SqrDistance(vPos);
 			string[] obj = new string[6]

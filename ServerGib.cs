@@ -160,7 +160,7 @@ public class ServerGib : BaseCombatEntity
 		size = ((Bounds)(ref val2)).size;
 		val.mass = Mathf.Clamp(magnitude * ((Vector3)(ref size)).magnitude * 20f, 10f, 2000f);
 		val.interpolation = (RigidbodyInterpolation)1;
-		val.collisionDetectionMode = (CollisionDetectionMode)(useContinuousCollision ? 1 : 0);
+		val.collisionDetectionMode = (CollisionDetectionMode)(useContinuousCollision ? 2 : 0);
 		if (base.isServer)
 		{
 			val.drag = 0.1f;

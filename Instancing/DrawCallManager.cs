@@ -295,20 +295,20 @@ public class DrawCallManager
 
 	private void SubmitDrawCallsInternal(Camera camera)
 	{
-		//IL_016a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0183: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0195: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fc: Invalid comparison between Unknown and I4
-		//IL_0100: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0106: Invalid comparison between Unknown and I4
-		if ((Object)(object)camera == (Object)null)
+		//IL_0172: Unknown result type (might be due to invalid IL or missing references)
+		//IL_018b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ad: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fe: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0104: Invalid comparison between Unknown and I4
+		//IL_0108: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010e: Invalid comparison between Unknown and I4
+		if ((Object)(object)camera == (Object)null || !((Behaviour)camera).enabled)
 		{
 			return;
 		}

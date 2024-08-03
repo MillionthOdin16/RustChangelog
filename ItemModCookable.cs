@@ -39,13 +39,15 @@ public class ItemModCookable : ItemMod
 
 	private void CycleCooking(Item item, float delta)
 	{
-		//IL_0192: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0211: Unknown result type (might be due to invalid IL or missing references)
-		//IL_021c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0223: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0229: Unknown result type (might be due to invalid IL or missing references)
-		//IL_022d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0233: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0198: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0260: Unknown result type (might be due to invalid IL or missing references)
+		//IL_026b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0272: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0278: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01fc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0201: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0218: Unknown result type (might be due to invalid IL or missing references)
+		//IL_021d: Unknown result type (might be due to invalid IL or missing references)
 		if (!CanBeCookedByAtTemperature(item.temperature) || item.cookTimeLeft < 0f)
 		{
 			if (setCookingFlag && item.HasFlag(Item.Flag.Cooking))
@@ -95,7 +97,12 @@ public class ItemModCookable : ItemMod
 				BasePlayer basePlayer = closestTutorialIsland.ForPlayer.Get(serverside: true);
 				if ((Object)(object)basePlayer != (Object)null)
 				{
-					basePlayer.ProcessMissionEvent(BaseMission.MissionEventType.COOK, item2.info.itemid, item2.amount);
+					basePlayer.ProcessMissionEvent(BaseMission.MissionEventType.COOK, new BaseMission.MissionEventPayload
+					{
+						IntIdentifier = item2.info.itemid,
+						WorldPosition = ((Component)item.parent.entityOwner).transform.position,
+						NetworkIdentifier = item.parent.entityOwner.net.ID
+					}, item2.amount);
 				}
 			}
 		}

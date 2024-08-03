@@ -12,10 +12,12 @@ public class MissionObjective_Harvest : MissionObjective
 
 	public BasePlayer.PingType pingType = BasePlayer.PingType.GoTo;
 
+	public bool countExisting;
+
 	public override void PostServerLoad(BasePlayer player, BaseMission.MissionInstance.ObjectiveStatus status)
 	{
 		base.PostServerLoad(player, status);
-		if (status.started)
+		if (status.started && !status.completed)
 		{
 			InitialiseResourcePings(player);
 		}
@@ -32,6 +34,19 @@ public class MissionObjective_Harvest : MissionObjective
 	{
 		base.ObjectiveStarted(playerFor, index, instance);
 		InitialiseResourcePings(playerFor);
+		if (countExisting && targetItems.Length != 0)
+		{
+			int num = 0;
+			ItemDefinition[] array = targetItems;
+			foreach (ItemDefinition definition in array)
+			{
+				num += playerFor.inventory.GetAmount(definition);
+			}
+			ProcessMissionEvent(playerFor, instance, index, BaseMission.MissionEventType.HARVEST, new BaseMission.MissionEventPayload
+			{
+				IntIdentifier = targetItems[0].itemid
+			}, num);
+		}
 	}
 
 	private void InitialiseResourcePings(BasePlayer forPlayer)

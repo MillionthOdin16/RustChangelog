@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using ConVar;
 using Facepunch;
+using Facepunch.Extend;
 using Facepunch.Rust;
 using Network;
 using ProtoBuf;
@@ -41,8 +42,10 @@ public class CodeLock : BaseLock
 
 	private string guestCode = string.Empty;
 
+	[NonSerialized]
 	public List<ulong> whitelistPlayers = new List<ulong>();
 
+	[NonSerialized]
 	public List<ulong> guestPlayers = new List<ulong>();
 
 	private int wrongCodes;
@@ -281,9 +284,9 @@ public class CodeLock : BaseLock
 			if (info.msg.codeLock.pv != null)
 			{
 				code = info.msg.codeLock.pv.code;
-				whitelistPlayers = info.msg.codeLock.pv.users;
+				whitelistPlayers = List.ShallowClonePooled<ulong>(info.msg.codeLock.pv.users);
 				guestCode = info.msg.codeLock.pv.guestCode;
-				guestPlayers = info.msg.codeLock.pv.guestUsers;
+				guestPlayers = List.ShallowClonePooled<ulong>(info.msg.codeLock.pv.guestUsers);
 			}
 		}
 	}
@@ -345,11 +348,9 @@ public class CodeLock : BaseLock
 		{
 			info.msg.codeLock.pv = Pool.Get<Private>();
 			info.msg.codeLock.pv.code = code;
-			info.msg.codeLock.pv.users = Pool.Get<List<ulong>>();
-			info.msg.codeLock.pv.users.AddRange(whitelistPlayers);
+			info.msg.codeLock.pv.users = List.ShallowClonePooled<ulong>(whitelistPlayers);
 			info.msg.codeLock.pv.guestCode = guestCode;
-			info.msg.codeLock.pv.guestUsers = Pool.Get<List<ulong>>();
-			info.msg.codeLock.pv.guestUsers.AddRange(guestPlayers);
+			info.msg.codeLock.pv.guestUsers = List.ShallowClonePooled<ulong>(guestPlayers);
 		}
 	}
 

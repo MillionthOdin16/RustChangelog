@@ -303,14 +303,15 @@ public class NPCTalking : NPCShopKeeper, IConversationProvider
 
 	public void ForceEndConversation(BasePlayer player)
 	{
-		ClientRPCPlayer(null, player, "Client_EndConversation");
+		ClientRPC(RpcTarget.Player("Client_EndConversation", player));
+		OnConversationEnded(player);
 	}
 
 	public void ForceSpeechNode(BasePlayer player, int speechNodeIndex)
 	{
 		if (!((Object)(object)player == (Object)null))
 		{
-			ClientRPCPlayer(null, player, "Client_ForceSpeechNode", speechNodeIndex);
+			ClientRPC(RpcTarget.Player("Client_ForceSpeechNode", player), speechNodeIndex);
 		}
 	}
 
@@ -365,7 +366,7 @@ public class NPCTalking : NPCShopKeeper, IConversationProvider
 			}
 			conversingPlayers.Add(ply);
 			UpdateFlags();
-			ClientRPCPlayer(null, ply, "Client_StartConversation", GetConversationIndex(conversationFor.shortname), GetConversationStartSpeech(ply));
+			ClientRPC(RpcTarget.Player("Client_StartConversation", ply), GetConversationIndex(conversationFor.shortname), GetConversationStartSpeech(ply));
 		}
 	}
 

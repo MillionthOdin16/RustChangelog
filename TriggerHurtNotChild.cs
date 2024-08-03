@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ConVar;
 using Facepunch;
 using Rust;
 using UnityEngine;
@@ -64,6 +65,10 @@ public class TriggerHurtNotChild : TriggerBase, IServerComponent, IHurtTrigger
 			return null;
 		}
 		if (ignoreNPC && baseEntity.IsNpc)
+		{
+			return null;
+		}
+		if (!Physics.treecollision && obj.layer == 30)
 		{
 			return null;
 		}
@@ -155,13 +160,13 @@ public class TriggerHurtNotChild : TriggerBase, IServerComponent, IHurtTrigger
 		//IL_0120: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0125: Unknown result type (might be due to invalid IL or missing references)
 		//IL_012a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ad: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01af: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01bb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01bd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01cd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ae: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01bc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01be: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ce: Unknown result type (might be due to invalid IL or missing references)
 		if (entityContents.IsNullOrEmpty())
 		{
 			return;

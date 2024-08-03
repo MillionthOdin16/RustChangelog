@@ -7,6 +7,8 @@ public class MissionObjective_DeployItem : MissionObjective
 {
 	public BaseEntity[] PossibleOptions = new BaseEntity[0];
 
+	public ItemDefinition[] PossibleItems = new ItemDefinition[0];
+
 	public int RequiredAmount = 1;
 
 	public bool PingTutorialTargets;
@@ -27,28 +29,49 @@ public class MissionObjective_DeployItem : MissionObjective
 			return;
 		}
 		base.ProcessMissionEvent(playerFor, instance, index, type, payload, amount);
-		if (type != BaseMission.MissionEventType.DEPLOY)
+		if (type == BaseMission.MissionEventType.DEPLOY && Matches(payload))
 		{
-			return;
+			instance.objectiveStatuses[index].progressCurrent += amount;
+			if (PingTutorialTargets)
+			{
+				UpdatePings(playerFor);
+			}
+			if (instance.objectiveStatuses[index].progressCurrent >= instance.objectiveStatuses[index].progressTarget)
+			{
+				CompleteObjective(index, instance, playerFor);
+			}
+			playerFor.MissionDirty();
 		}
+	}
+
+	private bool Matches(BaseMission.MissionEventPayload payload)
+	{
 		BaseEntity[] possibleOptions = PossibleOptions;
 		for (int i = 0; i < possibleOptions.Length; i++)
 		{
 			if (possibleOptions[i].prefabID == payload.UintIdentifier)
 			{
-				instance.objectiveStatuses[index].progressCurrent += amount;
-				if (PingTutorialTargets)
-				{
-					UpdatePings(playerFor);
-				}
-				if (instance.objectiveStatuses[index].progressCurrent >= instance.objectiveStatuses[index].progressTarget)
-				{
-					CompleteObjective(index, instance, playerFor);
-				}
-				playerFor.MissionDirty();
-				break;
+				return true;
 			}
 		}
+		ItemDefinition itemDefinition = null;
+		ItemDefinition[] possibleItems = PossibleItems;
+		foreach (ItemDefinition itemDefinition2 in possibleItems)
+		{
+			if (itemDefinition2.itemid == payload.IntIdentifier)
+			{
+				return true;
+			}
+			if ((Object)(object)itemDefinition == (Object)null)
+			{
+				itemDefinition = ItemManager.FindItemDefinition(payload.IntIdentifier);
+			}
+			if ((Object)(object)itemDefinition != (Object)null && (Object)(object)itemDefinition.isRedirectOf == (Object)(object)itemDefinition2)
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public override void ObjectiveStarted(BasePlayer playerFor, int index, BaseMission.MissionInstance instance)

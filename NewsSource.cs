@@ -205,7 +205,7 @@ public class NewsSource : MonoBehaviour
 					if (!string.IsNullOrWhiteSpace(text3))
 					{
 						currentParagraph.Append("\t• ");
-						currentParagraph.Append(text3.Trim());
+						ParseBbcode(ref currentParagraph, text3.Trim(), ref firstImage, depth + 1);
 						currentParagraph.AppendLine();
 					}
 				}
@@ -222,7 +222,7 @@ public class NewsSource : MonoBehaviour
 					if (!string.IsNullOrWhiteSpace(text2))
 					{
 						currentParagraph.Append($"\t{num++} ");
-						currentParagraph.Append(text2.Trim());
+						ParseBbcode(ref currentParagraph, text2.Trim(), ref firstImage, depth + 1);
 						currentParagraph.AppendLine();
 					}
 				}

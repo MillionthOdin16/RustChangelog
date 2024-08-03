@@ -1,5 +1,4 @@
 using System;
-using System.Runtime.CompilerServices;
 using Rust;
 using UnityEngine.EventSystems;
 using UnityEngine.Events;
@@ -1471,7 +1470,6 @@ public class ScrollRectEx : UIBehaviour, IInitializePotentialDragHandler, IEvent
 	{
 	}
 
-	[SpecialName]
 	Transform ICanvasElement.get_transform()
 	{
 		return ((Component)this).transform;

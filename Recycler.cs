@@ -11,13 +11,22 @@ public class Recycler : StorageContainer
 {
 	public Animator Animator;
 
-	public float recycleEfficiency = 0.5f;
+	[Tooltip("Depreciated")]
+	public float recycleEfficiency = 0.6f;
+
+	public float safezoneRecycleEfficiency = 0.4f;
+
+	public float radtownRecycleEfficiency = 0.6f;
 
 	public SoundDefinition grindingLoopDef;
+
+	public SoundDefinition grindingLoopDef_Slow;
 
 	public GameObjectRef startSound;
 
 	public GameObjectRef stopSound;
+
+	private float scrapRemainder;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -102,6 +111,8 @@ public class Recycler : StorageContainer
 		base.ServerInit();
 		ItemContainer itemContainer = base.inventory;
 		itemContainer.canAcceptItem = (Func<Item, int, bool>)Delegate.Combine(itemContainer.canAcceptItem, new Func<Item, int, bool>(RecyclerItemFilter));
+		UpdateInSafeZone();
+		Debug.Log((object)("RECYCLER IN SAFE ZONE: " + IsSafezoneRecycler()));
 	}
 
 	public bool RecyclerItemFilter(Item item, int targetSlot)
@@ -164,8 +175,6 @@ public class Recycler : StorageContainer
 		//IL_00e6: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00ed: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00f3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fd: Unknown result type (might be due to invalid IL or missing references)
 		int num = -1;
 		for (int i = 6; i < 12; i++)
 		{
@@ -216,9 +225,9 @@ public class Recycler : StorageContainer
 
 	public void RecycleThink()
 	{
-		//IL_012a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0199: Unknown result type (might be due to invalid IL or missing references)
 		bool flag = false;
-		float num = recycleEfficiency;
+		float num = (IsSafezoneRecycler() ? safezoneRecycleEfficiency : radtownRecycleEfficiency);
 		for (int i = 0; i < 6; i++)
 		{
 			Item slot = base.inventory.GetSlot(i);
@@ -237,14 +246,25 @@ public class Recycler : StorageContainer
 			}
 			if (slot.info.Blueprint.scrapFromRecycle > 0)
 			{
-				int num3 = slot.info.Blueprint.scrapFromRecycle * num2;
+				float num3 = slot.info.Blueprint.scrapFromRecycle * num2;
 				if (slot.MaxStackable() == 1 && slot.hasCondition)
 				{
-					num3 = Mathf.CeilToInt((float)num3 * slot.conditionNormalized);
+					num3 *= slot.conditionNormalized;
 				}
-				if (num3 >= 1)
+				float num4 = num / 0.5f;
+				num3 *= num4;
+				int num5 = Mathf.FloorToInt(num3);
+				float num6 = num3 - (float)num5;
+				scrapRemainder += num6;
+				if (scrapRemainder >= 1f)
 				{
-					Item item = ItemManager.CreateByName("scrap", num3, 0uL);
+					int num7 = Mathf.FloorToInt(scrapRemainder);
+					scrapRemainder -= num7;
+					num5 += num7;
+				}
+				if (num5 >= 1)
+				{
+					Item item = ItemManager.CreateByName("scrap", num5, 0uL);
 					Analytics.Azure.OnRecyclerItemProduced(item.info.shortname, item.amount, this, slot);
 					MoveItemToOutput(item);
 				}
@@ -271,38 +291,29 @@ public class Recycler : StorageContainer
 				{
 					continue;
 				}
-				float num4 = ingredient.amount / (float)slot.info.Blueprint.amountToCreate;
-				int num5 = 0;
-				if (num4 <= 1f)
+				float num8 = ingredient.amount / (float)slot.info.Blueprint.amountToCreate * num * (float)num2;
+				int num9 = Mathf.FloorToInt(num8);
+				float num10 = num8 - (float)num9;
+				if (num10 > float.Epsilon && Random.Range(0f, 1f) <= num10)
 				{
-					for (int j = 0; j < num2; j++)
-					{
-						if (Random.Range(0f, 1f) <= num4 * num)
-						{
-							num5++;
-						}
-					}
+					num9++;
 				}
-				else
-				{
-					num5 = Mathf.CeilToInt(Mathf.Clamp(num4 * num * Random.Range(1f, 1f), 0f, ingredient.amount)) * num2;
-				}
-				if (num5 <= 0)
+				if (num9 <= 0)
 				{
 					continue;
 				}
-				int num6 = Mathf.CeilToInt((float)num5 / (float)ingredient.itemDef.stackable);
-				for (int k = 0; k < num6; k++)
+				int num11 = Mathf.CeilToInt((float)num9 / (float)ingredient.itemDef.stackable);
+				for (int j = 0; j < num11; j++)
 				{
-					int num7 = ((num5 > ingredient.itemDef.stackable) ? ingredient.itemDef.stackable : num5);
-					Item item2 = ItemManager.Create(ingredient.itemDef, num7, 0uL);
+					int num12 = ((num9 > ingredient.itemDef.stackable) ? ingredient.itemDef.stackable : num9);
+					Item item2 = ItemManager.Create(ingredient.itemDef, num12, 0uL);
 					Analytics.Azure.OnRecyclerItemProduced(item2.info.shortname, item2.amount, this, slot);
 					if (!MoveItemToOutput(item2))
 					{
 						flag = true;
 					}
-					num5 -= num7;
-					if (num5 <= 0)
+					num9 -= num12;
+					if (num9 <= 0)
 					{
 						break;
 					}
@@ -316,13 +327,22 @@ public class Recycler : StorageContainer
 		}
 	}
 
+	public float GetRecycleThinkDuration()
+	{
+		if (IsSafezoneRecycler())
+		{
+			return 8f;
+		}
+		return 5f;
+	}
+
 	public void StartRecycling()
 	{
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
 		if (!IsOn())
 		{
-			((FacepunchBehaviour)this).InvokeRepeating((Action)RecycleThink, 5f, 5f);
+			((FacepunchBehaviour)this).InvokeRepeating((Action)RecycleThink, GetRecycleThinkDuration(), GetRecycleThinkDuration());
 			Effect.server.Run(startSound.resourcePath, this, 0u, Vector3.zero, Vector3.zero);
 			SetFlag(Flags.On, b: true);
 			SendNetworkUpdateImmediate();
@@ -340,6 +360,32 @@ public class Recycler : StorageContainer
 			SetFlag(Flags.On, b: false);
 			SendNetworkUpdateImmediate();
 		}
+	}
+
+	public void UpdateInSafeZone()
+	{
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		bool b = false;
+		List<TriggerBase> list = Pool.GetList<TriggerBase>();
+		GamePhysics.OverlapSphere<TriggerBase>(((Component)this).transform.position, 1f, list, 262144, (QueryTriggerInteraction)2);
+		foreach (TriggerBase item in list)
+		{
+			if ((Object)(object)item != (Object)null && Object.op_Implicit((Object)(object)((Component)item).GetComponent<TriggerSafeZone>()))
+			{
+				b = true;
+				break;
+			}
+		}
+		if (base.isServer)
+		{
+			SetFlag(Flags.Reserved9, b);
+		}
+		Pool.FreeList<TriggerBase>(ref list);
+	}
+
+	public bool IsSafezoneRecycler()
+	{
+		return HasFlag(Flags.Reserved9);
 	}
 
 	public void PlayAnim()

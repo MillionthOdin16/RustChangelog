@@ -143,16 +143,12 @@ public class DeployableBoomBox : ContainerIOEntity, ICassettePlayer, IAudioConne
 
 	public override int ConsumptionAmount()
 	{
-		if (!IsOn())
-		{
-			return 0;
-		}
-		return PowerUsageWhilePlaying;
+		return 10;
 	}
 
-	public override int DesiredPower()
+	public override int DesiredPower(int inputIndex = 0)
 	{
-		if (!IsOn())
+		if (!IsOn() || inputIndex != 0)
 		{
 			return 0;
 		}

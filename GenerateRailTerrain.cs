@@ -14,41 +14,52 @@ public class GenerateRailTerrain : ProceduralComponent
 
 	public const int TransitionSteps = 8;
 
+	private float SmoothenFilterStart(int index)
+	{
+		return Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0f, 8f, (float)index));
+	}
+
 	public override void Process(uint seed)
 	{
-		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0174: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0179: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0163: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0166: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_017a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0092: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0197: Unknown result type (might be due to invalid IL or missing references)
-		//IL_019f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a6: Unknown result type (might be due to invalid IL or missing references)
 		TerrainHeightMap heightMap = TerrainMeta.HeightMap;
-		Func<int, float> func = (int i) => Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0f, 8f, (float)i));
-		for (int j = 0; j < 8; j++)
+		for (int i = 0; i < 8; i++)
 		{
 			foreach (PathList item in TerrainMeta.Path.Rails.AsEnumerable().Reverse())
 			{
 				PathInterpolator path = item.Path;
 				Vector3[] points = path.Points;
-				for (int k = 0; k < points.Length; k++)
+				for (int j = 0; j < points.Length; j++)
 				{
-					Vector3 val = points[k];
-					float num = (item.Start ? func(k) : 1f);
-					val.y = Mathf.SmoothStep(val.y, heightMap.GetHeight(val), num);
-					points[k] = val;
+					Vector3 val = points[j];
+					float height = heightMap.GetHeight(val);
+					if (item.Start)
+					{
+						val.y = Mathf.SmoothStep(val.y, height, SmoothenFilterStart(j));
+					}
+					else
+					{
+						val.y = height;
+					}
+					points[j] = val;
 				}
-				path.Smoothen(8, Vector3.up, item.Start ? func : null);
+				path.Smoothen(8, Vector3.up, item.Start ? new Func<int, float>(SmoothenFilterStart) : null);
 				path.RecalculateTangents();
 				heightMap.Push();
 				float intensity = 1f;
-				float fade = Mathf.InverseLerp(8f, 0f, (float)j);
+				float fade = Mathf.InverseLerp(8f, 0f, (float)i);
 				item.AdjustTerrainHeight(intensity, fade);
 				heightMap.Pop();
 			}
@@ -57,12 +68,19 @@ public class GenerateRailTerrain : ProceduralComponent
 		{
 			PathInterpolator path2 = rail.Path;
 			Vector3[] points2 = path2.Points;
-			for (int l = 0; l < points2.Length; l++)
+			for (int k = 0; k < points2.Length; k++)
 			{
-				Vector3 val2 = points2[l];
-				float num2 = (rail.Start ? func(l) : 1f);
-				val2.y = Mathf.SmoothStep(val2.y, heightMap.GetHeight(val2), num2);
-				points2[l] = val2;
+				Vector3 val2 = points2[k];
+				float height2 = heightMap.GetHeight(val2);
+				if (rail.Start)
+				{
+					val2.y = Mathf.SmoothStep(val2.y, height2, SmoothenFilterStart(k));
+				}
+				else
+				{
+					val2.y = height2;
+				}
+				points2[k] = val2;
 			}
 			path2.RecalculateTangents();
 		}

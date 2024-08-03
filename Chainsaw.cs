@@ -28,6 +28,10 @@ public class Chainsaw : BaseMelee
 
 	private Vector2 saveST;
 
+	public static readonly Phrase UnloadAmmoTitle = new Phrase("unload_ammo", "Unload Ammo");
+
+	public static readonly Phrase UnloadAmmoDesc = new Phrase("unload_ammo_desc", "Unload the ammunition in this weapon and place it in your inventory.");
+
 	[Header("Chainsaw")]
 	public float fuelPerSec = 1f;
 
@@ -441,6 +445,12 @@ public class Chainsaw : BaseMelee
 	public void EngineTick()
 	{
 		ReduceAmmo(0.05f);
+		BasePlayer ownerPlayer = GetOwnerPlayer();
+		if ((Object)(object)ownerPlayer != (Object)null && ownerPlayer.IsSleeping())
+		{
+			SetEngineStatus(status: false);
+			SetAttackStatus(status: false);
+		}
 	}
 
 	public void AttackTick()
@@ -495,8 +505,6 @@ public class Chainsaw : BaseMelee
 		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
 		if (item == null || !(command == "unload_ammo"))
 		{
 			return;

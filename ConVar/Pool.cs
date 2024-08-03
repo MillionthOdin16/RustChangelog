@@ -65,7 +65,7 @@ public class Pool : ConsoleSystem
 				NumberExtensions.FormatNumberShort(value.ItemsSpilled)
 			});
 		}
-		arg.ReplyWith(arg.HasArg("--json") ? val.ToJson() : ((object)val).ToString());
+		arg.ReplyWith(arg.HasArg("--json", false) ? val.ToJson() : ((object)val).ToString());
 	}
 
 	[ServerVar]
@@ -96,7 +96,7 @@ public class Pool : ConsoleSystem
 				NumberExtensions.FormatBytes<int>(num2, false)
 			});
 		}
-		arg.ReplyWith(arg.HasArg("--json") ? val.ToJson() : ((object)val).ToString());
+		arg.ReplyWith(arg.HasArg("--json", false) ? val.ToJson() : ((object)val).ToString());
 	}
 
 	[ServerVar]
@@ -139,7 +139,7 @@ public class Pool : ConsoleSystem
 				});
 			}
 		}
-		arg.ReplyWith(arg.HasArg("--json") ? val.ToJson() : ((object)val).ToString());
+		arg.ReplyWith(arg.HasArg("--json", false) ? val.ToJson() : ((object)val).ToString());
 	}
 
 	[ServerVar]
@@ -168,7 +168,7 @@ public class Pool : ConsoleSystem
 				val.AddRow(new string[3] { text, text2, text3 });
 			}
 		}
-		arg.ReplyWith(arg.HasArg("--json") ? val.ToJson() : ((object)val).ToString());
+		arg.ReplyWith(arg.HasArg("--json", false) ? val.ToJson() : ((object)val).ToString());
 	}
 
 	[ServerVar]

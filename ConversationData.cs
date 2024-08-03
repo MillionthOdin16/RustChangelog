@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "NewConversation", menuName = "Rust/ConversationData", order = 1)]
@@ -161,6 +162,8 @@ public class ConversationData : ScriptableObject
 
 	public Phrase providerNameTranslated;
 
+	public Sprite providerIcon;
+
 	public bool canBeCancelled = true;
 
 	public SpeechNode[] speeches;
@@ -177,5 +180,21 @@ public class ConversationData : ScriptableObject
 			}
 		}
 		return -1;
+	}
+
+	public void FindAllMissionAssignments(List<BaseMission> results)
+	{
+		SpeechNode[] array = speeches;
+		for (int i = 0; i < array.Length; i++)
+		{
+			ResponseNode[] responses = array[i].responses;
+			foreach (ResponseNode responseNode in responses)
+			{
+				if (responseNode.actionType == ResponseNode.ActionType.AssignMission && responseNode.actionMission != null)
+				{
+					results.Add(responseNode.actionMission);
+				}
+			}
+		}
 	}
 }

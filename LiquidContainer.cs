@@ -28,7 +28,7 @@ public class LiquidContainer : ContainerIOEntity
 
 	private HashSet<ContainerIOEntity> pushTargets = new HashSet<ContainerIOEntity>();
 
-	private const int maxPushTargets = 3;
+	private const int maxPushTargets = 12;
 
 	private IOEntity considerConnectedTo;
 
@@ -43,6 +43,8 @@ public class LiquidContainer : ContainerIOEntity
 	private TimeUntil waterTransferStartTime;
 
 	private float lastOutputDrainUpdate;
+
+	private static HashSet<IOEntity> pushLiquidCheckEntityHash = new HashSet<IOEntity>();
 
 	public override bool IsGravitySource => true;
 
@@ -275,9 +277,9 @@ public class LiquidContainer : ContainerIOEntity
 
 	private void CalculateDrain(IOEntity ent, Vector3 fromSlotWorld, int depth, ref int amount, IOEntity lastEntity, ItemDefinition waterType)
 	{
-		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bd: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)ent == (Object)(object)this || depth <= 0 || (Object)(object)ent == (Object)null || (Object)(object)lastEntity == (Object)null || ent is LiquidContainer)
 		{
 			return;
@@ -399,6 +401,7 @@ public class LiquidContainer : ContainerIOEntity
 			return;
 		}
 		Item liquidItem = GetLiquidItem();
+		pushLiquidCheckEntityHash.Clear();
 		TimeWarning val = TimeWarning.New("UpdatePushTargets", 0);
 		try
 		{
@@ -410,7 +413,7 @@ public class LiquidContainer : ContainerIOEntity
 					IOEntity iOEntity = iOSlot.connectedTo.Get();
 					if ((Object)(object)iOEntity != (Object)null)
 					{
-						CheckPushLiquid(iOEntity, liquidItem, this, IOEntity.backtracking * 4);
+						CheckPushLiquid(iOEntity, liquidItem, this, IOEntity.backtracking * 4, pushLiquidCheckEntityHash);
 					}
 				}
 			}
@@ -478,15 +481,15 @@ public class LiquidContainer : ContainerIOEntity
 		}
 	}
 
-	private void CheckPushLiquid(IOEntity connected, Item ourFuel, IOEntity fromSource, int depth)
+	private void CheckPushLiquid(IOEntity connected, Item ourFuel, IOEntity fromSource, int depth, HashSet<IOEntity> checkEntities)
 	{
 		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ac: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00da: Unknown result type (might be due to invalid IL or missing references)
 		if (depth <= 0 || ourFuel.amount <= 0)
 		{
 			return;
@@ -506,11 +509,15 @@ public class LiquidContainer : ContainerIOEntity
 		foreach (IOSlot iOSlot in array)
 		{
 			IOEntity iOEntity2 = iOSlot.connectedTo.Get();
-			Vector3 sourceWorldPosition = ((Component)connected).transform.TransformPoint(iOSlot.handlePosition);
-			if ((Object)(object)iOEntity2 != (Object)null && (Object)(object)iOEntity2 != (Object)(object)fromSource && iOEntity2.AllowLiquidPassthrough(connected, sourceWorldPosition))
+			if (!((Object)(object)iOEntity2 != (Object)null) || !((Object)(object)iOEntity2 != (Object)(object)fromSource) || !checkEntities.Add(iOEntity2))
 			{
-				CheckPushLiquid(iOEntity2, ourFuel, fromSource, depth - 1);
-				if (pushTargets.Count >= 3)
+				continue;
+			}
+			Vector3 sourceWorldPosition = ((Component)connected).transform.TransformPoint(iOSlot.handlePosition);
+			if (iOEntity2.AllowLiquidPassthrough(fromSource, sourceWorldPosition))
+			{
+				CheckPushLiquid(iOEntity2, ourFuel, fromSource, depth - 1, checkEntities);
+				if (pushTargets.Count >= 12)
 				{
 					break;
 				}

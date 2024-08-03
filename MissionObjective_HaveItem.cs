@@ -8,6 +8,12 @@ public class MissionObjective_HaveItem : MissionObjective
 
 	public int targetItemAmount;
 
+	public bool canBeReset = true;
+
+	public BaseEntityRef[] pingEntitiesOnTutorialIsland;
+
+	public BasePlayer.PingType pingType = BasePlayer.PingType.GoTo;
+
 	public override void MissionStarted(int index, BaseMission.MissionInstance instance, BasePlayer forPlayer)
 	{
 		base.MissionStarted(index, instance, forPlayer);
@@ -25,6 +31,10 @@ public class MissionObjective_HaveItem : MissionObjective
 		int amount = assignee.inventory.GetAmount(targetItem.itemid);
 		bool completed = instance.objectiveStatuses[index].completed;
 		bool flag = amount >= targetItemAmount;
+		if (!canBeReset && completed)
+		{
+			return;
+		}
 		if (completed != flag)
 		{
 			if (flag)

@@ -134,6 +134,15 @@ public class IndustrialStorageAdaptor : IndustrialEntity, IIndustrialStorage
 		}
 	}
 
+	public override void OnParentChanging(BaseEntity oldParent, BaseEntity newParent)
+	{
+		base.OnParentChanging(oldParent, newParent);
+		if ((Object)(object)newParent != (Object)null)
+		{
+			cachedContainer = null;
+		}
+	}
+
 	public override int ConsumptionAmount()
 	{
 		return 0;

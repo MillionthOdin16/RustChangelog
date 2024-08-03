@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ConVar;
 using Facepunch;
 using Network;
@@ -90,9 +91,17 @@ public class IOEntity : DecayEntity
 
 		public Vector3[] linePoints;
 
+		public LineAnchor[] lineAnchors;
+
 		public float[] slackLevels;
 
 		public Vector3 worldSpaceLineEndRotation;
+
+		[HideInInspector]
+		public Vector3 originPosition;
+
+		[HideInInspector]
+		public Vector3 originRotation;
 
 		public ClientIOLine line;
 
@@ -120,6 +129,12 @@ public class IOEntity : DecayEntity
 			}
 			connectedToSlot = 0;
 			linePoints = null;
+			lineAnchors = null;
+		}
+
+		public bool IsConnected()
+		{
+			return (Object)(object)connectedTo.Get() != (Object)null;
 		}
 	}
 
@@ -128,6 +143,49 @@ public class IOEntity : DecayEntity
 		public string PrefabName;
 
 		public float Time;
+	}
+
+	public struct LineAnchor
+	{
+		public EntityRef<Door> entityRef;
+
+		public string boneName;
+
+		public int index;
+
+		public Vector3 position;
+
+		public LineAnchor(WireLineAnchorInfo info)
+		{
+			//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+			//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+			entityRef = new EntityRef<Door>(info.parentID);
+			boneName = info.boneName;
+			index = (int)info.index;
+			position = info.position;
+		}
+
+		public WireLineAnchorInfo ToInfo()
+		{
+			//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0005: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+			//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+			//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+			//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+			//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0047: Expected O, but got Unknown
+			return new WireLineAnchorInfo
+			{
+				parentID = entityRef.Get(serverside: true).net.ID,
+				boneName = boneName,
+				index = index,
+				position = position
+			};
+		}
 	}
 
 	public struct ContainerInputOutput
@@ -255,13 +313,17 @@ public class IOEntity : DecayEntity
 
 	private static List<FrameTiming> timings = new List<FrameTiming>();
 
-	private int cachedOutputsUsed;
+	protected int cachedOutputsUsed;
 
 	protected int lastPassthroughEnergy;
 
 	private int lastEnergy;
 
 	protected int currentEnergy;
+
+	private int changedCount;
+
+	private float lastChangeTime;
 
 	protected float lastUpdateTime;
 
@@ -274,6 +336,8 @@ public class IOEntity : DecayEntity
 	private List<Collider> spawnedColliders = new List<Collider>();
 
 	public virtual bool IsGravitySource => false;
+
+	protected virtual bool PreventDuplicatesInQueue => false;
 
 	private bool HasBlockedUpdatedOutputsThisFrame => Time.frameCount == lastUpdateBlockedFrame;
 
@@ -427,7 +491,7 @@ public class IOEntity : DecayEntity
 	{
 	}
 
-	public virtual bool WantsPower()
+	public virtual bool WantsPower(int inputIndex)
 	{
 		return true;
 	}
@@ -443,7 +507,7 @@ public class IOEntity : DecayEntity
 
 	public virtual bool WantsPassthroughPower()
 	{
-		return WantsPower();
+		return true;
 	}
 
 	public virtual int ConsumptionAmount()
@@ -454,6 +518,11 @@ public class IOEntity : DecayEntity
 	public virtual bool ShouldDrainBattery(IOEntity battery)
 	{
 		return ioType == battery.ioType;
+	}
+
+	public virtual bool ShouldBlockCircuit(IOEntity battery)
+	{
+		return false;
 	}
 
 	public virtual int MaximalPowerOutput()
@@ -612,7 +681,7 @@ public class IOEntity : DecayEntity
 	public virtual void SendAdditionalData(BasePlayer player, int slot, bool input)
 	{
 		int passthroughAmountForAnySlot = GetPassthroughAmountForAnySlot(slot, input);
-		ClientRPCPlayer(null, player, "Client_ReceiveAdditionalData", currentEnergy, passthroughAmountForAnySlot, 0f, 0f);
+		ClientRPC(RpcTarget.Player("Client_ReceiveAdditionalData", player), currentEnergy, passthroughAmountForAnySlot, 0f, 0f);
 	}
 
 	protected int GetPassthroughAmountForAnySlot(int slot, bool isInputSlot)
@@ -668,31 +737,77 @@ public class IOEntity : DecayEntity
 				}
 			}
 		}
-		if (!debugBudget)
+		if (debugBudget)
 		{
-			return;
+			float num2 = Time.realtimeSinceStartup - realtimeSinceStartup;
+			float num3 = debugBudgetThreshold / 1000f;
+			if (num2 > num3)
+			{
+				TextTable val = new TextTable();
+				val.AddColumns(new string[2] { "Prefab Name", "Time (in ms)" });
+				foreach (FrameTiming timing in timings)
+				{
+					string[] obj = new string[2] { timing.PrefabName, null };
+					float time = timing.Time;
+					obj[1] = time.ToString();
+					val.AddRow(obj);
+				}
+				val.AddRow(new string[2]
+				{
+					"Total time",
+					(num2 * 1000f).ToString()
+				});
+				Debug.Log((object)((object)val).ToString());
+			}
 		}
-		float num2 = Time.realtimeSinceStartup - realtimeSinceStartup;
-		float num3 = debugBudgetThreshold / 1000f;
-		if (!(num2 > num3))
+		AutoTurret.ProcessInterferenceQueue();
+	}
+
+	[ServerVar(ServerAdmin = true)]
+	public static void DebugQueue()
+	{
+		//IL_011f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d3: Unknown result type (might be due to invalid IL or missing references)
+		foreach (KeyValuePair<QueueType, Queue<IOEntity>> processQueue in _processQueues)
 		{
-			return;
+			QueueType key = processQueue.Key;
+			if (key != 0)
+			{
+				continue;
+			}
+			Queue<IOEntity> value = processQueue.Value;
+			Debug.Log((object)$"{key} queue size: {value.Count}");
+			if (value.Count == 0)
+			{
+				continue;
+			}
+			var list = (from e in value
+				group e by e.PrefabName into g
+				select new
+				{
+					PrefabName = g.Key,
+					Count = g.Count(),
+					Entities = g.ToList()
+				} into g
+				orderby g.Count descending
+				select g).Take(10).ToList();
+			Debug.Log((object)"-----Top queue occupants-----");
+			foreach (var item in list)
+			{
+				IOEntity iOEntity = item.Entities.First();
+				Debug.Log((object)$"[{item.Count} times] {iOEntity.PrefabName} @ {((Component)iOEntity).transform.position}");
+			}
+			if (list.Count > 0)
+			{
+				IOEntity iOEntity2 = list.First().Entities.First();
+				Debug.Log((object)"-----Showing top entity-----");
+				Debug.Log((object)$"Entity type: {iOEntity2.ioType}");
+				Debug.Log((object)("Entity prefab: " + iOEntity2.PrefabName));
+				Debug.Log((object)$"Entity net id: {iOEntity2.net.ID}");
+				Debug.Log((object)$"Entity position: teleportpos {((Component)iOEntity2).transform.position}");
+			}
 		}
-		TextTable val = new TextTable();
-		val.AddColumns(new string[2] { "Prefab Name", "Time (in ms)" });
-		foreach (FrameTiming timing in timings)
-		{
-			string[] obj = new string[2] { timing.PrefabName, null };
-			float time = timing.Time;
-			obj[1] = time.ToString();
-			val.AddRow(obj);
-		}
-		val.AddRow(new string[2]
-		{
-			"Total time",
-			(num2 * 1000f).ToString()
-		});
-		Debug.Log((object)((object)val).ToString());
 	}
 
 	public virtual void ResetIOState()
@@ -852,9 +967,22 @@ public class IOEntity : DecayEntity
 		}
 	}
 
-	public virtual int DesiredPower()
+	public virtual int DesiredPower(int inputIndex = 0)
 	{
-		return ConsumptionAmount();
+		if (!inputs[inputIndex].mainPowerSlot)
+		{
+			return 0;
+		}
+		int num = ConsumptionAmount();
+		if (IsFlickering())
+		{
+			return num;
+		}
+		if (currentEnergy < num)
+		{
+			return 0;
+		}
+		return num;
 	}
 
 	public virtual int CalculateCurrentEnergy(int inputAmount, int inputSlot)
@@ -870,11 +998,6 @@ public class IOEntity : DecayEntity
 	public virtual int GetPassthroughAmount(int outputSlot = 0)
 	{
 		if (outputSlot < 0 || outputSlot >= outputs.Length)
-		{
-			return 0;
-		}
-		IOEntity iOEntity = outputs[outputSlot].connectedTo.Get();
-		if ((Object)(object)iOEntity == (Object)null || iOEntity.IsDestroyed)
 		{
 			return 0;
 		}
@@ -897,7 +1020,10 @@ public class IOEntity : DecayEntity
 			IOStateChanged(currentEnergy, 0);
 			ensureOutputsUpdated = true;
 		}
-		_processQueues[GetQueueType()].Enqueue(this);
+		if (!PreventDuplicatesInQueue || !_processQueues[GetQueueType()].Contains(this))
+		{
+			_processQueues[GetQueueType()].Enqueue(this);
+		}
 	}
 
 	public virtual void UpdateFromInput(int inputAmount, int inputSlot)
@@ -934,8 +1060,26 @@ public class IOEntity : DecayEntity
 		SendNetworkUpdate_Flags();
 	}
 
+	public bool IsFlickering()
+	{
+		if (changedCount > 5)
+		{
+			return Time.realtimeSinceStartup - lastChangeTime < 1f;
+		}
+		return false;
+	}
+
 	public virtual void IOStateChanged(int inputAmount, int inputSlot)
 	{
+		if (Time.realtimeSinceStartup - lastChangeTime > 1f)
+		{
+			changedCount = 1;
+		}
+		else
+		{
+			changedCount++;
+		}
+		lastChangeTime = Time.realtimeSinceStartup;
 	}
 
 	public virtual void OnCircuitChanged(bool forceUpdate)
@@ -1111,15 +1255,23 @@ public class IOEntity : DecayEntity
 	{
 		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
 		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0107: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0160: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0165: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01aa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01af: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ba: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01bc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00be: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ca: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0124: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0178: Unknown result type (might be due to invalid IL or missing references)
+		//IL_017d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0194: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0199: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01cf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01df: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01e1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01e6: Unknown result type (might be due to invalid IL or missing references)
 		base.Save(info);
 		info.msg.ioEntity = Pool.Get<IOEntity>();
 		info.msg.ioEntity.inputs = Pool.GetList<IOConnection>();
@@ -1135,6 +1287,8 @@ public class IOEntity : DecayEntity
 			val.inUse = ((NetworkableId)(ref val.connectedID)).IsValid;
 			val.colour = (int)iOSlot.wireColour;
 			val.lineThickness = iOSlot.lineThickness;
+			val.originPosition = iOSlot.originPosition;
+			val.originRotation = iOSlot.originRotation;
 			info.msg.ioEntity.inputs.Add(val);
 		}
 		array = outputs;
@@ -1149,10 +1303,11 @@ public class IOEntity : DecayEntity
 			val2.colour = (int)iOSlot2.wireColour;
 			val2.worldSpaceRotation = iOSlot2.worldSpaceLineEndRotation;
 			val2.lineThickness = iOSlot2.lineThickness;
+			val2.originPosition = iOSlot2.originPosition;
+			val2.originRotation = iOSlot2.originRotation;
 			if (iOSlot2.linePoints != null)
 			{
 				val2.linePointList = Pool.GetList<LineVec>();
-				val2.linePointList.Clear();
 				for (int j = 0; j < iOSlot2.linePoints.Length; j++)
 				{
 					Vector3 val3 = iOSlot2.linePoints[j];
@@ -1163,6 +1318,22 @@ public class IOEntity : DecayEntity
 						val4.vec.w = iOSlot2.slackLevels[j];
 					}
 					val2.linePointList.Add(val4);
+				}
+			}
+			if (iOSlot2.slackLevels != null)
+			{
+				val2.slackLevels = iOSlot2.slackLevels.ToList();
+			}
+			if (iOSlot2.lineAnchors != null)
+			{
+				val2.lineAnchorList = Pool.GetList<WireLineAnchorInfo>();
+				for (int k = 0; k < iOSlot2.lineAnchors.Length; k++)
+				{
+					if (iOSlot2.lineAnchors[k].entityRef.IsValid(serverside: true))
+					{
+						WireLineAnchorInfo item = iOSlot2.lineAnchors[k].ToInfo();
+						val2.lineAnchorList.Add(item);
+					}
 				}
 			}
 			info.msg.ioEntity.outputs.Add(val2);
@@ -1180,6 +1351,103 @@ public class IOEntity : DecayEntity
 			}
 		}
 		return inputAmount;
+	}
+
+	public bool Disconnect(int index, bool isInput)
+	{
+		if (index >= (isInput ? inputs.Length : outputs.Length))
+		{
+			return false;
+		}
+		IOSlot iOSlot = (isInput ? inputs[index] : outputs[index]);
+		if ((Object)(object)iOSlot.connectedTo.Get() == (Object)null)
+		{
+			return false;
+		}
+		IOEntity iOEntity = iOSlot.connectedTo.Get();
+		IOSlot obj = (isInput ? iOEntity.outputs[iOSlot.connectedToSlot] : iOEntity.inputs[iOSlot.connectedToSlot]);
+		if (isInput)
+		{
+			UpdateFromInput(0, index);
+		}
+		else if (Object.op_Implicit((Object)(object)iOEntity))
+		{
+			iOEntity.UpdateFromInput(0, iOSlot.connectedToSlot);
+		}
+		iOSlot.Clear();
+		obj.Clear();
+		MarkDirtyForceUpdateOutputs();
+		SendNetworkUpdateImmediate();
+		RefreshIndustrialPreventBuilding();
+		if ((Object)(object)iOEntity != (Object)null)
+		{
+			iOEntity.RefreshIndustrialPreventBuilding();
+		}
+		if (isInput && (Object)(object)iOEntity != (Object)null)
+		{
+			iOEntity.SendChangedToRoot(forceUpdate: true);
+		}
+		else if (!isInput)
+		{
+			IOSlot[] array = inputs;
+			foreach (IOSlot iOSlot2 in array)
+			{
+				if (iOSlot2.mainPowerSlot && Object.op_Implicit((Object)(object)iOSlot2.connectedTo.Get()))
+				{
+					iOSlot2.connectedTo.Get().SendChangedToRoot(forceUpdate: true);
+				}
+			}
+		}
+		iOEntity.SendNetworkUpdateImmediate();
+		if (ioType == IOType.Industrial)
+		{
+			NotifyIndustrialNetworkChanged();
+		}
+		if ((Object)(object)iOEntity != (Object)null && iOEntity.ioType == IOType.Industrial)
+		{
+			iOEntity.NotifyIndustrialNetworkChanged();
+		}
+		return true;
+	}
+
+	public void ConnectTo(IOEntity entity, int outputIndex, int inputIndex)
+	{
+		ConnectTo(entity, outputIndex, inputIndex, new List<Vector3>(), new List<float>(), new LineAnchor[0]);
+	}
+
+	public void ConnectTo(IOEntity entity, int outputIndex, int inputIndex, List<Vector3> points, List<float> slackLevels, LineAnchor[] lineAnchors, WireTool.WireColour colour = WireTool.WireColour.Gray)
+	{
+		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ba: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
+		IOSlot obj = entity.inputs[inputIndex];
+		obj.connectedTo.Set(this);
+		obj.connectedToSlot = outputIndex;
+		obj.wireColour = colour;
+		obj.connectedTo.Init();
+		IOSlot obj2 = outputs[outputIndex];
+		obj2.connectedTo.Set(entity);
+		obj2.connectedToSlot = inputIndex;
+		obj2.linePoints = points.ToArray();
+		obj2.slackLevels = slackLevels.ToArray();
+		obj2.lineAnchors = lineAnchors;
+		obj2.wireColour = colour;
+		obj2.connectedTo.Init();
+		obj2.worldSpaceLineEndRotation = ((Component)entity).transform.TransformDirection(entity.inputs[inputIndex].handleDirection);
+		obj2.originPosition = ((Component)this).transform.position;
+		Quaternion rotation = ((Component)this).transform.rotation;
+		obj2.originRotation = ((Quaternion)(ref rotation)).eulerAngles;
+		MarkDirtyForceUpdateOutputs();
+		SendNetworkUpdate();
+		entity.SendNetworkUpdate();
+		SendChangedToRoot(forceUpdate: true);
+		RefreshIndustrialPreventBuilding();
 	}
 
 	public void FindContainerSource(List<ContainerInputOutput> found, int depth, bool input, List<IOEntity> ignoreList, int parentId = -1, int stackSize = 0)
@@ -1296,12 +1564,20 @@ public class IOEntity : DecayEntity
 	public override void Load(LoadInfo info)
 	{
 		//IL_00bc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0256: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02da: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02df: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03b9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03be: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03c3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0148: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0160: Unknown result type (might be due to invalid IL or missing references)
+		//IL_027c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0300: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0305: Unknown result type (might be due to invalid IL or missing references)
+		//IL_032a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_032f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_033f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0344: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0409: Unknown result type (might be due to invalid IL or missing references)
+		//IL_040e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0413: Unknown result type (might be due to invalid IL or missing references)
 		base.Load(info);
 		if (info.msg.ioEntity == null)
 		{
@@ -1332,6 +1608,8 @@ public class IOEntity : DecayEntity
 				inputs[i].type = (IOType)val.type;
 				inputs[i].wireColour = (WireTool.WireColour)val.colour;
 				inputs[i].lineThickness = val.lineThickness;
+				inputs[i].originPosition = val.originPosition;
+				inputs[i].originRotation = val.originRotation;
 			}
 		}
 		if (info.msg.ioEntity.outputs != null)
@@ -1373,21 +1651,38 @@ public class IOEntity : DecayEntity
 				outputs[k].wireColour = (WireTool.WireColour)val2.colour;
 				outputs[k].worldSpaceLineEndRotation = val2.worldSpaceRotation;
 				outputs[k].lineThickness = val2.lineThickness;
-				if (info.fromDisk || base.isClient)
+				outputs[k].originPosition = val2.originPosition;
+				outputs[k].originRotation = val2.originRotation;
+				if (!info.fromDisk && !base.isClient)
 				{
-					List<LineVec> linePointList = val2.linePointList;
-					if (outputs[k].linePoints == null || outputs[k].linePoints.Length != linePointList.Count)
+					continue;
+				}
+				List<LineVec> linePointList = val2.linePointList;
+				if (outputs[k].linePoints == null || outputs[k].linePoints.Length != linePointList.Count)
+				{
+					outputs[k].linePoints = (Vector3[])(object)new Vector3[linePointList.Count];
+				}
+				if (outputs[k].slackLevels == null || outputs[k].slackLevels.Length != linePointList.Count)
+				{
+					outputs[k].slackLevels = new float[linePointList.Count];
+				}
+				for (int l = 0; l < linePointList.Count; l++)
+				{
+					outputs[k].linePoints[l] = Vector4.op_Implicit(linePointList[l].vec);
+					outputs[k].slackLevels[l] = linePointList[l].vec.w;
+				}
+				List<WireLineAnchorInfo> lineAnchorList = val2.lineAnchorList;
+				if (outputs[k].lineAnchors == null || outputs[k].lineAnchors.Length != lineAnchorList.Count)
+				{
+					outputs[k].lineAnchors = new LineAnchor[lineAnchorList.Count];
+				}
+				for (int m = 0; m < lineAnchorList.Count; m++)
+				{
+					WireLineAnchorInfo val3 = lineAnchorList[m];
+					if (((NetworkableId)(ref val3.parentID)).IsValid)
 					{
-						outputs[k].linePoints = (Vector3[])(object)new Vector3[linePointList.Count];
-					}
-					if (outputs[k].slackLevels == null || outputs[k].slackLevels.Length != linePointList.Count)
-					{
-						outputs[k].slackLevels = new float[linePointList.Count];
-					}
-					for (int l = 0; l < linePointList.Count; l++)
-					{
-						outputs[k].linePoints[l] = Vector4.op_Implicit(linePointList[l].vec);
-						outputs[k].slackLevels[l] = linePointList[l].vec.w;
+						LineAnchor lineAnchor = new LineAnchor(val3);
+						outputs[k].lineAnchors[m] = lineAnchor;
 					}
 				}
 			}

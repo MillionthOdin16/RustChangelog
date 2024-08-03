@@ -117,7 +117,7 @@ public class InstrumentTool : HeldEntity
 		int arg3 = msg.read.Int32();
 		float arg4 = msg.read.Float();
 		KeyController.ProcessServerPlayedNote(GetOwnerPlayer());
-		ClientRPC(null, "Client_PlayNote", arg, arg2, arg3, arg4);
+		ClientRPC(RpcTarget.NetworkGroup("Client_PlayNote"), arg, arg2, arg3, arg4);
 	}
 
 	[RPC_Server]
@@ -126,7 +126,7 @@ public class InstrumentTool : HeldEntity
 		int arg = msg.read.Int32();
 		int arg2 = msg.read.Int32();
 		int arg3 = msg.read.Int32();
-		ClientRPC(null, "Client_StopNote", arg, arg2, arg3);
+		ClientRPC(RpcTarget.NetworkGroup("Client_StopNote"), arg, arg2, arg3);
 	}
 
 	public override void ServerUse()
@@ -135,14 +135,14 @@ public class InstrumentTool : HeldEntity
 		if (!((FacepunchBehaviour)this).IsInvoking((Action)StopAfterTime))
 		{
 			lastPlayedTurretData = KeyController.Bindings.BaseBindings[Random.Range(0, KeyController.Bindings.BaseBindings.Length)];
-			ClientRPC(null, "Client_PlayNote", (int)lastPlayedTurretData.Note, (int)lastPlayedTurretData.Type, lastPlayedTurretData.NoteOctave, 1f);
+			ClientRPC(RpcTarget.NetworkGroup("Client_PlayNote"), (int)lastPlayedTurretData.Note, (int)lastPlayedTurretData.Type, lastPlayedTurretData.NoteOctave, 1f);
 			((FacepunchBehaviour)this).Invoke((Action)StopAfterTime, 0.2f);
 		}
 	}
 
 	private void StopAfterTime()
 	{
-		ClientRPC(null, "Client_StopNote", (int)lastPlayedTurretData.Note, (int)lastPlayedTurretData.Type, lastPlayedTurretData.NoteOctave);
+		ClientRPC(RpcTarget.NetworkGroup("Client_StopNote"), (int)lastPlayedTurretData.Note, (int)lastPlayedTurretData.Type, lastPlayedTurretData.NoteOctave);
 	}
 
 	public override bool IsInstrument()

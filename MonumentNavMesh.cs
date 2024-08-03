@@ -5,6 +5,7 @@ using System.Diagnostics;
 using ConVar;
 using Rust;
 using Rust.Ai;
+using Unity.AI.Navigation;
 using UnityEngine;
 using UnityEngine.AI;
 

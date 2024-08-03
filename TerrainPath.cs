@@ -5,6 +5,12 @@ public class TerrainPath : TerrainExtension
 {
 	internal List<PathList> Roads = new List<PathList>();
 
+	internal List<PathList> MainRoads = new List<PathList>();
+
+	internal List<PathList> SideRoads = new List<PathList>();
+
+	internal List<PathList> TrailRoads = new List<PathList>();
+
 	internal List<PathList> Rails = new List<PathList>();
 
 	internal List<PathList> Rivers = new List<PathList>();
@@ -318,5 +324,36 @@ public class TerrainPath : TerrainExtension
 			}
 		}
 		return null;
+	}
+
+	public void AddRoad(List<PathList> newRoadList, bool addToMaster = true)
+	{
+		foreach (PathList newRoad in newRoadList)
+		{
+			AddRoad(newRoad, addToMaster);
+		}
+	}
+
+	public void AddRoad(PathList newRoad, bool addToMaster = true)
+	{
+		switch (newRoad?.Hierarchy)
+		{
+		case 0:
+			MainRoads.Add(newRoad);
+			break;
+		case 1:
+			SideRoads.Add(newRoad);
+			break;
+		case 2:
+			TrailRoads.Add(newRoad);
+			break;
+		default:
+			MainRoads.Add(newRoad);
+			break;
+		}
+		if (addToMaster && newRoad != null)
+		{
+			Roads.Add(newRoad);
+		}
 	}
 }

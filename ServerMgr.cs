@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using CompanionServer;
@@ -9,7 +10,9 @@ using Facepunch;
 using Facepunch.Math;
 using Facepunch.Models;
 using Facepunch.Network;
+using Facepunch.Ping;
 using Facepunch.Rust;
+using Facepunch.Rust.Profiling;
 using Ionic.Crc;
 using Network;
 using Network.Visibility;
@@ -30,6 +33,10 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 
 	private AIThinkManager.QueueType aiTick;
 
+	private Stopwatch methodTimer = new Stopwatch();
+
+	private Stopwatch updateTimer = new Stopwatch();
+
 	private List<ulong> bannedPlayerNotices = new List<ulong>();
 
 	private string _AssemblyHash;
@@ -42,9 +49,11 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 
 	public TimeAverageValueLookup<uint> rpcHistory = new TimeAverageValueLookup<uint>();
 
+	private Stopwatch timer = new Stopwatch();
+
 	public bool runFrameUpdate { get; private set; }
 
-	public static int AvailableSlots => ConVar.Server.maxplayers - BasePlayer.activePlayerList.Count;
+	public int AvailableSlots => ConVar.Server.maxplayers - BasePlayer.activePlayerList.Count - connectionQueue.ReservedCount;
 
 	private string AssemblyHash
 	{
@@ -77,7 +86,6 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 	{
 		persistance = new UserPersistance(ConVar.Server.rootFolder);
 		playerStateManager = new PlayerStateManager(persistance);
-		SpawnMapEntities();
 		TutorialIsland.GenerateIslandSpawnPoints(loadingSave: true);
 		if (Object.op_Implicit((Object)(object)SingletonComponent<SpawnHandler>.Instance))
 		{
@@ -100,6 +108,10 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 		{
 			SaveRestore.SaveCreatedTime = DateTime.UtcNow;
 			World.LoadedFromSave = false;
+		}
+		if (!World.LoadedFromSave)
+		{
+			SaveRestore.SpawnMapEntities(SaveRestore.FindMapEntities());
 		}
 		SaveRestore.InitializeWipeId();
 		if (Object.op_Implicit((Object)(object)SingletonComponent<SpawnHandler>.Instance))
@@ -155,6 +167,10 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 		((MonoBehaviour)this).InvokeRepeating("DoHeartbeat", 1f, 1f);
 		runFrameUpdate = true;
 		ConsoleSystem.OnReplicatedVarChanged += OnReplicatedVarChanged;
+		if (ConVar.Server.autoUploadMap)
+		{
+			MapUploader.UploadMap();
+		}
 	}
 
 	private void CloseConnection()
@@ -314,7 +330,7 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 				bannedPlayerNotices.Add(SteamId);
 			}
 			Debug.Log((object)$"Kicking {val.ipaddress}/{val.userid}/{val.username} (Steam Status \"{((object)(AuthResponse)(ref Status)).ToString()}\")");
-			val.authStatus = ((object)(AuthResponse)(ref Status)).ToString();
+			val.authStatusSteam = ((object)(AuthResponse)(ref Status)).ToString();
 			Net.sv.Kick(val, "Steam: " + ((object)(AuthResponse)(ref Status)).ToString(), false);
 		}
 	}
@@ -325,6 +341,7 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 		{
 			return;
 		}
+		updateTimer.Restart();
 		Manifest manifest = Application.Manifest;
 		if (manifest != null && manifest.Features.ServerAnalytics)
 		{
@@ -379,7 +396,9 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 				TimeWarning val2 = TimeWarning.New("Net.sv.Cycle", 100);
 				try
 				{
+					methodTimer.Restart();
 					((BaseNetwork)Net.sv).Cycle();
+					RuntimeProfiler.Net_Cycle = methodTimer.Elapsed;
 				}
 				finally
 				{
@@ -421,7 +440,9 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 					}
 					if (!Physics.autoSyncTransforms)
 					{
+						methodTimer.Restart();
 						Physics.SyncTransforms();
+						RuntimeProfiler.Physics_SyncTransforms = methodTimer.Elapsed;
 					}
 					try
 					{
@@ -431,7 +452,9 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 							CameraRendererManager instance = SingletonComponent<CameraRendererManager>.Instance;
 							if ((Object)(object)instance != (Object)null)
 							{
+								methodTimer.Restart();
 								instance.Tick();
+								RuntimeProfiler.Companion_Tick = methodTimer.Elapsed;
 							}
 						}
 						finally
@@ -444,7 +467,9 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 						Debug.LogWarning((object)"Server Exception: CameraRendererManager.Tick");
 						Debug.LogException(ex6, (Object)(object)this);
 					}
+					methodTimer.Restart();
 					BasePlayer.ServerCycle(Time.deltaTime);
+					RuntimeProfiler.BasePlayer_ServerCycle = methodTimer.Elapsed;
 					try
 					{
 						TimeWarning val3 = TimeWarning.New("FlameTurret.BudgetedUpdate", 0);
@@ -513,6 +538,23 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 						Debug.LogWarning((object)"Server Exception: BaseFishingRod.BudgetedUpdate");
 						Debug.LogException(ex10, (Object)(object)this);
 					}
+					try
+					{
+						TimeWarning val3 = TimeWarning.New("DroppedItem.BudgetedUpdate", 0);
+						try
+						{
+							((PersistentObjectWorkQueue<DroppedItem>)DroppedItem.underwaterStatusQueue).RunList((double)DroppedItem.underwater_drag_budget_ms);
+						}
+						finally
+						{
+							((IDisposable)val3)?.Dispose();
+						}
+					}
+					catch (Exception ex11)
+					{
+						Debug.LogWarning((object)"Server Exception: DroppedItem.BudgetedUpdate");
+						Debug.LogException(ex11, (Object)(object)this);
+					}
 					if (batchsynctransforms && autosynctransforms)
 					{
 						Physics.autoSyncTransforms = true;
@@ -523,10 +565,10 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 					((IDisposable)val2)?.Dispose();
 				}
 			}
-			catch (Exception ex11)
+			catch (Exception ex12)
 			{
 				Debug.LogWarning((object)"Server Exception: Player Update");
-				Debug.LogException(ex11, (Object)(object)this);
+				Debug.LogException(ex12, (Object)(object)this);
 			}
 			try
 			{
@@ -540,10 +582,10 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 					((IDisposable)val2)?.Dispose();
 				}
 			}
-			catch (Exception ex12)
+			catch (Exception ex13)
 			{
 				Debug.LogWarning((object)"Server Exception: Connection Queue");
-				Debug.LogException(ex12, (Object)(object)this);
+				Debug.LogException(ex13, (Object)(object)this);
 			}
 			try
 			{
@@ -557,10 +599,10 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 					((IDisposable)val2)?.Dispose();
 				}
 			}
-			catch (Exception ex13)
+			catch (Exception ex14)
 			{
 				Debug.LogWarning((object)"Server Exception: IOEntity.ProcessQueue");
-				Debug.LogException(ex13, (Object)(object)this);
+				Debug.LogException(ex14, (Object)(object)this);
 			}
 			if (!AI.spliceupdates)
 			{
@@ -584,10 +626,10 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 						((IDisposable)val2)?.Dispose();
 					}
 				}
-				catch (Exception ex14)
+				catch (Exception ex15)
 				{
 					Debug.LogWarning((object)"Server Exception: AIThinkManager.ProcessQueue");
-					Debug.LogException(ex14, (Object)(object)this);
+					Debug.LogException(ex15, (Object)(object)this);
 				}
 				if (!AI.spliceupdates)
 				{
@@ -608,10 +650,10 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 						((IDisposable)val2)?.Dispose();
 					}
 				}
-				catch (Exception ex15)
+				catch (Exception ex16)
 				{
 					Debug.LogWarning((object)"Server Exception: AIThinkManager.ProcessAnimalQueue");
-					Debug.LogException(ex15, (Object)(object)this);
+					Debug.LogException(ex16, (Object)(object)this);
 				}
 			}
 			try
@@ -626,10 +668,10 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 					((IDisposable)val2)?.Dispose();
 				}
 			}
-			catch (Exception ex16)
+			catch (Exception ex17)
 			{
 				Debug.LogWarning((object)"Server Exception: AIThinkManager.ProcessPetQueue");
-				Debug.LogException(ex16, (Object)(object)this);
+				Debug.LogException(ex17, (Object)(object)this);
 			}
 			try
 			{
@@ -643,10 +685,10 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 					((IDisposable)val2)?.Dispose();
 				}
 			}
-			catch (Exception ex17)
+			catch (Exception ex18)
 			{
 				Debug.LogWarning((object)"Server Exception: AIThinkManager.ProcessPetMovementQueue");
-				Debug.LogException(ex17, (Object)(object)this);
+				Debug.LogException(ex18, (Object)(object)this);
 			}
 			try
 			{
@@ -660,10 +702,10 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 					((IDisposable)val2)?.Dispose();
 				}
 			}
-			catch (Exception ex18)
+			catch (Exception ex19)
 			{
 				Debug.LogWarning((object)"Server Exception: BaseRidableAnimal.ProcessQueue");
-				Debug.LogException(ex18, (Object)(object)this);
+				Debug.LogException(ex19, (Object)(object)this);
 			}
 			try
 			{
@@ -677,10 +719,10 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 					((IDisposable)val2)?.Dispose();
 				}
 			}
-			catch (Exception ex19)
+			catch (Exception ex20)
 			{
 				Debug.LogWarning((object)"Server Exception: GrowableEntity.BudgetedUpdate");
-				Debug.LogException(ex19, (Object)(object)this);
+				Debug.LogException(ex20, (Object)(object)this);
 			}
 			try
 			{
@@ -694,10 +736,10 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 					((IDisposable)val2)?.Dispose();
 				}
 			}
-			catch (Exception ex20)
+			catch (Exception ex21)
 			{
 				Debug.LogWarning((object)"Server Exception: BasePlayer.BudgetedLifeStoryUpdate");
-				Debug.LogException(ex20, (Object)(object)this);
+				Debug.LogException(ex21, (Object)(object)this);
 			}
 			try
 			{
@@ -711,10 +753,10 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 					((IDisposable)val2)?.Dispose();
 				}
 			}
-			catch (Exception ex21)
+			catch (Exception ex22)
 			{
 				Debug.LogWarning((object)"Server Exception: JunkPileWater.UpdateNearbyPlayers");
-				Debug.LogException(ex21, (Object)(object)this);
+				Debug.LogException(ex22, (Object)(object)this);
 			}
 			try
 			{
@@ -728,10 +770,10 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 					((IDisposable)val2)?.Dispose();
 				}
 			}
-			catch (Exception ex22)
+			catch (Exception ex23)
 			{
 				Debug.LogWarning((object)"Server Exception: IndustrialEntity.RunQueue");
-				Debug.LogException(ex22, (Object)(object)this);
+				Debug.LogException(ex23, (Object)(object)this);
 			}
 			try
 			{
@@ -745,16 +787,17 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 					((IDisposable)val2)?.Dispose();
 				}
 			}
-			catch (Exception ex23)
+			catch (Exception ex24)
 			{
 				Debug.LogWarning((object)"Server Exception: AntiHack.Cycle");
-				Debug.LogException(ex23, (Object)(object)this);
+				Debug.LogException(ex24, (Object)(object)this);
 			}
 		}
 		finally
 		{
 			((IDisposable)val)?.Dispose();
 		}
+		RuntimeProfiler.ServerMgr_Update = updateTimer.Elapsed;
 	}
 
 	private void LateUpdate()
@@ -922,7 +965,12 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 				obj = "0";
 			}
 			string text7 = (string)obj;
-			SteamServer.GameTags = $"mp{ConVar.Server.maxplayers},cp{BasePlayer.activePlayerList.Count},pt{Net.sv.ProtocolId},qp{SingletonComponent<ServerMgr>.Instance.connectionQueue.Queued},v{2515}{text4}{text6},h{AssemblyHash},{text},{text2},{text3},cs{text7}";
+			string text8 = PingEstimater.GetCachedClosestRegion().Code;
+			if (!string.IsNullOrEmpty(ConVar.Server.ping_region_code_override))
+			{
+				text8 = ConVar.Server.ping_region_code_override;
+			}
+			SteamServer.GameTags = ServerTagCompressor.CompressTags($"mp{ConVar.Server.maxplayers},cp{BasePlayer.activePlayerList.Count},pt{Net.sv.ProtocolId},qp{SingletonComponent<ServerMgr>.Instance.connectionQueue.Queued},$r{text8},v{2554}{text4}{text6},{text2},{text3},cs{text7}");
 			if (ConVar.Server.description != null && ConVar.Server.description.Length > 100)
 			{
 				string[] array = StringEx.SplitToChunks(ConVar.Server.description, 100).ToArray();
@@ -947,18 +995,23 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 				}
 			}
 			SteamServer.SetKey("hash", AssemblyHash);
-			string text8 = World.Seed.ToString();
+			SteamServer.SetKey("status", text);
+			string text9 = World.Seed.ToString();
 			BaseGameMode activeGameMode = BaseGameMode.GetActiveGameMode(serverside: true);
 			if ((Object)(object)activeGameMode != (Object)null && !activeGameMode.ingameMap)
 			{
-				text8 = "0";
+				text9 = "0";
 			}
-			SteamServer.SetKey("world.seed", text8);
+			SteamServer.SetKey("world.seed", text9);
 			SteamServer.SetKey("world.size", World.Size.ToString());
 			SteamServer.SetKey("pve", ConVar.Server.pve.ToString());
 			SteamServer.SetKey("headerimage", ConVar.Server.headerimage);
 			SteamServer.SetKey("logoimage", ConVar.Server.logoimage);
 			SteamServer.SetKey("url", ConVar.Server.url);
+			if (!string.IsNullOrWhiteSpace(ConVar.Server.favoritesEndpoint))
+			{
+				SteamServer.SetKey("favendpoint", ConVar.Server.favoritesEndpoint);
+			}
 			SteamServer.SetKey("gmn", GamemodeName());
 			SteamServer.SetKey("gmt", GamemodeTitle());
 			SteamServer.SetKey("uptime", ((int)Time.realtimeSinceStartup).ToString());
@@ -982,14 +1035,20 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 		GlobalNetworkHandler.server.OnClientDisconnected(connection);
 		connectionQueue.RemoveConnection(connection);
 		ConnectionAuth.OnDisconnect(connection);
-		PlatformService.Instance.EndPlayerSession(connection.userid);
+		if (connection.authStatusSteam == "ok")
+		{
+			PlatformService.Instance.EndPlayerSession(connection.userid);
+		}
 		EACServer.OnLeaveGame(connection);
 		BasePlayer basePlayer = connection.player as BasePlayer;
 		if ((Object)(object)basePlayer != (Object)null)
 		{
 			basePlayer.OnDisconnected();
 		}
-		NexusServer.Logout(connection.userid);
+		if (connection.authStatusNexus == "ok")
+		{
+			NexusServer.Logout(connection.userid);
+		}
 	}
 
 	public static void OnEnterVisibility(Connection connection, Group group)
@@ -1021,60 +1080,51 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 		}
 	}
 
-	public void SpawnMapEntities()
-	{
-		new PrefabPreProcess(clientside: false, serverside: true);
-		BaseEntity[] array = Object.FindObjectsOfType<BaseEntity>();
-		BaseEntity[] array2 = array;
-		for (int i = 0; i < array2.Length; i++)
-		{
-			array2[i].SpawnAsMapEntity();
-		}
-		DebugEx.Log((object)$"Map Spawned {array.Length} entities", (StackTraceLogType)0);
-		array2 = array;
-		foreach (BaseEntity baseEntity in array2)
-		{
-			if ((Object)(object)baseEntity != (Object)null)
-			{
-				baseEntity.PostMapEntitySpawn();
-			}
-		}
-	}
-
 	public static BasePlayer.SpawnPoint FindSpawnPoint(BasePlayer forPlayer = null)
 	{
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0108: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0154: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0159: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_013e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0143: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0149: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00dd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0179: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0140: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0145: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0152: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0157: Unknown result type (might be due to invalid IL or missing references)
+		//IL_018c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0191: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0196: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0176: Unknown result type (might be due to invalid IL or missing references)
+		//IL_017b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0181: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0186: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fe: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0103: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0110: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0115: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b6: Unknown result type (might be due to invalid IL or missing references)
 		bool flag = false;
 		if ((Object)(object)forPlayer != (Object)null && forPlayer.IsInTutorial)
 		{
 			TutorialIsland currentTutorialIsland = forPlayer.GetCurrentTutorialIsland();
 			if ((Object)(object)currentTutorialIsland != (Object)null)
 			{
-				return new BasePlayer.SpawnPoint
+				BasePlayer.SpawnPoint spawnPoint = new BasePlayer.SpawnPoint();
+				if (forPlayer.CurrentTutorialAllowance > BasePlayer.TutorialItemAllowance.Level1_HatchetPickaxe)
 				{
-					pos = currentTutorialIsland.InitialSpawnPoint.position,
-					rot = currentTutorialIsland.InitialSpawnPoint.rotation
-				};
+					spawnPoint.pos = currentTutorialIsland.MidMissionSpawnPoint.position;
+					spawnPoint.rot = currentTutorialIsland.MidMissionSpawnPoint.rotation;
+				}
+				else
+				{
+					spawnPoint.pos = currentTutorialIsland.InitialSpawnPoint.position;
+					spawnPoint.rot = currentTutorialIsland.InitialSpawnPoint.rotation;
+				}
+				return spawnPoint;
 			}
 		}
 		BaseGameMode baseGameMode = Gamemode();
@@ -1088,45 +1138,45 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 		}
 		if ((Object)(object)SingletonComponent<SpawnHandler>.Instance != (Object)null && !flag)
 		{
-			BasePlayer.SpawnPoint spawnPoint = SpawnHandler.GetSpawnPoint();
-			if (spawnPoint != null)
+			BasePlayer.SpawnPoint spawnPoint2 = SpawnHandler.GetSpawnPoint();
+			if (spawnPoint2 != null)
 			{
-				return spawnPoint;
+				return spawnPoint2;
 			}
 		}
-		BasePlayer.SpawnPoint spawnPoint2 = new BasePlayer.SpawnPoint();
+		BasePlayer.SpawnPoint spawnPoint3 = new BasePlayer.SpawnPoint();
 		if ((Object)(object)forPlayer != (Object)null && forPlayer.IsInTutorial)
 		{
 			TutorialIsland currentTutorialIsland2 = forPlayer.GetCurrentTutorialIsland();
 			if ((Object)(object)currentTutorialIsland2 != (Object)null)
 			{
-				spawnPoint2.pos = currentTutorialIsland2.InitialSpawnPoint.position;
-				spawnPoint2.rot = currentTutorialIsland2.InitialSpawnPoint.rotation;
-				return spawnPoint2;
+				spawnPoint3.pos = currentTutorialIsland2.InitialSpawnPoint.position;
+				spawnPoint3.rot = currentTutorialIsland2.InitialSpawnPoint.rotation;
+				return spawnPoint3;
 			}
 		}
 		GameObject[] array = GameObject.FindGameObjectsWithTag("spawnpoint");
 		if (array.Length != 0)
 		{
 			GameObject val = array[Random.Range(0, array.Length)];
-			spawnPoint2.pos = val.transform.position;
-			spawnPoint2.rot = val.transform.rotation;
+			spawnPoint3.pos = val.transform.position;
+			spawnPoint3.rot = val.transform.rotation;
 		}
 		else
 		{
 			Debug.Log((object)"Couldn't find an appropriate spawnpoint for the player - so spawning at camera");
 			if ((Object)(object)MainCamera.mainCamera != (Object)null)
 			{
-				spawnPoint2.pos = MainCamera.position;
-				spawnPoint2.rot = MainCamera.rotation;
+				spawnPoint3.pos = MainCamera.position;
+				spawnPoint3.rot = MainCamera.rotation;
 			}
 		}
 		RaycastHit val2 = default(RaycastHit);
-		if (Physics.Raycast(new Ray(spawnPoint2.pos, Vector3.down), ref val2, 32f, 1537286401))
+		if (Physics.Raycast(new Ray(spawnPoint3.pos, Vector3.down), ref val2, 32f, 1537286401))
 		{
-			spawnPoint2.pos = ((RaycastHit)(ref val2)).point;
+			spawnPoint3.pos = ((RaycastHit)(ref val2)).point;
 		}
-		return spawnPoint2;
+		return spawnPoint3;
 	}
 
 	public void JoinGame(Connection connection)
@@ -1307,35 +1357,40 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 
 	public void OnNetworkMessage(Message packet)
 	{
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0021: Invalid comparison between Unknown and I4
 		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0188: Unknown result type (might be due to invalid IL or missing references)
-		//IL_021a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02b5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_035d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03f9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0569: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004b: Expected I4, but got Unknown
-		//IL_0112: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0070: Expected I4, but got Unknown
-		//IL_01a8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_023a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02d5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_037d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_04ed: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0463: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0110: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0238: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02d3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_037b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0417: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0587: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003f: Invalid comparison between Unknown and I4
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0069: Expected I4, but got Unknown
+		//IL_0130: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008e: Expected I4, but got Unknown
+		//IL_01c6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0258: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02f3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_039b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_050b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0481: Unknown result type (might be due to invalid IL or missing references)
 		if (ConVar.Server.packetlog_enabled)
 		{
 			packetHistory.Increment(packet.type);
+		}
+		if (PacketProfiler.enabled)
+		{
+			PacketProfiler.LogInbound(packet.type, (int)((Stream)(object)packet.read).Length);
 		}
 		Type type = packet.type;
 		if ((int)type != 4)
@@ -1637,7 +1692,7 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 	{
 		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f7: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer.SpawnPoint spawnPoint = FindSpawnPoint();
 		BasePlayer basePlayer = GameManager.server.CreateEntity("assets/prefabs/player/player.prefab", spawnPoint.pos, spawnPoint.rot).ToPlayer();
 		basePlayer.health = 0f;
@@ -1663,7 +1718,7 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 			}
 			DebugEx.Log((object)$"{basePlayer.displayName} with steamid {basePlayer.userID} joined from ip {basePlayer.net.connection.ipaddress}", (StackTraceLogType)0);
 			DebugEx.Log((object)$"\tNetworkId {basePlayer.userID} is {basePlayer.net.ID} ({basePlayer.displayName})", (StackTraceLogType)0);
-			if (basePlayer.net.connection.ownerid != basePlayer.net.connection.userid)
+			if (basePlayer.net.connection.ownerid != 0L && basePlayer.net.connection.ownerid != basePlayer.net.connection.userid)
 			{
 				DebugEx.Log((object)$"\t{basePlayer} is sharing the account {basePlayer.net.connection.ownerid}", (StackTraceLogType)0);
 			}
@@ -1736,9 +1791,10 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 
 	private void OnRPCMessage(Message packet)
 	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		timer.Restart();
 		NetworkableId uid = packet.read.EntityID();
 		uint num = packet.read.UInt32();
 		if (ConVar.Server.rpclog_enabled)
@@ -1749,6 +1805,10 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 		if (!((Object)(object)baseEntity == (Object)null))
 		{
 			baseEntity.SV_RPCMessage(num, packet);
+			if (timer.Elapsed > RuntimeProfiler.RpcWarningThreshold)
+			{
+				LagSpikeProfiler.RPC(timer.Elapsed, packet, baseEntity, num);
+			}
 		}
 	}
 
@@ -1816,14 +1876,14 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 			DebugEx.Log((object)("Kicking " + ((object)packet.connection)?.ToString() + " - their branch is '" + text + "' not '" + branch + "'"), (StackTraceLogType)0);
 			Net.sv.Kick(packet.connection, "Wrong Steam Beta: Requires '" + branch + "' branch!", false);
 		}
-		else if (packet.connection.protocol > 2515)
+		else if (packet.connection.protocol > 2554)
 		{
-			DebugEx.Log((object)("Kicking " + ((object)packet.connection)?.ToString() + " - their protocol is " + packet.connection.protocol + " not " + 2515), (StackTraceLogType)0);
+			DebugEx.Log((object)("Kicking " + ((object)packet.connection)?.ToString() + " - their protocol is " + packet.connection.protocol + " not " + 2554), (StackTraceLogType)0);
 			Net.sv.Kick(packet.connection, "Wrong Connection Protocol: Server update required!", false);
 		}
-		else if (packet.connection.protocol < 2515)
+		else if (packet.connection.protocol < 2554)
 		{
-			DebugEx.Log((object)("Kicking " + ((object)packet.connection)?.ToString() + " - their protocol is " + packet.connection.protocol + " not " + 2515), (StackTraceLogType)0);
+			DebugEx.Log((object)("Kicking " + ((object)packet.connection)?.ToString() + " - their protocol is " + packet.connection.protocol + " not " + 2554), (StackTraceLogType)0);
 			Net.sv.Kick(packet.connection, "Wrong Connection Protocol: Client update required!", false);
 		}
 		else
@@ -1836,6 +1896,8 @@ public class ServerMgr : SingletonComponent<ServerMgr>, IServerCallback
 			}
 			packet.connection.anticheatId = packet.read.StringRaw(128, false);
 			packet.connection.anticheatToken = packet.read.StringRaw(2048, false);
+			packet.connection.clientChangeset = packet.read.Int32();
+			packet.connection.clientBuildTime = packet.read.Int64();
 			auth.OnNewConnection(packet.connection);
 		}
 	}

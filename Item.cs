@@ -324,13 +324,11 @@ public class Item
 		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0180: Unknown result type (might be due to invalid IL or missing references)
-		//IL_018c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0196: Unknown result type (might be due to invalid IL or missing references)
-		//IL_019d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ad: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0183: Unknown result type (might be due to invalid IL or missing references)
+		//IL_018f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0199: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a6: Unknown result type (might be due to invalid IL or missing references)
 		if (!hasCondition)
 		{
 			return;
@@ -363,6 +361,7 @@ public class Item
 		}
 		if ((!info.condition.repairable && !Object.op_Implicit((Object)(object)((Component)info).GetComponent<ItemModRepair>())) || maxCondition <= 5f)
 		{
+			UnloadAmmo();
 			Remove();
 		}
 		else if (parent != null && parent.HasFlag(ItemContainer.Flag.NoBrokenItems))
@@ -527,7 +526,15 @@ public class Item
 		{
 			return ConVar.Server.itemdespawn_quick;
 		}
-		return ConVar.Server.itemdespawn * (float)despawnMultiplier;
+		int num = 0;
+		if (contents != null && contents.itemList != null)
+		{
+			foreach (Item item in contents.itemList)
+			{
+				num += item.despawnMultiplier;
+			}
+		}
+		return (float)Mathf.Min(Mathf.Max(despawnMultiplier, num), ConVar.Server.itemdespawn_container_max_multiplier) * ConVar.Server.itemdespawn;
 	}
 
 	protected void RemoveFromWorld()
@@ -600,10 +607,23 @@ public class Item
 			}
 		}
 		MarkDirty();
+		RecalulateParentEntity(children: false);
+	}
+
+	public void RecalulateParentEntity(bool children)
+	{
 		ItemMod[] itemMods = info.itemMods;
 		for (int i = 0; i < itemMods.Length; i++)
 		{
 			itemMods[i].OnParentChanged(this);
+		}
+		if (!children || contents == null)
+		{
+			return;
+		}
+		foreach (Item item in contents.itemList)
+		{
+			item.RecalulateParentEntity(children: false);
 		}
 	}
 
@@ -664,12 +684,10 @@ public class Item
 
 	public bool MoveToContainer(ItemContainer newcontainer, int iTargetPos = -1, bool allowStack = true, bool ignoreStackLimit = false, BasePlayer sourcePlayer = null, bool allowSwap = true)
 	{
-		//IL_045c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0462: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0469: Unknown result type (might be due to invalid IL or missing references)
-		//IL_046f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0473: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0479: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04d3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04d9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04e0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04e6: Unknown result type (might be due to invalid IL or missing references)
 		TimeWarning val = TimeWarning.New("MoveToContainer", 0);
 		try
 		{
@@ -679,19 +697,19 @@ public class Item
 			{
 				if (allowStack && info.stackable > 1)
 				{
-					foreach (Item item2 in from x in newcontainer.FindItemsByItemID(info.itemid)
+					foreach (Item item3 in from x in newcontainer.FindItemsByItemID(info.itemid)
 						orderby x.position
 						select x)
 					{
-						if (item2.CanStack(this) && (ignoreStackLimit || item2.amount < item2.MaxStackable()))
+						if (item3.CanStack(this) && (ignoreStackLimit || item3.amount < item3.MaxStackable()))
 						{
-							iTargetPos = item2.position;
+							iTargetPos = item3.position;
 						}
 					}
 				}
-				if (iTargetPos == -1 && newcontainer.GetEntityOwner(returnHeldEntity: true) is IItemContainerEntity itemContainerEntity)
+				if (iTargetPos == -1 && newcontainer.GetEntityOwner(returnHeldEntity: true) is IIdealSlotEntity idealSlotEntity)
 				{
-					iTargetPos = itemContainerEntity.GetIdealSlot(sourcePlayer, this);
+					iTargetPos = idealSlotEntity.GetIdealSlot(sourcePlayer, newcontainer, this);
 					if (iTargetPos == int.MinValue)
 					{
 						return false;
@@ -786,11 +804,21 @@ public class Item
 				{
 					ItemContainer itemContainer2 = parent;
 					int iTargetPos2 = position;
-					ItemContainer itemContainer3 = slot2.parent;
+					ItemContainer newcontainer2 = slot2.parent;
 					int num3 = slot2.position;
 					if (!slot2.CanMoveTo(itemContainer2, iTargetPos2))
 					{
 						return false;
+					}
+					if (itemContainer2.maxStackSize > 0 && slot2.amount > itemContainer2.maxStackSize)
+					{
+						Item item = slot2.SplitItem(slot2.amount - itemContainer2.maxStackSize);
+						if (item == null || !item.MoveToContainer(newcontainer2, -1, allowStack: false, ignoreStackLimit: false, sourcePlayer, allowSwap: false))
+						{
+							slot2.amount += item.amount;
+							item.Remove();
+							return false;
+						}
 					}
 					BaseEntity entityOwner = GetEntityOwner();
 					BaseEntity entityOwner2 = slot2.GetEntityOwner();
@@ -804,7 +832,7 @@ public class Item
 						slot2.RemoveFromContainer();
 						SetParent(itemContainer2);
 						position = iTargetPos2;
-						slot2.SetParent(itemContainer3);
+						slot2.SetParent(newcontainer2);
 						slot2.position = num3;
 						return true;
 					}
@@ -824,10 +852,14 @@ public class Item
 			}
 			if (newcontainer.maxStackSize > 0 && newcontainer.maxStackSize < amount)
 			{
-				Item item = SplitItem(newcontainer.maxStackSize);
-				if (item != null && !item.MoveToContainer(newcontainer, iTargetPos, allowStack: false, ignoreStackLimit: false, sourcePlayer) && (itemContainer == null || !item.MoveToContainer(itemContainer, -1, allowStack: true, ignoreStackLimit: false, sourcePlayer)))
+				Item item2 = SplitItem(newcontainer.maxStackSize);
+				if (item2 != null && !item2.MoveToContainer(newcontainer, iTargetPos, allowStack: false, ignoreStackLimit: false, sourcePlayer) && (itemContainer == null || !item2.MoveToContainer(itemContainer, -1, allowStack: true, ignoreStackLimit: false, sourcePlayer)))
 				{
-					item.Drop(newcontainer.dropPosition, newcontainer.dropVelocity);
+					DroppedItem droppedItem = item2.Drop(newcontainer.dropPosition, newcontainer.dropVelocity) as DroppedItem;
+					if ((Object)(object)droppedItem != (Object)null)
+					{
+						droppedItem.DroppedBy = sourcePlayer?.userID ?? ((BasePlayer.EncryptedValue<ulong>)0uL);
+					}
 				}
 				return true;
 			}
@@ -904,28 +936,31 @@ public class Item
 		return GetWorldEntity();
 	}
 
-	public BaseEntity Drop(Vector3 vPos, Vector3 vVelocity, Quaternion rotation = default(Quaternion), Quaternion playerRotation = default(Quaternion))
+	public BaseEntity Drop(Vector3 vPos, Vector3 vVelocity, Quaternion rotation = default(Quaternion))
 	{
-		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ac: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00df: Unknown result type (might be due to invalid IL or missing references)
+		ulong droppedBy = GetRootContainer()?.playerOwner?.userID ?? ((BasePlayer.EncryptedValue<ulong>)0uL);
 		RemoveFromWorld();
-		if (info.AlignWorldModelOnDrop && playerRotation != default(Quaternion))
+		if (info.AlignWorldModelOnDrop)
 		{
-			rotation = Quaternion.Euler(0f, ((Quaternion)(ref playerRotation)).eulerAngles.y, 0f);
+			Quaternion val = Quaternion.LookRotation(((Vector3)(ref vVelocity)).normalized, Vector3.up);
+			rotation = Quaternion.Euler(0f, ((Quaternion)(ref val)).eulerAngles.y, 0f);
 			rotation = Quaternion.Euler(info.WorldModelDropOffset) * rotation;
 		}
 		BaseEntity baseEntity = null;
@@ -935,6 +970,10 @@ public class Item
 			if (Object.op_Implicit((Object)(object)baseEntity))
 			{
 				baseEntity.SetVelocity(vVelocity);
+			}
+			if (baseEntity is DroppedItem droppedItem)
+			{
+				droppedItem.DroppedBy = droppedBy;
 			}
 		}
 		else
@@ -955,8 +994,6 @@ public class Item
 		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
 		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
 		float num = Random.value * (float)Math.PI * 2f;
 		Vector3 val = default(Vector3);
 		((Vector3)(ref val))._002Ector(Mathf.Sin(num), 1f, Mathf.Cos(num));
@@ -975,6 +1012,11 @@ public class Item
 	public void BusyFor(float fTime)
 	{
 		busyTime = Time.time + fTime;
+	}
+
+	public bool IsRemoved()
+	{
+		return removeTime > 0f;
 	}
 
 	public void Remove(float fTime = 0f)
@@ -1122,6 +1164,34 @@ public class Item
 		return item;
 	}
 
+	public void UnloadAmmo()
+	{
+		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ac: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b9: Unknown result type (might be due to invalid IL or missing references)
+		BaseProjectile baseProjectile = GetHeldEntity() as BaseProjectile;
+		if ((Object)(object)baseProjectile == (Object)null)
+		{
+			return;
+		}
+		while (baseProjectile.primaryMagazine.contents > 0)
+		{
+			int num = Mathf.Min(baseProjectile.primaryMagazine.contents, baseProjectile.primaryMagazine.ammoType.stackable);
+			baseProjectile.primaryMagazine.contents -= num;
+			Item item = ItemManager.Create(baseProjectile.primaryMagazine.ammoType, num, 0uL);
+			BasePlayer basePlayer = GetRootContainer()?.playerOwner;
+			if ((Object)(object)basePlayer != (Object)null)
+			{
+				basePlayer.GiveItem(item);
+			}
+			else if (!item.MoveToContainer(parent) && (Object)(object)item.Drop(parent.dropPosition, parent.dropVelocity) == (Object)null)
+			{
+				item.Remove();
+			}
+		}
+	}
+
 	public bool CanBeHeld()
 	{
 		if (isBroken)
@@ -1141,7 +1211,7 @@ public class Item
 		{
 			return false;
 		}
-		if (item.MaxStackable() <= 1)
+		if (item.info.stackable <= 1)
 		{
 			return false;
 		}
@@ -1200,6 +1270,11 @@ public class Item
 			return false;
 		}
 		return true;
+	}
+
+	public bool IsDroppedInWorld(bool serverside)
+	{
+		return worldEnt.IsValid(serverside);
 	}
 
 	public void SetWorldEntity(BaseEntity ent)
@@ -1362,6 +1437,36 @@ public class Item
 		return num;
 	}
 
+	public int GetAmmoAmount(List<AmmoTypes> ammoTypes)
+	{
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
+		int num = 0;
+		ItemModProjectile itemModProjectile = default(ItemModProjectile);
+		if (((Component)info).TryGetComponent<ItemModProjectile>(ref itemModProjectile))
+		{
+			foreach (AmmoTypes ammoType in ammoTypes)
+			{
+				if (itemModProjectile.IsAmmo(ammoType))
+				{
+					num += amount;
+				}
+			}
+		}
+		if (contents != null)
+		{
+			foreach (AmmoTypes ammoType2 in ammoTypes)
+			{
+				num += contents.GetAmmoAmount(ammoType2);
+			}
+		}
+		return num;
+	}
+
 	public override string ToString()
 	{
 		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
@@ -1454,7 +1559,7 @@ public class Item
 			val.conditionData.maxCondition = _maxCondition;
 			val.conditionData.condition = _condition;
 		}
-		if (contents != null)
+		if (contents != null && bIncludeContainer)
 		{
 			val.contents = contents.Save(bIncludeContainer);
 		}

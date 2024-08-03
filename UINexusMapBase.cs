@@ -1,0 +1,69 @@
+using System;
+using Rust.UI;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.Events;
+using UnityEngine.UI;
+
+public abstract class UINexusMapBase : BaseMonoBehaviour, IPointerDownHandler, IEventSystemHandler
+{
+	private static readonly Memoized<string, int> IntMemoized = new Memoized<string, int>((Func<int, string>)((int i) => i.ToString()));
+
+	public RawImage BackgroundImage;
+
+	public RawImage BackgroundFillImage;
+
+	public RectTransform LoadingView;
+
+	public RectTransform MissingView;
+
+	public ScrollRectEx MapScrollRect;
+
+	public ScrollRectZoom MapScrollZoom;
+
+	public RectTransform CameraPositon;
+
+	public CanvasGroup ZoneNameCanvasGroup;
+
+	public RectTransform ZoneNameContainer;
+
+	public GameObjectRef ZoneNameMarkerPrefab;
+
+	[Header("Zone Details")]
+	public CanvasGroup ZoneDetails;
+
+	public RustText ZoneName;
+
+	public RustText OnlineCount;
+
+	public RustText MaxCount;
+
+	public GameObjectRef ZoneNameLabelPrefab;
+
+	public GameObject InboundFerriesSection;
+
+	public RectTransform InboundFerriesList;
+
+	public GameObject OutboundFerriesSection;
+
+	public RectTransform OutboundFerriesList;
+
+	public GameObject ConnectionsSection;
+
+	public RectTransform ConnectionsList;
+
+	[Header("Behavior")]
+	public bool ShowLocalPlayer;
+
+	public float OutOfBoundsScaleFactor = 5f;
+
+	public float ZoneNameAlphaPower = 100f;
+
+	public UnityEvent OnMapLoaded = new UnityEvent();
+
+	public UnityEvent OnClicked = new UnityEvent();
+
+	public void OnPointerDown(PointerEventData eventData)
+	{
+	}
+}

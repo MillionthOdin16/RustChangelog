@@ -281,7 +281,7 @@ public class WantedPoster : DecayEntity, ISignage, IUGCBrowserEntity, ILOD, ISer
 		}
 		if (IsLocked())
 		{
-			return player.userID == base.OwnerID;
+			return (ulong)player.userID == base.OwnerID;
 		}
 		return true;
 	}

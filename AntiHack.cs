@@ -87,7 +87,7 @@ public static class AntiHack
 		}
 	}
 
-	private const int movement_mask = 429990145;
+	private const int movement_mask = 1503731969;
 
 	private const int vehicle_mask = 8192;
 
@@ -131,7 +131,7 @@ public static class AntiHack
 		//IL_00be: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
-		int num = 429990145;
+		int num = 1503731969;
 		if (!vehicleLayer)
 		{
 			num &= -8193;
@@ -238,8 +238,40 @@ public static class AntiHack
 		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
 		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00da: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0239: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0232: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0115: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_023e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0137: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0253: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0246: Unknown result type (might be due to invalid IL or missing references)
+		//IL_024b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0151: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0157: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0177: Unknown result type (might be due to invalid IL or missing references)
+		//IL_018c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0191: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0196: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0199: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ba: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01bf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0258: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_026c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_025f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0264: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01db: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0271: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0274: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0276: Unknown result type (might be due to invalid IL or missing references)
 		TimeWarning val = TimeWarning.New("AntiHack.ValidateMove", 0);
 		try
 		{
@@ -284,8 +316,32 @@ public static class AntiHack
 				AddViolation(ply, AntiHackType.FlyHack, ConVar.AntiHack.flyhack_penalty * ticks.Length);
 				if (ConVar.AntiHack.flyhack_reject)
 				{
-					return false;
+					if (ply.lastGroundedPosition == default(Vector3))
+					{
+						return true;
+					}
+					if (Vector3.Distance(ply.lastGroundedPosition, ((Component)ply).transform.position) <= 10f)
+					{
+						Collider collider2;
+						bool num = TestNoClipping(((Component)ply).transform.position, ply.lastGroundedPosition, ply.NoClipRadius(ConVar.AntiHack.noclip_margin), ConVar.AntiHack.noclip_backtracking, sphereCast: true, out collider2);
+						Vector3 val2 = ply.lastGroundedPosition + new Vector3(0f, ply.GetRadius(), 0f);
+						Vector3 val3 = ply.lastGroundedPosition + new Vector3(0f, ply.GetHeight() - ply.GetRadius(), 0f);
+						if (!num && !Physics.CheckCapsule(val2, val3, ply.GetRadius(), 1537286401))
+						{
+							ply.MovePosition(ply.lastGroundedPosition);
+							ply.ClientRPC<Vector3>(RpcTarget.Player("ForcePositionTo", ply), ((Component)ply).transform.position);
+							ply.violationLevel = 0f;
+						}
+					}
 				}
+			}
+			if (ConVar.AntiHack.serverside_fall_damage)
+			{
+				bool num2 = (Object)(object)((Component)ply).transform.parent == (Object)null;
+				Matrix4x4 val4 = (num2 ? Matrix4x4.identity : ((Component)ply).transform.parent.localToWorldMatrix);
+				Vector3 oldPos = (num2 ? ticks.StartPoint : ((Matrix4x4)(ref val4)).MultiplyPoint3x4(ticks.StartPoint));
+				Vector3 newPos = (num2 ? ticks.EndPoint : ((Matrix4x4)(ref val4)).MultiplyPoint3x4(ticks.EndPoint));
+				TestServerSideFallDamage(ply, oldPos, newPos, deltaTime);
 			}
 			return true;
 		}
@@ -381,7 +437,7 @@ public static class AntiHack
 		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
 		bool queriesHitBackfaces = Physics.queriesHitBackfaces;
 		Physics.queriesHitBackfaces = true;
-		if (Physics.Raycast(pos, Vector3.up, ref isInsideRayHit, 50f, 65537))
+		if (Physics.Raycast(pos, Vector3.up, ref isInsideRayHit, 50f, 65536))
 		{
 			Physics.queriesHitBackfaces = queriesHitBackfaces;
 			return Vector3.Dot(Vector3.up, ((RaycastHit)(ref isInsideRayHit)).normal) > 0f;
@@ -643,66 +699,82 @@ public static class AntiHack
 
 	public static bool TestFlying(BasePlayer ply, Vector3 oldPos, Vector3 newPos, bool verifyGrounded)
 	{
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ca: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01d6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01df: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f3: Unknown result type (might be due to invalid IL or missing references)
 		//IL_01f4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0095: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0097: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ba: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01fa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01fc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0208: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0211: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0226: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d7: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00dc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00de: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00eb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010f: Unknown result type (might be due to invalid IL or missing references)
+		if (!ply.isInAir)
+		{
+			ply.lastGroundedPosition = oldPos;
+		}
 		ply.isInAir = false;
 		ply.isOnPlayer = false;
 		if (verifyGrounded)
 		{
 			float flyhack_extrusion = ConVar.AntiHack.flyhack_extrusion;
 			Vector3 val = (oldPos + newPos) * 0.5f;
-			if (!ply.OnLadder() && !WaterLevel.Test(val - new Vector3(0f, flyhack_extrusion, 0f), waves: true, volumes: true, ply) && (EnvironmentManager.Get(val) & EnvironmentType.Elevator) == 0)
+			if (!ply.OnLadder())
 			{
-				float flyhack_margin = ConVar.AntiHack.flyhack_margin;
-				float radius = ply.GetRadius();
-				float height = ply.GetHeight(ducked: false);
-				Vector3 val2 = val + new Vector3(0f, radius - flyhack_extrusion, 0f);
-				Vector3 val3 = val + new Vector3(0f, height - radius, 0f);
-				float num = radius - flyhack_margin;
-				ply.isInAir = !Physics.CheckCapsule(val2, val3, num, 1503731969, (QueryTriggerInteraction)1);
-				if (ply.isInAir)
+				if (WaterLevel.Test(val - new Vector3(0f, flyhack_extrusion, 0f), waves: true, volumes: true, ply))
 				{
-					int num2 = Physics.OverlapCapsuleNonAlloc(val2, val3, num, buffer, 131072, (QueryTriggerInteraction)1);
-					for (int i = 0; i < num2; i++)
+					if (ply.waterDelay <= 0f)
 					{
-						BasePlayer basePlayer = ((Component)buffer[i]).gameObject.ToBaseEntity() as BasePlayer;
-						if (!((Object)(object)basePlayer == (Object)null) && !((Object)(object)basePlayer == (Object)(object)ply) && !basePlayer.isInAir && !basePlayer.isOnPlayer && !basePlayer.TriggeredAntiHack() && !basePlayer.IsSleeping())
-						{
-							ply.isOnPlayer = true;
-							ply.isInAir = false;
-							break;
-						}
+						ply.waterDelay = 0.3f;
 					}
-					for (int j = 0; j < buffer.Length; j++)
+				}
+				else if ((EnvironmentManager.Get(val) & EnvironmentType.Elevator) == 0)
+				{
+					float flyhack_margin = ConVar.AntiHack.flyhack_margin;
+					float radius = ply.GetRadius();
+					float height = ply.GetHeight(ducked: false);
+					Vector3 val2 = val + new Vector3(0f, radius - flyhack_extrusion, 0f);
+					Vector3 val3 = val + new Vector3(0f, height - radius, 0f);
+					float num = radius - flyhack_margin;
+					ply.isInAir = !Physics.CheckCapsule(val2, val3, num, 1503731969, (QueryTriggerInteraction)1);
+					if (ply.isInAir)
 					{
-						buffer[j] = null;
+						int num2 = Physics.OverlapCapsuleNonAlloc(val2, val3, num, buffer, 131072, (QueryTriggerInteraction)1);
+						for (int i = 0; i < num2; i++)
+						{
+							BasePlayer basePlayer = ((Component)buffer[i]).gameObject.ToBaseEntity() as BasePlayer;
+							if (!((Object)(object)basePlayer == (Object)null) && !((Object)(object)basePlayer == (Object)(object)ply) && !basePlayer.isInAir && !basePlayer.isOnPlayer && !basePlayer.TriggeredAntiHack() && !basePlayer.IsSleeping())
+							{
+								ply.isOnPlayer = true;
+								ply.isInAir = false;
+								break;
+							}
+						}
+						for (int j = 0; j < buffer.Length; j++)
+						{
+							buffer[j] = null;
+						}
 					}
 				}
 			}
@@ -749,6 +821,71 @@ public static class AntiHack
 			ply.flyhackDistanceHorizontal = 0f;
 		}
 		return false;
+	}
+
+	public static bool TestServerSideFallDamage(BasePlayer ply, Vector3 oldPos, Vector3 newPos, float deltaTime)
+	{
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
+		if (ply.waterDelay >= 0f)
+		{
+			ply.waterDelay -= deltaTime;
+		}
+		if (ply.isInAir)
+		{
+			Vector3 val = newPos - oldPos;
+			if (val.y < 0f)
+			{
+				if (ply.timeInAir == 0f)
+				{
+					ply.initialVelocity = ply.estimatedVelocity;
+					ply.fallingDistance = ply.GetHeight();
+					ply.timeInAir = 1f;
+				}
+				ply.timeInAir += deltaTime;
+				ply.fallingDistance += val.y;
+				if (ply.estimatedVelocity.y < ply.fallingVelocity)
+				{
+					ply.fallingVelocity = ply.estimatedVelocity.y;
+				}
+				ply.fallingVelocity = ply.estimatedVelocity.y;
+			}
+		}
+		else if (ply.waterDelay <= 0f)
+		{
+			if (ply.OnLadder() || ply.IsSwimming())
+			{
+				ResetServerFall(ply);
+				return false;
+			}
+			float num = 0f - Mathf.Sqrt(Mathf.Abs(0f - ((Vector3)(ref ply.initialVelocity)).magnitude * ((Vector3)(ref ply.initialVelocity)).magnitude + 2f * Physics.gravity.y * ply.fallingDistance) * 1.4f);
+			if (ply.fallingVelocity < 0f || (num < 0f && ply.timeInAir > 0f))
+			{
+				float num2 = Mathf.Max(Mathf.Abs(num), Mathf.Abs(ply.fallingVelocity));
+				ply.ApplyFallDamageFromVelocity(0f - num2);
+				ResetServerFall(ply);
+			}
+		}
+		return false;
+	}
+
+	public static void ResetServerFall(BasePlayer ply)
+	{
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		ply.fallingVelocity = 0f;
+		ply.fallingDistance = 0f;
+		ply.timeInAir = 0f;
+		ply.initialVelocity = default(Vector3);
 	}
 
 	public static bool TestIsBuildingInsideSomething(Construction.Target target, Vector3 deployPos)
@@ -811,13 +948,16 @@ public static class AntiHack
 		}
 	}
 
-	public static void Log(BasePlayer ply, AntiHackType type, string message)
+	public static void Log(BasePlayer ply, AntiHackType type, string message, bool logToAnalytics = true)
 	{
 		if (ConVar.AntiHack.debuglevel > 1)
 		{
 			LogToConsole(ply, type, message);
 		}
-		Analytics.Azure.OnAntihackViolation(ply, (int)type, message);
+		if (logToAnalytics)
+		{
+			Analytics.Azure.OnAntihackViolation(ply, type, message);
+		}
 		LogToEAC(ply, type, message);
 	}
 

@@ -52,6 +52,8 @@ public sealed class ItemContainer : IAmmoContainer
 
 	public ItemDefinition[] onlyAllowedItems;
 
+	public HashSet<ItemDefinition> blockedItems;
+
 	public List<ItemSlot> availableSlots = new List<ItemSlot>();
 
 	public int capacity = 2;
@@ -83,6 +85,8 @@ public sealed class ItemContainer : IAmmoContainer
 	public Action<Item, bool> onItemAddedRemoved;
 
 	public Action<Item, int> onItemAddedToStack;
+
+	public Action<Item, int> onItemRemovedFromStack;
 
 	public Action<Item> onPreItemRemove;
 
@@ -340,9 +344,38 @@ public sealed class ItemContainer : IAmmoContainer
 		return itemList.Count >= capacity;
 	}
 
+	public bool HasSpaceFor(Item item)
+	{
+		if (!IsFull())
+		{
+			return true;
+		}
+		return HasPartialStack(item);
+	}
+
 	public bool IsEmpty()
 	{
 		return itemList.Count == 0;
+	}
+
+	public bool HasPartialStack(Item toStack, out int slot)
+	{
+		slot = -1;
+		foreach (Item item in itemList)
+		{
+			if (item.info.itemid == toStack.info.itemid && item.amount < item.MaxStackable() && toStack.CanStack(item))
+			{
+				slot = item.position;
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public bool HasPartialStack(Item toStack)
+	{
+		int slot;
+		return HasPartialStack(toStack, out slot);
 	}
 
 	public bool CanAccept(Item item)
@@ -400,6 +433,14 @@ public sealed class ItemContainer : IAmmoContainer
 		}
 	}
 
+	public void SetBlacklist(ItemDefinition[] defs)
+	{
+		if (defs != null && defs.Length != 0)
+		{
+			blockedItems = new HashSet<ItemDefinition>(defs);
+		}
+	}
+
 	internal bool Insert(Item item)
 	{
 		if (itemList.Contains(item))
@@ -435,41 +476,59 @@ public sealed class ItemContainer : IAmmoContainer
 
 	public Item GetSlot(int slot)
 	{
-		for (int i = 0; i < itemList.Count; i++)
+		if (slot == -1)
 		{
-			if (itemList[i].position == slot)
+			return null;
+		}
+		_ = itemList.Count;
+		foreach (Item item in itemList)
+		{
+			if (item.position == slot)
 			{
-				return itemList[i];
+				return item;
 			}
 		}
 		return null;
 	}
 
-	public Item GetNonFullStackWithinRange(Item def, Vector2i range)
+	public bool QuickIndustrialPreCheck(Item toTransfer, Vector2i range, out int foundSlot)
 	{
-		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+		int num = range.y - range.x + 1;
 		int count = itemList.Count;
+		int num2 = 0;
+		foundSlot = -1;
 		for (int i = 0; i < count; i++)
 		{
-			if (itemList[i].amount >= itemList[i].info.stackable || itemList[i].position < range.x || itemList[i].position > range.y)
+			Item item = itemList[i];
+			int position = item.position;
+			if (position < range.x || position > range.y)
 			{
 				continue;
 			}
-			if (def.IsBlueprint())
+			num2++;
+			if (item.amount >= item.info.stackable || item.IsRemoved())
 			{
-				if (itemList[i].blueprintTarget != def.blueprintTarget)
+				continue;
+			}
+			if (toTransfer.IsBlueprint())
+			{
+				if (item.blueprintTarget != toTransfer.blueprintTarget)
 				{
 					continue;
 				}
 			}
-			else if ((Object)(object)itemList[i].info != (Object)(object)def.info)
+			else if ((Object)(object)item.info != (Object)(object)toTransfer.info)
 			{
 				continue;
 			}
-			return itemList[i];
+			foundSlot = position;
+			return true;
 		}
-		return null;
+		return num2 < num;
 	}
 
 	internal bool FindPosition(Item item)
@@ -574,6 +633,19 @@ public sealed class ItemContainer : IAmmoContainer
 		foreach (Item item in itemList)
 		{
 			if (item.info.itemid == itemid && (!onlyUsableAmounts || !item.IsBusy()))
+			{
+				num += item.amount;
+			}
+		}
+		return num;
+	}
+
+	public int GetOkConditionAmount(int itemid, bool onlyUsableAmounts)
+	{
+		int num = 0;
+		foreach (Item item in itemList)
+		{
+			if (item.info.itemid == itemid && (!onlyUsableAmounts || !item.IsBusy()) && !(item.condition <= 0f))
 			{
 				num += item.amount;
 			}
@@ -901,6 +973,16 @@ public sealed class ItemContainer : IAmmoContainer
 		return false;
 	}
 
+	public int GetAmmoAmount(ItemDefinition specificAmmo)
+	{
+		int num = 0;
+		for (int i = 0; i < itemList.Count; i++)
+		{
+			num += (((Object)(object)itemList[i].info == (Object)(object)specificAmmo) ? itemList[i].amount : 0);
+		}
+		return num;
+	}
+
 	public int GetAmmoAmount(AmmoTypes ammoType)
 	{
 		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
@@ -920,6 +1002,19 @@ public sealed class ItemContainer : IAmmoContainer
 			num += itemList[i].amount;
 		}
 		return num;
+	}
+
+	public bool HasAny(ItemDefinition itemDef)
+	{
+		for (int i = 0; i < itemList.Count; i++)
+		{
+			Item item = itemList[i];
+			if ((Object)(object)item.info == (Object)(object)itemDef && item.amount > 0)
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public int GetTotalItemAmount(Item item, int slotStartInclusive, int slotEndInclusive)
@@ -946,6 +1041,20 @@ public sealed class ItemContainer : IAmmoContainer
 			else if ((Object)(object)slot.info.isRedirectOf != (Object)null && (Object)(object)slot.info.isRedirectOf == (Object)(object)item.info.isRedirectOf)
 			{
 				num += slot.amount;
+			}
+		}
+		return num;
+	}
+
+	public int TotalItemAmount(ItemDefinition itemDef)
+	{
+		int num = 0;
+		for (int i = 0; i < itemList.Count; i++)
+		{
+			Item item = itemList[i];
+			if ((Object)(object)item.info == (Object)(object)itemDef)
+			{
+				num += item.amount;
 			}
 		}
 		return num;
@@ -1115,6 +1224,10 @@ public sealed class ItemContainer : IAmmoContainer
 			{
 				return CanAcceptResult.CannotAccept;
 			}
+		}
+		if (blockedItems != null && blockedItems.Contains(item.info))
+		{
+			return CanAcceptResult.CannotAccept;
 		}
 		if (item.GetItemVolume() > containerVolume)
 		{

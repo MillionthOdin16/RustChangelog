@@ -9,8 +9,8 @@ public class TriggerVehicleDrag : TriggerBase, IServerComponent
 
 	internal override GameObject InterestedInObject(GameObject obj)
 	{
-		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
 		obj = base.InterestedInObject(obj);
 		if ((Object)(object)obj == (Object)null)
 		{

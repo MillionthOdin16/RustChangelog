@@ -129,9 +129,9 @@ public class SpawnGroup : BaseMonoBehaviour, IServerComponent, ISpawnPointUser, 
 
 	public void Clear()
 	{
-		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
 		for (int num = spawnInstances.Count - 1; num >= 0; num--)
 		{
 			SpawnPointInstance spawnPointInstance = spawnInstances[num];
@@ -292,7 +292,7 @@ public class SpawnGroup : BaseMonoBehaviour, IServerComponent, ISpawnPointUser, 
 		for (int i = 0; i < spawnPoints.Length; i++)
 		{
 			BaseSpawnPoint baseSpawnPoint2 = spawnPoints[(num + i) % spawnPoints.Length];
-			if (!((Object)(object)baseSpawnPoint2 == (Object)null) && baseSpawnPoint2.IsAvailableTo(prefabRef) && !baseSpawnPoint2.HasPlayersIntersecting())
+			if (!((Object)(object)baseSpawnPoint2 == (Object)null) && baseSpawnPoint2.IsAvailableTo(prefabRef.Get()) && !baseSpawnPoint2.HasPlayersIntersecting())
 			{
 				baseSpawnPoint = baseSpawnPoint2;
 				break;

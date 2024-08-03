@@ -351,7 +351,7 @@ public class TrainCar : BaseVehicle, ITrainCollidable, IPrefabPreProcess, Trigge
 			localTrackSelection = trackSelection;
 			if (base.isServer)
 			{
-				ClientRPC(null, "SetTrackSelection", (sbyte)localTrackSelection);
+				ClientRPC(RpcTarget.NetworkGroup("SetTrackSelection"), (sbyte)localTrackSelection);
 			}
 		}
 	}
@@ -908,6 +908,7 @@ public class TrainCar : BaseVehicle, ITrainCollidable, IPrefabPreProcess, Trigge
 		{
 			if (!ColliderIsPartOfTrain(item))
 			{
+				Pool.FreeList<Collider>(ref list);
 				return false;
 			}
 		}
@@ -938,7 +939,7 @@ public class TrainCar : BaseVehicle, ITrainCollidable, IPrefabPreProcess, Trigge
 	{
 		if (IsMoving())
 		{
-			ClientRPC(null, "BaseTrainUpdate", GetNetworkTime(), frontBogieYRot, rearBogieYRot);
+			ClientRPC(RpcTarget.NetworkGroup("BaseTrainUpdate"), GetNetworkTime(), frontBogieYRot, rearBogieYRot);
 		}
 	}
 

@@ -17,10 +17,13 @@ public class AIBrainSenses
 
 	private float knownPlayersLOSUpdateInterval = 0.2f;
 
+	[NonSerialized]
 	public float MemoryDuration = 10f;
 
+	[NonSerialized]
 	public float LastThreatTimestamp;
 
+	[NonSerialized]
 	public float TimeInAgressiveState;
 
 	private static BaseEntity[] queryResults = new BaseEntity[64];
@@ -57,12 +60,14 @@ public class AIBrainSenses
 
 	private bool refreshKnownLOS;
 
+	[NonSerialized]
 	public bool ignoreTutorialPlayers;
 
 	private EntityType senseTypes;
 
 	private IAIAttack ownerAttack;
 
+	[NonSerialized]
 	public BaseAIBrain brain;
 
 	private Func<BaseEntity, bool> aiCaresAbout;

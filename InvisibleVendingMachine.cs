@@ -91,10 +91,18 @@ public class InvisibleVendingMachine : NPCVendingMachine
 
 	public override void Load(LoadInfo info)
 	{
-		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0097: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ba: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
 		base.Load(info);
-		if (!info.fromDisk || !((Object)(object)vmoManifest != (Object)null) || info.msg.vendingMachine == null)
+		if (!info.fromDisk)
+		{
+			return;
+		}
+		if (flags.HasFlag(Flags.Reserved6))
+		{
+			flags &= ~Flags.Reserved6;
+		}
+		if (!((Object)(object)vmoManifest != (Object)null) || info.msg.vendingMachine == null)
 		{
 			return;
 		}

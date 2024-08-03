@@ -24,6 +24,8 @@ public class SkyLantern : StorageContainer, IIgniteable
 
 	private Vector3 travelVec = Vector3.forward;
 
+	private float takeOffY;
+
 	public override float GetNetworkTime()
 	{
 		return Time.fixedTime;
@@ -52,12 +54,14 @@ public class SkyLantern : StorageContainer, IIgniteable
 	public void Ignite(Vector3 fromPos)
 	{
 		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
 		((Component)this).gameObject.transform.RemoveComponent<GroundWatch>();
 		((Component)this).gameObject.transform.RemoveComponent<DestroyOnGroundMissing>();
 		((Component)this).gameObject.layer = 14;
+		takeOffY = ((Component)this).transform.position.y;
 		travelVec = Vector3Ex.Direction2D(((Component)this).transform.position, fromPos);
 		SetFlag(Flags.On, b: true);
 		UpdateIdealAltitude();
@@ -103,6 +107,10 @@ public class SkyLantern : StorageContainer, IIgniteable
 			float num = TerrainMeta.HeightMap?.GetHeight(((Component)this).transform.position) ?? 0f;
 			float num2 = TerrainMeta.WaterMap?.GetHeight(((Component)this).transform.position) ?? 0f;
 			idealAltitude = Mathf.Max(num, num2) + hoverHeight;
+			if (takeOffY > idealAltitude)
+			{
+				idealAltitude = takeOffY + hoverHeight;
+			}
 			if (hoverHeight != 0f)
 			{
 				idealAltitude -= 2f * Mathf.Abs(randOffset);

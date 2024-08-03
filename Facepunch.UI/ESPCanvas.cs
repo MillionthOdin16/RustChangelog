@@ -10,9 +10,6 @@ public class ESPCanvas : SingletonComponent<ESPCanvas>
 	[Tooltip("This object will be duplicated in place")]
 	public ESPPlayerInfo Source;
 
-	[Tooltip("Entities this far away won't be overlayed")]
-	public float MaxDistance = 64f;
-
 	private static int NameplateCount = 32;
 
 	[ClientVar(ClientAdmin = true)]
@@ -26,6 +23,9 @@ public class ESPCanvas : SingletonComponent<ESPCanvas>
 
 	[ClientVar(ClientAdmin = true)]
 	public static bool ColourCodeTeams = false;
+
+	[ReplicatedVar(Help = "Multiply the maximum distance for displaying players nameplates")]
+	public static float DisplayDistanceMultiplier = 1f;
 
 	[ClientVar(ClientAdmin = true, Help = "Max amount of nameplates to show at once")]
 	public static int MaxNameplates

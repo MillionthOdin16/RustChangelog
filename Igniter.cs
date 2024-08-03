@@ -23,17 +23,25 @@ public class Igniter : IOEntity
 		return PowerConsumption;
 	}
 
-	public override void UpdateHasPower(int inputAmount, int inputSlot)
+	public bool CanIgnite()
 	{
-		base.UpdateHasPower(inputAmount, inputSlot);
-		if (inputAmount > 0)
+		return base.healthFraction >= 0.1f;
+	}
+
+	public override void UpdateFromInput(int inputAmount, int inputSlot)
+	{
+		base.UpdateFromInput(inputAmount, inputSlot);
+		if (inputAmount > 0 && CanIgnite())
 		{
 			((FacepunchBehaviour)this).InvokeRepeating((Action)IgniteInRange, IgniteStartDelay, IgniteFrequency);
+			SetFlag(Flags.On, b: true);
+			return;
 		}
-		else if (((FacepunchBehaviour)this).IsInvoking((Action)IgniteInRange))
+		if (((FacepunchBehaviour)this).IsInvoking((Action)IgniteInRange))
 		{
 			((FacepunchBehaviour)this).CancelInvoke((Action)IgniteInRange);
 		}
+		SetFlag(Flags.On, b: false);
 	}
 
 	private void IgniteInRange()
@@ -66,5 +74,27 @@ public class Igniter : IOEntity
 		}
 		Pool.FreeList<BaseEntity>(ref list);
 		Hurt(SelfDamagePerIgnite, DamageType.ElectricShock, this, useProtection: false);
+		if (!CanIgnite())
+		{
+			SendChangedToRoot(forceUpdate: true);
+		}
+	}
+
+	public override int DesiredPower(int inputIndex = 0)
+	{
+		if (!CanIgnite())
+		{
+			return 0;
+		}
+		return base.DesiredPower(inputIndex);
+	}
+
+	public override void OnRepair()
+	{
+		base.OnRepair();
+		if (CanIgnite())
+		{
+			SendChangedToRoot(forceUpdate: true);
+		}
 	}
 }

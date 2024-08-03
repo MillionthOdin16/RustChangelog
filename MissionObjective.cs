@@ -34,6 +34,10 @@ public abstract class MissionObjective : ScriptableObject
 
 	public bool IsStarted(int index, BaseMission.MissionInstance instance)
 	{
+		if (instance == null || instance.objectiveStatuses.Length <= index)
+		{
+			return false;
+		}
 		return instance.objectiveStatuses[index].started;
 	}
 

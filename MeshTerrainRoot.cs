@@ -1,9 +1,11 @@
 using UnityEngine;
 
 [ExecuteInEditMode]
-public class MeshTerrainRoot : MonoBehaviour
+public class MeshTerrainRoot : MonoBehaviour, IClientComponent
 {
-	public MeshRenderer MeshTerrainRenderer;
-
 	public GameObject TerrainBlendSearchRoot;
+
+	public Mesh TerrainMeshAsset;
+
+	public Material TerrainMaterial;
 }

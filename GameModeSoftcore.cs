@@ -111,17 +111,21 @@ public class GameModeSoftcore : GameModeVanilla
 
 	public override void OnPlayerDeath(BasePlayer instigator, BasePlayer victim, HitInfo deathInfo = null)
 	{
-		//IL_0109: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0118: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0122: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_013d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0142: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0154: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0155: Unknown result type (might be due to invalid IL or missing references)
-		if ((Object)(object)victim != (Object)null && !victim.IsNpc)
+		//IL_015d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0162: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0171: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0176: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0182: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0191: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0196: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a9: Unknown result type (might be due to invalid IL or missing references)
+		if ((Object)(object)victim != (Object)null && (victim.IsInTutorial || (victim.net != null && victim.net.group != null && victim.net.group.restricted)))
+		{
+			return;
+		}
+		if ((Object)(object)victim != (Object)null && !victim.IsNpc && !victim.IsInTutorial)
 		{
 			SetInventoryLocked(victim, wantsLocked: false);
 			int newID = 0;
@@ -137,7 +141,7 @@ public class GameModeSoftcore : GameModeVanilla
 			AddFractionOfContainer(victim.inventory.containerMain, ref to, reclaim_fraction_main);
 			if (to.Count > 0)
 			{
-				newID = ReclaimManager.instance.AddPlayerReclaim(victim.userID, to, ((Object)(object)instigator == (Object)null) ? 0 : instigator.userID, ((Object)(object)instigator == (Object)null) ? "" : instigator.displayName);
+				newID = ReclaimManager.instance.AddPlayerReclaim(victim.userID, to, ((Object)(object)instigator == (Object)null) ? ((BasePlayer.EncryptedValue<ulong>)0uL) : instigator.userID, ((Object)(object)instigator == (Object)null) ? "" : instigator.displayName);
 			}
 			ReturnItemsTo(ref source, victim.inventory.containerBelt);
 			if (to.Count > 0)
@@ -156,7 +160,10 @@ public class GameModeSoftcore : GameModeVanilla
 	public override void OnPlayerRespawn(BasePlayer player)
 	{
 		base.OnPlayerRespawn(player);
-		player.ShowToast(GameTip.Styles.Blue_Long, ReclaimToast);
+		if (!player.IsInTutorial)
+		{
+			player.ShowToast(GameTip.Styles.Blue_Long, ReclaimToast);
+		}
 	}
 
 	public override SleepingBag[] FindSleepingBagsForPlayer(ulong playerID, bool ignoreTimers)

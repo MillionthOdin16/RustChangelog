@@ -17,6 +17,8 @@ public class ItemAmount : ISerializationCallbackReceiver
 
 	public bool ignoreInTutorial;
 
+	public bool isBP;
+
 	public int itemid
 	{
 		get

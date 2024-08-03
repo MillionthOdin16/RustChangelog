@@ -56,6 +56,17 @@ public class ConstructionSkin : BasePrefab
 	{
 		DestroyConditionalModels(parent);
 		CreateConditionalModels(parent);
+		if (!parent.HasWallpaper())
+		{
+			return;
+		}
+		foreach (GameObject conditional in conditionals)
+		{
+			if (conditional.CompareTag("Wallpaper"))
+			{
+				SkinHelpers.SetSkin(conditional, WallpaperPlanner.WallpaperItemDef, parent.wallpaperID);
+			}
+		}
 	}
 
 	public void Destroy(BuildingBlock parent)

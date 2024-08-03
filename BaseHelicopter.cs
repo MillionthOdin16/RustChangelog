@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Rust;
 using UnityEngine;
 
-public class BaseHelicopter : BaseVehicle, SeekerTarget.ISeekerTargetOwner
+public abstract class BaseHelicopter : BaseVehicle, SeekerTarget.ISeekerTargetOwner
 {
 	[Serializable]
 	protected class GroundEffect
@@ -211,7 +211,8 @@ public class BaseHelicopter : BaseVehicle, SeekerTarget.ISeekerTargetOwner
 
 	public override void VehicleFixedUpdate()
 	{
-		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
 		base.VehicleFixedUpdate();
 		if (Time.time > lastPlayerInputTime + 0.5f)
 		{
@@ -221,6 +222,10 @@ public class BaseHelicopter : BaseVehicle, SeekerTarget.ISeekerTargetOwner
 		if (IsEngineOn() || ForceMovementHandling)
 		{
 			MovementUpdate();
+		}
+		else if (!HasDriver() && TimeSince.op_Implicit(timeSinceLastPush) > 2f)
+		{
+			ApplyHandbrake();
 		}
 		SetFlag(Flags.Reserved6, TOD_Sky.Instance.IsNight);
 		GameObject[] array = killTriggers;
@@ -247,6 +252,8 @@ public class BaseHelicopter : BaseVehicle, SeekerTarget.ISeekerTargetOwner
 	protected virtual void TryStartEngine(BasePlayer player)
 	{
 	}
+
+	protected abstract void ApplyHandbrake();
 
 	public void ClearDamageTorque()
 	{
@@ -404,12 +411,12 @@ public class BaseHelicopter : BaseVehicle, SeekerTarget.ISeekerTargetOwner
 				return;
 			}
 		}
-		float num = Mathf.InverseLerp(5f, 30f, magnitude);
+		float num = Mathf.InverseLerp(7f, 30f, magnitude);
 		if (!(num > 0f))
 		{
 			return;
 		}
-		pendingImpactDamage += Mathf.Max(num, 0.15f);
+		pendingImpactDamage += Mathf.Max(num, 0.05f);
 		if (Vector3.Dot(((Component)this).transform.up, Vector3.up) < 0.5f)
 		{
 			pendingImpactDamage *= 5f;
@@ -449,6 +456,7 @@ public class BaseHelicopter : BaseVehicle, SeekerTarget.ISeekerTargetOwner
 		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
 		//IL_009e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ef: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00d2: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00d9: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0100: Unknown result type (might be due to invalid IL or missing references)
@@ -525,6 +533,7 @@ public class BaseHelicopter : BaseVehicle, SeekerTarget.ISeekerTargetOwner
 				}
 			}
 		}
+		SeismicSensor.Notify(((Component)this).transform.position, 1);
 		base.OnKilled(info);
 	}
 

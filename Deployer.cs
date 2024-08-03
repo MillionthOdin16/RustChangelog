@@ -190,13 +190,16 @@ public class Deployer : HeldEntity
 	{
 		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ca: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0154: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0159: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ab: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0102: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0106: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0195: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ea: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ef: Unknown result type (might be due to invalid IL or missing references)
 		if (!HasItemAmount())
 		{
 			return;
@@ -226,6 +229,14 @@ public class Deployer : HeldEntity
 			ownerPlayer.ChatMessage("Building is blocked at placement position!");
 			return;
 		}
+		if (ownerPlayer.IsInTutorial)
+		{
+			TutorialIsland currentTutorialIsland = ownerPlayer.GetCurrentTutorialIsland();
+			if ((Object)(object)currentTutorialIsland != (Object)null && !currentTutorialIsland.CheckPlacement(ownerPlayer, deployable, ((Component)baseEntity).transform.position, ((Component)baseEntity).transform.rotation))
+			{
+				return;
+			}
+		}
 		Item ownerItem = GetOwnerItem();
 		ItemModDeployable modDeployable = GetModDeployable();
 		BaseEntity baseEntity2 = GameManager.server.CreateEntity(modDeployable.entityPrefab.resourcePath);
@@ -243,20 +254,28 @@ public class Deployer : HeldEntity
 			}
 			if (ownerPlayer.IsInTutorial)
 			{
-				TutorialIsland currentTutorialIsland = ownerPlayer.GetCurrentTutorialIsland();
-				if ((Object)(object)currentTutorialIsland != (Object)null)
+				TutorialIsland currentTutorialIsland2 = ownerPlayer.GetCurrentTutorialIsland();
+				if ((Object)(object)currentTutorialIsland2 != (Object)null)
 				{
-					currentTutorialIsland.OnPlayerBuiltConstruction(ownerPlayer);
+					currentTutorialIsland2.OnPlayerBuiltConstruction(ownerPlayer);
 				}
 			}
 			if ((Object)(object)GetOwnerItemDefinition() != (Object)null)
 			{
-				ownerPlayer.ProcessMissionEvent(BaseMission.MissionEventType.DEPLOY, baseEntity2.prefabID, 1f, ((Component)baseEntity2).transform.position);
+				ownerPlayer.ProcessMissionEvent(BaseMission.MissionEventType.DEPLOY, new BaseMission.MissionEventPayload
+				{
+					WorldPosition = ((Component)baseEntity2).transform.position,
+					UintIdentifier = baseEntity2.prefabID,
+					IntIdentifier = GetOwnerItemDefinition().itemid
+				}, 1f);
 			}
 		}
 		modDeployable.OnDeployed(baseEntity2, ownerPlayer);
 		Analytics.Azure.OnEntityBuilt(baseEntity2, ownerPlayer);
-		UseItemAmount(1);
+		if (!ownerPlayer.IsInCreativeMode || !Creative.freeBuild)
+		{
+			UseItemAmount(1);
+		}
 	}
 
 	public void DoDeploy_Regular(Deployable deployable, Ray ray)

@@ -38,6 +38,12 @@ public class TechTreeData : ScriptableObject
 
 	public int nextID;
 
+	public int techTreeLevel;
+
+	public SoundDefinition openSound;
+
+	public SoundDefinition closeSound;
+
 	private Dictionary<int, NodeInstance> _idToNode;
 
 	private NodeInstance _entryNode;
@@ -204,7 +210,7 @@ public class TechTreeData : ScriptableObject
 			{
 				if (!((Object)(object)item.itemDef == (Object)null) && !HasPlayerUnlocked(player, item))
 				{
-					num2 += ResearchTable.ScrapForResearch(item.itemDef, ResearchTable.ResearchType.TechTree);
+					num2 += Workbench.ScrapForResearch(item.itemDef, 0, out var _);
 				}
 			}
 			if (num2 < num)

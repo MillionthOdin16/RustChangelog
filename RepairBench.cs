@@ -16,7 +16,7 @@ public class RepairBench : StorageContainer
 
 	public const float REPAIR_COST_FRACTION = 0.2f;
 
-	private float nextSkinChangeTime;
+	private float nextSkinChangeAudioTime;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -158,7 +158,7 @@ public class RepairBench : StorageContainer
 		StripComponentRepairCost(allIngredients);
 	}
 
-	public static void StripComponentRepairCost(List<ItemAmount> allIngredients)
+	public static void StripComponentRepairCost(List<ItemAmount> allIngredients, float repairCostMultiplier = 1f)
 	{
 		if (allIngredients == null)
 		{
@@ -179,14 +179,14 @@ public class RepairBench : StorageContainer
 				{
 					if ((Object)(object)allIngredient.itemDef == (Object)(object)itemAmount2.itemDef)
 					{
-						allIngredient.amount += Mathf.Min(itemAmount2.amount * itemAmount.amount, 1f);
+						allIngredient.amount += Mathf.Max(itemAmount2.amount * itemAmount.amount * repairCostMultiplier, 1f);
 						flag = true;
 						break;
 					}
 				}
 				if (!flag)
 				{
-					allIngredients.Add(new ItemAmount(itemAmount2.itemDef, Mathf.Min(itemAmount2.amount * itemAmount.amount, 1f)));
+					allIngredients.Add(new ItemAmount(itemAmount2.itemDef, Mathf.Max(itemAmount2.amount * itemAmount.amount * repairCostMultiplier, 1f)));
 				}
 			}
 			allIngredients.RemoveAt(i);
@@ -206,16 +206,16 @@ public class RepairBench : StorageContainer
 	[RPC_Server.IsVisible(3f)]
 	public void ChangeSkin(RPCMessage msg)
 	{
-		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
-		//IL_04f9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_04fe: Unknown result type (might be due to invalid IL or missing references)
-		bool flag = Time.realtimeSinceStartup > nextSkinChangeTime;
+		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_050a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_050f: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer player = msg.player;
 		int num = msg.read.Int32();
 		ItemId val = default(ItemId);
 		((ItemId)(ref val))._002Ector(msg.read.UInt64());
 		bool isValid = ((ItemId)(ref val)).IsValid;
+		bool flag = !isValid || Time.realtimeSinceStartup > nextSkinChangeAudioTime;
 		Item slot = base.inventory.GetSlot(0);
 		if (slot == null || (isValid && slot.uid != val))
 		{
@@ -237,7 +237,10 @@ public class RepairBench : StorageContainer
 			debugprint("RepairBench.ChangeSkin cannot apply same skin twice : " + Skin + ": " + slot.skin);
 			return;
 		}
-		nextSkinChangeTime = Time.realtimeSinceStartup + 0.75f;
+		if (flag)
+		{
+			nextSkinChangeAudioTime = Time.realtimeSinceStartup + 0.75f;
+		}
 		ItemSkinDirectory.Skin skin = slot.info.skins.FirstOrDefault((ItemSkinDirectory.Skin x) => (ulong)x.id == Skin);
 		if ((Object)(object)slot.info.isRedirectOf != (Object)null)
 		{
@@ -346,7 +349,7 @@ public class RepairBench : StorageContainer
 		RepairAnItem(slot, player, this, conditionLost, mustKnowBlueprint: true);
 	}
 
-	public override int GetIdealSlot(BasePlayer player, Item item)
+	public override int GetIdealSlot(BasePlayer player, ItemContainer container, Item item)
 	{
 		return 0;
 	}

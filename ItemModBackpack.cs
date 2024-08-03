@@ -11,6 +11,8 @@ public class ItemModBackpack : ItemMod
 	[Header("Backpack's item volume when items are in it")]
 	public int containerVolumeWhenFilled = 1;
 
+	public bool DropWhenDowned;
+
 	public override void OnItemCreated(Item item)
 	{
 		base.OnItemCreated(item);

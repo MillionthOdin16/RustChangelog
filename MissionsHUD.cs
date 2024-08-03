@@ -16,10 +16,4 @@ public class MissionsHUD : SingletonComponent<MissionsHUD>
 	public GameObject timerObject;
 
 	public RustText timerText;
-
-	public GameObject tutorialObject;
-
-	public RustText tutorialText;
-
-	public TokenisedPhrase tutorialTextPhrase;
 }

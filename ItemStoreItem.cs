@@ -19,6 +19,8 @@ public class ItemStoreItem : MonoBehaviour
 
 	public TextMeshProUGUI Price;
 
+	public GameObject AlreadyOwnedButton;
+
 	public RustText ItemName;
 
 	public GameObject NewTag;

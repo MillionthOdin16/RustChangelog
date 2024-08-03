@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Facepunch;
 using UnityEngine;
@@ -136,8 +137,10 @@ public class TrainTrackSpline : WorldSpline
 
 	private int straightestPrevIndex;
 
+	[NonSerialized]
 	public HashSet<ITrainTrackUser> trackUsers = new HashSet<ITrainTrackUser>();
 
+	[NonSerialized]
 	public HashSet<TrainSignal> signals = new HashSet<TrainSignal>();
 
 	private bool HasNextTrack => nextTracks.Count > 0;

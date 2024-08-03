@@ -375,7 +375,7 @@ public class CameraRenderer : IPooled
 			{
 				break;
 			}
-			Collider collider = BurstUtil.GetCollider(foundColliderId);
+			Collider collider = CameraBurstUtil.GetCollider(foundColliderId);
 			if ((Object)(object)collider == (Object)null)
 			{
 				continue;

@@ -8,6 +8,8 @@ public class MissionObjective_Craft : MissionObjective
 
 	public int targetItemAmount;
 
+	public bool checkExistingInventory;
+
 	public override void MissionStarted(int index, BaseMission.MissionInstance instance, BasePlayer forPlayer)
 	{
 		base.MissionStarted(index, instance, forPlayer);
@@ -23,9 +25,11 @@ public class MissionObjective_Craft : MissionObjective
 			return;
 		}
 		ItemDefinition[] array = targetItems;
-		for (int i = 0; i < array.Length; i++)
+		foreach (ItemDefinition itemDefinition in array)
 		{
-			if (array[i].itemid == payload.IntIdentifier)
+			ItemDefinition itemDefinition2 = ItemManager.FindItemDefinition(payload.IntIdentifier);
+			bool flag = (Object)(object)itemDefinition2 != (Object)null && (Object)(object)itemDefinition2.isRedirectOf != (Object)null && itemDefinition2.isRedirectOf.itemid == itemDefinition.itemid;
+			if (itemDefinition.itemid == payload.IntIdentifier || flag)
 			{
 				instance.objectiveStatuses[index].progressCurrent += (int)amount;
 				if (instance.objectiveStatuses[index].progressCurrent >= (float)targetItemAmount)
@@ -34,6 +38,27 @@ public class MissionObjective_Craft : MissionObjective
 				}
 				playerFor.MissionDirty();
 				break;
+			}
+		}
+	}
+
+	public override void ObjectiveStarted(BasePlayer playerFor, int index, BaseMission.MissionInstance instance)
+	{
+		base.ObjectiveStarted(playerFor, index, instance);
+		if (checkExistingInventory)
+		{
+			int num = 0;
+			ItemDefinition[] array = targetItems;
+			foreach (ItemDefinition definition in array)
+			{
+				num += playerFor.inventory.GetAmount(definition);
+			}
+			if (num > 0)
+			{
+				ProcessMissionEvent(playerFor, instance, index, BaseMission.MissionEventType.CRAFT_ITEM, new BaseMission.MissionEventPayload
+				{
+					IntIdentifier = targetItems[0].itemid
+				}, num);
 			}
 		}
 	}

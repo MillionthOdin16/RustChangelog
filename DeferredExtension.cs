@@ -11,15 +11,11 @@ public class DeferredExtension : MonoBehaviour
 
 	public ScreenSpaceRefractionParams screenSpaceRefraction = ScreenSpaceRefractionParams.Default;
 
-	public Texture2D blueNoise;
-
-	public Texture preintegratedFGD_GGX;
-
-	public Texture envBrdfLut;
-
 	public float depthScale = 100f;
 
 	public bool debug;
 
 	public bool forceToCameraResolution;
+
+	public bool excludeMainLight;
 }

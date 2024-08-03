@@ -23,9 +23,9 @@ public class PieMenu : UIBehaviour
 			public Color CustomColor;
 		}
 
-		public string name;
+		public Phrase name;
 
-		public string desc;
+		public Phrase desc;
 
 		public string requirements;
 
@@ -42,6 +42,10 @@ public class PieMenu : UIBehaviour
 		public float time;
 
 		public BasePlayer.PingType? showTutorialHighlight;
+
+		public float sizeRatio = 1f;
+
+		public float iconScale = 1f;
 
 		[NonSerialized]
 		public Action<BasePlayer> action;
@@ -60,9 +64,6 @@ public class PieMenu : UIBehaviour
 
 		[NonSerialized]
 		public bool allowMerge;
-
-		[NonSerialized]
-		public bool wantsMerge;
 	}
 
 	public static PieMenu Instance;

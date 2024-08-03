@@ -95,6 +95,11 @@ public class SpookySpeaker : IOEntity
 		}
 	}
 
+	public override int ConsumptionAmount()
+	{
+		return 0;
+	}
+
 	private void SetTargetState(bool state)
 	{
 		SetFlag(Flags.On, state);
@@ -125,7 +130,7 @@ public class SpookySpeaker : IOEntity
 
 	public void SendPlaySound()
 	{
-		ClientRPC(null, "PlaySpookySound");
+		ClientRPC(RpcTarget.NetworkGroup("PlaySpookySound"));
 	}
 
 	public void DelayedOff()

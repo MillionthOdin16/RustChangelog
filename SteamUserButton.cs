@@ -10,11 +10,17 @@ public class SteamUserButton : MonoBehaviour
 
 	public RawImage avatar;
 
-	public Color textColorInGame;
+	public Color colorTeamOnline;
 
-	public Color textColorOnline;
+	public Color colorTeamOffline;
 
-	public Color textColorNormal;
+	public Color colorFriendOnline;
+
+	public Color colorFriendOffline;
+
+	public Color colorOnline;
+
+	public Color colorOffline;
 
 	public ulong SteamId { get; private set; }
 

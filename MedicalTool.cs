@@ -151,7 +151,7 @@ public class MedicalTool : AttackEntity
 			BasePlayer basePlayer = BaseNetworkable.serverEntities.Find(msg.read.EntityID()) as BasePlayer;
 			if ((Object)(object)basePlayer != (Object)null && Vector3.Distance(((Component)basePlayer).transform.position, ((Component)player).transform.position) < 4f)
 			{
-				ClientRPCPlayer(null, player, "Reset");
+				ClientRPC(RpcTarget.Player("Reset", player));
 				GiveEffectsTo(basePlayer);
 				UseItemAmount(1);
 				StartAttackCooldown(repeatDelay);
@@ -170,7 +170,7 @@ public class MedicalTool : AttackEntity
 		}
 		else if (player.CanInteract() && HasItemAmount())
 		{
-			ClientRPCPlayer(null, player, "Reset");
+			ClientRPC(RpcTarget.Player("Reset", player));
 			GiveEffectsTo(player);
 			UseItemAmount(1);
 			StartAttackCooldown(repeatDelay);

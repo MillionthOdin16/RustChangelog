@@ -99,6 +99,30 @@ public class HitInfo
 
 	public bool hasDamage => damageTypes.Total() > 0f;
 
+	public bool InitiatorParented
+	{
+		get
+		{
+			if ((Object)(object)Initiator != (Object)null && (Object)(object)Initiator.GetParentEntity() != (Object)null)
+			{
+				return Initiator.GetParentEntity().IsValid();
+			}
+			return false;
+		}
+	}
+
+	public bool HitEntityParented
+	{
+		get
+		{
+			if ((Object)(object)HitEntity != (Object)null && (Object)(object)HitEntity.GetParentEntity() != (Object)null)
+			{
+				return HitEntity.GetParentEntity().IsValid();
+			}
+			return false;
+		}
+	}
+
 	public bool isHeadshot
 	{
 		get

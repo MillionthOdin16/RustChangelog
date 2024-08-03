@@ -115,7 +115,7 @@ public class AudioVisualisationEntity : IOEntity
 
 	public override void OnFlagsChanged(Flags old, Flags next)
 	{
-		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
 		base.OnFlagsChanged(old, next);
 		if (base.isServer && old.HasFlag(Flags.Reserved8) != next.HasFlag(Flags.Reserved8) && next.HasFlag(Flags.Reserved8))
 		{
@@ -123,7 +123,7 @@ public class AudioVisualisationEntity : IOEntity
 			IOEntity audioSource = GetAudioSource(this, ref depth);
 			if ((Object)(object)audioSource != (Object)null)
 			{
-				ClientRPC<NetworkableId>(null, "Client_PlayAudioFrom", audioSource.net.ID);
+				ClientRPC<NetworkableId>(RpcTarget.NetworkGroup("Client_PlayAudioFrom"), audioSource.net.ID);
 			}
 			connectedTo.Set(audioSource);
 		}

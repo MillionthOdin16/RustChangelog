@@ -170,12 +170,13 @@ public class Prefab : IComparable<Prefab>
 		return Object.transform.CheckEnvironmentVolumesOutsideTerrain(pos, rot, scale, type, padding);
 	}
 
-	public void ApplySequenceReplacement(List<Prefab> sequence, ref Prefab replacement, Prefab[] possibleReplacements, int pathLength, int pathIndex)
+	public void ApplySequenceReplacement(List<Prefab> sequence, ref Prefab replacement, Prefab[] possibleReplacements, int pathLength, int pathIndex, Vector3 position)
 	{
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
 		PathSequence pathSequence = Attribute.Find<PathSequence>(ID);
 		if (pathSequence != null)
 		{
-			pathSequence.ApplySequenceReplacement(sequence, ref replacement, possibleReplacements, pathLength, pathIndex);
+			pathSequence.ApplySequenceReplacement(sequence, ref replacement, possibleReplacements, pathLength, pathIndex, position);
 		}
 	}
 

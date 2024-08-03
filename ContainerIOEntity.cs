@@ -237,7 +237,7 @@ public class ContainerIOEntity : IOEntity, IItemContainerEntity, IIdealSlotEntit
 			SetFlag(Flags.Open, b: true);
 			player.inventory.loot.AddContainer(inventory);
 			player.inventory.loot.SendImmediate();
-			player.ClientRPCPlayer(null, player, "RPC_OpenLootPanel", lootPanelName);
+			player.ClientRPC(RpcTarget.Player("RPC_OpenLootPanel", player), lootPanelName);
 			SendNetworkUpdate();
 			return true;
 		}
@@ -255,7 +255,7 @@ public class ContainerIOEntity : IOEntity, IItemContainerEntity, IIdealSlotEntit
 		return false;
 	}
 
-	public virtual int GetIdealSlot(BasePlayer player, Item item)
+	public virtual int GetIdealSlot(BasePlayer player, ItemContainer container, Item item)
 	{
 		return -1;
 	}

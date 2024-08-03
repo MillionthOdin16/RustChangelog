@@ -119,15 +119,15 @@ public class RecorderTool : ThrownWeapon, ICassettePlayer
 
 	public void OnCassetteInserted(Cassette c)
 	{
-		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
 		cachedCassette = c;
-		ClientRPC<NetworkableId>(null, "Client_OnCassetteInserted", c.net.ID);
+		ClientRPC<NetworkableId>(RpcTarget.NetworkGroup("Client_OnCassetteInserted"), c.net.ID);
 	}
 
 	public void OnCassetteRemoved(Cassette c)
 	{
 		cachedCassette = null;
-		ClientRPC(null, "Client_OnCassetteRemoved");
+		ClientRPC(RpcTarget.NetworkGroup("Client_OnCassetteRemoved"));
 	}
 
 	protected override void SetUpThrownWeapon(BaseEntity ent)

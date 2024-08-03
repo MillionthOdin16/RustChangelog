@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Facepunch.Rust;
 using UnityEngine;
 
 public struct Timing
@@ -17,6 +18,7 @@ public struct Timing
 		if (sw.Elapsed.TotalSeconds > 0.30000001192092896)
 		{
 			Debug.Log((object)("[" + sw.Elapsed.TotalSeconds.ToString("0.0") + "s] " + name));
+			PerformanceLogging.server?.SetTiming(name, sw.Elapsed);
 		}
 	}
 

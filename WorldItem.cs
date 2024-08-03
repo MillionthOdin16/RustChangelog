@@ -9,6 +9,12 @@ using UnityEngine.Assertions;
 
 public class WorldItem : BaseEntity, PlayerInventory.ICanMoveFrom
 {
+	public static readonly Phrase OpenLootTitle = new Phrase("open_loot", "Open");
+
+	public static readonly Phrase PickUpTitle = new Phrase("pick_up", "Pick Up");
+
+	public static readonly Phrase HoldToPickupPhrase = new Phrase("hold_use_to_pickup", "Hold [USE] to pickup");
+
 	[Header("WorldItem")]
 	public bool allowPickup = true;
 
@@ -268,7 +274,7 @@ public class WorldItem : BaseEntity, PlayerInventory.ICanMoveFrom
 		try
 		{
 			val.item = item.Save(bIncludeContainer: false, bIncludeOwners: false);
-			ClientRPC<UpdateItem>(null, "UpdateItem", val);
+			ClientRPC<UpdateItem>(RpcTarget.NetworkGroup("UpdateItem"), val);
 		}
 		finally
 		{
@@ -280,9 +286,9 @@ public class WorldItem : BaseEntity, PlayerInventory.ICanMoveFrom
 	[RPC_Server.IsVisible(3f)]
 	public void Pickup(RPCMessage msg)
 	{
-		if (msg.player.CanInteract() && this.item != null && allowPickup)
+		if (msg.player.CanInteract() && this.item != null && allowPickup && CanOpenInSafeZone(msg.player))
 		{
-			ClientRPC(null, "PickupSound");
+			ClientRPC(RpcTarget.NetworkGroup("PickupSound"));
 			Item item = this.item;
 			Analytics.Azure.OnItemPickup(msg.player, this);
 			RemoveItem();
@@ -327,6 +333,23 @@ public class WorldItem : BaseEntity, PlayerInventory.ICanMoveFrom
 		}
 	}
 
+	private bool CanOpenInSafeZone(BasePlayer looter)
+	{
+		if (item == null || !item.info.blockStealingInSafeZone)
+		{
+			return true;
+		}
+		if (!(this is DroppedItem droppedItem))
+		{
+			return true;
+		}
+		if (looter.InSafeZone() && droppedItem.DroppedBy != (ulong)looter.userID && droppedItem.DroppedBy != 0L)
+		{
+			return false;
+		}
+		return true;
+	}
+
 	[RPC_Server]
 	[RPC_Server.IsVisible(3f)]
 	private void RPC_OpenLoot(RPCMessage rpc)
@@ -339,12 +362,12 @@ public class WorldItem : BaseEntity, PlayerInventory.ICanMoveFrom
 		if (!((Object)(object)component == (Object)null) && component.canLootInWorld)
 		{
 			BasePlayer player = rpc.player;
-			if (Object.op_Implicit((Object)(object)player) && player.CanInteract() && player.inventory.loot.StartLootingEntity(this))
+			if (Object.op_Implicit((Object)(object)player) && player.CanInteract() && CanOpenInSafeZone(player) && player.inventory.loot.StartLootingEntity(this))
 			{
 				SetFlag(Flags.Open, b: true);
 				player.inventory.loot.AddContainer(item.contents);
 				player.inventory.loot.SendImmediate();
-				player.ClientRPCPlayer(null, player, "RPC_OpenLootPanel", "generic_resizable");
+				player.ClientRPC(RpcTarget.Player("RPC_OpenLootPanel", player), "generic_resizable");
 				SendNetworkUpdate();
 			}
 		}

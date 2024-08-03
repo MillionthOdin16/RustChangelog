@@ -407,9 +407,14 @@ public class MagnetCrane : GroundVehicle, CarPhysics<MagnetCrane>.ICar
 		return steerInput;
 	}
 
-	public bool GetSteerModInput()
+	public bool GetSteerSpeedMod(float speed)
 	{
 		return false;
+	}
+
+	public float GetSteerMaxMult(float speed)
+	{
+		return 1f;
 	}
 
 	public override void OnEngineStartFailed()

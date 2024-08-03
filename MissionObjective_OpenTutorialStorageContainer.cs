@@ -26,11 +26,10 @@ public class MissionObjective_OpenTutorialStorageContainer : MissionObjective
 
 	private void DeregisterPing(BasePlayer playerFor)
 	{
-		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
 		TutorialIsland currentTutorialIsland = playerFor.GetCurrentTutorialIsland();
 		if ((Object)(object)currentTutorialIsland != (Object)null && (Object)(object)currentTutorialIsland.TutorialContainer != (Object)null)
 		{
-			currentTutorialIsland.TutorialContainer.LoadStorage(Items);
 			playerFor.DeregisterPingedEntity(currentTutorialIsland.TutorialContainer.net.ID, BasePlayer.PingType.Loot);
 		}
 	}

@@ -17,8 +17,13 @@ public class VendingMachineMapMarker : MapMarker
 
 	public GameObjectRef clusterMarkerObj;
 
+	private UIMapVendingMachineMarker myUIMarker;
+
+	private RectTransform markerTransform;
+
 	public void SetVendingMachine(VendingMachine vm, string shopName)
 	{
+		_ = (Object)(object)vm == (Object)null;
 		server_vendingMachine = vm;
 		markerShopName = shopName;
 		if (!((FacepunchBehaviour)this).IsInvoking((Action)TryUpdatePosition))
@@ -27,7 +32,7 @@ public class VendingMachineMapMarker : MapMarker
 		}
 	}
 
-	private void TryUpdatePosition()
+	public void TryUpdatePosition()
 	{
 		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)server_vendingMachine != (Object)null && (Object)(object)server_vendingMachine.GetParentEntity() != (Object)null)
@@ -49,18 +54,22 @@ public class VendingMachineMapMarker : MapMarker
 	{
 		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0017: Expected O, but got Unknown
-		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0073: Expected O, but got Unknown
-		//IL_00c2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c8: Expected O, but got Unknown
+		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a0: Expected O, but got Unknown
+		//IL_00ef: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f5: Expected O, but got Unknown
 		base.Save(info);
 		info.msg.vendingMachine = new VendingMachine();
 		info.msg.vendingMachine.shopName = markerShopName;
 		if (!((Object)(object)server_vendingMachine != (Object)null))
 		{
 			return;
+		}
+		if (server_vendingMachine is NPCVendingMachine nPCVendingMachine && nPCVendingMachine.IsLocalized)
+		{
+			info.msg.vendingMachine.translationToken = nPCVendingMachine.GetTranslationToken();
 		}
 		info.msg.vendingMachine.networkID = server_vendingMachine.net.ID;
 		info.msg.vendingMachine.sellOrderContainer = new SellOrderContainer();
@@ -95,6 +104,7 @@ public class VendingMachineMapMarker : MapMarker
 				val.currencyIsBlueprint = sellOrder.currencyIsBP;
 				val.itemCondition = sellOrder.itemCondition;
 				val.itemConditionMax = sellOrder.itemConditionMax;
+				val.priceMultiplier = sellOrder.priceMultiplier;
 				appMarkerData.sellOrders.Add(val);
 			}
 		}

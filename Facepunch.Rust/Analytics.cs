@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -156,6 +157,18 @@ public static class Analytics
 			public const string DismountEntity = "dismount";
 
 			public const string BurstToggle = "burst_toggle";
+
+			public const string TutorialStarted = "tutorial_started";
+
+			public const string TutorialCompleted = "tutorial_completed";
+
+			public const string TutorialQuit = "tutorial_quit";
+
+			public const string BaseInteraction = "base_interaction";
+
+			public const string PlayerDeath = "player_death";
+
+			public const string CarShredded = "car_shredded";
 		}
 
 		private struct SimpleItemAmount
@@ -349,7 +362,7 @@ public static class Analytics
 			}
 		}
 
-		private static Dictionary<FiredProjectileKey, PendingFiredProjectile> firedProjectiles = new Dictionary<FiredProjectileKey, PendingFiredProjectile>();
+		private static Dictionary<FiredProjectileKey, PendingFiredProjectile> trackedProjectiles = new Dictionary<FiredProjectileKey, PendingFiredProjectile>();
 
 		private static Dictionary<int, string> geneCache = new Dictionary<int, string>();
 
@@ -390,8 +403,8 @@ public static class Analytics
 					.AddField("ip_convar", Net.sv.ip)
 					.AddField("port_convar", Net.sv.port)
 					.AddField("net_protocol", Net.sv.ProtocolId)
-					.AddField("protocol_network", 2515)
-					.AddField("protocol_save", 244);
+					.AddField("protocol_network", 2554)
+					.AddField("protocol_save", 252);
 				BuildInfo current = BuildInfo.Current;
 				EventRecord eventRecord2 = eventRecord.AddField("changeset", ((current != null) ? current.Scm.ChangeId : null) ?? "0").AddField("unity_version", Application.unityVersion);
 				BuildInfo current2 = BuildInfo.Current;
@@ -522,7 +535,7 @@ public static class Analytics
 				PendingFiredProjectile pendingFiredProjectile = Pool.Get<PendingFiredProjectile>();
 				pendingFiredProjectile.Record = record;
 				pendingFiredProjectile.FiredProjectile = projectile;
-				firedProjectiles[new FiredProjectileKey(player.userID, projectile.id)] = pendingFiredProjectile;
+				trackedProjectiles[new FiredProjectileKey(player.userID, projectile.id)] = pendingFiredProjectile;
 			}
 			catch (Exception ex)
 			{
@@ -539,9 +552,8 @@ public static class Analytics
 			try
 			{
 				FiredProjectileKey key = new FiredProjectileKey(player.userID, projectile.id);
-				if (!firedProjectiles.TryGetValue(key, out var value))
+				if (!trackedProjectiles.TryGetValue(key, out var value))
 				{
-					Debug.LogWarning((object)$"Can't find projectile for player '{player}' with id {projectile.id}");
 					return;
 				}
 				if (!value.Hit)
@@ -554,7 +566,7 @@ public static class Analytics
 					record.Submit();
 				}
 				Pool.Free<PendingFiredProjectile>(ref value);
-				firedProjectiles.Remove(key);
+				trackedProjectiles.Remove(key);
 			}
 			catch (Exception ex)
 			{
@@ -618,7 +630,7 @@ public static class Analytics
 			}
 			try
 			{
-				LogResource(ResourceMode.Produced, "craft", item, amount, null, null, inSafezone, workbench, player?.userID ?? 0);
+				LogResource(ResourceMode.Produced, "craft", item, amount, null, null, inSafezone, workbench, player?.userID ?? ((BasePlayer.EncryptedValue<ulong>)0uL));
 			}
 			catch (Exception ex)
 			{
@@ -634,7 +646,7 @@ public static class Analytics
 			}
 			try
 			{
-				LogResource(safezone: inSafezone, workbench: workbench, targetItem: targetItem, mode: ResourceMode.Consumed, category: "craft", itemName: item, amount: amount, sourceEntity: null, tool: null, steamId: player?.userID ?? 0);
+				LogResource(safezone: inSafezone, workbench: workbench, targetItem: targetItem, mode: ResourceMode.Consumed, category: "craft", itemName: item, amount: amount, sourceEntity: null, tool: null, steamId: player?.userID ?? ((BasePlayer.EncryptedValue<ulong>)0uL));
 			}
 			catch (Exception ex)
 			{
@@ -990,7 +1002,7 @@ public static class Analytics
 			}
 			try
 			{
-				if (!(entity is LootContainer lootContainer) || !lootContainer.FirstLooted)
+				if (!(entity is LootContainer lootContainer) || lootContainer.FirstLooterId != 0L)
 				{
 					return;
 				}
@@ -1153,7 +1165,7 @@ public static class Analytics
 			}
 		}
 
-		public static void OnAntihackViolation(BasePlayer player, int type, string message)
+		public static void OnAntihackViolation(BasePlayer player, AntiHackType type, string message)
 		{
 			if (!Stats)
 			{
@@ -1161,9 +1173,87 @@ public static class Analytics
 			}
 			try
 			{
-				EventRecord.New("antihack_violation").AddField("player", (BaseEntity)player).AddField("violation_type", type)
-					.AddField("message", message)
-					.Submit();
+				EventRecord eventRecord = EventRecord.New("antihack_violation").AddField("player", (BaseEntity)player).AddField("violation_type", (int)type)
+					.AddField("violation", type.ToString())
+					.AddField("message", message);
+				if (BuildInfo.Current != null)
+				{
+					eventRecord.AddField("changeset", BuildInfo.Current.Scm.ChangeId).AddField("network", 2554);
+				}
+				switch (type)
+				{
+				case AntiHackType.SpeedHack:
+					eventRecord.AddField("speedhack_protection", ConVar.AntiHack.speedhack_protection).AddField("speedhack_forgiveness", ConVar.AntiHack.speedhack_forgiveness).AddField("speedhack_forgiveness_inertia", ConVar.AntiHack.speedhack_forgiveness_inertia)
+						.AddField("speedhack_penalty", ConVar.AntiHack.speedhack_penalty)
+						.AddField("speedhack_penalty", ConVar.AntiHack.speedhack_reject)
+						.AddField("speedhack_slopespeed", ConVar.AntiHack.speedhack_slopespeed);
+					break;
+				case AntiHackType.NoClip:
+					eventRecord.AddField("noclip_protection", ConVar.AntiHack.noclip_protection).AddField("noclip_penalty", ConVar.AntiHack.noclip_penalty).AddField("noclip_maxsteps", ConVar.AntiHack.noclip_maxsteps)
+						.AddField("noclip_margin_dismount", ConVar.AntiHack.noclip_margin_dismount)
+						.AddField("noclip_margin", ConVar.AntiHack.noclip_margin)
+						.AddField("noclip_backtracking", ConVar.AntiHack.noclip_backtracking)
+						.AddField("noclip_reject", ConVar.AntiHack.noclip_reject)
+						.AddField("noclip_stepsize", ConVar.AntiHack.noclip_stepsize);
+					break;
+				case AntiHackType.ProjectileHack:
+					eventRecord.AddField("projectile_anglechange", ConVar.AntiHack.projectile_anglechange).AddField("projectile_backtracking", ConVar.AntiHack.projectile_backtracking).AddField("projectile_clientframes", ConVar.AntiHack.projectile_clientframes)
+						.AddField("projectile_damagedepth", ConVar.AntiHack.projectile_damagedepth)
+						.AddField("projectile_desync", ConVar.AntiHack.projectile_desync)
+						.AddField("projectile_forgiveness", ConVar.AntiHack.projectile_forgiveness)
+						.AddField("projectile_impactspawndepth", ConVar.AntiHack.projectile_impactspawndepth)
+						.AddField("projectile_losforgiveness", ConVar.AntiHack.projectile_losforgiveness)
+						.AddField("projectile_penalty", ConVar.AntiHack.projectile_penalty)
+						.AddField("projectile_positionoffset", ConVar.AntiHack.projectile_positionoffset)
+						.AddField("projectile_protection", ConVar.AntiHack.projectile_protection)
+						.AddField("projectile_serverframes", ConVar.AntiHack.projectile_serverframes)
+						.AddField("projectile_terraincheck", ConVar.AntiHack.projectile_terraincheck)
+						.AddField("projectile_trajectory", ConVar.AntiHack.projectile_trajectory)
+						.AddField("projectile_vehiclecheck", ConVar.AntiHack.projectile_vehiclecheck)
+						.AddField("projectile_velocitychange", ConVar.AntiHack.projectile_velocitychange);
+					break;
+				case AntiHackType.InsideTerrain:
+					eventRecord.AddField("terrain_check_geometry", ConVar.AntiHack.terrain_check_geometry).AddField("terrain_kill", ConVar.AntiHack.terrain_kill).AddField("terrain_padding", ConVar.AntiHack.terrain_padding)
+						.AddField("terrain_penalty", ConVar.AntiHack.terrain_penalty)
+						.AddField("terrain_protection", ConVar.AntiHack.terrain_protection)
+						.AddField("terrain_timeslice", ConVar.AntiHack.terrain_timeslice);
+					break;
+				case AntiHackType.MeleeHack:
+					eventRecord.AddField("melee_backtracking", ConVar.AntiHack.melee_backtracking).AddField("melee_clientframes", ConVar.AntiHack.melee_clientframes).AddField("melee_forgiveness", ConVar.AntiHack.melee_forgiveness)
+						.AddField("melee_losforgiveness", ConVar.AntiHack.melee_losforgiveness)
+						.AddField("melee_penalty", ConVar.AntiHack.melee_penalty)
+						.AddField("melee_protection", ConVar.AntiHack.melee_protection)
+						.AddField("melee_serverframes", ConVar.AntiHack.melee_serverframes)
+						.AddField("melee_terraincheck", ConVar.AntiHack.melee_terraincheck)
+						.AddField("melee_vehiclecheck", ConVar.AntiHack.melee_vehiclecheck);
+					break;
+				case AntiHackType.FlyHack:
+					eventRecord.AddField("flyhack_extrusion", ConVar.AntiHack.flyhack_extrusion).AddField("flyhack_forgiveness_horizontal", ConVar.AntiHack.flyhack_forgiveness_horizontal).AddField("flyhack_forgiveness_horizontal_inertia", ConVar.AntiHack.flyhack_forgiveness_horizontal_inertia)
+						.AddField("flyhack_forgiveness_vertical", ConVar.AntiHack.flyhack_forgiveness_vertical)
+						.AddField("flyhack_forgiveness_vertical_inertia", ConVar.AntiHack.flyhack_forgiveness_vertical_inertia)
+						.AddField("flyhack_margin", ConVar.AntiHack.flyhack_margin)
+						.AddField("flyhack_maxsteps", ConVar.AntiHack.flyhack_maxsteps)
+						.AddField("flyhack_penalty", ConVar.AntiHack.flyhack_penalty)
+						.AddField("flyhack_protection", ConVar.AntiHack.flyhack_protection)
+						.AddField("flyhack_reject", ConVar.AntiHack.flyhack_reject);
+					break;
+				case AntiHackType.EyeHack:
+					eventRecord.AddField("eye_clientframes", ConVar.AntiHack.eye_clientframes).AddField("eye_forgiveness", ConVar.AntiHack.eye_forgiveness).AddField("eye_history_forgiveness", ConVar.AntiHack.eye_history_forgiveness)
+						.AddField("eye_history_penalty", ConVar.AntiHack.eye_history_penalty)
+						.AddField("eye_losradius", ConVar.AntiHack.eye_losradius)
+						.AddField("eye_noclip_backtracking", ConVar.AntiHack.eye_noclip_backtracking)
+						.AddField("eye_noclip_cutoff", ConVar.AntiHack.eye_noclip_cutoff)
+						.AddField("eye_penalty", ConVar.AntiHack.eye_penalty)
+						.AddField("eye_protection", ConVar.AntiHack.eye_protection)
+						.AddField("eye_serverframes", ConVar.AntiHack.eye_serverframes)
+						.AddField("eye_terraincheck", ConVar.AntiHack.eye_terraincheck)
+						.AddField("eye_vehiclecheck", ConVar.AntiHack.eye_vehiclecheck);
+					break;
+				case AntiHackType.AttackHack:
+					eventRecord.AddField("maxdesync", ConVar.AntiHack.maxdesync);
+					break;
+				}
+				eventRecord.Submit();
 			}
 			catch (Exception ex)
 			{
@@ -1244,11 +1334,7 @@ public static class Analytics
 			try
 			{
 				FiredProjectileKey key = new FiredProjectileKey(projectile.attacker.userID, projectile.id);
-				if (!firedProjectiles.TryGetValue(key, out var value))
-				{
-					Debug.LogWarning((object)$"Can't find projectile for player '{projectile.attacker}' with id {projectile.id}");
-				}
-				else
+				if (trackedProjectiles.TryGetValue(key, out var value))
 				{
 					value.Record.AddField("projectile_invalid", value: true).AddObject("updates", projectile.updates);
 				}
@@ -1310,23 +1396,28 @@ public static class Analytics
 
 		public static void OnEntityTakeDamage(HitInfo info, bool isDeath)
 		{
-			//IL_01a6: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01b6: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01c6: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01d6: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01e6: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01f6: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00fe: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0109: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0115: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0120: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00cb: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00d7: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00e3: Unknown result type (might be due to invalid IL or missing references)
-			//IL_02ed: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0330: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0347: Unknown result type (might be due to invalid IL or missing references)
+			//IL_024b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_025b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_026b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_027b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_028b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_029b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01ae: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01b9: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01c5: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01d0: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00ca: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00d6: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00e2: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00ee: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0315: Unknown result type (might be due to invalid IL or missing references)
+			//IL_031a: Unknown result type (might be due to invalid IL or missing references)
+			//IL_03ea: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0427: Unknown result type (might be due to invalid IL or missing references)
+			//IL_043e: Unknown result type (might be due to invalid IL or missing references)
+			//IL_05ab: Unknown result type (might be due to invalid IL or missing references)
+			//IL_05c2: Unknown result type (might be due to invalid IL or missing references)
+			//IL_05d9: Unknown result type (might be due to invalid IL or missing references)
 			if (!Stats || !HighFrequencyStats)
 			{
 				return;
@@ -1347,12 +1438,27 @@ public static class Analytics
 					if (info.IsProjectile())
 					{
 						FiredProjectileKey key = new FiredProjectileKey(initiatorPlayer.userID, info.ProjectileID);
-						if (firedProjectiles.TryGetValue(key, out var value3))
+						if (trackedProjectiles.TryGetValue(key, out var value3))
 						{
 							eventRecord = value3.Record;
-							value = Vector3.Distance(info.HitNormalWorld, value3.FiredProjectile.initialPosition);
-							value = Vector3Ex.Distance2D(info.HitNormalWorld, value3.FiredProjectile.initialPosition);
+							value = Vector3.Distance(info.HitPositionWorld, value3.FiredProjectile.initialPosition);
+							value = Vector3Ex.Distance2D(info.HitPositionWorld, value3.FiredProjectile.initialPosition);
 							value3.Hit = info.DidHit;
+							if (eventRecord != null && value3.FiredProjectile.updates.Count > 0)
+							{
+								eventRecord.AddObject("projectile_updates", value3.FiredProjectile.updates);
+							}
+							if (eventRecord != null && value3.FiredProjectile.simulatedPositions.Count > 0)
+							{
+								eventRecord.AddObject("simulated_position", value3.FiredProjectile.simulatedPositions);
+							}
+							if (eventRecord != null)
+							{
+								eventRecord.AddField("partial_time", value3.FiredProjectile.partialTime);
+								eventRecord.AddField("desync_lifetime", value3.FiredProjectile.desyncLifeTime);
+							}
+							trackedProjectiles.Remove(key);
+							Pool.Free<PendingFiredProjectile>(ref value3);
 						}
 					}
 					else
@@ -1365,8 +1471,7 @@ public static class Analytics
 				{
 					eventRecord = EventRecord.New("entity_damage");
 				}
-				eventRecord.AddField("is_hit", value: true).AddField("is_headshot", info.isHeadshot).AddField("victim", info.HitEntity)
-					.AddField("damage", info.damageTypes.Total())
+				eventRecord.AddField("is_headshot", info.isHeadshot).AddField("victim", info.HitEntity).AddField("damage", info.damageTypes.Total())
 					.AddField("damage_type", info.damageTypes.GetMajorityDamageType().ToString())
 					.AddField("pos_world", info.HitPositionWorld)
 					.AddField("pos_local", info.HitPositionLocal)
@@ -1376,7 +1481,12 @@ public static class Analytics
 					.AddField("normal_local", info.HitNormalLocal)
 					.AddField("distance_cl", info.ProjectileDistance)
 					.AddField("distance", value)
-					.AddField("distance_2d", value2);
+					.AddField("distance_2d", value2)
+					.AddField("attacker_parented", info.InitiatorParented);
+				if ((Object)(object)info.HitEntity != (Object)null && (Object)(object)info.HitEntity.model != (Object)null)
+				{
+					eventRecord.AddField("pos_local_model", ((Component)info.HitEntity.model).transform.InverseTransformPoint(info.HitPositionWorld));
+				}
 				if (!info.IsProjectile())
 				{
 					eventRecord.AddField("weapon", (BaseEntity)info.Weapon);
@@ -1402,17 +1512,21 @@ public static class Analytics
 					{
 						eventRecord.AddField("attacker_life", initiatorPlayer.respawnId);
 					}
-					if (isDeath)
-					{
-						eventRecord.AddObject("attacker_worn", initiatorPlayer.inventory.containerWear.itemList.Select((Item x) => new SimpleItemAmount(x)));
-						eventRecord.AddObject("attacker_hotbar", initiatorPlayer.inventory.containerBelt.itemList.Select((Item x) => new SimpleItemAmount(x)));
-					}
+				}
+				else if ((Object)(object)initiatorPlayer != (Object)null)
+				{
+					eventRecord.AddObject("attacker_worn", initiatorPlayer.inventory.containerWear.itemList.Select((Item x) => new SimpleItemAmount(x)));
+					eventRecord.AddObject("attacker_hotbar", initiatorPlayer.inventory.containerBelt.itemList.Select((Item x) => new SimpleItemAmount(x)));
 				}
 				if ((Object)(object)basePlayer != (Object)null)
 				{
 					eventRecord.AddField("victim_life", basePlayer.respawnId);
 					eventRecord.AddObject("victim_worn", basePlayer.inventory.containerWear.itemList.Select((Item x) => new SimpleItemAmount(x)));
 					eventRecord.AddObject("victim_hotbar", basePlayer.inventory.containerBelt.itemList.Select((Item x) => new SimpleItemAmount(x)));
+					eventRecord.AddField("victim_view_dir", basePlayer.tickViewAngles);
+					eventRecord.AddField("victim_eye_pos", basePlayer.eyes.position);
+					eventRecord.AddField("victim_eye_dir", basePlayer.eyes.BodyForward());
+					eventRecord.AddField("victim_parented", info.HitEntityParented);
 				}
 				eventRecord.Submit();
 			}
@@ -1545,14 +1659,12 @@ public static class Analytics
 
 		public static void OnPlayerConnected(Connection connection)
 		{
-			if (!Stats)
-			{
-				return;
-			}
 			try
 			{
 				string userWipeId = SingletonComponent<ServerMgr>.Instance.persistance.GetUserWipeId(connection.userid);
-				EventRecord.New("player_connect").AddField("player_userid", userWipeId).AddField("username", connection.username)
+				EventRecord.New("player_connect").AddField("player_userid", userWipeId).AddField("steam_id", connection.userid)
+					.AddField("username", connection.username)
+					.AddField("ip", connection.ipaddress)
 					.Submit();
 			}
 			catch (Exception ex)
@@ -1563,14 +1675,11 @@ public static class Analytics
 
 		public static void OnPlayerDisconnected(Connection connection, string reason)
 		{
-			if (!Stats)
-			{
-				return;
-			}
 			try
 			{
 				string userWipeId = SingletonComponent<ServerMgr>.Instance.persistance.GetUserWipeId(connection.userid);
-				EventRecord.New("player_disconnect").AddField("player_userid", userWipeId).AddField("username", connection.username)
+				EventRecord.New("player_disconnect").AddField("player_userid", userWipeId).AddField("steam_id", connection.userid)
+					.AddField("username", connection.username)
 					.AddField("reason", reason)
 					.Submit();
 			}
@@ -1641,7 +1750,7 @@ public static class Analytics
 			}
 		}
 
-		public static void OnBuyFromVendingMachine(BasePlayer player, VendingMachine vendingMachine, int sellItemId, int sellAmount, bool sellingBp, int buyItemId, int buyAmount, bool buyingBp, int numberOfTransactions, BaseEntity drone = null)
+		public static void OnBuyFromVendingMachine(BasePlayer player, VendingMachine vendingMachine, int sellItemId, int sellAmount, bool sellingBp, int buyItemId, int buyAmount, bool buyingBp, int numberOfTransactions, float discount, BaseEntity drone = null)
 		{
 			if (!Stats)
 			{
@@ -1660,6 +1769,7 @@ public static class Analytics
 					.AddField("is_selling_bp", sellingBp)
 					.AddField("is_buying_bp", buyingBp)
 					.AddField("drone_terminal", drone)
+					.AddField("discount", discount)
 					.Submit();
 			}
 			catch (Exception ex)
@@ -1705,7 +1815,7 @@ public static class Analytics
 					{
 						string shortname = item.info.shortname;
 						int amount = item.amount;
-						ulong steamId = looter?.userID ?? 0;
+						ulong steamId = looter?.userID ?? ((BasePlayer.EncryptedValue<ulong>)0uL);
 						LogResource(ResourceMode.Produced, "loot", shortname, amount, entity, tool, safezone: false, null, steamId);
 					}
 				}
@@ -1872,7 +1982,7 @@ public static class Analytics
 			}
 		}
 
-		public static void OnBuildingBlockDemolished(BasePlayer player, BuildingBlock buildingBlock)
+		public static void OnBuildingBlockDemolished(BasePlayer player, StabilityEntity buildingBlock)
 		{
 			if (!Stats)
 			{
@@ -2091,6 +2201,111 @@ public static class Analytics
 					.AddField("deployHeight", deployHeight)
 					.AddField("timeInAir", timeInAir)
 					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnTutorialStarted(BasePlayer player)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord.New("tutorial_started").AddField("player", (BaseEntity)player).Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnTutorialCompleted(BasePlayer player, float timeElapsed)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord.New("tutorial_completed").AddField("player", (BaseEntity)player).AddLegacyTimespan("duration", TimeSpan.FromSeconds(timeElapsed))
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnTutorialQuit(BasePlayer player, string activeMissionName)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord.New("tutorial_quit").AddField("player", (BaseEntity)player).AddField("activeMissionName", activeMissionName)
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnBaseInteract(BasePlayer player, BaseEntity entity)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord.New("base_interaction").AddField("player", (BaseEntity)player).AddField("entity", entity)
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnPlayerDeath(BasePlayer player, BasePlayer killer)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord.New("player_death").AddField("player", (BaseEntity)player).AddField("killer", (BaseEntity)killer)
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnCarShredded(MagnetLiftable car, List<Item> produced)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord eventRecord = EventRecord.New("car_shredded").AddField("player", (BaseEntity)car.associatedPlayer).AddField("car", car.GetBaseEntity());
+				foreach (Item item in produced)
+				{
+					eventRecord.AddField("item_" + item.info.shortname, item);
+				}
+				eventRecord.Submit();
 			}
 			catch (Exception ex)
 			{
@@ -2507,6 +2722,8 @@ public static class Analytics
 
 		public static readonly AzureWebInterface server = new AzureWebInterface(isClient: false);
 
+		private AzureAnalyticsUploader GameplayBulkUploader;
+
 		public bool IsClient;
 
 		public int MaxRetries = 1;
@@ -2517,7 +2734,7 @@ public static class Analytics
 
 		private DateTime nextFlush;
 
-		private List<EventRecord> pending = new List<EventRecord>();
+		private ConcurrentQueue<EventRecord> uploadQueue = new ConcurrentQueue<EventRecord>();
 
 		private HttpClient HttpClient = new HttpClient();
 
@@ -2526,28 +2743,63 @@ public static class Analytics
 			CharSet = Encoding.UTF8.WebName
 		};
 
-		public int PendingCount => pending.Count;
+		public int PendingCount => uploadQueue.Count;
 
 		public AzureWebInterface(bool isClient)
 		{
 			//IL_0032: Unknown result type (might be due to invalid IL or missing references)
 			//IL_003c: Expected O, but got Unknown
 			IsClient = isClient;
+			Task.Run((Func<Task>)UploadSchedulingThread);
 		}
 
 		public void EnqueueEvent(EventRecord point)
 		{
-			DateTime utcNow = DateTime.UtcNow;
-			pending.Add(point);
-			if (pending.Count > FlushSize || utcNow > nextFlush)
+			if (!IsClient && !string.IsNullOrEmpty(BulkUploadConnectionString))
 			{
-				nextFlush = utcNow.Add(FlushDelay);
-				List<EventRecord> toUpload = pending;
-				Task.Run(async delegate
+				if (GameplayBulkUploader.NeedsCreation())
 				{
-					await UploadAsync(toUpload);
-				});
-				pending = Pool.GetList<EventRecord>();
+					GameplayBulkUploader = AzureAnalyticsUploader.Create("gameplay_events", TimeSpan.FromMinutes(5.0));
+					GameplayBulkUploader.UseJsonDataObject = true;
+				}
+				GameplayBulkUploader.Append(point);
+			}
+			else
+			{
+				point.MarkSubmitted();
+				uploadQueue.Enqueue(point);
+			}
+		}
+
+		private async Task UploadSchedulingThread()
+		{
+			while (!Application.isQuitting)
+			{
+				try
+				{
+					DateTime utcNow = DateTime.UtcNow;
+					if (uploadQueue.IsEmpty || (uploadQueue.Count < FlushSize && nextFlush > utcNow))
+					{
+						await Task.Delay(1000);
+						continue;
+					}
+					nextFlush = utcNow.Add(FlushDelay);
+					List<EventRecord> list = Pool.GetList<EventRecord>();
+					EventRecord result;
+					while (uploadQueue.TryDequeue(out result))
+					{
+						list.Add(result);
+					}
+					Task.Run(async delegate
+					{
+						await UploadAsync(list);
+					});
+				}
+				catch (Exception ex)
+				{
+					Debug.LogException(ex);
+					await Task.Delay(1000);
+				}
 			}
 		}
 
@@ -2558,119 +2810,29 @@ public static class Analytics
 			streamWriter.Write("[");
 			foreach (EventRecord record in records)
 			{
-				SerializeEvent(record, streamWriter, num);
+				if (num > 0)
+				{
+					streamWriter.Write(',');
+				}
+				record.SerializeAsJson(streamWriter);
 				num++;
 			}
 			streamWriter.Write("]");
 			streamWriter.Flush();
 		}
 
-		private void SerializeEvent(EventRecord record, StreamWriter writer, int index)
-		{
-			//IL_01f6: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01fb: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01fe: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0213: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0228: Unknown result type (might be due to invalid IL or missing references)
-			if (index > 0)
-			{
-				writer.Write(',');
-			}
-			writer.Write("{\"Timestamp\":\"");
-			writer.Write(record.Timestamp.ToString("o"));
-			writer.Write("\",\"Data\":{");
-			bool flag = true;
-			foreach (EventRecordField datum in record.Data)
-			{
-				if (flag)
-				{
-					flag = false;
-				}
-				else
-				{
-					writer.Write(',');
-				}
-				writer.Write("\"");
-				writer.Write(datum.Key1);
-				if (datum.Key2 != null)
-				{
-					writer.Write(datum.Key2);
-				}
-				writer.Write("\":");
-				if (!datum.IsObject)
-				{
-					writer.Write('"');
-				}
-				if (datum.String != null)
-				{
-					if (datum.IsObject)
-					{
-						writer.Write(datum.String);
-					}
-					else
-					{
-						string @string = datum.String;
-						int length = datum.String.Length;
-						for (int i = 0; i < length; i++)
-						{
-							char c = @string[i];
-							switch (c)
-							{
-							case '"':
-							case '\\':
-								writer.Write('\\');
-								writer.Write(c);
-								break;
-							case '\n':
-								writer.Write("\\n");
-								break;
-							case '\r':
-								writer.Write("\\r");
-								break;
-							case '\t':
-								writer.Write("\\t");
-								break;
-							default:
-								writer.Write(c);
-								break;
-							}
-						}
-					}
-				}
-				else if (datum.Float.HasValue)
-				{
-					writer.Write(datum.Float.Value);
-				}
-				else if (datum.Number.HasValue)
-				{
-					writer.Write(datum.Number.Value);
-				}
-				else if (datum.Guid.HasValue)
-				{
-					writer.Write(datum.Guid.Value.ToString("N"));
-				}
-				else if (datum.Vector.HasValue)
-				{
-					writer.Write('(');
-					Vector3 value = datum.Vector.Value;
-					writer.Write(value.x);
-					writer.Write(',');
-					writer.Write(value.y);
-					writer.Write(',');
-					writer.Write(value.z);
-					writer.Write(')');
-				}
-				if (!datum.IsObject)
-				{
-					writer.Write("\"");
-				}
-			}
-			writer.Write('}');
-			writer.Write('}');
-		}
-
 		private async Task UploadAsync(List<EventRecord> records)
 		{
+			if (!(IsClient ? (Application.Manifest?.Features?.ClientAnalytics).GetValueOrDefault() : (Application.Manifest?.Features?.ServerAnalytics).GetValueOrDefault()))
+			{
+				Pool.FreeListAndItems<EventRecord>(ref records);
+				return;
+			}
+			if (records.Count == 0)
+			{
+				Pool.FreeList<EventRecord>(ref records);
+				return;
+			}
 			MemoryStream stream = Pool.Get<MemoryStream>();
 			stream.Position = 0L;
 			stream.SetLength(0L);
@@ -2715,10 +2877,10 @@ public static class Analytics
 						{
 							Debug.LogException(ex);
 						}
-						goto IL_01e4;
+						goto IL_0297;
 					}
 					break;
-					IL_01e4:
+					IL_0297:
 					if (ticket != null)
 					{
 						try
@@ -2745,12 +2907,7 @@ public static class Analytics
 			}
 			finally
 			{
-				foreach (EventRecord record in records)
-				{
-					EventRecord current = record;
-					Pool.Free<EventRecord>(ref current);
-				}
-				Pool.FreeList<EventRecord>(ref records);
+				Pool.FreeListAndItems<EventRecord>(ref records);
 				Pool.FreeMemoryStream(ref stream);
 			}
 		}
@@ -3212,7 +3369,7 @@ public static class Analytics
 	public static string AnalyticsHeader { get; set; } = "X-API-KEY";
 
 
-	[ServerVar(Name = "analytics_enabled")]
+	[ServerVar(Name = "analytics_enabled", Saved = true)]
 	public static bool UploadAnalytics { get; set; } = true;
 
 
@@ -3222,6 +3379,9 @@ public static class Analytics
 
 	public static string AnalyticsPublicKey { get; set; } = "pub878ABLezSB6onshSwBCRGYDCpEI";
 
+
+	[ServerVar(Name = "analytics_bulk_upload_url", Saved = true)]
+	public static string BulkUploadConnectionString { get; set; }
 
 	[ServerVar(Name = "high_freq_stats", Saved = true)]
 	public static bool HighFrequencyStats { get; set; } = true;

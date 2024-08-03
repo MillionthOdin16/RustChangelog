@@ -226,7 +226,7 @@ public class SmartAlarm : AppIOEntity, ISubscribable
 	{
 		if (!((Object)(object)player == (Object)null) && !AddSubscription(player.userID))
 		{
-			player.ClientRPCPlayer(null, player, "HandleCompanionPairingResult", 7);
+			player.ClientRPC(RpcTarget.Player("HandleCompanionPairingResult", player), 7);
 		}
 	}
 
@@ -240,7 +240,7 @@ public class SmartAlarm : AppIOEntity, ISubscribable
 			BuildingPrivlidge buildingPrivilege = GetBuildingPrivilege();
 			if (!((Object)(object)buildingPrivilege != (Object)null) || buildingPrivilege.CanAdministrate(rpc.player))
 			{
-				ClientRPCPlayer(null, rpc.player, "SetupNotification", _notificationTitle, _notificationBody);
+				ClientRPC(RpcTarget.Player("SetupNotification", rpc.player), _notificationTitle, _notificationBody);
 			}
 		}
 	}

@@ -387,7 +387,7 @@ public class FrankensteinTable : StorageContainer
 			base.inventory.SetLocked(isLocked: true);
 			SendNetworkUpdateImmediate();
 			((MonoBehaviour)this).StartCoroutine(DelayWakeFrankenstein(owner));
-			ClientRPC(null, "CL_WakeFrankenstein");
+			ClientRPC(RpcTarget.NetworkGroup("CL_WakeFrankenstein"));
 		}
 	}
 

@@ -1,23 +1,19 @@
 using System;
-using ConVar;
 using UnityEngine;
+using UnityEngine.Serialization;
 
-public class Buoyancy : ListComponent<Buoyancy>, IServerComponent
+public class Buoyancy : ListComponent<Buoyancy>, IServerComponent, IPrefabPreProcess
 {
-	public enum WhenDisabled
-	{
-		GoToSleep,
-		GoKinematic
-	}
-
+	[Serializable]
 	private struct BuoyancyPointData
 	{
-		public Transform transform;
-
+		[ReadOnly]
 		public Vector3 localPosition;
 
+		[ReadOnly]
 		public Vector3 rootToPoint;
 
+		[NonSerialized]
 		public Vector3 position;
 	}
 
@@ -28,6 +24,8 @@ public class Buoyancy : ListComponent<Buoyancy>, IServerComponent
 	public Rigidbody rigidBody;
 
 	public float buoyancyScale = 1f;
+
+	public bool scaleForceWithMass;
 
 	public bool doEffects = true;
 
@@ -41,8 +39,9 @@ public class Buoyancy : ListComponent<Buoyancy>, IServerComponent
 	public float underwaterDrag = 2f;
 
 	[Range(0f, 1f)]
-	[Tooltip("How much this object will ignore the waves system, 0 = flat water, 1 = full waves (default 1)")]
-	public float flatWaterLerp = 1f;
+	[Tooltip("How much this object will pay attention to the wave system, 0 = flat water, 1 = full waves (default 1)")]
+	[FormerlySerializedAs("flatWaterLerp")]
+	public float wavesEffect = 1f;
 
 	public Action<bool> SubmergedChanged;
 
@@ -51,9 +50,11 @@ public class Buoyancy : ListComponent<Buoyancy>, IServerComponent
 	[NonSerialized]
 	public float submergedFraction;
 
-	public WhenDisabled whenDisabled;
-
+	[SerializeField]
+	[ReadOnly]
 	private BuoyancyPointData[] pointData;
+
+	private bool initedPointArrays;
 
 	private Vector2[] pointPositionArray;
 
@@ -71,11 +72,67 @@ public class Buoyancy : ListComponent<Buoyancy>, IServerComponent
 
 	private float timeInWater;
 
+	[NonSerialized]
 	public float? ArtificialHeight;
 
 	private BaseVehicle forVehicle;
 
+	private bool hasLocalPlayers;
+
+	private bool hadLocalPlayers;
+
 	public float timeOutOfWater { get; private set; }
+
+	public bool InWater => submergedFraction > requiredSubmergedFraction;
+
+	public void PreProcess(IPrefabProcessor preProcess, GameObject rootObj, string name, bool serverside, bool clientside, bool bundling)
+	{
+		if (!Application.isPlaying || serverside)
+		{
+			SavePointData();
+		}
+	}
+
+	public void SavePointData()
+	{
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0102: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0124: Unknown result type (might be due to invalid IL or missing references)
+		if (points == null || points.Length == 0)
+		{
+			Rigidbody val = ((Component)this).GetComponent<Rigidbody>();
+			if ((Object)(object)val == (Object)null)
+			{
+				val = ((Component)this).gameObject.AddComponent<Rigidbody>();
+			}
+			GameObject val2 = new GameObject("BuoyancyPoint");
+			val2.transform.parent = ((Component)val).gameObject.transform;
+			val2.transform.localPosition = val.centerOfMass;
+			BuoyancyPoint buoyancyPoint = val2.AddComponent<BuoyancyPoint>();
+			buoyancyPoint.buoyancyForce = val.mass * (0f - Physics.gravity.y);
+			buoyancyPoint.buoyancyForce *= 1.32f;
+			buoyancyPoint.size = 0.2f;
+			points = new BuoyancyPoint[1];
+			points[0] = buoyancyPoint;
+		}
+		if (pointData == null || pointData.Length != points.Length)
+		{
+			pointData = new BuoyancyPointData[points.Length];
+			for (int i = 0; i < points.Length; i++)
+			{
+				Transform transform = ((Component)points[i]).transform;
+				pointData[i].localPosition = transform.localPosition;
+				pointData[i].rootToPoint = ((Component)this).transform.InverseTransformPoint(transform.position);
+			}
+		}
+	}
 
 	public static string DefaultWaterImpact()
 	{
@@ -90,78 +147,78 @@ public class Buoyancy : ListComponent<Buoyancy>, IServerComponent
 
 	public void Sleep()
 	{
-		if (whenDisabled == WhenDisabled.GoToSleep)
+		if (((Object)(object)forEntity == (Object)null || !forEntity.BuoyancySleep(InWater)) && (Object)(object)rigidBody != (Object)null)
 		{
-			if ((Object)(object)rigidBody != (Object)null)
-			{
-				rigidBody.Sleep();
-			}
-		}
-		else if (whenDisabled == WhenDisabled.GoKinematic)
-		{
-			if ((Object)(object)forVehicle != (Object)null)
-			{
-				forVehicle.SetToKinematic();
-			}
-			else if ((Object)(object)rigidBody != (Object)null)
-			{
-				rigidBody.isKinematic = true;
-			}
+			rigidBody.Sleep();
 		}
 		((Behaviour)this).enabled = false;
 	}
 
 	public void Wake()
 	{
-		if (whenDisabled == WhenDisabled.GoToSleep)
+		if (((Object)(object)forEntity == (Object)null || !forEntity.BuoyancyWake()) && (Object)(object)rigidBody != (Object)null)
 		{
-			if ((Object)(object)rigidBody != (Object)null)
-			{
-				rigidBody.WakeUp();
-			}
-		}
-		else if (whenDisabled == WhenDisabled.GoKinematic)
-		{
-			if ((Object)(object)forVehicle != (Object)null)
-			{
-				forVehicle.SetToNonKinematic();
-			}
-			else if ((Object)(object)rigidBody != (Object)null)
-			{
-				rigidBody.isKinematic = false;
-			}
+			rigidBody.WakeUp();
 		}
 		((Behaviour)this).enabled = true;
 	}
 
 	public void CheckSleepState()
 	{
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)((Component)this).transform == (Object)null || (Object)(object)rigidBody == (Object)null)
 		{
 			return;
 		}
-		bool flag = BaseNetworkable.HasCloseConnections(((Component)this).transform.position, 100f);
-		bool flag2 = rigidBody.IsSleeping() || rigidBody.isKinematic;
-		bool flag3 = timeInWater > 6f && (flag2 || !flag);
+		hasLocalPlayers = HasLocalPlayers();
+		bool flag = rigidBody.IsSleeping() || rigidBody.isKinematic;
+		bool flag2 = flag || (!hasLocalPlayers && timeInWater > 6f);
 		if ((Object)(object)forVehicle != (Object)null && forVehicle.IsOn())
 		{
-			flag3 = false;
+			flag2 = false;
 		}
-		if (((Behaviour)this).enabled && flag3)
+		if (((Behaviour)this).enabled && flag2)
 		{
 			((FacepunchBehaviour)this).Invoke((Action)Sleep, 0f);
 			return;
 		}
-		bool flag4 = !flag2 || (flag && timeInWater > 0f);
-		if (!((Behaviour)this).enabled && flag4)
+		if (!((Behaviour)this).enabled && hasLocalPlayers && !hadLocalPlayers)
+		{
+			DoCycle(forced: true);
+		}
+		bool flag3 = !flag || ShouldWake(hasLocalPlayers);
+		if (!((Behaviour)this).enabled && flag3)
 		{
 			((FacepunchBehaviour)this).Invoke((Action)Wake, 0f);
 		}
+		hadLocalPlayers = hasLocalPlayers;
 	}
 
-	protected void DoCycle()
+	public bool ShouldWake()
 	{
+		return ShouldWake(HasLocalPlayers());
+	}
+
+	public bool ShouldWake(bool hasLocalPlayers)
+	{
+		if (hasLocalPlayers)
+		{
+			return submergedFraction > 0f;
+		}
+		return false;
+	}
+
+	private bool HasLocalPlayers()
+	{
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		return BaseNetworkable.HasCloseConnections(((Component)this).transform.position, 100f);
+	}
+
+	protected void DoCycle(bool forced = false)
+	{
+		if (!((Behaviour)this).enabled && !forced)
+		{
+			return;
+		}
 		bool num = submergedFraction > 0f;
 		BuoyancyFixedUpdate();
 		bool flag = submergedFraction > 0f;
@@ -220,112 +277,56 @@ public class Buoyancy : ListComponent<Buoyancy>, IServerComponent
 		return normalFast;
 	}
 
-	public void EnsurePointsInitialized()
-	{
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0163: Unknown result type (might be due to invalid IL or missing references)
-		//IL_018c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0191: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a4: Unknown result type (might be due to invalid IL or missing references)
-		if (points == null || points.Length == 0)
-		{
-			Rigidbody component = ((Component)this).GetComponent<Rigidbody>();
-			if ((Object)(object)component != (Object)null)
-			{
-				GameObject val = new GameObject("BuoyancyPoint");
-				val.transform.parent = ((Component)component).gameObject.transform;
-				val.transform.localPosition = component.centerOfMass;
-				BuoyancyPoint buoyancyPoint = val.AddComponent<BuoyancyPoint>();
-				buoyancyPoint.buoyancyForce = component.mass * (0f - Physics.gravity.y);
-				buoyancyPoint.buoyancyForce *= 1.32f;
-				buoyancyPoint.size = 0.2f;
-				points = new BuoyancyPoint[1];
-				points[0] = buoyancyPoint;
-			}
-		}
-		if (pointData == null || pointData.Length != points.Length)
-		{
-			pointData = new BuoyancyPointData[points.Length];
-			pointPositionArray = (Vector2[])(object)new Vector2[points.Length];
-			pointPositionUVArray = (Vector2[])(object)new Vector2[points.Length];
-			pointShoreVectorArray = (Vector3[])(object)new Vector3[points.Length];
-			pointTerrainHeightArray = new float[points.Length];
-			pointWaterHeightArray = new float[points.Length];
-			for (int i = 0; i < points.Length; i++)
-			{
-				Transform transform = ((Component)points[i]).transform;
-				Transform parent = transform.parent;
-				transform.SetParent(((Component)this).transform);
-				Vector3 localPosition = transform.localPosition;
-				transform.SetParent(parent);
-				pointData[i].transform = transform;
-				pointData[i].localPosition = transform.localPosition;
-				pointData[i].rootToPoint = localPosition;
-			}
-		}
-	}
-
 	public void BuoyancyFixedUpdate()
 	{
-		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0089: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ac: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00c2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ec: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ff: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0110: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0115: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0184: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0189: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0198: Unknown result type (might be due to invalid IL or missing references)
-		//IL_019d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ac: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ee: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01f0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0248: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0238: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02e3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02e5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02ea: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02ec: Unknown result type (might be due to invalid IL or missing references)
-		//IL_036c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_036e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02fa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02fc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03b5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03b7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03bc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_031b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0337: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0353: Unknown result type (might be due to invalid IL or missing references)
-		//IL_042d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_042f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0431: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0436: Unknown result type (might be due to invalid IL or missing references)
-		if ((Object)(object)TerrainMeta.WaterMap == (Object)null)
-		{
-			return;
-		}
-		EnsurePointsInitialized();
-		if ((Object)(object)rigidBody == (Object)null)
+		//IL_00c7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ea: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0113: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0182: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0187: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0196: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01aa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0206: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0208: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0255: Unknown result type (might be due to invalid IL or missing references)
+		//IL_023a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0308: Unknown result type (might be due to invalid IL or missing references)
+		//IL_030a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_030f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0311: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03da: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03dc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03e1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0391: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0393: Unknown result type (might be due to invalid IL or missing references)
+		//IL_031f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0321: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0340: Unknown result type (might be due to invalid IL or missing references)
+		//IL_035c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0378: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0452: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0454: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0456: Unknown result type (might be due to invalid IL or missing references)
+		//IL_045b: Unknown result type (might be due to invalid IL or missing references)
+		if ((Object)(object)TerrainMeta.WaterMap == (Object)null || (Object)(object)rigidBody == (Object)null)
 		{
 			return;
 		}
@@ -333,6 +334,10 @@ public class Buoyancy : ListComponent<Buoyancy>, IServerComponent
 		{
 			((FacepunchBehaviour)this).Invoke((Action)Sleep, 0f);
 			return;
+		}
+		if (!initedPointArrays)
+		{
+			InitPointArrays();
 		}
 		float time = Time.time;
 		float x = TerrainMeta.Position.x;
@@ -342,7 +347,6 @@ public class Buoyancy : ListComponent<Buoyancy>, IServerComponent
 		Matrix4x4 localToWorldMatrix = ((Component)this).transform.localToWorldMatrix;
 		for (int i = 0; i < pointData.Length; i++)
 		{
-			_ = points[i];
 			Vector3 val = ((Matrix4x4)(ref localToWorldMatrix)).MultiplyPoint3x4(pointData[i].rootToPoint);
 			pointData[i].position = val;
 			float num = (val.x - x) * x2;
@@ -351,7 +355,7 @@ public class Buoyancy : ListComponent<Buoyancy>, IServerComponent
 			pointPositionUVArray[i] = new Vector2(num, num2);
 		}
 		WaterSystem.GetHeightArray(pointPositionArray, pointPositionUVArray, pointShoreVectorArray, pointTerrainHeightArray, pointWaterHeightArray);
-		bool flag = flatWaterLerp < 1f;
+		bool flag = wavesEffect < 1f;
 		int num3 = 0;
 		Vector3 val2 = default(Vector3);
 		Vector3 val3 = default(Vector3);
@@ -362,16 +366,20 @@ public class Buoyancy : ListComponent<Buoyancy>, IServerComponent
 			Vector3 localPosition = pointData[j].localPosition;
 			Vector2 posUV = pointPositionUVArray[j];
 			float terrainHeight = pointTerrainHeightArray[j];
-			float waterHeight = pointWaterHeightArray[j];
+			float num4 = pointWaterHeightArray[j];
 			if (ArtificialHeight.HasValue)
 			{
-				waterHeight = ArtificialHeight.Value;
+				num4 = ArtificialHeight.Value;
+			}
+			else if (flag)
+			{
+				num4 = Mathf.Lerp(0f, num4, wavesEffect);
 			}
 			bool doDeepwaterChecks = !ArtificialHeight.HasValue;
-			WaterLevel.WaterInfo buoyancyWaterInfo = WaterLevel.GetBuoyancyWaterInfo(position, posUV, terrainHeight, waterHeight, doDeepwaterChecks, forEntity);
+			WaterLevel.WaterInfo buoyancyWaterInfo = WaterLevel.GetBuoyancyWaterInfo(position, posUV, terrainHeight, num4, doDeepwaterChecks, forEntity);
 			if (flag && buoyancyWaterInfo.isValid)
 			{
-				buoyancyWaterInfo.currentDepth = (buoyancyWaterInfo.surfaceLevel = Mathf.Lerp(Env.oceanlevel, buoyancyWaterInfo.surfaceLevel, flatWaterLerp)) - position.y;
+				buoyancyWaterInfo.currentDepth = Mathf.Lerp(buoyancyWaterInfo.currentDepth, buoyancyWaterInfo.surfaceLevel - position.y, wavesEffect);
 			}
 			bool flag2 = false;
 			if (position.y < buoyancyWaterInfo.surfaceLevel && buoyancyWaterInfo.isValid)
@@ -379,17 +387,21 @@ public class Buoyancy : ListComponent<Buoyancy>, IServerComponent
 				flag2 = true;
 				num3++;
 				float currentDepth = buoyancyWaterInfo.currentDepth;
-				float num4 = Mathf.InverseLerp(0f, buoyancyPoint.size, currentDepth);
-				float num5 = 1f + Mathf.PerlinNoise(buoyancyPoint.randomOffset + time * buoyancyPoint.waveFrequency, 0f) * buoyancyPoint.waveScale;
-				float num6 = buoyancyPoint.buoyancyForce * buoyancyScale;
-				((Vector3)(ref val2))._002Ector(0f, num5 * num4 * num6, 0f);
+				float num5 = Mathf.InverseLerp(0f, buoyancyPoint.size, currentDepth);
+				float num6 = 1f + Mathf.PerlinNoise(buoyancyPoint.randomOffset + time * buoyancyPoint.waveFrequency, 0f) * buoyancyPoint.waveScale;
+				float num7 = buoyancyPoint.buoyancyForce * buoyancyScale;
+				if (scaleForceWithMass)
+				{
+					num7 *= rigidBody.mass;
+				}
+				((Vector3)(ref val2))._002Ector(0f, num6 * num5 * num7, 0f);
 				Vector3 flowDirection = GetFlowDirection(posUV);
 				if (flowDirection.y < 0.9999f && flowDirection != Vector3.up)
 				{
-					num6 *= 0.25f;
-					val2.x += flowDirection.x * num6 * flowMovementScale;
-					val2.y += flowDirection.y * num6 * flowMovementScale;
-					val2.z += flowDirection.z * num6 * flowMovementScale;
+					num7 *= 0.25f;
+					val2.x += flowDirection.x * num7 * flowMovementScale;
+					val2.y += flowDirection.y * num7 * flowMovementScale;
+					val2.z += flowDirection.z * num7 * flowMovementScale;
 				}
 				rigidBody.AddForceAtPosition(val2, position, (ForceMode)0);
 			}
@@ -410,7 +422,7 @@ public class Buoyancy : ListComponent<Buoyancy>, IServerComponent
 		{
 			submergedFraction = (float)num3 / (float)points.Length;
 		}
-		if (submergedFraction > requiredSubmergedFraction)
+		if (InWater)
 		{
 			timeInWater += Time.fixedDeltaTime;
 			timeOutOfWater = 0f;
@@ -420,5 +432,15 @@ public class Buoyancy : ListComponent<Buoyancy>, IServerComponent
 			timeOutOfWater += Time.fixedDeltaTime;
 			timeInWater = 0f;
 		}
+	}
+
+	private void InitPointArrays()
+	{
+		pointPositionArray = (Vector2[])(object)new Vector2[points.Length];
+		pointPositionUVArray = (Vector2[])(object)new Vector2[points.Length];
+		pointShoreVectorArray = (Vector3[])(object)new Vector3[points.Length];
+		pointTerrainHeightArray = new float[points.Length];
+		pointWaterHeightArray = new float[points.Length];
+		initedPointArrays = true;
 	}
 }

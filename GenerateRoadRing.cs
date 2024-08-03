@@ -279,7 +279,7 @@ public class GenerateRoadRing : ProceduralComponent
 			pathList.Path.Resample(7.5f);
 			pathList.Path.RecalculateTangents();
 			pathList.AdjustPlacementMap(24f);
-			TerrainMeta.Path.Roads.Add(pathList);
+			TerrainMeta.Path.AddRoad(pathList);
 		}
 	}
 }

@@ -1,13 +1,18 @@
+using ConVar;
 using UnityEngine;
 
 [CreateAssetMenu(menuName = "Rust/Missions/OBJECTIVES/SpeakWith")]
 public class MissionObjective_SpeakWith : MissionObjective
 {
-	public ItemAmount[] requiredReturnItems;
+	public ItemAmount[] requiredReturnItems = new ItemAmount[0];
 
 	public bool destroyReturnItems;
 
 	public bool showPing;
+
+	public bool checkSpaceForRewards;
+
+	public static Phrase NoSpaceInInventoryPhrase = new Phrase("no_space_mission_reward", "No space for rewards in inventory, please clear some space");
 
 	public override void ObjectiveStarted(BasePlayer playerFor, int index, BaseMission.MissionInstance instance)
 	{
@@ -28,16 +33,29 @@ public class MissionObjective_SpeakWith : MissionObjective
 
 	public override void ProcessMissionEvent(BasePlayer playerFor, BaseMission.MissionInstance instance, int index, BaseMission.MissionEventType type, BaseMission.MissionEventPayload payload, float amount)
 	{
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ee: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0113: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011a: Unknown result type (might be due to invalid IL or missing references)
 		base.ProcessMissionEvent(playerFor, instance, index, type, payload, amount);
-		if (type != BaseMission.MissionEventType.CONVERSATION || IsCompleted(index, instance) || !CanProgress(index, instance))
+		if (type != BaseMission.MissionEventType.CONVERSATION)
+		{
+			return;
+		}
+		if (Debugging.printMissionSpeakInfo)
+		{
+			Debug.Log((object)$"Speak info: IsCompleted:{IsCompleted(index, instance)} CanProgress:{CanProgress(index, instance)}");
+		}
+		if (IsCompleted(index, instance) || !CanProgress(index, instance))
 		{
 			return;
 		}
 		BaseEntity baseEntity = instance.ProviderEntity();
+		if (Debugging.printMissionSpeakInfo)
+		{
+			Debug.Log((object)$"Looking for Provider: {instance.providerID.Value}/{baseEntity} Supplied NPC:{payload.NetworkIdentifier}");
+		}
 		if (!Object.op_Implicit((Object)(object)baseEntity))
 		{
 			return;
@@ -61,6 +79,10 @@ public class MissionObjective_SpeakWith : MissionObjective
 			}
 			if (flag && destroyReturnItems)
 			{
+				if (!CheckRewardsSpace())
+				{
+					return;
+				}
 				array = requiredReturnItems;
 				foreach (ItemAmount itemAmount2 in array)
 				{
@@ -68,9 +90,18 @@ public class MissionObjective_SpeakWith : MissionObjective
 				}
 			}
 		}
-		if (requiredReturnItems == null || requiredReturnItems.Length == 0 || flag)
+		if (CheckRewardsSpace() && (requiredReturnItems == null || requiredReturnItems.Length == 0 || flag))
 		{
 			CompleteObjective(index, instance, playerFor);
+		}
+		bool CheckRewardsSpace()
+		{
+			if (checkSpaceForRewards && !playerFor.inventory.HasEmptySlots(instance.GetTotalRequiredRewardItemSlots()))
+			{
+				playerFor.ShowToast(GameTip.Styles.Red_Normal, NoSpaceInInventoryPhrase);
+				return false;
+			}
+			return true;
 		}
 	}
 

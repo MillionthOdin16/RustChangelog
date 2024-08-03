@@ -5,4 +5,7 @@ public class Tree : ConsoleSystem
 {
 	[ServerVar]
 	public static bool global_broadcast;
+
+	[ServerVar]
+	public static bool simplified_collider;
 }

@@ -4,6 +4,10 @@ using UnityEngine.UI;
 
 public class SelectedItem : SingletonComponent<SelectedItem>, IInventoryChanged
 {
+	public static readonly Phrase DropTitle = new Phrase("drop", "Drop");
+
+	public static readonly Phrase DropDesc = new Phrase("drop_desc", "");
+
 	public Image icon;
 
 	public Image iconSplitter;

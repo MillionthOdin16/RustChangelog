@@ -23,6 +23,8 @@ public class LootContainer : StorageContainer
 		public int numberToSpawn;
 
 		public float probability;
+
+		public string onlyWithLoadoutNamed;
 	}
 
 	public bool destroyOnEmpty = true;
@@ -51,7 +53,10 @@ public class LootContainer : StorageContainer
 
 	public spawnType SpawnType;
 
-	public bool FirstLooted;
+	public ClanScoreEventType clanScoreEventForFirstLooter = (ClanScoreEventType)(-1);
+
+	[NonSerialized]
+	public ulong FirstLooterId;
 
 	private static ItemDefinition scrapDef;
 
@@ -69,7 +74,7 @@ public class LootContainer : StorageContainer
 
 	public override void ResetState()
 	{
-		FirstLooted = false;
+		FirstLooterId = 0uL;
 		base.ResetState();
 	}
 
@@ -170,8 +175,6 @@ public class LootContainer : StorageContainer
 		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
 		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
 		if (scrapAmount <= 0)
 		{
 			return;
@@ -199,8 +202,6 @@ public class LootContainer : StorageContainer
 		//IL_0109: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0110: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0116: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0120: Unknown result type (might be due to invalid IL or missing references)
 		base.DropBonusItems(initiator, container);
 		if ((Object)(object)initiator == (Object)null || container == null)
 		{
@@ -238,10 +239,17 @@ public class LootContainer : StorageContainer
 
 	public override bool OnStartBeingLooted(BasePlayer baseEntity)
 	{
-		if (!FirstLooted)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Invalid comparison between Unknown and I4
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		if (FirstLooterId == 0L)
 		{
-			FirstLooted = true;
+			FirstLooterId = baseEntity.userID;
 			Analytics.Azure.OnFirstLooted(this, baseEntity);
+			if ((int)clanScoreEventForFirstLooter != -1)
+			{
+				baseEntity.AddClanScore(clanScoreEventForFirstLooter);
+			}
 		}
 		return base.OnStartBeingLooted(baseEntity);
 	}
@@ -267,7 +275,10 @@ public class LootContainer : StorageContainer
 
 	public override void OnKilled(HitInfo info)
 	{
-		Analytics.Azure.OnLootContainerDestroyed(this, info.InitiatorPlayer, info.Weapon);
+		if (info != null)
+		{
+			Analytics.Azure.OnLootContainerDestroyed(this, info.InitiatorPlayer, info.Weapon);
+		}
 		base.OnKilled(info);
 		if (info != null && (Object)(object)info.InitiatorPlayer != (Object)null && !string.IsNullOrEmpty(deathStat))
 		{

@@ -300,14 +300,14 @@ public class BaseArcadeMachine : BaseVehicle
 	public override void PlayerMounted(BasePlayer player, BaseMountable seat)
 	{
 		base.PlayerMounted(player, seat);
-		ClientRPCPlayer(null, player, "BeginHosting");
+		ClientRPC(RpcTarget.Player("BeginHosting", player));
 		SetFlag(Flags.Reserved7, b: true, recursive: true);
 	}
 
 	public override void PlayerDismounted(BasePlayer player, BaseMountable seat)
 	{
 		base.PlayerDismounted(player, seat);
-		ClientRPCPlayer(null, player, "EndHosting");
+		ClientRPC(RpcTarget.Player("EndHosting", player));
 		SetFlag(Flags.Reserved7, b: false, recursive: true);
 		if (!AnyMounted())
 		{
@@ -365,7 +365,7 @@ public class BaseArcadeMachine : BaseVehicle
 		foreach (BaseEntity entityContent in networkTrigger.entityContents)
 		{
 			BasePlayer component = ((Component)entityContent).GetComponent<BasePlayer>();
-			ClientRPCPlayer(null, component, msg);
+			ClientRPC(RpcTarget.Player(msg, component));
 		}
 	}
 
@@ -382,7 +382,7 @@ public class BaseArcadeMachine : BaseVehicle
 		foreach (BaseEntity entityContent in networkTrigger.entityContents)
 		{
 			BasePlayer component = ((Component)entityContent).GetComponent<BasePlayer>();
-			ClientRPCPlayer(null, component, "DestroyEntity", arg);
+			ClientRPC(RpcTarget.Player("DestroyEntity", component), arg);
 		}
 	}
 
@@ -401,7 +401,7 @@ public class BaseArcadeMachine : BaseVehicle
 		foreach (BaseEntity entityContent in networkTrigger.entityContents)
 		{
 			BasePlayer component = ((Component)entityContent).GetComponent<BasePlayer>();
-			ClientRPCPlayer(null, component, "GetEntityMessage", arg, arg2);
+			ClientRPC(RpcTarget.Player("GetEntityMessage", component), arg, arg2);
 		}
 	}
 

@@ -174,6 +174,41 @@ public class TerrainMeta : MonoBehaviour
 		return false;
 	}
 
+	public static bool OutOfMarginPlusTutorialBounds(Vector3 worldPos)
+	{
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0095: Unknown result type (might be due to invalid IL or missing references)
+		if (worldPos.x < Position.x - Size.x - TutorialIsland.TutorialBoundsSize)
+		{
+			return true;
+		}
+		if (worldPos.z < Position.z - Size.z - TutorialIsland.TutorialBoundsSize)
+		{
+			return true;
+		}
+		if (worldPos.x > Position.x + Size.x + Size.x + TutorialIsland.TutorialBoundsSize)
+		{
+			return true;
+		}
+		if (worldPos.z > Position.z + Size.z + Size.z + TutorialIsland.TutorialBoundsSize)
+		{
+			return true;
+		}
+		return false;
+	}
+
 	public static float InnerDistToEdge2D(Vector3 worldPos)
 	{
 		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
@@ -203,29 +238,56 @@ public class TerrainMeta : MonoBehaviour
 
 	public static bool IsPointWithinTutorialBounds(Vector3 worldPos)
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
-		float num = Position.x - Size.x - TutorialIsland.TutorialBoundsSize;
-		float num2 = Position.x + Size.x + Size.x - TutorialIsland.TutorialBoundsSize;
-		float num3 = Position.z - Size.z - TutorialIsland.TutorialBoundsSize;
-		float num4 = Position.z + Size.z + Size.z - TutorialIsland.TutorialBoundsSize;
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		float tutorialBoundsSize = TutorialIsland.TutorialBoundsSize;
+		float maximumPointTutorial = ValidBounds.GetMaximumPointTutorial();
+		float num = 0f - maximumPointTutorial + tutorialBoundsSize;
+		float num2 = maximumPointTutorial - tutorialBoundsSize;
+		float num3 = 0f - maximumPointTutorial + tutorialBoundsSize;
+		float num4 = maximumPointTutorial - tutorialBoundsSize;
 		if (!(worldPos.x < num) && !(worldPos.x > num2) && !(worldPos.z < num3))
 		{
 			return worldPos.z > num4;
 		}
 		return true;
+	}
+
+	public static bool RandomWaterPointInAnnulus(Vector3 centre, float minRadius, float maxRadius, out Vector3 randomPoint)
+	{
+		//IL_0004: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
+		for (int i = 0; i < 100; i++)
+		{
+			Vector3 val = Vector2.op_Implicit(Random.insideUnitCircle);
+			float num = Random.Range(minRadius, maxRadius);
+			Vector3 val2 = centre + new Vector3(val.x, 0f, val.y) * num;
+			float height = HeightMap.GetHeight(val2);
+			float height2 = WaterMap.GetHeight(val2);
+			if (height <= height2)
+			{
+				randomPoint = val2;
+				return true;
+			}
+		}
+		randomPoint = Vector3.zero;
+		return false;
 	}
 
 	public static Vector3 RandomPointOffshore()

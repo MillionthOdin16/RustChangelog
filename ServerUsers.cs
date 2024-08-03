@@ -20,6 +20,7 @@ public static class ServerUsers
 		SkipQueue
 	}
 
+	[JsonModel]
 	public class User
 	{
 		public ulong steamid;

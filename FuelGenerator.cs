@@ -140,6 +140,11 @@ public class FuelGenerator : ContainerIOEntity
 		return currentEnergy;
 	}
 
+	public override bool AllowDrainFrom(int outputSlot)
+	{
+		return false;
+	}
+
 	[RPC_Server]
 	[RPC_Server.IsVisible(3f)]
 	public void RPC_EngineSwitch(RPCMessage msg)

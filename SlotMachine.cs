@@ -397,7 +397,7 @@ public class SlotMachine : BaseMountable
 		SpinResultPrevious3 = SpinResult3;
 		CalculateSpinResults();
 		SpinTime = Time.time;
-		ClientRPC(null, "RPC_OnSpin", (sbyte)SpinResult1, (sbyte)SpinResult2, (sbyte)SpinResult3);
+		ClientRPC(RpcTarget.NetworkGroup("RPC_OnSpin"), (sbyte)SpinResult1, (sbyte)SpinResult2, (sbyte)SpinResult3);
 		((FacepunchBehaviour)this).Invoke((Action)CheckPayout, SpinDuration);
 	}
 

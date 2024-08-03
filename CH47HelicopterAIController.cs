@@ -141,7 +141,7 @@ public class CH47HelicopterAIController : CH47Helicopter
 	{
 		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
 		base.ServerInit();
-		((FacepunchBehaviour)this).Invoke((Action)SpawnScientists, 0.25f);
+		((FacepunchBehaviour)this).Invoke((Action)CheckSpawnScientists, 0.25f);
 		SetMoveTarget(((Component)this).transform.position);
 	}
 
@@ -190,6 +190,19 @@ public class CH47HelicopterAIController : CH47Helicopter
 		if (!((Object)(object)human == (Object)null) && (Object)(object)human.Brain != (Object)null && human.Brain.Senses != null)
 		{
 			human.Brain.Senses.ignoreTutorialPlayers = true;
+		}
+	}
+
+	private void CheckSpawnScientists()
+	{
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		if (ValidBounds.Test(this, ((Component)this).transform.position))
+		{
+			((FacepunchBehaviour)this).Invoke((Action)SpawnScientists, 2f);
+		}
+		else
+		{
+			((FacepunchBehaviour)this).Invoke((Action)CheckSpawnScientists, 2f);
 		}
 	}
 

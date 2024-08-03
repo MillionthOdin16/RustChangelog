@@ -64,10 +64,10 @@ public class MissionPoint : MonoBehaviour
 		{ 256, 8 }
 	};
 
-	public static List<MissionPoint> all = new List<MissionPoint>();
-
 	[InspectorFlags]
 	public MissionPointEnum Flags = (MissionPointEnum)(-1);
+
+	public static List<MissionPoint> all = new List<MissionPoint>();
 
 	public static int TypeToIndex(int id)
 	{

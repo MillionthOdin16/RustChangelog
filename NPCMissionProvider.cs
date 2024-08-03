@@ -1,8 +1,12 @@
+using System.Collections.Generic;
+using Facepunch;
 using UnityEngine;
 
 public class NPCMissionProvider : NPCTalking, IMissionProvider
 {
 	public MissionManifest manifest;
+
+	public GameObjectRef MarkerPrefab;
 
 	public NetworkableId ProviderID()
 	{
@@ -19,6 +23,40 @@ public class NPCMissionProvider : NPCTalking, IMissionProvider
 	public BaseEntity Entity()
 	{
 		return this;
+	}
+
+	public override void ServerInit()
+	{
+		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
+		base.ServerInit();
+		if (MarkerPrefab != null && MarkerPrefab.isValid)
+		{
+			List<BaseMission> list = Pool.GetList<BaseMission>();
+			ConversationData[] array = conversations;
+			for (int i = 0; i < array.Length; i++)
+			{
+				array[i].FindAllMissionAssignments(list);
+			}
+			if (list.Count > 0)
+			{
+				MapMarkerMissionProvider obj = GameManager.server.CreateEntity(MarkerPrefab.resourcePath, ((Component)this).transform.position, ((Component)this).transform.rotation) as MapMarkerMissionProvider;
+				obj.AssignMissions(list, GetProviderToken());
+				obj.Spawn();
+			}
+			Pool.FreeList<BaseMission>(ref list);
+		}
+	}
+
+	private string GetProviderToken()
+	{
+		ConversationData[] array = conversations;
+		int num = 0;
+		if (num < array.Length)
+		{
+			return array[num].providerNameTranslated.token;
+		}
+		return string.Empty;
 	}
 
 	public override void OnConversationEnded(BasePlayer player)

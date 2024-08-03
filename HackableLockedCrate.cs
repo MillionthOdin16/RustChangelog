@@ -33,8 +33,11 @@ public class HackableLockedCrate : LootContainer
 
 	public bool shouldDecay = true;
 
-	[NonSerialized]
-	public ulong OriginalHackerPlayer;
+	private BasePlayer originalHackerPlayer;
+
+	private ulong originalHackerPlayerId;
+
+	private bool hasBeenOpened;
 
 	private BaseEntity mapMarkerInstance;
 
@@ -245,7 +248,8 @@ public class HackableLockedCrate : LootContainer
 		if (!IsBeingHacked())
 		{
 			Analytics.Azure.OnLockedCrateStarted(msg.player, this);
-			OriginalHackerPlayer = msg.player.userID;
+			originalHackerPlayerId = msg.player.userID;
+			originalHackerPlayer = msg.player;
 			StartHacking();
 		}
 	}
@@ -255,7 +259,7 @@ public class HackableLockedCrate : LootContainer
 		BroadcastEntityMessage("HackingStarted", 20f, 256);
 		SetFlag(Flags.Reserved1, b: true);
 		((FacepunchBehaviour)this).InvokeRepeating((Action)HackProgress, 1f, 1f);
-		ClientRPC(null, "UpdateHackProgress", 0, (int)requiredHackSeconds);
+		ClientRPC(RpcTarget.NetworkGroup("UpdateHackProgress"), 0, (int)requiredHackSeconds);
 		RefreshDecay();
 	}
 
@@ -264,12 +268,27 @@ public class HackableLockedCrate : LootContainer
 		hackSeconds += 1f;
 		if (hackSeconds > requiredHackSeconds)
 		{
-			Analytics.Azure.OnLockedCrateFinished(OriginalHackerPlayer, this);
+			Analytics.Azure.OnLockedCrateFinished(originalHackerPlayerId, this);
+			if ((Object)(object)originalHackerPlayer != (Object)null && originalHackerPlayer.serverClan != null)
+			{
+				originalHackerPlayer.AddClanScore((ClanScoreEventType)5);
+			}
 			RefreshDecay();
 			SetFlag(Flags.Reserved2, b: true);
 			isLootable = true;
 			((FacepunchBehaviour)this).CancelInvoke((Action)HackProgress);
 		}
-		ClientRPC(null, "UpdateHackProgress", (int)hackSeconds, (int)requiredHackSeconds);
+		ClientRPC(RpcTarget.NetworkGroup("UpdateHackProgress"), (int)hackSeconds, (int)requiredHackSeconds);
+	}
+
+	public override bool OnStartBeingLooted(BasePlayer player)
+	{
+		bool num = base.OnStartBeingLooted(player);
+		if (num && !hasBeenOpened)
+		{
+			hasBeenOpened = true;
+			player.AddClanScore((ClanScoreEventType)6);
+		}
+		return num;
 	}
 }

@@ -32,6 +32,18 @@ public class AntiHack : ConsoleSystem
 	public static bool forceposition = true;
 
 	[ServerVar]
+	[Help("0 == allow RPCs from stalled players, 1 == ignore RPCs from currently stalled players, 2 == ignore RPCs from recently stalled players")]
+	public static int rpcstallmode = 1;
+
+	[ServerVar]
+	[Help("time in seconds before player is no longer treated as wasStalled")]
+	public static float rpcstallfade = 2.5f;
+
+	[ServerVar]
+	[Help("time in seconds we can receive no ticks for before player is considered stalling")]
+	public static float rpcstallthreshold = 1f;
+
+	[ServerVar]
 	[Help("0 == users, 1 == admins, 2 == developers")]
 	public static int userlevel = 2;
 
@@ -145,7 +157,7 @@ public class AntiHack : ConsoleSystem
 
 	[ServerVar]
 	[Help("whether or not to reject movement when flyhack is detected")]
-	public static bool flyhack_reject = false;
+	public static bool flyhack_reject = true;
 
 	[ServerVar]
 	[Help("violation penalty to hand out when flyhack is detected")]
@@ -153,11 +165,11 @@ public class AntiHack : ConsoleSystem
 
 	[ServerVar]
 	[Help("distance threshold to assume flyhacking, lower value = more false positives")]
-	public static float flyhack_forgiveness_vertical = 1.5f;
+	public static float flyhack_forgiveness_vertical = 1f;
 
 	[ServerVar]
 	[Help("distance threshold to assume flyhacking, lower value = more false positives")]
-	public static float flyhack_forgiveness_vertical_inertia = 10f;
+	public static float flyhack_forgiveness_vertical_inertia = 7f;
 
 	[ServerVar]
 	[Help("distance threshold to assume flyhacking, lower value = more false positives")]
@@ -173,7 +185,7 @@ public class AntiHack : ConsoleSystem
 
 	[ServerVar]
 	[Help("collider margin when checking for flyhacking")]
-	public static float flyhack_margin = 0.05f;
+	public static float flyhack_margin = 0.1f;
 
 	[ServerVar]
 	[Help("movement curve step size, lower value = less false positives")]
@@ -182,6 +194,10 @@ public class AntiHack : ConsoleSystem
 	[ServerVar]
 	[Help("movement curve max steps, lower value = more false positives")]
 	public static int flyhack_maxsteps = 15;
+
+	[ServerVar]
+	[Help("serverside fall damage, requires flyhack_protection >= 2 for proper functionality")]
+	public static bool serverside_fall_damage = false;
 
 	[ServerVar]
 	[Help("0 == disabled, 1 == speed, 2 == speed + entity, 3 == speed + entity + LOS, 4 == speed + entity + LOS + trajectory, 5 == speed + entity + LOS + trajectory + update, 6 == speed + entity + LOS + trajectory + tickhistory")]
@@ -205,7 +221,7 @@ public class AntiHack : ConsoleSystem
 
 	[ServerVar]
 	[Help("projectile trajectory forgiveness, lower value = more false positives")]
-	public static float projectile_trajectory = 1f;
+	public static float projectile_trajectory = 2f;
 
 	[ServerVar]
 	[Help("projectile penetration angle change, lower value = more false positives")]
@@ -246,6 +262,14 @@ public class AntiHack : ConsoleSystem
 	[ServerVar]
 	[Help("whether or not to compensate for the client / server vehicle position offset")]
 	public static bool projectile_positionoffset = true;
+
+	[ServerVar]
+	[Help("minimum distance before we verify client projectile distance mismatch, lower value = more false positives")]
+	public static float projectile_distance_forgiveness_minimum = 25f;
+
+	[ServerVar]
+	[Help("maximum number of projectile updates to allow before rejecting damage")]
+	public static int projectile_update_limit = 4;
 
 	[ServerVar]
 	[Help("0 == disabled, 1 == initiator, 2 == initiator + target, 3 == initiator + target + LOS, 4 == initiator + target + LOS + tickhistory")]
@@ -292,8 +316,12 @@ public class AntiHack : ConsoleSystem
 	public static float eye_penalty = 0f;
 
 	[ServerVar]
-	[Help("eye speed forgiveness in percent, lower value = more false positives")]
-	public static float eye_forgiveness = 0.5f;
+	[Help("eye distance forgiveness, lower value = more false positives")]
+	public static float eye_forgiveness = 0.4f;
+
+	[ServerVar]
+	[Help("eye distance forgiveness for parented or mounted players, lower value = more false positives")]
+	public static float eye_distance_parented_mounted_forgiveness = 2f;
 
 	[ServerVar]
 	[Help("eye server frames to include in delay, lower value = more false positives")]
@@ -334,6 +362,10 @@ public class AntiHack : ConsoleSystem
 	[ServerVar]
 	[Help("how much forgiveness to add when checking the distance between player tick history and player eye history")]
 	public static float eye_history_forgiveness = 0.1f;
+
+	[ServerVar]
+	[Help("maximum distance an impact effect can be from the entities bounds")]
+	public static float impact_effect_distance_forgiveness = 0.45f;
 
 	[ServerVar]
 	[Help("line of sight sphere cast radius, 0 == raycast")]

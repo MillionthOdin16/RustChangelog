@@ -1,5 +1,6 @@
 using System;
-using Network;
+using Facepunch;
+using ProtoBuf;
 using UnityEngine;
 
 public class TutorialNPC : NPCMissionProvider
@@ -20,11 +21,20 @@ public class TutorialNPC : NPCMissionProvider
 
 	public ConversationData SetSailConversation;
 
-	public GestureConfig LoopingGesture;
+	public ConversationData PostBearAttackConversation;
+
+	public BaseMission PostBearAttackMission;
 
 	public GameObjectRef BearRoarSfx;
 
 	public Transform BearRoarSpawnPos;
+
+	[Range(0f, 1f)]
+	public float TalkingHeadIkWeight = 0.7f;
+
+	public RuntimeAnimatorController CustomAnimator;
+
+	private static readonly int IsTalking = Animator.StringToHash("IsTalking");
 
 	private const uint FORAGE_MISSION = 2265941643u;
 
@@ -38,18 +48,9 @@ public class TutorialNPC : NPCMissionProvider
 
 	private const uint CRAFT_KAYAK_MISSION = 3197637569u;
 
-	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
-	{
-		TimeWarning val = TimeWarning.New("TutorialNPC.OnRpcMessage", 0);
-		try
-		{
-		}
-		finally
-		{
-			((IDisposable)val)?.Dispose();
-		}
-		return base.OnRpcMessage(player, rpc, msg);
-	}
+	public const uint BEAR_ATTACK_RESPAWN_MISSION = 3156134108u;
+
+	private BasePlayer playerToKill;
 
 	protected override bool CanTalkTo(BasePlayer bp)
 	{
@@ -74,6 +75,10 @@ public class TutorialNPC : NPCMissionProvider
 		{
 			return BuildKayakConversation;
 		}
+		if (player.HasCompletedMission(3156134108u))
+		{
+			return PostBearAttackConversation;
+		}
 		if (player.HasCompletedMission(3432877204u))
 		{
 			return PrepareForCombatConversation;
@@ -95,26 +100,38 @@ public class TutorialNPC : NPCMissionProvider
 
 	public override void OnConversationAction(BasePlayer player, string action)
 	{
-		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
 		base.OnConversationAction(player, action);
-		if (action == "openhelp")
-		{
-			ClientRPCPlayer(null, player, "Client_OpenHelp");
-		}
-		else if (action == "playbearsfx")
+		if (action == "playbearsfx")
 		{
 			Effect.server.Run(BearRoarSfx.resourcePath, BearRoarSpawnPos.position);
+			playerToKill = player;
+			((FacepunchBehaviour)this).Invoke((Action)WaitAndKill, 2f);
+		}
+		else if (action == "cleardeathmarker")
+		{
+			player.ClearDeathMarker(sendToClient: true);
 		}
 	}
 
-	public override void ServerInit()
+	private void WaitAndKill()
 	{
-		base.ServerInit();
-		if ((Object)(object)LoopingGesture != (Object)null)
+		if ((Object)(object)playerToKill != (Object)null)
 		{
-			Server_StartGesture(LoopingGesture);
+			DeathInfo val = Pool.Get<DeathInfo>();
+			val.attackerName = "bear";
+			if (playerToKill.IsGod())
+			{
+				playerToKill.net.connection.info.Set("global.god", "0");
+			}
+			playerToKill.SetOverrideDeathBlow(val);
+			playerToKill.Hurt(9999f);
+			if (PostBearAttackMission != null)
+			{
+				BaseMission.AssignMission(playerToKill, this, PostBearAttackMission);
+			}
 		}
 	}
 
@@ -122,10 +139,6 @@ public class TutorialNPC : NPCMissionProvider
 	{
 		base.PostServerLoad();
 		EndSleeping();
-		if ((Object)(object)LoopingGesture != (Object)null)
-		{
-			Server_StartGesture(LoopingGesture);
-		}
 	}
 
 	public override void GreetPlayer(BasePlayer player)
@@ -134,5 +147,17 @@ public class TutorialNPC : NPCMissionProvider
 
 	public override void Greeting()
 	{
+	}
+
+	public override void OnConversationStarted(BasePlayer speakingTo)
+	{
+		base.OnConversationStarted(speakingTo);
+		SetFlag(Flags.Busy, b: true);
+	}
+
+	public override void OnConversationEnded(BasePlayer player)
+	{
+		base.OnConversationEnded(player);
+		SetFlag(Flags.Busy, b: false);
 	}
 }

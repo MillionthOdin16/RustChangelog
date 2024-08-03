@@ -7,6 +7,7 @@ using System.Text;
 using ConVar;
 using Facepunch;
 using Facepunch.Rust;
+using Facepunch.Rust.Profiling;
 using Network;
 using Network.Visibility;
 using ProtoBuf;
@@ -67,23 +68,23 @@ public abstract class BaseNetworkable : BaseMonoBehaviour, IEntity, NetworkHandl
 
 	public abstract class EntityRealm : IEnumerable<BaseNetworkable>, IEnumerable
 	{
-		private ListDictionary<NetworkableId, BaseNetworkable> entityList = new ListDictionary<NetworkableId, BaseNetworkable>();
+		private HiddenValue<ListDictionary<NetworkableId, BaseNetworkable>> entityList = new HiddenValue<ListDictionary<NetworkableId, BaseNetworkable>>(new ListDictionary<NetworkableId, BaseNetworkable>());
 
-		public int Count => entityList.Count;
+		public int Count => entityList.Get().Count;
 
 		protected abstract Manager visibilityManager { get; }
 
 		public bool Contains(NetworkableId uid)
 		{
-			//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-			return entityList.Contains(uid);
+			//IL_000b: Unknown result type (might be due to invalid IL or missing references)
+			return entityList.Get().Contains(uid);
 		}
 
 		public BaseNetworkable Find(NetworkableId uid)
 		{
-			//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+			//IL_000d: Unknown result type (might be due to invalid IL or missing references)
 			BaseNetworkable result = null;
-			if (!entityList.TryGetValue(uid, ref result))
+			if (!entityList.Get().TryGetValue(uid, ref result))
 			{
 				return null;
 			}
@@ -92,28 +93,29 @@ public abstract class BaseNetworkable : BaseMonoBehaviour, IEntity, NetworkHandl
 
 		public void RegisterID(BaseNetworkable ent)
 		{
-			//IL_0014: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0044: Unknown result type (might be due to invalid IL or missing references)
-			//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+			//IL_002e: Unknown result type (might be due to invalid IL or missing references)
 			if (ent.net != null)
 			{
-				if (entityList.Contains(ent.net.ID))
+				ListDictionary<NetworkableId, BaseNetworkable> val = entityList.Get();
+				if (val.Contains(ent.net.ID))
 				{
-					entityList[ent.net.ID] = ent;
+					val[ent.net.ID] = ent;
 				}
 				else
 				{
-					entityList.Add(ent.net.ID, ent);
+					val.Add(ent.net.ID, ent);
 				}
 			}
 		}
 
 		public void UnregisterID(BaseNetworkable ent)
 		{
-			//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0019: Unknown result type (might be due to invalid IL or missing references)
 			if (ent.net != null)
 			{
-				entityList.Remove(ent.net.ID);
+				entityList.Get().Remove(ent.net.ID);
 			}
 		}
 
@@ -167,8 +169,8 @@ public abstract class BaseNetworkable : BaseMonoBehaviour, IEntity, NetworkHandl
 
 		public Enumerator<BaseNetworkable> GetEnumerator()
 		{
-			//IL_000b: Unknown result type (might be due to invalid IL or missing references)
-			return entityList.Values.GetEnumerator();
+			//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+			return entityList.Get().Values.GetEnumerator();
 		}
 
 		IEnumerator<BaseNetworkable> IEnumerable<BaseNetworkable>.GetEnumerator()
@@ -185,7 +187,7 @@ public abstract class BaseNetworkable : BaseMonoBehaviour, IEntity, NetworkHandl
 
 		public void Clear()
 		{
-			entityList.Clear();
+			entityList.Get().Clear();
 		}
 	}
 
@@ -548,7 +550,6 @@ public abstract class BaseNetworkable : BaseMonoBehaviour, IEntity, NetworkHandl
 		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
 		net = Net.sv.CreateNetworkable(entityID);
 		serverEntities.RegisterID(this);
-		PreServerLoad();
 	}
 
 	public virtual void PreServerLoad()
@@ -605,6 +606,35 @@ public abstract class BaseNetworkable : BaseMonoBehaviour, IEntity, NetworkHandl
 			}
 		}
 		return connectionsInSphereList;
+	}
+
+	public static void GetCloseConnections(Vector3 position, float distance, List<Connection> foundConnections)
+	{
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
+		if (Net.sv == null || Net.sv.visibility == null)
+		{
+			return;
+		}
+		float num = distance * distance;
+		Group group = Net.sv.visibility.GetGroup(position);
+		if (group == null)
+		{
+			return;
+		}
+		List<Connection> subscribers = group.subscribers;
+		for (int i = 0; i < subscribers.Count; i++)
+		{
+			Connection val = subscribers[i];
+			if (val.active)
+			{
+				BasePlayer basePlayer = val.player as BasePlayer;
+				if (!((Object)(object)basePlayer == (Object)null) && !(basePlayer.SqrDistance(position) > num))
+				{
+					foundConnections.Add(basePlayer.Connection);
+				}
+			}
+		}
 	}
 
 	public static void GetCloseConnections(Vector3 position, float distance, List<BasePlayer> players)
@@ -798,6 +828,11 @@ public abstract class BaseNetworkable : BaseMonoBehaviour, IEntity, NetworkHandl
 
 	public virtual void Spawn()
 	{
+		EntityProfiler.spawned++;
+		if (EntityProfiler.mode >= 2)
+		{
+			EntityProfiler.OnSpawned(this);
+		}
 		SpawnShared();
 		if (net == null)
 		{
@@ -872,11 +907,27 @@ public abstract class BaseNetworkable : BaseMonoBehaviour, IEntity, NetworkHandl
 			Debug.LogWarning((object)("Calling kill - but already IsDestroyed!? " + (object)this));
 			return;
 		}
+		EntityProfiler.killed++;
+		if (EntityProfiler.mode >= 2)
+		{
+			EntityProfiler.OnKilled(this);
+		}
 		((Component)this).gameObject.BroadcastOnParentDestroying();
 		DoEntityDestroy();
 		TerminateOnClient(mode);
 		TerminateOnServer();
 		EntityDestroy();
+	}
+
+	public void KillAsMapEntity()
+	{
+		if (IsFullySpawned())
+		{
+			Kill();
+			return;
+		}
+		IsDestroyed = true;
+		Object.Destroy((Object)(object)((Component)this).gameObject);
 	}
 
 	private void TerminateOnClient(DestroyMode mode)

@@ -523,8 +523,8 @@ public class Chat : ConsoleSystem
 
 	private static void sayImpl(ChatChannel targetChannel, Arg arg)
 	{
-		//IL_017e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0183: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0188: Unknown result type (might be due to invalid IL or missing references)
 		if (!enabled)
 		{
 			arg.ReplyWith("Chat is disabled.");

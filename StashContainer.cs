@@ -5,6 +5,7 @@ using Network;
 using UnityEngine;
 using UnityEngine.Assertions;
 
+[Factory("stash")]
 public class StashContainer : StorageContainer
 {
 	public static class StashContainerFlags
@@ -21,6 +22,11 @@ public class StashContainer : StorageContainer
 	public GameObjectRef buryEffect;
 
 	public float uncoverRange = 3f;
+
+	public float uncoverTime = 2f;
+
+	[ServerVar(Name = "reveal_tick_rate")]
+	public static float PlayerDetectionTickRate = 0.5f;
 
 	private float lastToggleTime;
 
@@ -72,57 +78,6 @@ public class StashContainer : StorageContainer
 					{
 						Debug.LogException(ex);
 						player.Kick("RPC Error in RPC_HideStash");
-					}
-				}
-				finally
-				{
-					((IDisposable)val2)?.Dispose();
-				}
-				return true;
-			}
-			if (rpc == 298671803 && (Object)(object)player != (Object)null)
-			{
-				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
-				if (Global.developer > 2)
-				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_WantsUnhide "));
-				}
-				TimeWarning val2 = TimeWarning.New("RPC_WantsUnhide", 0);
-				try
-				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
-					try
-					{
-						if (!RPC_Server.IsVisible.Test(298671803u, "RPC_WantsUnhide", this, player, 3f))
-						{
-							return true;
-						}
-					}
-					finally
-					{
-						((IDisposable)val3)?.Dispose();
-					}
-					try
-					{
-						val3 = TimeWarning.New("Call", 0);
-						try
-						{
-							RPCMessage rPCMessage = default(RPCMessage);
-							rPCMessage.connection = msg.connection;
-							rPCMessage.player = player;
-							rPCMessage.read = msg.read;
-							RPCMessage rpc3 = rPCMessage;
-							RPC_WantsUnhide(rpc3);
-						}
-						finally
-						{
-							((IDisposable)val3)?.Dispose();
-						}
-					}
-					catch (Exception ex2)
-					{
-						Debug.LogException(ex2);
-						player.Kick("RPC Error in RPC_WantsUnhide");
 					}
 				}
 				finally
@@ -194,10 +149,33 @@ public class StashContainer : StorageContainer
 		}
 	}
 
+	private void RemoveFromNetworkRange()
+	{
+		base.limitNetworking = true;
+	}
+
+	private void ReturnToNetworkRange()
+	{
+		if (base.limitNetworking)
+		{
+			base.limitNetworking = false;
+			SendNetworkUpdateImmediate();
+		}
+		((FacepunchBehaviour)this).CancelInvoke((Action)RemoveFromNetworkRange);
+	}
+
 	public void SetHidden(bool isHidden)
 	{
 		if (!(Time.realtimeSinceStartup - lastToggleTime < 3f) && isHidden != HasFlag(Flags.Reserved5))
 		{
+			if (isHidden)
+			{
+				((FacepunchBehaviour)this).Invoke((Action)RemoveFromNetworkRange, 3f);
+			}
+			else
+			{
+				ReturnToNetworkRange();
+			}
 			lastToggleTime = Time.realtimeSinceStartup;
 			((FacepunchBehaviour)this).Invoke((Action)Decay, 259200f);
 			if (base.isServer)
@@ -224,6 +202,15 @@ public class StashContainer : StorageContainer
 		SetHidden(isHidden: false);
 	}
 
+	public override void PostServerLoad()
+	{
+		base.PostServerLoad();
+		if (IsHidden())
+		{
+			RemoveFromNetworkRange();
+		}
+	}
+
 	public void ToggleHidden()
 	{
 		SetHidden(!IsHidden());
@@ -235,21 +222,6 @@ public class StashContainer : StorageContainer
 	{
 		Analytics.Azure.OnStashHidden(rpc.player, this);
 		SetHidden(isHidden: true);
-	}
-
-	[RPC_Server]
-	[RPC_Server.IsVisible(3f)]
-	public void RPC_WantsUnhide(RPCMessage rpc)
-	{
-		if (IsHidden())
-		{
-			BasePlayer player = rpc.player;
-			if (PlayerInRange(player))
-			{
-				Analytics.Azure.OnStashRevealed(rpc.player, this);
-				SetHidden(isHidden: false);
-			}
-		}
 	}
 
 	public override void OnFlagsChanged(Flags old, Flags next)

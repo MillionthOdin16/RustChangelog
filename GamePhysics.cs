@@ -153,6 +153,15 @@ public static class GamePhysics
 		BufferToList(colBuffer, count, list);
 	}
 
+	public static bool OverlapSphere(Vector3 position, float radius, int layerMask = -5, QueryTriggerInteraction triggerInteraction = 1)
+	{
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		layerMask = HandleIgnoreCollision(position, layerMask);
+		return Physics.OverlapSphereNonAlloc(position, radius, colBuffer, layerMask, triggerInteraction) > 0;
+	}
+
 	public static void CapsuleSweep(Vector3 position0, Vector3 position1, float radius, Vector3 direction, float distance, List<RaycastHit> list, int layerMask = -5, QueryTriggerInteraction triggerInteraction = 1)
 	{
 		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
@@ -501,11 +510,11 @@ public static class GamePhysics
 		//IL_00ef: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00fc: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0105: Unknown result type (might be due to invalid IL or missing references)
-		if (!ValidBounds.Test(p0))
+		if (!ValidBounds.TestOuterBounds(p0))
 		{
 			return false;
 		}
-		if (!ValidBounds.Test(p1))
+		if (!ValidBounds.TestOuterBounds(p1))
 		{
 			return false;
 		}
@@ -562,6 +571,8 @@ public static class GamePhysics
 	public static bool Verify(Collider collider, Vector3 point, BaseEntity ignoreEntity = null)
 	{
 		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)collider == (Object)null)
 		{
@@ -574,6 +585,10 @@ public static class GamePhysics
 		if (collider is TerrainCollider)
 		{
 			if (Object.op_Implicit((Object)(object)TerrainMeta.Collision) && TerrainMeta.Collision.GetIgnore(point))
+			{
+				return false;
+			}
+			if (point == Vector3.zero)
 			{
 				return false;
 			}

@@ -530,7 +530,7 @@ public class Drone : RemoteControlEntity, IRemoteControllableClientCallbacks, IR
 
 	protected override bool CanChangeID(BasePlayer player)
 	{
-		if ((Object)(object)player != (Object)null && base.OwnerID == player.userID)
+		if ((Object)(object)player != (Object)null && base.OwnerID == (ulong)player.userID)
 		{
 			return !HasFlag(Flags.Reserved2);
 		}
@@ -549,7 +549,7 @@ public class Drone : RemoteControlEntity, IRemoteControllableClientCallbacks, IR
 	public override void OnPickedUpPreItemMove(Item createdItem, BasePlayer player)
 	{
 		base.OnPickedUpPreItemMove(createdItem, player);
-		if ((Object)(object)player != (Object)null && player.userID == base.OwnerID)
+		if ((Object)(object)player != (Object)null && (ulong)player.userID == base.OwnerID)
 		{
 			createdItem.text = GetIdentifier();
 		}

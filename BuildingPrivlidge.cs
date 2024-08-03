@@ -27,7 +27,10 @@ public class BuildingPrivlidge : StorageContainer
 		}
 	}
 
-	public List<PlayerNameID> authorizedPlayers = new List<PlayerNameID>();
+	public GameObject assignDialog;
+
+	[NonSerialized]
+	public HashSet<PlayerNameID> authorizedPlayers = new HashSet<PlayerNameID>();
 
 	public const Flags Flag_MaxAuths = Flags.Reserved5;
 
@@ -52,20 +55,20 @@ public class BuildingPrivlidge : StorageContainer
 		TimeWarning val = TimeWarning.New("BuildingPrivlidge.OnRpcMessage", 0);
 		try
 		{
-			if (rpc == 1092560690 && (Object)(object)player != (Object)null)
+			if (rpc == 82205621 && (Object)(object)player != (Object)null)
 			{
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - AddSelfAuthorize "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - AddAuthorize "));
 				}
-				TimeWarning val2 = TimeWarning.New("AddSelfAuthorize", 0);
+				TimeWarning val2 = TimeWarning.New("AddAuthorize", 0);
 				try
 				{
 					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
-						if (!RPC_Server.IsVisible.Test(1092560690u, "AddSelfAuthorize", this, player, 3f))
+						if (!RPC_Server.IsVisible.Test(82205621u, "AddAuthorize", this, player, 3f))
 						{
 							return true;
 						}
@@ -84,7 +87,7 @@ public class BuildingPrivlidge : StorageContainer
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
 							RPCMessage rpc2 = rPCMessage;
-							AddSelfAuthorize(rpc2);
+							AddAuthorize(rpc2);
 						}
 						finally
 						{
@@ -94,7 +97,7 @@ public class BuildingPrivlidge : StorageContainer
 					catch (Exception ex)
 					{
 						Debug.LogException(ex);
-						player.Kick("RPC Error in AddSelfAuthorize");
+						player.Kick("RPC Error in AddAuthorize");
 					}
 				}
 				finally
@@ -272,12 +275,12 @@ public class BuildingPrivlidge : StorageContainer
 
 	public bool IsAuthed(BasePlayer player)
 	{
-		return authorizedPlayers.Any((PlayerNameID x) => x.userid == player.userID);
+		return IsAuthed(player.userID);
 	}
 
-	public bool IsAuthed(ulong userID)
+	public bool IsAuthed(ulong userId)
 	{
-		return authorizedPlayers.Any((PlayerNameID x) => x.userid == userID);
+		return authorizedPlayers.Any((PlayerNameID x) => x.userid == userId);
 	}
 
 	public bool AnyAuthed()
@@ -314,32 +317,48 @@ public class BuildingPrivlidge : StorageContainer
 	{
 		base.Save(info);
 		info.msg.buildingPrivilege = Pool.Get<BuildingPrivilege>();
-		info.msg.buildingPrivilege.users = authorizedPlayers;
 		if (!info.forDisk)
 		{
 			info.msg.buildingPrivilege.upkeepPeriodMinutes = CalculateUpkeepPeriodMinutes();
 			info.msg.buildingPrivilege.costFraction = CalculateUpkeepCostFraction();
 			info.msg.buildingPrivilege.protectedMinutes = GetProtectedMinutes();
+			info.msg.buildingPrivilege.clientAuthed = IsAuthed(info.forConnection.userid);
+			info.msg.buildingPrivilege.clientAnyAuthed = AnyAuthed();
+		}
+		if (!info.forDisk && !info.msg.buildingPrivilege.clientAuthed)
+		{
+			return;
+		}
+		info.msg.buildingPrivilege.users = Pool.GetList<PlayerNameID>();
+		foreach (PlayerNameID authorizedPlayer in authorizedPlayers)
+		{
+			info.msg.buildingPrivilege.users.Add(authorizedPlayer.Copy());
 		}
 	}
 
-	public override void PostSave(SaveInfo info)
+	public override bool CanUseNetworkCache(Connection connection)
 	{
-		info.msg.buildingPrivilege.users = null;
+		return false;
 	}
 
 	public override void Load(LoadInfo info)
 	{
 		base.Load(info);
-		authorizedPlayers.Clear();
-		if (info.msg.buildingPrivilege != null && info.msg.buildingPrivilege.users != null)
+		Pool.ClearList<PlayerNameID>((ICollection<PlayerNameID>)authorizedPlayers);
+		if (info.msg.buildingPrivilege == null)
 		{
-			authorizedPlayers = info.msg.buildingPrivilege.users;
-			if (!info.fromDisk)
+			return;
+		}
+		if (info.msg.buildingPrivilege.users != null)
+		{
+			foreach (PlayerNameID user in info.msg.buildingPrivilege.users)
 			{
-				cachedProtectedMinutes = info.msg.buildingPrivilege.protectedMinutes;
+				authorizedPlayers.Add(user.Copy());
 			}
-			info.msg.buildingPrivilege.users = null;
+		}
+		if (!info.fromDisk)
+		{
+			cachedProtectedMinutes = info.msg.buildingPrivilege.protectedMinutes;
 		}
 	}
 
@@ -404,27 +423,29 @@ public class BuildingPrivlidge : StorageContainer
 
 	[RPC_Server]
 	[RPC_Server.IsVisible(3f)]
-	private void AddSelfAuthorize(RPCMessage rpc)
+	private void AddAuthorize(RPCMessage rpc)
 	{
 		if (rpc.player.CanInteract() && CanAdministrate(rpc.player))
 		{
-			AddPlayer(rpc.player);
+			ulong targetPlayerId = rpc.read.UInt64();
+			AddPlayer(rpc.player, targetPlayerId);
 			SendNetworkUpdate();
 		}
 	}
 
-	public void AddPlayer(BasePlayer player)
+	public void AddPlayer(BasePlayer granter, ulong targetPlayerId)
 	{
 		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0034: Expected O, but got Unknown
 		if (!AtMaxAuthCapacity())
 		{
-			authorizedPlayers.RemoveAll((PlayerNameID x) => x.userid == player.userID);
+			authorizedPlayers.RemoveWhere((PlayerNameID x) => x.userid == targetPlayerId);
 			PlayerNameID val = new PlayerNameID();
-			val.userid = player.userID;
-			val.username = player.displayName;
+			val.userid = targetPlayerId;
+			string username = BasePlayer.FindByID(targetPlayerId)?.displayName ?? "unknown";
+			val.username = username;
 			authorizedPlayers.Add(val);
-			Analytics.Azure.OnEntityAuthChanged(this, player, authorizedPlayers.Select((PlayerNameID x) => x.userid), "added", player.userID);
+			Analytics.Azure.OnEntityAuthChanged(this, granter, authorizedPlayers.Select((PlayerNameID x) => x.userid), "added", targetPlayerId);
 			UpdateMaxAuthCapacity();
 		}
 	}
@@ -435,7 +456,7 @@ public class BuildingPrivlidge : StorageContainer
 	{
 		if (rpc.player.CanInteract() && CanAdministrate(rpc.player))
 		{
-			authorizedPlayers.RemoveAll((PlayerNameID x) => x.userid == rpc.player.userID);
+			authorizedPlayers.RemoveWhere((PlayerNameID x) => x.userid == (ulong)rpc.player.userID);
 			Analytics.Azure.OnEntityAuthChanged(this, rpc.player, authorizedPlayers.Select((PlayerNameID x) => x.userid), "removed", rpc.player.userID);
 			UpdateMaxAuthCapacity();
 			SendNetworkUpdate();
@@ -482,10 +503,14 @@ public class BuildingPrivlidge : StorageContainer
 		}
 	}
 
-	public override int GetIdealSlot(BasePlayer player, Item item)
+	public override int GetIdealSlot(BasePlayer player, ItemContainer container, Item item)
 	{
 		if (item != null && (Object)(object)item.info != (Object)null && allowedConstructionItems.Contains(item.info))
 		{
+			if ((Object)(object)player != (Object)null && player.IsInTutorial)
+			{
+				return 0;
+			}
 			for (int i = 24; i <= 27; i++)
 			{
 				if (base.inventory.GetSlot(i) == null)
@@ -494,7 +519,40 @@ public class BuildingPrivlidge : StorageContainer
 				}
 			}
 		}
-		return base.GetIdealSlot(player, item);
+		return base.GetIdealSlot(player, container, item);
+	}
+
+	private void UnlinkDoorControllers()
+	{
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		BuildingManager.Building building = GetBuilding();
+		if (building == null)
+		{
+			return;
+		}
+		Enumerator<DecayEntity> enumerator = building.decayEntities.GetEnumerator();
+		try
+		{
+			while (enumerator.MoveNext())
+			{
+				if (!(enumerator.Current is Door door))
+				{
+					continue;
+				}
+				foreach (BaseEntity child in door.children)
+				{
+					if (child is CustomDoorManipulator customDoorManipulator)
+					{
+						customDoorManipulator.SetTargetDoor(null);
+					}
+				}
+			}
+		}
+		finally
+		{
+			((IDisposable)enumerator).Dispose();
+		}
 	}
 
 	public override bool HasSlot(Slot slot)
@@ -598,11 +656,47 @@ public class BuildingPrivlidge : StorageContainer
 
 	public override void OnKilled(HitInfo info)
 	{
+		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
 		if (ConVar.Decay.upkeep_grief_protection > 0f)
 		{
 			PurchaseUpkeepTime(ConVar.Decay.upkeep_grief_protection * 60f);
 		}
+		if (info != null && (Object)(object)info.InitiatorPlayer != (Object)null && !info.InitiatorPlayer.IsNpc && info.InitiatorPlayer.serverClan != null)
+		{
+			IReadOnlyList<ClanMember> members = info.InitiatorPlayer.serverClan.Members;
+			bool flag = false;
+			foreach (ClanMember item in members)
+			{
+				if (item.SteamId == base.OwnerID)
+				{
+					flag = true;
+					break;
+				}
+			}
+			if (!flag)
+			{
+				HandleKilledByClanMember(info.InitiatorPlayer);
+			}
+		}
+		UnlinkDoorControllers();
 		base.OnKilled(info);
+	}
+
+	private async void HandleKilledByClanMember(BasePlayer player)
+	{
+		try
+		{
+			ClanValueResult<IClan> val = await ClanManager.ServerInstance.Backend.GetByMember(base.OwnerID);
+			IClan val2 = (val.IsSuccess ? val.Value : null);
+			if (val2 != null)
+			{
+				player.AddClanScore((ClanScoreEventType)4, 1, null, val2);
+			}
+		}
+		catch (Exception ex)
+		{
+			Debug.LogException(ex);
+		}
 	}
 
 	public override void DecayTick()
@@ -800,5 +894,35 @@ public class BuildingPrivlidge : StorageContainer
 		{
 			((IDisposable)enumerator).Dispose();
 		}
+	}
+
+	public static string FormatUpkeepMinutes(float minutes)
+	{
+		int num = Mathf.FloorToInt(minutes / 60f);
+		int num2 = Mathf.FloorToInt(minutes - (float)num * 60f);
+		int num3 = Mathf.FloorToInt(minutes * 60f % 60f);
+		if (num >= 72)
+		{
+			string text = Translate.Get("days", "days");
+			int num4 = num / 24;
+			if (num4 >= 30)
+			{
+				return "> 30 " + text;
+			}
+			return $"{num4:N0} {text}";
+		}
+		if (num >= 12)
+		{
+			return $"{num:N0} hrs";
+		}
+		if (num >= 1)
+		{
+			return $"{num:N0}h{num2:N0}m";
+		}
+		if (minutes >= 1f)
+		{
+			return $"{num2:N0}m{num3:N0}s";
+		}
+		return $"{minutes * 60f:N0}s";
 	}
 }

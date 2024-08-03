@@ -72,15 +72,6 @@ public class CustomTimerSwitch : TimerSwitch
 		return base.OnRpcMessage(player, rpc, msg);
 	}
 
-	public override void UpdateFromInput(int inputAmount, int inputSlot)
-	{
-		base.UpdateFromInput(inputAmount, inputSlot);
-		if (inputAmount > 0 && inputSlot == 1)
-		{
-			SwitchPressed();
-		}
-	}
-
 	[RPC_Server]
 	[RPC_Server.IsVisible(3f)]
 	public void SERVER_SetTime(RPCMessage msg)

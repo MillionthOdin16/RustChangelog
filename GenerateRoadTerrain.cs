@@ -11,21 +11,35 @@ public class GenerateRoadTerrain : ProceduralComponent
 
 	public const int SmoothenXZ = 4;
 
+	private float SmoothenFilter(Vector3[] points, int index)
+	{
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		int topology = TerrainMeta.TopologyMap.GetTopology(points[index]);
+		if (((uint)topology & 0x80400u) != 0)
+		{
+			return 0f;
+		}
+		if (((uint)topology & 0x100000u) != 0)
+		{
+			return 0.5f;
+		}
+		return 1f;
+	}
+
 	public override void Process(uint seed)
 	{
-		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0093: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0095: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ce: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01de: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01e0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ba: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ca: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01cc: Unknown result type (might be due to invalid IL or missing references)
 		TerrainHeightMap heightMap = TerrainMeta.HeightMap;
-		TerrainTopologyMap topologymap = TerrainMeta.TopologyMap;
 		for (int j = 0; j < 2; j++)
 		{
 			foreach (PathList item in TerrainMeta.Path.Roads.AsEnumerable().Reverse())
@@ -38,16 +52,7 @@ public class GenerateRoadTerrain : ProceduralComponent
 					val.y = heightMap.GetHeight(val);
 					points[k] = val;
 				}
-				path.Smoothen(8, Vector3.up, delegate(int i)
-				{
-					//IL_0017: Unknown result type (might be due to invalid IL or missing references)
-					int topology = topologymap.GetTopology(path.Points[i]);
-					if (((uint)topology & 0x80000u) != 0)
-					{
-						return 0f;
-					}
-					return (((uint)topology & 0x100000u) != 0) ? 0.5f : 1f;
-				});
+				path.Smoothen(8, Vector3.up, (int i) => SmoothenFilter(points, i));
 				path.RecalculateTangents();
 				heightMap.Push();
 				float intensity = 1f;

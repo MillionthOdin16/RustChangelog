@@ -61,7 +61,10 @@ public class BaseMission : BaseScriptableObject
 		ACQUITE_ITEM_STACK,
 		OPEN_STORAGE,
 		COOK,
-		ENTER_TRIGGER
+		ENTER_TRIGGER,
+		UPGRADE_BUILDING_GRADE,
+		RESPAWN,
+		METAL_DETECTOR_FIND
 	}
 
 	[Serializable]
@@ -319,6 +322,20 @@ public class BaseMission : BaseScriptableObject
 					mission.objectives[i].objective.PostServerLoad(player, objectiveStatuses[i]);
 				}
 			}
+		}
+
+		public int GetTotalRequiredRewardItemSlots()
+		{
+			BaseMission mission = GetMission();
+			int num = 0;
+			for (int i = 0; i < mission.objectives.Length; i++)
+			{
+				if (!mission.objectives[i].isRequired && objectiveStatuses[i].completed)
+				{
+					num += mission.objectives[i].bonusRewards.Length;
+				}
+			}
+			return mission.baseRewards.Length + num;
 		}
 
 		public void Reset()
@@ -631,7 +648,9 @@ public class BaseMission : BaseScriptableObject
 
 	public bool completeSilently;
 
-	public TutorialFullScreenHelpInfo showHelpInfo;
+	public bool blockMissionStat;
+
+	public TutorialMissionHelpSet showHelpInfo;
 
 	public MissionObjectiveEntry[] objectives;
 
@@ -649,12 +668,6 @@ public class BaseMission : BaseScriptableObject
 
 	public BaseMission followupMission;
 
-	public float advanceTimeByOnComplete;
-
-	public TimeChange onStartTimeChange;
-
-	public TimeChange onCompleteTimeChange;
-
 	public int repeatDelaySecondsSuccess = -1;
 
 	public int repeatDelaySecondsFailed = -1;
@@ -664,8 +677,6 @@ public class BaseMission : BaseScriptableObject
 	public Sprite icon;
 
 	public Sprite providerIcon;
-
-	public bool finishTutorial;
 
 	public bool hideStagesNotStarted;
 
@@ -771,27 +782,6 @@ public class BaseMission : BaseScriptableObject
 		{
 			assignee.SetTutorialAllowance(AllowedTutorialItems);
 		}
-		ApplyTimeChange(onStartTimeChange, assignee);
-	}
-
-	private void ApplyTimeChange(TimeChange timeChange, BasePlayer player)
-	{
-		if (timeChange == null || (Object)(object)player == (Object)null)
-		{
-			return;
-		}
-		if (player.IsInTutorial)
-		{
-			TutorialIsland currentTutorialIsland = player.GetCurrentTutorialIsland();
-			if ((Object)(object)currentTutorialIsland != (Object)null)
-			{
-				currentTutorialIsland.CurrentIslandTime = TimeChange.Apply(currentTutorialIsland.CurrentIslandTime, timeChange, player);
-			}
-		}
-		else
-		{
-			TimeChange.Apply(0f, timeChange, player);
-		}
 	}
 
 	public void CheckObjectives(MissionInstance instance, BasePlayer assignee)
@@ -867,26 +857,21 @@ public class BaseMission : BaseScriptableObject
 		instance.status = MissionStatus.Completed;
 		assignee.SetActiveMission(-1);
 		assignee.MissionDirty();
-		ApplyTimeChange(onCompleteTimeChange, assignee);
 		if (followupMission != null)
 		{
 			assignee.RegisterFollowupMission(followupMission, instance.ProviderEntity() as IMissionProvider);
 		}
-		if (GameInfo.HasAchievements)
+		if (GameInfo.HasAchievements && mission != null && !mission.blockMissionStat)
 		{
 			assignee.stats.Add("missions_completed", 1, Stats.All);
 			assignee.stats.Save(forceSteamSave: true);
 		}
-		if (finishTutorial)
+		if (assignee.IsInTutorial)
 		{
 			TutorialIsland currentTutorialIsland = assignee.GetCurrentTutorialIsland();
-			if ((Object)(object)currentTutorialIsland != (Object)null)
+			if ((Object)(object)currentTutorialIsland != (Object)null && currentTutorialIsland.FinalMission == this)
 			{
 				currentTutorialIsland.StartEndingCinematic(assignee);
-			}
-			else
-			{
-				Debug.LogError((object)"Missing tutorial island");
 			}
 		}
 		static void GiveReward(BasePlayer player, ItemAmount reward)
@@ -897,7 +882,11 @@ public class BaseMission : BaseScriptableObject
 			}
 			else
 			{
-				Item item = ItemManager.Create(reward.itemDef, Mathf.CeilToInt(reward.amount), 0uL);
+				Item item = (reward.isBP ? ItemManager.Create(ItemManager.blueprintBaseDef, Mathf.CeilToInt(reward.amount), 0uL) : ItemManager.Create(reward.itemDef, Mathf.CeilToInt(reward.amount), 0uL));
+				if (reward.isBP)
+				{
+					item.blueprintTarget = reward.itemDef.itemid;
+				}
 				if (item != null)
 				{
 					player.GiveItem(item, BaseEntity.GiveItemReason.PickedUp);

@@ -113,7 +113,7 @@ public class PetBrain : BaseAIBrain
 			{
 				basePlayer.SendClientPetStateIndex();
 			}
-			baseEntity.ClientRPC(null, "OnCommandGiven");
+			baseEntity.ClientRPC(RpcTarget.NetworkGroup("OnCommandGiven"));
 		}
 	}
 }

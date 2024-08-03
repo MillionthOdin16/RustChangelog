@@ -11,6 +11,14 @@ public class ItemModSetFrequency : ItemMod
 		public TimeSince TimeSinceEdit;
 	}
 
+	public static readonly Phrase RfOffTitle = new Phrase("rf_off", "Disable RF");
+
+	public static readonly Phrase RfOffDesc = new Phrase("rf_off_desc", " Disable detonation via RF");
+
+	public static readonly Phrase RfOnTitle = new Phrase("rf_on", "Enable RF");
+
+	public static readonly Phrase RfOnDesc = new Phrase("rf_on_desc", " Enable detonation via RF");
+
 	public GameObjectRef frequencyPanelPrefab;
 
 	public bool allowArmDisarm;

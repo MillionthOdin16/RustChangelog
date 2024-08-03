@@ -72,10 +72,10 @@ public class TabToggle : MonoBehaviour
 		{
 			return;
 		}
-		CanvasGroup component = go.GetComponent<CanvasGroup>();
-		if (FadeOut && Object.op_Implicit((Object)(object)component))
+		CanvasGroup val = default(CanvasGroup);
+		if (FadeOut && go.TryGetComponent<CanvasGroup>(ref val))
 		{
-			LeanTween.alphaCanvas(component, 0f, 0.1f).setOnComplete((Action)delegate
+			LeanTween.alphaCanvas(val, 0f, 0.1f).setOnComplete((Action)delegate
 			{
 				go.SetActive(false);
 			});
@@ -90,11 +90,11 @@ public class TabToggle : MonoBehaviour
 	{
 		if (!go.activeSelf)
 		{
-			CanvasGroup component = go.GetComponent<CanvasGroup>();
-			if (FadeIn && Object.op_Implicit((Object)(object)component))
+			CanvasGroup val = default(CanvasGroup);
+			if (FadeIn && go.TryGetComponent<CanvasGroup>(ref val))
 			{
-				component.alpha = 0f;
-				LeanTween.alphaCanvas(component, 1f, 0.1f);
+				val.alpha = 0f;
+				LeanTween.alphaCanvas(val, 1f, 0.1f);
 			}
 			go.SetActive(true);
 		}

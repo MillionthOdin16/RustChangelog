@@ -12,9 +12,22 @@ using UnityEngine.Assertions;
 
 public class Planner : HeldEntity
 {
+	public struct CanBuildResult
+	{
+		public bool Result;
+
+		public Phrase Phrase;
+
+		public string[] Arguments;
+	}
+
 	public BaseEntity[] buildableList;
 
-	public bool isTypeDeployable => (Object)(object)GetModDeployable() != (Object)null;
+	public virtual bool isTypeDeployable => (Object)(object)GetModDeployable() != (Object)null;
+
+	public Vector3 serverStartDurationPlacementPosition { get; private set; }
+
+	public TimeSince serverStartDurationPlacementTime { get; private set; }
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -72,6 +85,61 @@ public class Planner : HeldEntity
 				}
 				return true;
 			}
+			if (rpc == 3892284151u && (Object)(object)player != (Object)null)
+			{
+				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
+				if (Global.developer > 2)
+				{
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - StartDurationPlace "));
+				}
+				TimeWarning val2 = TimeWarning.New("StartDurationPlace", 0);
+				try
+				{
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					try
+					{
+						if (!RPC_Server.CallsPerSecond.Test(3892284151u, "StartDurationPlace", this, player, 10uL))
+						{
+							return true;
+						}
+						if (!RPC_Server.IsActiveItem.Test(3892284151u, "StartDurationPlace", this, player))
+						{
+							return true;
+						}
+					}
+					finally
+					{
+						((IDisposable)val3)?.Dispose();
+					}
+					try
+					{
+						val3 = TimeWarning.New("Call", 0);
+						try
+						{
+							RPCMessage rPCMessage = default(RPCMessage);
+							rPCMessage.connection = msg.connection;
+							rPCMessage.player = player;
+							rPCMessage.read = msg.read;
+							RPCMessage msg3 = rPCMessage;
+							StartDurationPlace(msg3);
+						}
+						finally
+						{
+							((IDisposable)val3)?.Dispose();
+						}
+					}
+					catch (Exception ex2)
+					{
+						Debug.LogException(ex2);
+						player.Kick("RPC Error in StartDurationPlace");
+					}
+				}
+				finally
+				{
+					((IDisposable)val2)?.Dispose();
+				}
+				return true;
+			}
 		}
 		finally
 		{
@@ -90,7 +158,7 @@ public class Planner : HeldEntity
 		return ((Component)ownerItemDefinition).GetComponent<ItemModDeployable>();
 	}
 
-	public Deployable GetDeployable()
+	public virtual Deployable GetDeployable()
 	{
 		ItemModDeployable modDeployable = GetModDeployable();
 		if ((Object)(object)modDeployable == (Object)null)
@@ -119,44 +187,59 @@ public class Planner : HeldEntity
 		}
 	}
 
+	[RPC_Server]
+	[RPC_Server.IsActiveItem]
+	[RPC_Server.CallsPerSecond(10uL)]
+	private void StartDurationPlace(RPCMessage msg)
+	{
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		BasePlayer ownerPlayer = GetOwnerPlayer();
+		if (Object.op_Implicit((Object)(object)ownerPlayer))
+		{
+			serverStartDurationPlacementPosition = ((Component)ownerPlayer).transform.position;
+			serverStartDurationPlacementTime = TimeSince.op_Implicit(0f);
+		}
+	}
+
 	public Socket_Base FindSocket(string name, uint prefabIDToFind)
 	{
 		return PrefabAttribute.server.FindAll<Socket_Base>(prefabIDToFind).FirstOrDefault((Socket_Base s) => s.socketName == name);
 	}
 
-	public void DoBuild(CreateBuilding msg)
+	public virtual void DoBuild(CreateBuilding msg)
 	{
-		//IL_02fd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0302: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0317: Unknown result type (might be due to invalid IL or missing references)
-		//IL_031c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0324: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0329: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0331: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0336: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0197: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01f1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01f6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_020c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0211: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0216: Unknown result type (might be due to invalid IL or missing references)
-		//IL_021b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_022d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0232: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0237: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0249: Unknown result type (might be due to invalid IL or missing references)
-		//IL_024e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0253: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0264: Unknown result type (might be due to invalid IL or missing references)
-		//IL_026a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_026f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0274: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0372: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0369: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0377: Unknown result type (might be due to invalid IL or missing references)
-		//IL_037f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0292: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0297: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02ac: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02b1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02b9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02be: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02c6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02cb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0186: Unknown result type (might be due to invalid IL or missing references)
+		//IL_018b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ab: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01cc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01de: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01e3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01e8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ff: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0204: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0209: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0155: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0314: Unknown result type (might be due to invalid IL or missing references)
+		//IL_030b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0319: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0321: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer ownerPlayer = GetOwnerPlayer();
 		if (!Object.op_Implicit((Object)(object)ownerPlayer))
 		{
@@ -182,7 +265,7 @@ public class Planner : HeldEntity
 				val.amount = Pool.GetList<float>();
 				val.itemID = Pool.GetList<int>();
 				GetConstructionCost(val, construction);
-				ownerPlayer.ClientRPCPlayer<ItemAmountList>(null, ownerPlayer, "Client_OnRepairFailedResources", val);
+				ownerPlayer.ClientRPC<ItemAmountList>(RpcTarget.Player("Client_OnRepairFailedResources", ownerPlayer), val);
 				return;
 			}
 			finally
@@ -201,21 +284,6 @@ public class Planner : HeldEntity
 			ownerPlayer.ChatMessage("Deployable mismatch!");
 			AntiHack.NoteAdminHack(ownerPlayer);
 			return;
-		}
-		if (Server.max_sleeping_bags > 0)
-		{
-			SleepingBag.CanBuildResult? canBuildResult = SleepingBag.CanBuildBed(ownerPlayer, construction);
-			if (canBuildResult.HasValue)
-			{
-				if (canBuildResult.Value.Phrase != null && !ownerPlayer.IsInTutorial)
-				{
-					ownerPlayer.ShowToast((!canBuildResult.Value.Result) ? GameTip.Styles.Red_Normal : GameTip.Styles.Blue_Long, canBuildResult.Value.Phrase, canBuildResult.Value.Arguments);
-				}
-				if (!canBuildResult.Value.Result)
-				{
-					return;
-				}
-			}
 		}
 		Construction.Target target = default(Construction.Target);
 		if (((NetworkableId)(ref msg.entity)).IsValid)
@@ -256,6 +324,7 @@ public class Planner : HeldEntity
 		target.normal = msg.normal;
 		target.rotation = msg.rotation;
 		target.player = ownerPlayer;
+		target.isHoldingShift = msg.isHoldingShift;
 		target.valid = true;
 		if (ShouldParent(target.entity, deployable))
 		{
@@ -267,74 +336,95 @@ public class Planner : HeldEntity
 				return;
 			}
 		}
-		DoBuild(target, construction);
+		BaseEntity baseEntity = DoBuild(target, construction);
+		if ((Object)(object)baseEntity != (Object)null && ownerPlayer.IsInCreativeMode && Creative.freeBuild && baseEntity is BuildingBlock buildingBlock)
+		{
+			ConstructionGrade constructionGrade = construction.grades[msg.setToGrade];
+			if (buildingBlock.currentGrade != constructionGrade)
+			{
+				buildingBlock.ChangeGradeAndSkin(constructionGrade.gradeBase.type, constructionGrade.gradeBase.skin);
+			}
+		}
 	}
 
-	public void DoBuild(Construction.Target target, Construction component)
+	public BaseEntity DoBuild(Construction.Target target, Construction component)
 	{
-		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0101: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0108: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0116: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0118: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0111: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0136: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0141: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0146: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0149: Unknown result type (might be due to invalid IL or missing references)
 		//IL_014e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0153: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0155: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0156: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0461: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01e9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01f2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01f9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01fe: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0203: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0255: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0262: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0263: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0234: Unknown result type (might be due to invalid IL or missing references)
-		//IL_023d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0249: Unknown result type (might be due to invalid IL or missing references)
-		//IL_024e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0253: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0271: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0273: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0419: Unknown result type (might be due to invalid IL or missing references)
-		//IL_041f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03e9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03ee: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03fe: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01fa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0201: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0206: Unknown result type (might be due to invalid IL or missing references)
+		//IL_020b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_025d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04e8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04ed: Unknown result type (might be due to invalid IL or missing references)
+		//IL_026a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_026b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_023c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0245: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0251: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0256: Unknown result type (might be due to invalid IL or missing references)
+		//IL_025b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0279: Unknown result type (might be due to invalid IL or missing references)
+		//IL_027b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04a2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04a8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0472: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0477: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0487: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer ownerPlayer = GetOwnerPlayer();
-		if (!Object.op_Implicit((Object)(object)ownerPlayer) || target.ray.IsNaNOrInfinity() || Vector3Ex.IsNaNOrInfinity(target.position) || Vector3Ex.IsNaNOrInfinity(target.normal))
+		if (!Object.op_Implicit((Object)(object)ownerPlayer))
 		{
-			return;
+			return null;
+		}
+		if (target.ray.IsNaNOrInfinity())
+		{
+			return null;
+		}
+		if (Vector3Ex.IsNaNOrInfinity(target.position))
+		{
+			return null;
+		}
+		if (Vector3Ex.IsNaNOrInfinity(target.normal))
+		{
+			return null;
 		}
 		if (target.socket != null)
 		{
 			if (!target.socket.female)
 			{
 				ownerPlayer.ChatMessage("Target socket is not female. (" + target.socket.socketName + ")");
-				return;
+				return null;
 			}
 			if ((Object)(object)target.entity != (Object)null && target.entity.IsOccupied(target.socket))
 			{
 				ownerPlayer.ChatMessage("Target socket is occupied. (" + target.socket.socketName + ")");
-				return;
+				return null;
 			}
 			if (target.onTerrain)
 			{
 				ownerPlayer.ChatMessage("Target on terrain is not allowed when attaching to socket. (" + target.socket.socketName + ")");
-				return;
+				return null;
 			}
 		}
 		Vector3 val = (((Object)(object)target.entity != (Object)null && target.socket != null) ? target.GetWorldPosition() : target.position);
 		if (AntiHack.TestIsBuildingInsideSomething(target, val))
 		{
 			ownerPlayer.ChatMessage("Can't deploy inside objects");
-			return;
+			return null;
 		}
 		if (ConVar.AntiHack.eye_protection >= 2)
 		{
@@ -382,72 +472,108 @@ public class Planner : HeldEntity
 			if (!GamePhysics.LineOfSightRadius(center, position, layerMask, num3) || !GamePhysics.LineOfSightRadius(position, origin, layerMask, num3) || !GamePhysics.LineOfSightRadius(origin, val2, layerMask, num3, 0f, padding))
 			{
 				ownerPlayer.ChatMessage("Line of sight blocked.");
-				return;
+				return null;
 			}
 		}
 		Construction.lastPlacementError = "No Error";
+		if (Server.max_sleeping_bags > 0)
+		{
+			CanBuildResult? result = SleepingBag.CanBuildBed(ownerPlayer, component);
+			if (HandleCanBuild(result, ownerPlayer))
+			{
+				return null;
+			}
+		}
+		if (Server.max_shelters > 0)
+		{
+			CanBuildResult? result2 = LegacyShelter.CanBuildShelter(ownerPlayer, component);
+			if (HandleCanBuild(result2, ownerPlayer))
+			{
+				return null;
+			}
+		}
 		GameObject val3 = DoPlacement(target, component);
 		if ((Object)(object)val3 == (Object)null)
 		{
 			ownerPlayer.ChatMessage("Can't place: " + Construction.lastPlacementError);
 		}
-		if (!((Object)(object)val3 != (Object)null))
+		if ((Object)(object)val3 != (Object)null)
 		{
-			return;
-		}
-		Deployable deployable = GetDeployable();
-		BaseEntity baseEntity = val3.ToBaseEntity();
-		if ((Object)(object)baseEntity != (Object)null && deployable != null)
-		{
-			if (ShouldParent(target.entity, deployable))
+			Deployable deployable = GetDeployable();
+			BaseEntity baseEntity = val3.ToBaseEntity();
+			if ((Object)(object)baseEntity != (Object)null && deployable != null)
 			{
-				baseEntity.SetParent(target.entity, worldPositionStays: true);
-			}
-			if (deployable.wantsInstanceData && GetOwnerItem().instanceData != null)
-			{
-				(baseEntity as IInstanceDataReceiver).ReceiveInstanceData(GetOwnerItem().instanceData);
-			}
-			if (deployable.copyInventoryFromItem)
-			{
-				StorageContainer component2 = ((Component)baseEntity).GetComponent<StorageContainer>();
-				if (Object.op_Implicit((Object)(object)component2))
+				if (ShouldParent(target.entity, deployable))
 				{
-					component2.ReceiveInventoryFromItem(GetOwnerItem());
+					if (target.socket is Socket_Specific_Female socket_Specific_Female)
+					{
+						if (socket_Specific_Female.parentToBone)
+						{
+							baseEntity.SetParent(target.entity, socket_Specific_Female.boneName, worldPositionStays: true);
+						}
+						else
+						{
+							baseEntity.SetParent(target.entity, worldPositionStays: true);
+						}
+					}
+					else
+					{
+						baseEntity.SetParent(target.entity, worldPositionStays: true);
+					}
+				}
+				if (deployable.wantsInstanceData && GetOwnerItem().instanceData != null)
+				{
+					(baseEntity as IInstanceDataReceiver).ReceiveInstanceData(GetOwnerItem().instanceData);
+				}
+				if (deployable.copyInventoryFromItem)
+				{
+					StorageContainer component2 = ((Component)baseEntity).GetComponent<StorageContainer>();
+					if (Object.op_Implicit((Object)(object)component2))
+					{
+						component2.ReceiveInventoryFromItem(GetOwnerItem());
+					}
+				}
+				ItemModDeployable modDeployable = GetModDeployable();
+				if ((Object)(object)modDeployable != (Object)null)
+				{
+					modDeployable.OnDeployed(baseEntity, ownerPlayer);
+				}
+				baseEntity.OnDeployed(baseEntity.GetParentEntity(), ownerPlayer, GetOwnerItem());
+				if (deployable.placeEffect.isValid)
+				{
+					if (Object.op_Implicit((Object)(object)target.entity) && target.socket != null)
+					{
+						Effect.server.Run(deployable.placeEffect.resourcePath, ((Component)target.entity).transform.TransformPoint(target.socket.worldPosition), ((Component)target.entity).transform.up);
+					}
+					else
+					{
+						Effect.server.Run(deployable.placeEffect.resourcePath, target.position, target.normal);
+					}
 				}
 			}
-			ItemModDeployable modDeployable = GetModDeployable();
-			if ((Object)(object)modDeployable != (Object)null)
+			if ((Object)(object)baseEntity != (Object)null)
 			{
-				modDeployable.OnDeployed(baseEntity, ownerPlayer);
-			}
-			baseEntity.OnDeployed(baseEntity.GetParentEntity(), ownerPlayer, GetOwnerItem());
-			if (deployable.placeEffect.isValid)
-			{
-				if (Object.op_Implicit((Object)(object)target.entity) && target.socket != null)
+				Analytics.Azure.OnEntityBuilt(baseEntity, ownerPlayer);
+				if ((Object)(object)GetOwnerItemDefinition() != (Object)null)
 				{
-					Effect.server.Run(deployable.placeEffect.resourcePath, ((Component)target.entity).transform.TransformPoint(target.socket.worldPosition), ((Component)target.entity).transform.up);
-				}
-				else
-				{
-					Effect.server.Run(deployable.placeEffect.resourcePath, target.position, target.normal);
+					ownerPlayer.ProcessMissionEvent(BaseMission.MissionEventType.DEPLOY, new BaseMission.MissionEventPayload
+					{
+						WorldPosition = ((Component)baseEntity).transform.position,
+						UintIdentifier = baseEntity.prefabID,
+						IntIdentifier = GetOwnerItemDefinition().itemid
+					}, 1f);
 				}
 			}
+			PayForPlacement(ownerPlayer, component);
+			return baseEntity;
 		}
-		if ((Object)(object)baseEntity != (Object)null)
-		{
-			Analytics.Azure.OnEntityBuilt(baseEntity, ownerPlayer);
-			if ((Object)(object)GetOwnerItemDefinition() != (Object)null)
-			{
-				ownerPlayer.ProcessMissionEvent(BaseMission.MissionEventType.DEPLOY, baseEntity.prefabID, 1f, ((Component)baseEntity).transform.position);
-			}
-		}
-		PayForPlacement(ownerPlayer, component);
+		return null;
 	}
 
 	public GameObject DoPlacement(Construction.Target placement, Construction component)
 	{
-		//IL_013f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0144: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0149: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer ownerPlayer = GetOwnerPlayer();
 		if (!Object.op_Implicit((Object)(object)ownerPlayer))
 		{
@@ -506,6 +632,10 @@ public class Planner : HeldEntity
 
 	public void PayForPlacement(BasePlayer player, Construction component)
 	{
+		if (player.IsInCreativeMode && Creative.freeBuild)
+		{
+			return;
+		}
 		if (player.IsInTutorial)
 		{
 			TutorialIsland currentTutorialIsland = player.GetCurrentTutorialIsland();
@@ -542,6 +672,10 @@ public class Planner : HeldEntity
 		{
 			return false;
 		}
+		if (ownerPlayer.IsInCreativeMode && Creative.freeBuild)
+		{
+			return true;
+		}
 		foreach (ItemAmount item in component.defaultGrade.CostToBuild())
 		{
 			if ((float)ownerPlayer.inventory.GetAmount(item.itemDef.itemid) < item.amount)
@@ -552,7 +686,7 @@ public class Planner : HeldEntity
 		return true;
 	}
 
-	private void GetConstructionCost(ItemAmountList list, Construction component)
+	protected void GetConstructionCost(ItemAmountList list, Construction component)
 	{
 		list.amount.Clear();
 		list.itemID.Clear();
@@ -568,6 +702,22 @@ public class Planner : HeldEntity
 		if ((Object)(object)targetEntity != (Object)null && targetEntity.SupportsChildDeployables() && (targetEntity.ForceDeployableSetParent() || (deployable != null && deployable.setSocketParent)))
 		{
 			return true;
+		}
+		return false;
+	}
+
+	private bool HandleCanBuild(CanBuildResult? result, BasePlayer player)
+	{
+		if (result.HasValue)
+		{
+			if (result.Value.Phrase != null && !player.IsInTutorial)
+			{
+				player.ShowToast((!result.Value.Result) ? GameTip.Styles.Red_Normal : GameTip.Styles.Blue_Long, result.Value.Phrase, result.Value.Arguments);
+			}
+			if (!result.Value.Result)
+			{
+				return true;
+			}
 		}
 		return false;
 	}

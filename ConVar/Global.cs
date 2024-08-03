@@ -178,9 +178,16 @@ public class Global : ConsoleSystem
 	[ServerVar]
 	public static void quit(Arg args)
 	{
-		SingletonComponent<ServerMgr>.Instance.Shutdown();
+		if ((Object)(object)SingletonComponent<ServerMgr>.Instance != (Object)null)
+		{
+			SingletonComponent<ServerMgr>.Instance.Shutdown();
+		}
 		Application.isQuitting = true;
-		Net.sv.Stop("quit");
+		Server sv = Net.sv;
+		if (sv != null)
+		{
+			sv.Stop("quit");
+		}
 		Process.GetCurrentProcess().Kill();
 		Debug.Log((object)"Quitting");
 		Application.Quit();
@@ -322,17 +329,26 @@ public class Global : ConsoleSystem
 	public static void kill(Arg args)
 	{
 		BasePlayer basePlayer = args.Player();
-		if (Object.op_Implicit((Object)(object)basePlayer) && !basePlayer.IsSpectating() && !basePlayer.IsDead())
+		if (!Object.op_Implicit((Object)(object)basePlayer) || basePlayer.IsSpectating() || basePlayer.IsDead())
 		{
-			if (basePlayer.CanSuicide())
+			return;
+		}
+		if (basePlayer.IsRestrained)
+		{
+			Handcuffs handcuffs = basePlayer.Belt?.GetRestraintItem();
+			if ((Object)(object)handcuffs != (Object)null && handcuffs.BlockSuicide)
 			{
-				basePlayer.MarkSuicide();
-				basePlayer.Hurt(1000f, DamageType.Suicide, basePlayer, useProtection: false);
+				return;
 			}
-			else
-			{
-				basePlayer.ConsoleMessage("You can't suicide again so quickly, wait a while");
-			}
+		}
+		if (basePlayer.CanSuicide())
+		{
+			basePlayer.MarkSuicide();
+			basePlayer.Hurt(1000f, DamageType.Suicide, basePlayer, useProtection: false);
+		}
+		else
+		{
+			basePlayer.ConsoleMessage("You can't suicide again so quickly, wait a while");
 		}
 	}
 
@@ -564,7 +580,7 @@ public class Global : ConsoleSystem
 		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
 		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer basePlayer = args.Player();
 		if (!Object.op_Implicit((Object)(object)basePlayer))
@@ -777,8 +793,8 @@ public class Global : ConsoleSystem
 	[ServerVar]
 	public static void teleport2owneditem(Arg arg)
 	{
-		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer basePlayer = arg.Player();
 		BasePlayer playerOrSleeper = arg.GetPlayerOrSleeper(0);
 		ulong result;
@@ -806,8 +822,8 @@ public class Global : ConsoleSystem
 	[ServerVar]
 	public static void teleport2autheditem(Arg arg)
 	{
-		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer basePlayer = arg.Player();
 		BasePlayer playerOrSleeper = arg.GetPlayerOrSleeper(0);
 		ulong result;
@@ -842,6 +858,19 @@ public class Global : ConsoleSystem
 			return;
 		}
 		string @string = arg.GetString(0, "");
+		if (arg.HasArgs(1) && @string != "True")
+		{
+			int num = arg.GetInt(0, 0);
+			if (num == -1)
+			{
+				num = basePlayer.State.pointsOfInterest.Count - 1;
+			}
+			if (num >= 0 && num < basePlayer.State.pointsOfInterest.Count)
+			{
+				TeleportToMarker(basePlayer.State.pointsOfInterest[num], basePlayer);
+				return;
+			}
+		}
 		if (!string.IsNullOrEmpty(@string))
 		{
 			foreach (MapNote item in basePlayer.State.pointsOfInterest)
@@ -851,15 +880,6 @@ public class Global : ConsoleSystem
 					TeleportToMarker(item, basePlayer);
 					return;
 				}
-			}
-		}
-		if (arg.HasArgs(1))
-		{
-			int @int = arg.GetInt(0, 0);
-			if (@int >= 0 && @int < basePlayer.State.pointsOfInterest.Count)
-			{
-				TeleportToMarker(basePlayer.State.pointsOfInterest[@int], basePlayer);
-				return;
 			}
 		}
 		int debugMapMarkerIndex = basePlayer.DebugMapMarkerIndex;
@@ -991,7 +1011,7 @@ public class Global : ConsoleSystem
 				((IDisposable)enumerator).Dispose();
 			}
 		}
-		arg.ReplyWith(arg.HasArg("--json") ? val.ToJson() : ((object)val).ToString());
+		arg.ReplyWith(arg.HasArg("--json", false) ? val.ToJson() : ((object)val).ToString());
 	}
 
 	public static uint GingerbreadMaterialID()
@@ -1167,5 +1187,11 @@ public class Global : ConsoleSystem
 			stringBuilder.AppendLine(SceneUtility.GetScenePathByBuildIndex(i));
 		}
 		return stringBuilder.ToString();
+	}
+
+	[ServerVar(Clientside = true, Help = "Immediately update the manifest")]
+	public static void UpdateManifest(Arg args)
+	{
+		Manifest.UpdateManifest();
 	}
 }

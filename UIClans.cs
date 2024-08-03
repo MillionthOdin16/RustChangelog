@@ -42,11 +42,15 @@ public class UIClans : SingletonComponent<UIClans>
 
 	public RustText ClanMembers;
 
+	public RustText ClanScore;
+
 	public RustButton LeaveButton;
 
 	public Texture2D DefaultLogo;
 
 	public RustButton OverviewButton;
+
+	public RustButton ScoreEventsButton;
 
 	public RustButton LogsButton;
 
@@ -55,6 +59,8 @@ public class UIClans : SingletonComponent<UIClans>
 	public RustButton CreatePrompt;
 
 	public CanvasGroup LoadingIndicator;
+
+	public UIClanLeaderboard Leaderboard;
 
 	public UIClanConfirmation Confirmation;
 
@@ -70,6 +76,8 @@ public class UIClans : SingletonComponent<UIClans>
 	public UIClanInvites Invites;
 
 	public UIClanRanks Ranks;
+
+	public UIClanScoreEvents ScoreEvents;
 
 	public UIClanLog Logs;
 

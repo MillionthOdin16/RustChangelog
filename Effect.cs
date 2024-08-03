@@ -1,3 +1,4 @@
+using ConVar;
 using Network;
 using Rust;
 using UnityEngine;
@@ -203,10 +204,10 @@ public class Effect : EffectData
 
 		public static void ImpactEffect(HitInfo info)
 		{
-			//IL_01b2: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01b8: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01cb: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01d1: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01bc: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01c2: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01d5: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01db: Unknown result type (might be due to invalid IL or missing references)
 			//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
 			//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
 			//IL_00d7: Unknown result type (might be due to invalid IL or missing references)
@@ -214,15 +215,15 @@ public class Effect : EffectData
 			//IL_00e7: Unknown result type (might be due to invalid IL or missing references)
 			//IL_00f4: Unknown result type (might be due to invalid IL or missing references)
 			//IL_004d: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0172: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0178: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0197: Unknown result type (might be due to invalid IL or missing references)
-			//IL_019d: Unknown result type (might be due to invalid IL or missing references)
+			//IL_017c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0182: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01a1: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01a7: Unknown result type (might be due to invalid IL or missing references)
 			//IL_005a: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0248: Unknown result type (might be due to invalid IL or missing references)
-			//IL_024e: Unknown result type (might be due to invalid IL or missing references)
-			//IL_022c: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0232: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0252: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0258: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0236: Unknown result type (might be due to invalid IL or missing references)
+			//IL_023c: Unknown result type (might be due to invalid IL or missing references)
 			//IL_012d: Unknown result type (might be due to invalid IL or missing references)
 			if (!info.DoHitEffects)
 			{
@@ -251,7 +252,10 @@ public class Effect : EffectData
 					if ((Object)(object)initiatorPlayer != (Object)null && ((object)initiatorPlayer).GetType() == typeof(BasePlayer))
 					{
 						float num2 = Mathf.Sqrt(((Bounds)(ref bounds)).SqrDistance(info.HitPositionLocal));
-						AntiHack.Log(initiatorPlayer, AntiHackType.EffectHack, $"Tried to run an impact effect outside of entity '{info.HitEntity.ShortPrefabName}' bounds by {num2}m");
+						if (num2 > ConVar.AntiHack.impact_effect_distance_forgiveness)
+						{
+							AntiHack.Log(initiatorPlayer, AntiHackType.EffectHack, $"Tried to run an impact effect outside of entity '{info.HitEntity.ShortPrefabName}' bounds by {num2}m");
+						}
 					}
 					return;
 				}

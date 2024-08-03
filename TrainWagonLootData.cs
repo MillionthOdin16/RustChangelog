@@ -37,16 +37,22 @@ public class TrainWagonLootData : ScriptableObject
 	[SerializeField]
 	private LootOption fuelWagonContent;
 
-	public static TrainWagonLootData instance;
+	private static TrainWagonLootData _instance;
 
 	private const int LOOT_WAGON_INDEX = 1000;
 
 	private const int FUEL_WAGON_INDEX = 1001;
 
-	[RuntimeInitializeOnLoadMethod]
-	private static void Init()
+	public static TrainWagonLootData instance
 	{
-		instance = Resources.Load<TrainWagonLootData>("Train Wagon Loot Data");
+		get
+		{
+			if ((Object)(object)_instance == (Object)null)
+			{
+				_instance = Resources.Load<TrainWagonLootData>("Train Wagon Loot Data");
+			}
+			return _instance;
+		}
 	}
 
 	public LootOption GetLootOption(TrainCarUnloadable.WagonType wagonType, out int index)

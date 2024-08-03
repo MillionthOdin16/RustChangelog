@@ -108,6 +108,11 @@ public class BaseLock : BaseEntity
 				rpc.player.GiveItem(item);
 			}
 			Analytics.Azure.OnEntityPickedUp(rpc.player, this);
+			BaseEntity baseEntity = GetParentEntity();
+			if ((Object)(object)baseEntity != (Object)null && (Object)(object)baseEntity.GetSlot(Slot.Lock) == (Object)(object)this)
+			{
+				baseEntity.SetSlot(Slot.Lock, null);
+			}
 			Kill();
 		}
 	}

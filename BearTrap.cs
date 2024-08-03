@@ -126,7 +126,7 @@ public class BearTrap : BaseTrap
 
 	public void DelayedFire()
 	{
-		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
 		if (Object.op_Implicit((Object)(object)hurtTarget))
 		{
 			BaseEntity baseEntity = hurtTarget.ToBaseEntity();

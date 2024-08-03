@@ -4,6 +4,14 @@ using UnityEngine;
 [CreateAssetMenu(menuName = "Rust/Material Config")]
 public class MaterialConfig : ScriptableObject
 {
+	[Serializable]
+	public class EnvironmentVolumeOverride
+	{
+		public EnvironmentType Environment;
+
+		public Enum Biome;
+	}
+
 	public class ShaderParameters<T>
 	{
 		public string Name;
@@ -18,11 +26,11 @@ public class MaterialConfig : ScriptableObject
 
 		private T[] climates;
 
-		public float FindBlendParameters(Vector3 pos, out T src, out T dst)
+		public float FindBlendParameters(Vector3 pos, int biomeOverride, out T src, out T dst)
 		{
-			//IL_0081: Unknown result type (might be due to invalid IL or missing references)
-			//IL_008e: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00ca: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0085: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0098: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00d8: Unknown result type (might be due to invalid IL or missing references)
 			if ((Object)(object)TerrainMeta.BiomeMap == (Object)null)
 			{
 				src = Temperate;
@@ -33,16 +41,16 @@ public class MaterialConfig : ScriptableObject
 			{
 				climates = new T[4] { Arid, Temperate, Tundra, Arctic };
 			}
-			int biomeMaxType = TerrainMeta.BiomeMap.GetBiomeMaxType(pos);
-			int biomeMaxType2 = TerrainMeta.BiomeMap.GetBiomeMaxType(pos, ~biomeMaxType);
-			src = climates[TerrainBiome.TypeToIndex(biomeMaxType)];
-			dst = climates[TerrainBiome.TypeToIndex(biomeMaxType2)];
-			return TerrainMeta.BiomeMap.GetBiome(pos, biomeMaxType2);
+			int num = ((biomeOverride != 0) ? biomeOverride : TerrainMeta.BiomeMap.GetBiomeMaxType(pos));
+			int num2 = ((biomeOverride != 0) ? biomeOverride : TerrainMeta.BiomeMap.GetBiomeMaxType(pos, ~num));
+			src = climates[TerrainBiome.TypeToIndex(num)];
+			dst = climates[TerrainBiome.TypeToIndex(num2)];
+			return TerrainMeta.BiomeMap.GetBiome(pos, num2);
 		}
 
-		public T FindBlendParameters(Vector3 pos)
+		public T FindBlendParameters(Vector3 pos, int biomeOverride)
 		{
-			//IL_006a: Unknown result type (might be due to invalid IL or missing references)
+			//IL_006d: Unknown result type (might be due to invalid IL or missing references)
 			if ((Object)(object)TerrainMeta.BiomeMap == (Object)null)
 			{
 				return Temperate;
@@ -51,8 +59,8 @@ public class MaterialConfig : ScriptableObject
 			{
 				climates = new T[4] { Arid, Temperate, Tundra, Arctic };
 			}
-			int biomeMaxType = TerrainMeta.BiomeMap.GetBiomeMaxType(pos);
-			return climates[TerrainBiome.TypeToIndex(biomeMaxType)];
+			int num = ((biomeOverride != 0) ? biomeOverride : TerrainMeta.BiomeMap.GetBiomeMaxType(pos));
+			return climates[TerrainBiome.TypeToIndex(num)];
 		}
 	}
 
@@ -71,6 +79,11 @@ public class MaterialConfig : ScriptableObject
 	{
 	}
 
+	[Serializable]
+	public class ShaderParametersToggle : ShaderParameters<bool>
+	{
+	}
+
 	[Horizontal(4, 0)]
 	public ShaderParametersFloat[] Floats;
 
@@ -80,7 +93,13 @@ public class MaterialConfig : ScriptableObject
 	[Horizontal(4, 0)]
 	public ShaderParametersTexture[] Textures;
 
+	[Horizontal(4, 0)]
+	public ShaderParametersToggle[] Toggles;
+
 	public string[] ScaleUV;
+
+	[Horizontal(2, -1)]
+	public EnvironmentVolumeOverride[] EnvironmentVolumeOverrides;
 
 	private MaterialPropertyBlock properties;
 
@@ -88,56 +107,88 @@ public class MaterialConfig : ScriptableObject
 	{
 		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0013: Expected O, but got Unknown
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0092: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0106: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0116: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0124: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0132: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ea: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ec: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0064: Expected I4, but got Unknown
+		//IL_011e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0168: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01bd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01cb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01e0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01fb: Unknown result type (might be due to invalid IL or missing references)
 		if (properties == null)
 		{
 			properties = new MaterialPropertyBlock();
 		}
 		properties.Clear();
-		for (int i = 0; i < Floats.Length; i++)
+		int biomeOverride = 0;
+		if (EnvironmentVolumeOverrides.Length != 0)
 		{
-			ShaderParametersFloat shaderParametersFloat = Floats[i];
+			EnvironmentType environmentType = EnvironmentManager.Get(pos);
+			if (TerrainMeta.IsPointWithinTutorialBounds(pos))
+			{
+				biomeOverride = 2;
+			}
+			else
+			{
+				EnvironmentVolumeOverride[] environmentVolumeOverrides = EnvironmentVolumeOverrides;
+				foreach (EnvironmentVolumeOverride environmentVolumeOverride in environmentVolumeOverrides)
+				{
+					if ((environmentType & environmentVolumeOverride.Environment) != 0)
+					{
+						biomeOverride = (int)environmentVolumeOverride.Biome;
+						break;
+					}
+				}
+			}
+		}
+		for (int j = 0; j < Floats.Length; j++)
+		{
+			ShaderParametersFloat shaderParametersFloat = Floats[j];
 			float src;
 			float dst;
-			float num = shaderParametersFloat.FindBlendParameters(pos, out src, out dst);
+			float num = shaderParametersFloat.FindBlendParameters(pos, biomeOverride, out src, out dst);
 			properties.SetFloat(shaderParametersFloat.Name, Mathf.Lerp(src, dst, num));
 		}
-		for (int j = 0; j < Colors.Length; j++)
+		for (int k = 0; k < Colors.Length; k++)
 		{
-			ShaderParametersColor shaderParametersColor = Colors[j];
+			ShaderParametersColor shaderParametersColor = Colors[k];
 			Color src2;
 			Color dst2;
-			float num2 = shaderParametersColor.FindBlendParameters(pos, out src2, out dst2);
+			float num2 = shaderParametersColor.FindBlendParameters(pos, biomeOverride, out src2, out dst2);
 			properties.SetColor(shaderParametersColor.Name, Color.Lerp(src2, dst2, num2));
 		}
-		for (int k = 0; k < Textures.Length; k++)
+		for (int l = 0; l < Textures.Length; l++)
 		{
-			ShaderParametersTexture shaderParametersTexture = Textures[k];
-			Texture val = shaderParametersTexture.FindBlendParameters(pos);
+			ShaderParametersTexture shaderParametersTexture = Textures[l];
+			Texture val = shaderParametersTexture.FindBlendParameters(pos, biomeOverride);
 			if (Object.op_Implicit((Object)(object)val))
 			{
 				properties.SetTexture(shaderParametersTexture.Name, val);
 			}
 		}
-		for (int l = 0; l < ScaleUV.Length; l++)
+		for (int m = 0; m < Toggles.Length; m++)
 		{
-			Vector4 vector = mat.GetVector(ScaleUV[l]);
+			ShaderParametersToggle shaderParametersToggle = Toggles[m];
+			bool flag = shaderParametersToggle.FindBlendParameters(pos, biomeOverride);
+			properties.SetFloat(shaderParametersToggle.Name, flag ? 1f : 0f);
+		}
+		for (int n = 0; n < ScaleUV.Length; n++)
+		{
+			Vector4 vector = mat.GetVector(ScaleUV[n]);
 			((Vector4)(ref vector))._002Ector(vector.x * scale.y, vector.y * scale.y, vector.z, vector.w);
-			properties.SetVector(ScaleUV[l], vector);
+			properties.SetVector(ScaleUV[n], vector);
 		}
 		return properties;
 	}

@@ -6,6 +6,18 @@ namespace ConVar;
 [Factory("env")]
 public class Env : ConsoleSystem
 {
+	[ClientVar(Default = "1")]
+	public static bool nightlight_enabled = true;
+
+	[ClientVar(Default = "0", Help = "Toggles nightlight screen effect when using debug camera")]
+	public static bool nightlight_debugcamera_enabled = true;
+
+	private static float nightlight_distance_internal = 7f;
+
+	private static float nightlight_fadefraction_internal = 0.65f;
+
+	private static float nightlight_brightness_internal = 0.0175f;
+
 	[ServerVar]
 	public static bool progresstime
 	{
@@ -119,6 +131,47 @@ public class Env : ConsoleSystem
 		}
 	}
 
+	[ReplicatedVar(Default = "7")]
+	public static float nightlight_distance
+	{
+		get
+		{
+			return nightlight_distance_internal;
+		}
+		set
+		{
+			value = Mathf.Clamp(value, 0f, 25f);
+			nightlight_distance_internal = value;
+		}
+	}
+
+	[ReplicatedVar(Default = "0.65")]
+	public static float nightlight_fadefraction
+	{
+		get
+		{
+			return nightlight_fadefraction_internal;
+		}
+		set
+		{
+			nightlight_fadefraction_internal = value;
+		}
+	}
+
+	[ReplicatedVar(Default = "0.0175")]
+	public static float nightlight_brightness
+	{
+		get
+		{
+			return nightlight_brightness_internal;
+		}
+		set
+		{
+			value = Mathf.Clamp(value, 0f, 0.2f);
+			nightlight_brightness_internal = value;
+		}
+	}
+
 	[ServerVar]
 	public static void addtime(Arg arg)
 	{
@@ -126,6 +179,7 @@ public class Env : ConsoleSystem
 		{
 			DateTime dateTime = TOD_Sky.Instance.Cycle.DateTime.AddTicks(arg.GetTicks(0, 0L));
 			TOD_Sky.Instance.Cycle.DateTime = dateTime;
+			NPCVendingMachine.OnTimeModified();
 		}
 	}
 }

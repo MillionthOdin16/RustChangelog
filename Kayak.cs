@@ -81,6 +81,12 @@ public class Kayak : BaseBoat, IPoolVehicle
 		((FacepunchBehaviour)this).InvokeRandomized((Action)BoatDecay, Random.Range(30f, 60f), 60f, 6f);
 	}
 
+	public override void OnDeployed(BaseEntity parent, BasePlayer deployedBy, Item fromItem)
+	{
+		base.OnDeployed(parent, deployedBy, fromItem);
+		buoyancy.wavesEffect = (((Object)(object)deployedBy != (Object)null && deployedBy.IsInTutorial) ? 0f : 1f);
+	}
+
 	public override void OnPlayerMounted()
 	{
 		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
@@ -133,21 +139,21 @@ public class Kayak : BaseBoat, IPoolVehicle
 		//IL_00c7: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00d2: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00d7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0116: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0119: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0121: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0133: Unknown result type (might be due to invalid IL or missing references)
-		//IL_013e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0149: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0180: Unknown result type (might be due to invalid IL or missing references)
-		//IL_018e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0193: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0125: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0137: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0142: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0152: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0183: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0188: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0196: Unknown result type (might be due to invalid IL or missing references)
 		//IL_019b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_019d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a3: Unknown result type (might be due to invalid IL or missing references)
 		//IL_01a5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01af: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ad: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b7: Unknown result type (might be due to invalid IL or missing references)
 		timeSinceLastUsed = TimeSince.op_Implicit(0f);
 		if (!IsPlayerHoldingPaddle(player))
 		{
@@ -176,7 +182,7 @@ public class Kayak : BaseBoat, IPoolVehicle
 			rigidBody.AddForceAtPosition(val * num, GetPaddlePoint(playerSeat, PaddleDirection.Left), (ForceMode)1);
 			Rigidbody obj = rigidBody;
 			obj.angularVelocity += -((Component)this).transform.up * rotatePaddleForce;
-			ClientRPC(null, "OnPaddled", flag ? 2 : 0, playerSeat);
+			ClientRPC(RpcTarget.NetworkGroup("OnPaddled"), flag ? 2 : 0, playerSeat);
 		}
 		else if (inputState.IsDown(BUTTON.RIGHT) || inputState.IsDown(BUTTON.FIRE_SECONDARY))
 		{
@@ -184,7 +190,7 @@ public class Kayak : BaseBoat, IPoolVehicle
 			rigidBody.AddForceAtPosition(val * num, GetPaddlePoint(playerSeat, PaddleDirection.Right), (ForceMode)1);
 			Rigidbody obj2 = rigidBody;
 			obj2.angularVelocity += ((Component)this).transform.up * rotatePaddleForce;
-			ClientRPC(null, "OnPaddled", (!flag) ? 1 : 3, playerSeat);
+			ClientRPC(RpcTarget.NetworkGroup("OnPaddled"), (!flag) ? 1 : 3, playerSeat);
 		}
 		if (flag2)
 		{
@@ -289,18 +295,18 @@ public class Kayak : BaseBoat, IPoolVehicle
 
 	public override void VehicleFixedUpdate()
 	{
-		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
 		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0089: Unknown result type (might be due to invalid IL or missing references)
 		base.VehicleFixedUpdate();
 		if (fixedDragUpdate == null)
 		{
@@ -313,9 +319,12 @@ public class Kayak : BaseBoat, IPoolVehicle
 		}
 		if (inCinematic)
 		{
-			Vector3 velocity = rigidBody.velocity;
-			velocity = Vector3.MoveTowards(velocity, Vector3Ex.WithZ(Vector3Ex.WithX(velocity, 0f), 0f), Time.fixedDeltaTime);
-			rigidBody.velocity = velocity;
+			if (!rigidBody.isKinematic)
+			{
+				Vector3 velocity = rigidBody.velocity;
+				velocity = Vector3.MoveTowards(velocity, Vector3Ex.WithZ(Vector3Ex.WithX(velocity, 0f), 0f), Time.fixedDeltaTime);
+				rigidBody.velocity = velocity;
+			}
 			((Component)this).transform.rotation = Quaternion.RotateTowards(((Component)this).transform.rotation, cinematicWorldRotation, 180f * Time.fixedDeltaTime);
 		}
 		rigidBody.drag = fixedDragUpdate.Get(force: false);

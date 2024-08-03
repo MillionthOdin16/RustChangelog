@@ -221,6 +221,15 @@ public class WipeTimer : BaseEntity
 		}
 	}
 
+	private bool HoursUntilWipe(float hours)
+	{
+		if (serverinstance.GetTimeSpanUntilWipe().TotalHours < (double)hours)
+		{
+			return true;
+		}
+		return false;
+	}
+
 	private static CronExpression GetCronExpression(WipeFrequency frequency, int dayOfWeek, float hourOfDay)
 	{
 		string cronString = GetCronString(frequency, dayOfWeek, hourOfDay);

@@ -61,7 +61,15 @@ public class GameManager
 		{
 			return null;
 		}
-		preProcessed.Process(strPrefab, val);
+		try
+		{
+			preProcessed.Process(strPrefab, val);
+		}
+		catch
+		{
+			Debug.LogError((object)("Failed to preprocess prefab: " + strPrefab));
+			throw;
+		}
 		GameObject val2 = preProcessed.Find(strPrefab);
 		if (!((Object)(object)val2 != (Object)null))
 		{

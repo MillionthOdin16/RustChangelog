@@ -282,6 +282,37 @@ public class PathInterpolator
 		}
 	}
 
+	public void Straighten(int diStart, int diEnd)
+	{
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
+		Vector3 val = Points[diStart];
+		Vector3 val2 = Points[diEnd];
+		Vector3 val3 = Tangents[diStart];
+		Vector3 val4 = Tangents[diEnd];
+		float num = 1f / (float)(diEnd - diStart);
+		for (int i = diStart + 1; i <= diEnd - 1; i++)
+		{
+			float num2 = (float)(i - diStart) * num;
+			Points[i] = Vector3.Lerp(val, val2, num2);
+			Tangents[i] = Vector3.Slerp(val3, val4, num2);
+		}
+	}
+
 	public Vector3 GetStartPoint()
 	{
 		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
@@ -327,13 +358,44 @@ public class PathInterpolator
 
 	public Vector3 GetTangentByIndex(int i)
 	{
-		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0004: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 val = GetPoint(i + 1) - GetPoint(i - 1);
 		return ((Vector3)(ref val)).normalized;
+	}
+
+	public int GetPrevIndex(float distance)
+	{
+		return Mathf.FloorToInt(distance / Length * (float)(Points.Length - 1));
+	}
+
+	public int GetNextIndex(float distance)
+	{
+		return Mathf.CeilToInt(distance / Length * (float)(Points.Length - 1));
+	}
+
+	public Vector3 GetPoint(int index)
+	{
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		if (Length == 0f)
+		{
+			return GetStartPoint();
+		}
+		if (index <= MinIndex)
+		{
+			return GetStartPoint();
+		}
+		if (index >= MaxIndex)
+		{
+			return GetEndPoint();
+		}
+		return Points[index];
 	}
 
 	public Vector3 GetPoint(float distance)

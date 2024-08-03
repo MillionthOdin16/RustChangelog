@@ -56,8 +56,6 @@ public class RidableHorse : BaseRidableAnimal
 
 	private int prevSlots;
 
-	private static Material[] breedAssignmentArray = (Material[])(object)new Material[2];
-
 	private float distanceRecordingSpacing = 5f;
 
 	private HitchTrough currentHitch;
@@ -238,8 +236,12 @@ public class RidableHorse : BaseRidableAnimal
 		return !flag;
 	}
 
-	public override bool IsPlayerSeatSwapValid(BasePlayer player, int fromIndex, int toIndex)
+	public override bool IsPlayerSeatSwapValid(BasePlayer player, int fromIndex, int toIndex, bool ignoreRestraint)
 	{
+		if (!base.IsPlayerSeatSwapValid(player, fromIndex, toIndex, ignoreRestraint))
+		{
+			return false;
+		}
 		if (!HasSaddle())
 		{
 			return false;
@@ -262,12 +264,13 @@ public class RidableHorse : BaseRidableAnimal
 
 	public override void AttemptMount(BasePlayer player, bool doMountChecks = true)
 	{
+		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
 		if (IsForSale() || !MountEligable(player))
 		{
 			return;
 		}
 		BaseMountable baseMountable;
-		if (HasSingleSaddle())
+		if (HasSingleSaddle() && !player.IsRestrained)
 		{
 			baseMountable = mountPoints[0].mountable;
 		}
@@ -277,15 +280,18 @@ public class RidableHorse : BaseRidableAnimal
 			{
 				return;
 			}
-			baseMountable = (HasDriver() ? mountPoints[2].mountable : mountPoints[1].mountable);
+			baseMountable = ((HasDriver() || player.IsRestrained) ? mountPoints[2].mountable : mountPoints[1].mountable);
 		}
-		if ((Object)(object)baseMountable != (Object)null)
+		if (!GamePhysics.OverlapSphere(((Component)animalNeck).transform.position, obstacleDetectionRadius * 1.8f, 2097152, (QueryTriggerInteraction)1))
 		{
-			baseMountable.AttemptMount(player, doMountChecks);
-		}
-		if (PlayerIsMounted(player))
-		{
-			PlayerMounted(player, baseMountable);
+			if ((Object)(object)baseMountable != (Object)null)
+			{
+				baseMountable.AttemptMount(player, doMountChecks);
+			}
+			if (PlayerIsMounted(player))
+			{
+				PlayerMounted(player, baseMountable);
+			}
 		}
 	}
 
@@ -336,6 +342,8 @@ public class RidableHorse : BaseRidableAnimal
 		riderProtection = ScriptableObject.CreateInstance<ProtectionProperties>();
 		baseProtection = ScriptableObject.CreateInstance<ProtectionProperties>();
 		baseProtection.Add(baseHorseProtection, 1f);
+		obstacleDetectionRadius = 0.25f;
+		obstacleHeadDetectionRadius = 0.35f;
 		base.ServerInit();
 		EquipmentUpdate();
 	}
@@ -532,8 +540,6 @@ public class RidableHorse : BaseRidableAnimal
 		//IL_017a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0181: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0187: Unknown result type (might be due to invalid IL or missing references)
-		//IL_018b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0191: Unknown result type (might be due to invalid IL or missing references)
 		SetFlag(Flags.Reserved4, b: false, recursive: false, networkupdate: false);
 		SetFlag(Flags.Reserved5, b: false, recursive: false, networkupdate: false);
 		SetFlag(Flags.Reserved6, b: false, recursive: false, networkupdate: false);

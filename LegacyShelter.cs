@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using ConVar;
 using Facepunch;
 using ProtoBuf;
@@ -6,6 +7,14 @@ using UnityEngine;
 
 public class LegacyShelter : DecayEntity
 {
+	private static Dictionary<ulong, List<LegacyShelter>> sheltersPerPlayer = new Dictionary<ulong, List<LegacyShelter>>();
+
+	public static readonly int FpShelterDefault = 1;
+
+	public static Phrase shelterLimitPhrase = new Phrase("shelter_limit_update", "You are now at {0}/{1} shelters");
+
+	public static Phrase shelterLimitReachedPhrase = new Phrase("shelter_limit_reached", "You have reached your shelter limit!");
+
 	[Header("Shelter References")]
 	public GameObjectRef smallPrivilegePrefab;
 
@@ -19,13 +28,111 @@ public class LegacyShelter : DecayEntity
 
 	private EntityRef<BaseLock> lockEntityInstance;
 
-	private BasePlayer owner;
-
 	private Decay decayReference;
 
 	private float lastShelterDecayTick;
 
 	private float lastInteractedWithDoor;
+
+	private ulong shelterOwnerID;
+
+	public static Dictionary<ulong, List<LegacyShelter>> SheltersPerPlayer => sheltersPerPlayer;
+
+	public static Planner.CanBuildResult? CanBuildShelter(BasePlayer player, Construction construction)
+	{
+		GameObject obj = GameManager.server.FindPrefab(construction.prefabID);
+		if (((obj != null) ? obj.GetComponent<BaseEntity>() : null) is LegacyShelter)
+		{
+			int num = 1;
+			Planner.CanBuildResult value2;
+			if (sheltersPerPlayer.TryGetValue(player.userID, out var value))
+			{
+				num = value.Count + 1;
+				if (value.Count >= ConVar.Server.max_shelters)
+				{
+					value2 = default(Planner.CanBuildResult);
+					value2.Result = false;
+					value2.Phrase = shelterLimitReachedPhrase;
+					return value2;
+				}
+			}
+			value2 = default(Planner.CanBuildResult);
+			value2.Result = true;
+			value2.Phrase = shelterLimitPhrase;
+			value2.Arguments = new string[2]
+			{
+				num.ToString(),
+				ConVar.Server.max_shelters.ToString()
+			};
+			return value2;
+		}
+		return null;
+	}
+
+	internal override void DoServerDestroy()
+	{
+		base.DoServerDestroy();
+		if (sheltersPerPlayer.TryGetValue(shelterOwnerID, out var _))
+		{
+			sheltersPerPlayer[shelterOwnerID].Remove(this);
+			BasePlayer basePlayer = BasePlayer.FindByID(shelterOwnerID);
+			if ((Object)(object)basePlayer != (Object)null)
+			{
+				basePlayer.SendRespawnOptions();
+			}
+		}
+	}
+
+	public static int GetShelterCount(ulong userId)
+	{
+		if (userId == 0L)
+		{
+			return 0;
+		}
+		if (!sheltersPerPlayer.TryGetValue(userId, out var value))
+		{
+			return 0;
+		}
+		return value.Count;
+	}
+
+	private void AddToShelterList(ulong id)
+	{
+		if (!sheltersPerPlayer.ContainsKey(id))
+		{
+			sheltersPerPlayer.Add(id, new List<LegacyShelter>());
+		}
+		if (!IsShelterInList(sheltersPerPlayer[id], out var _))
+		{
+			sheltersPerPlayer[id].Add(this);
+		}
+	}
+
+	private bool IsShelterInList(List<LegacyShelter> shelters, out LegacyShelter thisShelter)
+	{
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		bool result = false;
+		thisShelter = null;
+		if (shelters.Count == 0)
+		{
+			return false;
+		}
+		if ((Object)(object)thisShelter == (Object)null)
+		{
+			return false;
+		}
+		foreach (LegacyShelter shelter in shelters)
+		{
+			if (shelter.net.ID == net.ID)
+			{
+				result = true;
+				thisShelter = shelter;
+				break;
+			}
+		}
+		return result;
+	}
 
 	public override EntityPrivilege GetEntityBuildingPrivilege()
 	{
@@ -56,6 +163,28 @@ public class LegacyShelter : DecayEntity
 		}
 	}
 
+	public override void Load(LoadInfo info)
+	{
+		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		base.Load(info);
+		if (info.msg.legacyShelter == null || !base.isServer)
+		{
+			return;
+		}
+		shelterOwnerID = info.msg.legacyShelter.ownerId;
+		childDoorInstance = new EntityRef<LegacyShelterDoor>(info.msg.legacyShelter.doorID);
+		lastInteractedWithDoor = info.msg.legacyShelter.timeSinceInteracted;
+		AddToShelterList(shelterOwnerID);
+		if (ConVar.Server.max_shelters == FpShelterDefault)
+		{
+			BasePlayer basePlayer = BasePlayer.FindByID(shelterOwnerID);
+			if ((Object)(object)basePlayer != (Object)null)
+			{
+				basePlayer.SendRespawnOptions();
+			}
+		}
+	}
+
 	public override void DecayTick()
 	{
 		base.DecayTick();
@@ -82,7 +211,15 @@ public class LegacyShelter : DecayEntity
 		{
 			return float.MaxValue;
 		}
-		return decayReference.GetDecayDuration(this);
+		if (decayReference == null)
+		{
+			SetupDecay();
+		}
+		if (decayReference != null)
+		{
+			return decayReference.GetDecayDuration(this);
+		}
+		return float.MaxValue;
 	}
 
 	public LegacyShelterDoor GetChildDoor()
@@ -95,17 +232,6 @@ public class LegacyShelter : DecayEntity
 		return null;
 	}
 
-	public override void Load(LoadInfo info)
-	{
-		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-		base.Load(info);
-		if (info.msg.legacyShelter != null)
-		{
-			childDoorInstance = new EntityRef<LegacyShelterDoor>(info.msg.legacyShelter.doorID);
-			lastInteractedWithDoor = info.msg.legacyShelter.timeSinceInteracted;
-		}
-	}
-
 	public override void Save(SaveInfo info)
 	{
 		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
@@ -114,11 +240,14 @@ public class LegacyShelter : DecayEntity
 		info.msg.legacyShelter = Pool.Get<LegacyShelter>();
 		info.msg.legacyShelter.doorID = childDoorInstance.uid;
 		info.msg.legacyShelter.timeSinceInteracted = lastInteractedWithDoor;
+		info.msg.legacyShelter.ownerId = shelterOwnerID;
 	}
 
 	public override void OnPlaced(BasePlayer player)
 	{
-		owner = player;
+		shelterOwnerID = player.userID;
+		AddToShelterList(shelterOwnerID);
+		player.SendRespawnOptions();
 	}
 
 	public override void Hurt(HitInfo info)
@@ -174,20 +303,21 @@ public class LegacyShelter : DecayEntity
 
 	private void Setup(BaseEntity child)
 	{
-		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
 		LegacyShelterDoor legacyShelterDoor = (LegacyShelterDoor)child;
 		childDoorInstance.Set(legacyShelterDoor);
-		((Component)this).GetComponentInChildren<EntityPrivilege>().AddPlayer(owner);
+		BasePlayer basePlayer = BasePlayer.FindByID(shelterOwnerID);
+		((Component)this).GetComponentInChildren<EntityPrivilege>().AddPlayer(basePlayer);
 		legacyShelterDoor.SetupDoor(this);
 		legacyShelterDoor.SetMaxHealth(MaxHealth());
 		UpdateDoorHp();
 		BaseEntity baseEntity = GameManager.server.CreateEntity(includedLockPrefab.resourcePath);
 		baseEntity.SetParent(legacyShelterDoor, legacyShelterDoor.GetSlotAnchorName(Slot.Lock));
-		baseEntity.OwnerID = owner.userID;
-		baseEntity.OnDeployed(legacyShelterDoor, owner, null);
+		baseEntity.OwnerID = shelterOwnerID;
+		baseEntity.OnDeployed(legacyShelterDoor, basePlayer, null);
 		baseEntity.Spawn();
 		BaseLock baseLock = (BaseLock)baseEntity;
 		if ((Object)(object)baseLock != (Object)null)

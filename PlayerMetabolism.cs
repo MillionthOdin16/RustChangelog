@@ -117,13 +117,13 @@ public class PlayerMetabolism : BaseMetabolism<BasePlayer>
 		{
 			owner.Hurt(Mathf.InverseLerp(0.5f, 0f, oxygen.value) * delta * 20f, DamageType.Drowned, null, useProtection: false);
 		}
-		if (bleeding.value > 0f)
+		if (!owner.IsGod() && bleeding.value > 0f)
 		{
 			float num = delta * (1f / 3f);
 			owner.Hurt(num, DamageType.Bleeding);
 			bleeding.Subtract(num);
 		}
-		if (poison.value > 0f)
+		if (!owner.IsGod() && poison.value > 0f)
 		{
 			owner.Hurt(poison.value * delta * 0.1f, DamageType.Poison);
 		}
@@ -156,27 +156,32 @@ public class PlayerMetabolism : BaseMetabolism<BasePlayer>
 
 	protected override void RunMetabolism(BaseCombatEntity ownerEntity, float delta)
 	{
-		//IL_04b5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_04cc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04d2: Unknown result type (might be due to invalid IL or missing references)
 		//IL_04e9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0506: Unknown result type (might be due to invalid IL or missing references)
 		BaseGameMode activeGameMode = BaseGameMode.GetActiveGameMode(serverside: true);
-		float currentTemperature = owner.currentTemperature;
+		float num = owner.currentTemperature;
 		float fTarget = owner.currentComfort;
 		UpdateWorkbenchFlags();
 		owner.SetPlayerFlag(BasePlayer.PlayerFlags.SafeZone, owner.InSafeZone());
 		owner.SetPlayerFlag(BasePlayer.PlayerFlags.NoRespawnZone, owner.InNoRespawnZone());
-		owner.SetPlayerFlag(BasePlayer.PlayerFlags.ModifyClan, owner.CanModifyClan());
-		if ((Object)(object)activeGameMode == (Object)null || activeGameMode.allowTemperature)
+		owner.SetPlayerFlag(BasePlayer.PlayerFlags.ModifyClan, Clan.editsRequireClanTable && owner.CanModifyClan());
+		bool num2 = (Object)(object)activeGameMode == (Object)null || activeGameMode.allowTemperature;
+		if (owner.IsInTutorial)
 		{
-			float num = currentTemperature;
-			num -= DeltaWet() * 34f;
-			float num2 = Mathf.Clamp(owner.baseProtection.amounts[18] * 1.5f, -1f, 1f);
-			float num3 = Mathf.InverseLerp(20f, -50f, currentTemperature);
-			float num4 = Mathf.InverseLerp(20f, 30f, currentTemperature);
-			num += num3 * 70f * num2;
-			num += num4 * 10f * Mathf.Abs(num2);
-			num += heartrate.value * 5f;
-			temperature.MoveTowards(num, delta * 5f);
+			num = 25f;
+		}
+		if (num2)
+		{
+			float num3 = num;
+			num3 -= DeltaWet() * 34f;
+			float num4 = Mathf.Clamp(owner.baseProtection.amounts[18] * 1.5f, -1f, 1f);
+			float num5 = Mathf.InverseLerp(20f, -50f, num);
+			float num6 = Mathf.InverseLerp(20f, 30f, num);
+			num3 += num5 * 70f * num4;
+			num3 += num6 * 10f * Mathf.Abs(num4);
+			num3 += heartrate.value * 5f;
+			temperature.MoveTowards(num3, delta * 5f);
 		}
 		else
 		{
@@ -187,30 +192,30 @@ public class PlayerMetabolism : BaseMetabolism<BasePlayer>
 			fTarget = 0f;
 		}
 		comfort.MoveTowards(fTarget, delta / 5f);
-		float num5 = 0.6f + 0.4f * comfort.value;
-		if (calories.value > 100f && owner.healthFraction < num5 && radiation_poison.Fraction() < 0.25f && owner.SecondsSinceAttacked > 10f && !SignificantBleeding() && temperature.value >= 10f && hydration.value > 40f)
+		float num7 = 0.6f + 0.4f * comfort.value;
+		if (calories.value > 100f && owner.healthFraction < num7 && radiation_poison.Fraction() < 0.25f && owner.SecondsSinceAttacked > 10f && !SignificantBleeding() && temperature.value >= 10f && hydration.value > 40f)
 		{
-			float num6 = Mathf.InverseLerp(calories.min, calories.max, calories.value);
-			float num7 = 5f;
-			float num8 = num7 * owner.MaxHealth() * 0.8f / 600f;
-			num8 += num8 * num6 * 0.5f;
-			float num9 = num8 / num7;
-			num9 += num9 * comfort.value * 6f;
-			ownerEntity.Heal(num9 * delta);
-			calories.Subtract(num8 * delta);
-			hydration.Subtract(num8 * delta * 0.2f);
+			float num8 = Mathf.InverseLerp(calories.min, calories.max, calories.value);
+			float num9 = 5f;
+			float num10 = num9 * owner.MaxHealth() * 0.8f / 600f;
+			num10 += num10 * num8 * 0.5f;
+			float num11 = num10 / num9;
+			num11 += num11 * comfort.value * 6f;
+			ownerEntity.Heal(num11 * delta);
+			calories.Subtract(num10 * delta);
+			hydration.Subtract(num10 * delta * 0.2f);
 		}
-		float num10 = owner.estimatedSpeed2D / owner.GetMaxSpeed() * 0.75f;
-		float fTarget2 = Mathf.Clamp(0.05f + num10, 0f, 1f);
+		float num12 = owner.estimatedSpeed2D / owner.GetMaxSpeed() * 0.75f;
+		float fTarget2 = Mathf.Clamp(0.05f + num12, 0f, 1f);
 		heartrate.MoveTowards(fTarget2, delta * 0.1f);
 		if (!owner.IsGod())
 		{
-			float num11 = heartrate.Fraction() * 0.375f;
-			calories.MoveTowards(0f, delta * num11);
-			float num12 = 1f / 120f;
-			num12 += Mathf.InverseLerp(40f, 60f, temperature.value) * (1f / 12f);
-			num12 += heartrate.value * (1f / 15f);
-			hydration.MoveTowards(0f, delta * num12);
+			float num13 = heartrate.Fraction() * 0.375f;
+			calories.MoveTowards(0f, delta * num13);
+			float num14 = 1f / 120f;
+			num14 += Mathf.InverseLerp(40f, 60f, temperature.value) * (1f / 12f);
+			num14 += heartrate.value * (1f / 15f);
+			hydration.MoveTowards(0f, delta * num14);
 		}
 		bool b = hydration.Fraction() <= 0f || radiation_poison.value >= 100f;
 		owner.SetPlayerFlag(BasePlayer.PlayerFlags.NoSprint, b);
@@ -220,33 +225,33 @@ public class PlayerMetabolism : BaseMetabolism<BasePlayer>
 		}
 		if (temperature.value < 10f)
 		{
-			float num13 = Mathf.InverseLerp(20f, -100f, temperature.value);
-			heartrate.MoveTowards(Mathf.Lerp(0.2f, 1f, num13), delta * 2f * num13);
+			float num15 = Mathf.InverseLerp(20f, -100f, temperature.value);
+			heartrate.MoveTowards(Mathf.Lerp(0.2f, 1f, num15), delta * 2f * num15);
 		}
-		float num14 = owner.AirFactor();
-		float num15 = ((num14 > oxygen.value) ? 1f : 0.1f);
-		oxygen.MoveTowards(num14, delta * num15);
-		float num16 = 0f;
-		float num17 = 0f;
+		float num16 = owner.AirFactor();
+		float num17 = ((num16 > oxygen.value) ? 1f : 0.1f);
+		oxygen.MoveTowards(num16, delta * num17);
+		float num18 = 0f;
+		float num19 = 0f;
 		if (owner.IsOutside(owner.eyes.position))
 		{
-			num16 = Climate.GetRain(owner.eyes.position) * Weather.wetness_rain;
-			num17 = Climate.GetSnow(owner.eyes.position) * Weather.wetness_snow;
+			num18 = Climate.GetRain(owner.eyes.position) * Weather.wetness_rain;
+			num19 = Climate.GetSnow(owner.eyes.position) * Weather.wetness_snow;
 		}
 		bool flag = owner.baseProtection.amounts[4] > 0f;
 		float currentEnvironmentalWetness = owner.currentEnvironmentalWetness;
 		currentEnvironmentalWetness = Mathf.Clamp(currentEnvironmentalWetness, 0f, 0.8f);
-		float num18 = owner.WaterFactor();
-		if (!flag && num18 > 0f)
+		float num20 = owner.WaterFactor();
+		if (!flag && num20 > 0f)
 		{
-			wetness.value = Mathf.Max(wetness.value, Mathf.Clamp(num18, wetness.min, wetness.max));
+			wetness.value = Mathf.Max(wetness.value, Mathf.Clamp(num20, wetness.min, wetness.max));
 		}
-		float num19 = Mathx.Max(wetness.value, num16, num17, currentEnvironmentalWetness);
-		num19 = Mathf.Min(num19, flag ? 0f : num19);
-		wetness.MoveTowards(num19, delta * 0.05f);
-		if (num18 < wetness.value && currentEnvironmentalWetness <= 0f)
+		float num21 = Mathx.Max(wetness.value, num18, num19, currentEnvironmentalWetness);
+		num21 = Mathf.Min(num21, flag ? 0f : num21);
+		wetness.MoveTowards(num21, delta * 0.05f);
+		if (num20 < wetness.value && currentEnvironmentalWetness <= 0f)
 		{
-			wetness.MoveTowards(0f, delta * 0.2f * Mathf.InverseLerp(0f, 100f, currentTemperature));
+			wetness.MoveTowards(0f, delta * 0.2f * Mathf.InverseLerp(0f, 100f, num));
 		}
 		poison.MoveTowards(0f, delta * (5f / 9f));
 		if (wetness.Fraction() > 0.4f && owner.estimatedSpeed > 0.25f && radiation_level.Fraction() == 0f)
@@ -271,15 +276,15 @@ public class PlayerMetabolism : BaseMetabolism<BasePlayer>
 		}
 		if (pending_health.value > 0f)
 		{
-			float num20 = Mathf.Min(1f * delta, pending_health.value);
-			ownerEntity.Heal(num20);
+			float num22 = Mathf.Min(1f * delta, pending_health.value);
+			ownerEntity.Heal(num22);
 			if (ownerEntity.healthFraction == 1f)
 			{
 				pending_health.value = 0f;
 			}
 			else
 			{
-				pending_health.Subtract(num20);
+				pending_health.Subtract(num22);
 			}
 		}
 	}
@@ -321,7 +326,7 @@ public class PlayerMetabolism : BaseMetabolism<BasePlayer>
 		PlayerMetabolism val = Save();
 		try
 		{
-			base.baseEntity.ClientRPCPlayerAndSpectators<PlayerMetabolism>(null, base.baseEntity, "UpdateMetabolism", val);
+			base.baseEntity.ClientRPC<PlayerMetabolism>(RpcTarget.PlayerAndSpectators("UpdateMetabolism", base.baseEntity), val);
 		}
 		finally
 		{

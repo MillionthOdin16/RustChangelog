@@ -115,11 +115,20 @@ public class InputState
 
 	public void Clear()
 	{
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
 		current.buttons = 0;
 		previous.buttons = 0;
-		current.mouseDelta = Vector3.zero;
+		SetMouseDelta(Vector3.zero);
 		SwallowedButtons = 0;
+	}
+
+	public void SetMouseDelta(Vector3 d)
+	{
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		previous.mouseDelta = d;
+		current.mouseDelta = d;
 	}
 }

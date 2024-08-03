@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
 using ConVar;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -8,10 +6,6 @@ using UnityEngine.Serialization;
 [CreateAssetMenu(menuName = "Rust/Density Spawn Population")]
 public class DensitySpawnPopulation : SpawnPopulationBase
 {
-	public string ResourceFolder = string.Empty;
-
-	public GameObjectRef[] ResourceList;
-
 	[Header("Spawn Info")]
 	[Tooltip("Usually per square km")]
 	[SerializeField]
@@ -42,48 +36,9 @@ public class DensitySpawnPopulation : SpawnPopulationBase
 
 	public bool FilterOutTutorialIslands;
 
-	internal Prefab<Spawnable>[] Prefabs;
-
-	protected int[] numToSpawn;
-
 	private int sumToSpawn;
 
 	public virtual float TargetDensity => _targetDensity;
-
-	public override bool Initialize()
-	{
-		if (Prefabs == null || Prefabs.Length == 0)
-		{
-			if (!string.IsNullOrEmpty(ResourceFolder))
-			{
-				Prefabs = Prefab.Load<Spawnable>("assets/bundled/prefabs/autospawn/" + ResourceFolder, GameManager.server, PrefabAttribute.server, useProbabilities: false, useWorldConfig: true);
-			}
-			if (ResourceList != null && ResourceList.Length != 0)
-			{
-				List<string> list = new List<string>();
-				GameObjectRef[] resourceList = ResourceList;
-				foreach (GameObjectRef gameObjectRef in resourceList)
-				{
-					string resourcePath = gameObjectRef.resourcePath;
-					if (string.IsNullOrEmpty(resourcePath))
-					{
-						Debug.LogWarning((object)(((Object)this).name + " resource list contains invalid resource path for GUID " + gameObjectRef.guid), (Object)(object)this);
-					}
-					else
-					{
-						list.Add(resourcePath);
-					}
-				}
-				Prefabs = Prefab.Load<Spawnable>(list.ToArray(), GameManager.server, PrefabAttribute.server);
-			}
-			if (Prefabs == null || Prefabs.Length == 0)
-			{
-				return false;
-			}
-			numToSpawn = new int[Prefabs.Length];
-		}
-		return true;
-	}
 
 	public override void SubFill(SpawnHandler spawnHandler, SpawnDistribution distribution, int numToFill, bool initialSpawn)
 	{
@@ -273,34 +228,5 @@ public class DensitySpawnPopulation : SpawnPopulationBase
 	public override SpawnFilter GetSpawnFilter()
 	{
 		return Filter;
-	}
-
-	public override void GetReportString(StringBuilder sb, bool detailed)
-	{
-		if (!string.IsNullOrEmpty(ResourceFolder))
-		{
-			sb.AppendLine(((Object)this).name + " (autospawn/" + ResourceFolder + ")");
-		}
-		else
-		{
-			sb.AppendLine(((Object)this).name);
-		}
-		if (!detailed)
-		{
-			return;
-		}
-		sb.AppendLine("\tPrefabs:");
-		if (Prefabs != null)
-		{
-			Prefab<Spawnable>[] prefabs = Prefabs;
-			foreach (Prefab<Spawnable> prefab in prefabs)
-			{
-				sb.AppendLine("\t\t" + prefab.Name + " - " + (object)prefab.Object);
-			}
-		}
-		else
-		{
-			sb.AppendLine("\t\tN/A");
-		}
 	}
 }

@@ -243,7 +243,7 @@ public class PatrolHelicopter : BaseCombatEntity, SeekerTarget.ISeekerTargetOwne
 		Quaternion localRotation = rotorPivot.transform.localRotation;
 		helicopter.tiltRot = ((Quaternion)(ref localRotation)).eulerAngles;
 		info.msg.helicopter.spotlightVec = spotlightTarget;
-		info.msg.helicopter.weakspothealths = Pool.Get<List<float>>();
+		info.msg.helicopter.weakspothealths = Pool.GetList<float>();
 		for (int i = 0; i < weakspots.Length; i++)
 		{
 			info.msg.helicopter.weakspothealths.Add(weakspots[i].health);
@@ -434,14 +434,12 @@ public class PatrolHelicopter : BaseCombatEntity, SeekerTarget.ISeekerTargetOwne
 	public void DoFlare()
 	{
 		SetFlag(Flags.OnFire, b: true);
-		SeekerTarget.SetSeekerTarget(this, SeekerTarget.SeekerStrength.OFF);
 		((FacepunchBehaviour)this).Invoke((Action)ClearFlares, flareDuration);
 	}
 
 	public void ClearFlares()
 	{
 		SetFlag(Flags.OnFire, b: false);
-		SeekerTarget.SetSeekerTarget(this, SeekerTarget.SeekerStrength.MEDIUM);
 	}
 
 	public void Update()
@@ -476,7 +474,7 @@ public class PatrolHelicopter : BaseCombatEntity, SeekerTarget.ISeekerTargetOwne
 		bool flag = false;
 		if (info.damageTypes.Total() >= base.health)
 		{
-			base.health = 1000000f;
+			base.health = 10000f;
 			myAI.CriticalDamage();
 			flag = true;
 		}
@@ -485,6 +483,7 @@ public class PatrolHelicopter : BaseCombatEntity, SeekerTarget.ISeekerTargetOwne
 		{
 			return;
 		}
+		myAI.OtherDamaged(info);
 		weakspot[] array = weakspots;
 		foreach (weakspot weakspot in array)
 		{

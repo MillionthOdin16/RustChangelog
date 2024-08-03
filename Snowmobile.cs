@@ -110,8 +110,6 @@ public class Snowmobile : GroundVehicle, VehicleChassisVisuals<Snowmobile>.IClie
 
 	private float _brake;
 
-	private float _steer;
-
 	private float _mass = -1f;
 
 	public const Flags Flag_Slowmode = Flags.Reserved8;
@@ -121,6 +119,8 @@ public class Snowmobile : GroundVehicle, VehicleChassisVisuals<Snowmobile>.IClie
 	private float cachedFuelFraction;
 
 	private const float FORCE_MULTIPLIER = 10f;
+
+	private float _steer;
 
 	private CarPhysics<Snowmobile> carPhysics;
 
@@ -165,18 +165,6 @@ public class Snowmobile : GroundVehicle, VehicleChassisVisuals<Snowmobile>.IClie
 	}
 
 	public bool IsBraking => BrakeInput > 0f;
-
-	public float SteerInput
-	{
-		get
-		{
-			return _steer;
-		}
-		protected set
-		{
-			_steer = Mathf.Clamp(value, -1f, 1f);
-		}
-	}
 
 	public float SteerAngle
 	{
@@ -240,6 +228,18 @@ public class Snowmobile : GroundVehicle, VehicleChassisVisuals<Snowmobile>.IClie
 				return rigidBody.mass;
 			}
 			return _mass;
+		}
+	}
+
+	public float SteerInput
+	{
+		get
+		{
+			return _steer;
+		}
+		protected set
+		{
+			_steer = Mathf.Clamp(value, -1f, 1f);
 		}
 	}
 
@@ -358,12 +358,12 @@ public class Snowmobile : GroundVehicle, VehicleChassisVisuals<Snowmobile>.IClie
 	public override void Load(LoadInfo info)
 	{
 		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
 		base.Load(info);
 		if (info.msg.snowmobile != null)
 		{
 			itemStorageInstance.uid = info.msg.snowmobile.storageID;
-			engineController.FuelSystem.fuelStorageInstance.uid = info.msg.snowmobile.fuelStorageID;
+			engineController.FuelSystem.SetInstanceID(info.msg.snowmobile.fuelStorageID);
 			cachedFuelFraction = info.msg.snowmobile.fuelFraction;
 		}
 	}
@@ -388,14 +388,14 @@ public class Snowmobile : GroundVehicle, VehicleChassisVisuals<Snowmobile>.IClie
 		return BrakeInput;
 	}
 
-	public float GetSteerInput()
-	{
-		return SteerInput;
-	}
-
-	public bool GetSteerModInput()
+	public bool GetSteerSpeedMod(float speed)
 	{
 		return false;
+	}
+
+	public virtual float GetSteerMaxMult(float speed)
+	{
+		return 1f;
 	}
 
 	public float GetPerformanceFraction()
@@ -437,6 +437,11 @@ public class Snowmobile : GroundVehicle, VehicleChassisVisuals<Snowmobile>.IClie
 				driver.GiveAchievement("DRIVE_SNOWMOBILE");
 			}
 		}
+	}
+
+	public float GetSteerInput()
+	{
+		return SteerInput;
 	}
 
 	public override void ServerInit()
@@ -515,13 +520,13 @@ public class Snowmobile : GroundVehicle, VehicleChassisVisuals<Snowmobile>.IClie
 	{
 		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
 		if (!IsDriver(player))
 		{
 			return;
 		}
 		timeSinceLastUsed = TimeSince.op_Implicit(0f);
-		if (inputState.IsDown(BUTTON.DUCK))
+		if (inputState.IsDown(BUTTON.FIRE_THIRD))
 		{
 			SteerInput += inputState.MouseDelta().x * 0.1f;
 		}
@@ -621,8 +626,8 @@ public class Snowmobile : GroundVehicle, VehicleChassisVisuals<Snowmobile>.IClie
 	{
 		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00a0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
 		base.Save(info);
 		info.msg.snowmobile = Pool.Get<Snowmobile>();
 		info.msg.snowmobile.steerInput = SteerInput;
@@ -630,7 +635,8 @@ public class Snowmobile : GroundVehicle, VehicleChassisVisuals<Snowmobile>.IClie
 		info.msg.snowmobile.throttleInput = ThrottleInput;
 		info.msg.snowmobile.brakeInput = BrakeInput;
 		info.msg.snowmobile.storageID = itemStorageInstance.uid;
-		info.msg.snowmobile.fuelStorageID = GetFuelSystem().fuelStorageInstance.uid;
+		info.msg.snowmobile.fuelStorageID = GetFuelSystem().GetInstanceID();
+		info.msg.snowmobile.fuelFraction = GetFuelFraction();
 	}
 
 	public override int StartingFuelUnits()
@@ -673,7 +679,7 @@ public class Snowmobile : GroundVehicle, VehicleChassisVisuals<Snowmobile>.IClie
 		}
 		else if (MountEligable(player))
 		{
-			BaseMountable baseMountable = (HasDriver() ? GetIdealMountPointFor(player) : mountPoints[0].mountable);
+			BaseMountable baseMountable = ((HasDriver() || player.IsRestrained) ? GetIdealMountPointFor(player) : mountPoints[0].mountable);
 			if ((Object)(object)baseMountable != (Object)null)
 			{
 				baseMountable.AttemptMount(player, doMountChecks);
@@ -716,13 +722,13 @@ public class Snowmobile : GroundVehicle, VehicleChassisVisuals<Snowmobile>.IClie
 			byte num = (byte)((ThrottleInput + 1f) * 7f);
 			byte b = (byte)(BrakeInput * 15f);
 			byte arg = (byte)(num + (b << 4));
-			ClientRPC(null, "SnowmobileUpdate", SteerInput, arg, DriveWheelVelocity, GetFuelFraction());
+			ClientRPC(RpcTarget.NetworkGroup("SnowmobileUpdate"), SteerInput, arg, DriveWheelVelocity, GetFuelFraction());
 		}
 	}
 
 	public override void OnEngineStartFailed()
 	{
-		ClientRPC(null, "EngineStartFailed");
+		ClientRPC(RpcTarget.NetworkGroup("EngineStartFailed"));
 	}
 
 	public override void ScaleDamageForPlayer(BasePlayer player, HitInfo info)

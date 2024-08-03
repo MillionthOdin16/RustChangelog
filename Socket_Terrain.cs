@@ -73,10 +73,10 @@ public class Socket_Terrain : Socket_Base
 		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00af: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b8: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 eulerAngles = ((Quaternion)(ref rotation)).eulerAngles;
@@ -93,7 +93,7 @@ public class Socket_Terrain : Socket_Base
 		Quaternion val2 = Quaternion.LookRotation(direction, val) * Quaternion.Euler(0f, eulerAngles.y, 0f) * Quaternion.Euler(target.rotation);
 		Vector3 val3 = target.position;
 		val3 -= val2 * position;
-		return new Construction.Placement
+		return new Construction.Placement(target)
 		{
 			rotation = val2,
 			position = val3

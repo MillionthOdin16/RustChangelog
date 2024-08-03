@@ -263,7 +263,7 @@ public class MotorRowboat : BaseBoat
 		base.DoServerDestroy();
 	}
 
-	public override EntityFuelSystem GetFuelSystem()
+	public override IFuelSystem GetFuelSystem()
 	{
 		return fuelSystem;
 	}
@@ -434,7 +434,7 @@ public class MotorRowboat : BaseBoat
 
 	public void CheckInvalidBoat()
 	{
-		bool num = fuelStoragePrefab.isValid && !fuelSystem.fuelStorageInstance.IsValid(base.isServer);
+		bool num = fuelStoragePrefab.isValid && !fuelSystem.HasValidInstance(base.isServer);
 		bool flag = storageUnitPrefab.isValid && !storageUnitInstance.IsValid(base.isServer);
 		if (num || flag)
 		{
@@ -702,12 +702,12 @@ public class MotorRowboat : BaseBoat
 	{
 		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
 		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
 		base.Save(info);
 		info.msg.motorBoat = Pool.Get<Motorboat>();
 		info.msg.motorBoat.storageid = storageUnitInstance.uid;
-		info.msg.motorBoat.fuelStorageID = fuelSystem.fuelStorageInstance.uid;
+		info.msg.motorBoat.fuelStorageID = fuelSystem.GetInstanceID();
 	}
 
 	protected override bool CanPushNow(BasePlayer pusher)
@@ -760,12 +760,12 @@ public class MotorRowboat : BaseBoat
 
 	public override void Load(LoadInfo info)
 	{
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
 		base.Load(info);
 		if (info.msg.motorBoat != null)
 		{
-			fuelSystem.fuelStorageInstance.uid = info.msg.motorBoat.fuelStorageID;
+			fuelSystem.SetInstanceID(info.msg.motorBoat.fuelStorageID);
 			storageUnitInstance.uid = info.msg.motorBoat.storageid;
 		}
 	}

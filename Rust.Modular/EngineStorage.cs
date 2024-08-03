@@ -85,7 +85,7 @@ public class EngineStorage : StorageContainer
 		return false;
 	}
 
-	public override int GetIdealSlot(BasePlayer player, Item item)
+	public override int GetIdealSlot(BasePlayer player, ItemContainer container, Item item)
 	{
 		return GetValidSlot(item);
 	}
@@ -111,10 +111,6 @@ public class EngineStorage : StorageContainer
 	public override void OnInventoryFirstCreated(ItemContainer container)
 	{
 		RefreshLoadoutData();
-	}
-
-	public void NonUserSpawn()
-	{
 	}
 
 	public override void OnItemAddedOrRemoved(Item item, bool added)

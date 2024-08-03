@@ -83,109 +83,6 @@ public class TreeEntity : ResourceEntity, IPrefabPreProcess
 		return 1f;
 	}
 
-	public override void ServerInit()
-	{
-		base.ServerInit();
-		lastDirection = ((Random.Range(0, 2) != 0) ? 1 : (-1));
-	}
-
-	public override void ServerInitPostNetworkGroupAssign()
-	{
-		base.ServerInitPostNetworkGroupAssign();
-		TreeManager.OnTreeSpawned(this);
-	}
-
-	internal override void DoServerDestroy()
-	{
-		base.DoServerDestroy();
-		CleanupMarker();
-		TreeManager.OnTreeDestroyed(this);
-	}
-
-	public bool DidHitMarker(HitInfo info)
-	{
-		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0097: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
-		if ((Object)(object)xMarker == (Object)null)
-		{
-			return false;
-		}
-		if (PrefabAttribute.server.Find<TreeMarkerData>(prefabID) != null)
-		{
-			Bounds val = default(Bounds);
-			((Bounds)(ref val))._002Ector(((Component)xMarker).transform.position, Vector3.one * 0.2f);
-			if (((Bounds)(ref val)).Contains(info.HitPositionWorld))
-			{
-				return true;
-			}
-		}
-		else
-		{
-			Vector3 val2 = Vector3Ex.Direction2D(((Component)this).transform.position, ((Component)xMarker).transform.position);
-			Vector3 attackNormal = info.attackNormal;
-			float num = Vector3.Dot(val2, attackNormal);
-			float num2 = Vector3.Distance(((Component)xMarker).transform.position, info.HitPositionWorld);
-			if (num >= 0.3f && num2 <= 0.2f)
-			{
-				return true;
-			}
-		}
-		return false;
-	}
-
-	public void StartBonusGame()
-	{
-		if (((FacepunchBehaviour)this).IsInvoking((Action)StopBonusGame))
-		{
-			((FacepunchBehaviour)this).CancelInvoke((Action)StopBonusGame);
-		}
-		((FacepunchBehaviour)this).Invoke((Action)StopBonusGame, 60f);
-	}
-
-	public void StopBonusGame()
-	{
-		CleanupMarker();
-		lastHitTime = 0f;
-		currentBonusLevel = 0;
-	}
-
-	public bool BonusActive()
-	{
-		return (Object)(object)xMarker != (Object)null;
-	}
-
-	private void DoBirds()
-	{
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
-		if (!base.isClient && !(Time.realtimeSinceStartup < nextBirdTime) && !(((Bounds)(ref bounds)).extents.y < 6f))
-		{
-			uint num = (uint)(int)net.ID.Value + birdCycleIndex;
-			if (SeedRandom.Range(ref num, 0, 2) == 0)
-			{
-				Effect.server.Run("assets/prefabs/npc/birds/birdemission.prefab", ((Component)this).transform.position + Vector3.up * Random.Range(((Bounds)(ref bounds)).extents.y * 0.65f, ((Bounds)(ref bounds)).extents.y * 0.9f), Vector3.up);
-			}
-			birdCycleIndex++;
-			nextBirdTime = Time.realtimeSinceStartup + 90f;
-		}
-	}
-
 	public override void OnAttacked(HitInfo info)
 	{
 		//IL_00e8: Unknown result type (might be due to invalid IL or missing references)
@@ -311,7 +208,7 @@ public class TreeEntity : ResourceEntity, IPrefabPreProcess
 			float num3 = Random.Range(0.5f, 0.5f);
 			Vector3 val4 = Vector3.Lerp(-val2, val3 * num2, num3);
 			Vector3 val5 = ((Component)this).transform.InverseTransformDirection(((Vector3)(ref val4)).normalized) * 2.5f;
-			val5 = ((Component)this).transform.InverseTransformPoint(GetCollider().ClosestPoint(((Component)this).transform.TransformPoint(val5)));
+			val5 = ((Component)this).transform.InverseTransformPoint(serverCollider.ClosestPoint(((Component)this).transform.TransformPoint(val5)));
 			Vector3 val6 = ((Component)this).transform.TransformPoint(val5);
 			Vector3 val7 = ((Component)this).transform.InverseTransformPoint(info.HitPositionWorld);
 			val5.y = val7.y;
@@ -325,9 +222,9 @@ public class TreeEntity : ResourceEntity, IPrefabPreProcess
 			Quaternion val11 = QuaternionEx.LookRotationNormal(-val9, Vector3.zero);
 			val5 = ((Component)this).transform.TransformPoint(val5);
 			val11 = QuaternionEx.LookRotationNormal(-val10, Vector3.zero);
-			val5 = GetCollider().ClosestPoint(val5);
+			val5 = serverCollider.ClosestPoint(val5);
 			Line val12 = default(Line);
-			((Line)(ref val12))._002Ector(((Component)GetCollider()).transform.TransformPoint(new Vector3(0f, 10f, 0f)), ((Component)GetCollider()).transform.TransformPoint(new Vector3(0f, -10f, 0f)));
+			((Line)(ref val12))._002Ector(((Component)serverCollider).transform.TransformPoint(new Vector3(0f, 10f, 0f)), ((Component)serverCollider).transform.TransformPoint(new Vector3(0f, -10f, 0f)));
 			val11 = QuaternionEx.LookRotationNormal(-Vector3Ex.Direction(((Line)(ref val12)).ClosestPoint(val5), val5));
 			xMarker = GameManager.server.CreateEntity("assets/content/nature/treesprefabs/trees/effects/tree_marking.prefab", val5, val11);
 		}
@@ -352,6 +249,113 @@ public class TreeEntity : ResourceEntity, IPrefabPreProcess
 		}
 	}
 
+	public override void ServerInit()
+	{
+		if ((Object)(object)serverCollider == (Object)null)
+		{
+			serverCollider = clientCollider ?? ((Component)this).GetComponentInChildren<Collider>();
+		}
+		base.ServerInit();
+		lastDirection = ((Random.Range(0, 2) != 0) ? 1 : (-1));
+	}
+
+	public override void ServerInitPostNetworkGroupAssign()
+	{
+		base.ServerInitPostNetworkGroupAssign();
+		TreeManager.OnTreeSpawned(this);
+	}
+
+	internal override void DoServerDestroy()
+	{
+		base.DoServerDestroy();
+		CleanupMarker();
+		TreeManager.OnTreeDestroyed(this);
+	}
+
+	public bool DidHitMarker(HitInfo info)
+	{
+		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0097: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
+		if ((Object)(object)xMarker == (Object)null)
+		{
+			return false;
+		}
+		if (PrefabAttribute.server.Find<TreeMarkerData>(prefabID) != null)
+		{
+			Bounds val = default(Bounds);
+			((Bounds)(ref val))._002Ector(((Component)xMarker).transform.position, Vector3.one * 0.2f);
+			if (((Bounds)(ref val)).Contains(info.HitPositionWorld))
+			{
+				return true;
+			}
+		}
+		else
+		{
+			Vector3 val2 = Vector3Ex.Direction2D(((Component)this).transform.position, ((Component)xMarker).transform.position);
+			Vector3 attackNormal = info.attackNormal;
+			float num = Vector3.Dot(val2, attackNormal);
+			float num2 = Vector3.Distance(((Component)xMarker).transform.position, info.HitPositionWorld);
+			if (num >= 0.3f && num2 <= 0.2f)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public void StartBonusGame()
+	{
+		if (((FacepunchBehaviour)this).IsInvoking((Action)StopBonusGame))
+		{
+			((FacepunchBehaviour)this).CancelInvoke((Action)StopBonusGame);
+		}
+		((FacepunchBehaviour)this).Invoke((Action)StopBonusGame, 60f);
+	}
+
+	public void StopBonusGame()
+	{
+		CleanupMarker();
+		lastHitTime = 0f;
+		currentBonusLevel = 0;
+	}
+
+	public bool BonusActive()
+	{
+		return (Object)(object)xMarker != (Object)null;
+	}
+
+	private void DoBirds()
+	{
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
+		if (!base.isClient && !(Time.realtimeSinceStartup < nextBirdTime) && !(((Bounds)(ref bounds)).extents.y < 6f))
+		{
+			uint num = (uint)(int)net.ID.Value + birdCycleIndex;
+			if (SeedRandom.Range(ref num, 0, 2) == 0)
+			{
+				Effect.server.Run("assets/prefabs/npc/birds/birdemission.prefab", ((Component)this).transform.position + Vector3.up * Random.Range(((Bounds)(ref bounds)).extents.y * 0.65f, ((Bounds)(ref bounds)).extents.y * 0.9f), Vector3.up);
+			}
+			birdCycleIndex++;
+			nextBirdTime = Time.realtimeSinceStartup + 90f;
+		}
+	}
+
 	public void CleanupMarker()
 	{
 		if (Object.op_Implicit((Object)(object)xMarker))
@@ -361,30 +365,13 @@ public class TreeEntity : ResourceEntity, IPrefabPreProcess
 		xMarker = null;
 	}
 
-	public Collider GetCollider()
-	{
-		if (base.isServer)
-		{
-			if (!((Object)(object)serverCollider == (Object)null))
-			{
-				return serverCollider;
-			}
-			return (Collider)(object)((Component)this).GetComponentInChildren<CapsuleCollider>();
-		}
-		if (!((Object)(object)clientCollider == (Object)null))
-		{
-			return clientCollider;
-		}
-		return ((Component)this).GetComponent<Collider>();
-	}
-
 	public override void OnKilled(HitInfo info)
 	{
 		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
 		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
@@ -398,17 +385,17 @@ public class TreeEntity : ResourceEntity, IPrefabPreProcess
 		Analytics.Server.TreeKilled(info.WeaponPrefab);
 		if (fallOnKilled)
 		{
-			Collider collider = GetCollider();
-			if (Object.op_Implicit((Object)(object)collider))
+			Collider val = serverCollider;
+			if (Object.op_Implicit((Object)(object)val))
 			{
-				collider.enabled = false;
+				val.enabled = false;
 			}
-			Vector3 val = info.attackNormal;
-			if (val == Vector3.zero)
+			Vector3 val2 = info.attackNormal;
+			if (val2 == Vector3.zero)
 			{
-				val = Vector3Ex.Direction2D(((Component)this).transform.position, info.PointStart);
+				val2 = Vector3Ex.Direction2D(((Component)this).transform.position, info.PointStart);
 			}
-			ClientRPC<Vector3>(null, "TreeFall", val);
+			ClientRPC<Vector3>(RpcTarget.NetworkGroup("TreeFall"), val2);
 			((FacepunchBehaviour)this).Invoke((Action)DelayedKill, fallDuration + 1f);
 		}
 		else

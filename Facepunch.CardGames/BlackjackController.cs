@@ -52,9 +52,9 @@ public class BlackjackController : CardGameController
 
 	private const float DEALER_MOVE_TIME = 1f;
 
-	private const int NUM_DECKS = 6;
+	private const int NUM_DECKS = 10;
 
-	private StackOfCards cardStack = new StackOfCards(6);
+	private StackOfCards cardStack = new StackOfCards(10);
 
 	public override int MinPlayers => 1;
 
@@ -421,7 +421,7 @@ public class BlackjackController : CardGameController
 		base.resultInfo.winningScore = dealerCardsVal;
 		if (NumPlayersInCurrentRound() == 0)
 		{
-			base.Owner.ClientRPC<RoundResults>(null, "OnResultsDeclared", base.resultInfo);
+			base.Owner.ClientRPC<RoundResults>(RpcTarget.NetworkGroup("OnResultsDeclared"), base.resultInfo);
 			return;
 		}
 		bool dealerHasBlackjack = HasBlackjack(dealerCards);
@@ -446,7 +446,7 @@ public class BlackjackController : CardGameController
 			PayOut(item, num);
 		}
 		ClearPot();
-		base.Owner.ClientRPC<RoundResults>(null, "OnResultsDeclared", base.resultInfo);
+		base.Owner.ClientRPC<RoundResults>(RpcTarget.NetworkGroup("OnResultsDeclared"), base.resultInfo);
 		BlackjackRoundResult CheckResult(List<PlayingCard> cards, int betAmount, out int winnings)
 		{
 			if (cards.Count == 0)
@@ -619,7 +619,7 @@ public class BlackjackController : CardGameController
 			break;
 		}
 		case BlackjackInputOption.Abandon:
-			pdBlackjack.LeaveCurrentRound(clearBets: false, leftRoundEarly: true);
+			pdBlackjack.LeaveGame();
 			break;
 		}
 		if (HasBusted(pdBlackjack.Cards) && !pdBlackjack.TrySwitchToSplitHand())
@@ -656,7 +656,7 @@ public class BlackjackController : CardGameController
 		}
 		else if (selectedMove == BlackjackInputOption.Abandon)
 		{
-			pdBlackjack.LeaveCurrentRound(clearBets: false, leftRoundEarly: true);
+			pdBlackjack.LeaveGame();
 		}
 	}
 
@@ -682,7 +682,7 @@ public class BlackjackController : CardGameController
 	protected override void SubStartRound()
 	{
 		dealerCards.Clear();
-		cardStack = new StackOfCards(6);
+		cardStack = new StackOfCards(10);
 		ClearLastAction();
 		ServerPlaySound(CardGameSounds.SoundType.Shuffle);
 		foreach (CardPlayerDataBlackjack item in PlayersInRound())
@@ -728,7 +728,7 @@ public class BlackjackController : CardGameController
 		}
 		if (pData.HasUserInGame)
 		{
-			base.Owner.ClientRPC(null, "ClientOnPlayerLeft", pData.UserID);
+			base.Owner.ClientRPC(RpcTarget.NetworkGroup("ClientOnPlayerLeft"), pData.UserID);
 		}
 		base.Owner.SendNetworkUpdate();
 	}
@@ -818,7 +818,7 @@ public class BlackjackController : CardGameController
 	private void DealerPlayInvoke()
 	{
 		int cardsValue = GetCardsValue(dealerCards, CardsValueMode.High);
-		if (GetCardsValue(dealerCards, CardsValueMode.Low) < 17 && (cardsValue < 17 || cardsValue > 21))
+		if (GetCardsValue(dealerCards, CardsValueMode.Low) < 17 && (cardsValue < 18 || cardsValue > 21))
 		{
 			cardStack.TryTakeCard(out var card);
 			dealerCards.Add(card);

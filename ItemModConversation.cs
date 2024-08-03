@@ -2,6 +2,10 @@ using UnityEngine;
 
 public class ItemModConversation : ItemMod
 {
+	public static readonly Phrase SquakTitle = new Phrase("squak", "MISSING SQUAK PHRASE");
+
+	public static readonly Phrase SquakDesc = new Phrase("squak_desc", "MISSING SQUAK DESC PHRASE");
+
 	public ConversationData conversationData;
 
 	public GameObjectRef conversationEntity;

@@ -12,7 +12,11 @@ public static class Auth_Steam
 
 	public static IEnumerator Run(Connection connection)
 	{
-		connection.authStatus = "";
+		connection.authStatusSteam = string.Empty;
+		if (!connection.active || connection.rejected)
+		{
+			yield break;
+		}
 		if (!PlatformService.Instance.BeginPlayerSession(connection.userid, connection.token))
 		{
 			ConnectionAuth.Reject(connection, "Steam Auth Failed");
@@ -20,36 +24,36 @@ public static class Auth_Steam
 		}
 		waitingList.Add(connection);
 		Stopwatch timeout = Stopwatch.StartNew();
-		while (timeout.Elapsed.TotalSeconds < 30.0 && connection.active && !(connection.authStatus != ""))
+		while (timeout.Elapsed.TotalSeconds < 30.0 && connection.active && !(connection.authStatusSteam != string.Empty))
 		{
 			yield return null;
 		}
 		waitingList.Remove(connection);
 		if (connection.active)
 		{
-			if (connection.authStatus.Length == 0)
+			if (connection.authStatusSteam.Length == 0)
 			{
-				ConnectionAuth.Reject(connection, "Steam Auth Timeout");
+				ConnectionAuth.Reject(connection, "Steam Auth Timeout: No auth response");
 				PlatformService.Instance.EndPlayerSession(connection.userid);
 			}
-			else if (connection.authStatus == "banned")
+			else if (connection.authStatusSteam == "banned")
 			{
-				ConnectionAuth.Reject(connection, "Auth: " + connection.authStatus);
+				ConnectionAuth.Reject(connection, "Steam Auth: " + connection.authStatusSteam);
 				PlatformService.Instance.EndPlayerSession(connection.userid);
 			}
-			else if (connection.authStatus == "gamebanned")
+			else if (connection.authStatusSteam == "gamebanned")
 			{
-				ConnectionAuth.Reject(connection, "Steam Auth: " + connection.authStatus);
+				ConnectionAuth.Reject(connection, "Steam Auth: " + connection.authStatusSteam);
 				PlatformService.Instance.EndPlayerSession(connection.userid);
 			}
-			else if (connection.authStatus == "vacbanned")
+			else if (connection.authStatusSteam == "vacbanned")
 			{
-				ConnectionAuth.Reject(connection, "Steam Auth: " + connection.authStatus);
+				ConnectionAuth.Reject(connection, "Steam Auth: " + connection.authStatusSteam);
 				PlatformService.Instance.EndPlayerSession(connection.userid);
 			}
-			else if (connection.authStatus != "ok")
+			else if (connection.authStatusSteam != "ok")
 			{
-				ConnectionAuth.Reject(connection, "Steam Auth Failed", "Steam Auth Error: " + connection.authStatus);
+				ConnectionAuth.Reject(connection, "Steam Auth Failed", "Steam Auth Error: " + connection.authStatusSteam);
 				PlatformService.Instance.EndPlayerSession(connection.userid);
 			}
 			else
@@ -68,8 +72,8 @@ public static class Auth_Steam
 		//IL_0067: Invalid comparison between Unknown and I4
 		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0078: Invalid comparison between Unknown and I4
-		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0089: Invalid comparison between Unknown and I4
+		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0090: Invalid comparison between Unknown and I4
 		Connection val = waitingList.Find((Connection x) => x.userid == steamid);
 		if (val == null)
 		{
@@ -78,30 +82,31 @@ public static class Auth_Steam
 		val.ownerid = ownerSteamID;
 		if (ServerUsers.Is(ownerSteamID, ServerUsers.UserGroup.Banned) || ServerUsers.Is(steamid, ServerUsers.UserGroup.Banned))
 		{
-			val.authStatus = "banned";
+			val.authStatusSteam = "banned";
 			return true;
 		}
 		if ((int)response == 2)
 		{
-			val.authStatus = "ok";
+			val.authStatusSteam = "ok";
 			return true;
 		}
 		if ((int)response == 3)
 		{
-			val.authStatus = "vacbanned";
+			val.authStatusSteam = "vacbanned";
 			return true;
 		}
 		if ((int)response == 4)
 		{
-			val.authStatus = "gamebanned";
+			val.authStatusSteam = "gamebanned";
 			return true;
 		}
-		if ((int)response == 1)
+		if (!Server.strictauth_steam && (int)response == 1)
 		{
-			val.authStatus = "ok";
+			Debug.LogWarning((object)("Steam Auth Timeout: AuthResponse.TimedOut for " + steamid + " / " + ownerSteamID + " - bypassing since strictauth_steam is false"));
+			val.authStatusSteam = "ok";
 			return true;
 		}
-		val.authStatus = ((object)(AuthResponse)(ref response)).ToString();
+		val.authStatusSteam = ((object)(AuthResponse)(ref response)).ToString();
 		return true;
 	}
 }

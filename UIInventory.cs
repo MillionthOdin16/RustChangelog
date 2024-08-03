@@ -21,4 +21,6 @@ public class UIInventory : SingletonComponent<UIInventory>
 	public ContactsPanel contactsPanel;
 
 	public GameObject backpackSlot;
+
+	public UnderwearSkinPicker underwearSkinPicker;
 }

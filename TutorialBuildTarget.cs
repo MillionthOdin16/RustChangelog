@@ -6,6 +6,8 @@ public class TutorialBuildTarget : MonoBehaviour
 {
 	public BaseEntityRef TargetPrefab;
 
+	public ItemDefinition TargetItemDef;
+
 	public GameObject VisualObject;
 
 	public Vector3 PhysCheckOffset = Vector3.zero;
@@ -22,16 +24,16 @@ public class TutorialBuildTarget : MonoBehaviour
 
 	public bool IsValid(Construction toConstruct, Construction.Target target, Construction.Placement placement)
 	{
-		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b9: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ca: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0136: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0147: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0103: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0109: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0113: Unknown result type (might be due to invalid IL or missing references)
 		UpdateActive(target.player);
 		if (!((Component)this).gameObject.activeInHierarchy)
 		{
@@ -39,7 +41,19 @@ public class TutorialBuildTarget : MonoBehaviour
 		}
 		if (!TargetPrefab.isValid || toConstruct.prefabID != TargetPrefab.Get().prefabID)
 		{
-			return false;
+			bool flag = false;
+			if ((Object)(object)TargetItemDef != (Object)null && (Object)(object)target.player != (Object)null && (Object)(object)target.player.GetHeldEntity() != (Object)null && target.player.GetHeldEntity().GetItem() != null)
+			{
+				Item item = target.player.GetHeldEntity().GetItem();
+				if ((Object)(object)item.info != (Object)null && (Object)(object)item.info.isRedirectOf == (Object)(object)TargetItemDef)
+				{
+					flag = true;
+				}
+			}
+			if (!flag)
+			{
+				return false;
+			}
 		}
 		if (Vector3.Distance(placement.position, ((Component)this).transform.position) < MaxDistance)
 		{
@@ -52,6 +66,38 @@ public class TutorialBuildTarget : MonoBehaviour
 				placement.position = ((Component)this).transform.position;
 				placement.rotation = ((Component)this).transform.rotation;
 			}
+			return true;
+		}
+		return false;
+	}
+
+	public bool IsValid(BasePlayer player, Deployable deployable, Vector3 worldPosition, Quaternion worldRotation)
+	{
+		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00af: Unknown result type (might be due to invalid IL or missing references)
+		UpdateActive(player);
+		if (!((Component)this).gameObject.activeInHierarchy)
+		{
+			return false;
+		}
+		if (!TargetPrefab.isValid || deployable.prefabID != TargetPrefab.Get().prefabID)
+		{
+			bool flag = false;
+			if ((Object)(object)TargetItemDef != (Object)null && (Object)(object)player != (Object)null && (Object)(object)player.GetHeldEntity() != (Object)null && player.GetHeldEntity().GetItem() != null)
+			{
+				Item item = player.GetHeldEntity().GetItem();
+				if ((Object)(object)item.info != (Object)null && (Object)(object)item.info.isRedirectOf == (Object)(object)TargetItemDef)
+				{
+					flag = true;
+				}
+			}
+			if (!flag)
+			{
+				return false;
+			}
+		}
+		if (Vector3.Distance(worldPosition, ((Component)this).transform.position) < MaxDistance)
+		{
 			return true;
 		}
 		return false;

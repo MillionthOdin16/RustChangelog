@@ -45,6 +45,8 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 
 	public AmbienceEmitter ambienceEmitter;
 
+	public bool playAmbientSounds = true;
+
 	public GameObject assignDialog;
 
 	public LaserBeam laserBeam;
@@ -94,7 +96,7 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 	public const Flags Flag_MaxAuths = Flags.Reserved4;
 
 	[NonSerialized]
-	public List<PlayerNameID> authorizedPlayers = new List<PlayerNameID>();
+	public HashSet<PlayerNameID> authorizedPlayers = new HashSet<PlayerNameID>();
 
 	[ServerVar(Help = "How many milliseconds to spend on target scanning per frame")]
 	public static float auto_turret_budget_ms = 0.5f;
@@ -117,6 +119,8 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 	public TriggerBase interferenceTrigger;
 
 	public float maxInterference = -1f;
+
+	public float attachedWeaponZOffsetScale = -0.5f;
 
 	public Transform socketTransform;
 
@@ -146,6 +150,8 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 
 	private HashSet<AutoTurret> nearbyTurrets = new HashSet<AutoTurret>();
 
+	private static HashSet<AutoTurret> interferenceUpdateList = new HashSet<AutoTurret>();
+
 	private float nextForcedAimTime;
 
 	private Vector3 lastSentAimDir = Vector3.zero;
@@ -170,8 +176,6 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 
 	private HeldEntity AttachedWeapon;
 
-	public float attachedWeaponZOffsetScale = -0.5f;
-
 	public bool CanPing => false;
 
 	public virtual bool RequiresMouse => true;
@@ -195,6 +199,8 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 			return false;
 		}
 	}
+
+	protected override bool PreventDuplicatesInQueue => Sentry.debugPreventDuplicates;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -712,7 +718,14 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 	{
 		base.Save(info);
 		info.msg.autoturret = Pool.Get<AutoTurret>();
-		info.msg.autoturret.users = authorizedPlayers;
+		if (info.forDisk || IsAuthed(info.forConnection.userid))
+		{
+			info.msg.autoturret.users = Pool.GetList<PlayerNameID>();
+			foreach (PlayerNameID authorizedPlayer in authorizedPlayers)
+			{
+				info.msg.autoturret.users.Add(authorizedPlayer);
+			}
+		}
 		if (info.forDisk || ((Object)(object)info.forConnection?.player != (Object)null && CanChangeID(info.forConnection.player as BasePlayer)))
 		{
 			info.msg.rcEntity = Pool.Get<RCEntity>();
@@ -731,7 +744,14 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 		base.Load(info);
 		if (info.msg.autoturret != null)
 		{
-			authorizedPlayers = info.msg.autoturret.users;
+			authorizedPlayers.Clear();
+			if (info.msg.autoturret.users != null)
+			{
+				foreach (PlayerNameID user in info.msg.autoturret.users)
+				{
+					authorizedPlayers.Add(user);
+				}
+			}
 			info.msg.autoturret.users = null;
 		}
 		if (info.msg.rcEntity != null)
@@ -1089,13 +1109,13 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 			SetFlag(Flags.On, online);
 			if (online)
 			{
-				UpdateInterference();
+				TryRegisterForInterferenceUpdate();
 			}
 			else
 			{
 				SetFlag(Flags.OnFire, b: false);
+				UpdateInterferenceOnOthers();
 			}
-			UpdateInterferenceOnOthers();
 			booting = false;
 			GetAttachedWeapon()?.SetLightsOn(online);
 			SendNetworkUpdate();
@@ -1110,6 +1130,41 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 				authDirty = true;
 			}
 		}
+	}
+
+	public static void ProcessInterferenceQueue()
+	{
+		float realtimeSinceStartup = Time.realtimeSinceStartup;
+		float num = 0.0005f;
+		List<AutoTurret> list = Pool.GetList<AutoTurret>();
+		while (interferenceUpdateList.Count > 0 && Time.realtimeSinceStartup < realtimeSinceStartup + num)
+		{
+			list.Clear();
+			ulong num2 = 0uL;
+			AutoTurret autoTurret = null;
+			foreach (AutoTurret interferenceUpdate in interferenceUpdateList)
+			{
+				if ((Object)(object)interferenceUpdate == (Object)null)
+				{
+					list.Add(interferenceUpdate);
+				}
+				else if (interferenceUpdate.net.ID.Value > num2)
+				{
+					num2 = interferenceUpdate.net.ID.Value;
+					autoTurret = interferenceUpdate;
+				}
+			}
+			if ((Object)(object)autoTurret != (Object)null)
+			{
+				interferenceUpdateList.Remove(autoTurret);
+				autoTurret.UpdateInterference();
+			}
+			foreach (AutoTurret item in list)
+			{
+				interferenceUpdateList.Remove(item);
+			}
+		}
+		Pool.FreeList<AutoTurret>(ref list);
 	}
 
 	public override int GetPassthroughAmount(int outputSlot = 0)
@@ -1289,7 +1344,7 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 		//IL_004a: Expected O, but got Unknown
 		if (!IsOnline() && player.CanBuild() && !AtMaxAuthCapacity())
 		{
-			authorizedPlayers.RemoveAll((PlayerNameID x) => x.userid == player.userID);
+			authorizedPlayers.RemoveWhere((PlayerNameID x) => x.userid == (ulong)player.userID);
 			PlayerNameID val = new PlayerNameID();
 			val.userid = player.userID;
 			val.username = player.displayName;
@@ -1306,7 +1361,7 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 	{
 		if (!booting && !IsOnline() && IsAuthed(rpc.player))
 		{
-			authorizedPlayers.RemoveAll((PlayerNameID x) => x.userid == rpc.player.userID);
+			authorizedPlayers.RemoveWhere((PlayerNameID x) => x.userid == (ulong)rpc.player.userID);
 			authDirty = true;
 			Analytics.Azure.OnEntityAuthChanged(this, rpc.player, authorizedPlayers.Select((PlayerNameID x) => x.userid), "removed", rpc.player.userID);
 			UpdateMaxAuthCapacity();
@@ -1421,9 +1476,9 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 	{
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
 		lastSentAimDir = aimDir;
-		ClientRPC<Vector3>(null, "CLIENT_ReceiveAimDir", aimDir);
+		ClientRPC<Vector3>(RpcTarget.NetworkGroup("CLIENT_ReceiveAimDir"), aimDir);
 		nextForcedAimTime = Time.realtimeSinceStartup + 2f;
 	}
 
@@ -1519,7 +1574,7 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 		BaseProjectile attachedWeapon = GetAttachedWeapon();
 		if (!((Object)(object)attachedWeapon == (Object)null) && !IsOffline())
 		{
-			attachedWeapon.ServerUse(1f, IsBeingControlled ? RCEyes : gun_pitch);
+			attachedWeapon.ServerUse(1f, IsBeingControlled ? RCEyes : gun_pitch, useBulletThickness: false);
 		}
 	}
 
@@ -1548,7 +1603,7 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0126: Unknown result type (might be due to invalid IL or missing references)
 		//IL_012b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01fe: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0202: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0154: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0159: Unknown result type (might be due to invalid IL or missing references)
 		//IL_015b: Unknown result type (might be due to invalid IL or missing references)
@@ -1616,7 +1671,7 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 			ApplyDamage(target, ((Component)target).transform.position - val2 * 0.25f, val2);
 			numConsecutiveMisses = 0;
 		}
-		ClientRPC<uint, Vector3>(null, "CLIENT_FireGun", StringPool.Get(((Object)((Component)muzzleToUse).gameObject).name), targetPos);
+		ClientRPC<uint, Vector3>(RpcTarget.NetworkGroup("CLIENT_FireGun"), StringPool.Get(((Object)((Component)muzzleToUse).gameObject).name), targetPos);
 		Pool.FreeList<RaycastHit>(ref list);
 	}
 
@@ -1706,13 +1761,17 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 		{
 			return num;
 		}
-		List<Item> list = Pool.GetList<Item>();
-		base.inventory.FindAmmo(list, attachedWeapon.primaryMagazine.definition.ammoTypes);
-		for (int i = 0; i < list.Count; i++)
+		List<Item> ammos = Pool.GetList<Item>();
+		base.inventory.FindAmmo(ammos, attachedWeapon.primaryMagazine.definition.ammoTypes);
+		if (!attachedWeapon.primaryMagazine.allowAmmoSwitching)
 		{
-			num += list[i].amount;
+			BaseProjectile.StripAmmoToType(ref ammos, attachedWeapon.primaryMagazine.ammoType);
 		}
-		Pool.FreeList<Item>(ref list);
+		for (int i = 0; i < ammos.Count; i++)
+		{
+			num += ammos[i].amount;
+		}
+		Pool.FreeList<Item>(ref ammos);
 		return num;
 	}
 
@@ -1739,16 +1798,17 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 
 	public void Reload()
 	{
-		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_013e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0166: Unknown result type (might be due to invalid IL or missing references)
-		//IL_016b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0191: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0196: Unknown result type (might be due to invalid IL or missing references)
 		BaseProjectile attachedWeapon = GetAttachedWeapon();
 		if ((Object)(object)attachedWeapon == (Object)null)
 		{
 			return;
 		}
+		_ = attachedWeapon.primaryMagazine.ammoType;
 		nextShotTime = Mathf.Max(nextShotTime, Time.time + Mathf.Min(attachedWeapon.GetReloadDuration() * 0.5f, 2f));
 		AmmoTypes ammoTypes = attachedWeapon.primaryMagazine.definition.ammoTypes;
 		if (attachedWeapon.primaryMagazine.contents > 0)
@@ -1777,21 +1837,25 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 			base.inventory.AddItem(attachedWeapon.primaryMagazine.ammoType, attachedWeapon.primaryMagazine.contents, 0uL);
 			attachedWeapon.SetAmmoCount(0);
 		}
-		List<Item> list = Pool.GetList<Item>();
-		base.inventory.FindAmmo(list, ammoTypes);
-		if (list.Count > 0)
+		List<Item> ammos = Pool.GetList<Item>();
+		base.inventory.FindAmmo(ammos, ammoTypes);
+		if (!attachedWeapon.primaryMagazine.allowAmmoSwitching)
+		{
+			BaseProjectile.StripAmmoToType(ref ammos, attachedWeapon.primaryMagazine.ammoType);
+		}
+		if (ammos.Count > 0)
 		{
 			Effect.server.Run(reloadEffect.resourcePath, this, StringPool.Get("WeaponAttachmentPoint"), Vector3.zero, Vector3.zero);
 			totalAmmoDirty = true;
-			attachedWeapon.primaryMagazine.ammoType = list[0].info;
+			attachedWeapon.primaryMagazine.ammoType = ammos[0].info;
 			int num2 = 0;
-			while (attachedWeapon.primaryMagazine.contents < attachedWeapon.primaryMagazine.capacity && num2 < list.Count)
+			while (attachedWeapon.primaryMagazine.contents < attachedWeapon.primaryMagazine.capacity && num2 < ammos.Count)
 			{
-				if ((Object)(object)list[num2].info == (Object)(object)attachedWeapon.primaryMagazine.ammoType)
+				if ((Object)(object)ammos[num2].info == (Object)(object)attachedWeapon.primaryMagazine.ammoType)
 				{
 					int num3 = attachedWeapon.primaryMagazine.capacity - attachedWeapon.primaryMagazine.contents;
-					num3 = Mathf.Min(list[num2].amount, num3);
-					list[num2].UseItem(num3);
+					num3 = Mathf.Min(ammos[num2].amount, num3);
+					ammos[num2].UseItem(num3);
 					attachedWeapon.ModifyAmmoCount(num3);
 				}
 				num2++;
@@ -1820,7 +1884,7 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 				}
 			}
 		}
-		Pool.FreeList<Item>(ref list);
+		Pool.FreeList<Item>(ref ammos);
 		attachedWeapon.SendNetworkUpdate();
 	}
 
@@ -1904,15 +1968,21 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 			totalAmmoDirty = true;
 			Reload();
 			UpdateTotalAmmo();
-			return;
+			if (IsOffline())
+			{
+				heldEntity.SetLightsOn(isOn: false);
+			}
 		}
-		BaseProjectile attachedWeapon = GetAttachedWeapon();
-		if ((Object)(object)attachedWeapon != (Object)null)
+		else
 		{
-			attachedWeapon.SetGenericVisible(wantsVis: false);
-			attachedWeapon.SetLightsOn(isOn: false);
+			BaseProjectile attachedWeapon = GetAttachedWeapon();
+			if ((Object)(object)attachedWeapon != (Object)null)
+			{
+				attachedWeapon.SetGenericVisible(wantsVis: false);
+				attachedWeapon.SetLightsOn(isOn: false);
+			}
+			AttachedWeapon = null;
 		}
-		AttachedWeapon = null;
 	}
 
 	public static HeldEntity TryAddWeaponToTurret(Item weaponItem, Transform parent, BaseEntity entityParent, float zOffsetScale)
@@ -2135,6 +2205,14 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 		return IsOnFire();
 	}
 
+	private void TryRegisterForInterferenceUpdate()
+	{
+		if (IsOn() && interferenceUpdateList.Add(this))
+		{
+			UpdateInterferenceOnOthers();
+		}
+	}
+
 	private void UpdateInterference()
 	{
 		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
@@ -2150,14 +2228,17 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 				num += 1f;
 			}
 		}
-		SetFlag(Flags.OnFire, num >= Sentry.maxinterference);
+		SetFlag(Flags.OnFire, num >= (float)Sentry.maxinterference);
 	}
 
 	private void UpdateInterferenceOnOthers()
 	{
 		foreach (AutoTurret nearbyTurret in nearbyTurrets)
 		{
-			nearbyTurret.UpdateInterference();
+			if ((Object)(object)nearbyTurret != (Object)null)
+			{
+				nearbyTurret.TryRegisterForInterferenceUpdate();
+			}
 		}
 	}
 
@@ -2168,20 +2249,24 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 		Vis.Entities(((Component)this).transform.position, Sentry.interferenceradius, list, 256, (QueryTriggerInteraction)1);
 		foreach (AutoTurret item in list)
 		{
-			if (created)
+			if (!((Object)(object)item == (Object)(object)this))
 			{
-				nearbyTurrets.Add(item);
-				item.nearbyTurrets.Add(this);
-			}
-			else
-			{
-				item.nearbyTurrets.Remove(this);
+				if (created)
+				{
+					nearbyTurrets.Add(item);
+					item.nearbyTurrets.Add(this);
+				}
+				else
+				{
+					item.nearbyTurrets.Remove(this);
+				}
 			}
 		}
 		if (!created)
 		{
 			nearbyTurrets.Clear();
 		}
+		Pool.FreeList<AutoTurret>(ref list);
 	}
 
 	public void TargetScan()
@@ -2419,7 +2504,7 @@ public class AutoTurret : ContainerIOEntity, IRemoteControllable
 		return default(ItemContainerId);
 	}
 
-	public override int GetIdealSlot(BasePlayer player, Item item)
+	public override int GetIdealSlot(BasePlayer player, ItemContainer container, Item item)
 	{
 		bool num = item.info.category == ItemCategory.Weapon;
 		bool flag = item.info.category == ItemCategory.Ammunition;

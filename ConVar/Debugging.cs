@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using Facepunch;
 using Facepunch.Extend;
@@ -29,6 +30,12 @@ public class Debugging : ConsoleSystem
 	[ServerVar(Help = "Do not damage any items")]
 	public static bool disablecondition = false;
 
+	[ServerVar]
+	public static int tutorial_start_cooldown = 60;
+
+	[ServerVar]
+	public static bool printMissionSpeakInfo = false;
+
 	[ClientVar]
 	[ServerVar]
 	public static bool callbacks = false;
@@ -48,7 +55,7 @@ public class Debugging : ConsoleSystem
 	}
 
 	[ServerVar]
-	[ClientVar]
+	[ClientVar(ClientAdmin = true)]
 	public static void renderinfo(Arg arg)
 	{
 		RenderInfo.GenerateReport();
@@ -66,7 +73,7 @@ public class Debugging : ConsoleSystem
 				arg.ReplyWith("Must be called from client with player model");
 				return;
 			}
-			basePlayer.ClientRPCPlayer(null, basePlayer, "TogglePlayerMovement", @bool);
+			basePlayer.ClientRPC(RpcTarget.Player("TogglePlayerMovement", basePlayer), @bool);
 			arg.ReplyWith((@bool ? "enabled" : "disabled") + " player movement");
 		}
 	}
@@ -161,6 +168,27 @@ public class Debugging : ConsoleSystem
 		return "Playing cinematic";
 	}
 
+	[ServerVar(Help = "If a player ends up stuck on a tutorial for any reason this will clear the island and reset the player (will also kill player)")]
+	public static void clearTutorialForPlayer(Arg arg)
+	{
+		BasePlayer player = arg.GetPlayer(0);
+		if ((Object)(object)player == (Object)null)
+		{
+			arg.ReplyWith("Please provide a player");
+		}
+		else if (player.IsInTutorial)
+		{
+			TutorialIsland currentTutorialIsland = player.GetCurrentTutorialIsland();
+			if ((Object)(object)currentTutorialIsland != (Object)null)
+			{
+				currentTutorialIsland.Return();
+			}
+			player.ClearTutorial();
+			player.Hurt(99999f);
+			player.ClearTutorial_PostDeath();
+		}
+	}
+
 	[ServerVar]
 	public static void deleteEntitiesByShortname(Arg arg)
 	{
@@ -206,7 +234,7 @@ public class Debugging : ConsoleSystem
 			while (enumerator.MoveNext())
 			{
 				BaseNetworkable current = enumerator.Current;
-				Debug.Log((object)$"{current.PrefabName}:{current.net.group.ID}");
+				Debug.Log((object)string.Format("{0}:{1}{2}", current.PrefabName, current.net.group.ID, current.net.group.restricted ? "/Restricted" : string.Empty));
 			}
 		}
 		finally
@@ -231,6 +259,16 @@ public class Debugging : ConsoleSystem
 	{
 		Item activeItem = arg.Player().GetActiveItem();
 		activeItem?.LoseCondition(activeItem.condition * 2f);
+	}
+
+	[ServerVar(Help = "Almost break the current held object")]
+	public static void breakheld_almost(Arg arg)
+	{
+		Item activeItem = arg.Player().GetActiveItem();
+		if (activeItem != null && activeItem.hasCondition)
+		{
+			activeItem.condition = 1f;
+		}
 	}
 
 	[ServerVar(Help = "reset all puzzles")]
@@ -362,6 +400,7 @@ public class Debugging : ConsoleSystem
 		AdjustCalories(arg.Player(), 1000f);
 		AdjustHydration(arg.Player(), 1000f);
 		AdjustRadiation(arg.Player(), -10000f);
+		AdjustBleeding(arg.Player(), -10000f);
 	}
 
 	[ServerVar]
@@ -464,6 +503,11 @@ public class Debugging : ConsoleSystem
 	private static void AdjustRadiation(BasePlayer player, float amount, float time = 1f)
 	{
 		player.metabolism.SetAttribute(MetabolismAttribute.Type.Radiation, amount);
+	}
+
+	private static void AdjustBleeding(BasePlayer player, float amount, float time = 1f)
+	{
+		player.metabolism.SetAttribute(MetabolismAttribute.Type.Bleeding, amount);
 	}
 
 	private static void setattribute(Arg arg, MetabolismAttribute.Type type)
@@ -579,7 +623,7 @@ public class Debugging : ConsoleSystem
 			//IL_0091: Unknown result type (might be due to invalid IL or missing references)
 			int num = 0;
 			int num2 = 0;
-			WireTool.WireColour wireColour = WireTool.WireColour.Default;
+			WireTool.WireColour wireColour = WireTool.WireColour.Gray;
 			IOEntity.IOSlot iOSlot = InputIOEnt.inputs[num];
 			IOEntity.IOSlot obj = OutputIOEnt.outputs[num2];
 			iOSlot.connectedTo.Set(OutputIOEnt);
@@ -649,13 +693,18 @@ public class Debugging : ConsoleSystem
 		}
 	}
 
-	[ServerVar]
+	[ServerUserVar]
 	public static void startTutorial(Arg arg)
 	{
+		if (!Server.tutorialEnabled)
+		{
+			arg.ReplyWith("Tutorial is not enabled on this server");
+			return;
+		}
 		BasePlayer basePlayer = arg.Player();
 		if ((Object)(object)basePlayer != (Object)null && !basePlayer.IsInTutorial)
 		{
-			basePlayer.StartTutorial();
+			basePlayer.StartTutorial(triggerAnalytics: false);
 		}
 	}
 
@@ -668,8 +717,60 @@ public class Debugging : ConsoleSystem
 			TutorialIsland currentTutorialIsland = basePlayer.GetCurrentTutorialIsland();
 			if ((Object)(object)currentTutorialIsland != (Object)null)
 			{
-				currentTutorialIsland.OnPlayerCompletedTutorial(basePlayer);
+				currentTutorialIsland.OnPlayerCompletedTutorial(basePlayer, isQuit: false, triggerAnalytics: false);
 			}
 		}
+	}
+
+	[ServerUserVar(ServerAdmin = false)]
+	public static void quitTutorial(Arg arg)
+	{
+		BasePlayer basePlayer = arg.Player();
+		if ((Object)(object)basePlayer != (Object)null && basePlayer.IsInTutorial)
+		{
+			TutorialIsland currentTutorialIsland = basePlayer.GetCurrentTutorialIsland();
+			if ((Object)(object)currentTutorialIsland != (Object)null)
+			{
+				currentTutorialIsland.OnPlayerCompletedTutorial(basePlayer, isQuit: true, triggerAnalytics: true);
+			}
+		}
+	}
+
+	[ServerVar]
+	public static void tutorialStatus(Arg arg)
+	{
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Expected O, but got Unknown
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		ListHashSet<TutorialIsland> tutorialList = TutorialIsland.GetTutorialList(isServer: true);
+		TextTable val = new TextTable();
+		val.AddColumns(new string[5] { "Index", "ID", "Player Name", "Duration", "IsConnected" });
+		int num = 0;
+		Enumerator<TutorialIsland> enumerator = tutorialList.GetEnumerator();
+		try
+		{
+			while (enumerator.MoveNext())
+			{
+				TutorialIsland current = enumerator.Current;
+				BasePlayer basePlayer = current.ForPlayer.Get(serverside: true);
+				val.AddRow(new string[5]
+				{
+					num++.ToString(),
+					(current.net.group.ID - 1).ToString(),
+					((Object)(object)basePlayer != (Object)null) ? basePlayer.displayName : "NULL",
+					current.TutorialDuration.ToShortString(),
+					((Object)(object)basePlayer != (Object)null) ? basePlayer.IsConnected.ToString() : "NULL"
+				});
+			}
+		}
+		finally
+		{
+			((IDisposable)enumerator).Dispose();
+		}
+		StringBuilder stringBuilder = new StringBuilder();
+		stringBuilder.AppendLine($"Tutorial islands in use: {num}/{TutorialIsland.MaxTutorialIslandCount}");
+		stringBuilder.AppendLine(((object)val).ToString());
+		arg.ReplyWith(stringBuilder.ToString());
 	}
 }

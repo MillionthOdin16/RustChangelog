@@ -1,4 +1,5 @@
 using System;
+using Facepunch.Flexbox;
 using Rust.UI;
 using UnityEngine;
 
@@ -39,4 +40,13 @@ public class ChangeSignText : UIDialog
 	public RustSlider brushSpacingSlider;
 
 	public RustSlider brushOpacitySlider;
+
+	[Header("Layout")]
+	public FlexElement rootElement;
+
+	public FlexElement bodyElement;
+
+	public FlexElement controlsElement;
+
+	public FlexElement floatElement;
 }
