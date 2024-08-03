@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class LightPulse : MonoBehaviour, IClientComponent
 {
-	public Light TargetLight;
+	public Light TargetLight = null;
 
 	public float PulseSpeed = 1f;
 

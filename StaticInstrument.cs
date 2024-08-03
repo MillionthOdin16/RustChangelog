@@ -6,13 +6,13 @@ using UnityEngine.Assertions;
 
 public class StaticInstrument : BaseMountable
 {
-	public AnimatorOverrideController AnimatorOverride;
+	public AnimatorOverrideController AnimatorOverride = null;
 
-	public bool ShowDeployAnimation;
+	public bool ShowDeployAnimation = false;
 
 	public InstrumentKeyController KeyController;
 
-	public bool ShouldSuppressHandsAnimationLayer;
+	public bool ShouldSuppressHandsAnimationLayer = false;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -24,7 +24,7 @@ public class StaticInstrument : BaseMountable
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_PlayNote "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_PlayNote "));
 				}
 				TimeWarning val2 = TimeWarning.New("Server_PlayNote", 0);
 				try
@@ -60,12 +60,12 @@ public class StaticInstrument : BaseMountable
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_StopNote "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_StopNote "));
 				}
-				TimeWarning val2 = TimeWarning.New("Server_StopNote", 0);
+				TimeWarning val4 = TimeWarning.New("Server_StopNote", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Call", 0);
+					TimeWarning val5 = TimeWarning.New("Call", 0);
 					try
 					{
 						RPCMessage rPCMessage = default(RPCMessage);
@@ -77,7 +77,7 @@ public class StaticInstrument : BaseMountable
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val5)?.Dispose();
 					}
 				}
 				catch (Exception ex2)
@@ -87,7 +87,7 @@ public class StaticInstrument : BaseMountable
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val4)?.Dispose();
 				}
 				return true;
 			}

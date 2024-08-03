@@ -14,7 +14,7 @@ public class BossFormController : ArcadeEntityController
 
 		public ArcadeEntityController damageInstance;
 
-		public bool destroyed;
+		public bool destroyed = false;
 	}
 
 	public float animationSpeed = 0.5f;

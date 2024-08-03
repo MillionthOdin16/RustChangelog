@@ -17,7 +17,7 @@ public class SwapArrows : MonoBehaviour, IClientComponent
 	[NonSerialized]
 	private string curAmmoType = "";
 
-	private bool wasHidden;
+	private bool wasHidden = false;
 
 	public void SelectArrowType(int iType)
 	{
@@ -31,9 +31,9 @@ public class SwapArrows : MonoBehaviour, IClientComponent
 	public void HideAllArrowHeads()
 	{
 		GameObject[] array = arrowModels;
-		for (int i = 0; i < array.Length; i++)
+		foreach (GameObject val in array)
 		{
-			array[i].SetActive(false);
+			val.SetActive(false);
 		}
 	}
 

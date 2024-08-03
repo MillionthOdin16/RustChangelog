@@ -25,28 +25,28 @@ public class SoundDefinition : ScriptableObject
 
 	public SoundClass soundClass;
 
-	public bool defaultToFirstPerson;
+	public bool defaultToFirstPerson = false;
 
-	public bool loop;
+	public bool loop = false;
 
-	public bool randomizeStartPosition;
+	public bool randomizeStartPosition = false;
 
-	public bool useHighQualityFades;
+	public bool useHighQualityFades = false;
 
 	[Range(0f, 1f)]
 	public float volume = 1f;
 
 	[Range(0f, 1f)]
-	public float volumeVariation;
+	public float volumeVariation = 0f;
 
 	[Range(-3f, 3f)]
 	public float pitch = 1f;
 
 	[Range(0f, 1f)]
-	public float pitchVariation;
+	public float pitchVariation = 0f;
 
 	[Header("Voice limiting")]
-	public bool dontVoiceLimit;
+	public bool dontVoiceLimit = false;
 
 	public int globalVoiceMaxCount = 100;
 
@@ -59,10 +59,10 @@ public class SoundDefinition : ScriptableObject
 	public float localVoiceDebounceTime = 0.1f;
 
 	[Header("Occlusion Settings")]
-	public bool forceOccludedPlayback;
+	public bool forceOccludedPlayback = false;
 
 	[Header("Doppler")]
-	public bool enableDoppler;
+	public bool enableDoppler = false;
 
 	public float dopplerAmount = 0.18f;
 
@@ -73,15 +73,15 @@ public class SoundDefinition : ScriptableObject
 	[Header("Custom curves")]
 	public AnimationCurve falloffCurve;
 
-	public bool useCustomFalloffCurve;
+	public bool useCustomFalloffCurve = false;
 
 	public AnimationCurve spatialBlendCurve;
 
-	public bool useCustomSpatialBlendCurve;
+	public bool useCustomSpatialBlendCurve = false;
 
 	public AnimationCurve spreadCurve;
 
-	public bool useCustomSpreadCurve;
+	public bool useCustomSpreadCurve = false;
 
 	public float maxDistance
 	{

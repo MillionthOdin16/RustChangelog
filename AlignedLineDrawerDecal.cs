@@ -1,4 +1,4 @@
 public class AlignedLineDrawerDecal : AlignedLineDrawer, INotifyLOD
 {
-	public DeferredDecal decalComponent;
+	public DeferredDecal decalComponent = null;
 }

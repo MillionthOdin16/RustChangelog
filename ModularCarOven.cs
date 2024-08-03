@@ -6,7 +6,7 @@ using UnityEngine.Assertions;
 
 public class ModularCarOven : BaseOven
 {
-	private BaseVehicleModule moduleParent;
+	private BaseVehicleModule moduleParent = null;
 
 	private BaseVehicleModule ModuleParent
 	{
@@ -31,7 +31,7 @@ public class ModularCarOven : BaseOven
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SVSwitch "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SVSwitch "));
 				}
 				TimeWarning val2 = TimeWarning.New("SVSwitch", 0);
 				try
@@ -50,7 +50,7 @@ public class ModularCarOven : BaseOven
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -62,7 +62,7 @@ public class ModularCarOven : BaseOven
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -93,7 +93,7 @@ public class ModularCarOven : BaseOven
 
 	protected override void SVSwitch(RPCMessage msg)
 	{
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
 		if (!((Object)(object)ModuleParent == (Object)null) && ModuleParent.CanBeLooted(msg.player) && !WaterLevel.Test(((Component)this).transform.position, waves: true, volumes: false))
 		{
 			base.SVSwitch(msg);
@@ -111,7 +111,7 @@ public class ModularCarOven : BaseOven
 
 	protected override void OnCooked()
 	{
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
 		base.OnCooked();
 		if (WaterLevel.Test(((Component)this).transform.position, waves: true, volumes: false))
 		{

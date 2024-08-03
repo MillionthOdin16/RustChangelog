@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Rust;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 public class WaterVisibilityTrigger : EnvironmentVolumeTrigger
 {
@@ -8,7 +9,7 @@ public class WaterVisibilityTrigger : EnvironmentVolumeTrigger
 
 	public bool toggleVisuals = true;
 
-	private long enteredTick;
+	private long enteredTick = 0L;
 
 	private static long ticks = 1L;
 
@@ -54,55 +55,43 @@ public class WaterVisibilityTrigger : EnvironmentVolumeTrigger
 
 	protected void OnTriggerEnter(Collider other)
 	{
-		bool num = (Object)(object)((Component)other).gameObject.GetComponent<PlayerWalkMovement>() != (Object)null;
-		bool flag = ((Component)other).gameObject.CompareTag("MainCamera");
-		if ((num || flag) && !tracker.ContainsValue(this))
+		Profiler.BeginSample("WaterVisibilityTrigger.OnTriggerEnter");
+		bool flag = (Object)(object)((Component)other).gameObject.GetComponent<PlayerWalkMovement>() != (Object)null;
+		bool flag2 = ((Component)other).gameObject.CompareTag("MainCamera");
+		if ((flag || flag2) && !tracker.ContainsValue(this))
 		{
 			enteredTick = ticks++;
 			tracker.Add(enteredTick, this);
 			ToggleVisibility();
 		}
-		if (!flag && !other.isTrigger)
+		if (!flag2 && !other.isTrigger)
 		{
 			ToggleCollision(other);
 		}
+		Profiler.EndSample();
 	}
 
 	protected void OnTriggerExit(Collider other)
 	{
-		bool num = (Object)(object)((Component)other).gameObject.GetComponent<PlayerWalkMovement>() != (Object)null;
-		bool flag = ((Component)other).gameObject.CompareTag("MainCamera");
-		if ((num || flag) && tracker.ContainsValue(this))
+		Profiler.BeginSample("WaterVisibilityTrigger.OnTriggerExit");
+		bool flag = (Object)(object)((Component)other).gameObject.GetComponent<PlayerWalkMovement>() != (Object)null;
+		bool flag2 = ((Component)other).gameObject.CompareTag("MainCamera");
+		if ((flag || flag2) && tracker.ContainsValue(this))
 		{
 			tracker.Remove(enteredTick);
 			if (tracker.Count > 0)
 			{
-				bool flag2 = false;
-				foreach (WaterVisibilityTrigger value in tracker.Values)
-				{
-					if (value.toggleVisuals)
-					{
-						flag2 = true;
-						break;
-					}
-				}
-				if (flag2)
-				{
-					tracker.Values[tracker.Count - 1].ToggleVisibility();
-				}
-				else
-				{
-					ResetVisibility();
-				}
+				tracker.Values[tracker.Count - 1].ToggleVisibility();
 			}
 			else
 			{
 				ResetVisibility();
 			}
 		}
-		if (!flag && !other.isTrigger)
+		if (!flag2 && !other.isTrigger)
 		{
 			ResetCollision(other);
 		}
+		Profiler.EndSample();
 	}
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Facepunch.Rust;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 public class BigWheelGame : SpinnerWheel
 {
@@ -15,7 +16,7 @@ public class BigWheelGame : SpinnerWheel
 	[ServerVar]
 	public static float spinFrequencySeconds = 45f;
 
-	protected int spinNumber;
+	protected int spinNumber = 0;
 
 	protected int lastPaidSpinNumber = -1;
 
@@ -68,7 +69,7 @@ public class BigWheelGame : SpinnerWheel
 
 	protected void InitBettingTerminals()
 	{
-		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
 		terminals.Clear();
 		Vis.Entities(((Component)this).transform.position, 30f, terminals, 256, (QueryTriggerInteraction)2);
 		terminals = terminals.Distinct().ToList();
@@ -103,6 +104,7 @@ public class BigWheelGame : SpinnerWheel
 
 	public void Payout()
 	{
+		Profiler.BeginSample("BigWheelGame.Payout");
 		HitNumber currentHitType = GetCurrentHitType();
 		Guid value = Guid.NewGuid();
 		foreach (BigWheelBettingTerminal terminal in terminals)
@@ -141,12 +143,13 @@ public class BigWheelGame : SpinnerWheel
 		}
 		ItemManager.DoRemoves();
 		SetTerminalsLocked(isLocked: false);
+		Profiler.EndSample();
 	}
 
 	public HitNumber GetCurrentHitType()
 	{
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
 		HitNumber result = null;
 		float num = float.PositiveInfinity;
 		HitNumber[] array = hitNumbers;

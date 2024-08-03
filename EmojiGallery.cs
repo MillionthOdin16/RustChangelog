@@ -9,17 +9,17 @@ public class EmojiGallery : MonoBehaviour
 
 	public RustEmojiLibrary Library;
 
-	public GameObject HighlightRoot;
+	public GameObject HighlightRoot = null;
 
-	public RustText HighlightText;
+	public RustText HighlightText = null;
 
-	public EmojiController SkinIndicator;
+	public EmojiController SkinIndicator = null;
 
 	public EmojiController[] SkinToneGallery;
 
 	public RustEmojiConfig SkinDemoConfig;
 
-	public GameObject SkinPickerRoot;
+	public GameObject SkinPickerRoot = null;
 
 	public TmProEmojiInputField TargetInputField;
 }

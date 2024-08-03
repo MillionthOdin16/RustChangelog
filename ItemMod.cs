@@ -52,9 +52,9 @@ public class ItemMod : MonoBehaviour
 	public virtual bool CanDoAction(Item item, BasePlayer player)
 	{
 		ItemMod[] array = siblingMods;
-		for (int i = 0; i < array.Length; i++)
+		foreach (ItemMod itemMod in array)
 		{
-			if (!array[i].Passes(item))
+			if (!itemMod.Passes(item))
 			{
 				return false;
 			}

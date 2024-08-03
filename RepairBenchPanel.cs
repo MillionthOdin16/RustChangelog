@@ -25,5 +25,5 @@ public class RepairBenchPanel : LootPanel
 
 	public IconSkinPicker picker;
 
-	public GameObject attachmentSkinBlocker;
+	public GameObject attachmentSkinBlocker = null;
 }

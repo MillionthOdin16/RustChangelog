@@ -1,5 +1,6 @@
 using Facepunch;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 public class Model : MonoBehaviour, IPrefabPreProcess
 {
@@ -16,12 +17,12 @@ public class Model : MonoBehaviour, IPrefabPreProcess
 	public Skeleton skeleton;
 
 	[HideInInspector]
-	public Transform[] boneTransforms;
+	public Transform[] boneTransforms = null;
 
 	[HideInInspector]
-	public string[] boneNames;
+	public string[] boneNames = null;
 
-	internal BoneDictionary boneDict;
+	internal BoneDictionary boneDict = null;
 
 	internal int skin;
 
@@ -46,7 +47,10 @@ public class Model : MonoBehaviour, IPrefabPreProcess
 	private Transform FindBoneInternal(string name)
 	{
 		BuildBoneDictionary();
-		return boneDict.FindBone(name, defaultToRoot: false);
+		Profiler.BeginSample("Model.FindBoneInternal");
+		Transform result = boneDict.FindBone(name, defaultToRoot: false);
+		Profiler.EndSample();
+		return result;
 	}
 
 	public Transform FindBone(string name)
@@ -57,7 +61,10 @@ public class Model : MonoBehaviour, IPrefabPreProcess
 		{
 			return result;
 		}
-		return boneDict.FindBone(name);
+		Profiler.BeginSample("Model.FindBone");
+		result = boneDict.FindBone(name);
+		Profiler.EndSample();
+		return result;
 	}
 
 	public Transform FindBone(uint hash)
@@ -68,13 +75,19 @@ public class Model : MonoBehaviour, IPrefabPreProcess
 		{
 			return result;
 		}
-		return boneDict.FindBone(hash);
+		Profiler.BeginSample("Model.FindBone");
+		result = boneDict.FindBone(hash);
+		Profiler.EndSample();
+		return result;
 	}
 
 	public uint FindBoneID(Transform transform)
 	{
 		BuildBoneDictionary();
-		return boneDict.FindBoneID(transform);
+		Profiler.BeginSample("Model.FindBoneID");
+		uint result = boneDict.FindBoneID(transform);
+		Profiler.EndSample();
+		return result;
 	}
 
 	public Transform[] GetBones()
@@ -85,10 +98,11 @@ public class Model : MonoBehaviour, IPrefabPreProcess
 
 	public Transform FindClosestBone(Vector3 worldPos)
 	{
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
 		Transform result = rootBone;
 		float num = float.MaxValue;
+		Profiler.BeginSample("Model.FindClosestBone");
 		for (int i = 0; i < boneTransforms.Length; i++)
 		{
 			Transform val = boneTransforms[i];
@@ -102,6 +116,7 @@ public class Model : MonoBehaviour, IPrefabPreProcess
 				}
 			}
 		}
+		Profiler.EndSample();
 		return result;
 	}
 

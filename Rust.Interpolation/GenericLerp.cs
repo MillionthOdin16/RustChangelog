@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 namespace Rust.Interpolation;
 
@@ -39,6 +40,7 @@ public class GenericLerp<T> : IDisposable where T : ISnapshot<T>, new()
 	{
 		if (target != null)
 		{
+			Profiler.BeginSample("GenericLerp.Update");
 			float extrapolationTime = target.GetExtrapolationTime();
 			float interpolationDelay = target.GetInterpolationDelay();
 			float interpolationSmoothing = target.GetInterpolationSmoothing();
@@ -57,11 +59,13 @@ public class GenericLerp<T> : IDisposable where T : ISnapshot<T>, new()
 				segment.tick.Lerp(target.GetCurrentState(), segment.tick, delta);
 			}
 			target.SetFrom(segment.tick);
+			Profiler.EndSample();
 		}
 	}
 
 	public void Snapshot(T snapshot)
 	{
+		Profiler.BeginSample("GenericLerp.Snapshot");
 		float interpolationDelay = target.GetInterpolationDelay();
 		float interpolationSmoothing = target.GetInterpolationSmoothing();
 		float num = interpolationDelay + interpolationSmoothing + 1f;
@@ -80,6 +84,7 @@ public class GenericLerp<T> : IDisposable where T : ISnapshot<T>, new()
 		lerpTime = (snapshot.Time += TimeOffset);
 		interpolator.Add(snapshot);
 		interpolator.Cull(lerpTime - num);
+		Profiler.EndSample();
 	}
 
 	public void SnapTo(T snapshot)

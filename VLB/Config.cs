@@ -12,17 +12,17 @@ public class Config : ScriptableObject
 
 	public int geometryRenderQueue = 3000;
 
-	public bool forceSinglePass;
+	public bool forceSinglePass = false;
 
 	[SerializeField]
 	[HighlightNull]
-	private Shader beamShader1Pass;
+	private Shader beamShader1Pass = null;
 
 	[FormerlySerializedAs("BeamShader")]
 	[FormerlySerializedAs("beamShader")]
 	[SerializeField]
 	[HighlightNull]
-	private Shader beamShader2Pass;
+	private Shader beamShader2Pass = null;
 
 	public int sharedMeshSides = 24;
 
@@ -34,26 +34,16 @@ public class Config : ScriptableObject
 	public Vector3 globalNoiseVelocity = Consts.NoiseVelocityDefault;
 
 	[HighlightNull]
-	public TextAsset noise3DData;
+	public TextAsset noise3DData = null;
 
 	public int noise3DSize = 64;
 
 	[HighlightNull]
-	public ParticleSystem dustParticlesPrefab;
+	public ParticleSystem dustParticlesPrefab = null;
 
-	private static Config m_Instance;
+	private static Config m_Instance = null;
 
-	public Shader beamShader
-	{
-		get
-		{
-			if (!forceSinglePass)
-			{
-				return beamShader2Pass;
-			}
-			return beamShader1Pass;
-		}
-	}
+	public Shader beamShader => forceSinglePass ? beamShader1Pass : beamShader2Pass;
 
 	public Vector4 globalNoiseParam => new Vector4(globalNoiseVelocity.x, globalNoiseVelocity.y, globalNoiseVelocity.z, globalNoiseScale);
 
@@ -73,8 +63,8 @@ public class Config : ScriptableObject
 
 	public void Reset()
 	{
-		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
 		geometryLayerID = 1;
 		geometryTag = "Untagged";
 		geometryRenderQueue = 3000;
@@ -95,7 +85,7 @@ public class Config : ScriptableObject
 
 	public ParticleSystem NewVolumetricDustParticles()
 	{
-		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
 		if (!Object.op_Implicit((Object)(object)dustParticlesPrefab))
 		{
 			if (Application.isPlaying)
@@ -104,11 +94,11 @@ public class Config : ScriptableObject
 			}
 			return null;
 		}
-		ParticleSystem obj = Object.Instantiate<ParticleSystem>(dustParticlesPrefab);
-		obj.useAutoRandomSeed = false;
-		((Object)obj).name = "Dust Particles";
-		((Object)((Component)obj).gameObject).hideFlags = Consts.ProceduralObjectsHideFlags;
-		((Component)obj).gameObject.SetActive(true);
-		return obj;
+		ParticleSystem val = Object.Instantiate<ParticleSystem>(dustParticlesPrefab);
+		val.useAutoRandomSeed = false;
+		((Object)val).name = "Dust Particles";
+		((Object)((Component)val).gameObject).hideFlags = Consts.ProceduralObjectsHideFlags;
+		((Component)val).gameObject.SetActive(true);
+		return val;
 	}
 }

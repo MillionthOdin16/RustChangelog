@@ -22,17 +22,7 @@ public class IndividualSpawner : BaseMonoBehaviour, IServerComponent, ISpawnPoin
 
 	private float nextSpawnTime = -1f;
 
-	public int currentPopulation
-	{
-		get
-		{
-			if (!((Object)(object)spawnInstance == (Object)null))
-			{
-				return 1;
-			}
-			return 0;
-		}
-	}
+	public int currentPopulation => (!((Object)(object)spawnInstance == (Object)null)) ? 1 : 0;
 
 	private bool IsSpawned => (Object)(object)spawnInstance != (Object)null;
 
@@ -62,10 +52,10 @@ public class IndividualSpawner : BaseMonoBehaviour, IServerComponent, ISpawnPoin
 
 	protected void OnDrawGizmosSelected()
 	{
-		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
 		if (TryGetEntityBounds(out var result))
 		{
 			Gizmos.color = Color.yellow;
@@ -120,13 +110,13 @@ public class IndividualSpawner : BaseMonoBehaviour, IServerComponent, ISpawnPoin
 
 	public bool HasSpaceToSpawn()
 	{
-		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
 		if (useCustomBoundsCheckMask)
 		{
 			return SpawnHandler.CheckBounds(entityPrefab.Get(), ((Component)this).transform.position, ((Component)this).transform.rotation, Vector3.one, customBoundsCheckMask);
@@ -134,10 +124,10 @@ public class IndividualSpawner : BaseMonoBehaviour, IServerComponent, ISpawnPoin
 		return SingletonComponent<SpawnHandler>.Instance.CheckBounds(entityPrefab.Get(), ((Component)this).transform.position, ((Component)this).transform.rotation, Vector3.one);
 	}
 
-	protected virtual void TrySpawnEntity()
+	private void TrySpawnEntity()
 	{
-		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
 		if (!isSpawnerActive || IsSpawned)
 		{
 			return;
@@ -168,9 +158,9 @@ public class IndividualSpawner : BaseMonoBehaviour, IServerComponent, ISpawnPoin
 
 	private bool TryGetEntityBounds(out Bounds result)
 	{
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
 		if (entityPrefab != null)
 		{
 			GameObject val = entityPrefab.Get();

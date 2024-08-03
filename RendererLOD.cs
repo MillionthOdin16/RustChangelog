@@ -21,5 +21,5 @@ public class RendererLOD : LODComponent, IBatchingHandler
 		public bool isImpostor;
 	}
 
-	public State[] States;
+	public State[] States = null;
 }

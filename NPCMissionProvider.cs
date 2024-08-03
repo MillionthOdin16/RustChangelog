@@ -6,13 +6,17 @@ public class NPCMissionProvider : NPCTalking, IMissionProvider
 
 	public NetworkableId ProviderID()
 	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
 		return net.ID;
 	}
 
 	public Vector3 ProviderPosition()
 	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
 		return ((Component)this).transform.position;
 	}
 
@@ -23,16 +27,16 @@ public class NPCMissionProvider : NPCTalking, IMissionProvider
 
 	public override void OnConversationEnded(BasePlayer player)
 	{
-		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0004: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
 		player.ProcessMissionEvent(BaseMission.MissionEventType.CONVERSATION, ProviderID().Value.ToString(), 0f);
 		base.OnConversationEnded(player);
 	}
 
 	public override void OnConversationStarted(BasePlayer speakingTo)
 	{
-		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0004: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
 		speakingTo.ProcessMissionEvent(BaseMission.MissionEventType.CONVERSATION, ProviderID().Value.ToString(), 1f);
 		base.OnConversationStarted(speakingTo);
 	}
@@ -40,12 +44,12 @@ public class NPCMissionProvider : NPCTalking, IMissionProvider
 	public bool ContainsSpeech(string speech)
 	{
 		ConversationData[] array = conversations;
-		for (int i = 0; i < array.Length; i++)
+		foreach (ConversationData conversationData in array)
 		{
-			ConversationData.SpeechNode[] speeches = array[i].speeches;
-			for (int j = 0; j < speeches.Length; j++)
+			ConversationData.SpeechNode[] speeches = conversationData.speeches;
+			foreach (ConversationData.SpeechNode speechNode in speeches)
 			{
-				if (speeches[j].shortname == speech)
+				if (speechNode.shortname == speech)
 				{
 					return true;
 				}
@@ -56,17 +60,13 @@ public class NPCMissionProvider : NPCTalking, IMissionProvider
 
 	public string IntroOverride(string overrideSpeech)
 	{
-		if (!ContainsSpeech(overrideSpeech))
-		{
-			return "intro";
-		}
-		return overrideSpeech;
+		return ContainsSpeech(overrideSpeech) ? overrideSpeech : "intro";
 	}
 
 	public override string GetConversationStartSpeech(BasePlayer player)
 	{
-		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
 		string text = "";
 		foreach (BaseMission.MissionInstance mission in player.missions)
 		{
@@ -74,9 +74,13 @@ public class NPCMissionProvider : NPCTalking, IMissionProvider
 			{
 				text = IntroOverride("missionactive");
 			}
-			if (mission.status == BaseMission.MissionStatus.Completed && mission.providerID == ProviderID() && Time.time - mission.endTime < 5f)
+			if (mission.status == BaseMission.MissionStatus.Completed && mission.providerID == ProviderID())
 			{
-				text = IntroOverride("missionreturn");
+				float num = Time.time - mission.endTime;
+				if (num < 5f)
+				{
+					text = IntroOverride("missionreturn");
+				}
 			}
 		}
 		if (string.IsNullOrEmpty(text))
@@ -91,7 +95,8 @@ public class NPCMissionProvider : NPCTalking, IMissionProvider
 		if (action.Contains("assignmission"))
 		{
 			int num = action.IndexOf(" ");
-			BaseMission fromShortName = MissionManifest.GetFromShortName(action.Substring(num + 1));
+			string shortname = action.Substring(num + 1);
+			BaseMission fromShortName = MissionManifest.GetFromShortName(shortname);
 			if (Object.op_Implicit((Object)(object)fromShortName))
 			{
 				BaseMission.AssignMission(player, this, fromShortName);

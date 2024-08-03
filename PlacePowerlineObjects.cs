@@ -30,18 +30,18 @@ public class PlacePowerlineObjects : ProceduralComponent
 			{
 				item2.TrimStart(obj);
 			}
-			start = End;
-			foreach (PathList.BasicObject obj2 in start)
+			PathList.BasicObject[] end = End;
+			foreach (PathList.BasicObject obj2 in end)
 			{
 				item2.TrimEnd(obj2);
 			}
-			start = Start;
-			foreach (PathList.BasicObject obj3 in start)
+			PathList.BasicObject[] start2 = Start;
+			foreach (PathList.BasicObject obj3 in start2)
 			{
 				item2.SpawnStart(ref seed, obj3);
 			}
-			start = End;
-			foreach (PathList.BasicObject obj4 in start)
+			PathList.BasicObject[] end2 = End;
+			foreach (PathList.BasicObject obj4 in end2)
 			{
 				item2.SpawnEnd(ref seed, obj4);
 			}

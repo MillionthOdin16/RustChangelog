@@ -24,12 +24,10 @@ public static class Output
 
 	public static event Action<string, string, LogType> OnMessage;
 
-	public static event Action<string, string, LogType> OnPostMessage;
-
 	public static void Install()
 	{
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0019: Expected O, but got Unknown
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Expected O, but got Unknown
 		if (!installed)
 		{
 			Application.logMessageReceived += new LogCallback(LogHandler);
@@ -39,29 +37,18 @@ public static class Output
 
 	internal static void LogHandler(string log, string stacktrace, LogType type)
 	{
-		//IL_019f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0186: Unknown result type (might be due to invalid IL or missing references)
-		if ((Output.OnMessage == null && Output.OnPostMessage == null) || log.StartsWith("Kinematic body only supports Speculative Continuous collision detection") || log.StartsWith("Non-convex MeshCollider with non-kinematic Rigidbody is no longer supported") || log.StartsWith("Skipped frame because GfxDevice") || log.StartsWith("Your current multi-scene setup has inconsistent Lighting") || log.Contains("HandleD3DDeviceLost") || log.Contains("ResetD3DDevice") || log.Contains("dev->Reset") || log.Contains("D3Dwindow device not lost anymore") || log.Contains("D3D device reset") || log.Contains("group < 0xfff") || log.Contains("Mesh can not have more than 65000 vert") || log.Contains("Trying to add (Layout Rebuilder for)") || log.Contains("Coroutine continue failure") || log.Contains("No texture data available to upload") || log.Contains("Trying to reload asset from disk that is not") || log.Contains("Unable to find shaders used for the terrain engine.") || log.Contains("Canvas element contains more than 65535 vertices") || log.Contains("RectTransform.set_anchorMin") || log.Contains("FMOD failed to initialize the output device") || log.Contains("Cannot create FMOD::Sound") || log.Contains("invalid utf-16 sequence") || log.Contains("missing surrogate tail") || log.Contains("Failed to create agent because it is not close enough to the Nav") || log.Contains("user-provided triangle mesh descriptor is invalid") || log.Contains("Releasing render texture that is set as"))
+		//IL_024e: Unknown result type (might be due to invalid IL or missing references)
+		if (Output.OnMessage == null || log.StartsWith("Kinematic body only supports Speculative Continuous collision detection") || log.StartsWith("Non-convex MeshCollider with non-kinematic Rigidbody is no longer supported") || log.StartsWith("Skipped frame because GfxDevice") || log.StartsWith("Your current multi-scene setup has inconsistent Lighting") || log.Contains("HandleD3DDeviceLost") || log.Contains("ResetD3DDevice") || log.Contains("dev->Reset") || log.Contains("D3Dwindow device not lost anymore") || log.Contains("D3D device reset") || log.Contains("group < 0xfff") || log.Contains("Mesh can not have more than 65000 vert") || log.Contains("Trying to add (Layout Rebuilder for)") || log.Contains("Coroutine continue failure") || log.Contains("No texture data available to upload") || log.Contains("Trying to reload asset from disk that is not") || log.Contains("Unable to find shaders used for the terrain engine.") || log.Contains("Canvas element contains more than 65535 vertices") || log.Contains("RectTransform.set_anchorMin") || log.Contains("FMOD failed to initialize the output device") || log.Contains("Cannot create FMOD::Sound") || log.Contains("invalid utf-16 sequence") || log.Contains("missing surrogate tail") || log.Contains("Failed to create agent because it is not close enough to the Nav") || log.Contains("user-provided triangle mesh descriptor is invalid") || log.Contains("Releasing render texture that is set as"))
 		{
 			return;
 		}
 		TimeWarning val = TimeWarning.New("Facepunch.Output.LogHandler", 0);
 		try
 		{
-			try
-			{
-				Output.OnMessage?.Invoke(log, stacktrace, type);
-			}
-			catch (Exception)
-			{
-			}
-			try
-			{
-				Output.OnPostMessage?.Invoke(log, stacktrace, type);
-			}
-			catch (Exception)
-			{
-			}
+			Output.OnMessage?.Invoke(log, stacktrace, type);
+		}
+		catch (Exception)
+		{
 		}
 		finally
 		{

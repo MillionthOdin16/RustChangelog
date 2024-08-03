@@ -16,15 +16,17 @@ public class AIMovePoint : AIPoint
 
 	public float radius = 1f;
 
-	public float WaitTime;
+	public float WaitTime = 0f;
 
-	public List<Transform> LookAtPoints;
+	public List<Transform> LookAtPoints = null;
 
 	public void OnDrawGizmos()
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
 		Color color = Gizmos.color;
 		Gizmos.color = Color.green;
 		GizmosUtil.DrawWireCircleY(((Component)this).transform.position, radius);
@@ -33,13 +35,13 @@ public class AIMovePoint : AIPoint
 
 	public void DrawLookAtPoints()
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
 		Color color = Gizmos.color;
 		Gizmos.color = Color.gray;
 		if (LookAtPoints != null)
@@ -72,11 +74,7 @@ public class AIMovePoint : AIPoint
 
 	public bool HasLookAtPoints()
 	{
-		if (LookAtPoints != null)
-		{
-			return LookAtPoints.Count > 0;
-		}
-		return false;
+		return LookAtPoints != null && LookAtPoints.Count > 0;
 	}
 
 	public Transform GetRandomLookAtPoint()

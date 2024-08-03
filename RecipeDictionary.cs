@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 public static class RecipeDictionary
 {
@@ -37,9 +38,11 @@ public static class RecipeDictionary
 		{
 			return null;
 		}
+		Profiler.BeginSample("RecipeDictionary.GetMatchingRecipe");
 		List<Recipe> recipesByFirstIngredient = GetRecipesByFirstIngredient(recipeList, orderedIngredients[0]);
 		if (recipesByFirstIngredient == null)
 		{
+			Profiler.EndSample();
 			return null;
 		}
 		foreach (Recipe item2 in recipesByFirstIngredient)
@@ -72,16 +75,19 @@ public static class RecipeDictionary
 				}
 				num2++;
 			}
-			if (flag)
+			if (!flag)
 			{
-				quantity = num;
-				if (quantity > 1 && !item2.CanQueueMultiple)
-				{
-					quantity = 1;
-				}
-				return item2;
+				continue;
 			}
+			quantity = num;
+			if (quantity > 1 && !item2.CanQueueMultiple)
+			{
+				quantity = 1;
+			}
+			Profiler.EndSample();
+			return item2;
 		}
+		Profiler.EndSample();
 		return null;
 	}
 

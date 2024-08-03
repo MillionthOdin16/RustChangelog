@@ -42,7 +42,7 @@ public class SmartAlarm : AppIOEntity, ISubscribable
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SetNotificationTextImpl "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SetNotificationTextImpl "));
 				}
 				TimeWarning val2 = TimeWarning.New("SetNotificationTextImpl", 0);
 				try
@@ -65,7 +65,7 @@ public class SmartAlarm : AppIOEntity, ISubscribable
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -77,7 +77,7 @@ public class SmartAlarm : AppIOEntity, ISubscribable
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -97,12 +97,12 @@ public class SmartAlarm : AppIOEntity, ISubscribable
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - StartSetupNotification "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - StartSetupNotification "));
 				}
-				TimeWarning val2 = TimeWarning.New("StartSetupNotification", 0);
+				TimeWarning val5 = TimeWarning.New("StartSetupNotification", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					TimeWarning val6 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.CallsPerSecond.Test(4207149767u, "StartSetupNotification", this, player, 5uL))
@@ -116,11 +116,11 @@ public class SmartAlarm : AppIOEntity, ISubscribable
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val6)?.Dispose();
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val7 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -132,7 +132,7 @@ public class SmartAlarm : AppIOEntity, ISubscribable
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val7)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -143,7 +143,7 @@ public class SmartAlarm : AppIOEntity, ISubscribable
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val5)?.Dispose();
 				}
 				return true;
 			}

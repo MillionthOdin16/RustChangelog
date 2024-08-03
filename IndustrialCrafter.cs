@@ -10,13 +10,13 @@ public class IndustrialCrafter : IndustrialEntity, IItemContainerEntity, IIdealS
 {
 	public string LootPanelName = "generic";
 
-	public bool NeedsBuildingPrivilegeToUse;
+	public bool NeedsBuildingPrivilegeToUse = false;
 
-	public bool OnlyOneUser;
+	public bool OnlyOneUser = false;
 
-	public SoundDefinition ContainerOpenSound;
+	public SoundDefinition ContainerOpenSound = null;
 
-	public SoundDefinition ContainerCloseSound;
+	public SoundDefinition ContainerCloseSound = null;
 
 	public AnimationCurve MaterialOffsetCurve = AnimationCurve.Linear(0f, 0f, 1f, 1f);
 
@@ -34,9 +34,9 @@ public class IndustrialCrafter : IndustrialEntity, IItemContainerEntity, IIdealS
 
 	public const int BlueprintSlotEnd = 3;
 
-	private ItemDefinition currentlyCrafting;
+	private ItemDefinition currentlyCrafting = null;
 
-	private int currentlyCraftingAmount;
+	private int currentlyCraftingAmount = 0;
 
 	private const int StorageSize = 12;
 
@@ -82,7 +82,7 @@ public class IndustrialCrafter : IndustrialEntity, IItemContainerEntity, IIdealS
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_OpenLoot "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_OpenLoot "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_OpenLoot", 0);
 				try
@@ -101,7 +101,7 @@ public class IndustrialCrafter : IndustrialEntity, IItemContainerEntity, IIdealS
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -113,7 +113,7 @@ public class IndustrialCrafter : IndustrialEntity, IItemContainerEntity, IIdealS
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -133,12 +133,12 @@ public class IndustrialCrafter : IndustrialEntity, IItemContainerEntity, IIdealS
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SvSwitch "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SvSwitch "));
 				}
-				TimeWarning val2 = TimeWarning.New("SvSwitch", 0);
+				TimeWarning val5 = TimeWarning.New("SvSwitch", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					TimeWarning val6 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.CallsPerSecond.Test(4167839872u, "SvSwitch", this, player, 2uL))
@@ -152,11 +152,11 @@ public class IndustrialCrafter : IndustrialEntity, IItemContainerEntity, IIdealS
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val6)?.Dispose();
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val7 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -168,7 +168,7 @@ public class IndustrialCrafter : IndustrialEntity, IItemContainerEntity, IIdealS
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val7)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -179,7 +179,7 @@ public class IndustrialCrafter : IndustrialEntity, IItemContainerEntity, IIdealS
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val5)?.Dispose();
 				}
 				return true;
 			}
@@ -327,9 +327,9 @@ public class IndustrialCrafter : IndustrialEntity, IItemContainerEntity, IIdealS
 
 	protected override void RunJob()
 	{
-		//IL_01bf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01df: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01eb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0238: Unknown result type (might be due to invalid IL or missing references)
+		//IL_025a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0266: Unknown result type (might be due to invalid IL or missing references)
 		base.RunJob();
 		if (Server.industrialCrafterFrequency <= 0f || HasFlag(Flags.Reserved1) || (Object)(object)currentlyCrafting != (Object)null)
 		{
@@ -346,7 +346,8 @@ public class IndustrialCrafter : IndustrialEntity, IItemContainerEntity, IIdealS
 			bool flag = true;
 			foreach (ItemAmount ingredient in blueprint.ingredients)
 			{
-				if ((float)GetInputAmount(ingredient.itemDef) < ingredient.amount)
+				int inputAmount = GetInputAmount(ingredient.itemDef);
+				if ((float)inputAmount < ingredient.amount)
 				{
 					flag = false;
 					break;
@@ -389,13 +390,13 @@ public class IndustrialCrafter : IndustrialEntity, IItemContainerEntity, IIdealS
 
 	private void CompleteCraft()
 	{
-		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00de: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ec: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0100: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0107: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010d: Unknown result type (might be due to invalid IL or missing references)
 		bool flag = false;
 		for (int i = 8; i <= 11; i++)
 		{
@@ -418,7 +419,8 @@ public class IndustrialCrafter : IndustrialEntity, IItemContainerEntity, IIdealS
 		}
 		if (!flag)
 		{
-			ItemManager.Create(currentlyCrafting, currentlyCraftingAmount, 0uL).Drop(((Component)this).transform.position + ((Component)this).transform.forward * 0.5f, Vector3.zero);
+			Item item2 = ItemManager.Create(currentlyCrafting, currentlyCraftingAmount, 0uL);
+			item2.Drop(((Component)this).transform.position + ((Component)this).transform.forward * 0.5f, Vector3.zero);
 		}
 		currentlyCrafting = null;
 		currentlyCraftingAmount = 0;
@@ -504,8 +506,11 @@ public class IndustrialCrafter : IndustrialEntity, IItemContainerEntity, IIdealS
 
 	public Vector2i InputSlotRange(int slotIndex)
 	{
-		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
 		if (slotIndex == 3)
 		{
 			return new Vector2i(0, 3);
@@ -515,8 +520,11 @@ public class IndustrialCrafter : IndustrialEntity, IItemContainerEntity, IIdealS
 
 	public Vector2i OutputSlotRange(int slotIndex)
 	{
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
 		if (slotIndex == 1)
 		{
 			return new Vector2i(0, 3);
@@ -604,11 +612,7 @@ public class IndustrialCrafter : IndustrialEntity, IItemContainerEntity, IIdealS
 	{
 		if (base.isServer)
 		{
-			if (inventory != null && inventory.IsEmpty())
-			{
-				return base.CanPickup(player);
-			}
-			return false;
+			return inventory != null && inventory.IsEmpty() && base.CanPickup(player);
 		}
 		return base.CanPickup(player);
 	}
@@ -620,8 +624,10 @@ public class IndustrialCrafter : IndustrialEntity, IItemContainerEntity, IIdealS
 
 	public ItemContainerId GetIdealContainer(BasePlayer player, Item item, bool altMove)
 	{
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
 		return default(ItemContainerId);
 	}
 

@@ -19,13 +19,18 @@ public class WaterPurifier : LiquidContainer
 
 	public int freshWaterRatio = 4;
 
-	public bool stopWhenOutputFull;
+	public bool stopWhenOutputFull = false;
 
 	protected LiquidContainer waterStorage;
 
-	private float dirtyWaterProcssed;
+	private float dirtyWaterProcssed = 0f;
 
-	private float pendingFreshWater;
+	private float pendingFreshWater = 0f;
+
+	public bool IsBoiling()
+	{
+		return HasFlag(Flags.Reserved1);
+	}
 
 	public override void ServerInit()
 	{
@@ -44,8 +49,8 @@ public class WaterPurifier : LiquidContainer
 
 	protected virtual void SpawnStorageEnt(bool load)
 	{
-		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00be: Unknown result type (might be due to invalid IL or missing references)
 		if (load)
 		{
 			BaseEntity baseEntity = GetParentEntity();
@@ -102,11 +107,7 @@ public class WaterPurifier : LiquidContainer
 	public bool HasDirtyWater()
 	{
 		Item slot = base.inventory.GetSlot(0);
-		if (slot != null && slot.info.itemType == ItemContainer.ContentsType.Liquid)
-		{
-			return slot.amount > 0;
-		}
-		return false;
+		return slot != null && slot.info.itemType == ItemContainer.ContentsType.Liquid && slot.amount > 0;
 	}
 
 	public void Cook(float timeCooked)
@@ -184,10 +185,5 @@ public class WaterPurifier : LiquidContainer
 		{
 			SetFlag(Flags.On, b: false);
 		}
-	}
-
-	public bool IsBoiling()
-	{
-		return HasFlag(Flags.Reserved1);
 	}
 }

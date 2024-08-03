@@ -20,10 +20,6 @@ public interface IConnection
 
 	void Subscribe(EntityTarget target);
 
-	void Subscribe(ClanTarget target);
-
-	void Unsubscribe(ClanTarget target);
-
 	bool BeginViewing(IRemoteControllable camera);
 
 	void EndViewing();

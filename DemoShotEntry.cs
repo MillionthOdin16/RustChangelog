@@ -5,7 +5,7 @@ public class DemoShotEntry : MonoBehaviour
 {
 	public RustButton PlayButton;
 
-	public Sprite DragSprite;
+	public Sprite DragSprite = null;
 
-	public RustInput RenameInput;
+	public RustInput RenameInput = null;
 }

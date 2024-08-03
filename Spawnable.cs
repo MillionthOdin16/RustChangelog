@@ -6,7 +6,7 @@ using UnityEngine;
 public class Spawnable : MonoBehaviour, IServerComponent
 {
 	[ReadOnly]
-	public SpawnPopulationBase Population;
+	public SpawnPopulation Population;
 
 	[SerializeField]
 	private bool ForceSpawnOnly;
@@ -40,12 +40,12 @@ public class Spawnable : MonoBehaviour, IServerComponent
 
 	private void Add()
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
 		SpawnPosition = ((Component)this).transform.position;
 		SpawnRotation = ((Component)this).transform.rotation;
 		if (!Object.op_Implicit((Object)(object)SingletonComponent<SpawnHandler>.Instance))
@@ -87,7 +87,7 @@ public class Spawnable : MonoBehaviour, IServerComponent
 	{
 		if (info.msg.spawnable != null)
 		{
-			Population = FileSystem.Load<SpawnPopulationBase>(StringPool.Get(info.msg.spawnable.population), true);
+			Population = FileSystem.Load<SpawnPopulation>(StringPool.Get(info.msg.spawnable.population), true);
 		}
 		Add();
 	}

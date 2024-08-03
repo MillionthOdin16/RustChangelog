@@ -7,6 +7,7 @@ using ProtoBuf;
 using Rust;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.Profiling;
 
 public class MotorRowboat : BaseBoat
 {
@@ -37,6 +38,8 @@ public class MotorRowboat : BaseBoat
 
 	public float splashAccentFrequencyMax = 10f;
 
+	protected const Flags Flag_EngineOn = Flags.Reserved1;
+
 	protected const Flags Flag_ThrottleOn = Flags.Reserved2;
 
 	protected const Flags Flag_TurnLeft = Flags.Reserved3;
@@ -52,8 +55,6 @@ public class MotorRowboat : BaseBoat
 	protected const Flags Flag_Dying = Flags.Broken;
 
 	private const float submergeFractionMinimum = 0.85f;
-
-	public float deathSinkRate = 0.1f;
 
 	[Header("Fuel")]
 	public GameObjectRef fuelStoragePrefab;
@@ -110,9 +111,9 @@ public class MotorRowboat : BaseBoat
 
 	protected EntityFuelSystem fuelSystem;
 
-	public Transform[] stationaryDismounts;
-
 	protected TimeSince timeSinceLastUsedFuel;
+
+	public Transform[] stationaryDismounts;
 
 	public float angularDragBase = 0.5f;
 
@@ -132,7 +133,7 @@ public class MotorRowboat : BaseBoat
 
 	private TimeSince startedFlip;
 
-	private float lastHadDriverTime;
+	private float lastHadDriverTime = 0f;
 
 	private const float maxVelForStationaryDismount = 4f;
 
@@ -148,7 +149,7 @@ public class MotorRowboat : BaseBoat
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_EngineToggle "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_EngineToggle "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_EngineToggle", 0);
 				try
@@ -184,12 +185,12 @@ public class MotorRowboat : BaseBoat
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_OpenFuel "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_OpenFuel "));
 				}
-				TimeWarning val2 = TimeWarning.New("RPC_OpenFuel", 0);
+				TimeWarning val4 = TimeWarning.New("RPC_OpenFuel", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Call", 0);
+					TimeWarning val5 = TimeWarning.New("Call", 0);
 					try
 					{
 						RPCMessage rPCMessage = default(RPCMessage);
@@ -201,7 +202,7 @@ public class MotorRowboat : BaseBoat
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val5)?.Dispose();
 					}
 				}
 				catch (Exception ex2)
@@ -211,7 +212,7 @@ public class MotorRowboat : BaseBoat
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val4)?.Dispose();
 				}
 				return true;
 			}
@@ -231,8 +232,8 @@ public class MotorRowboat : BaseBoat
 
 	public override void ServerInit()
 	{
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
 		base.ServerInit();
 		timeSinceLastUsedFuel = TimeSince.op_Implicit(0f);
 		((FacepunchBehaviour)this).InvokeRandomized((Action)BoatDecay, Random.Range(30f, 60f), 60f, 6f);
@@ -275,7 +276,7 @@ public class MotorRowboat : BaseBoat
 
 	public virtual void BoatDecay()
 	{
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
 		if (!IsDying)
 		{
 			BaseBoat.WaterVehicleDecay(this, 60f, TimeSince.op_Implicit(timeSinceLastUsedFuel), outsidedecayminutes, deepwaterdecayminutes, decaystartdelayminutes, preventDecayIndoors);
@@ -284,46 +285,48 @@ public class MotorRowboat : BaseBoat
 
 	protected override void DoPushAction(BasePlayer player)
 	{
-		//IL_0095: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00af: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00d6: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00db: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e6: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00eb: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00f0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ff: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0106: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0101: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0103: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0108: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0111: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0116: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0129: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0158: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0160: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01bb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_018e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0193: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0119: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0125: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0143: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0172: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0177: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01e5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ea: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b6: Unknown result type (might be due to invalid IL or missing references)
 		if (IsFlipped())
 		{
 			Vector3 val = ((Component)this).transform.InverseTransformPoint(((Component)player).transform.position);
@@ -365,12 +368,12 @@ public class MotorRowboat : BaseBoat
 
 	private void FlipMonitor()
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
 		float num = Vector3.Dot(Vector3.up, ((Component)this).transform.up);
 		rigidBody.angularVelocity = Vector3.Lerp(rigidBody.angularVelocity, Vector3.zero, Time.fixedDeltaTime * 8f * num);
 		if (TimeSince.op_Implicit(startedFlip) > 3f)
@@ -411,7 +414,7 @@ public class MotorRowboat : BaseBoat
 	{
 		if (fuelSystem.HasFuel(forceCheck: true))
 		{
-			SetFlag(Flags.On, wantsOn);
+			SetFlag(Flags.Reserved1, wantsOn);
 		}
 	}
 
@@ -429,9 +432,9 @@ public class MotorRowboat : BaseBoat
 
 	public void CheckInvalidBoat()
 	{
-		bool num = fuelStoragePrefab.isValid && !fuelSystem.fuelStorageInstance.IsValid(base.isServer);
-		bool flag = storageUnitPrefab.isValid && !storageUnitInstance.IsValid(base.isServer);
-		if (num || flag)
+		bool flag = fuelStoragePrefab.isValid && !fuelSystem.fuelStorageInstance.IsValid(base.isServer);
+		bool flag2 = storageUnitPrefab.isValid && !storageUnitInstance.IsValid(base.isServer);
+		if (flag || flag2)
 		{
 			Debug.Log((object)"Destroying invalid boat ");
 			((FacepunchBehaviour)this).Invoke((Action)ActualDeath, 1f);
@@ -445,7 +448,7 @@ public class MotorRowboat : BaseBoat
 
 	public override bool EngineOn()
 	{
-		return IsOn();
+		return HasFlag(Flags.Reserved1);
 	}
 
 	public float TimeSinceDriver()
@@ -461,14 +464,12 @@ public class MotorRowboat : BaseBoat
 
 	public override void VehicleFixedUpdate()
 	{
-		//IL_00b7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0161: Unknown result type (might be due to invalid IL or missing references)
-		if (IsTransferProtected())
-		{
-			return;
-		}
+		//IL_00f9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c7: Unknown result type (might be due to invalid IL or missing references)
 		base.VehicleFixedUpdate();
+		Profiler.BeginSample("MotorRowboat.VehicleFixedUpdate");
+		Profiler.BeginSample("Input");
 		float num = TimeSinceDriver();
 		if (num > 15f)
 		{
@@ -479,11 +480,15 @@ public class MotorRowboat : BaseBoat
 				gasPedal = 0f;
 			}
 		}
+		Profiler.EndSample();
 		SetFlags();
+		Profiler.BeginSample("UpdateDrag");
 		UpdateDrag();
+		Profiler.EndSample();
+		Profiler.BeginSample("Buoyancy.Scale");
 		if (IsDying)
 		{
-			buoyancy.buoyancyScale = Mathf.Lerp(buoyancy.buoyancyScale, 0f, Time.fixedDeltaTime * deathSinkRate);
+			buoyancy.buoyancyScale = Mathf.Lerp(buoyancy.buoyancyScale, 0f, Time.fixedDeltaTime * 0.1f);
 		}
 		else
 		{
@@ -497,12 +502,16 @@ public class MotorRowboat : BaseBoat
 			float num5 = 1f - 0.3f * (1f - base.healthFraction);
 			buoyancy.buoyancyScale = (num2 + num4) * num5;
 		}
+		Profiler.EndSample();
+		Profiler.BeginSample("UseFuel");
 		if (EngineOn())
 		{
 			float num6 = (HasFlag(Flags.Reserved2) ? 1f : 0.0333f);
 			fuelSystem.TryUseFuel(Time.fixedDeltaTime * num6, fuelPerSec);
 			timeSinceLastUsedFuel = TimeSince.op_Implicit(0f);
 		}
+		Profiler.EndSample();
+		Profiler.EndSample();
 	}
 
 	private void SetFlags()
@@ -511,15 +520,15 @@ public class MotorRowboat : BaseBoat
 		try
 		{
 			bool b = EngineOn() && !IsFlipped() && base.healthFraction > 0f && fuelSystem.HasFuel() && TimeSinceDriver() < 75f;
-			Flags num = flags;
+			Flags flags = base.flags;
 			SetFlag(Flags.Reserved3, steering > 0f, recursive: false, networkupdate: false);
 			SetFlag(Flags.Reserved4, steering < 0f, recursive: false, networkupdate: false);
-			SetFlag(Flags.On, b, recursive: false, networkupdate: false);
+			SetFlag(Flags.Reserved1, b, recursive: false, networkupdate: false);
 			SetFlag(Flags.Reserved2, EngineOn() && gasPedal != 0f, recursive: false, networkupdate: false);
 			SetFlag(Flags.Reserved9, buoyancy.submergedFraction > 0.85f, recursive: false, networkupdate: false);
 			SetFlag(Flags.Reserved6, fuelSystem.HasFuel(), recursive: false, networkupdate: false);
 			SetFlag(Flags.Reserved8, base.RecentlyPushed, recursive: false, networkupdate: false);
-			if (num != flags)
+			if (flags != base.flags)
 			{
 				((FacepunchBehaviour)this).Invoke((Action)base.SendNetworkUpdate_Flags, 0f);
 			}
@@ -532,20 +541,16 @@ public class MotorRowboat : BaseBoat
 
 	protected override bool DetermineIfStationary()
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 localVelocity = GetLocalVelocity();
-		if (((Vector3)(ref localVelocity)).sqrMagnitude < 0.5f)
-		{
-			return !AnyMounted();
-		}
-		return false;
+		return ((Vector3)(ref localVelocity)).sqrMagnitude < 0.5f && !AnyMounted();
 	}
 
 	public override void SeatClippedWorld(BaseMountable mountable)
 	{
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer mounted = mountable.GetMounted();
 		if (!((Object)(object)mounted == (Object)null))
 		{
@@ -569,14 +574,15 @@ public class MotorRowboat : BaseBoat
 
 	public void UpdateDrag()
 	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
 		float num = Vector3Ex.SqrMagnitude2D(rigidBody.velocity);
 		float num2 = Mathf.InverseLerp(0f, 2f, num);
-		float num3 = angularDragBase * (IsOn() ? 1f : engineOffAngularDragMultiplier);
+		bool flag = HasFlag(Flags.Reserved1);
+		float num3 = angularDragBase * (flag ? 1f : engineOffAngularDragMultiplier);
 		rigidBody.angularDrag = num3 + angularDragVelocity * num2;
 		rigidBody.drag = landDrag + waterDrag * Mathf.InverseLerp(0f, 1f, buoyancy.submergedFraction);
 		if (offAxisDrag > 0f)
@@ -613,8 +619,8 @@ public class MotorRowboat : BaseBoat
 
 	public override bool MountEligable(BasePlayer player)
 	{
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
 		if (IsDying)
 		{
 			return false;
@@ -629,9 +635,9 @@ public class MotorRowboat : BaseBoat
 
 	public override bool HasValidDismountPosition(BasePlayer player)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 worldVelocity = GetWorldVelocity();
 		if (((Vector3)(ref worldVelocity)).magnitude <= 4f)
 		{
@@ -649,14 +655,14 @@ public class MotorRowboat : BaseBoat
 
 	public override bool GetDismountPosition(BasePlayer player, out Vector3 res)
 	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ba: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 velocity = rigidBody.velocity;
 		if (((Vector3)(ref velocity)).magnitude <= 4f)
 		{
@@ -682,23 +688,12 @@ public class MotorRowboat : BaseBoat
 		return base.GetDismountPosition(player, out res);
 	}
 
-	public override void DisableTransferProtection()
-	{
-		if ((Object)(object)GetDriver() != (Object)null && IsOn())
-		{
-			gasPedal = 0f;
-			steering = 0f;
-			lastHadDriverTime = Time.time;
-		}
-		base.DisableTransferProtection();
-	}
-
 	public override void Save(SaveInfo info)
 	{
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
 		base.Save(info);
 		info.msg.motorBoat = Pool.Get<Motorboat>();
 		info.msg.motorBoat.storageid = storageUnitInstance.uid;
@@ -707,8 +702,8 @@ public class MotorRowboat : BaseBoat
 
 	protected override bool CanPushNow(BasePlayer pusher)
 	{
-		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
 		if (!base.CanPushNow(pusher))
 		{
 			return false;
@@ -729,11 +724,7 @@ public class MotorRowboat : BaseBoat
 		{
 			return false;
 		}
-		if (!pusher.isMounted && pusher.IsOnGround() && base.healthFraction > 0f)
-		{
-			return ShowPushMenu(pusher);
-		}
-		return false;
+		return !pusher.isMounted && pusher.IsOnGround() && base.healthFraction > 0f && ShowPushMenu(pusher);
 	}
 
 	private bool ShowPushMenu(BasePlayer player)
@@ -742,21 +733,13 @@ public class MotorRowboat : BaseBoat
 		{
 			return false;
 		}
-		if (IsStationary())
-		{
-			if (!(player.WaterFactor() <= 0.6f))
-			{
-				return IsFlipped();
-			}
-			return true;
-		}
-		return false;
+		return IsStationary() && (player.WaterFactor() <= 0.6f || IsFlipped());
 	}
 
 	public override void Load(LoadInfo info)
 	{
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
 		base.Load(info);
 		if (info.msg.motorBoat != null)
 		{

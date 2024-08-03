@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.Serialization;
 
-[CreateAssetMenu(menuName = "Scriptable Object/Vehicles/Train Wagon Loot Data", fileName = "Train Wagon Loot Data")]
+[CreateAssetMenu(menuName = "Rust/Vehicles/Train Wagon Loot Data", fileName = "Train Wagon Loot Data")]
 public class TrainWagonLootData : ScriptableObject
 {
 	[Serializable]
@@ -135,7 +135,15 @@ public class TrainWagonLootData : ScriptableObject
 		if (sc.IsValid())
 		{
 			int maxLootAmount = lootOption.maxLootAmount;
-			result = (((float)maxLootAmount != 0f) ? Mathf.Clamp01((float)sc.inventory.GetAmount(lootOption.lootItem.itemid, onlyUsableAmounts: false) / (float)maxLootAmount) : 0f);
+			if ((float)maxLootAmount == 0f)
+			{
+				result = 0f;
+			}
+			else
+			{
+				int amount = sc.inventory.GetAmount(lootOption.lootItem.itemid, onlyUsableAmounts: false);
+				result = Mathf.Clamp01((float)amount / (float)maxLootAmount);
+			}
 		}
 		return result;
 	}

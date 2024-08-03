@@ -15,7 +15,7 @@ public class FreeableLootContainer : LootContainer
 
 	private Rigidbody rb;
 
-	public uint skinOverride;
+	public uint skinOverride = 0u;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -27,7 +27,7 @@ public class FreeableLootContainer : LootContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_FreeCrate "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_FreeCrate "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_FreeCrate", 0);
 				try
@@ -46,7 +46,7 @@ public class FreeableLootContainer : LootContainer
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -58,7 +58,7 @@ public class FreeableLootContainer : LootContainer
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -129,8 +129,8 @@ public class FreeableLootContainer : LootContainer
 
 	public void Release(BasePlayer ply)
 	{
-		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
 		GetRB().isKinematic = false;
 		((Behaviour)buoyancy).enabled = true;
 		buoyancy.buoyancyScale = 1f;

@@ -6,25 +6,6 @@ using UnityEngine;
 
 public class VehicleSpawner : BaseEntity
 {
-	public interface IVehicleSpawnUser
-	{
-		string ShortPrefabName { get; }
-
-		bool IsClient { get; }
-
-		bool IsDestroyed { get; }
-
-		void SetupOwner(BasePlayer owner, Vector3 newSafeAreaOrigin, float newSafeAreaRadius);
-
-		bool IsDespawnEligable();
-
-		EntityFuelSystem GetFuelSystem();
-
-		int StartingFuelUnits();
-
-		void Kill(DestroyMode mode);
-	}
-
 	[Serializable]
 	public class SpawnPair
 	{
@@ -52,28 +33,24 @@ public class VehicleSpawner : BaseEntity
 		return 32768;
 	}
 
-	public IVehicleSpawnUser GetVehicleOccupying()
+	public BaseVehicle GetVehicleOccupying()
 	{
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-		IVehicleSpawnUser result = null;
-		List<IVehicleSpawnUser> list = Pool.GetList<IVehicleSpawnUser>();
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		BaseVehicle result = null;
+		List<BaseVehicle> list = Pool.GetList<BaseVehicle>();
 		Vis.Entities(((Component)spawnOffset).transform.position, occupyRadius, list, GetOccupyLayer(), (QueryTriggerInteraction)1);
 		if (list.Count > 0)
 		{
 			result = list[0];
 		}
-		Pool.FreeList<IVehicleSpawnUser>(ref list);
+		Pool.FreeList<BaseVehicle>(ref list);
 		return result;
 	}
 
 	public bool IsPadOccupied()
 	{
-		IVehicleSpawnUser vehicleOccupying = GetVehicleOccupying();
-		if (vehicleOccupying != null)
-		{
-			return !vehicleOccupying.IsDespawnEligable();
-		}
-		return false;
+		BaseVehicle vehicleOccupying = GetVehicleOccupying();
+		return (Object)(object)vehicleOccupying != (Object)null && !vehicleOccupying.IsDespawnEligable();
 	}
 
 	public override void OnEntityMessage(BaseEntity from, string msg)
@@ -95,16 +72,16 @@ public class VehicleSpawner : BaseEntity
 		}
 	}
 
-	public IVehicleSpawnUser SpawnVehicle(string prefabToSpawn, BasePlayer newOwner)
+	public BaseVehicle SpawnVehicle(string prefabToSpawn, BasePlayer newOwner)
 	{
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
 		CleanupArea(cleanupRadius);
 		NudgePlayersInRadius(spawnNudgeRadius);
 		BaseEntity baseEntity = GameManager.server.CreateEntity(prefabToSpawn, ((Component)spawnOffset).transform.position, ((Component)spawnOffset).transform.rotation);
 		baseEntity.Spawn();
-		IVehicleSpawnUser component = ((Component)baseEntity).GetComponent<IVehicleSpawnUser>();
+		BaseVehicle component = ((Component)baseEntity).GetComponent<BaseVehicle>();
 		if ((Object)(object)newOwner != (Object)null)
 		{
 			component.SetupOwner(newOwner, ((Component)spawnOffset).transform.position, safeRadius);
@@ -123,15 +100,15 @@ public class VehicleSpawner : BaseEntity
 
 	public void CleanupArea(float radius)
 	{
-		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
-		List<IVehicleSpawnUser> list = Pool.GetList<IVehicleSpawnUser>();
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
+		List<BaseVehicle> list = Pool.GetList<BaseVehicle>();
 		Vis.Entities(((Component)spawnOffset).transform.position, radius, list, 32768, (QueryTriggerInteraction)2);
-		foreach (IVehicleSpawnUser item in list)
+		foreach (BaseVehicle item in list)
 		{
-			if (!item.IsClient && !item.IsDestroyed)
+			if (!item.isClient && !item.IsDestroyed)
 			{
-				item.Kill(DestroyMode.None);
+				item.Kill();
 			}
 		}
 		List<ServerGib> list2 = Pool.GetList<ServerGib>();
@@ -143,29 +120,29 @@ public class VehicleSpawner : BaseEntity
 				item2.Kill();
 			}
 		}
-		Pool.FreeList<IVehicleSpawnUser>(ref list);
+		Pool.FreeList<BaseVehicle>(ref list);
 		Pool.FreeList<ServerGib>(ref list2);
 	}
 
 	public void NudgePlayersInRadius(float radius)
 	{
-		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
 		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0093: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c3: Unknown result type (might be due to invalid IL or missing references)
 		List<BasePlayer> list = Pool.GetList<BasePlayer>();
 		Vis.Entities(((Component)spawnOffset).transform.position, radius, list, 131072, (QueryTriggerInteraction)2);
 		foreach (BasePlayer item in list)

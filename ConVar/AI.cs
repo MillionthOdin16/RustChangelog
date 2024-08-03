@@ -252,14 +252,14 @@ public class AI : ConsoleSystem
 	public static void killscientists(Arg args)
 	{
 		ScientistNPC[] array = BaseEntity.Util.FindAll<ScientistNPC>();
-		for (int i = 0; i < array.Length; i++)
+		foreach (ScientistNPC scientistNPC in array)
 		{
-			array[i].Kill();
+			scientistNPC.Kill();
 		}
 		TunnelDweller[] array2 = BaseEntity.Util.FindAll<TunnelDweller>();
-		for (int i = 0; i < array2.Length; i++)
+		foreach (TunnelDweller tunnelDweller in array2)
 		{
-			array2[i].Kill();
+			tunnelDweller.Kill();
 		}
 	}
 
@@ -267,9 +267,9 @@ public class AI : ConsoleSystem
 	public static void killanimals(Arg args)
 	{
 		BaseAnimalNPC[] array = BaseEntity.Util.FindAll<BaseAnimalNPC>();
-		for (int i = 0; i < array.Length; i++)
+		foreach (BaseAnimalNPC baseAnimalNPC in array)
 		{
-			array[i].Kill();
+			baseAnimalNPC.Kill();
 		}
 	}
 

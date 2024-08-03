@@ -1,4 +1,4 @@
 public class SeasonalTimedExplosive : TimedExplosive
 {
-	public RandomRendererEnable randomRenderer;
+	public RandomRendererEnable randomRenderer = null;
 }

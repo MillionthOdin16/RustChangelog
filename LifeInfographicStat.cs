@@ -49,7 +49,7 @@ public class LifeInfographicStat : MonoBehaviour
 
 	public WeaponInfoType weaponInfoType;
 
-	public TextMeshProUGUI targetText;
+	public TextMeshProUGUI targetText = null;
 
 	public Image StatImage;
 }

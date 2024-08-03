@@ -7,7 +7,7 @@ public class BlueprintCategoryButton : MonoBehaviour, IInventoryChanged
 
 	public ItemCategory Category;
 
-	public bool AlwaysShow;
+	public bool AlwaysShow = false;
 
 	public bool ShowItemCount = true;
 

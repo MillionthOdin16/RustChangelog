@@ -36,10 +36,6 @@ public sealed class Grain : PostProcessEffectSettings
 
 	public override bool IsEnabledAndSupported(PostProcessRenderContext context)
 	{
-		if (enabled.value)
-		{
-			return intensity.value > 0f;
-		}
-		return false;
+		return enabled.value && intensity.value > 0f;
 	}
 }

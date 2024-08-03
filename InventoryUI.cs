@@ -4,5 +4,11 @@ public class InventoryUI : MonoBehaviour
 {
 	public GameObject ContactsButton;
 
-	public GameObject ClanButton;
+	private void Update()
+	{
+		if ((Object)(object)ContactsButton != (Object)null && RelationshipManager.contacts != ContactsButton.activeSelf)
+		{
+			ContactsButton.SetActive(RelationshipManager.contacts);
+		}
+	}
 }

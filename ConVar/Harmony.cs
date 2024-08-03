@@ -6,12 +6,14 @@ public class Harmony : ConsoleSystem
 	[ServerVar(Name = "load")]
 	public static void Load(Arg args)
 	{
-		HarmonyLoader.TryLoadMod(args.GetString(0, ""));
+		string @string = args.GetString(0, "");
+		HarmonyLoader.TryLoadMod(@string);
 	}
 
 	[ServerVar(Name = "unload")]
 	public static void Unload(Arg args)
 	{
-		HarmonyLoader.TryUnloadMod(args.GetString(0, ""));
+		string @string = args.GetString(0, "");
+		HarmonyLoader.TryUnloadMod(@string);
 	}
 }

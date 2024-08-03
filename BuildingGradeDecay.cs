@@ -2,7 +2,7 @@ using ConVar;
 
 public class BuildingGradeDecay : Decay
 {
-	public BuildingGrade.Enum decayGrade;
+	public BuildingGrade.Enum decayGrade = BuildingGrade.Enum.Twigs;
 
 	public override float GetDecayDelay(BaseEntity entity)
 	{

@@ -13,7 +13,7 @@ public class DevWeatherAdjust : MonoBehaviour
 
 	protected void OnGUI()
 	{
-		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
 		float num = (float)Screen.width * 0.2f;
 		GUILayout.BeginArea(new Rect((float)Screen.width - num - 20f, 20f, num, 400f), "", GUIStyle.op_Implicit("box"));
 		GUILayout.Box("Weather", Array.Empty<GUILayoutOption>());

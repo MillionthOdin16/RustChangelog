@@ -22,7 +22,7 @@ public class TimerSwitch : IOEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SVSwitch "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SVSwitch "));
 				}
 				TimeWarning val2 = TimeWarning.New("SVSwitch", 0);
 				try
@@ -41,7 +41,7 @@ public class TimerSwitch : IOEntity
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -53,7 +53,7 @@ public class TimerSwitch : IOEntity
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -88,20 +88,12 @@ public class TimerSwitch : IOEntity
 
 	public override bool WantsPassthroughPower()
 	{
-		if (IsPowered())
-		{
-			return IsOn();
-		}
-		return false;
+		return IsPowered() && IsOn();
 	}
 
 	public override int GetPassthroughAmount(int outputSlot = 0)
 	{
-		if (!IsPowered() || !IsOn())
-		{
-			return 0;
-		}
-		return base.GetPassthroughAmount();
+		return (IsPowered() && IsOn()) ? base.GetPassthroughAmount() : 0;
 	}
 
 	public override void UpdateHasPower(int inputAmount, int inputSlot)

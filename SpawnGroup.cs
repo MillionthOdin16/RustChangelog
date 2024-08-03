@@ -13,7 +13,7 @@ public class SpawnGroup : BaseMonoBehaviour, IServerComponent, ISpawnPointUser, 
 
 		public int weight = 1;
 
-		public bool mobile;
+		public bool mobile = false;
 	}
 
 	[InspectorFlags]
@@ -33,11 +33,11 @@ public class SpawnGroup : BaseMonoBehaviour, IServerComponent, ISpawnPointUser, 
 
 	public bool wantsInitialSpawn = true;
 
-	public bool temporary;
+	public bool temporary = false;
 
-	public bool forceInitialSpawn;
+	public bool forceInitialSpawn = false;
 
-	public bool preventDuplicates;
+	public bool preventDuplicates = false;
 
 	public bool isSpawnerActive = true;
 
@@ -48,7 +48,7 @@ public class SpawnGroup : BaseMonoBehaviour, IServerComponent, ISpawnPointUser, 
 	[NonSerialized]
 	public MonumentInfo Monument;
 
-	protected bool fillOnSpawn;
+	protected bool fillOnSpawn = false;
 
 	protected BaseSpawnPoint[] spawnPoints;
 
@@ -80,7 +80,7 @@ public class SpawnGroup : BaseMonoBehaviour, IServerComponent, ISpawnPointUser, 
 
 	protected void Awake()
 	{
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)TerrainMeta.TopologyMap == (Object)null)
 		{
 			return;
@@ -129,9 +129,9 @@ public class SpawnGroup : BaseMonoBehaviour, IServerComponent, ISpawnPointUser, 
 
 	public void Clear()
 	{
-		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
 		for (int num = spawnInstances.Count - 1; num >= 0; num--)
 		{
 			SpawnPointInstance spawnPointInstance = spawnInstances[num];
@@ -221,8 +221,8 @@ public class SpawnGroup : BaseMonoBehaviour, IServerComponent, ISpawnPointUser, 
 
 	protected virtual void Spawn(int numToSpawn)
 	{
-		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
 		numToSpawn = Mathf.Min(numToSpawn, maxPopulation - currentPopulation);
 		for (int i = 0; i < numToSpawn; i++)
 		{
@@ -281,10 +281,10 @@ public class SpawnGroup : BaseMonoBehaviour, IServerComponent, ISpawnPointUser, 
 
 	protected virtual BaseSpawnPoint GetSpawnPoint(GameObjectRef prefabRef, out Vector3 pos, out Quaternion rot)
 	{
-		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0004: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
 		BaseSpawnPoint baseSpawnPoint = null;
 		pos = Vector3.zero;
 		rot = Quaternion.identity;
@@ -312,8 +312,8 @@ public class SpawnGroup : BaseMonoBehaviour, IServerComponent, ISpawnPointUser, 
 
 	protected virtual void OnDrawGizmos()
 	{
-		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
 		Gizmos.color = new Color(1f, 1f, 0f, 1f);
 		Gizmos.DrawSphere(((Component)this).transform.position, 0.25f);
 	}

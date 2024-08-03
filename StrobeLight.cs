@@ -142,7 +142,7 @@ public class StrobeLight : IOEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SetStrobe "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SetStrobe "));
 				}
 				TimeWarning val2 = TimeWarning.New("SetStrobe", 0);
 				try
@@ -161,7 +161,7 @@ public class StrobeLight : IOEntity
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -173,7 +173,7 @@ public class StrobeLight : IOEntity
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -193,12 +193,12 @@ public class StrobeLight : IOEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SetStrobeSpeed "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SetStrobeSpeed "));
 				}
-				TimeWarning val2 = TimeWarning.New("SetStrobeSpeed", 0);
+				TimeWarning val5 = TimeWarning.New("SetStrobeSpeed", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					TimeWarning val6 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsVisible.Test(1814332702u, "SetStrobeSpeed", this, player, 3f))
@@ -208,11 +208,11 @@ public class StrobeLight : IOEntity
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val6)?.Dispose();
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val7 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -224,7 +224,7 @@ public class StrobeLight : IOEntity
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val7)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -235,7 +235,7 @@ public class StrobeLight : IOEntity
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val5)?.Dispose();
 				}
 				return true;
 			}

@@ -11,19 +11,19 @@ public class CoverageQueries : MonoBehaviour
 {
 	public class BufferSet
 	{
-		public int width;
+		public int width = 0;
 
-		public int height;
+		public int height = 0;
 
-		public Texture2D inputTexture;
+		public Texture2D inputTexture = null;
 
-		public RenderTexture resultTexture;
+		public RenderTexture resultTexture = null;
 
 		public Color[] inputData = (Color[])(object)new Color[0];
 
 		public Color32[] resultData = (Color32[])(object)new Color32[0];
 
-		private Material coverageMat;
+		private Material coverageMat = null;
 
 		private const int MaxAsyncGPUReadbackRequests = 10;
 
@@ -57,12 +57,12 @@ public class CoverageQueries : MonoBehaviour
 
 		public bool CheckResize(int count)
 		{
-			//IL_006b: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0075: Expected O, but got Unknown
-			//IL_00ad: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00b7: Expected O, but got Unknown
-			//IL_013e: Unknown result type (might be due to invalid IL or missing references)
-			//IL_013f: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0076: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0080: Expected O, but got Unknown
+			//IL_00bb: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00c5: Expected O, but got Unknown
+			//IL_0157: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0158: Unknown result type (might be due to invalid IL or missing references)
 			if (count > inputData.Length || ((Object)(object)resultTexture != (Object)null && !resultTexture.IsCreated()))
 			{
 				Dispose(data: false);
@@ -104,10 +104,12 @@ public class CoverageQueries : MonoBehaviour
 
 		public void Dispatch(int count)
 		{
-			//IL_0009: Unknown result type (might be due to invalid IL or missing references)
-			//IL_000e: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+			//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_004d: Unknown result type (might be due to invalid IL or missing references)
 			if (inputData.Length != 0)
 			{
 				RenderBuffer activeColorBuffer = Graphics.activeColorBuffer;
@@ -120,7 +122,7 @@ public class CoverageQueries : MonoBehaviour
 
 		public void IssueRead()
 		{
-			//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0023: Unknown result type (might be due to invalid IL or missing references)
 			if (asyncRequests.Count < 10)
 			{
 				asyncRequests.Enqueue(AsyncGPUReadback.Request((Texture)(object)resultTexture, 0, (Action<AsyncGPUReadbackRequest>)null));
@@ -129,14 +131,14 @@ public class CoverageQueries : MonoBehaviour
 
 		public void GetResults()
 		{
-			//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0016: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0026: Unknown result type (might be due to invalid IL or missing references)
-			//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-			//IL_003f: Unknown result type (might be due to invalid IL or missing references)
-			//IL_004e: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0053: Unknown result type (might be due to invalid IL or missing references)
-			//IL_006c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+			//IL_004f: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0054: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+			//IL_006d: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0090: Unknown result type (might be due to invalid IL or missing references)
 			if (resultData.Length == 0)
 			{
 				return;
@@ -229,16 +231,16 @@ public class CoverageQueries : MonoBehaviour
 			}
 		}
 
-		public Input input;
+		public Input input = default(Input);
 
-		public Internal intern;
+		public Internal intern = default(Internal);
 
-		public Result result;
+		public Result result = default(Result);
 
 		public bool IsRegistered => intern.id >= 0;
 	}
 
-	public float depthBias = -0.1f;
+	public bool debug = false;
 
-	public bool debug;
+	public float depthBias = -0.1f;
 }

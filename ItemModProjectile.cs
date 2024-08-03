@@ -11,19 +11,19 @@ public class ItemModProjectile : MonoBehaviour
 
 	public int numProjectiles = 1;
 
-	public float projectileSpread;
+	public float projectileSpread = 0f;
 
 	public float projectileVelocity = 100f;
 
-	public float projectileVelocitySpread;
+	public float projectileVelocitySpread = 0f;
 
-	public bool useCurve;
+	public bool useCurve = false;
 
 	public AnimationCurve spreadScalar;
 
 	public GameObjectRef attackEffectOverride;
 
-	public float barrelConditionLoss;
+	public float barrelConditionLoss = 0f;
 
 	public string category = "bullet";
 
@@ -73,10 +73,10 @@ public class ItemModProjectile : MonoBehaviour
 
 	public bool IsAmmo(AmmoTypes ammo)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0009: Invalid comparison between Unknown and I4
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000a: Invalid comparison between Unknown and I4
 		return (ammoType & ammo) > 0;
 	}
 

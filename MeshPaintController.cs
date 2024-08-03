@@ -17,9 +17,7 @@ public class MeshPaintController : MonoBehaviour, IClientComponent
 
 	public float brushPreviewScaleMultiplier = 1f;
 
-	public Texture2D stampTexture;
-
-	public bool applyDefaults;
+	public bool applyDefaults = false;
 
 	public Texture2D defaltBrushTexture;
 
@@ -28,8 +26,6 @@ public class MeshPaintController : MonoBehaviour, IClientComponent
 	public Color defaultBrushColor = Color.black;
 
 	public float defaultBrushAlpha = 0.5f;
-
-	public float maxBrushScale = 32f;
 
 	public Toggle lastBrush;
 

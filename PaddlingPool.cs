@@ -11,11 +11,11 @@ public class PaddlingPool : LiquidContainer, ISplashable
 
 	public GameObject poolWaterVisual;
 
-	public float minimumWaterHeight;
+	public float minimumWaterHeight = 0f;
 
 	public float maximumWaterHeight = 1f;
 
-	public WaterVolume waterVolume;
+	public WaterVolume waterVolume = null;
 
 	public bool alignWaterUp = true;
 
@@ -23,7 +23,7 @@ public class PaddlingPool : LiquidContainer, ISplashable
 
 	public Transform destroyedWithWaterEffectPos;
 
-	public Collider requireLookAt;
+	public Collider requireLookAt = null;
 
 	private float lastFillAmount = -1f;
 
@@ -79,19 +79,15 @@ public class PaddlingPool : LiquidContainer, ISplashable
 
 	private float GetNormalisedFillLevel()
 	{
-		if (base.inventory.itemList.Count <= 0 || base.inventory.itemList[0] == null)
-		{
-			return 0f;
-		}
-		return (float)base.inventory.itemList[0].amount / (float)maxStackSize;
+		return (base.inventory.itemList.Count > 0 && base.inventory.itemList[0] != null) ? ((float)base.inventory.itemList[0].amount / (float)maxStackSize) : 0f;
 	}
 
 	private void UpdatePoolFillAmount(float normalisedAmount)
 	{
-		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
 		poolWaterVisual.gameObject.SetActive(normalisedAmount > 0f);
 		waterVolume.waterEnabled = normalisedAmount > 0f;
 		float y = Mathf.Lerp(minimumWaterHeight, maximumWaterHeight, normalisedAmount);

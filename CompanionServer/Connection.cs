@@ -7,6 +7,7 @@ using Facepunch;
 using Fleck;
 using ProtoBuf;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 namespace CompanionServer;
 
@@ -21,8 +22,6 @@ public class Connection : IConnection
 	private PlayerTarget? _subscribedPlayer;
 
 	private readonly HashSet<EntityTarget> _subscribedEntities;
-
-	private readonly HashSet<ClanTarget> _subscribedClans;
 
 	private IRemoteControllable _currentCamera;
 
@@ -48,7 +47,6 @@ public class Connection : IConnection
 		_listener = listener;
 		_connection = connection;
 		_subscribedEntities = new HashSet<EntityTarget>();
-		_subscribedClans = new HashSet<ClanTarget>();
 	}
 
 	public void OnClose()
@@ -63,11 +61,6 @@ public class Connection : IConnection
 			_listener.EntitySubscribers.Remove(subscribedEntity, this);
 		}
 		_subscribedEntities.Clear();
-		foreach (ClanTarget subscribedClan in _subscribedClans)
-		{
-			_listener.ClanSubscribers.Remove(subscribedClan, this);
-		}
-		_subscribedClans.Clear();
 		_currentCamera?.StopControl(new CameraViewerId(_cameraViewerSteamId, ConnectionId));
 		if (TryGetCameraTarget(_currentCamera, out var target))
 		{
@@ -78,17 +71,18 @@ public class Connection : IConnection
 		_isControllingCamera = false;
 	}
 
-	public void OnMessage(Span<byte> data)
+	public void OnMessage(System.Span<byte> data)
 	{
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
 		if (App.update && App.queuelimit > 0 && data.Length <= App.maxmessagesize)
 		{
+			Profiler.BeginSample("CompanionServer.OnMessage");
 			MemoryBuffer val = default(MemoryBuffer);
 			((MemoryBuffer)(ref val))._002Ector(data.Length);
 			data.CopyTo(MemoryBuffer.op_Implicit(val));
 			_listener.Enqueue(this, ((MemoryBuffer)(ref val)).Slice(data.Length));
+			Profiler.EndSample();
 		}
 	}
 
@@ -103,7 +97,8 @@ public class Connection : IConnection
 
 	public void Send(AppResponse response)
 	{
-		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
+		Profiler.BeginSample("CompanionServer.Send");
 		AppMessage val = Pool.Get<AppMessage>();
 		val.response = response;
 		MessageStream.Position = 0L;
@@ -118,6 +113,7 @@ public class Connection : IConnection
 			val.Dispose();
 		}
 		SendRaw(((MemoryBuffer)(ref val2)).Slice(num));
+		Profiler.EndSample();
 	}
 
 	public void Subscribe(PlayerTarget target)
@@ -198,34 +194,9 @@ public class Connection : IConnection
 		_cameraViewerSteamId = 0uL;
 	}
 
-	public void Subscribe(ClanTarget target)
-	{
-		if (_subscribedClans.Contains(target))
-		{
-			return;
-		}
-		foreach (ClanTarget subscribedClan in _subscribedClans)
-		{
-			_listener.ClanSubscribers.Remove(subscribedClan, this);
-		}
-		_subscribedClans.Clear();
-		if (_subscribedClans.Add(target))
-		{
-			_listener.ClanSubscribers.Add(target, this);
-		}
-	}
-
-	public void Unsubscribe(ClanTarget target)
-	{
-		if (_subscribedClans.Remove(target))
-		{
-			_listener.ClanSubscribers.Remove(target, this);
-		}
-	}
-
 	public void SendRaw(MemoryBuffer data)
 	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
 		try
 		{
 			_connection.Send(data);
@@ -238,7 +209,7 @@ public class Connection : IConnection
 
 	private static bool TryGetCameraTarget(IRemoteControllable camera, out CameraTarget target)
 	{
-		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
 		BaseEntity baseEntity = camera?.GetEnt();
 		if (camera.IsUnityNull() || (Object)(object)baseEntity == (Object)null || !baseEntity.IsValid())
 		{

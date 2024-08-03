@@ -148,7 +148,7 @@ public class Inventory : ConsoleSystem
 	private const string LoadoutDirectory = "loadouts";
 
 	[ServerVar(Help = "Disables all attire limitations, so NPC clothing and invalid overlaps can be equipped")]
-	public static bool disableAttireLimitations;
+	public static bool disableAttireLimitations = false;
 
 	[ServerUserVar]
 	public static void lighttoggle(Arg arg)
@@ -199,9 +199,11 @@ public class Inventory : ConsoleSystem
 		if (basePlayer.IsDeveloper)
 		{
 			basePlayer.ChatMessage("you silently gave yourself " + num + " x " + item.info.displayName.english);
-			return;
 		}
-		Chat.Broadcast(basePlayer.displayName + " gave themselves " + num + " x " + item.info.displayName.english, "SERVER", "#eee", 0uL);
+		else
+		{
+			Chat.Broadcast(basePlayer.displayName + " gave themselves " + num + " x " + item.info.displayName.english, "SERVER", "#eee", 0uL);
+		}
 	}
 
 	[ServerVar]
@@ -239,8 +241,8 @@ public class Inventory : ConsoleSystem
 	[ServerVar]
 	public static void giveall(Arg arg)
 	{
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
 		Item item = null;
 		string text = "SERVER";
 		if ((Object)(object)arg.Player() != (Object)null)
@@ -341,9 +343,11 @@ public class Inventory : ConsoleSystem
 		if (basePlayer.IsDeveloper)
 		{
 			basePlayer.ChatMessage("you silently gave yourself " + num + " x " + item.info.displayName.english);
-			return;
 		}
-		Chat.Broadcast(basePlayer.displayName + " gave themselves " + num + " x " + item.info.displayName.english, "SERVER", "#eee", 0uL);
+		else
+		{
+			Chat.Broadcast(basePlayer.displayName + " gave themselves " + num + " x " + item.info.displayName.english, "SERVER", "#eee", 0uL);
+		}
 	}
 
 	[ServerVar]
@@ -373,9 +377,11 @@ public class Inventory : ConsoleSystem
 		if (basePlayer.IsDeveloper)
 		{
 			basePlayer.ChatMessage("you silently gave yourself " + item.amount + " x " + item.info.displayName.english);
-			return;
 		}
-		Chat.Broadcast(basePlayer.displayName + " gave themselves " + item.amount + " x " + item.info.displayName.english, "SERVER", "#eee", 0uL);
+		else
+		{
+			Chat.Broadcast(basePlayer.displayName + " gave themselves " + item.amount + " x " + item.info.displayName.english, "SERVER", "#eee", 0uL);
+		}
 	}
 
 	[ServerVar(Help = "Copies the players inventory to the player in front of them")]
@@ -404,23 +410,19 @@ public class Inventory : ConsoleSystem
 		{
 			basePlayer2 = RelationshipManager.GetLookingAtPlayer(basePlayer);
 		}
-		if (!((Object)(object)basePlayer2 == (Object)null))
+		if ((Object)(object)basePlayer2 == (Object)null)
 		{
-			copyTo(basePlayer, basePlayer2);
+			return;
 		}
-	}
-
-	public static void copyTo(BasePlayer from, BasePlayer toply)
-	{
-		toply.inventory.containerBelt.Clear();
-		toply.inventory.containerWear.Clear();
+		basePlayer2.inventory.containerBelt.Clear();
+		basePlayer2.inventory.containerWear.Clear();
 		int num = 0;
-		foreach (Item item2 in from.inventory.containerBelt.itemList)
+		foreach (Item item2 in basePlayer.inventory.containerBelt.itemList)
 		{
-			toply.inventory.containerBelt.AddItem(item2.info, item2.amount, item2.skin);
+			basePlayer2.inventory.containerBelt.AddItem(item2.info, item2.amount, item2.skin);
 			if (item2.contents != null)
 			{
-				Item item = toply.inventory.containerBelt.itemList[num];
+				Item item = basePlayer2.inventory.containerBelt.itemList[num];
 				foreach (Item item3 in item2.contents.itemList)
 				{
 					item.contents.AddItem(item3.info, item3.amount, item3.skin);
@@ -428,24 +430,24 @@ public class Inventory : ConsoleSystem
 			}
 			num++;
 		}
-		foreach (Item item4 in from.inventory.containerWear.itemList)
+		foreach (Item item4 in basePlayer.inventory.containerWear.itemList)
 		{
-			toply.inventory.containerWear.AddItem(item4.info, item4.amount, item4.skin);
+			basePlayer2.inventory.containerWear.AddItem(item4.info, item4.amount, item4.skin);
 		}
-		if (from.IsDeveloper)
+		if (basePlayer.IsDeveloper)
 		{
-			from.ChatMessage("you silently copied items to " + toply.displayName);
+			basePlayer.ChatMessage("you silently copied items to " + basePlayer2.displayName);
 		}
 		else
 		{
-			Chat.Broadcast(from.displayName + " copied their inventory to " + toply.displayName, "SERVER", "#eee", 0uL);
+			Chat.Broadcast(basePlayer.displayName + " copied their inventory to " + basePlayer2.displayName, "SERVER", "#eee", 0uL);
 		}
 	}
 
 	[ServerVar(Help = "Deploys a loadout to players in a radius eg. inventory.deployLoadoutInRange testloadout 30")]
 	public static void deployLoadoutInRange(Arg arg)
 	{
-		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer basePlayer = arg.Player();
 		if ((!basePlayer.IsAdmin && !basePlayer.IsDeveloper && !Server.cinematic) || (Object)(object)basePlayer == (Object)null)
 		{
@@ -508,14 +510,14 @@ public class Inventory : ConsoleSystem
 		BasePlayer basePlayer = arg.Player();
 		if (!((Object)(object)basePlayer == (Object)null) && (basePlayer.IsAdmin || basePlayer.IsDeveloper || Server.cinematic))
 		{
-			BasePlayer basePlayer2 = (string.IsNullOrEmpty(arg.GetString(0, "")) ? null : arg.GetPlayerOrSleeperOrBot(0));
+			BasePlayer basePlayer2 = (string.IsNullOrEmpty(arg.GetString(1, "")) ? null : arg.GetPlayerOrSleeperOrBot(1));
 			if ((Object)(object)basePlayer2 == (Object)null)
 			{
 				basePlayer2 = basePlayer;
 			}
 			if ((Object)(object)basePlayer2 == (Object)null)
 			{
-				arg.ReplyWith("Could not find player " + arg.GetString(0, "") + " and no local player available");
+				arg.ReplyWith("Could not find player " + arg.GetString(1, "") + " and no local player available");
 				return;
 			}
 			basePlayer2.inventory.containerBelt.Clear();
@@ -536,7 +538,8 @@ public class Inventory : ConsoleSystem
 		if (!((Object)(object)basePlayer == (Object)null) && (basePlayer.IsAdmin || basePlayer.IsDeveloper || Server.cinematic))
 		{
 			string @string = arg.GetString(0, "");
-			string contents = JsonConvert.SerializeObject((object)new SavedLoadout(basePlayer), (Formatting)1);
+			SavedLoadout savedLoadout = new SavedLoadout(basePlayer);
+			string contents = JsonConvert.SerializeObject((object)savedLoadout, (Formatting)1);
 			string loadoutPath = GetLoadoutPath(@string);
 			File.WriteAllText(loadoutPath, contents);
 			arg.ReplyWith("Saved loadout to " + loadoutPath);
@@ -656,10 +659,10 @@ public class Inventory : ConsoleSystem
 
 	private static void EquipItemInSlot(BasePlayer player, int slot)
 	{
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
 		ItemId itemID = default(ItemId);
 		for (int i = 0; i < player.inventory.containerBelt.itemList.Count; i++)
 		{
@@ -674,10 +677,10 @@ public class Inventory : ConsoleSystem
 
 	private static int GetSlotIndex(BasePlayer player)
 	{
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
 		if (player.GetActiveItem() == null)
 		{
 			return -1;

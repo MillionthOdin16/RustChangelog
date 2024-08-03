@@ -19,9 +19,9 @@ public class MapInterface : SingletonComponent<MapInterface>
 
 	public ScrollRectEx scrollRect;
 
-	public RustButton showGridToggle;
+	public Toggle showGridToggle;
 
-	public RustButton FocusButton;
+	public Button FocusButton;
 
 	public CanvasGroup CanvasGroup;
 
@@ -29,13 +29,7 @@ public class MapInterface : SingletonComponent<MapInterface>
 
 	public SoundDefinition ClearMarkerSound;
 
-	public MapView View;
-
-	public UINexusMap NexusMap;
-
-	public GameObject NexusButtonGroup;
-
-	public RustButton NexusToggle;
+	public MapView View = null;
 
 	public Color[] PointOfInterestColours;
 
@@ -43,9 +37,7 @@ public class MapInterface : SingletonComponent<MapInterface>
 
 	public Sprite PingBackground;
 
-	public bool DebugStayOpen;
-
-	public GameObject MarkerListSection;
+	public bool DebugStayOpen = false;
 
 	public GameObjectRef MarkerListPrefab;
 
@@ -57,11 +49,9 @@ public class MapInterface : SingletonComponent<MapInterface>
 
 	public GameObject TeamLeaderHeader;
 
-	public RustButton HideTeamLeaderMarkersToggle;
+	public RustButton HideTeamLeaderMarkersToggle = null;
 
-	public CanvasGroup TeamMarkersCanvas;
+	public CanvasGroup TeamMarkersCanvas = null;
 
-	public RustImageButton ShowSleepingBagsButton;
-
-	public RustImageButton ShowVendingMachinesButton;
+	public RustImageButton ShowSleepingBagsButton = null;
 }

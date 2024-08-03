@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using RustNative;
 using Unity.Collections;
 using UnityEngine;
+using UnityEngine.Profiling;
 using UnityEngine.Rendering;
 
 [RequireComponent(typeof(Camera))]
@@ -13,23 +14,23 @@ public class OcclusionCulling : MonoBehaviour
 {
 	public class BufferSet
 	{
-		public ComputeBuffer inputBuffer;
+		public ComputeBuffer inputBuffer = null;
 
-		public ComputeBuffer resultBuffer;
+		public ComputeBuffer resultBuffer = null;
 
-		public int width;
+		public int width = 0;
 
-		public int height;
+		public int height = 0;
 
-		public int capacity;
+		public int capacity = 0;
 
-		public int count;
+		public int count = 0;
 
-		public Texture2D inputTexture;
+		public Texture2D inputTexture = null;
 
-		public RenderTexture resultTexture;
+		public RenderTexture resultTexture = null;
 
-		public Texture2D resultReadTexture;
+		public Texture2D resultReadTexture = null;
 
 		public Color[] inputData = (Color[])(object)new Color[0];
 
@@ -95,20 +96,20 @@ public class OcclusionCulling : MonoBehaviour
 
 		public bool CheckResize(int count, int granularity)
 		{
-			//IL_01b8: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01c2: Expected O, but got Unknown
-			//IL_01c5: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01cf: Expected O, but got Unknown
-			//IL_0097: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00a1: Expected O, but got Unknown
-			//IL_00d9: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00e3: Expected O, but got Unknown
-			//IL_0133: Unknown result type (might be due to invalid IL or missing references)
-			//IL_013d: Expected O, but got Unknown
-			//IL_0190: Unknown result type (might be due to invalid IL or missing references)
-			//IL_019a: Expected I4, but got Unknown
-			//IL_024a: Unknown result type (might be due to invalid IL or missing references)
-			//IL_024b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01db: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01e5: Expected O, but got Unknown
+			//IL_01e8: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01f2: Expected O, but got Unknown
+			//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00af: Expected O, but got Unknown
+			//IL_00ea: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00f4: Expected O, but got Unknown
+			//IL_0148: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0152: Expected O, but got Unknown
+			//IL_01b0: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01ba: Expected I4, but got Unknown
+			//IL_027f: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0280: Unknown result type (might be due to invalid IL or missing references)
 			if (count > capacity || (culling.usePixelShaderFallback && (Object)(object)resultTexture != (Object)null && !resultTexture.IsCreated()))
 			{
 				Dispose(data: false);
@@ -183,10 +184,12 @@ public class OcclusionCulling : MonoBehaviour
 
 		public void Dispatch(int count)
 		{
-			//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0016: Unknown result type (might be due to invalid IL or missing references)
 			//IL_0017: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+			//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0058: Unknown result type (might be due to invalid IL or missing references)
 			if (culling.usePixelShaderFallback)
 			{
 				RenderBuffer activeColorBuffer = Graphics.activeColorBuffer;
@@ -205,11 +208,11 @@ public class OcclusionCulling : MonoBehaviour
 
 		public void IssueRead()
 		{
-			//IL_0047: Unknown result type (might be due to invalid IL or missing references)
-			//IL_004c: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0038: Unknown result type (might be due to invalid IL or missing references)
-			//IL_003d: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0053: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0060: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0065: Unknown result type (might be due to invalid IL or missing references)
+			//IL_004f: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0054: Unknown result type (might be due to invalid IL or missing references)
+			//IL_006d: Unknown result type (might be due to invalid IL or missing references)
 			if (SafeMode)
 			{
 				return;
@@ -230,15 +233,15 @@ public class OcclusionCulling : MonoBehaviour
 
 		public void GetResults()
 		{
-			//IL_010c: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0036: Unknown result type (might be due to invalid IL or missing references)
-			//IL_003b: Unknown result type (might be due to invalid IL or missing references)
-			//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0062: Unknown result type (might be due to invalid IL or missing references)
+			//IL_015c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_004d: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0052: Unknown result type (might be due to invalid IL or missing references)
 			//IL_0067: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0076: Unknown result type (might be due to invalid IL or missing references)
-			//IL_007b: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0094: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0081: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0086: Unknown result type (might be due to invalid IL or missing references)
+			//IL_009a: Unknown result type (might be due to invalid IL or missing references)
+			//IL_009f: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00c2: Unknown result type (might be due to invalid IL or missing references)
 			if (resultData == null || resultData.Length == 0)
 			{
 				return;
@@ -278,7 +281,8 @@ public class OcclusionCulling : MonoBehaviour
 				RenderTexture.active = resultTexture;
 				resultReadTexture.ReadPixels(new Rect(0f, 0f, (float)width, (float)height), 0, 0);
 				resultReadTexture.Apply();
-				Array.Copy(resultReadTexture.GetPixels32(), resultData, resultData.Length);
+				Color32[] pixels = resultReadTexture.GetPixels32();
+				Array.Copy(pixels, resultData, resultData.Length);
 			}
 			else
 			{
@@ -286,8 +290,6 @@ public class OcclusionCulling : MonoBehaviour
 			}
 		}
 	}
-
-	public delegate void OnVisibilityChanged(bool visible);
 
 	public enum DebugFilter
 	{
@@ -311,21 +313,21 @@ public class OcclusionCulling : MonoBehaviour
 	[Serializable]
 	public class DebugSettings
 	{
-		public bool log;
+		public bool log = false;
 
-		public bool showAllVisible;
+		public bool showAllVisible = false;
 
-		public bool showMipChain;
+		public bool showMipChain = false;
 
-		public bool showMain;
+		public bool showMain = false;
 
-		public int showMainLod;
+		public int showMainLod = 0;
 
-		public bool showFallback;
+		public bool showFallback = false;
 
-		public bool showStats;
+		public bool showStats = false;
 
-		public bool showScreenBounds;
+		public bool showScreenBounds = false;
 
 		public DebugMask showMask;
 
@@ -654,11 +656,7 @@ public class OcclusionCulling : MonoBehaviour
 		public bool Contains(OccludeeState value)
 		{
 			int hashedListIndex = value.hashedListIndex;
-			if (hashedListIndex >= 0)
-			{
-				return list[hashedListIndex] != null;
-			}
-			return false;
+			return hashedListIndex >= 0 && list[hashedListIndex] != null;
 		}
 
 		public void EnsureCapacity(int min)
@@ -693,9 +691,9 @@ public class OcclusionCulling : MonoBehaviour
 
 		public void Reset()
 		{
-			//IL_001f: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0026: Unknown result type (might be due to invalid IL or missing references)
-			//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+			//IL_002c: Unknown result type (might be due to invalid IL or missing references)
 			x = (y = (z = 0));
 			bounds = default(Bounds);
 			sphereBounds = Vector4.zero;
@@ -706,15 +704,15 @@ public class OcclusionCulling : MonoBehaviour
 
 		public Cell Initialize(int x, int y, int z, Bounds bounds)
 		{
-			//IL_0016: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-			//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0038: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0044: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0049: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0051: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0056: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+			//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0045: Unknown result type (might be due to invalid IL or missing references)
+			//IL_004a: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0052: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0057: Unknown result type (might be due to invalid IL or missing references)
 			this.x = x;
 			this.y = y;
 			this.z = z;
@@ -744,18 +742,64 @@ public class OcclusionCulling : MonoBehaviour
 
 		public Sphere(Vector3 position, float radius)
 		{
-			//IL_0001: Unknown result type (might be due to invalid IL or missing references)
 			//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0003: Unknown result type (might be due to invalid IL or missing references)
 			this.position = position;
 			this.radius = radius;
 		}
 	}
 
+	public delegate void OnVisibilityChanged(bool visible);
+
+	public DebugSettings debugSettings = new DebugSettings();
+
+	private Material debugMipMat;
+
+	private const float debugDrawDuration = 0.0334f;
+
+	private Material downscaleMat = null;
+
+	private Material blitCopyMat = null;
+
+	private int hiZLevelCount = 0;
+
+	private int hiZWidth = 0;
+
+	private int hiZHeight = 0;
+
+	private RenderTexture depthTexture = null;
+
+	private RenderTexture hiZTexture = null;
+
+	private RenderTexture[] hiZLevels = null;
+
+	private const int GridCellsPerAxis = 2097152;
+
+	private const int GridHalfCellsPerAxis = 1048576;
+
+	private const int GridMinHalfCellsPerAxis = -1048575;
+
+	private const int GridMaxHalfCellsPerAxis = 1048575;
+
+	private const float GridCellSize = 100f;
+
+	private const float GridHalfCellSize = 50f;
+
+	private const float GridRcpCellSize = 0.01f;
+
+	private const int GridPoolCapacity = 16384;
+
+	private const int GridPoolGranularity = 4096;
+
+	private static HashedPool<Cell> grid = new HashedPool<Cell>(16384, 4096);
+
+	private static Queue<Cell> gridChanged = new Queue<Cell>();
+
 	public ComputeShader computeShader;
 
 	public bool usePixelShaderFallback = true;
 
-	public bool useAsyncReadAPI;
+	public bool useAsyncReadAPI = false;
 
 	private Camera camera;
 
@@ -807,9 +851,9 @@ public class OcclusionCulling : MonoBehaviour
 
 	private float[] matrixToFloatTemp = new float[16];
 
-	private Material fallbackMat;
+	private Material fallbackMat = null;
 
-	private Material depthCopyMat;
+	private Material depthCopyMat = null;
 
 	private Matrix4x4 viewMatrix;
 
@@ -833,49 +877,7 @@ public class OcclusionCulling : MonoBehaviour
 
 	private static DebugFilter _debugShow = DebugFilter.Off;
 
-	public DebugSettings debugSettings = new DebugSettings();
-
-	private Material debugMipMat;
-
-	private const float debugDrawDuration = 0.0334f;
-
-	private Material downscaleMat;
-
-	private Material blitCopyMat;
-
-	private int hiZLevelCount;
-
-	private int hiZWidth;
-
-	private int hiZHeight;
-
-	private RenderTexture depthTexture;
-
-	private RenderTexture hiZTexture;
-
-	private RenderTexture[] hiZLevels;
-
-	private const int GridCellsPerAxis = 2097152;
-
-	private const int GridHalfCellsPerAxis = 1048576;
-
-	private const int GridMinHalfCellsPerAxis = -1048575;
-
-	private const int GridMaxHalfCellsPerAxis = 1048575;
-
-	private const float GridCellSize = 100f;
-
-	private const float GridHalfCellSize = 50f;
-
-	private const float GridRcpCellSize = 0.01f;
-
-	private const int GridPoolCapacity = 16384;
-
-	private const int GridPoolGranularity = 4096;
-
-	private static HashedPool<Cell> grid = new HashedPool<Cell>(16384, 4096);
-
-	private static Queue<Cell> gridChanged = new Queue<Cell>();
+	public bool HiZReady => (Object)(object)hiZTexture != (Object)null && hiZWidth > 0 && hiZHeight > 0;
 
 	public static OcclusionCulling Instance => instance;
 
@@ -921,848 +923,26 @@ public class OcclusionCulling : MonoBehaviour
 		}
 	}
 
-	public bool HiZReady
-	{
-		get
-		{
-			if ((Object)(object)hiZTexture != (Object)null && hiZWidth > 0)
-			{
-				return hiZHeight > 0;
-			}
-			return false;
-		}
-	}
-
-	private static void GrowStatePool()
-	{
-		for (int i = 0; i < 2048; i++)
-		{
-			statePool.Enqueue(new OccludeeState());
-		}
-	}
-
-	private static OccludeeState Allocate()
-	{
-		if (statePool.Count == 0)
-		{
-			GrowStatePool();
-		}
-		return statePool.Dequeue();
-	}
-
-	private static void Release(OccludeeState state)
-	{
-		statePool.Enqueue(state);
-	}
-
-	private void Awake()
-	{
-		instance = this;
-		camera = ((Component)this).GetComponent<Camera>();
-		for (int i = 0; i < 6; i++)
-		{
-			frustumPropNames[i] = "_FrustumPlane" + i;
-		}
-	}
-
-	private void OnEnable()
-	{
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0083: Invalid comparison between Unknown and I4
-		//IL_00be: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0173: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0178: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0185: Expected O, but got Unknown
-		//IL_0135: Unknown result type (might be due to invalid IL or missing references)
-		//IL_013a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0147: Expected O, but got Unknown
-		if (!Enabled)
-		{
-			Enabled = false;
-			return;
-		}
-		GraphicsDeviceType graphicsDeviceType;
-		if (!Supported)
-		{
-			graphicsDeviceType = SystemInfo.graphicsDeviceType;
-			Debug.LogWarning((object)("[OcclusionCulling] Disabled due to graphics device type " + ((object)(GraphicsDeviceType)(ref graphicsDeviceType)).ToString() + " not supported."));
-			Enabled = false;
-			return;
-		}
-		usePixelShaderFallback = usePixelShaderFallback || !SystemInfo.supportsComputeShaders || (Object)(object)computeShader == (Object)null || !computeShader.HasKernel("compute_cull");
-		useNativePath = (int)SystemInfo.graphicsDeviceType == 2 && SupportsNativePath();
-		useAsyncReadAPI = !useNativePath && SystemInfo.supportsAsyncGPUReadback;
-		if (!useNativePath && !useAsyncReadAPI)
-		{
-			graphicsDeviceType = SystemInfo.graphicsDeviceType;
-			Debug.LogWarning((object)("[OcclusionCulling] Disabled due to unsupported Async GPU Reads on device " + ((object)(GraphicsDeviceType)(ref graphicsDeviceType)).ToString()));
-			Enabled = false;
-			return;
-		}
-		for (int i = 0; i < staticOccludees.Count; i++)
-		{
-			staticChanged.Add(i);
-		}
-		for (int j = 0; j < dynamicOccludees.Count; j++)
-		{
-			dynamicChanged.Add(j);
-		}
-		if (usePixelShaderFallback)
-		{
-			fallbackMat = new Material(Shader.Find("Hidden/OcclusionCulling/Culling"))
-			{
-				hideFlags = (HideFlags)61
-			};
-		}
-		staticSet.Attach(this);
-		dynamicSet.Attach(this);
-		gridSet.Attach(this);
-		depthCopyMat = new Material(Shader.Find("Hidden/OcclusionCulling/DepthCopy"))
-		{
-			hideFlags = (HideFlags)61
-		};
-		InitializeHiZMap();
-		UpdateCameraMatrices(starting: true);
-	}
-
-	private bool SupportsNativePath()
-	{
-		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-		bool result = true;
-		try
-		{
-			OccludeeState.State states = default(OccludeeState.State);
-			Color32 results = default(Color32);
-			((Color32)(ref results))._002Ector((byte)0, (byte)0, (byte)0, (byte)0);
-			Vector4 zero = Vector4.zero;
-			int bucket = 0;
-			int changed = 0;
-			int changedCount = 0;
-			ProcessOccludees_Native(ref states, ref bucket, 0, ref results, 0, ref changed, ref changedCount, ref zero, 0f, 0u);
-		}
-		catch (EntryPointNotFoundException)
-		{
-			Debug.Log((object)"[OcclusionCulling] Fast native path not available. Reverting to managed fallback.");
-			result = false;
-		}
-		return result;
-	}
-
-	private void OnDisable()
-	{
-		if ((Object)(object)fallbackMat != (Object)null)
-		{
-			Object.DestroyImmediate((Object)(object)fallbackMat);
-			fallbackMat = null;
-		}
-		if ((Object)(object)depthCopyMat != (Object)null)
-		{
-			Object.DestroyImmediate((Object)(object)depthCopyMat);
-			depthCopyMat = null;
-		}
-		staticSet.Dispose();
-		dynamicSet.Dispose();
-		gridSet.Dispose();
-		FinalizeHiZMap();
-	}
-
-	public static void MakeAllVisible()
-	{
-		for (int i = 0; i < staticOccludees.Count; i++)
-		{
-			if (staticOccludees[i] != null)
-			{
-				staticOccludees[i].MakeVisible();
-			}
-		}
-		for (int j = 0; j < dynamicOccludees.Count; j++)
-		{
-			if (dynamicOccludees[j] != null)
-			{
-				dynamicOccludees[j].MakeVisible();
-			}
-		}
-	}
-
-	private void Update()
-	{
-		if (!Enabled)
-		{
-			((Behaviour)this).enabled = false;
-			return;
-		}
-		CheckResizeHiZMap();
-		DebugUpdate();
-		DebugDraw();
-	}
-
-	public static void RecursiveAddOccludees<T>(Transform transform, float minTimeVisible = 0.1f, bool isStatic = true, bool stickyGizmos = false) where T : Occludee
-	{
-		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0094: Expected O, but got Unknown
-		Renderer component = ((Component)transform).GetComponent<Renderer>();
-		Collider component2 = ((Component)transform).GetComponent<Collider>();
-		if ((Object)(object)component != (Object)null && (Object)(object)component2 != (Object)null)
-		{
-			T component3 = ((Component)component).gameObject.GetComponent<T>();
-			component3 = (((Object)(object)component3 == (Object)null) ? ((Component)component).gameObject.AddComponent<T>() : component3);
-			component3.minTimeVisible = minTimeVisible;
-			component3.isStatic = isStatic;
-			component3.stickyGizmos = stickyGizmos;
-			component3.Register();
-		}
-		foreach (Transform item in transform)
-		{
-			RecursiveAddOccludees<T>(item, minTimeVisible, isStatic, stickyGizmos);
-		}
-	}
-
-	private static int FindFreeSlot(SimpleList<OccludeeState> occludees, SimpleList<OccludeeState.State> states, Queue<int> recycled)
-	{
-		int result;
-		if (recycled.Count > 0)
-		{
-			result = recycled.Dequeue();
-		}
-		else
-		{
-			if (occludees.Count == occludees.Capacity)
-			{
-				int num = Mathf.Min(occludees.Capacity + 2048, 1048576);
-				if (num > 0)
-				{
-					occludees.Capacity = num;
-					states.Capacity = num;
-				}
-			}
-			if (occludees.Count < occludees.Capacity)
-			{
-				result = occludees.Count;
-				occludees.Add(null);
-				states.Add(default(OccludeeState.State));
-			}
-			else
-			{
-				result = -1;
-			}
-		}
-		return result;
-	}
-
-	public static OccludeeState GetStateById(int id)
-	{
-		if (id >= 0 && id < 2097152)
-		{
-			bool num = id < 1048576;
-			int index = (num ? id : (id - 1048576));
-			if (num)
-			{
-				return staticOccludees[index];
-			}
-			return dynamicOccludees[index];
-		}
-		return null;
-	}
-
-	public static int RegisterOccludee(Vector3 center, float radius, bool isVisible, float minTimeVisible, bool isStatic, int layer, OnVisibilityChanged onVisibilityChanged = null)
-	{
-		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		int num = -1;
-		num = ((!isStatic) ? RegisterOccludee(center, radius, isVisible, minTimeVisible, isStatic, layer, onVisibilityChanged, dynamicOccludees, dynamicStates, dynamicRecycled, dynamicChanged, dynamicSet, dynamicVisibilityChanged) : RegisterOccludee(center, radius, isVisible, minTimeVisible, isStatic, layer, onVisibilityChanged, staticOccludees, staticStates, staticRecycled, staticChanged, staticSet, staticVisibilityChanged));
-		if (!(num < 0 || isStatic))
-		{
-			return num + 1048576;
-		}
-		return num;
-	}
-
-	private static int RegisterOccludee(Vector3 center, float radius, bool isVisible, float minTimeVisible, bool isStatic, int layer, OnVisibilityChanged onVisibilityChanged, SimpleList<OccludeeState> occludees, SimpleList<OccludeeState.State> states, Queue<int> recycled, List<int> changed, BufferSet set, SimpleList<int> visibilityChanged)
-	{
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-		int num = FindFreeSlot(occludees, states, recycled);
-		if (num >= 0)
-		{
-			Vector4 sphereBounds = default(Vector4);
-			((Vector4)(ref sphereBounds))._002Ector(center.x, center.y, center.z, radius);
-			OccludeeState occludeeState = Allocate().Initialize(states, set, num, sphereBounds, isVisible, minTimeVisible, isStatic, layer, onVisibilityChanged);
-			occludeeState.cell = RegisterToGrid(occludeeState);
-			occludees[num] = occludeeState;
-			changed.Add(num);
-			if (states.array[num].isVisible != 0 != occludeeState.cell.isVisible)
-			{
-				visibilityChanged.Add(num);
-			}
-		}
-		return num;
-	}
-
-	public static void UnregisterOccludee(int id)
-	{
-		if (id >= 0 && id < 2097152)
-		{
-			bool num = id < 1048576;
-			int slot = (num ? id : (id - 1048576));
-			if (num)
-			{
-				UnregisterOccludee(slot, staticOccludees, staticRecycled, staticChanged);
-			}
-			else
-			{
-				UnregisterOccludee(slot, dynamicOccludees, dynamicRecycled, dynamicChanged);
-			}
-		}
-	}
-
-	private static void UnregisterOccludee(int slot, SimpleList<OccludeeState> occludees, Queue<int> recycled, List<int> changed)
-	{
-		OccludeeState occludeeState = occludees[slot];
-		UnregisterFromGrid(occludeeState);
-		recycled.Enqueue(slot);
-		changed.Add(slot);
-		Release(occludeeState);
-		occludees[slot] = null;
-		occludeeState.Invalidate();
-	}
-
-	public static void UpdateDynamicOccludee(int id, Vector3 center, float radius)
-	{
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
-		int num = id - 1048576;
-		if (num >= 0 && num < 1048576)
-		{
-			dynamicStates.array[num].sphereBounds = new Vector4(center.x, center.y, center.z, radius);
-			dynamicChanged.Add(num);
-		}
-	}
-
-	private void UpdateBuffers(SimpleList<OccludeeState> occludees, SimpleList<OccludeeState.State> states, BufferSet set, List<int> changed, bool isStatic)
-	{
-		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
-		int count = occludees.Count;
-		bool flag = changed.Count > 0;
-		set.CheckResize(count, 2048);
-		for (int i = 0; i < changed.Count; i++)
-		{
-			int num = changed[i];
-			OccludeeState occludeeState = occludees[num];
-			if (occludeeState != null)
-			{
-				if (!isStatic)
-				{
-					UpdateInGrid(occludeeState);
-				}
-				set.inputData[num] = Color.op_Implicit(states[num].sphereBounds);
-			}
-			else
-			{
-				set.inputData[num] = Color.op_Implicit(Vector4.zero);
-			}
-		}
-		changed.Clear();
-		if (flag)
-		{
-			set.UploadData();
-		}
-	}
-
-	private void UpdateCameraMatrices(bool starting = false)
-	{
-		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
-		if (!starting)
-		{
-			prevViewProjMatrix = viewProjMatrix;
-		}
-		Matrix4x4 val = Matrix4x4.Perspective(camera.fieldOfView, camera.aspect, camera.nearClipPlane, camera.farClipPlane);
-		viewMatrix = camera.worldToCameraMatrix;
-		projMatrix = GL.GetGPUProjectionMatrix(val, false);
-		viewProjMatrix = projMatrix * viewMatrix;
-		invViewProjMatrix = Matrix4x4.Inverse(viewProjMatrix);
-		if (starting)
-		{
-			prevViewProjMatrix = viewProjMatrix;
-		}
-	}
-
-	private void OnPreCull()
-	{
-		UpdateCameraMatrices();
-		GenerateHiZMipChain();
-		PrepareAndDispatch();
-		IssueRead();
-		if (grid.Size <= gridSet.resultData.Length)
-		{
-			RetrieveAndApplyVisibility();
-		}
-		else
-		{
-			Debug.LogWarning((object)("[OcclusionCulling] Grid size and result capacity are out of sync: " + grid.Size + ", " + gridSet.resultData.Length));
-		}
-	}
-
-	private void OnPostRender()
-	{
-		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
-		bool sRGBWrite = GL.sRGBWrite;
-		RenderBuffer activeColorBuffer = Graphics.activeColorBuffer;
-		RenderBuffer activeDepthBuffer = Graphics.activeDepthBuffer;
-		GrabDepthTexture();
-		Graphics.SetRenderTarget(activeColorBuffer, activeDepthBuffer);
-		GL.sRGBWrite = sRGBWrite;
-	}
-
-	private float[] MatrixToFloatArray(Matrix4x4 m)
-	{
-		int i = 0;
-		int num = 0;
-		for (; i < 4; i++)
-		{
-			for (int j = 0; j < 4; j++)
-			{
-				matrixToFloatTemp[num++] = ((Matrix4x4)(ref m))[j, i];
-			}
-		}
-		return matrixToFloatTemp;
-	}
-
-	private void PrepareAndDispatch()
-	{
-		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0166: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0182: Unknown result type (might be due to invalid IL or missing references)
-		//IL_019e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01be: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01d8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01d9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ba: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_021b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0112: Unknown result type (might be due to invalid IL or missing references)
-		Vector2 val = default(Vector2);
-		((Vector2)(ref val))._002Ector((float)hiZWidth, (float)hiZHeight);
-		ExtractFrustum(viewProjMatrix, ref frustumPlanes);
-		bool flag = true;
-		if (usePixelShaderFallback)
-		{
-			fallbackMat.SetTexture("_HiZMap", (Texture)(object)hiZTexture);
-			fallbackMat.SetFloat("_HiZMaxLod", (float)(hiZLevelCount - 1));
-			fallbackMat.SetMatrix("_ViewMatrix", viewMatrix);
-			fallbackMat.SetMatrix("_ProjMatrix", projMatrix);
-			fallbackMat.SetMatrix("_ViewProjMatrix", viewProjMatrix);
-			fallbackMat.SetVector("_CameraWorldPos", Vector4.op_Implicit(((Component)this).transform.position));
-			fallbackMat.SetVector("_ViewportSize", Vector4.op_Implicit(val));
-			fallbackMat.SetFloat("_FrustumCull", flag ? 0f : 1f);
-			for (int i = 0; i < 6; i++)
-			{
-				fallbackMat.SetVector(frustumPropNames[i], frustumPlanes[i]);
-			}
-		}
-		else
-		{
-			computeShader.SetTexture(0, "_HiZMap", (Texture)(object)hiZTexture);
-			computeShader.SetFloat("_HiZMaxLod", (float)(hiZLevelCount - 1));
-			computeShader.SetFloats("_ViewMatrix", MatrixToFloatArray(viewMatrix));
-			computeShader.SetFloats("_ProjMatrix", MatrixToFloatArray(projMatrix));
-			computeShader.SetFloats("_ViewProjMatrix", MatrixToFloatArray(viewProjMatrix));
-			computeShader.SetVector("_CameraWorldPos", Vector4.op_Implicit(((Component)this).transform.position));
-			computeShader.SetVector("_ViewportSize", Vector4.op_Implicit(val));
-			computeShader.SetFloat("_FrustumCull", flag ? 0f : 1f);
-			for (int j = 0; j < 6; j++)
-			{
-				computeShader.SetVector(frustumPropNames[j], frustumPlanes[j]);
-			}
-		}
-		if (staticOccludees.Count > 0)
-		{
-			UpdateBuffers(staticOccludees, staticStates, staticSet, staticChanged, isStatic: true);
-			staticSet.Dispatch(staticOccludees.Count);
-		}
-		if (dynamicOccludees.Count > 0)
-		{
-			UpdateBuffers(dynamicOccludees, dynamicStates, dynamicSet, dynamicChanged, isStatic: false);
-			dynamicSet.Dispatch(dynamicOccludees.Count);
-		}
-		UpdateGridBuffers();
-		gridSet.Dispatch(grid.Size);
-	}
-
-	private void IssueRead()
-	{
-		if (staticOccludees.Count > 0)
-		{
-			staticSet.IssueRead();
-		}
-		if (dynamicOccludees.Count > 0)
-		{
-			dynamicSet.IssueRead();
-		}
-		if (grid.Count > 0)
-		{
-			gridSet.IssueRead();
-		}
-		GL.IssuePluginEvent(Graphics.GetRenderEventFunc(), 2);
-	}
-
-	public void ResetTiming(SmartList bucket)
-	{
-		for (int i = 0; i < bucket.Size; i++)
-		{
-			OccludeeState occludeeState = bucket[i];
-			if (occludeeState != null)
-			{
-				occludeeState.states.array[occludeeState.slot].waitTime = 0f;
-			}
-		}
-	}
-
-	public void ResetTiming()
-	{
-		for (int i = 0; i < grid.Size; i++)
-		{
-			Cell cell = grid[i];
-			if (cell != null)
-			{
-				ResetTiming(cell.staticBucket);
-				ResetTiming(cell.dynamicBucket);
-			}
-		}
-	}
-
-	private static bool FrustumCull(Vector4[] planes, Vector4 testSphere)
-	{
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
-		for (int i = 0; i < 6; i++)
-		{
-			if (planes[i].x * testSphere.x + planes[i].y * testSphere.y + planes[i].z * testSphere.z + planes[i].w < 0f - testSphere.w)
-			{
-				return false;
-			}
-		}
-		return true;
-	}
-
-	private static int ProcessOccludees_Safe(SimpleList<OccludeeState.State> states, SmartList bucket, Color32[] results, SimpleList<int> changed, Vector4[] frustumPlanes, float time, uint frame)
-	{
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-		int num = 0;
-		for (int i = 0; i < bucket.Size; i++)
-		{
-			OccludeeState occludeeState = bucket[i];
-			if (occludeeState == null || occludeeState.slot >= results.Length)
-			{
-				continue;
-			}
-			int slot = occludeeState.slot;
-			OccludeeState.State value = states[slot];
-			bool flag = FrustumCull(frustumPlanes, value.sphereBounds);
-			bool flag2 = results[slot].r > 0 && flag;
-			if (flag2 || frame < value.waitFrame)
-			{
-				value.waitTime = time + value.minTimeVisible;
-			}
-			if (!flag2)
-			{
-				flag2 = time < value.waitTime;
-			}
-			if (flag2 != (value.isVisible != 0))
-			{
-				if (value.callback != 0)
-				{
-					changed.Add(slot);
-				}
-				else
-				{
-					value.isVisible = (byte)(flag2 ? 1 : 0);
-				}
-			}
-			states[slot] = value;
-			num += value.isVisible;
-		}
-		return num;
-	}
-
-	private static int ProcessOccludees_Fast(OccludeeState.State[] states, int[] bucket, int bucketCount, Color32[] results, int resultCount, int[] changed, ref int changedCount, Vector4[] frustumPlanes, float time, uint frame)
-	{
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
-		int num = 0;
-		for (int i = 0; i < bucketCount; i++)
-		{
-			int num2 = bucket[i];
-			if (num2 < 0 || num2 >= resultCount || states[num2].active == 0)
-			{
-				continue;
-			}
-			OccludeeState.State state = states[num2];
-			bool flag = FrustumCull(frustumPlanes, state.sphereBounds);
-			bool flag2 = results[num2].r > 0 && flag;
-			if (flag2 || frame < state.waitFrame)
-			{
-				state.waitTime = time + state.minTimeVisible;
-			}
-			if (!flag2)
-			{
-				flag2 = time < state.waitTime;
-			}
-			if (flag2 != (state.isVisible != 0))
-			{
-				if (state.callback != 0)
-				{
-					changed[changedCount++] = num2;
-				}
-				else
-				{
-					state.isVisible = (byte)(flag2 ? 1 : 0);
-				}
-			}
-			states[num2] = state;
-			num += ((!flag2) ? 1 : 0);
-		}
-		return num;
-	}
-
-	[DllImport("Renderer", EntryPoint = "CULL_ProcessOccludees")]
-	private static extern int ProcessOccludees_Native(ref OccludeeState.State states, ref int bucket, int bucketCount, ref Color32 results, int resultCount, ref int changed, ref int changedCount, ref Vector4 frustumPlanes, float time, uint frame);
-
-	private void ApplyVisibility_Safe(float time, uint frame)
-	{
-		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
-		bool ready = staticSet.Ready;
-		bool ready2 = dynamicSet.Ready;
-		for (int i = 0; i < grid.Size; i++)
-		{
-			Cell cell = grid[i];
-			if (cell == null || gridSet.resultData.Length == 0)
-			{
-				continue;
-			}
-			bool flag = FrustumCull(frustumPlanes, cell.sphereBounds);
-			bool flag2 = gridSet.resultData[i].r > 0 && flag;
-			if (cell.isVisible || flag2)
-			{
-				int num = 0;
-				int num2 = 0;
-				if (ready && cell.staticBucket.Count > 0)
-				{
-					num = ProcessOccludees_Safe(staticStates, cell.staticBucket, staticSet.resultData, staticVisibilityChanged, frustumPlanes, time, frame);
-				}
-				if (ready2 && cell.dynamicBucket.Count > 0)
-				{
-					num2 = ProcessOccludees_Safe(dynamicStates, cell.dynamicBucket, dynamicSet.resultData, dynamicVisibilityChanged, frustumPlanes, time, frame);
-				}
-				cell.isVisible = flag2 || num < cell.staticBucket.Count || num2 < cell.dynamicBucket.Count;
-			}
-		}
-	}
-
-	private void ApplyVisibility_Fast(float time, uint frame)
-	{
-		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
-		bool ready = staticSet.Ready;
-		bool ready2 = dynamicSet.Ready;
-		for (int i = 0; i < grid.Size; i++)
-		{
-			Cell cell = grid[i];
-			if (cell == null || gridSet.resultData.Length == 0)
-			{
-				continue;
-			}
-			bool flag = FrustumCull(frustumPlanes, cell.sphereBounds);
-			bool flag2 = gridSet.resultData[i].r > 0 && flag;
-			if (cell.isVisible || flag2)
-			{
-				int num = 0;
-				int num2 = 0;
-				if (ready && cell.staticBucket.Count > 0)
-				{
-					num = ProcessOccludees_Fast(staticStates.array, cell.staticBucket.Slots, cell.staticBucket.Size, staticSet.resultData, staticSet.resultData.Length, staticVisibilityChanged.array, ref staticVisibilityChanged.count, frustumPlanes, time, frame);
-				}
-				if (ready2 && cell.dynamicBucket.Count > 0)
-				{
-					num2 = ProcessOccludees_Fast(dynamicStates.array, cell.dynamicBucket.Slots, cell.dynamicBucket.Size, dynamicSet.resultData, dynamicSet.resultData.Length, dynamicVisibilityChanged.array, ref dynamicVisibilityChanged.count, frustumPlanes, time, frame);
-				}
-				cell.isVisible = flag2 || num < cell.staticBucket.Count || num2 < cell.dynamicBucket.Count;
-			}
-		}
-	}
-
-	private void ApplyVisibility_Native(float time, uint frame)
-	{
-		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
-		bool ready = staticSet.Ready;
-		bool ready2 = dynamicSet.Ready;
-		for (int i = 0; i < grid.Size; i++)
-		{
-			Cell cell = grid[i];
-			if (cell == null || gridSet.resultData.Length == 0)
-			{
-				continue;
-			}
-			bool flag = FrustumCull(frustumPlanes, cell.sphereBounds);
-			bool flag2 = gridSet.resultData[i].r > 0 && flag;
-			if (cell.isVisible || flag2)
-			{
-				int num = 0;
-				int num2 = 0;
-				if (ready && cell.staticBucket.Count > 0)
-				{
-					num = ProcessOccludees_Native(ref staticStates.array[0], ref cell.staticBucket.Slots[0], cell.staticBucket.Size, ref staticSet.resultData[0], staticSet.resultData.Length, ref staticVisibilityChanged.array[0], ref staticVisibilityChanged.count, ref frustumPlanes[0], time, frame);
-				}
-				if (ready2 && cell.dynamicBucket.Count > 0)
-				{
-					num2 = ProcessOccludees_Native(ref dynamicStates.array[0], ref cell.dynamicBucket.Slots[0], cell.dynamicBucket.Size, ref dynamicSet.resultData[0], dynamicSet.resultData.Length, ref dynamicVisibilityChanged.array[0], ref dynamicVisibilityChanged.count, ref frustumPlanes[0], time, frame);
-				}
-				cell.isVisible = flag2 || num < cell.staticBucket.Count || num2 < cell.dynamicBucket.Count;
-			}
-		}
-	}
-
-	private void ProcessCallbacks(SimpleList<OccludeeState> occludees, SimpleList<OccludeeState.State> states, SimpleList<int> changed)
-	{
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004a: Expected O, but got Unknown
-		for (int i = 0; i < changed.Count; i++)
-		{
-			int num = changed[i];
-			OccludeeState occludeeState = occludees[num];
-			if (occludeeState != null)
-			{
-				bool flag = states.array[num].isVisible == 0;
-				OnVisibilityChanged onVisibilityChanged = occludeeState.onVisibilityChanged;
-				if (onVisibilityChanged != null && (Object)onVisibilityChanged.Target != (Object)null)
-				{
-					onVisibilityChanged(flag);
-				}
-				if (occludeeState.slot >= 0)
-				{
-					states.array[occludeeState.slot].isVisible = (byte)(flag ? 1 : 0);
-				}
-			}
-		}
-		changed.Clear();
-	}
-
-	public void RetrieveAndApplyVisibility()
-	{
-		if (staticOccludees.Count > 0)
-		{
-			staticSet.GetResults();
-		}
-		if (dynamicOccludees.Count > 0)
-		{
-			dynamicSet.GetResults();
-		}
-		if (grid.Count > 0)
-		{
-			gridSet.GetResults();
-		}
-		if (debugSettings.showAllVisible)
-		{
-			for (int i = 0; i < staticSet.resultData.Length; i++)
-			{
-				staticSet.resultData[i].r = 1;
-			}
-			for (int j = 0; j < dynamicSet.resultData.Length; j++)
-			{
-				dynamicSet.resultData[j].r = 1;
-			}
-			for (int k = 0; k < gridSet.resultData.Length; k++)
-			{
-				gridSet.resultData[k].r = 1;
-			}
-		}
-		staticVisibilityChanged.EnsureCapacity(staticOccludees.Count);
-		dynamicVisibilityChanged.EnsureCapacity(dynamicOccludees.Count);
-		float time = Time.time;
-		uint frameCount = (uint)Time.frameCount;
-		if (useNativePath)
-		{
-			ApplyVisibility_Native(time, frameCount);
-		}
-		else
-		{
-			ApplyVisibility_Fast(time, frameCount);
-		}
-		ProcessCallbacks(staticOccludees, staticStates, staticVisibilityChanged);
-		ProcessCallbacks(dynamicOccludees, dynamicStates, dynamicVisibilityChanged);
-	}
-
 	public static bool DebugFilterIsDynamic(int filter)
 	{
-		if (filter != 1)
-		{
-			return filter == 4;
-		}
-		return true;
+		return filter == 1 || filter == 4;
 	}
 
 	public static bool DebugFilterIsStatic(int filter)
 	{
-		if (filter != 2)
-		{
-			return filter == 4;
-		}
-		return true;
+		return filter == 2 || filter == 4;
 	}
 
 	public static bool DebugFilterIsGrid(int filter)
 	{
-		if (filter != 3)
-		{
-			return filter == 4;
-		}
-		return true;
+		return filter == 3 || filter == 4;
 	}
 
 	private void DebugInitialize()
 	{
-		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001d: Expected O, but got Unknown
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Expected O, but got Unknown
 		debugMipMat = new Material(Shader.Find("Hidden/OcclusionCulling/DebugMip"))
 		{
 			hideFlags = (HideFlags)61
@@ -1801,50 +981,50 @@ public class OcclusionCulling : MonoBehaviour
 
 	public static void ExtractFrustum(Matrix4x4 viewProjMatrix, ref Vector4[] planes)
 	{
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0097: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0112: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0126: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0140: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0146: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0167: Unknown result type (might be due to invalid IL or missing references)
-		//IL_016d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0181: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0187: Unknown result type (might be due to invalid IL or missing references)
-		//IL_019b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01bb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01dc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ef: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0202: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0215: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0235: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0115: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0129: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0143: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0149: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0171: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0185: Unknown result type (might be due to invalid IL or missing references)
+		//IL_018b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01bf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01e1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0207: Unknown result type (might be due to invalid IL or missing references)
+		//IL_021a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_023b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_024f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0241: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0255: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0269: Unknown result type (might be due to invalid IL or missing references)
+		//IL_025b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_026f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0283: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0275: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0289: Unknown result type (might be due to invalid IL or missing references)
+		//IL_028f: Unknown result type (might be due to invalid IL or missing references)
 		planes[0].x = viewProjMatrix.m30 + viewProjMatrix.m00;
 		planes[0].y = viewProjMatrix.m31 + viewProjMatrix.m01;
 		planes[0].z = viewProjMatrix.m32 + viewProjMatrix.m02;
@@ -1901,12 +1081,12 @@ public class OcclusionCulling : MonoBehaviour
 
 	private void InitializeHiZMap()
 	{
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002a: Expected O, but got Unknown
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003e: Expected O, but got Unknown
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Expected O, but got Unknown
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0041: Expected O, but got Unknown
 		Shader val = Shader.Find("Hidden/OcclusionCulling/DepthDownscale");
 		Shader val2 = Shader.Find("Hidden/OcclusionCulling/BlitCopy");
 		downscaleMat = new Material(val)
@@ -1977,44 +1157,29 @@ public class OcclusionCulling : MonoBehaviour
 
 	private RenderTexture CreateDepthTexture(string name, int width, int height, bool mips = false)
 	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0037: Expected O, but got Unknown
-		RenderTexture val = new RenderTexture(width, height, 0, (RenderTextureFormat)14, (RenderTextureReadWrite)1)
-		{
-			name = name,
-			useMipMap = mips,
-			autoGenerateMips = false,
-			wrapMode = (TextureWrapMode)1,
-			filterMode = (FilterMode)0
-		};
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Expected O, but got Unknown
+		RenderTexture val = new RenderTexture(width, height, 0, (RenderTextureFormat)14, (RenderTextureReadWrite)1);
+		((Object)val).name = name;
+		val.useMipMap = mips;
+		val.autoGenerateMips = false;
+		((Texture)val).wrapMode = (TextureWrapMode)1;
+		((Texture)val).filterMode = (FilterMode)0;
 		val.Create();
 		return val;
 	}
 
 	private RenderTexture CreateDepthTextureMip(string name, int width, int height, int mip)
 	{
-		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003d: Expected O, but got Unknown
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Expected O, but got Unknown
 		int num = width >> mip;
 		int num2 = height >> mip;
-		RenderTexture val = new RenderTexture(num, num2, 0, (RenderTextureFormat)14, (RenderTextureReadWrite)1)
-		{
-			name = name,
-			useMipMap = false,
-			wrapMode = (TextureWrapMode)1,
-			filterMode = (FilterMode)0
-		};
+		RenderTexture val = new RenderTexture(num, num2, 0, (RenderTextureFormat)14, (RenderTextureReadWrite)1);
+		((Object)val).name = name;
+		val.useMipMap = false;
+		((Texture)val).wrapMode = (TextureWrapMode)1;
+		((Texture)val).filterMode = (FilterMode)0;
 		val.Create();
 		return val;
 	}
@@ -2029,9 +1194,9 @@ public class OcclusionCulling : MonoBehaviour
 
 	public void GenerateHiZMipChain()
 	{
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
 		if (HiZReady)
 		{
 			bool flag = true;
@@ -2056,25 +1221,31 @@ public class OcclusionCulling : MonoBehaviour
 
 	private void DebugDrawGizmos()
 	{
-		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0093: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ee: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0103: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0108: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0113: Unknown result type (might be due to invalid IL or missing references)
 		Camera component = ((Component)this).GetComponent<Camera>();
 		Gizmos.color = new Color(0.75f, 0.75f, 0f, 0.5f);
 		Gizmos.matrix = Matrix4x4.TRS(((Component)this).transform.position, ((Component)this).transform.rotation, Vector3.one);
@@ -2082,12 +1253,14 @@ public class OcclusionCulling : MonoBehaviour
 		Gizmos.color = Color.red;
 		Gizmos.matrix = Matrix4x4.identity;
 		Matrix4x4 worldToCameraMatrix = component.worldToCameraMatrix;
-		Matrix4x4 val = GL.GetGPUProjectionMatrix(component.projectionMatrix, false) * worldToCameraMatrix;
+		Matrix4x4 gPUProjectionMatrix = GL.GetGPUProjectionMatrix(component.projectionMatrix, false);
+		Matrix4x4 val = gPUProjectionMatrix * worldToCameraMatrix;
 		Vector4[] planes = (Vector4[])(object)new Vector4[6];
 		ExtractFrustum(val, ref planes);
+		Vector3 val2 = default(Vector3);
 		for (int i = 0; i < planes.Length; i++)
 		{
-			Vector3 val2 = new Vector3(planes[i].x, planes[i].y, planes[i].z);
+			((Vector3)(ref val2))._002Ector(planes[i].x, planes[i].y, planes[i].z);
 			float w = planes[i].w;
 			Vector3 val3 = -val2 * w;
 			Gizmos.DrawLine(val3, val3 * 2f);
@@ -2097,50 +1270,50 @@ public class OcclusionCulling : MonoBehaviour
 	private static int floor(float x)
 	{
 		int num = (int)x;
-		if (!(x < (float)num))
-		{
-			return num;
-		}
-		return num - 1;
+		return (x < (float)num) ? (num - 1) : num;
 	}
 
 	public static Cell RegisterToGrid(OccludeeState occludee)
 	{
-		//IL_0111: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0181: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0151: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01bd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01bf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c1: Unknown result type (might be due to invalid IL or missing references)
+		Profiler.BeginSample("BucketHash");
 		int num = floor(occludee.states.array[occludee.slot].sphereBounds.x * 0.01f);
 		int num2 = floor(occludee.states.array[occludee.slot].sphereBounds.y * 0.01f);
 		int num3 = floor(occludee.states.array[occludee.slot].sphereBounds.z * 0.01f);
 		int num4 = Mathf.Clamp(num, -1048575, 1048575);
 		int num5 = Mathf.Clamp(num2, -1048575, 1048575);
 		int num6 = Mathf.Clamp(num3, -1048575, 1048575);
-		long num7 = ((num4 >= 0) ? num4 : (num4 + 1048575));
+		ulong num7 = (ulong)((num4 >= 0) ? num4 : (num4 + 1048575));
 		ulong num8 = (ulong)((num5 >= 0) ? num5 : (num5 + 1048575));
 		ulong num9 = (ulong)((num6 >= 0) ? num6 : (num6 + 1048575));
-		ulong key = (ulong)(num7 << 42) | (num8 << 21) | num9;
+		ulong key = (num7 << 42) | (num8 << 21) | num9;
+		Profiler.EndSample();
+		Profiler.BeginSample("BucketFind");
 		Cell value;
-		bool num10 = grid.TryGetValue(key, out value);
-		if (!num10)
+		bool flag = grid.TryGetValue(key, out value);
+		Profiler.EndSample();
+		Profiler.BeginSample("BucketAdd");
+		if (!flag)
 		{
-			Vector3 val = new Vector3
-			{
-				x = (float)num * 100f + 50f,
-				y = (float)num2 * 100f + 50f,
-				z = (float)num3 * 100f + 50f
-			};
+			Vector3 val = default(Vector3);
+			val.x = (float)num * 100f + 50f;
+			val.y = (float)num2 * 100f + 50f;
+			val.z = (float)num3 * 100f + 50f;
 			Vector3 val2 = default(Vector3);
 			((Vector3)(ref val2))._002Ector(100f, 100f, 100f);
 			value = grid.Add(key).Initialize(num, num2, num3, new Bounds(val, val2));
 		}
 		SmartList smartList = (occludee.isStatic ? value.staticBucket : value.dynamicBucket);
-		if (!num10 || !smartList.Contains(occludee))
+		if (!flag || !smartList.Contains(occludee))
 		{
 			occludee.cell = value;
 			smartList.Add(occludee);
 			gridChanged.Enqueue(value);
 		}
+		Profiler.EndSample();
 		return value;
 	}
 
@@ -2159,9 +1332,9 @@ public class OcclusionCulling : MonoBehaviour
 	public static void UnregisterFromGrid(OccludeeState occludee)
 	{
 		Cell cell = occludee.cell;
-		SmartList obj = (occludee.isStatic ? cell.staticBucket : cell.dynamicBucket);
+		SmartList smartList = (occludee.isStatic ? cell.staticBucket : cell.dynamicBucket);
 		gridChanged.Enqueue(cell);
-		obj.Remove(occludee);
+		smartList.Remove(occludee);
 		if (cell.staticBucket.Count == 0 && cell.dynamicBucket.Count == 0)
 		{
 			grid.Remove(cell);
@@ -2172,9 +1345,9 @@ public class OcclusionCulling : MonoBehaviour
 
 	public void UpdateGridBuffers()
 	{
-		//IL_00ac: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00de: Unknown result type (might be due to invalid IL or missing references)
 		if (gridSet.CheckResize(grid.Size, 256))
 		{
 			if (debugSettings.log)
@@ -2190,14 +1363,845 @@ public class OcclusionCulling : MonoBehaviour
 			}
 		}
 		bool flag = gridChanged.Count > 0;
+		Profiler.BeginSample("UpdateInputData");
 		while (gridChanged.Count > 0)
 		{
 			Cell cell = gridChanged.Dequeue();
 			gridSet.inputData[cell.hashedPoolIndex] = Color.op_Implicit(cell.sphereBounds);
 		}
+		Profiler.EndSample();
 		if (flag)
 		{
+			Profiler.BeginSample("UpdateInputBuffer");
 			gridSet.UploadData();
+			Profiler.EndSample();
 		}
+	}
+
+	private static void GrowStatePool()
+	{
+		for (int i = 0; i < 2048; i++)
+		{
+			statePool.Enqueue(new OccludeeState());
+		}
+	}
+
+	private static OccludeeState Allocate()
+	{
+		if (statePool.Count == 0)
+		{
+			GrowStatePool();
+		}
+		return statePool.Dequeue();
+	}
+
+	private static void Release(OccludeeState state)
+	{
+		statePool.Enqueue(state);
+	}
+
+	private void Awake()
+	{
+		instance = this;
+		camera = ((Component)this).GetComponent<Camera>();
+		for (int i = 0; i < 6; i++)
+		{
+			frustumPropNames[i] = "_FrustumPlane" + i;
+		}
+	}
+
+	private void OnEnable()
+	{
+		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0092: Invalid comparison between Unknown and I4
+		//IL_00d6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ae: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01bc: Expected O, but got Unknown
+		//IL_0166: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0179: Expected O, but got Unknown
+		if (!Enabled)
+		{
+			Enabled = false;
+			return;
+		}
+		if (!Supported)
+		{
+			Debug.LogWarning((object)string.Concat("[OcclusionCulling] Disabled due to graphics device type ", SystemInfo.graphicsDeviceType, " not supported."));
+			Enabled = false;
+			return;
+		}
+		usePixelShaderFallback = usePixelShaderFallback || !SystemInfo.supportsComputeShaders || (Object)(object)computeShader == (Object)null || !computeShader.HasKernel("compute_cull");
+		useNativePath = (int)SystemInfo.graphicsDeviceType == 2 && SupportsNativePath();
+		useAsyncReadAPI = !useNativePath && SystemInfo.supportsAsyncGPUReadback;
+		if (!useNativePath && !useAsyncReadAPI)
+		{
+			Debug.LogWarning((object)("[OcclusionCulling] Disabled due to unsupported Async GPU Reads on device " + SystemInfo.graphicsDeviceType));
+			Enabled = false;
+			return;
+		}
+		for (int i = 0; i < staticOccludees.Count; i++)
+		{
+			staticChanged.Add(i);
+		}
+		for (int j = 0; j < dynamicOccludees.Count; j++)
+		{
+			dynamicChanged.Add(j);
+		}
+		if (usePixelShaderFallback)
+		{
+			fallbackMat = new Material(Shader.Find("Hidden/OcclusionCulling/Culling"))
+			{
+				hideFlags = (HideFlags)61
+			};
+		}
+		staticSet.Attach(this);
+		dynamicSet.Attach(this);
+		gridSet.Attach(this);
+		depthCopyMat = new Material(Shader.Find("Hidden/OcclusionCulling/DepthCopy"))
+		{
+			hideFlags = (HideFlags)61
+		};
+		InitializeHiZMap();
+		UpdateCameraMatrices(starting: true);
+	}
+
+	private bool SupportsNativePath()
+	{
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		bool result = true;
+		try
+		{
+			OccludeeState.State states = default(OccludeeState.State);
+			Color32 results = default(Color32);
+			((Color32)(ref results))._002Ector((byte)0, (byte)0, (byte)0, (byte)0);
+			Vector4 zero = Vector4.zero;
+			int bucket = 0;
+			int changed = 0;
+			int changedCount = 0;
+			ProcessOccludees_Native(ref states, ref bucket, 0, ref results, 0, ref changed, ref changedCount, ref zero, 0f, 0u);
+		}
+		catch (EntryPointNotFoundException)
+		{
+			Debug.Log((object)"[OcclusionCulling] Fast native path not available. Reverting to managed fallback.");
+			result = false;
+		}
+		return result;
+	}
+
+	private void OnDisable()
+	{
+		if ((Object)(object)fallbackMat != (Object)null)
+		{
+			Object.DestroyImmediate((Object)(object)fallbackMat);
+			fallbackMat = null;
+		}
+		if ((Object)(object)depthCopyMat != (Object)null)
+		{
+			Object.DestroyImmediate((Object)(object)depthCopyMat);
+			depthCopyMat = null;
+		}
+		staticSet.Dispose();
+		dynamicSet.Dispose();
+		gridSet.Dispose();
+		FinalizeHiZMap();
+	}
+
+	public static void MakeAllVisible()
+	{
+		for (int i = 0; i < staticOccludees.Count; i++)
+		{
+			if (staticOccludees[i] != null)
+			{
+				staticOccludees[i].MakeVisible();
+			}
+		}
+		for (int j = 0; j < dynamicOccludees.Count; j++)
+		{
+			if (dynamicOccludees[j] != null)
+			{
+				dynamicOccludees[j].MakeVisible();
+			}
+		}
+	}
+
+	private void Update()
+	{
+		if (!Enabled)
+		{
+			((Behaviour)this).enabled = false;
+			return;
+		}
+		CheckResizeHiZMap();
+		DebugUpdate();
+		DebugDraw();
+	}
+
+	public static void RecursiveAddOccludees<T>(Transform transform, float minTimeVisible = 0.1f, bool isStatic = true, bool stickyGizmos = false) where T : Occludee
+	{
+		//IL_0093: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009a: Expected O, but got Unknown
+		Renderer component = ((Component)transform).GetComponent<Renderer>();
+		Collider component2 = ((Component)transform).GetComponent<Collider>();
+		if ((Object)(object)component != (Object)null && (Object)(object)component2 != (Object)null)
+		{
+			T component3 = ((Component)component).gameObject.GetComponent<T>();
+			component3 = (((Object)(object)component3 == (Object)null) ? ((Component)component).gameObject.AddComponent<T>() : component3);
+			component3.minTimeVisible = minTimeVisible;
+			component3.isStatic = isStatic;
+			component3.stickyGizmos = stickyGizmos;
+			component3.Register();
+		}
+		foreach (Transform item in transform)
+		{
+			Transform transform2 = item;
+			RecursiveAddOccludees<T>(transform2, minTimeVisible, isStatic, stickyGizmos);
+		}
+	}
+
+	private static int FindFreeSlot(SimpleList<OccludeeState> occludees, SimpleList<OccludeeState.State> states, Queue<int> recycled)
+	{
+		int result;
+		if (recycled.Count > 0)
+		{
+			result = recycled.Dequeue();
+		}
+		else
+		{
+			if (occludees.Count == occludees.Capacity)
+			{
+				int num = Mathf.Min(occludees.Capacity + 2048, 1048576);
+				if (num > 0)
+				{
+					occludees.Capacity = num;
+					states.Capacity = num;
+				}
+			}
+			if (occludees.Count < occludees.Capacity)
+			{
+				result = occludees.Count;
+				occludees.Add(null);
+				states.Add(default(OccludeeState.State));
+			}
+			else
+			{
+				result = -1;
+			}
+		}
+		return result;
+	}
+
+	public static OccludeeState GetStateById(int id)
+	{
+		if (id >= 0 && id < 2097152)
+		{
+			bool flag = id < 1048576;
+			int index = (flag ? id : (id - 1048576));
+			if (flag)
+			{
+				return staticOccludees[index];
+			}
+			return dynamicOccludees[index];
+		}
+		return null;
+	}
+
+	public static int RegisterOccludee(Vector3 center, float radius, bool isVisible, float minTimeVisible, bool isStatic, int layer, OnVisibilityChanged onVisibilityChanged = null)
+	{
+		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
+		int num = -1;
+		num = ((!isStatic) ? RegisterOccludee(center, radius, isVisible, minTimeVisible, isStatic, layer, onVisibilityChanged, dynamicOccludees, dynamicStates, dynamicRecycled, dynamicChanged, dynamicSet, dynamicVisibilityChanged) : RegisterOccludee(center, radius, isVisible, minTimeVisible, isStatic, layer, onVisibilityChanged, staticOccludees, staticStates, staticRecycled, staticChanged, staticSet, staticVisibilityChanged));
+		return (num < 0 || isStatic) ? num : (num + 1048576);
+	}
+
+	private static int RegisterOccludee(Vector3 center, float radius, bool isVisible, float minTimeVisible, bool isStatic, int layer, OnVisibilityChanged onVisibilityChanged, SimpleList<OccludeeState> occludees, SimpleList<OccludeeState.State> states, Queue<int> recycled, List<int> changed, BufferSet set, SimpleList<int> visibilityChanged)
+	{
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+		int num = FindFreeSlot(occludees, states, recycled);
+		if (num >= 0)
+		{
+			Vector4 sphereBounds = default(Vector4);
+			((Vector4)(ref sphereBounds))._002Ector(center.x, center.y, center.z, radius);
+			OccludeeState occludeeState = Allocate().Initialize(states, set, num, sphereBounds, isVisible, minTimeVisible, isStatic, layer, onVisibilityChanged);
+			occludeeState.cell = RegisterToGrid(occludeeState);
+			occludees[num] = occludeeState;
+			changed.Add(num);
+			if (states.array[num].isVisible != 0 != occludeeState.cell.isVisible)
+			{
+				visibilityChanged.Add(num);
+			}
+		}
+		return num;
+	}
+
+	public static void UnregisterOccludee(int id)
+	{
+		if (id >= 0 && id < 2097152)
+		{
+			bool flag = id < 1048576;
+			int slot = (flag ? id : (id - 1048576));
+			if (flag)
+			{
+				UnregisterOccludee(slot, staticOccludees, staticRecycled, staticChanged);
+			}
+			else
+			{
+				UnregisterOccludee(slot, dynamicOccludees, dynamicRecycled, dynamicChanged);
+			}
+		}
+	}
+
+	private static void UnregisterOccludee(int slot, SimpleList<OccludeeState> occludees, Queue<int> recycled, List<int> changed)
+	{
+		OccludeeState occludeeState = occludees[slot];
+		UnregisterFromGrid(occludeeState);
+		recycled.Enqueue(slot);
+		changed.Add(slot);
+		Release(occludeeState);
+		occludees[slot] = null;
+		occludeeState.Invalidate();
+	}
+
+	public static void UpdateDynamicOccludee(int id, Vector3 center, float radius)
+	{
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
+		int num = id - 1048576;
+		if (num >= 0 && num < 1048576)
+		{
+			dynamicStates.array[num].sphereBounds = new Vector4(center.x, center.y, center.z, radius);
+			dynamicChanged.Add(num);
+		}
+	}
+
+	private void UpdateBuffers(SimpleList<OccludeeState> occludees, SimpleList<OccludeeState.State> states, BufferSet set, List<int> changed, bool isStatic)
+	{
+		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
+		int count = occludees.Count;
+		bool flag = changed.Count > 0;
+		Profiler.BeginSample("CheckResize");
+		set.CheckResize(count, 2048);
+		Profiler.EndSample();
+		Profiler.BeginSample("UpdateInputData");
+		for (int i = 0; i < changed.Count; i++)
+		{
+			int num = changed[i];
+			OccludeeState occludeeState = occludees[num];
+			if (occludeeState != null)
+			{
+				if (!isStatic)
+				{
+					UpdateInGrid(occludeeState);
+				}
+				set.inputData[num] = Color.op_Implicit(states[num].sphereBounds);
+			}
+			else
+			{
+				set.inputData[num] = Color.op_Implicit(Vector4.zero);
+			}
+		}
+		changed.Clear();
+		Profiler.EndSample();
+		if (flag)
+		{
+			Profiler.BeginSample("UpdateInputBuffer");
+			set.UploadData();
+			Profiler.EndSample();
+		}
+	}
+
+	private void UpdateCameraMatrices(bool starting = false)
+	{
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0097: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
+		if (!starting)
+		{
+			prevViewProjMatrix = viewProjMatrix;
+		}
+		Matrix4x4 val = Matrix4x4.Perspective(camera.fieldOfView, camera.aspect, camera.nearClipPlane, camera.farClipPlane);
+		viewMatrix = camera.worldToCameraMatrix;
+		projMatrix = GL.GetGPUProjectionMatrix(val, false);
+		viewProjMatrix = projMatrix * viewMatrix;
+		invViewProjMatrix = Matrix4x4.Inverse(viewProjMatrix);
+		if (starting)
+		{
+			prevViewProjMatrix = viewProjMatrix;
+		}
+	}
+
+	private void OnPreCull()
+	{
+		UpdateCameraMatrices();
+		GenerateHiZMipChain();
+		PrepareAndDispatch();
+		IssueRead();
+		if (grid.Size <= gridSet.resultData.Length)
+		{
+			RetrieveAndApplyVisibility();
+			return;
+		}
+		Debug.LogWarning((object)("[OcclusionCulling] Grid size and result capacity are out of sync: " + grid.Size + ", " + gridSet.resultData.Length));
+	}
+
+	private void OnPostRender()
+	{
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		bool sRGBWrite = GL.sRGBWrite;
+		RenderBuffer activeColorBuffer = Graphics.activeColorBuffer;
+		RenderBuffer activeDepthBuffer = Graphics.activeDepthBuffer;
+		GrabDepthTexture();
+		Graphics.SetRenderTarget(activeColorBuffer, activeDepthBuffer);
+		GL.sRGBWrite = sRGBWrite;
+	}
+
+	private float[] MatrixToFloatArray(Matrix4x4 m)
+	{
+		int i = 0;
+		int num = 0;
+		for (; i < 4; i++)
+		{
+			for (int j = 0; j < 4; j++)
+			{
+				matrixToFloatTemp[num++] = ((Matrix4x4)(ref m))[j, i];
+			}
+		}
+		return matrixToFloatTemp;
+	}
+
+	private void PrepareAndDispatch()
+	{
+		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
+		//IL_018b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01e6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01eb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0201: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0202: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0097: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ca: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_024a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012b: Unknown result type (might be due to invalid IL or missing references)
+		Profiler.BeginSample("PrepareAndDispatch");
+		Vector2 val = default(Vector2);
+		((Vector2)(ref val))._002Ector((float)hiZWidth, (float)hiZHeight);
+		ExtractFrustum(viewProjMatrix, ref frustumPlanes);
+		bool flag = true;
+		if (usePixelShaderFallback)
+		{
+			fallbackMat.SetTexture("_HiZMap", (Texture)(object)hiZTexture);
+			fallbackMat.SetFloat("_HiZMaxLod", (float)(hiZLevelCount - 1));
+			fallbackMat.SetMatrix("_ViewMatrix", viewMatrix);
+			fallbackMat.SetMatrix("_ProjMatrix", projMatrix);
+			fallbackMat.SetMatrix("_ViewProjMatrix", viewProjMatrix);
+			fallbackMat.SetVector("_CameraWorldPos", Vector4.op_Implicit(((Component)this).transform.position));
+			fallbackMat.SetVector("_ViewportSize", Vector4.op_Implicit(val));
+			fallbackMat.SetFloat("_FrustumCull", flag ? 0f : 1f);
+			for (int i = 0; i < 6; i++)
+			{
+				fallbackMat.SetVector(frustumPropNames[i], frustumPlanes[i]);
+			}
+		}
+		else
+		{
+			computeShader.SetTexture(0, "_HiZMap", (Texture)(object)hiZTexture);
+			computeShader.SetFloat("_HiZMaxLod", (float)(hiZLevelCount - 1));
+			computeShader.SetFloats("_ViewMatrix", MatrixToFloatArray(viewMatrix));
+			computeShader.SetFloats("_ProjMatrix", MatrixToFloatArray(projMatrix));
+			computeShader.SetFloats("_ViewProjMatrix", MatrixToFloatArray(viewProjMatrix));
+			computeShader.SetVector("_CameraWorldPos", Vector4.op_Implicit(((Component)this).transform.position));
+			computeShader.SetVector("_ViewportSize", Vector4.op_Implicit(val));
+			computeShader.SetFloat("_FrustumCull", flag ? 0f : 1f);
+			for (int j = 0; j < 6; j++)
+			{
+				computeShader.SetVector(frustumPropNames[j], frustumPlanes[j]);
+			}
+		}
+		if (staticOccludees.Count > 0)
+		{
+			Profiler.BeginSample("UpdateStaticBuffers");
+			UpdateBuffers(staticOccludees, staticStates, staticSet, staticChanged, isStatic: true);
+			Profiler.EndSample();
+			Profiler.BeginSample("DispatchStatic");
+			staticSet.Dispatch(staticOccludees.Count);
+			Profiler.EndSample();
+		}
+		if (dynamicOccludees.Count > 0)
+		{
+			Profiler.BeginSample("UpdateDynamicBuffers");
+			UpdateBuffers(dynamicOccludees, dynamicStates, dynamicSet, dynamicChanged, isStatic: false);
+			Profiler.EndSample();
+			Profiler.BeginSample("DispatchDynamic");
+			dynamicSet.Dispatch(dynamicOccludees.Count);
+			Profiler.EndSample();
+		}
+		Profiler.BeginSample("UpdateGridBuffers");
+		UpdateGridBuffers();
+		Profiler.EndSample();
+		Profiler.BeginSample("DispatchGrid");
+		gridSet.Dispatch(grid.Size);
+		Profiler.EndSample();
+		Profiler.EndSample();
+	}
+
+	private void IssueRead()
+	{
+		Profiler.BeginSample("IssueRead");
+		if (staticOccludees.Count > 0)
+		{
+			staticSet.IssueRead();
+		}
+		if (dynamicOccludees.Count > 0)
+		{
+			dynamicSet.IssueRead();
+		}
+		if (grid.Count > 0)
+		{
+			gridSet.IssueRead();
+		}
+		GL.IssuePluginEvent(Graphics.GetRenderEventFunc(), 2);
+		Profiler.EndSample();
+	}
+
+	public void ResetTiming(SmartList bucket)
+	{
+		for (int i = 0; i < bucket.Size; i++)
+		{
+			OccludeeState occludeeState = bucket[i];
+			if (occludeeState != null)
+			{
+				occludeeState.states.array[occludeeState.slot].waitTime = 0f;
+			}
+		}
+	}
+
+	public void ResetTiming()
+	{
+		for (int i = 0; i < grid.Size; i++)
+		{
+			Cell cell = grid[i];
+			if (cell != null)
+			{
+				ResetTiming(cell.staticBucket);
+				ResetTiming(cell.dynamicBucket);
+			}
+		}
+	}
+
+	private static bool FrustumCull(Vector4[] planes, Vector4 testSphere)
+	{
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		for (int i = 0; i < 6; i++)
+		{
+			float num = planes[i].x * testSphere.x + planes[i].y * testSphere.y + planes[i].z * testSphere.z + planes[i].w;
+			if (num < 0f - testSphere.w)
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private static int ProcessOccludees_Safe(SimpleList<OccludeeState.State> states, SmartList bucket, Color32[] results, SimpleList<int> changed, Vector4[] frustumPlanes, float time, uint frame)
+	{
+		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+		int num = 0;
+		for (int i = 0; i < bucket.Size; i++)
+		{
+			OccludeeState occludeeState = bucket[i];
+			if (occludeeState == null || occludeeState.slot >= results.Length)
+			{
+				continue;
+			}
+			int slot = occludeeState.slot;
+			OccludeeState.State value = states[slot];
+			bool flag = FrustumCull(frustumPlanes, value.sphereBounds);
+			bool flag2 = results[slot].r > 0 && flag;
+			if (flag2 || frame < value.waitFrame)
+			{
+				value.waitTime = time + value.minTimeVisible;
+			}
+			if (!flag2)
+			{
+				flag2 = time < value.waitTime;
+			}
+			if (flag2 != (value.isVisible != 0))
+			{
+				if (value.callback != 0)
+				{
+					changed.Add(slot);
+				}
+				else
+				{
+					value.isVisible = (byte)(flag2 ? 1 : 0);
+				}
+			}
+			states[slot] = value;
+			num += value.isVisible;
+		}
+		return num;
+	}
+
+	private static int ProcessOccludees_Fast(OccludeeState.State[] states, int[] bucket, int bucketCount, Color32[] results, int resultCount, int[] changed, ref int changedCount, Vector4[] frustumPlanes, float time, uint frame)
+	{
+		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
+		int num = 0;
+		for (int i = 0; i < bucketCount; i++)
+		{
+			int num2 = bucket[i];
+			if (num2 < 0 || num2 >= resultCount || states[num2].active == 0)
+			{
+				continue;
+			}
+			OccludeeState.State state = states[num2];
+			bool flag = FrustumCull(frustumPlanes, state.sphereBounds);
+			bool flag2 = results[num2].r > 0 && flag;
+			if (flag2 || frame < state.waitFrame)
+			{
+				state.waitTime = time + state.minTimeVisible;
+			}
+			if (!flag2)
+			{
+				flag2 = time < state.waitTime;
+			}
+			if (flag2 != (state.isVisible != 0))
+			{
+				if (state.callback != 0)
+				{
+					changed[changedCount++] = num2;
+				}
+				else
+				{
+					state.isVisible = (byte)(flag2 ? 1 : 0);
+				}
+			}
+			states[num2] = state;
+			num += ((!flag2) ? 1 : 0);
+		}
+		return num;
+	}
+
+	[DllImport("Renderer", EntryPoint = "CULL_ProcessOccludees")]
+	private static extern int ProcessOccludees_Native(ref OccludeeState.State states, ref int bucket, int bucketCount, ref Color32 results, int resultCount, ref int changed, ref int changedCount, ref Vector4 frustumPlanes, float time, uint frame);
+
+	private void ApplyVisibility_Safe(float time, uint frame)
+	{
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		bool ready = staticSet.Ready;
+		bool ready2 = dynamicSet.Ready;
+		for (int i = 0; i < grid.Size; i++)
+		{
+			Cell cell = grid[i];
+			if (cell == null || gridSet.resultData.Length == 0)
+			{
+				continue;
+			}
+			bool flag = FrustumCull(frustumPlanes, cell.sphereBounds);
+			bool flag2 = gridSet.resultData[i].r > 0 && flag;
+			if (cell.isVisible || flag2)
+			{
+				int num = 0;
+				int num2 = 0;
+				if (ready && cell.staticBucket.Count > 0)
+				{
+					num = ProcessOccludees_Safe(staticStates, cell.staticBucket, staticSet.resultData, staticVisibilityChanged, frustumPlanes, time, frame);
+				}
+				if (ready2 && cell.dynamicBucket.Count > 0)
+				{
+					num2 = ProcessOccludees_Safe(dynamicStates, cell.dynamicBucket, dynamicSet.resultData, dynamicVisibilityChanged, frustumPlanes, time, frame);
+				}
+				cell.isVisible = flag2 || num < cell.staticBucket.Count || num2 < cell.dynamicBucket.Count;
+			}
+		}
+	}
+
+	private void ApplyVisibility_Fast(float time, uint frame)
+	{
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		bool ready = staticSet.Ready;
+		bool ready2 = dynamicSet.Ready;
+		for (int i = 0; i < grid.Size; i++)
+		{
+			Cell cell = grid[i];
+			if (cell == null || gridSet.resultData.Length == 0)
+			{
+				continue;
+			}
+			bool flag = FrustumCull(frustumPlanes, cell.sphereBounds);
+			bool flag2 = gridSet.resultData[i].r > 0 && flag;
+			if (cell.isVisible || flag2)
+			{
+				int num = 0;
+				int num2 = 0;
+				if (ready && cell.staticBucket.Count > 0)
+				{
+					num = ProcessOccludees_Fast(staticStates.array, cell.staticBucket.Slots, cell.staticBucket.Size, staticSet.resultData, staticSet.resultData.Length, staticVisibilityChanged.array, ref staticVisibilityChanged.count, frustumPlanes, time, frame);
+				}
+				if (ready2 && cell.dynamicBucket.Count > 0)
+				{
+					num2 = ProcessOccludees_Fast(dynamicStates.array, cell.dynamicBucket.Slots, cell.dynamicBucket.Size, dynamicSet.resultData, dynamicSet.resultData.Length, dynamicVisibilityChanged.array, ref dynamicVisibilityChanged.count, frustumPlanes, time, frame);
+				}
+				cell.isVisible = flag2 || num < cell.staticBucket.Count || num2 < cell.dynamicBucket.Count;
+			}
+		}
+	}
+
+	private void ApplyVisibility_Native(float time, uint frame)
+	{
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		bool ready = staticSet.Ready;
+		bool ready2 = dynamicSet.Ready;
+		for (int i = 0; i < grid.Size; i++)
+		{
+			Cell cell = grid[i];
+			if (cell == null || gridSet.resultData.Length == 0)
+			{
+				continue;
+			}
+			bool flag = FrustumCull(frustumPlanes, cell.sphereBounds);
+			bool flag2 = gridSet.resultData[i].r > 0 && flag;
+			if (cell.isVisible || flag2)
+			{
+				int num = 0;
+				int num2 = 0;
+				if (ready && cell.staticBucket.Count > 0)
+				{
+					num = ProcessOccludees_Native(ref staticStates.array[0], ref cell.staticBucket.Slots[0], cell.staticBucket.Size, ref staticSet.resultData[0], staticSet.resultData.Length, ref staticVisibilityChanged.array[0], ref staticVisibilityChanged.count, ref frustumPlanes[0], time, frame);
+				}
+				if (ready2 && cell.dynamicBucket.Count > 0)
+				{
+					num2 = ProcessOccludees_Native(ref dynamicStates.array[0], ref cell.dynamicBucket.Slots[0], cell.dynamicBucket.Size, ref dynamicSet.resultData[0], dynamicSet.resultData.Length, ref dynamicVisibilityChanged.array[0], ref dynamicVisibilityChanged.count, ref frustumPlanes[0], time, frame);
+				}
+				cell.isVisible = flag2 || num < cell.staticBucket.Count || num2 < cell.dynamicBucket.Count;
+			}
+		}
+	}
+
+	private void ProcessCallbacks(SimpleList<OccludeeState> occludees, SimpleList<OccludeeState.State> states, SimpleList<int> changed)
+	{
+		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0061: Expected O, but got Unknown
+		for (int i = 0; i < changed.Count; i++)
+		{
+			int num = changed[i];
+			OccludeeState occludeeState = occludees[num];
+			if (occludeeState != null)
+			{
+				bool flag = states.array[num].isVisible == 0;
+				OnVisibilityChanged onVisibilityChanged = occludeeState.onVisibilityChanged;
+				if (onVisibilityChanged != null && (Object)onVisibilityChanged.Target != (Object)null)
+				{
+					onVisibilityChanged(flag);
+				}
+				if (occludeeState.slot >= 0)
+				{
+					states.array[occludeeState.slot].isVisible = (byte)(flag ? 1 : 0);
+				}
+			}
+		}
+		changed.Clear();
+	}
+
+	public void RetrieveAndApplyVisibility()
+	{
+		if (staticOccludees.Count > 0)
+		{
+			Profiler.BeginSample("GetStaticResults");
+			staticSet.GetResults();
+			Profiler.EndSample();
+		}
+		if (dynamicOccludees.Count > 0)
+		{
+			Profiler.BeginSample("GetDynamicResults");
+			dynamicSet.GetResults();
+			Profiler.EndSample();
+		}
+		if (grid.Count > 0)
+		{
+			Profiler.BeginSample("GetGridResults");
+			gridSet.GetResults();
+			Profiler.EndSample();
+		}
+		if (debugSettings.showAllVisible)
+		{
+			for (int i = 0; i < staticSet.resultData.Length; i++)
+			{
+				staticSet.resultData[i].r = 1;
+			}
+			for (int j = 0; j < dynamicSet.resultData.Length; j++)
+			{
+				dynamicSet.resultData[j].r = 1;
+			}
+			for (int k = 0; k < gridSet.resultData.Length; k++)
+			{
+				gridSet.resultData[k].r = 1;
+			}
+		}
+		staticVisibilityChanged.EnsureCapacity(staticOccludees.Count);
+		dynamicVisibilityChanged.EnsureCapacity(dynamicOccludees.Count);
+		float time = Time.time;
+		uint frameCount = (uint)Time.frameCount;
+		Profiler.BeginSample("ApplyVisibility");
+		if (useNativePath)
+		{
+			Profiler.BeginSample("NativePath");
+			ApplyVisibility_Native(time, frameCount);
+			Profiler.EndSample();
+		}
+		else
+		{
+			Profiler.BeginSample("CSharpPath");
+			ApplyVisibility_Fast(time, frameCount);
+			Profiler.EndSample();
+		}
+		Profiler.EndSample();
+		Profiler.BeginSample("OnVisibilityChanged");
+		ProcessCallbacks(staticOccludees, staticStates, staticVisibilityChanged);
+		ProcessCallbacks(dynamicOccludees, dynamicStates, dynamicVisibilityChanged);
+		Profiler.EndSample();
 	}
 }

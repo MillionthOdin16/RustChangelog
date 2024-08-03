@@ -22,9 +22,9 @@ public class MainMenuSystem : SingletonComponent<MainMenuSystem>
 
 	public GameObject DemoBrowserButton;
 
-	public GameObject SuicideButton;
+	public GameObject SuicideButton = null;
 
-	public GameObject EndDemoButton;
+	public GameObject EndDemoButton = null;
 
 	public GameObject ReflexModeOption;
 

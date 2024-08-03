@@ -2,11 +2,11 @@ using UnityEngine;
 
 public class AvatarSwitcher : StateMachineBehaviour
 {
-	public Avatar ToApply;
+	public Avatar ToApply = null;
 
 	public override void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
 	{
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
 		((StateMachineBehaviour)this).OnStateEnter(animator, stateInfo, layerIndex);
 		if ((Object)(object)ToApply != (Object)null)
 		{

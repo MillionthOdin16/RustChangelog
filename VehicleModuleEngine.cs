@@ -71,17 +71,7 @@ public class VehicleModuleEngine : VehicleModuleStorage
 
 	public EngineAudioSet AudioSet => engine.audioSet;
 
-	private bool EngineIsOn
-	{
-		get
-		{
-			if ((Object)(object)base.Car != (Object)null)
-			{
-				return base.Car.CurEngineState == VehicleEngineController<GroundVehicle>.EngineState.On;
-			}
-			return false;
-		}
-	}
+	private bool EngineIsOn => (Object)(object)base.Car != (Object)null && base.Car.CurEngineState == VehicleEngineController<GroundVehicle>.EngineState.On;
 
 	public override void InitShared()
 	{
@@ -174,7 +164,7 @@ public class VehicleModuleEngine : VehicleModuleStorage
 	public override void Hurt(HitInfo info)
 	{
 		base.Hurt(info);
-		if (!IsTransferProtected() && info.damageTypes.GetMajorityDamageType() != DamageType.Decay)
+		if (info.damageTypes.GetMajorityDamageType() != DamageType.Decay)
 		{
 			float num = info.damageTypes.Total();
 			EngineStorage engineStorage = GetContainer() as EngineStorage;

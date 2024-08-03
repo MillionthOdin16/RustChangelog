@@ -3,19 +3,19 @@ using UnityEngine;
 
 public class TerrainHeightMap : TerrainMap<short>
 {
-	public Texture2D HeightTexture;
+	public Texture2D HeightTexture = null;
 
-	public Texture2D NormalTexture;
+	public Texture2D NormalTexture = null;
 
 	private float normY;
 
 	public override void Setup()
 	{
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00af: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d9: Unknown result type (might be due to invalid IL or missing references)
 		res = terrain.terrainData.heightmapResolution;
 		src = (dst = new short[res * res]);
 		normY = TerrainMeta.Size.x / TerrainMeta.Size.y / (float)res;
@@ -67,17 +67,17 @@ public class TerrainHeightMap : TerrainMap<short>
 
 	public void GenerateTextures(bool heightTexture = true, bool normalTexture = true)
 	{
-		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005d: Expected O, but got Unknown
-		//IL_00ed: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f7: Expected O, but got Unknown
+		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0062: Expected O, but got Unknown
+		//IL_00fa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0104: Expected O, but got Unknown
 		if (heightTexture)
 		{
 			Color32[] heights = (Color32[])(object)new Color32[res * res];
 			Parallel.For(0, res, (Action<int>)delegate(int z)
 			{
-				//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-				//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+				//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+				//IL_003b: Unknown result type (might be due to invalid IL or missing references)
 				for (int j = 0; j < res; j++)
 				{
 					heights[z * res + j] = BitUtility.EncodeShort(src[z * res + j]);
@@ -96,18 +96,18 @@ public class TerrainHeightMap : TerrainMap<short>
 		Color32[] normals = (Color32[])(object)new Color32[normalres * normalres];
 		Parallel.For(0, normalres, (Action<int>)delegate(int z)
 		{
-			//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0033: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0054: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0055: Unknown result type (might be due to invalid IL or missing references)
-			//IL_005c: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0061: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0072: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0073: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0078: Unknown result type (might be due to invalid IL or missing references)
-			//IL_007d: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0030: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+			//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0058: Unknown result type (might be due to invalid IL or missing references)
+			//IL_005f: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0064: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0076: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0077: Unknown result type (might be due to invalid IL or missing references)
+			//IL_007c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0081: Unknown result type (might be due to invalid IL or missing references)
 			float normZ = ((float)z + 0.5f) / (float)normalres;
 			for (int i = 0; i < normalres; i++)
 			{
@@ -136,25 +136,25 @@ public class TerrainHeightMap : TerrainMap<short>
 
 	public float GetHeight(Vector3 worldPos)
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
 		return TerrainMeta.Position.y + GetHeight01(worldPos) * TerrainMeta.Size.y;
 	}
 
 	public float GetHeight(float normX, float normZ)
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
 		return TerrainMeta.Position.y + GetHeight01(normX, normZ) * TerrainMeta.Size.y;
 	}
 
 	public float GetHeightFast(Vector2 uv)
 	{
-		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0100: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0108: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0114: Unknown result type (might be due to invalid IL or missing references)
 		int num = res - 1;
 		float num2 = uv.x * (float)num;
 		float num3 = uv.y * (float)num;
@@ -177,21 +177,22 @@ public class TerrainHeightMap : TerrainMap<short>
 		float num16 = (float)src[num12] * 3.051944E-05f;
 		float num17 = (float)src[num13] * 3.051944E-05f;
 		float num18 = (num15 - num14) * num6 + num14;
-		float num19 = ((num17 - num16) * num6 + num16 - num18) * num7 + num18;
-		return TerrainMeta.Position.y + num19 * TerrainMeta.Size.y;
+		float num19 = (num17 - num16) * num6 + num16;
+		float num20 = (num19 - num18) * num7 + num18;
+		return TerrainMeta.Position.y + num20 * TerrainMeta.Size.y;
 	}
 
 	public float GetHeight(int x, int z)
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
 		return TerrainMeta.Position.y + GetHeight01(x, z) * TerrainMeta.Size.y;
 	}
 
 	public float GetHeight01(Vector3 worldPos)
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
 		float normX = TerrainMeta.NormalizeX(worldPos.x);
 		float normZ = TerrainMeta.NormalizeZ(worldPos.z);
 		return GetHeight01(normX, normZ);
@@ -256,9 +257,11 @@ public class TerrainHeightMap : TerrainMap<short>
 
 	public Vector3 GetNormal(Vector3 worldPos)
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
 		float normX = TerrainMeta.NormalizeX(worldPos.x);
 		float normZ = TerrainMeta.NormalizeZ(worldPos.z);
 		return GetNormal(normX, normZ);
@@ -266,23 +269,29 @@ public class TerrainHeightMap : TerrainMap<short>
 
 	public Vector3 GetNormal(float normX, float normZ)
 	{
-		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0092: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0093: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0095: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0097: Unknown result type (might be due to invalid IL or missing references)
 		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ad: Unknown result type (might be due to invalid IL or missing references)
 		int num = res - 1;
 		float num2 = normX * (float)num;
 		float num3 = normZ * (float)num;
@@ -304,9 +313,11 @@ public class TerrainHeightMap : TerrainMap<short>
 
 	public Vector3 GetNormal(int x, int z)
 	{
-		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
 		int num = res - 1;
 		int x2 = Mathf.Clamp(x - 1, 0, num);
 		int z2 = Mathf.Clamp(z - 1, 0, num);
@@ -320,14 +331,16 @@ public class TerrainHeightMap : TerrainMap<short>
 
 	private Vector3 GetNormalSobel(int x, int z)
 	{
-		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ee: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0172: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_019a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ef: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0173: Unknown result type (might be due to invalid IL or missing references)
+		//IL_017e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a4: Unknown result type (might be due to invalid IL or missing references)
 		int num = res - 1;
 		Vector3 val = default(Vector3);
 		((Vector3)(ref val))._002Ector(TerrainMeta.Size.x / (float)num, TerrainMeta.Size.y, TerrainMeta.Size.z / (float)num);
@@ -358,29 +371,29 @@ public class TerrainHeightMap : TerrainMap<short>
 
 	public float GetSlope(Vector3 worldPos)
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
 		return Vector3.Angle(Vector3.up, GetNormal(worldPos));
 	}
 
 	public float GetSlope(float normX, float normZ)
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
 		return Vector3.Angle(Vector3.up, GetNormal(normX, normZ));
 	}
 
 	public float GetSlope(int x, int z)
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
 		return Vector3.Angle(Vector3.up, GetNormal(x, z));
 	}
 
 	public float GetSlope01(Vector3 worldPos)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
 		return GetSlope(worldPos) * (1f / 90f);
 	}
 
@@ -396,8 +409,8 @@ public class TerrainHeightMap : TerrainMap<short>
 
 	public void SetHeight(Vector3 worldPos, float height)
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
 		float normX = TerrainMeta.NormalizeX(worldPos.x);
 		float normZ = TerrainMeta.NormalizeZ(worldPos.z);
 		SetHeight(normX, normZ, height);
@@ -417,8 +430,8 @@ public class TerrainHeightMap : TerrainMap<short>
 
 	public void SetHeight(Vector3 worldPos, float height, float opacity)
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
 		float normX = TerrainMeta.NormalizeX(worldPos.x);
 		float normZ = TerrainMeta.NormalizeZ(worldPos.z);
 		SetHeight(normX, normZ, height, opacity);
@@ -439,8 +452,8 @@ public class TerrainHeightMap : TerrainMap<short>
 
 	public void AddHeight(Vector3 worldPos, float delta)
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
 		float normX = TerrainMeta.NormalizeX(worldPos.x);
 		float normZ = TerrainMeta.NormalizeZ(worldPos.z);
 		AddHeight(normX, normZ, delta);
@@ -461,8 +474,8 @@ public class TerrainHeightMap : TerrainMap<short>
 
 	public void LowerHeight(Vector3 worldPos, float height, float opacity)
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
 		float normX = TerrainMeta.NormalizeX(worldPos.x);
 		float normZ = TerrainMeta.NormalizeZ(worldPos.z);
 		LowerHeight(normX, normZ, height, opacity);
@@ -483,8 +496,8 @@ public class TerrainHeightMap : TerrainMap<short>
 
 	public void RaiseHeight(Vector3 worldPos, float height, float opacity)
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
 		float normX = TerrainMeta.NormalizeX(worldPos.x);
 		float normZ = TerrainMeta.NormalizeZ(worldPos.z);
 		RaiseHeight(normX, normZ, height, opacity);
@@ -505,9 +518,9 @@ public class TerrainHeightMap : TerrainMap<short>
 
 	public void SetHeight(Vector3 worldPos, float opacity, float radius, float fade = 0f)
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
 		float normX = TerrainMeta.NormalizeX(worldPos.x);
 		float normZ = TerrainMeta.NormalizeZ(worldPos.z);
 		float height = TerrainMeta.NormalizeY(worldPos.y);
@@ -528,9 +541,9 @@ public class TerrainHeightMap : TerrainMap<short>
 
 	public void LowerHeight(Vector3 worldPos, float opacity, float radius, float fade = 0f)
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
 		float normX = TerrainMeta.NormalizeX(worldPos.x);
 		float normZ = TerrainMeta.NormalizeZ(worldPos.z);
 		float height = TerrainMeta.NormalizeY(worldPos.y);
@@ -551,9 +564,9 @@ public class TerrainHeightMap : TerrainMap<short>
 
 	public void RaiseHeight(Vector3 worldPos, float opacity, float radius, float fade = 0f)
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
 		float normX = TerrainMeta.NormalizeX(worldPos.x);
 		float normZ = TerrainMeta.NormalizeZ(worldPos.z);
 		float height = TerrainMeta.NormalizeY(worldPos.y);
@@ -574,8 +587,8 @@ public class TerrainHeightMap : TerrainMap<short>
 
 	public void AddHeight(Vector3 worldPos, float delta, float radius, float fade = 0f)
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
 		float normX = TerrainMeta.NormalizeX(worldPos.x);
 		float normZ = TerrainMeta.NormalizeZ(worldPos.z);
 		AddHeight(normX, normZ, delta, radius, fade);

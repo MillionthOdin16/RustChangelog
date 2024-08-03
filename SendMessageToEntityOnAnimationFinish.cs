@@ -10,8 +10,8 @@ public class SendMessageToEntityOnAnimationFinish : StateMachineBehaviour
 
 	public override void OnStateUpdate(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
 	{
-		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
 		if (0f + repeatRate > Time.time || animator.IsInTransition(layerIndex) || ((AnimatorStateInfo)(ref stateInfo)).normalizedTime < 1f)
 		{
 			return;

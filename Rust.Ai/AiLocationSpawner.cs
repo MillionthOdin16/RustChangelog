@@ -63,8 +63,8 @@ public class AiLocationSpawner : SpawnGroup
 
 	protected override void Spawn(int numToSpawn)
 	{
-		//IL_0155: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0156: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019d: Unknown result type (might be due to invalid IL or missing references)
 		if (!ConVar.AI.npc_enable)
 		{
 			maxPopulation = 0;

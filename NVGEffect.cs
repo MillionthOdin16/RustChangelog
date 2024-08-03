@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.Profiling;
 using UnityStandardAssets.ImageEffects;
 
 [ExecuteInEditMode]
@@ -136,9 +137,9 @@ public class NVGEffect : PostEffectsBase, IImageEffect
 
 	private void UpdateColorCorrectionTexture(ColorCorrectionParams param, ref Texture2D tex)
 	{
-		//IL_0093: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d8: Unknown result type (might be due to invalid IL or missing references)
 		if (param.redChannel != null && param.greenChannel != null && param.blueChannel != null)
 		{
 			for (float num = 0f; num <= 1f; num += 0.003921569f)
@@ -163,14 +164,14 @@ public class NVGEffect : PostEffectsBase, IImageEffect
 
 	public override bool CheckResources()
 	{
-		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005f: Expected O, but got Unknown
-		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0082: Expected O, but got Unknown
+		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0068: Expected O, but got Unknown
+		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008d: Expected O, but got Unknown
 		((PostEffectsBase)this).CheckSupport(false);
 		material = ((PostEffectsBase)this).CheckShaderAndCreateMaterial(Shader, material);
 		if ((Object)(object)rgbChannelTex1 == (Object)null || (Object)(object)rgbChannelTex2 == (Object)null)
@@ -195,28 +196,24 @@ public class NVGEffect : PostEffectsBase, IImageEffect
 
 	public bool IsActive()
 	{
-		if (((Behaviour)this).enabled && ((PostEffectsBase)this).CheckResources())
-		{
-			return (Object)(object)NoiseTexture != (Object)null;
-		}
-		return false;
+		return ((Behaviour)this).enabled && ((PostEffectsBase)this).CheckResources() && (Object)(object)NoiseTexture != (Object)null;
 	}
 
 	public void OnRenderImage(RenderTexture source, RenderTexture destination)
 	{
-		//IL_00f1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ea: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0125: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0135: Unknown result type (might be due to invalid IL or missing references)
 		//IL_011e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_013a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0182: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0187: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01bd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01cd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01d2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0201: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0117: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0123: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0153: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0163: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0168: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ed: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01fd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0202: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0238: Unknown result type (might be due to invalid IL or missing references)
 		if (!((PostEffectsBase)this).CheckResources())
 		{
 			Graphics.Blit((Texture)(object)source, destination);
@@ -226,6 +223,7 @@ public class NVGEffect : PostEffectsBase, IImageEffect
 			}
 			return;
 		}
+		Profiler.BeginSample("NVGEffect");
 		if (updateTexturesOnStartup)
 		{
 			UpdateTextures();
@@ -282,5 +280,6 @@ public class NVGEffect : PostEffectsBase, IImageEffect
 		}
 		GL.End();
 		GL.PopMatrix();
+		Profiler.EndSample();
 	}
 }

@@ -3,6 +3,7 @@ using System.Collections;
 using Network;
 using Rust;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 public class FrankensteinPet : BasePet, IAISenses, IAIAttack
 {
@@ -11,9 +12,9 @@ public class FrankensteinPet : BasePet, IAISenses, IAIAttack
 	public static float decayminutes = 180f;
 
 	[Header("Audio")]
-	public SoundDefinition AttackVocalSFX;
+	public SoundDefinition AttackVocalSFX = null;
 
-	private float nextAttackTime;
+	private float nextAttackTime = 0f;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -75,11 +76,7 @@ public class FrankensteinPet : BasePet, IAISenses, IAIAttack
 
 	public bool IsTarget(BaseEntity entity)
 	{
-		if (entity is BasePlayer)
-		{
-			return !entity.IsNpc;
-		}
-		return false;
+		return entity is BasePlayer && !entity.IsNpc;
 	}
 
 	public bool IsFriendly(BaseEntity entity)
@@ -122,21 +119,24 @@ public class FrankensteinPet : BasePet, IAISenses, IAIAttack
 
 	public bool IsTargetInRange(BaseEntity entity, out float dist)
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
 		dist = Vector3.Distance(((Component)entity).transform.position, ((Component)this).transform.position);
 		return dist <= EngagementRange();
 	}
 
 	public bool CanSeeTarget(BaseEntity entity)
 	{
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)entity == (Object)null)
 		{
 			return false;
 		}
-		return entity.IsVisible(GetEntity().CenterPoint(), entity.CenterPoint());
+		Profiler.BeginSample("FrankensteinPet.CanSeeTarget");
+		bool result = entity.IsVisible(GetEntity().CenterPoint(), entity.CenterPoint());
+		Profiler.EndSample();
+		return result;
 	}
 
 	public bool NeedsToReload()
@@ -172,16 +172,17 @@ public class FrankensteinPet : BasePet, IAISenses, IAIAttack
 
 	private void Attack(BaseCombatEntity target)
 	{
-		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
 		if (!((Object)(object)target == (Object)null))
 		{
 			Vector3 val = target.ServerPosition - ServerPosition;
-			if (((Vector3)(ref val)).magnitude > 0.001f)
+			float magnitude = ((Vector3)(ref val)).magnitude;
+			if (magnitude > 0.001f)
 			{
 				ServerRotation = Quaternion.LookRotation(((Vector3)(ref val)).normalized);
 			}
@@ -203,6 +204,8 @@ public class FrankensteinPet : BasePet, IAISenses, IAIAttack
 
 	public BaseEntity GetBestTarget()
 	{
+		Profiler.BeginSample("FrankensteinPet.GetBestTarget");
+		Profiler.EndSample();
 		return null;
 	}
 
@@ -217,10 +220,10 @@ public class FrankensteinPet : BasePet, IAISenses, IAIAttack
 
 	public override BaseCorpse CreateCorpse()
 	{
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
 		TimeWarning val = TimeWarning.New("Create corpse", 0);
 		try
 		{
@@ -236,9 +239,9 @@ public class FrankensteinPet : BasePet, IAISenses, IAIAttack
 				nPCPlayerCorpse.playerSteamID = userID;
 				nPCPlayerCorpse.Spawn();
 				ItemContainer[] containers = nPCPlayerCorpse.containers;
-				for (int i = 0; i < containers.Length; i++)
+				foreach (ItemContainer itemContainer in containers)
 				{
-					containers[i].Clear();
+					itemContainer.Clear();
 				}
 			}
 			return nPCPlayerCorpse;

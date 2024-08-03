@@ -7,7 +7,7 @@ public class VirtualItemIcon : MonoBehaviour
 
 	public int itemAmount;
 
-	public bool asBlueprint;
+	public bool asBlueprint = false;
 
 	public Image iconImage;
 

@@ -24,26 +24,26 @@ public static class MeshGenerator
 
 	public static Mesh GenerateConeZ_Radius(float lengthZ, float radiusStart, float radiusEnd, int numSides, int numSegments, bool cap)
 	{
-		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003c: Expected O, but got Unknown
-		//IL_0117: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0158: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ec: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01d6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01db: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0206: Unknown result type (might be due to invalid IL or missing references)
-		//IL_020b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_026d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0272: Unknown result type (might be due to invalid IL or missing references)
-		//IL_027d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0289: Unknown result type (might be due to invalid IL or missing references)
-		//IL_028e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0472: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0492: Unknown result type (might be due to invalid IL or missing references)
-		//IL_049d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0041: Expected O, but got Unknown
+		//IL_013f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0144: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0186: Unknown result type (might be due to invalid IL or missing references)
+		//IL_018b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fe: Unknown result type (might be due to invalid IL or missing references)
+		//IL_021e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0223: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0259: Unknown result type (might be due to invalid IL or missing references)
+		//IL_025e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02d6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02db: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02e6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02f2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02f7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_052e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_054e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0559: Unknown result type (might be due to invalid IL or missing references)
 		Debug.Assert(lengthZ > 0f);
 		Debug.Assert(radiusStart >= 0f);
 		Debug.Assert(numSides >= 3);
@@ -128,44 +128,46 @@ public static class MeshGenerator
 			}
 			val.uv = array4;
 		}
-		int num13 = numSides * 2 * Mathf.Max(numSegments + 1, 1) * 3;
+		int num13 = numSides * 2 * Mathf.Max(numSegments + 1, 1);
+		int num14 = num13 * 3;
+		int num15 = num14;
 		if (flag)
 		{
-			num13 += numSides * 3;
+			num15 += numSides * 3;
 		}
-		int[] array5 = new int[num13];
-		int num14 = 0;
-		for (int num15 = 0; num15 < numSides; num15++)
+		int[] array5 = new int[num15];
+		int num16 = 0;
+		for (int num17 = 0; num17 < numSides; num17++)
 		{
-			int num16 = num15 + 1;
-			if (num16 == numSides)
+			int num18 = num17 + 1;
+			if (num18 == numSides)
 			{
-				num16 = 0;
+				num18 = 0;
 			}
-			for (int num17 = 0; num17 < numSegments + 1; num17++)
+			for (int num19 = 0; num19 < numSegments + 1; num19++)
 			{
-				int num18 = num17 * numSides;
-				array5[num14++] = num18 + num15;
-				array5[num14++] = num18 + num16;
-				array5[num14++] = num18 + num15 + numSides;
-				array5[num14++] = num18 + num16 + numSides;
-				array5[num14++] = num18 + num15 + numSides;
-				array5[num14++] = num18 + num16;
+				int num20 = num19 * numSides;
+				array5[num16++] = num20 + num17;
+				array5[num16++] = num20 + num18;
+				array5[num16++] = num20 + num17 + numSides;
+				array5[num16++] = num20 + num18 + numSides;
+				array5[num16++] = num20 + num17 + numSides;
+				array5[num16++] = num20 + num18;
 			}
 		}
 		if (flag)
 		{
-			for (int num19 = 0; num19 < numSides - 1; num19++)
+			for (int num21 = 0; num21 < numSides - 1; num21++)
 			{
-				array5[num14++] = num;
-				array5[num14++] = num + num19 + 2;
-				array5[num14++] = num + num19 + 1;
+				array5[num16++] = num;
+				array5[num16++] = num + num21 + 2;
+				array5[num16++] = num + num21 + 1;
 			}
-			array5[num14++] = num;
-			array5[num14++] = num + 1;
-			array5[num14++] = num + numSides;
+			array5[num16++] = num;
+			array5[num16++] = num + 1;
+			array5[num16++] = num + numSides;
 		}
-		Debug.Assert(num14 == array5.Length);
+		Debug.Assert(num16 == array5.Length);
 		if (!duplicateBackFaces)
 		{
 			val.triangles = array5;
@@ -174,11 +176,11 @@ public static class MeshGenerator
 		{
 			int[] array6 = new int[array5.Length * 2];
 			array5.CopyTo(array6, 0);
-			for (int num20 = 0; num20 < array5.Length; num20 += 3)
+			for (int num22 = 0; num22 < array5.Length; num22 += 3)
 			{
-				array6[array5.Length + num20] = array5[num20] + num2;
-				array6[array5.Length + num20 + 1] = array5[num20 + 2] + num2;
-				array6[array5.Length + num20 + 2] = array5[num20 + 1] + num2;
+				array6[array5.Length + num22] = array5[num22] + num2;
+				array6[array5.Length + num22 + 1] = array5[num22 + 2] + num2;
+				array6[array5.Length + num22 + 2] = array5[num22 + 1] + num2;
 			}
 			val.triangles = array6;
 		}

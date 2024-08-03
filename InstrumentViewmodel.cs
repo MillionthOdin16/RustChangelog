@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class InstrumentViewmodel : MonoBehaviour
 {
-	public Animator ViewAnimator;
+	public Animator ViewAnimator = null;
 
 	public bool UpdateA = true;
 
@@ -20,9 +20,9 @@ public class InstrumentViewmodel : MonoBehaviour
 
 	public bool UpdateRecentlyPlayed = true;
 
-	public bool UpdatePlayedNoteTrigger;
+	public bool UpdatePlayedNoteTrigger = false;
 
-	public bool UseTriggers;
+	public bool UseTriggers = false;
 
 	private readonly int note_a = Animator.StringToHash("play_A");
 

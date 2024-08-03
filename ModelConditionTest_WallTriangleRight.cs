@@ -18,12 +18,12 @@ public class ModelConditionTest_WallTriangleRight : ModelConditionTest
 
 	public static bool CheckCondition(BaseEntity ent)
 	{
-		//IL_00bc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0106: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0111: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0116: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0118: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0179: Unknown result type (might be due to invalid IL or missing references)
+		//IL_017e: Unknown result type (might be due to invalid IL or missing references)
 		if (CheckSocketOccupied(ent, "wall/sockets/wall-female"))
 		{
 			return false;
@@ -56,13 +56,22 @@ public class ModelConditionTest_WallTriangleRight : ModelConditionTest
 		for (int i = 0; i < entityLink.connections.Count; i++)
 		{
 			BuildingBlock buildingBlock = entityLink.connections[i].owner as BuildingBlock;
-			if (!((Object)(object)buildingBlock == (Object)null))
+			if ((Object)(object)buildingBlock == (Object)null)
 			{
-				if (buildingBlock.blockDefinition.info.name.token == "roof" && Vector3.Angle(((Component)ent).transform.forward, -((Component)buildingBlock).transform.forward) < 10f)
+				continue;
+			}
+			if (buildingBlock.blockDefinition.info.name.token == "roof")
+			{
+				float num = Vector3.Angle(((Component)ent).transform.forward, -((Component)buildingBlock).transform.forward);
+				if (num < 10f)
 				{
 					return true;
 				}
-				if (buildingBlock.blockDefinition.info.name.token == "roof_triangle" && Vector3.Angle(((Component)ent).transform.forward, -((Component)buildingBlock).transform.forward) < 40f)
+			}
+			if (buildingBlock.blockDefinition.info.name.token == "roof_triangle")
+			{
+				float num2 = Vector3.Angle(((Component)ent).transform.forward, -((Component)buildingBlock).transform.forward);
+				if (num2 < 40f)
 				{
 					return true;
 				}

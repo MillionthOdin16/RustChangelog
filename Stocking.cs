@@ -29,7 +29,8 @@ public class Stocking : LootContainer
 		}
 		for (int num = base.inventory.itemList.Count - 1; num >= 0; num--)
 		{
-			if (base.inventory.itemList[num] != null)
+			Item item = base.inventory.itemList[num];
+			if (item != null)
 			{
 				return false;
 			}

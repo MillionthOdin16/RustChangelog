@@ -179,8 +179,8 @@ public static class ImageProcessing
 	{
 		Parallel.For(0, len1, (Action<int>)delegate(int x)
 		{
-			//IL_000a: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0010: Expected O, but got Unknown
+			//IL_000b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0011: Expected O, but got Unknown
 			MaxQueue val2 = new MaxQueue(radius * 2 + 1);
 			for (int k = 0; k < radius; k++)
 			{
@@ -204,8 +204,8 @@ public static class ImageProcessing
 		});
 		Parallel.For(0, len2, (Action<int>)delegate(int y)
 		{
-			//IL_000a: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0010: Expected O, but got Unknown
+			//IL_000b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0011: Expected O, but got Unknown
 			MaxQueue val = new MaxQueue(radius * 2 + 1);
 			for (int i = 0; i < radius; i++)
 			{
@@ -290,19 +290,14 @@ public static class ImageProcessing
 		}
 	}
 
-	public static bool IsValidPNG(byte[] data, int maxSizeSquare)
-	{
-		return IsValidPNG(data, maxSizeSquare, maxSizeSquare);
-	}
-
 	public static bool IsValidPNG(byte[] data, int maxWidth, int maxHeight)
 	{
-		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ee: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0147: Unknown result type (might be due to invalid IL or missing references)
 		if (data == null || data.Length < 29)
 		{
 			return false;
@@ -368,11 +363,6 @@ public static class ImageProcessing
 		return true;
 	}
 
-	public static bool IsValidJPG(byte[] data, int maxSizeSquare)
-	{
-		return IsValidJPG(data, maxSizeSquare, maxSizeSquare);
-	}
-
 	public static bool IsValidJPG(byte[] data, int maxWidth, int maxHeight)
 	{
 		if (data.Length < 30)
@@ -421,7 +411,8 @@ public static class ImageProcessing
 				if (data[num + 1] == 192 || data[num + 1] == 193 || data[num + 1] == 194)
 				{
 					int num3 = (data[num + 5] << 8) | data[num + 6];
-					return ((data[num + 7] << 8) | data[num + 8]) <= maxWidth && num3 <= maxHeight;
+					int num4 = (data[num + 7] << 8) | data[num + 8];
+					return num4 <= maxWidth && num3 <= maxHeight;
 				}
 				num += 2;
 				num2 = (data[num] << 8) | data[num + 1];

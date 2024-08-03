@@ -26,7 +26,7 @@ public class IndustrialFilterDialog : UIDialog
 
 	public GameObject[] FilterModeExplanations;
 
-	public GameObject FilterModeBlocker;
+	public GameObject FilterModeBlocker = null;
 
 	public RustText FilterCountText;
 

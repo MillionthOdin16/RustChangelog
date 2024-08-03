@@ -2,6 +2,8 @@ using UnityEngine;
 
 public class IronSights : MonoBehaviour
 {
+	public bool Enabled = false;
+
 	[Header("View Setup")]
 	public IronsightAimPoint aimPoint;
 

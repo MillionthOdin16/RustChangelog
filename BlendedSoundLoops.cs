@@ -24,7 +24,7 @@ public class BlendedSoundLoops : MonoBehaviour, IClientComponent
 	}
 
 	[Range(0f, 1f)]
-	public float blend;
+	public float blend = 0f;
 
 	public float blendSmoothing = 1f;
 
@@ -42,5 +42,5 @@ public class BlendedSoundLoops : MonoBehaviour, IClientComponent
 
 	public List<Loop> loops = new List<Loop>();
 
-	public float maxDistance;
+	public float maxDistance = 0f;
 }

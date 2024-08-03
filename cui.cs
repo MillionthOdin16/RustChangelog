@@ -5,8 +5,8 @@ public class cui
 	[ServerUserVar]
 	public static void cui_test(Arg args)
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
 		CommunityEntity.ServerInstance.ClientRPCEx(new SendInfo
 		{
 			connection = args.Connection
@@ -16,8 +16,8 @@ public class cui
 	[ServerUserVar]
 	public static void cui_test_update(Arg args)
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
 		CommunityEntity.ServerInstance.ClientRPCEx(new SendInfo
 		{
 			connection = args.Connection
@@ -27,8 +27,8 @@ public class cui
 	[ServerUserVar]
 	public static void endtest(Arg args)
 	{
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
 		args.ReplyWith("Ending Test!");
 		CommunityEntity.ServerInstance.ClientRPCEx(new SendInfo
 		{

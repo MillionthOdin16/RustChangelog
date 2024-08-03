@@ -5,8 +5,6 @@ public class ChangeSignText : UIDialog
 {
 	public Action<int, Texture2D> onUpdateTexture;
 
-	public Action onClose;
-
 	public GameObject objectContainer;
 
 	public GameObject currentFrameSection;

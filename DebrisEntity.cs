@@ -3,7 +3,7 @@ using ConVar;
 
 public class DebrisEntity : BaseCombatEntity
 {
-	public float DebrisDespawnOverride;
+	public float DebrisDespawnOverride = 0f;
 
 	public override void ServerInit()
 	{
@@ -35,11 +35,7 @@ public class DebrisEntity : BaseCombatEntity
 
 	public float GetRemovalTime()
 	{
-		if (!(DebrisDespawnOverride > 0f))
-		{
-			return Server.debrisdespawn;
-		}
-		return DebrisDespawnOverride;
+		return (DebrisDespawnOverride > 0f) ? DebrisDespawnOverride : Server.debrisdespawn;
 	}
 
 	public void ResetRemovalTime()

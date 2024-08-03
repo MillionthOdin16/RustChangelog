@@ -12,17 +12,17 @@ public class HLODBounds : MonoBehaviour, IEditorComponent
 	public float CullDistance = 100f;
 
 	[Tooltip("If set, the lod will take over at this distance instead of the CullDistance (eg. we make a model based on what this area looks like at 200m but we actually want it take over rendering at 300m)")]
-	public float OverrideLodDistance;
+	public float OverrideLodDistance = 0f;
 
 	[Tooltip("Any renderers below this height will considered culled even if they are visible from a distance. Good for underground areas")]
-	public float CullBelowHeight;
+	public float CullBelowHeight = 0f;
 
 	[Tooltip("Optimises the mesh produced by removing non-visible and small faces. Can turn it off during dev but should be on for final builds")]
 	public bool ApplyMeshTrimming = true;
 
 	public MeshTrimSettings Settings = MeshTrimSettings.Default;
 
-	public RendererLOD DebugComponent;
+	public RendererLOD DebugComponent = null;
 
-	public bool ShowTrimSettings;
+	public bool ShowTrimSettings = false;
 }

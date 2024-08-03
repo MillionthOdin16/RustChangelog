@@ -1,6 +1,6 @@
 public class ClientIOLine_Pipe : ClientIOLine, INotifyLOD
 {
-	public NotifyLOD NotifyLod;
+	public NotifyLOD NotifyLod = null;
 
-	public PipeMesh PipeRenderer;
+	public PipeMesh PipeRenderer = null;
 }

@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.CompilerServices;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
@@ -24,22 +25,34 @@ internal static class BurstUtil
 
 	public unsafe static ref readonly T GetReadonly<T>(this in NativeArray<T> array, int index) where T : unmanaged
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		if (index < 0 || index >= array.Length)
+		{
+			throw new ArgumentOutOfRangeException("index");
+		}
 		T* unsafeReadOnlyPtr = (T*)NativeArrayUnsafeUtility.GetUnsafeReadOnlyPtr<T>(array);
 		return ref unsafeReadOnlyPtr[index];
 	}
 
 	public unsafe static ref T Get<T>(this in NativeArray<T> array, int index) where T : unmanaged
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		if (index < 0 || index >= array.Length)
+		{
+			throw new ArgumentOutOfRangeException("index");
+		}
 		T* unsafePtr = (T*)NativeArrayUnsafeUtility.GetUnsafePtr<T>(array);
 		return ref unsafePtr[index];
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static int GetColliderId(this RaycastHit hit)
+	public unsafe static int GetColliderId(this RaycastHit hit)
 	{
-		return ((RaycastHit)(ref hit)).colliderInstanceID;
+		return ((RaycastHitPublic*)(&hit))->m_Collider;
 	}
 
 	public unsafe static Collider GetCollider(int colliderInstanceId)

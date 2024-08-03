@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 public class BaseAnimalNPC : BaseNpc, IAIAttack, IAITirednessAbove, IAISleep, IAIHungerAbove, IAISenses, IThinker
 {
@@ -28,10 +29,12 @@ public class BaseAnimalNPC : BaseNpc, IAIAttack, IAITirednessAbove, IAISleep, IA
 
 	public virtual void TryThink()
 	{
+		Profiler.BeginSample("BaseAnimalNPC.TryThink");
 		if (brain.ShouldServerThink())
 		{
 			brain.DoThink();
 		}
+		Profiler.EndSample();
 	}
 
 	public override void OnKilled(HitInfo hitInfo = null)
@@ -111,21 +114,24 @@ public class BaseAnimalNPC : BaseNpc, IAIAttack, IAITirednessAbove, IAISleep, IA
 
 	public bool IsTargetInRange(BaseEntity entity, out float dist)
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
 		dist = Vector3.Distance(((Component)entity).transform.position, base.AttackPosition);
 		return dist <= EngagementRange();
 	}
 
 	public bool CanSeeTarget(BaseEntity entity)
 	{
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)entity == (Object)null)
 		{
 			return false;
 		}
-		return entity.IsVisible(GetEntity().CenterPoint(), entity.CenterPoint());
+		Profiler.BeginSample("BaseAnimalNPC.CanSeeTarget");
+		bool result = entity.IsVisible(GetEntity().CenterPoint(), entity.CenterPoint());
+		Profiler.EndSample();
+		return result;
 	}
 
 	public bool Reload()

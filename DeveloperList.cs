@@ -25,10 +25,6 @@ public static class DeveloperList
 
 	public static bool IsDeveloper(BasePlayer ply)
 	{
-		if ((Object)(object)ply != (Object)null)
-		{
-			return Contains(ply.UserIDString);
-		}
-		return false;
+		return (Object)(object)ply != (Object)null && Contains(ply.UserIDString);
 	}
 }

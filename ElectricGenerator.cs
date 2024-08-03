@@ -68,8 +68,8 @@ public class ElectricGenerator : IOEntity
 
 	public override void Save(SaveInfo info)
 	{
-		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
 		base.Save(info);
 		if (!info.forDisk)
 		{
@@ -92,7 +92,7 @@ public class ElectricGenerator : IOEntity
 
 	public override void Load(LoadInfo info)
 	{
-		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
 		base.Load(info);
 		if (!info.fromDisk || info.msg.puzzleReset == null)
 		{

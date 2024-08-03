@@ -4,11 +4,11 @@ using UnityEngine.UI;
 
 public class CompassMapMarker : MonoBehaviour
 {
-	public Image MarkerImage;
+	public Image MarkerImage = null;
 
-	public Image MarkerImageOuter;
+	public Image MarkerImageOuter = null;
 
-	public GameObject LeaderRoot;
+	public GameObject LeaderRoot = null;
 
 	public RustText MarkerLabel;
 }

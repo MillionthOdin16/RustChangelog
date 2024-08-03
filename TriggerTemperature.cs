@@ -7,9 +7,9 @@ public class TriggerTemperature : TriggerBase
 
 	public float triggerSize;
 
-	public float minSize;
+	public float minSize = 0f;
 
-	public bool sunlightBlocker;
+	public bool sunlightBlocker = false;
 
 	public float sunlightBlockAmount;
 
@@ -21,29 +21,31 @@ public class TriggerTemperature : TriggerBase
 
 	private void OnValidate()
 	{
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-		if ((Object)(object)((Component)this).GetComponent<SphereCollider>() != (Object)null)
+		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		SphereCollider component = ((Component)this).GetComponent<SphereCollider>();
+		if ((Object)(object)component != (Object)null)
 		{
 			triggerSize = ((Component)this).GetComponent<SphereCollider>().radius * ((Component)this).transform.localScale.y;
 			return;
 		}
-		Vector3 val = Vector3.Scale(((Component)this).GetComponent<BoxCollider>().size, ((Component)this).transform.localScale);
+		BoxCollider component2 = ((Component)this).GetComponent<BoxCollider>();
+		Vector3 val = Vector3.Scale(component2.size, ((Component)this).transform.localScale);
 		triggerSize = Vector3Ex.Max(val) * 0.5f;
 	}
 
 	public float WorkoutTemperature(Vector3 position, float oldTemperature)
 	{
-		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
 		if (sunlightBlocker)
 		{
 			float time = Env.time;

@@ -15,9 +15,9 @@ public class HostileNote : MonoBehaviour, IClientComponent
 
 	public Text smallWarningText;
 
-	public static float unhostileTime;
+	public static float unhostileTime = 0f;
 
-	public static float weaponDrawnDuration;
+	public static float weaponDrawnDuration = 0f;
 
 	public Color warnColor;
 

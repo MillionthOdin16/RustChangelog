@@ -4,10 +4,6 @@ using UnityEngine;
 
 public class PlayerBelt
 {
-	public static int ClientAutoSelectSlot = -1;
-
-	public static uint ClientAutoSeletItemUID = 0u;
-
 	public static int SelectedSlot = -1;
 
 	protected BasePlayer player;
@@ -21,11 +17,11 @@ public class PlayerBelt
 
 	public void DropActive(Vector3 position, Vector3 velocity)
 	{
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
 		Item activeItem = player.GetActiveItem();
 		if (activeItem == null)
 		{

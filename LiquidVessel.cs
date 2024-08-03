@@ -17,7 +17,7 @@ public class LiquidVessel : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - DoEmpty "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - DoEmpty "));
 				}
 				TimeWarning val2 = TimeWarning.New("DoEmpty", 0);
 				try
@@ -36,7 +36,7 @@ public class LiquidVessel : HeldEntity
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -48,7 +48,7 @@ public class LiquidVessel : HeldEntity
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -118,7 +118,8 @@ public class LiquidVessel : HeldEntity
 		using List<Item>.Enumerator enumerator = item.contents.itemList.GetEnumerator();
 		if (enumerator.MoveNext())
 		{
-			enumerator.Current.UseItem(50);
+			Item current = enumerator.Current;
+			current.UseItem(50);
 		}
 	}
 

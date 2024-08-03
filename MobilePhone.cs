@@ -8,7 +8,7 @@ using UnityEngine.Assertions;
 
 public class MobilePhone : HeldEntity
 {
-	public PhoneController Controller;
+	public PhoneController Controller = null;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -20,7 +20,7 @@ public class MobilePhone : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - AnswerPhone "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - AnswerPhone "));
 				}
 				TimeWarning val2 = TimeWarning.New("AnswerPhone", 0);
 				try
@@ -39,7 +39,7 @@ public class MobilePhone : HeldEntity
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -51,7 +51,7 @@ public class MobilePhone : HeldEntity
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -71,12 +71,12 @@ public class MobilePhone : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ClearCurrentUser "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ClearCurrentUser "));
 				}
-				TimeWarning val2 = TimeWarning.New("ClearCurrentUser", 0);
+				TimeWarning val5 = TimeWarning.New("ClearCurrentUser", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					TimeWarning val6 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.FromOwner.Test(2754362156u, "ClearCurrentUser", this, player))
@@ -86,11 +86,11 @@ public class MobilePhone : HeldEntity
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val6)?.Dispose();
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val7 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -102,7 +102,7 @@ public class MobilePhone : HeldEntity
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val7)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -113,7 +113,7 @@ public class MobilePhone : HeldEntity
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val5)?.Dispose();
 				}
 				return true;
 			}
@@ -122,12 +122,12 @@ public class MobilePhone : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - InitiateCall "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - InitiateCall "));
 				}
-				TimeWarning val2 = TimeWarning.New("InitiateCall", 0);
+				TimeWarning val8 = TimeWarning.New("InitiateCall", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					TimeWarning val9 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.FromOwner.Test(1095090232u, "InitiateCall", this, player))
@@ -137,11 +137,11 @@ public class MobilePhone : HeldEntity
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val9)?.Dispose();
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val10 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -153,7 +153,7 @@ public class MobilePhone : HeldEntity
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val10)?.Dispose();
 						}
 					}
 					catch (Exception ex3)
@@ -164,7 +164,7 @@ public class MobilePhone : HeldEntity
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val8)?.Dispose();
 				}
 				return true;
 			}
@@ -173,12 +173,12 @@ public class MobilePhone : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_AddSavedNumber "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_AddSavedNumber "));
 				}
-				TimeWarning val2 = TimeWarning.New("Server_AddSavedNumber", 0);
+				TimeWarning val11 = TimeWarning.New("Server_AddSavedNumber", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					TimeWarning val12 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.CallsPerSecond.Test(2606442785u, "Server_AddSavedNumber", this, player, 5uL))
@@ -192,11 +192,11 @@ public class MobilePhone : HeldEntity
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val12)?.Dispose();
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val13 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -208,7 +208,7 @@ public class MobilePhone : HeldEntity
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val13)?.Dispose();
 						}
 					}
 					catch (Exception ex4)
@@ -219,7 +219,7 @@ public class MobilePhone : HeldEntity
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val11)?.Dispose();
 				}
 				return true;
 			}
@@ -228,12 +228,12 @@ public class MobilePhone : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_RemoveSavedNumber "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_RemoveSavedNumber "));
 				}
-				TimeWarning val2 = TimeWarning.New("Server_RemoveSavedNumber", 0);
+				TimeWarning val14 = TimeWarning.New("Server_RemoveSavedNumber", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					TimeWarning val15 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.CallsPerSecond.Test(1402406333u, "Server_RemoveSavedNumber", this, player, 5uL))
@@ -247,11 +247,11 @@ public class MobilePhone : HeldEntity
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val15)?.Dispose();
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val16 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -263,7 +263,7 @@ public class MobilePhone : HeldEntity
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val16)?.Dispose();
 						}
 					}
 					catch (Exception ex5)
@@ -274,7 +274,7 @@ public class MobilePhone : HeldEntity
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val14)?.Dispose();
 				}
 				return true;
 			}
@@ -283,12 +283,12 @@ public class MobilePhone : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_RequestCurrentState "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_RequestCurrentState "));
 				}
-				TimeWarning val2 = TimeWarning.New("Server_RequestCurrentState", 0);
+				TimeWarning val17 = TimeWarning.New("Server_RequestCurrentState", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					TimeWarning val18 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.FromOwner.Test(2704491961u, "Server_RequestCurrentState", this, player))
@@ -298,11 +298,11 @@ public class MobilePhone : HeldEntity
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val18)?.Dispose();
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val19 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -314,7 +314,7 @@ public class MobilePhone : HeldEntity
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val19)?.Dispose();
 						}
 					}
 					catch (Exception ex6)
@@ -325,7 +325,7 @@ public class MobilePhone : HeldEntity
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val17)?.Dispose();
 				}
 				return true;
 			}
@@ -334,12 +334,12 @@ public class MobilePhone : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_RequestPhoneDirectory "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_RequestPhoneDirectory "));
 				}
-				TimeWarning val2 = TimeWarning.New("Server_RequestPhoneDirectory", 0);
+				TimeWarning val20 = TimeWarning.New("Server_RequestPhoneDirectory", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					TimeWarning val21 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.CallsPerSecond.Test(942544266u, "Server_RequestPhoneDirectory", this, player, 5uL))
@@ -353,11 +353,11 @@ public class MobilePhone : HeldEntity
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val21)?.Dispose();
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val22 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -369,7 +369,7 @@ public class MobilePhone : HeldEntity
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val22)?.Dispose();
 						}
 					}
 					catch (Exception ex7)
@@ -380,7 +380,7 @@ public class MobilePhone : HeldEntity
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val20)?.Dispose();
 				}
 				return true;
 			}
@@ -389,12 +389,12 @@ public class MobilePhone : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ServerDeleteVoicemail "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ServerDeleteVoicemail "));
 				}
-				TimeWarning val2 = TimeWarning.New("ServerDeleteVoicemail", 0);
+				TimeWarning val23 = TimeWarning.New("ServerDeleteVoicemail", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					TimeWarning val24 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.CallsPerSecond.Test(1240133378u, "ServerDeleteVoicemail", this, player, 5uL))
@@ -408,11 +408,11 @@ public class MobilePhone : HeldEntity
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val24)?.Dispose();
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val25 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -424,7 +424,7 @@ public class MobilePhone : HeldEntity
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val25)?.Dispose();
 						}
 					}
 					catch (Exception ex8)
@@ -435,7 +435,7 @@ public class MobilePhone : HeldEntity
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val23)?.Dispose();
 				}
 				return true;
 			}
@@ -444,12 +444,12 @@ public class MobilePhone : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ServerHangUp "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ServerHangUp "));
 				}
-				TimeWarning val2 = TimeWarning.New("ServerHangUp", 0);
+				TimeWarning val26 = TimeWarning.New("ServerHangUp", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					TimeWarning val27 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.FromOwner.Test(1221129498u, "ServerHangUp", this, player))
@@ -459,11 +459,11 @@ public class MobilePhone : HeldEntity
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val27)?.Dispose();
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val28 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -475,7 +475,7 @@ public class MobilePhone : HeldEntity
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val28)?.Dispose();
 						}
 					}
 					catch (Exception ex9)
@@ -486,7 +486,7 @@ public class MobilePhone : HeldEntity
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val26)?.Dispose();
 				}
 				return true;
 			}
@@ -495,12 +495,12 @@ public class MobilePhone : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ServerPlayVoicemail "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ServerPlayVoicemail "));
 				}
-				TimeWarning val2 = TimeWarning.New("ServerPlayVoicemail", 0);
+				TimeWarning val29 = TimeWarning.New("ServerPlayVoicemail", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					TimeWarning val30 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.CallsPerSecond.Test(239260010u, "ServerPlayVoicemail", this, player, 5uL))
@@ -514,11 +514,11 @@ public class MobilePhone : HeldEntity
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val30)?.Dispose();
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val31 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -530,7 +530,7 @@ public class MobilePhone : HeldEntity
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val31)?.Dispose();
 						}
 					}
 					catch (Exception ex10)
@@ -541,7 +541,7 @@ public class MobilePhone : HeldEntity
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val29)?.Dispose();
 				}
 				return true;
 			}
@@ -550,12 +550,12 @@ public class MobilePhone : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ServerSendVoicemail "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ServerSendVoicemail "));
 				}
-				TimeWarning val2 = TimeWarning.New("ServerSendVoicemail", 0);
+				TimeWarning val32 = TimeWarning.New("ServerSendVoicemail", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					TimeWarning val33 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.CallsPerSecond.Test(189198880u, "ServerSendVoicemail", this, player, 5uL))
@@ -565,11 +565,11 @@ public class MobilePhone : HeldEntity
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val33)?.Dispose();
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val34 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -581,7 +581,7 @@ public class MobilePhone : HeldEntity
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val34)?.Dispose();
 						}
 					}
 					catch (Exception ex11)
@@ -592,7 +592,7 @@ public class MobilePhone : HeldEntity
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val32)?.Dispose();
 				}
 				return true;
 			}
@@ -601,12 +601,12 @@ public class MobilePhone : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ServerStopVoicemail "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ServerStopVoicemail "));
 				}
-				TimeWarning val2 = TimeWarning.New("ServerStopVoicemail", 0);
+				TimeWarning val35 = TimeWarning.New("ServerStopVoicemail", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					TimeWarning val36 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.CallsPerSecond.Test(2760189029u, "ServerStopVoicemail", this, player, 5uL))
@@ -620,11 +620,11 @@ public class MobilePhone : HeldEntity
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val36)?.Dispose();
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val37 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -636,7 +636,7 @@ public class MobilePhone : HeldEntity
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val37)?.Dispose();
 						}
 					}
 					catch (Exception ex12)
@@ -647,7 +647,7 @@ public class MobilePhone : HeldEntity
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val35)?.Dispose();
 				}
 				return true;
 			}
@@ -656,12 +656,12 @@ public class MobilePhone : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SetCurrentUser "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SetCurrentUser "));
 				}
-				TimeWarning val2 = TimeWarning.New("SetCurrentUser", 0);
+				TimeWarning val38 = TimeWarning.New("SetCurrentUser", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					TimeWarning val39 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.FromOwner.Test(3900772076u, "SetCurrentUser", this, player))
@@ -671,11 +671,11 @@ public class MobilePhone : HeldEntity
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val39)?.Dispose();
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val40 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -687,7 +687,7 @@ public class MobilePhone : HeldEntity
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val40)?.Dispose();
 						}
 					}
 					catch (Exception ex13)
@@ -698,7 +698,7 @@ public class MobilePhone : HeldEntity
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val38)?.Dispose();
 				}
 				return true;
 			}
@@ -707,12 +707,12 @@ public class MobilePhone : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - UpdatePhoneName "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - UpdatePhoneName "));
 				}
-				TimeWarning val2 = TimeWarning.New("UpdatePhoneName", 0);
+				TimeWarning val41 = TimeWarning.New("UpdatePhoneName", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					TimeWarning val42 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.CallsPerSecond.Test(2760249627u, "UpdatePhoneName", this, player, 5uL))
@@ -726,11 +726,11 @@ public class MobilePhone : HeldEntity
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val42)?.Dispose();
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val43 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -742,7 +742,7 @@ public class MobilePhone : HeldEntity
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val43)?.Dispose();
 						}
 					}
 					catch (Exception ex14)
@@ -753,7 +753,7 @@ public class MobilePhone : HeldEntity
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val41)?.Dispose();
 				}
 				return true;
 			}
@@ -767,8 +767,8 @@ public class MobilePhone : HeldEntity
 
 	public override void Save(SaveInfo info)
 	{
-		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ba: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
 		base.Save(info);
 		if (info.msg.telephone == null)
 		{
@@ -930,7 +930,7 @@ public class MobilePhone : HeldEntity
 
 	public override void Load(LoadInfo info)
 	{
-		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
 		base.Load(info);
 		if (info.msg?.telephone != null)
 		{

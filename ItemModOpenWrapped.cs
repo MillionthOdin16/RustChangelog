@@ -8,9 +8,9 @@ public class ItemModOpenWrapped : ItemMod
 
 	public override void ServerCommand(Item item, string command, BasePlayer player)
 	{
-		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
 		if (!(command == "open") || item.amount <= 0)
 		{
 			return;
@@ -19,9 +19,10 @@ public class ItemModOpenWrapped : ItemMod
 		if (slot != null)
 		{
 			int position = item.position;
+			int iTargetPos = position;
 			ItemContainer rootContainer = item.GetRootContainer();
 			item.RemoveFromContainer();
-			slot.MoveToContainer(rootContainer, position);
+			slot.MoveToContainer(rootContainer, iTargetPos);
 			item.Remove();
 			if (successEffect.isValid)
 			{

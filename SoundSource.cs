@@ -9,23 +9,23 @@ public class SoundSource : MonoBehaviour, IClientComponentEx, ILOD
 	{
 		public Vector3 offset = Vector3.zero;
 
-		public bool isOccluded;
+		public bool isOccluded = false;
 	}
 
 	[Header("Occlusion")]
-	public bool handleOcclusionChecks;
+	public bool handleOcclusionChecks = false;
 
 	public LayerMask occlusionLayerMask;
 
 	public List<OcclusionPoint> occlusionPoints = new List<OcclusionPoint>();
 
-	public bool isOccluded;
+	public bool isOccluded = false;
 
-	public float occlusionAmount;
+	public float occlusionAmount = 0f;
 
 	public float lodDistance = 100f;
 
-	public bool inRange;
+	public bool inRange = false;
 
 	public virtual void PreClientComponentCull(IPrefabProcessor p)
 	{

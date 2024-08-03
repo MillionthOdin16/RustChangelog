@@ -110,7 +110,7 @@ public class TugboatSounds : MonoBehaviour, IClientComponent
 	[SerializeField]
 	private float hullGroanCooldown = 1f;
 
-	private float lastHullGroan;
+	private float lastHullGroan = 0f;
 
 	[SerializeField]
 	private SoundDefinition chainRattleDef;
@@ -124,16 +124,16 @@ public class TugboatSounds : MonoBehaviour, IClientComponent
 	[SerializeField]
 	private float chainRattleAngleDeltaThreshold = 1f;
 
-	private float lastChainRattle;
+	private float lastChainRattle = 0f;
 
 	private Line leftSoundLine;
 
 	private Line rightSoundLine;
 
 	[Header("Runtime")]
-	public bool engineOn;
+	public bool engineOn = false;
 
-	public bool throttleOn;
+	public bool throttleOn = false;
 
 	public bool inWater = true;
 }

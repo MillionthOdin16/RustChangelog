@@ -28,5 +28,5 @@ public class CameraEx : MonoBehaviour
 
 	internal AmbientMode old_ambientMode;
 
-	public float aspect;
+	public float aspect = 0f;
 }

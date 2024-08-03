@@ -9,17 +9,15 @@ public class DeferredExtension : MonoBehaviour
 
 	public SubsurfaceScatteringParams subsurfaceScattering = SubsurfaceScatteringParams.Default;
 
-	public ScreenSpaceRefractionParams screenSpaceRefraction = ScreenSpaceRefractionParams.Default;
+	public Texture2D blueNoise = null;
 
-	public Texture2D blueNoise;
+	public Texture preintegratedFGD_GGX = null;
 
-	public Texture preintegratedFGD_GGX;
-
-	public Texture envBrdfLut;
+	public Texture envBrdfLut = null;
 
 	public float depthScale = 100f;
 
-	public bool debug;
+	public bool debug = false;
 
-	public bool forceToCameraResolution;
+	public bool forceToCameraResolution = false;
 }

@@ -21,7 +21,7 @@ public class SmokeGrenade : TimedExplosive
 
 	public float fieldMax = 8f;
 
-	protected bool killing;
+	protected bool killing = false;
 
 	public override void ServerInit()
 	{
@@ -31,8 +31,8 @@ public class SmokeGrenade : TimedExplosive
 
 	public override void Explode()
 	{
-		//IL_008b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ad: Unknown result type (might be due to invalid IL or missing references)
 		if (WaterFactor() >= 0.5f)
 		{
 			FinishUp();

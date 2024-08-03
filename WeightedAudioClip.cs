@@ -4,7 +4,7 @@ using UnityEngine;
 [Serializable]
 public class WeightedAudioClip
 {
-	public AudioClip audioClip;
+	public AudioClip audioClip = null;
 
 	public int weight = 1;
 }

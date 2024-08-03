@@ -28,15 +28,15 @@ public class ProceduralDynamicDungeon : BaseEntity
 
 	public TriggerRadiation exitRadiation;
 
-	public uint seed;
+	public uint seed = 0u;
 
-	public uint baseseed;
+	public uint baseseed = 0u;
 
 	public Vector3 mapOffset = Vector3.zero;
 
 	public static readonly List<ProceduralDynamicDungeon> dungeons = new List<ProceduralDynamicDungeon>();
 
-	public ProceduralDungeonCell entranceHack;
+	public ProceduralDungeonCell entranceHack = null;
 
 	public override void InitShared()
 	{
@@ -50,9 +50,10 @@ public class ProceduralDynamicDungeon : BaseEntity
 		foreach (ProceduralDungeonCell spawnedCell in spawnedCells)
 		{
 			EntityFlag_Toggle[] componentsInChildren = ((Component)spawnedCell).GetComponentsInChildren<EntityFlag_Toggle>();
-			for (int i = 0; i < componentsInChildren.Length; i++)
+			EntityFlag_Toggle[] array = componentsInChildren;
+			foreach (EntityFlag_Toggle entityFlag_Toggle in array)
 			{
-				componentsInChildren[i].DoUpdate(this);
+				entityFlag_Toggle.DoUpdate(this);
 			}
 		}
 	}
@@ -71,10 +72,10 @@ public class ProceduralDynamicDungeon : BaseEntity
 
 	public bool ContainsAnyPlayers()
 	{
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0089: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
 		Bounds val = default(Bounds);
 		((Bounds)(ref val))._002Ector(((Component)this).transform.position, new Vector3((float)gridResolution * gridSpacing, 20f, (float)gridResolution * gridSpacing));
 		for (int i = 0; i < BasePlayer.activePlayerList.Count; i++)
@@ -98,10 +99,10 @@ public class ProceduralDynamicDungeon : BaseEntity
 
 	public void KillPlayers()
 	{
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0095: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
 		Bounds val = default(Bounds);
 		((Bounds)(ref val))._002Ector(((Component)this).transform.position, new Vector3((float)gridResolution * gridSpacing, 20f, (float)gridResolution * gridSpacing));
 		for (int i = 0; i < BasePlayer.activePlayerList.Count; i++)
@@ -134,13 +135,12 @@ public class ProceduralDynamicDungeon : BaseEntity
 
 	public override void ServerInit()
 	{
-		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
 		if (!Application.isLoadingSave)
 		{
 			baseseed = (seed = (uint)Random.Range(0, 12345567));
-			int num = (int)seed;
-			Debug.Log((object)("Spawning dungeon with seed :" + num));
+			Debug.Log((object)("Spawning dungeon with seed :" + (int)seed));
 		}
 		base.ServerInit();
 		if (!Application.isLoadingSave)
@@ -166,7 +166,7 @@ public class ProceduralDynamicDungeon : BaseEntity
 
 	private void CreateAIZ()
 	{
-		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
 		AIInformationZone aIInformationZone = ((Component)this).gameObject.AddComponent<AIInformationZone>();
 		aIInformationZone.UseCalculatedCoverDistances = false;
 		((Bounds)(ref aIInformationZone.bounds)).extents = new Vector3((float)gridResolution * gridSpacing * 0.75f, 10f, (float)gridResolution * gridSpacing * 0.75f);
@@ -188,10 +188,10 @@ public class ProceduralDynamicDungeon : BaseEntity
 
 	public override void Save(SaveInfo info)
 	{
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
 		base.Save(info);
 		if (info.msg.proceduralDungeon == null)
 		{
@@ -209,16 +209,16 @@ public class ProceduralDynamicDungeon : BaseEntity
 
 	public void InitSpawnGroups()
 	{
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
 		foreach (ProceduralDungeonCell spawnedCell in spawnedCells)
 		{
 			if (!((Object)(object)entranceHack != (Object)null) || !(Vector3.Distance(((Component)entranceHack).transform.position, ((Component)spawnedCell).transform.position) < 20f))
 			{
 				SpawnGroup[] spawnGroups = spawnedCell.spawnGroups;
-				for (int i = 0; i < spawnGroups.Length; i++)
+				foreach (SpawnGroup spawnGroup in spawnGroups)
 				{
-					spawnGroups[i].Spawn();
+					spawnGroup.Spawn();
 				}
 			}
 		}
@@ -229,18 +229,18 @@ public class ProceduralDynamicDungeon : BaseEntity
 		foreach (ProceduralDungeonCell spawnedCell in spawnedCells)
 		{
 			SpawnGroup[] spawnGroups = spawnedCell.spawnGroups;
-			for (int i = 0; i < spawnGroups.Length; i++)
+			foreach (SpawnGroup spawnGroup in spawnGroups)
 			{
-				spawnGroups[i].Clear();
+				spawnGroup.Clear();
 			}
 		}
 	}
 
 	public override void Load(LoadInfo info)
 	{
-		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
 		base.Load(info);
 		if (info.msg.proceduralDungeon != null)
 		{
@@ -254,13 +254,13 @@ public class ProceduralDynamicDungeon : BaseEntity
 	[ExecuteInEditMode]
 	public void GenerateGrid()
 	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ec: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0208: Unknown result type (might be due to invalid IL or missing references)
-		//IL_020d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0245: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0261: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0266: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 val = ((Component)this).transform.position - new Vector3((float)gridResolution * gridSpacing * 0.5f, 0f, (float)gridResolution * gridSpacing * 0.5f);
 		RetireAllCells();
 		grid = new bool[gridResolution * gridResolution];
@@ -372,11 +372,11 @@ public class ProceduralDynamicDungeon : BaseEntity
 		{
 			return true;
 		}
-		bool num = CanSeeEntrance(x, y + 1, ref checkedCells);
-		bool flag = CanSeeEntrance(x, y - 1, ref checkedCells);
-		bool flag2 = CanSeeEntrance(x - 1, y, ref checkedCells);
-		bool flag3 = CanSeeEntrance(x + 1, y, ref checkedCells);
-		return num || flag3 || flag2 || flag;
+		bool flag = CanSeeEntrance(x, y + 1, ref checkedCells);
+		bool flag2 = CanSeeEntrance(x, y - 1, ref checkedCells);
+		bool flag3 = CanSeeEntrance(x - 1, y, ref checkedCells);
+		bool flag4 = CanSeeEntrance(x + 1, y, ref checkedCells);
+		return flag || flag4 || flag3 || flag2;
 	}
 
 	public bool HasPathToEntrance(int x, int y)
@@ -389,11 +389,11 @@ public class ProceduralDynamicDungeon : BaseEntity
 
 	public bool CanFindEntrance(int x, int y)
 	{
-		new List<int>();
-		GetGridState(x, y + 1);
-		GetGridState(x, y - 1);
-		GetGridState(x - 1, y);
-		GetGridState(x + 1, y);
+		List<int> list = new List<int>();
+		bool gridState = GetGridState(x, y + 1);
+		bool gridState2 = GetGridState(x, y - 1);
+		bool gridState3 = GetGridState(x - 1, y);
+		bool gridState4 = GetGridState(x + 1, y);
 		return true;
 	}
 
@@ -430,7 +430,8 @@ public class ProceduralDynamicDungeon : BaseEntity
 
 	public bool GetGridState(int x, int y)
 	{
-		if (GetGridIndex(x, y) >= grid.Length)
+		int gridIndex = GetGridIndex(x, y);
+		if (gridIndex >= grid.Length)
 		{
 			return false;
 		}

@@ -6,6 +6,7 @@ using System.Linq;
 using ProtoBuf;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.Profiling;
 
 public class ItemManager
 {
@@ -171,7 +172,7 @@ public class ItemManager
 
 	private static void TrySkinChangeItem(ref ItemDefinition template, ref ulong skinId)
 	{
-		if (skinId == 0L)
+		if (skinId == 0)
 		{
 			return;
 		}
@@ -268,7 +269,9 @@ public class ItemManager
 
 	public static void Heartbeat()
 	{
+		Profiler.BeginSample("ItemManager.Heartbeat");
 		DoRemoves();
+		Profiler.EndSample();
 	}
 
 	public static void RemoveItem(Item item, float fTime = 0f)

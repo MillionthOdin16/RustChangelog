@@ -6,7 +6,7 @@ public class ConversationManager : MonoBehaviour
 	{
 		public ConversationData data;
 
-		public int currentSpeechNodeIndex;
+		public int currentSpeechNodeIndex = 0;
 
 		public IConversationProvider provider;
 

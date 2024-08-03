@@ -21,7 +21,7 @@ public class AnimalAnimation : MonoBehaviour, IClientComponent
 	public AnimationCurve saddleMovementGainCurve;
 
 	[Tooltip("Ensure there is a float param called idleOffset if this is enabled")]
-	public bool hasIdleOffset;
+	public bool hasIdleOffset = false;
 
 	[ReadOnly]
 	public string BaseFolder;

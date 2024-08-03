@@ -12,9 +12,9 @@ public class SocketMod_AngleCheck : SocketMod
 
 	private void OnDrawGizmosSelected()
 	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
 		Gizmos.matrix = ((Component)this).transform.localToWorldMatrix;
 		Gizmos.color = Color.yellow;
 		Gizmos.DrawFrustum(Vector3.zero, withinDegrees, 1f, 0f, 1f);
@@ -22,11 +22,12 @@ public class SocketMod_AngleCheck : SocketMod
 
 	public override bool DoCheck(Construction.Placement place)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-		if (Vector3Ex.DotDegrees(worldNormal, place.rotation * Vector3.up) < withinDegrees)
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		float num = Vector3Ex.DotDegrees(worldNormal, place.rotation * Vector3.up);
+		if (num < withinDegrees)
 		{
 			return true;
 		}

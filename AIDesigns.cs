@@ -53,12 +53,12 @@ public static class AIDesigns
 				return null;
 			}
 			designs.Add(designName, value);
-			return value;
 		}
 		catch (Exception)
 		{
 			Debug.LogWarning((object)("Error trying to find AI design by name: " + text));
 			return null;
 		}
+		return value;
 	}
 }

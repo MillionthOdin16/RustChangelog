@@ -8,21 +8,21 @@ public class InstrumentTool : HeldEntity
 {
 	public InstrumentKeyController KeyController;
 
-	public SoundDefinition DeploySound;
+	public SoundDefinition DeploySound = null;
 
 	public Vector2 PitchClamp = new Vector2(-90f, 90f);
 
-	public bool UseAnimationSlotEvents;
+	public bool UseAnimationSlotEvents = false;
 
 	public Transform MuzzleT;
 
-	public bool UsableByAutoTurrets;
+	public bool UsableByAutoTurrets = false;
 
 	private NoteBindingCollection.NoteData lastPlayedTurretData;
 
-	public override Transform MuzzleTransform => MuzzleT;
-
 	public override bool IsUsableByTurret => UsableByAutoTurrets;
+
+	public override Transform MuzzleTransform => MuzzleT;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -34,7 +34,7 @@ public class InstrumentTool : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_PlayNote "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_PlayNote "));
 				}
 				TimeWarning val2 = TimeWarning.New("Server_PlayNote", 0);
 				try
@@ -70,12 +70,12 @@ public class InstrumentTool : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_StopNote "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_StopNote "));
 				}
-				TimeWarning val2 = TimeWarning.New("Server_StopNote", 0);
+				TimeWarning val4 = TimeWarning.New("Server_StopNote", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Call", 0);
+					TimeWarning val5 = TimeWarning.New("Call", 0);
 					try
 					{
 						RPCMessage rPCMessage = default(RPCMessage);
@@ -87,7 +87,7 @@ public class InstrumentTool : HeldEntity
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val5)?.Dispose();
 					}
 				}
 				catch (Exception ex2)
@@ -97,7 +97,7 @@ public class InstrumentTool : HeldEntity
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val4)?.Dispose();
 				}
 				return true;
 			}

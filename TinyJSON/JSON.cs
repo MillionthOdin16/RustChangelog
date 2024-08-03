@@ -80,9 +80,9 @@ public static class JSON
 			return value;
 		}
 		Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
-		for (int i = 0; i < assemblies.Length; i++)
+		foreach (Assembly assembly in assemblies)
 		{
-			value = assemblies[i].GetType(fullName);
+			value = assembly.GetType(fullName);
 			if (value != null)
 			{
 				typeCache.Add(fullName, value);
@@ -115,13 +115,15 @@ public static class JSON
 		{
 			if (type.GetArrayRank() == 1)
 			{
-				return (T)decodeArrayMethod.MakeGenericMethod(type.GetElementType()).Invoke(null, new object[1] { data });
+				MethodInfo methodInfo = decodeArrayMethod.MakeGenericMethod(type.GetElementType());
+				return (T)methodInfo.Invoke(null, new object[1] { data });
 			}
 			if (!(data is ProxyArray proxyArray))
 			{
 				throw new DecodeException("Variant is expected to be a ProxyArray here, but it is not.");
 			}
-			int[] array = new int[type.GetArrayRank()];
+			int arrayRank = type.GetArrayRank();
+			int[] array = new int[arrayRank];
 			if (proxyArray.CanBeMultiRankArray(array))
 			{
 				Type elementType = type.GetElementType();
@@ -130,10 +132,10 @@ public static class JSON
 					throw new DecodeException("Array element type is expected to be not null, but it is.");
 				}
 				Array array2 = Array.CreateInstance(elementType, array);
-				MethodInfo methodInfo = decodeMultiRankArrayMethod.MakeGenericMethod(elementType);
+				MethodInfo methodInfo2 = decodeMultiRankArrayMethod.MakeGenericMethod(elementType);
 				try
 				{
-					methodInfo.Invoke(null, new object[4] { proxyArray, array2, 1, array });
+					methodInfo2.Invoke(null, new object[4] { proxyArray, array2, 1, array });
 				}
 				catch (Exception innerException)
 				{
@@ -145,13 +147,19 @@ public static class JSON
 		}
 		if (typeof(IList).IsAssignableFrom(type))
 		{
-			return (T)decodeListMethod.MakeGenericMethod(type.GetGenericArguments()).Invoke(null, new object[1] { data });
+			MethodInfo methodInfo3 = decodeListMethod.MakeGenericMethod(type.GetGenericArguments());
+			return (T)methodInfo3.Invoke(null, new object[1] { data });
 		}
 		if (typeof(IDictionary).IsAssignableFrom(type))
 		{
-			return (T)decodeDictionaryMethod.MakeGenericMethod(type.GetGenericArguments()).Invoke(null, new object[1] { data });
+			MethodInfo methodInfo4 = decodeDictionaryMethod.MakeGenericMethod(type.GetGenericArguments());
+			return (T)methodInfo4.Invoke(null, new object[1] { data });
 		}
-		string typeHint = ((data as ProxyObject) ?? throw new InvalidCastException("ProxyObject expected when decoding into '" + type.FullName + "'.")).TypeHint;
+		if (!(data is ProxyObject proxyObject))
+		{
+			throw new InvalidCastException("ProxyObject expected when decoding into '" + type.FullName + "'.");
+		}
+		string typeHint = proxyObject.TypeHint;
 		T val;
 		if (typeHint != null && typeHint != type.FullName)
 		{
@@ -177,7 +185,8 @@ public static class JSON
 			if (fieldInfo == null)
 			{
 				FieldInfo[] fields = type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-				foreach (FieldInfo fieldInfo2 in fields)
+				FieldInfo[] array3 = fields;
+				foreach (FieldInfo fieldInfo2 in array3)
 				{
 					object[] customAttributes = fieldInfo2.GetCustomAttributes(inherit: true);
 					foreach (object obj in customAttributes)
@@ -193,8 +202,8 @@ public static class JSON
 			if (fieldInfo != null)
 			{
 				bool flag = fieldInfo.IsPublic;
-				object[] customAttributes = fieldInfo.GetCustomAttributes(inherit: true);
-				foreach (object o in customAttributes)
+				object[] customAttributes2 = fieldInfo.GetCustomAttributes(inherit: true);
+				foreach (object o in customAttributes2)
 				{
 					if (excludeAttrType.IsInstanceOfType(o))
 					{
@@ -207,16 +216,16 @@ public static class JSON
 				}
 				if (flag)
 				{
-					MethodInfo methodInfo2 = decodeTypeMethod.MakeGenericMethod(fieldInfo.FieldType);
+					MethodInfo methodInfo5 = decodeTypeMethod.MakeGenericMethod(fieldInfo.FieldType);
 					if (type.IsValueType)
 					{
 						object obj2 = val;
-						fieldInfo.SetValue(obj2, methodInfo2.Invoke(null, new object[1] { item.Value }));
+						fieldInfo.SetValue(obj2, methodInfo5.Invoke(null, new object[1] { item.Value }));
 						val = (T)obj2;
 					}
 					else
 					{
-						fieldInfo.SetValue(val, methodInfo2.Invoke(null, new object[1] { item.Value }));
+						fieldInfo.SetValue(val, methodInfo5.Invoke(null, new object[1] { item.Value }));
 					}
 				}
 			}
@@ -224,10 +233,11 @@ public static class JSON
 			if (propertyInfo == null)
 			{
 				PropertyInfo[] properties = type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-				foreach (PropertyInfo propertyInfo2 in properties)
+				PropertyInfo[] array4 = properties;
+				foreach (PropertyInfo propertyInfo2 in array4)
 				{
-					object[] customAttributes = propertyInfo2.GetCustomAttributes(inherit: false);
-					foreach (object obj3 in customAttributes)
+					object[] customAttributes3 = propertyInfo2.GetCustomAttributes(inherit: false);
+					foreach (object obj3 in customAttributes3)
 					{
 						if (decodeAliasAttrType.IsInstanceOfType(obj3) && ((DecodeAlias)obj3).Contains(item.Key))
 						{
@@ -239,25 +249,25 @@ public static class JSON
 			}
 			if (propertyInfo != null && propertyInfo.CanWrite && propertyInfo.GetCustomAttributes(inherit: false).AnyOfType(includeAttrType))
 			{
-				MethodInfo methodInfo3 = decodeTypeMethod.MakeGenericMethod(propertyInfo.PropertyType);
+				MethodInfo methodInfo6 = decodeTypeMethod.MakeGenericMethod(propertyInfo.PropertyType);
 				if (type.IsValueType)
 				{
 					object obj4 = val;
-					propertyInfo.SetValue(obj4, methodInfo3.Invoke(null, new object[1] { item.Value }), null);
+					propertyInfo.SetValue(obj4, methodInfo6.Invoke(null, new object[1] { item.Value }), null);
 					val = (T)obj4;
 				}
 				else
 				{
-					propertyInfo.SetValue(val, methodInfo3.Invoke(null, new object[1] { item.Value }), null);
+					propertyInfo.SetValue(val, methodInfo6.Invoke(null, new object[1] { item.Value }), null);
 				}
 			}
 		}
 		MethodInfo[] methods = type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		foreach (MethodInfo methodInfo4 in methods)
+		foreach (MethodInfo methodInfo7 in methods)
 		{
-			if (methodInfo4.GetCustomAttributes(inherit: false).AnyOfType(typeof(AfterDecode)))
+			if (methodInfo7.GetCustomAttributes(inherit: false).AnyOfType(typeof(AfterDecode)))
 			{
-				methodInfo4.Invoke(val, (methodInfo4.GetParameters().Length == 0) ? null : new object[1] { data });
+				methodInfo7.Invoke(val, (methodInfo7.GetParameters().Length == 0) ? null : new object[1] { data });
 			}
 		}
 		return val;
@@ -266,7 +276,11 @@ public static class JSON
 	private static List<T> DecodeList<T>(Variant data)
 	{
 		List<T> list = new List<T>();
-		foreach (Variant item in (IEnumerable<Variant>)((data as ProxyArray) ?? throw new DecodeException("Variant is expected to be a ProxyArray here, but it is not.")))
+		if (!(data is ProxyArray proxyArray))
+		{
+			throw new DecodeException("Variant is expected to be a ProxyArray here, but it is not.");
+		}
+		foreach (Variant item in (IEnumerable<Variant>)proxyArray)
 		{
 			list.Add(DecodeType<T>(item));
 		}
@@ -277,7 +291,11 @@ public static class JSON
 	{
 		Dictionary<TKey, TValue> dictionary = new Dictionary<TKey, TValue>();
 		Type typeFromHandle = typeof(TKey);
-		foreach (KeyValuePair<string, Variant> item in (IEnumerable<KeyValuePair<string, Variant>>)((data as ProxyObject) ?? throw new DecodeException("Variant is expected to be a ProxyObject here, but it is not.")))
+		if (!(data is ProxyObject proxyObject))
+		{
+			throw new DecodeException("Variant is expected to be a ProxyObject here, but it is not.");
+		}
+		foreach (KeyValuePair<string, Variant> item in (IEnumerable<KeyValuePair<string, Variant>>)proxyObject)
 		{
 			TKey key = (TKey)(typeFromHandle.IsEnum ? Enum.Parse(typeFromHandle, item.Key) : Convert.ChangeType(item.Key, typeFromHandle));
 			TValue value = DecodeType<TValue>(item.Value);
@@ -288,10 +306,14 @@ public static class JSON
 
 	private static T[] DecodeArray<T>(Variant data)
 	{
-		ProxyArray obj = (data as ProxyArray) ?? throw new DecodeException("Variant is expected to be a ProxyArray here, but it is not.");
-		T[] array = new T[obj.Count];
+		if (!(data is ProxyArray proxyArray))
+		{
+			throw new DecodeException("Variant is expected to be a ProxyArray here, but it is not.");
+		}
+		int count = proxyArray.Count;
+		T[] array = new T[count];
 		int num = 0;
-		foreach (Variant item in (IEnumerable<Variant>)obj)
+		foreach (Variant item in (IEnumerable<Variant>)proxyArray)
 		{
 			array[num++] = DecodeType<T>(item);
 		}

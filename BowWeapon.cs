@@ -16,7 +16,7 @@ public class BowWeapon : BaseProjectile
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - BowReload "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - BowReload "));
 				}
 				TimeWarning val2 = TimeWarning.New("BowReload", 0);
 				try
@@ -35,7 +35,7 @@ public class BowWeapon : BaseProjectile
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -47,7 +47,7 @@ public class BowWeapon : BaseProjectile
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -74,11 +74,7 @@ public class BowWeapon : BaseProjectile
 	[RPC_Server.IsActiveItem]
 	private void BowReload(RPCMessage msg)
 	{
-		BasePlayer ownerPlayer = GetOwnerPlayer();
-		if ((Object)(object)ownerPlayer != (Object)null)
-		{
-			TryReloadMagazine(ownerPlayer.inventory);
-		}
+		ReloadMagazine();
 	}
 
 	public override bool ForceSendMagazine(SaveInfo saveInfo)

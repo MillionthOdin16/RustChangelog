@@ -7,31 +7,31 @@ using UnityEngine;
 [ExecuteInEditMode]
 public class TerrainTexturing : TerrainExtension
 {
-	public bool debugFoliageDisplacement;
-
-	private bool initialized;
-
-	private static TerrainTexturing instance;
-
 	private const int ShoreVectorDownscale = 1;
 
 	private const int ShoreVectorBlurPasses = 1;
 
-	private float terrainSize;
+	private float terrainSize = 0f;
 
-	private int shoreMapSize;
+	private int shoreMapSize = 0;
 
 	private float shoreDistanceScale;
 
-	private float[] shoreDistances;
+	private float[] shoreDistances = null;
 
-	private Vector3[] shoreVectors;
+	private Vector3[] shoreVectors = null;
 
-	public static TerrainTexturing Instance => instance;
+	public bool debugFoliageDisplacement = false;
+
+	private bool initialized = false;
+
+	private static TerrainTexturing instance;
 
 	public int ShoreMapSize => shoreMapSize;
 
 	public Vector3[] ShoreMap => shoreVectors;
+
+	public static TerrainTexturing Instance => instance;
 
 	private void InitializeBasePyramid()
 	{
@@ -55,6 +55,262 @@ public class TerrainTexturing : TerrainExtension
 
 	private void UpdateCoarseHeightSlope()
 	{
+	}
+
+	private void InitializeShoreVector()
+	{
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
+		int num = Mathf.ClosestPowerOfTwo(terrain.terrainData.heightmapResolution) >> 1;
+		int num2 = num * num;
+		terrainSize = Mathf.Max(terrain.terrainData.size.x, terrain.terrainData.size.z);
+		shoreMapSize = num;
+		shoreDistanceScale = terrainSize / (float)shoreMapSize;
+		shoreDistances = new float[num * num];
+		shoreVectors = (Vector3[])(object)new Vector3[num * num];
+		for (int i = 0; i < num2; i++)
+		{
+			shoreDistances[i] = 10000f;
+			shoreVectors[i] = Vector3.one;
+		}
+	}
+
+	private void GenerateShoreVector()
+	{
+		TimeWarning val = TimeWarning.New("GenerateShoreVector", 500);
+		try
+		{
+			GenerateShoreVector(out shoreDistances, out shoreVectors);
+		}
+		finally
+		{
+			((IDisposable)val)?.Dispose();
+		}
+	}
+
+	private void ReleaseShoreVector()
+	{
+		shoreDistances = null;
+		shoreVectors = null;
+	}
+
+	private void GenerateShoreVector(out float[] distances, out Vector3[] vectors)
+	{
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0107: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0109: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0113: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0115: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ac: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00be: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0183: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0188: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a6: Unknown result type (might be due to invalid IL or missing references)
+		float num = terrainSize / (float)shoreMapSize;
+		Vector3 position = terrain.GetPosition();
+		int num2 = LayerMask.NameToLayer("Terrain");
+		NativeArray<RaycastHit> val = default(NativeArray<RaycastHit>);
+		val._002Ector(shoreMapSize * shoreMapSize, (Allocator)3, (NativeArrayOptions)1);
+		NativeArray<RaycastCommand> val2 = default(NativeArray<RaycastCommand>);
+		val2._002Ector(shoreMapSize * shoreMapSize, (Allocator)3, (NativeArrayOptions)1);
+		for (int i = 0; i < shoreMapSize; i++)
+		{
+			for (int j = 0; j < shoreMapSize; j++)
+			{
+				float num3 = ((float)j + 0.5f) * num;
+				float num4 = ((float)i + 0.5f) * num;
+				Vector3 val3 = new Vector3(position.x, 0f, position.z) + new Vector3(num3, 1000f, num4);
+				Vector3 down = Vector3.down;
+				val2[i * shoreMapSize + j] = new RaycastCommand(val3, down, float.MaxValue, -5, 1);
+			}
+		}
+		JobHandle val4 = RaycastCommand.ScheduleBatch(val2, val, 1, default(JobHandle));
+		((JobHandle)(ref val4)).Complete();
+		byte[] image = new byte[shoreMapSize * shoreMapSize];
+		distances = new float[shoreMapSize * shoreMapSize];
+		vectors = (Vector3[])(object)new Vector3[shoreMapSize * shoreMapSize];
+		int k = 0;
+		int num5 = 0;
+		for (; k < shoreMapSize; k++)
+		{
+			int num6 = 0;
+			while (num6 < shoreMapSize)
+			{
+				RaycastHit val5 = val[k * shoreMapSize + num6];
+				bool flag = ((Component)((RaycastHit)(ref val5)).collider).gameObject.layer == num2;
+				if (flag && ((RaycastHit)(ref val5)).point.y <= 0f)
+				{
+					flag = false;
+				}
+				image[num5] = (byte)(flag ? 255u : 0u);
+				distances[num5] = (flag ? 256 : 0);
+				num6++;
+				num5++;
+			}
+		}
+		ref int size = ref shoreMapSize;
+		byte threshold = 127;
+		DistanceField.Generate(in size, in threshold, in image, ref distances);
+		DistanceField.ApplyGaussianBlur(shoreMapSize, distances);
+		DistanceField.GenerateVectors(in shoreMapSize, in distances, ref vectors);
+		val.Dispose();
+		val2.Dispose();
+	}
+
+	public float GetCoarseDistanceToShore(Vector3 pos)
+	{
+		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+		Vector2 uv = default(Vector2);
+		uv.x = (pos.x - TerrainMeta.Position.x) * TerrainMeta.OneOverSize.x;
+		uv.y = (pos.z - TerrainMeta.Position.z) * TerrainMeta.OneOverSize.z;
+		return GetCoarseDistanceToShore(uv);
+	}
+
+	public float GetCoarseDistanceToShore(Vector2 uv)
+	{
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		int num = shoreMapSize;
+		int num2 = num - 1;
+		float num3 = uv.x * (float)num2;
+		float num4 = uv.y * (float)num2;
+		int num5 = (int)num3;
+		int num6 = (int)num4;
+		float num7 = num3 - (float)num5;
+		float num8 = num4 - (float)num6;
+		num5 = ((num5 >= 0) ? num5 : 0);
+		num6 = ((num6 >= 0) ? num6 : 0);
+		num5 = ((num5 <= num2) ? num5 : num2);
+		num6 = ((num6 <= num2) ? num6 : num2);
+		int num9 = ((num3 < (float)num2) ? 1 : 0);
+		int num10 = ((num4 < (float)num2) ? num : 0);
+		int num11 = num6 * num + num5;
+		int num12 = num11 + num9;
+		int num13 = num11 + num10;
+		int num14 = num13 + num9;
+		float num15 = shoreDistances[num11];
+		float num16 = shoreDistances[num12];
+		float num17 = shoreDistances[num13];
+		float num18 = shoreDistances[num14];
+		float num19 = (num16 - num15) * num7 + num15;
+		float num20 = (num18 - num17) * num7 + num17;
+		return ((num20 - num19) * num8 + num19) * shoreDistanceScale;
+	}
+
+	public Vector3 GetCoarseVectorToShore(Vector3 pos)
+	{
+		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
+		Vector2 uv = default(Vector2);
+		uv.x = (pos.x - TerrainMeta.Position.x) * TerrainMeta.OneOverSize.x;
+		uv.y = (pos.z - TerrainMeta.Position.z) * TerrainMeta.OneOverSize.z;
+		return GetCoarseVectorToShore(uv);
+	}
+
+	public Vector3 GetCoarseVectorToShore(Vector2 uv)
+	{
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00df: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ea: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0100: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0121: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0142: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0163: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_017d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0184: Unknown result type (might be due to invalid IL or missing references)
+		//IL_018f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ae: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01bf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ca: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01db: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01e6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01fd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0202: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0206: Unknown result type (might be due to invalid IL or missing references)
+		int num = shoreMapSize;
+		int num2 = num - 1;
+		float num3 = uv.x * (float)num2;
+		float num4 = uv.y * (float)num2;
+		int num5 = (int)num3;
+		int num6 = (int)num4;
+		float num7 = num3 - (float)num5;
+		float num8 = num4 - (float)num6;
+		num5 = ((num5 >= 0) ? num5 : 0);
+		num6 = ((num6 >= 0) ? num6 : 0);
+		num5 = ((num5 <= num2) ? num5 : num2);
+		num6 = ((num6 <= num2) ? num6 : num2);
+		int num9 = ((num3 < (float)num2) ? 1 : 0);
+		int num10 = ((num4 < (float)num2) ? num : 0);
+		int num11 = num6 * num + num5;
+		int num12 = num11 + num9;
+		int num13 = num11 + num10;
+		int num14 = num13 + num9;
+		Vector3 val = shoreVectors[num11];
+		Vector3 val2 = shoreVectors[num12];
+		Vector3 val3 = shoreVectors[num13];
+		Vector3 val4 = shoreVectors[num14];
+		Vector3 val5 = default(Vector3);
+		val5.x = (val2.x - val.x) * num7 + val.x;
+		val5.y = (val2.y - val.y) * num7 + val.y;
+		val5.z = (val2.z - val.z) * num7 + val.z;
+		Vector3 val6 = default(Vector3);
+		val6.x = (val4.x - val3.x) * num7 + val3.x;
+		val6.y = (val4.y - val3.y) * num7 + val3.y;
+		val6.z = (val4.z - val3.z) * num7 + val3.z;
+		float num15 = (val6.x - val5.x) * num8 + val5.x;
+		float num16 = (val6.y - val5.y) * num8 + val5.y;
+		float num17 = (val6.z - val5.z) * num8 + val5.z;
+		return new Vector3(num15, num16, num17 * shoreDistanceScale);
 	}
 
 	private void CheckInstance()
@@ -114,256 +370,5 @@ public class TerrainTexturing : TerrainExtension
 			UpdateBasePyramid();
 			UpdateCoarseHeightSlope();
 		}
-	}
-
-	private void InitializeShoreVector()
-	{
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
-		int num = Mathf.ClosestPowerOfTwo(terrain.terrainData.heightmapResolution) >> 1;
-		int num2 = num * num;
-		terrainSize = Mathf.Max(terrain.terrainData.size.x, terrain.terrainData.size.z);
-		shoreMapSize = num;
-		shoreDistanceScale = terrainSize / (float)shoreMapSize;
-		shoreDistances = new float[num * num];
-		shoreVectors = (Vector3[])(object)new Vector3[num * num];
-		for (int i = 0; i < num2; i++)
-		{
-			shoreDistances[i] = 10000f;
-			shoreVectors[i] = Vector3.one;
-		}
-	}
-
-	private void GenerateShoreVector()
-	{
-		TimeWarning val = TimeWarning.New("GenerateShoreVector", 500);
-		try
-		{
-			GenerateShoreVector(out shoreDistances, out shoreVectors);
-		}
-		finally
-		{
-			((IDisposable)val)?.Dispose();
-		}
-	}
-
-	private void ReleaseShoreVector()
-	{
-		shoreDistances = null;
-		shoreVectors = null;
-	}
-
-	private void GenerateShoreVector(out float[] distances, out Vector3[] vectors)
-	{
-		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fe: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0100: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0105: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0168: Unknown result type (might be due to invalid IL or missing references)
-		//IL_016d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_018b: Unknown result type (might be due to invalid IL or missing references)
-		float num = terrainSize / (float)shoreMapSize;
-		Vector3 position = terrain.GetPosition();
-		int num2 = LayerMask.NameToLayer("Terrain");
-		NativeArray<RaycastHit> val = default(NativeArray<RaycastHit>);
-		val._002Ector(shoreMapSize * shoreMapSize, (Allocator)3, (NativeArrayOptions)1);
-		NativeArray<RaycastCommand> val2 = default(NativeArray<RaycastCommand>);
-		val2._002Ector(shoreMapSize * shoreMapSize, (Allocator)3, (NativeArrayOptions)1);
-		for (int i = 0; i < shoreMapSize; i++)
-		{
-			for (int j = 0; j < shoreMapSize; j++)
-			{
-				float num3 = ((float)j + 0.5f) * num;
-				float num4 = ((float)i + 0.5f) * num;
-				Vector3 val3 = new Vector3(position.x, 0f, position.z) + new Vector3(num3, 1000f, num4);
-				Vector3 down = Vector3.down;
-				val2[i * shoreMapSize + j] = new RaycastCommand(val3, down, float.MaxValue, -5, 1);
-			}
-		}
-		JobHandle val4 = RaycastCommand.ScheduleBatch(val2, val, 1, default(JobHandle));
-		((JobHandle)(ref val4)).Complete();
-		byte[] image = new byte[shoreMapSize * shoreMapSize];
-		distances = new float[shoreMapSize * shoreMapSize];
-		vectors = (Vector3[])(object)new Vector3[shoreMapSize * shoreMapSize];
-		int k = 0;
-		int num5 = 0;
-		for (; k < shoreMapSize; k++)
-		{
-			int num6 = 0;
-			while (num6 < shoreMapSize)
-			{
-				RaycastHit val5 = val[k * shoreMapSize + num6];
-				bool flag = ((Component)((RaycastHit)(ref val5)).collider).gameObject.layer == num2;
-				if (flag && ((RaycastHit)(ref val5)).point.y <= 0f)
-				{
-					flag = false;
-				}
-				image[num5] = (byte)(flag ? 255u : 0u);
-				distances[num5] = (flag ? 256 : 0);
-				num6++;
-				num5++;
-			}
-		}
-		ref int size = ref shoreMapSize;
-		byte threshold = 127;
-		DistanceField.Generate(in size, in threshold, in image, ref distances);
-		DistanceField.ApplyGaussianBlur(shoreMapSize, distances);
-		DistanceField.GenerateVectors(in shoreMapSize, in distances, ref vectors);
-		val.Dispose();
-		val2.Dispose();
-	}
-
-	public float GetCoarseDistanceToShore(Vector3 pos)
-	{
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
-		Vector2 uv = default(Vector2);
-		uv.x = (pos.x - TerrainMeta.Position.x) * TerrainMeta.OneOverSize.x;
-		uv.y = (pos.z - TerrainMeta.Position.z) * TerrainMeta.OneOverSize.z;
-		return GetCoarseDistanceToShore(uv);
-	}
-
-	public float GetCoarseDistanceToShore(Vector2 uv)
-	{
-		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
-		int num = shoreMapSize;
-		int num2 = num - 1;
-		float num3 = uv.x * (float)num2;
-		float num4 = uv.y * (float)num2;
-		int num5 = (int)num3;
-		int num6 = (int)num4;
-		float num7 = num3 - (float)num5;
-		float num8 = num4 - (float)num6;
-		num5 = ((num5 >= 0) ? num5 : 0);
-		num6 = ((num6 >= 0) ? num6 : 0);
-		num5 = ((num5 <= num2) ? num5 : num2);
-		num6 = ((num6 <= num2) ? num6 : num2);
-		int num9 = ((num3 < (float)num2) ? 1 : 0);
-		int num10 = ((num4 < (float)num2) ? num : 0);
-		int num11 = num6 * num + num5;
-		int num12 = num11 + num9;
-		int num13 = num11 + num10;
-		int num14 = num13 + num9;
-		float num15 = shoreDistances[num11];
-		float num16 = shoreDistances[num12];
-		float num17 = shoreDistances[num13];
-		float num18 = shoreDistances[num14];
-		float num19 = (num16 - num15) * num7 + num15;
-		return (((num18 - num17) * num7 + num17 - num19) * num8 + num19) * shoreDistanceScale;
-	}
-
-	public Vector3 GetCoarseVectorToShore(Vector3 pos)
-	{
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
-		Vector2 uv = default(Vector2);
-		uv.x = (pos.x - TerrainMeta.Position.x) * TerrainMeta.OneOverSize.x;
-		uv.y = (pos.z - TerrainMeta.Position.z) * TerrainMeta.OneOverSize.z;
-		return GetCoarseVectorToShore(uv);
-	}
-
-	public Vector3 GetCoarseVectorToShore(Vector2 uv)
-	{
-		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00de: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ed: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ff: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0115: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0120: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0136: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0141: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0150: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0157: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0162: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0171: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0178: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0183: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0190: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0197: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01aa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01bc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01cd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01d8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ed: Unknown result type (might be due to invalid IL or missing references)
-		int num = shoreMapSize;
-		int num2 = num - 1;
-		float num3 = uv.x * (float)num2;
-		float num4 = uv.y * (float)num2;
-		int num5 = (int)num3;
-		int num6 = (int)num4;
-		float num7 = num3 - (float)num5;
-		float num8 = num4 - (float)num6;
-		num5 = ((num5 >= 0) ? num5 : 0);
-		num6 = ((num6 >= 0) ? num6 : 0);
-		num5 = ((num5 <= num2) ? num5 : num2);
-		num6 = ((num6 <= num2) ? num6 : num2);
-		int num9 = ((num3 < (float)num2) ? 1 : 0);
-		int num10 = ((num4 < (float)num2) ? num : 0);
-		int num11 = num6 * num + num5;
-		int num12 = num11 + num9;
-		int num13 = num11 + num10;
-		int num14 = num13 + num9;
-		Vector3 val = shoreVectors[num11];
-		Vector3 val2 = shoreVectors[num12];
-		Vector3 val3 = shoreVectors[num13];
-		Vector3 val4 = shoreVectors[num14];
-		Vector3 val5 = default(Vector3);
-		val5.x = (val2.x - val.x) * num7 + val.x;
-		val5.y = (val2.y - val.y) * num7 + val.y;
-		val5.z = (val2.z - val.z) * num7 + val.z;
-		Vector3 val6 = default(Vector3);
-		val6.x = (val4.x - val3.x) * num7 + val3.x;
-		val6.y = (val4.y - val3.y) * num7 + val3.y;
-		val6.z = (val4.z - val3.z) * num7 + val3.z;
-		float num15 = (val6.x - val5.x) * num8 + val5.x;
-		float num16 = (val6.y - val5.y) * num8 + val5.y;
-		float num17 = (val6.z - val5.z) * num8 + val5.z;
-		return new Vector3(num15, num16, num17 * shoreDistanceScale);
 	}
 }

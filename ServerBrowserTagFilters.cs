@@ -13,8 +13,8 @@ public class ServerBrowserTagFilters : MonoBehaviour
 
 	public void Start()
 	{
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001e: Expected O, but got Unknown
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Expected O, but got Unknown
 		_groups = ((Component)this).gameObject.GetComponentsInChildren<ServerBrowserTagGroup>();
 		UnityAction val = (UnityAction)delegate
 		{
@@ -25,13 +25,13 @@ public class ServerBrowserTagFilters : MonoBehaviour
 			}
 		};
 		ServerBrowserTagGroup[] groups = _groups;
-		for (int i = 0; i < groups.Length; i++)
+		foreach (ServerBrowserTagGroup serverBrowserTagGroup in groups)
 		{
-			ServerBrowserTag[] tags = groups[i].tags;
-			foreach (ServerBrowserTag obj in tags)
+			ServerBrowserTag[] tags = serverBrowserTagGroup.tags;
+			foreach (ServerBrowserTag serverBrowserTag in tags)
 			{
-				obj.button.OnPressed.AddListener(val);
-				obj.button.OnReleased.AddListener(val);
+				serverBrowserTag.button.OnPressed.AddListener(val);
+				serverBrowserTag.button.OnReleased.AddListener(val);
 			}
 		}
 	}
@@ -48,9 +48,9 @@ public class ServerBrowserTagFilters : MonoBehaviour
 			if (serverBrowserTagGroup.tags != null)
 			{
 				ServerBrowserTag[] tags = serverBrowserTagGroup.tags;
-				for (int j = 0; j < tags.Length; j++)
+				foreach (ServerBrowserTag serverBrowserTag in tags)
 				{
-					tags[j].button.SetToggleFalse();
+					serverBrowserTag.button.SetToggleFalse();
 				}
 			}
 		}
@@ -67,11 +67,10 @@ public class ServerBrowserTagFilters : MonoBehaviour
 			{
 				continue;
 			}
-			ServerBrowserTag[] tags;
 			if (serverBrowserTagGroup.isExclusive)
 			{
 				HashSet<string> hashSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-				tags = serverBrowserTagGroup.tags;
+				ServerBrowserTag[] tags = serverBrowserTagGroup.tags;
 				foreach (ServerBrowserTag serverBrowserTag in tags)
 				{
 					if (serverBrowserTag.IsActive)
@@ -89,8 +88,8 @@ public class ServerBrowserTagFilters : MonoBehaviour
 				}
 				continue;
 			}
-			tags = serverBrowserTagGroup.tags;
-			foreach (ServerBrowserTag serverBrowserTag2 in tags)
+			ServerBrowserTag[] tags2 = serverBrowserTagGroup.tags;
+			foreach (ServerBrowserTag serverBrowserTag2 in tags2)
 			{
 				if (serverBrowserTag2.IsActive)
 				{

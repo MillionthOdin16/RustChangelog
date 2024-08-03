@@ -2,10 +2,11 @@ using System;
 using Facepunch;
 using ProtoBuf;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 namespace CompanionServer.Handlers;
 
-public class Map : BasePlayerHandler<AppEmpty>
+public class Map : BaseHandler<AppEmpty>
 {
 	private static int _width;
 
@@ -19,11 +20,11 @@ public class Map : BasePlayerHandler<AppEmpty>
 
 	public override void Execute()
 	{
-		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00af: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00eb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011d: Unknown result type (might be due to invalid IL or missing references)
 		if (_imageData == null)
 		{
 			SendError("no_map");
@@ -63,7 +64,8 @@ public class Map : BasePlayerHandler<AppEmpty>
 
 	private static void RenderToCache()
 	{
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+		Profiler.BeginSample("Map.RenderToCache");
 		_imageData = null;
 		_width = 0;
 		_height = 0;
@@ -80,5 +82,6 @@ public class Map : BasePlayerHandler<AppEmpty>
 		{
 			Debug.LogError((object)"Map image is null! App users will not be able to see the map.");
 		}
+		Profiler.EndSample();
 	}
 }

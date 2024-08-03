@@ -1,8 +1,8 @@
 using System;
-using ConVar;
 using Facepunch;
 using ProtoBuf;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 public class EnvSync : PointEntity
 {
@@ -18,35 +18,20 @@ public class EnvSync : PointEntity
 
 	private void UpdateNetwork()
 	{
-		if (NexusServer.Started && NexusServer.LastReset.HasValue && (Object)(object)TOD_Sky.Instance != (Object)null)
-		{
-			TOD_Time time = TOD_Sky.Instance.Components.Time;
-			DateTimeOffset dateTimeOffset = DateTimeOffset.FromUnixTimeSeconds(NexusServer.LastReset.Value);
-			double totalMinutes = (DateTimeOffset.UtcNow - dateTimeOffset).TotalMinutes;
-			double num = (double)(Nexus.timeOffset / 24f) + totalMinutes / (double)time.DayLengthInMinutes;
-			if (time.UseTimeCurve)
-			{
-				double num2 = Math.Truncate(num);
-				double num3 = (num - num2) * 24.0;
-				float num4 = time.TimeCurve.Evaluate((float)num3);
-				num = num2 + (double)(num4 / 24f);
-			}
-			float num5 = (float)(num * 24.0);
-			DateTime dateTime = dateTimeOffset.Date.AddHours(num5);
-			TOD_Sky.Instance.Cycle.DateTime = dateTime.ToUniversalTime();
-		}
 		SendNetworkUpdate();
 	}
 
 	public override void Save(SaveInfo info)
 	{
 		base.Save(info);
+		Profiler.BeginSample("EnvSync.Save");
 		info.msg.environment = Pool.Get<Environment>();
 		if (Object.op_Implicit((Object)(object)TOD_Sky.Instance))
 		{
 			info.msg.environment.dateTime = TOD_Sky.Instance.Cycle.DateTime.ToBinary();
 		}
 		info.msg.environment.engineTime = Time.realtimeSinceStartup;
+		Profiler.EndSample();
 	}
 
 	public override void Load(LoadInfo info)

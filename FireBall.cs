@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Facepunch;
 using Rust;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 public class FireBall : BaseEntity, ISplashable
 {
@@ -15,7 +16,7 @@ public class FireBall : BaseEntity, ISplashable
 	public ParticleSystem[] restingSystems;
 
 	[NonSerialized]
-	public float generation;
+	public float generation = 0f;
 
 	public GameObjectRef spreadSubEntity;
 
@@ -27,28 +28,28 @@ public class FireBall : BaseEntity, ISplashable
 
 	public int waterToExtinguish = 200;
 
-	public bool canMerge;
+	public bool canMerge = false;
 
 	public LayerMask AttackLayers = LayerMask.op_Implicit(1220225809);
 
-	public bool ignoreNPC;
+	public bool ignoreNPC = false;
 
 	private Vector3 lastPos = Vector3.zero;
 
-	private float deathTime;
+	private float deathTime = 0f;
 
-	private int wetness;
+	private int wetness = 0;
 
-	private float spawnTime;
+	private float spawnTime = 0f;
 
 	private Vector3 delayedVelocity;
 
 	public void SetDelayedVelocity(Vector3 delayed)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
 		if (!(delayedVelocity != Vector3.zero))
 		{
 			delayedVelocity = delayed;
@@ -58,9 +59,9 @@ public class FireBall : BaseEntity, ISplashable
 
 	private void ApplyDelayedVelocity()
 	{
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
 		SetVelocity(delayedVelocity);
 		delayedVelocity = Vector3.zero;
 	}
@@ -106,19 +107,19 @@ public class FireBall : BaseEntity, ISplashable
 
 	public void TryToSpread()
 	{
-		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ac: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c7: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00dd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ef: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0100: Unknown result type (might be due to invalid IL or missing references)
 		float num = 0.9f - generation * 0.1f;
 		if (Random.Range(0f, 1f) < num && spreadSubEntity.isValid)
 		{
@@ -127,7 +128,8 @@ public class FireBall : BaseEntity, ISplashable
 			{
 				((Component)baseEntity).transform.position = ((Component)this).transform.position + Vector3.up * 0.25f;
 				baseEntity.Spawn();
-				Vector3 modifiedAimConeDirection = AimConeUtil.GetModifiedAimConeDirection(45f, Vector3.up);
+				float aimCone = 45f;
+				Vector3 modifiedAimConeDirection = AimConeUtil.GetModifiedAimConeDirection(aimCone, Vector3.up);
 				baseEntity.creatorEntity = (((Object)(object)creatorEntity == (Object)null) ? baseEntity : creatorEntity);
 				baseEntity.SetVelocity(modifiedAimConeDirection * Random.Range(5f, 8f));
 				((Component)baseEntity).SendMessage("SetGeneration", (object)(generation + 1f));
@@ -142,12 +144,13 @@ public class FireBall : BaseEntity, ISplashable
 
 	public void Think()
 	{
-		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
 		if (base.isServer)
 		{
+			Profiler.BeginSample("FireThink");
 			SetResting(Vector3.Distance(lastPos, ((Component)this).transform.localPosition) < 0.25f);
 			lastPos = ((Component)this).transform.localPosition;
 			if (IsResting())
@@ -162,26 +165,27 @@ public class FireBall : BaseEntity, ISplashable
 			{
 				Extinguish();
 			}
+			Profiler.EndSample();
 		}
 	}
 
 	public void DoRadialDamage()
 	{
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0130: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0176: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0188: Unknown result type (might be due to invalid IL or missing references)
-		//IL_018d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0162: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01cc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01de: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ac: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b1: Unknown result type (might be due to invalid IL or missing references)
 		List<Collider> list = Pool.GetList<Collider>();
 		Vector3 position = ((Component)this).transform.position + new Vector3(0f, radius * 0.75f, 0f);
 		Vis.Colliders<Collider>(position, radius, list, LayerMask.op_Implicit(AttackLayers), (QueryTriggerInteraction)2);
@@ -215,11 +219,7 @@ public class FireBall : BaseEntity, ISplashable
 
 	public bool CanMerge()
 	{
-		if (canMerge)
-		{
-			return TimeLeft() < MaxLifeTime() * 0.8f;
-		}
-		return false;
+		return canMerge && TimeLeft() < MaxLifeTime() * 0.8f;
 	}
 
 	public float TimeAlive()
@@ -229,7 +229,7 @@ public class FireBall : BaseEntity, ISplashable
 
 	public void SetResting(bool isResting)
 	{
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
 		if (isResting != IsResting() && isResting && TimeAlive() > 1f && CanMerge())
 		{
 			List<Collider> list = Pool.GetList<Collider>();

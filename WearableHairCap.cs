@@ -8,7 +8,7 @@ public class WearableHairCap : MonoBehaviour
 	[ColorUsage(false, true)]
 	public Color BaseColor = Color.black;
 
-	public Texture Mask;
+	public Texture Mask = null;
 
 	private static MaterialPropertyBlock block;
 
@@ -22,8 +22,8 @@ public class WearableHairCap : MonoBehaviour
 
 	public void ApplyHairCap(MaterialPropertyBlock block)
 	{
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0092: Unknown result type (might be due to invalid IL or missing references)
 		if (Type == HairType.Head || Type == HairType.Armpit || Type == HairType.Pubic)
 		{
 			Texture texture = block.GetTexture(_HairPackedMapUV1);

@@ -7,14 +7,15 @@ public class UIEscapeCapture : ListComponent<UIEscapeCapture>
 
 	public static bool EscapePressed()
 	{
-		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
 		Enumerator<UIEscapeCapture> enumerator = ListComponent<UIEscapeCapture>.InstanceList.GetEnumerator();
 		try
 		{
 			if (enumerator.MoveNext())
 			{
-				enumerator.Current.onEscape.Invoke();
+				UIEscapeCapture current = enumerator.Current;
+				current.onEscape.Invoke();
 				return true;
 			}
 		}

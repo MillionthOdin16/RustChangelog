@@ -4,35 +4,35 @@ using UnityEngine.UI;
 
 public class PhoneDialler : UIDialog
 {
-	public GameObject DialingRoot;
+	public GameObject DialingRoot = null;
 
-	public GameObject CallInProcessRoot;
+	public GameObject CallInProcessRoot = null;
 
-	public GameObject IncomingCallRoot;
+	public GameObject IncomingCallRoot = null;
 
-	public RustText ThisPhoneNumber;
+	public RustText ThisPhoneNumber = null;
 
-	public RustInput PhoneNameInput;
+	public RustInput PhoneNameInput = null;
 
 	public RustText textDisplay;
 
-	public RustText CallTimeText;
+	public RustText CallTimeText = null;
 
-	public RustButton DefaultDialViewButton;
+	public RustButton DefaultDialViewButton = null;
 
 	public RustText[] IncomingCallNumber;
 
-	public GameObject NumberDialRoot;
+	public GameObject NumberDialRoot = null;
 
-	public GameObject PromptVoicemailRoot;
+	public GameObject PromptVoicemailRoot = null;
 
-	public RustButton ContactsButton;
+	public RustButton ContactsButton = null;
 
-	public RustText FailText;
+	public RustText FailText = null;
 
-	public NeedsCursor CursorController;
+	public NeedsCursor CursorController = null;
 
-	public NeedsKeyboard KeyboardController;
+	public NeedsKeyboard KeyboardController = null;
 
 	public Phrase WrongNumberPhrase;
 
@@ -40,25 +40,25 @@ public class PhoneDialler : UIDialog
 
 	public Phrase Engaged;
 
-	public GameObjectRef DirectoryEntryPrefab;
+	public GameObjectRef DirectoryEntryPrefab = null;
 
-	public Transform DirectoryRoot;
+	public Transform DirectoryRoot = null;
 
-	public GameObject NoDirectoryRoot;
+	public GameObject NoDirectoryRoot = null;
 
-	public RustButton DirectoryPageUp;
+	public RustButton DirectoryPageUp = null;
 
-	public RustButton DirectoryPageDown;
+	public RustButton DirectoryPageDown = null;
 
-	public Transform ContactsRoot;
+	public Transform ContactsRoot = null;
 
-	public RustInput ContactsNameInput;
+	public RustInput ContactsNameInput = null;
 
-	public RustInput ContactsNumberInput;
+	public RustInput ContactsNumberInput = null;
 
-	public GameObject NoContactsRoot;
+	public GameObject NoContactsRoot = null;
 
-	public RustButton AddContactButton;
+	public RustButton AddContactButton = null;
 
 	public SoundDefinition DialToneSfx;
 
@@ -66,7 +66,7 @@ public class PhoneDialler : UIDialog
 
 	public Phrase AnsweringMachine;
 
-	public VoicemailDialog Voicemail;
+	public VoicemailDialog Voicemail = null;
 
-	public GameObject VoicemailRoot;
+	public GameObject VoicemailRoot = null;
 }

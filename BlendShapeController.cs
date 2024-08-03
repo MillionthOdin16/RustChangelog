@@ -19,7 +19,7 @@ public class BlendShapeController : MonoBehaviour
 		public BlendMode Mode;
 	}
 
-	public SkinnedMeshRenderer TargetRenderer;
+	public SkinnedMeshRenderer TargetRenderer = null;
 
 	public BlendState[] States;
 

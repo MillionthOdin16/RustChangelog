@@ -2,5 +2,5 @@ using UnityEngine;
 
 public class KeyframeWidget : MonoBehaviour
 {
-	public Tooltip AttachedTooltip;
+	public Tooltip AttachedTooltip = null;
 }

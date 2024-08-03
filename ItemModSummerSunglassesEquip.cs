@@ -11,7 +11,7 @@ public class ItemModSummerSunglassesEquip : ItemMod
 
 	public override void DoAction(Item item, BasePlayer player)
 	{
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
 		base.DoAction(item, player);
 		if ((Object)(object)player != (Object)null && !string.IsNullOrEmpty(AchivementName) && player.inventory.containerWear.FindItemByUID(item.uid) != null)
 		{

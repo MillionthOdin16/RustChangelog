@@ -33,14 +33,6 @@ public class ItemDefinition : MonoBehaviour
 		public WorldSpawnCondition foundCondition;
 	}
 
-	[Serializable]
-	public struct OverrideWorldModel
-	{
-		public GameObjectRef worldModel;
-
-		public int minStackSize;
-	}
-
 	public enum RedirectVendingBehaviour
 	{
 		NoListing,
@@ -51,9 +43,7 @@ public class ItemDefinition : MonoBehaviour
 	public enum Flag
 	{
 		NoDropping = 1,
-		NotStraightToBelt = 2,
-		NotAllowedInBelt = 4,
-		Backpack = 8
+		NotStraightToBelt = 2
 	}
 
 	public enum AmountType
@@ -84,21 +74,21 @@ public class ItemDefinition : MonoBehaviour
 
 	public ItemCategory category;
 
-	public ItemSelectionPanel selectionPanel;
+	public ItemSelectionPanel selectionPanel = ItemSelectionPanel.None;
 
 	[Header("Containment")]
 	public int maxDraggable;
 
 	public ItemContainer.ContentsType itemType = ItemContainer.ContentsType.Generic;
 
-	public AmountType amountType;
+	public AmountType amountType = AmountType.Count;
 
 	[InspectorFlags]
 	public ItemSlot occupySlots = ItemSlot.None;
 
 	public int stackable;
 
-	public bool quickDespawn;
+	public bool quickDespawn = false;
 
 	[Header("Spawn Tables")]
 	[Tooltip("How rare this item is and how much it costs to research")]
@@ -106,7 +96,7 @@ public class ItemDefinition : MonoBehaviour
 
 	public Rarity despawnRarity;
 
-	public bool spawnAsBlueprint;
+	public bool spawnAsBlueprint = false;
 
 	[Header("Sounds")]
 	public SoundDefinition inventoryGrabSound;
@@ -134,11 +124,9 @@ public class ItemDefinition : MonoBehaviour
 
 	public GameObjectRef worldModelPrefab;
 
-	public OverrideWorldModel[] worldModelOverrides;
+	public ItemDefinition isRedirectOf = null;
 
-	public ItemDefinition isRedirectOf;
-
-	public RedirectVendingBehaviour redirectVendingBehaviour;
+	public RedirectVendingBehaviour redirectVendingBehaviour = RedirectVendingBehaviour.NoListing;
 
 	[NonSerialized]
 	public ItemMod[] itemMods;
@@ -220,7 +208,7 @@ public class ItemDefinition : MonoBehaviour
 		if (itemDefinition2 != null)
 		{
 			ulong workshopDownload = itemDefinition2.WorkshopDownload;
-			if (workshopDownload != 0L)
+			if (workshopDownload != 0)
 			{
 				string itemShortName = itemDefinition2.ItemShortName;
 				if (itemShortName == itemDefinition.shortname || itemShortName == ((Object)itemDefinition).name)
@@ -231,7 +219,8 @@ public class ItemDefinition : MonoBehaviour
 		}
 		for (int i = 0; i < itemDefinition.skins.Length; i++)
 		{
-			if (itemDefinition.skins[i].id == skinID)
+			ItemSkinDirectory.Skin skin = itemDefinition.skins[i];
+			if (skin.id == skinID)
 			{
 				return (ulong)skinID;
 			}
@@ -253,45 +242,13 @@ public class ItemDefinition : MonoBehaviour
 		skins = ItemSkinDirectory.ForItem(this);
 		itemMods = ((Component)this).GetComponentsInChildren<ItemMod>(true);
 		ItemMod[] array = itemMods;
-		for (int i = 0; i < array.Length; i++)
+		foreach (ItemMod itemMod in array)
 		{
-			array[i].ModInit();
+			itemMod.ModInit();
 		}
 		Children = itemList.Where((ItemDefinition x) => (Object)(object)x.Parent == (Object)(object)this).ToArray();
 		ItemModWearable = ((Component)this).GetComponent<ItemModWearable>();
 		isHoldable = (Object)(object)((Component)this).GetComponent<ItemModEntity>() != (Object)null;
 		isUsable = (Object)(object)((Component)this).GetComponent<ItemModEntity>() != (Object)null || (Object)(object)((Component)this).GetComponent<ItemModConsume>() != (Object)null;
-	}
-
-	public GameObjectRef GetWorldModel(int amount)
-	{
-		if (worldModelOverrides == null || worldModelOverrides.Length == 0)
-		{
-			return worldModelPrefab;
-		}
-		for (int num = worldModelOverrides.Length - 1; num >= 0; num--)
-		{
-			if (amount >= worldModelOverrides[num].minStackSize)
-			{
-				return worldModelOverrides[num].worldModel;
-			}
-		}
-		return worldModelPrefab;
-	}
-
-	public int GetWorldModelIndex(int amount)
-	{
-		if (worldModelOverrides == null || worldModelOverrides.Length == 0)
-		{
-			return -1;
-		}
-		for (int num = worldModelOverrides.Length - 1; num >= 0; num--)
-		{
-			if (amount >= worldModelOverrides[num].minStackSize)
-			{
-				return num;
-			}
-		}
-		return -1;
 	}
 }

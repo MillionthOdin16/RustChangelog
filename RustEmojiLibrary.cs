@@ -3,10 +3,16 @@ using System.Collections.Generic;
 using System.IO;
 using ConVar;
 using UnityEngine;
-using UnityEngine.Experimental.Rendering;
 
 public class RustEmojiLibrary : BaseScriptableObject
 {
+	public struct ServerEmojiConfig
+	{
+		public uint CRC;
+
+		public FileStorage.Type FileType;
+	}
+
 	public enum EmojiType
 	{
 		Core,
@@ -70,19 +76,20 @@ public class RustEmojiLibrary : BaseScriptableObject
 		}
 	}
 
-	public struct ServerEmojiConfig
-	{
-		public uint CRC;
+	private const long MAX_FILE_SIZE_BYTES = 250000L;
 
-		public FileStorage.Type FileType;
-	}
+	private const int MAX_TEX_SIZE_PIXELS = 256;
+
+	public static Dictionary<string, ServerEmojiConfig> allServerEmoji = new Dictionary<string, ServerEmojiConfig>();
+
+	private static bool hasLoaded = false;
 
 	public static NetworkableId EmojiStorageNetworkId = new NetworkableId(0uL);
 
 	[HideInInspector]
 	public RustEmojiConfig[] Configs;
 
-	public RenderTextureDescriptor RenderTextureDesc = new RenderTextureDescriptor(256, 256, (GraphicsFormat)8, 0);
+	public RenderTexture DefaultRenderTexture;
 
 	public int InitialPoolSize = 10;
 
@@ -96,17 +103,6 @@ public class RustEmojiLibrary : BaseScriptableObject
 
 	private static bool hasPrewarmed = false;
 
-	private const long MAX_FILE_SIZE_BYTES = 250000L;
-
-	public const int MAX_TEX_SIZE_PIXELS = 256;
-
-	public static Dictionary<string, ServerEmojiConfig> allServerEmoji = new Dictionary<string, ServerEmojiConfig>();
-
-	private static bool hasLoaded = false;
-
-	[NonSerialized]
-	public static List<string> cachedServerList = new List<string>();
-
 	public static RustEmojiLibrary Instance
 	{
 		get
@@ -118,6 +114,93 @@ public class RustEmojiLibrary : BaseScriptableObject
 			}
 			return _instance;
 		}
+	}
+
+	public static void FindAllServerEmoji()
+	{
+		//IL_0146: Unknown result type (might be due to invalid IL or missing references)
+		if (hasLoaded)
+		{
+			return;
+		}
+		hasLoaded = true;
+		string serverFolder = Server.GetServerFolder("serveremoji");
+		if (!Directory.Exists(serverFolder))
+		{
+			return;
+		}
+		IEnumerable<string> enumerable = Directory.EnumerateFiles(serverFolder);
+		foreach (string item in enumerable)
+		{
+			try
+			{
+				FileInfo fileInfo = new FileInfo(item);
+				if (!CheckByteArray(fileInfo.Length))
+				{
+					Debug.Log((object)$"{serverFolder} file size is too big for emoji, max file size is {250000L} bytes");
+					continue;
+				}
+				byte[] array = File.ReadAllBytes(item);
+				if (!CheckTextureSize(array, out var texWidth, out var texHeight))
+				{
+					Debug.Log((object)$"{item} is too large, it's size is {texWidth}x{texHeight} and the maximum is {256}x{256}");
+				}
+				else if (item.EndsWith(".png") || item.EndsWith(".jpg"))
+				{
+					FileStorage.Type type = FileStorage.Type.jpg;
+					if (item.EndsWith(".png"))
+					{
+						type = FileStorage.Type.png;
+					}
+					uint cRC = FileStorage.server.Store(array, type, EmojiStorageNetworkId);
+					string[] array2 = item.Split('/', '\\');
+					string text = array2[array2.Length - 1];
+					text = text.Replace(".png", string.Empty);
+					text = text.Replace(".jpg", string.Empty);
+					if (!allServerEmoji.ContainsKey(text))
+					{
+						allServerEmoji.Add(text, new ServerEmojiConfig
+						{
+							CRC = cRC,
+							FileType = type
+						});
+					}
+				}
+			}
+			catch (Exception arg)
+			{
+				Debug.Log((object)$"Exception loading {item} - {arg}");
+			}
+		}
+	}
+
+	public static void ResetServerEmoji()
+	{
+		hasLoaded = false;
+		allServerEmoji.Clear();
+		FindAllServerEmoji();
+	}
+
+	public static bool CheckByteArray(long arrayLength)
+	{
+		return arrayLength <= 250000;
+	}
+
+	public static bool CheckByteArray(int arrayLength)
+	{
+		return (long)arrayLength <= 250000L;
+	}
+
+	public static bool CheckTextureSize(byte[] bytes, out int texWidth, out int texHeight)
+	{
+		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0009: Expected O, but got Unknown
+		Texture2D val = new Texture2D(1, 1);
+		ImageConversion.LoadImage(val, bytes);
+		texWidth = ((Texture)val).width;
+		texHeight = ((Texture)val).height;
+		Object.Destroy((Object)(object)val);
+		return texWidth <= 256 && texHeight <= 256;
 	}
 
 	private void Prewarm()
@@ -169,100 +252,13 @@ public class RustEmojiLibrary : BaseScriptableObject
 		Prewarm();
 		foreach (EmojiSource item in serverSide ? conditionalAccessOnly : all)
 		{
-			if (item.Type != EmojiType.Server || !Global.blockServerEmoji)
+			if (item.StringMatch(key, out skinVariantIndex))
 			{
-				if (item.StringMatch(key, out skinVariantIndex))
-				{
-					er = item;
-					return true;
-				}
-				allIndex++;
+				er = item;
+				return true;
 			}
+			allIndex++;
 		}
 		return false;
-	}
-
-	public static void FindAllServerEmoji()
-	{
-		//IL_00f9: Unknown result type (might be due to invalid IL or missing references)
-		if (hasLoaded)
-		{
-			return;
-		}
-		hasLoaded = true;
-		string serverFolder = Server.GetServerFolder("serveremoji");
-		if (!Directory.Exists(serverFolder))
-		{
-			return;
-		}
-		foreach (string item in Directory.EnumerateFiles(serverFolder))
-		{
-			try
-			{
-				FileInfo fileInfo = new FileInfo(item);
-				bool flag = fileInfo.Extension == ".png";
-				bool flag2 = fileInfo.Extension == ".jpg";
-				if (!CheckByteArray(fileInfo.Length))
-				{
-					Debug.Log((object)$"{serverFolder} file size is too big for emoji, max file size is {250000L} bytes");
-					continue;
-				}
-				byte[] data = File.ReadAllBytes(item);
-				if (flag && !ImageProcessing.IsValidPNG(data, 256))
-				{
-					Debug.Log((object)(item + " is an invalid png"));
-				}
-				else if (flag2 && !ImageProcessing.IsValidJPG(data, 256))
-				{
-					Debug.Log((object)(item + " is an invalid jpg"));
-				}
-				else if (flag || flag2)
-				{
-					FileStorage.Type type = FileStorage.Type.jpg;
-					if (flag)
-					{
-						type = FileStorage.Type.png;
-					}
-					uint cRC = FileStorage.server.Store(data, type, EmojiStorageNetworkId);
-					string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(item);
-					if (!allServerEmoji.ContainsKey(fileNameWithoutExtension))
-					{
-						allServerEmoji.Add(fileNameWithoutExtension, new ServerEmojiConfig
-						{
-							CRC = cRC,
-							FileType = type
-						});
-					}
-				}
-			}
-			catch (Exception arg)
-			{
-				Debug.Log((object)$"Exception loading {item} - {arg}");
-			}
-		}
-		cachedServerList = new List<string>();
-		foreach (KeyValuePair<string, ServerEmojiConfig> item2 in allServerEmoji)
-		{
-			cachedServerList.Add(item2.Key);
-			cachedServerList.Add(item2.Value.CRC.ToString());
-			cachedServerList.Add(((int)item2.Value.FileType).ToString());
-		}
-	}
-
-	public static void ResetServerEmoji()
-	{
-		hasLoaded = false;
-		allServerEmoji.Clear();
-		FindAllServerEmoji();
-	}
-
-	private static bool CheckByteArray(long arrayLength)
-	{
-		return arrayLength <= 250000;
-	}
-
-	public static bool CheckByteArray(int arrayLength)
-	{
-		return (long)arrayLength <= 250000L;
 	}
 }

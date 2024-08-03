@@ -20,9 +20,9 @@ public class MusicTheme : ScriptableObject
 
 		public int startingBar;
 
-		public int layerId;
+		public int layerId = 0;
 
-		public float minIntensity;
+		public float minIntensity = 0f;
 
 		public float maxIntensity = 1f;
 
@@ -34,35 +34,21 @@ public class MusicTheme : ScriptableObject
 
 		public float fadeOutTime = 0.5f;
 
-		public float intensityReduction;
+		public float intensityReduction = 0f;
 
-		public int jumpBarCount;
+		public int jumpBarCount = 0;
 
 		public float jumpMinimumIntensity = 0.5f;
 
 		public float jumpMaximumIntensity = 0.5f;
 
-		public int endingBar
-		{
-			get
-			{
-				if (!((Object)(object)musicClip == (Object)null))
-				{
-					return startingBar + musicClip.lengthInBarsWithTail;
-				}
-				return startingBar;
-			}
-		}
+		public int endingBar => ((Object)(object)musicClip == (Object)null) ? startingBar : (startingBar + musicClip.lengthInBarsWithTail);
 
 		public bool isControlClip => (Object)(object)musicClip == (Object)null;
 
 		public bool CanPlay(float intensity)
 		{
-			if (intensity > minIntensity || (minIntensity == 0f && intensity == 0f))
-			{
-				return intensity <= maxIntensity;
-			}
-			return false;
+			return (intensity > minIntensity || (minIntensity == 0f && intensity == 0f)) && intensity <= maxIntensity;
 		}
 
 		public void CopySettingsFrom(PositionedClip otherClip)
@@ -99,7 +85,7 @@ public class MusicTheme : ScriptableObject
 
 	public int intensityHoldBars = 4;
 
-	public int lengthInBars;
+	public int lengthInBars = 0;
 
 	[Header("Playback restrictions")]
 	public bool canPlayInMenus = true;
@@ -224,14 +210,16 @@ public class MusicTheme : ScriptableObject
 
 	public bool CanPlayInEnvironment(int currentBiome, int currentTopology, float currentRain, float currentSnow, float currentWind)
 	{
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0036: Invalid comparison between Unknown and I4
-		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004b: Invalid comparison between Unknown and I4
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Invalid comparison between Unknown and I4
+		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004f: Invalid comparison between Unknown and I4
+		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0066: Invalid comparison between Unknown and I4
+		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0071: Invalid comparison between Unknown and I4
 		if (Object.op_Implicit((Object)(object)TOD_Sky.Instance) && time.Evaluate(TOD_Sky.Instance.Cycle.Hour) < 0f)
 		{
 			return false;
@@ -240,7 +228,7 @@ public class MusicTheme : ScriptableObject
 		{
 			return false;
 		}
-		if ((int)topologies != -1 && (topologies & currentTopology) != 0)
+		if ((int)topologies != -1 && (topologies & currentTopology) > 0)
 		{
 			return false;
 		}
@@ -261,8 +249,8 @@ public class MusicTheme : ScriptableObject
 
 	public bool FirstClipsLoaded()
 	{
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0016: Invalid comparison between Unknown and I4
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Invalid comparison between Unknown and I4
 		for (int i = 0; i < firstAudioClips.Count; i++)
 		{
 			if ((int)firstAudioClips[i].loadState != 2)

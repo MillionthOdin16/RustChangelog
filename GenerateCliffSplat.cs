@@ -10,7 +10,8 @@ public class GenerateCliffSplat : ProceduralComponent
 		TerrainSplatMap splatMap = TerrainMeta.SplatMap;
 		float normZ = splatMap.Coordinate(z);
 		float normX = splatMap.Coordinate(x);
-		if ((TerrainMeta.TopologyMap.GetTopology(normX, normZ) & 0x800400) == 0)
+		int topology = TerrainMeta.TopologyMap.GetTopology(normX, normZ);
+		if ((topology & 0x800400) == 0)
 		{
 			float slope = TerrainMeta.HeightMap.GetSlope(normX, normZ);
 			if (slope > 30f)

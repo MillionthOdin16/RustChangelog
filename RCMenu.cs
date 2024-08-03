@@ -16,7 +16,7 @@ public class RCMenu : ComputerMenu
 
 	private Vector3 initialDevicesPosition;
 
-	public static bool isControllingCamera;
+	public static bool isControllingCamera = false;
 
 	public CanvasGroup overExposure;
 
@@ -61,7 +61,7 @@ public class RCMenu : ComputerMenu
 
 	public float autoTurretDotGrowScale = 4f;
 
-	public PingManager PingManager;
+	public PingManager PingManager = null;
 
 	public ScrollRectSettable scrollRect;
 }

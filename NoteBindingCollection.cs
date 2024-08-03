@@ -40,9 +40,9 @@ public class NoteBindingCollection : ScriptableObject
 			if (AdditionalMidiTargets != null)
 			{
 				int[] additionalMidiTargets = AdditionalMidiTargets;
-				for (int i = 0; i < additionalMidiTargets.Length; i++)
+				foreach (int num in additionalMidiTargets)
 				{
-					if (additionalMidiTargets[i] == code)
+					if (num == code)
 					{
 						return true;
 					}
@@ -61,7 +61,7 @@ public class NoteBindingCollection : ScriptableObject
 
 	public float MinimumNoteTime;
 
-	public float MaximumNoteLength;
+	public float MaximumNoteLength = 0f;
 
 	public bool AllowAutoplay = true;
 
@@ -71,7 +71,7 @@ public class NoteBindingCollection : ScriptableObject
 
 	public string KeyMidiMapShortname = "";
 
-	public bool AllowSustain;
+	public bool AllowSustain = false;
 
 	public bool AllowFullKeyboardInput = true;
 
@@ -81,9 +81,9 @@ public class NoteBindingCollection : ScriptableObject
 
 	public int MaxConcurrentNotes = 3;
 
-	public bool LoopSounds;
+	public bool LoopSounds = false;
 
-	public float SoundFadeInTime;
+	public float SoundFadeInTime = 0f;
 
 	public float minimumSoundFadeOutTime = 0.1f;
 
@@ -94,24 +94,24 @@ public class NoteBindingCollection : ScriptableObject
 		Note = Notes.B
 	};
 
-	public bool RunInstrumentAnimationController;
+	public bool RunInstrumentAnimationController = false;
 
 	public bool PlayRepeatAnimations = true;
 
 	public float AnimationDeadTime = 1f;
 
-	public float AnimationResetDelay;
+	public float AnimationResetDelay = 0f;
 
 	public float RecentlyPlayedThreshold = 1f;
 
 	[Range(0f, 1f)]
-	public float CrossfadeNormalizedAnimationTarget;
+	public float CrossfadeNormalizedAnimationTarget = 0f;
 
 	public float AnimationCrossfadeDuration = 0.15f;
 
 	public float CrossfadePlayerSpeedMulti = 1f;
 
-	public int DefaultOctave;
+	public int DefaultOctave = 0;
 
 	public int ShiftedOctave = 1;
 

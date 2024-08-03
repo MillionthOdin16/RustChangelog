@@ -37,13 +37,13 @@ public class LiquidWeapon : BaseLiquidVessel
 
 	public LiquidWeaponEffects EntityWeaponEffects;
 
-	public bool RequiresPumping;
+	public bool RequiresPumping = false;
 
-	public bool AutoPump;
+	public bool AutoPump = false;
 
-	public bool WaitForFillAnim;
+	public bool WaitForFillAnim = false;
 
-	public bool UseFalloffCurve;
+	public bool UseFalloffCurve = false;
 
 	public AnimationCurve FalloffCurve;
 
@@ -53,9 +53,9 @@ public class LiquidWeapon : BaseLiquidVessel
 
 	public float StopFillingBlockDuration = 1f;
 
-	private float cooldownTime;
+	private float cooldownTime = 0f;
 
-	private int pressure;
+	private int pressure = 0;
 
 	public const string RadiationFightAchievement = "SUMMER_RADICAL";
 
@@ -69,17 +69,7 @@ public class LiquidWeapon : BaseLiquidVessel
 
 	public float MinimumPressureFraction => (float)PressureGainedPerPump / (float)MaxPressure;
 
-	public float CurrentRange
-	{
-		get
-		{
-			if (!UseFalloffCurve)
-			{
-				return MaxRange;
-			}
-			return MaxRange * FalloffCurve.Evaluate((float)(MaxPressure - pressure) / (float)MaxPressure);
-		}
-	}
+	public float CurrentRange => UseFalloffCurve ? (MaxRange * FalloffCurve.Evaluate((float)(MaxPressure - pressure) / (float)MaxPressure)) : MaxRange;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -91,7 +81,7 @@ public class LiquidWeapon : BaseLiquidVessel
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - PumpWater "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - PumpWater "));
 				}
 				TimeWarning val2 = TimeWarning.New("PumpWater", 0);
 				try
@@ -110,7 +100,7 @@ public class LiquidWeapon : BaseLiquidVessel
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -122,7 +112,7 @@ public class LiquidWeapon : BaseLiquidVessel
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -142,12 +132,12 @@ public class LiquidWeapon : BaseLiquidVessel
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - StartFiring "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - StartFiring "));
 				}
-				TimeWarning val2 = TimeWarning.New("StartFiring", 0);
+				TimeWarning val5 = TimeWarning.New("StartFiring", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					TimeWarning val6 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsActiveItem.Test(3724096303u, "StartFiring", this, player))
@@ -157,11 +147,11 @@ public class LiquidWeapon : BaseLiquidVessel
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val6)?.Dispose();
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val7 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -173,7 +163,7 @@ public class LiquidWeapon : BaseLiquidVessel
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val7)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -184,7 +174,7 @@ public class LiquidWeapon : BaseLiquidVessel
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val5)?.Dispose();
 				}
 				return true;
 			}
@@ -193,12 +183,12 @@ public class LiquidWeapon : BaseLiquidVessel
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - StopFiring "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - StopFiring "));
 				}
-				TimeWarning val2 = TimeWarning.New("StopFiring", 0);
+				TimeWarning val8 = TimeWarning.New("StopFiring", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					TimeWarning val9 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsActiveItem.Test(789289044u, "StopFiring", this, player))
@@ -208,18 +198,18 @@ public class LiquidWeapon : BaseLiquidVessel
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val9)?.Dispose();
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val10 = TimeWarning.New("Call", 0);
 						try
 						{
 							StopFiring();
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val10)?.Dispose();
 						}
 					}
 					catch (Exception ex3)
@@ -230,7 +220,7 @@ public class LiquidWeapon : BaseLiquidVessel
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val8)?.Dispose();
 				}
 				return true;
 			}
@@ -327,7 +317,8 @@ public class LiquidWeapon : BaseLiquidVessel
 
 	private void PumpWater()
 	{
-		if (!((Object)(object)GetOwnerPlayer() == (Object)null) && !OnCooldown() && !Firing())
+		BasePlayer ownerPlayer = GetOwnerPlayer();
+		if (!((Object)(object)ownerPlayer == (Object)null) && !OnCooldown() && !Firing())
 		{
 			pressure += PressureGainedPerPump;
 			pressure = Mathf.Min(pressure, MaxPressure);
@@ -339,17 +330,17 @@ public class LiquidWeapon : BaseLiquidVessel
 
 	private void FireTick()
 	{
-		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e9: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer ownerPlayer = GetOwnerPlayer();
 		if (!CanFire(ownerPlayer))
 		{
@@ -381,8 +372,8 @@ public class LiquidWeapon : BaseLiquidVessel
 
 	private void DoSplash(BasePlayer attacker, Vector3 position, Vector3 direction, int amount)
 	{
-		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
 		Item item = GetItem();
 		if (item != null && item.contents != null)
 		{

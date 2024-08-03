@@ -6,7 +6,7 @@ public class BasePrefab : BaseMonoBehaviour, IPrefabPreProcess
 	public uint prefabID;
 
 	[HideInInspector]
-	public bool isClient;
+	public bool isClient = false;
 
 	public bool isServer => !isClient;
 

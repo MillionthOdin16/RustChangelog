@@ -3,7 +3,7 @@ using UnityEngine;
 public class PlayerModelHairCap : MonoBehaviour
 {
 	[InspectorFlags]
-	public HairCapMask hairCapMask;
+	public HairCapMask hairCapMask = (HairCapMask)0;
 
 	public void SetupHairCap(SkinSetCollection skin, float hairNum, float meshNum, MaterialPropertyBlock block)
 	{

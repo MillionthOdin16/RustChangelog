@@ -5,13 +5,14 @@ using UnityEngine;
 [Serializable]
 public class TokenisedPhrase : Phrase
 {
-	public static readonly Phrase LeftMouse = new Phrase("button.mouse.left", "Left Mouse");
-
-	public static readonly Phrase RightMouse = new Phrase("button.mouse.right", "Right Mouse");
-
-	public static readonly Phrase MiddleMouse = new Phrase("button.mouse.middle", "Middle Mouse");
-
-	public override string translated => ReplaceTokens(((Phrase)this).translated);
+	public override string translated
+	{
+		get
+		{
+			string str = ((Phrase)this).translated;
+			return ReplaceTokens(str);
+		}
+	}
 
 	public static string ReplaceTokens(string str)
 	{
@@ -26,7 +27,6 @@ public class TokenisedPhrase : Phrase
 		str = str.Replace("[slot2]", string.Format("[{0}]", Input.GetButtonWithBind("+slot2").ToUpper()));
 		str = str.Replace("[attack]", string.Format("[{0}]", TranslateMouseButton(Input.GetButtonWithBind("+attack")).ToUpper()));
 		str = str.Replace("[attack2]", string.Format("[{0}]", TranslateMouseButton(Input.GetButtonWithBind("+attack2")).ToUpper()));
-		str = str.Replace("[attack3]", string.Format("[{0}]", TranslateMouseButton(Input.GetButtonWithBind("+attack3")).ToUpper()));
 		str = str.Replace("[+use]", string.Format("[{0}]", TranslateMouseButton(Input.GetButtonWithBind("+use")).ToUpper()));
 		str = str.Replace("[+altlook]", string.Format("[{0}]", TranslateMouseButton(Input.GetButtonWithBind("+altlook")).ToUpper()));
 		str = str.Replace("[+reload]", string.Format("[{0}]", TranslateMouseButton(Input.GetButtonWithBind("+reload")).ToUpper()));
@@ -42,8 +42,6 @@ public class TokenisedPhrase : Phrase
 		str = str.Replace("[+pets]", string.Format("[{0}]", Input.GetButtonWithBind("+pets")).ToUpper());
 		str = str.Replace("[lighttoggle]", string.Format("[{0}]", Input.GetButtonWithBind("lighttoggle")).ToUpper());
 		str = str.Replace("[+ping]", string.Format("[{0}]", Input.GetButtonWithBind("+ping")).ToUpper());
-		str = str.Replace("[clan.toggleclan]", string.Format("[{0}]", Input.GetButtonWithBind("clan.toggleclan")).ToUpper());
-		str = str.Replace("[+jump]", string.Format("[{0}]", Input.GetButtonWithBind("+jump")).ToUpper());
 		return str;
 	}
 
@@ -56,9 +54,9 @@ public class TokenisedPhrase : Phrase
 	{
 		return mouseButton switch
 		{
-			"mouse0" => LeftMouse.translated, 
-			"mouse1" => RightMouse.translated, 
-			"mouse2" => MiddleMouse.translated, 
+			"mouse0" => "Left Mouse", 
+			"mouse1" => "Right Mouse", 
+			"mouse2" => "Center Mouse", 
 			_ => mouseButton, 
 		};
 	}

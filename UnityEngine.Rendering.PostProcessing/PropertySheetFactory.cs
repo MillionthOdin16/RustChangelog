@@ -25,10 +25,10 @@ public sealed class PropertySheetFactory
 
 	public PropertySheet Get(Shader shader)
 	{
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0066: Expected O, but got Unknown
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006e: Expected O, but got Unknown
 		if ((Object)(object)shader == (Object)null)
 		{
 			throw new ArgumentException($"Invalid shader ({shader})");
@@ -38,11 +38,12 @@ public sealed class PropertySheetFactory
 			return value;
 		}
 		string name = ((Object)shader).name;
-		value = new PropertySheet(new Material(shader)
+		Material material = new Material(shader)
 		{
 			name = $"PostProcess - {name.Substring(name.LastIndexOf('/') + 1)}",
 			hideFlags = (HideFlags)52
-		});
+		};
+		value = new PropertySheet(material);
 		m_Sheets.Add(shader, value);
 		return value;
 	}

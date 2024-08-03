@@ -141,11 +141,7 @@ public class CardPlayerData : IDisposable
 
 	public bool HasBeenIdleFor(int seconds)
 	{
-		if (HasUserInGame)
-		{
-			return Time.unscaledTime > lastActionTime + (float)seconds;
-		}
-		return false;
+		return HasUserInGame && Time.unscaledTime > lastActionTime + (float)seconds;
 	}
 
 	public StorageContainer GetStorage()

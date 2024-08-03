@@ -16,7 +16,7 @@ public class DungeonGridLink : MonoBehaviour
 
 	protected void Start()
 	{
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
 		if (!((Object)(object)TerrainMeta.Path == (Object)null))
 		{
 			DungeonGridInfo dungeonGridInfo = TerrainMeta.Path.FindClosest(TerrainMeta.Path.DungeonGridEntrances, ((Component)this).transform.position);

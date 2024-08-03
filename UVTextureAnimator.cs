@@ -10,11 +10,11 @@ internal class UVTextureAnimator : MonoBehaviour
 
 	public float Fps = 20f;
 
-	public int OffsetMat;
+	public int OffsetMat = 0;
 
 	public bool IsLoop = true;
 
-	public float StartDelay;
+	public float StartDelay = 0f;
 
 	private bool isInizialised;
 
@@ -45,11 +45,11 @@ internal class UVTextureAnimator : MonoBehaviour
 
 	private void InitDefaultVariables()
 	{
-		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ea: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010b: Unknown result type (might be due to invalid IL or missing references)
 		currentRenderer = ((Component)this).GetComponent<Renderer>();
 		if ((Object)(object)currentRenderer == (Object)null)
 		{
@@ -131,7 +131,7 @@ internal class UVTextureAnimator : MonoBehaviour
 
 	private void UpdateCorutineFrame()
 	{
-		//IL_008b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0095: Unknown result type (might be due to invalid IL or missing references)
 		allCount++;
 		index++;
 		if (index >= count)

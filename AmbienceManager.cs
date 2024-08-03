@@ -10,7 +10,7 @@ public class AmbienceManager : SingletonComponent<AmbienceManager>, IClientCompo
 
 		public int limit = 1;
 
-		public int active;
+		public int active = 0;
 	}
 
 	public List<EmitterTypeLimit> localEmitterLimits = new List<EmitterTypeLimit>();
@@ -19,7 +19,7 @@ public class AmbienceManager : SingletonComponent<AmbienceManager>, IClientCompo
 
 	public int maxActiveLocalEmitters = 5;
 
-	public int activeLocalEmitters;
+	public int activeLocalEmitters = 0;
 
 	public List<AmbienceEmitter> cameraEmitters = new List<AmbienceEmitter>();
 
@@ -31,7 +31,7 @@ public class AmbienceManager : SingletonComponent<AmbienceManager>, IClientCompo
 
 	public List<AmbienceZone> currentAmbienceZones = new List<AmbienceZone>();
 
-	public bool isUnderwater;
+	public bool isUnderwater = false;
 
 	public float ambienceZoneGain { get; private set; } = 1f;
 

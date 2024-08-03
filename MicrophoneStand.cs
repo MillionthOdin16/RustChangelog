@@ -17,17 +17,17 @@ public class MicrophoneStand : BaseMountable
 		LowPitch
 	}
 
-	public VoiceProcessor VoiceProcessor;
+	public VoiceProcessor VoiceProcessor = null;
 
-	public AudioSource VoiceSource;
+	public AudioSource VoiceSource = null;
 
-	private SpeechMode currentSpeechMode;
+	private SpeechMode currentSpeechMode = SpeechMode.Normal;
 
-	public AudioMixerGroup NormalMix;
+	public AudioMixerGroup NormalMix = null;
 
-	public AudioMixerGroup HighPitchMix;
+	public AudioMixerGroup HighPitchMix = null;
 
-	public AudioMixerGroup LowPitchMix;
+	public AudioMixerGroup LowPitchMix = null;
 
 	public Phrase NormalPhrase = new Phrase("microphone_normal", "Normal");
 
@@ -45,7 +45,7 @@ public class MicrophoneStand : BaseMountable
 
 	public Transform IOSubEntitySpawnPos;
 
-	public bool IsStatic;
+	public bool IsStatic = false;
 
 	public EntityRef<IOEntity> ioEntity;
 
@@ -59,7 +59,7 @@ public class MicrophoneStand : BaseMountable
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SetMode "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SetMode "));
 				}
 				TimeWarning val2 = TimeWarning.New("SetMode", 0);
 				try
@@ -114,8 +114,8 @@ public class MicrophoneStand : BaseMountable
 
 	public override void Save(SaveInfo info)
 	{
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
 		base.Save(info);
 		if (info.msg.microphoneStand == null)
 		{
@@ -127,8 +127,8 @@ public class MicrophoneStand : BaseMountable
 
 	public void SpawnChildEntity()
 	{
-		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
 		MicrophoneStandIOEntity microphoneStandIOEntity = GameManager.server.CreateEntity(IOSubEntity.resourcePath, IOSubEntitySpawnPos.localPosition, IOSubEntitySpawnPos.localRotation) as MicrophoneStandIOEntity;
 		microphoneStandIOEntity.enableSaving = enableSaving;
 		microphoneStandIOEntity.SetParent(this);
@@ -145,8 +145,8 @@ public class MicrophoneStand : BaseMountable
 
 	public override void PostMapEntitySpawn()
 	{
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
 		base.PostMapEntitySpawn();
 		if (!IsStatic)
 		{
@@ -169,10 +169,14 @@ public class MicrophoneStand : BaseMountable
 				float num3 = Distance((BaseEntity)item);
 				foreach (MicrophoneStand item2 in list2)
 				{
-					if (!item2.isClient && item2.Distance((BaseEntity)item) < num3)
+					if (!item2.isClient)
 					{
-						flag = false;
-						break;
+						float num4 = item2.Distance((BaseEntity)item);
+						if (num4 < num3)
+						{
+							flag = false;
+							break;
+						}
 					}
 				}
 			}
@@ -190,7 +194,7 @@ public class MicrophoneStand : BaseMountable
 
 	public override void Load(LoadInfo info)
 	{
-		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
 		base.Load(info);
 		if (info.msg.microphoneStand != null)
 		{

@@ -31,7 +31,7 @@ public abstract class CardGameController : IDisposable
 
 	private CardList localPlayerCards;
 
-	protected int activePlayerIndex;
+	protected int activePlayerIndex = 0;
 
 	public const int STD_RAISE_INCREMENTS = 5;
 
@@ -41,17 +41,7 @@ public abstract class CardGameController : IDisposable
 
 	public bool HasGameInProgress => State >= CardGameState.InGameBetweenRounds;
 
-	public bool HasRoundInProgressOrEnding
-	{
-		get
-		{
-			if (State != CardGameState.InGameRound)
-			{
-				return State == CardGameState.InGameRoundEnding;
-			}
-			return true;
-		}
-	}
+	public bool HasRoundInProgressOrEnding => State == CardGameState.InGameRound || State == CardGameState.InGameRoundEnding;
 
 	public bool HasActiveRound => State == CardGameState.InGameRound;
 
@@ -241,9 +231,9 @@ public abstract class CardGameController : IDisposable
 	{
 		int num = 0;
 		CardPlayerData[] playerData = PlayerData;
-		for (int i = 0; i < playerData.Length; i++)
+		foreach (CardPlayerData cardPlayerData in playerData)
 		{
-			if (playerData[i].HasUserInGame)
+			if (cardPlayerData.HasUserInGame)
 			{
 				num++;
 			}
@@ -255,9 +245,9 @@ public abstract class CardGameController : IDisposable
 	{
 		int num = 0;
 		CardPlayerData[] playerData = PlayerData;
-		for (int i = 0; i < playerData.Length; i++)
+		foreach (CardPlayerData cardPlayerData in playerData)
 		{
-			if (playerData[i].HasUserInCurrentRound)
+			if (cardPlayerData.HasUserInCurrentRound)
 			{
 				num++;
 			}
@@ -601,9 +591,9 @@ public abstract class CardGameController : IDisposable
 		syncData.state = (int)State;
 		syncData.activePlayerIndex = activePlayerIndex;
 		CardPlayerData[] playerData = PlayerData;
-		for (int i = 0; i < playerData.Length; i++)
+		foreach (CardPlayerData cardPlayerData in playerData)
 		{
-			playerData[i].Save(syncData);
+			cardPlayerData.Save(syncData);
 		}
 		syncData.pot = GetScrapInPot();
 	}
@@ -629,16 +619,18 @@ public abstract class CardGameController : IDisposable
 			}
 			else if (cardPlayerData.HasBeenIdleFor(240) && BasePlayer.TryFindByID(cardPlayerData.UserID, out basePlayer))
 			{
-				basePlayer.GetMounted().DismountPlayer(basePlayer);
+				BaseMountable mounted = basePlayer.GetMounted();
+				mounted.DismountPlayer(basePlayer);
 			}
 		}
-		if (NumPlayersAllowedToPlay() < MinPlayers)
+		int num = NumPlayersAllowedToPlay();
+		if (num < MinPlayers)
 		{
 			EndGameplay();
 			return false;
 		}
-		playerData = PlayerData;
-		foreach (CardPlayerData cardPlayerData2 in playerData)
+		CardPlayerData[] playerData2 = PlayerData;
+		foreach (CardPlayerData cardPlayerData2 in playerData2)
 		{
 			if (IsAllowedToPlay(cardPlayerData2))
 			{
@@ -717,9 +709,9 @@ public abstract class CardGameController : IDisposable
 			SubEndGameplay();
 			State = CardGameState.NotPlaying;
 			CardPlayerData[] playerData = PlayerData;
-			for (int i = 0; i < playerData.Length; i++)
+			foreach (CardPlayerData cardPlayerData in playerData)
 			{
-				playerData[i].LeaveGame();
+				cardPlayerData.LeaveGame();
 			}
 			SyncAllLocalPlayerCards();
 			Owner.SendNetworkUpdate();
@@ -790,10 +782,9 @@ public abstract class CardGameController : IDisposable
 
 	public virtual void OnTableDestroyed()
 	{
-		CardPlayerData[] playerData;
 		if (HasGameInProgress)
 		{
-			playerData = PlayerData;
+			CardPlayerData[] playerData = PlayerData;
 			foreach (CardPlayerData cardPlayerData in playerData)
 			{
 				if (cardPlayerData.HasUserInGame)
@@ -804,8 +795,8 @@ public abstract class CardGameController : IDisposable
 			if (GetScrapInPot() > 0)
 			{
 				int maxAmount = GetScrapInPot() / NumPlayersInGame();
-				playerData = PlayerData;
-				foreach (CardPlayerData cardPlayerData2 in playerData)
+				CardPlayerData[] playerData2 = PlayerData;
+				foreach (CardPlayerData cardPlayerData2 in playerData2)
 				{
 					if (cardPlayerData2.HasUserInGame)
 					{
@@ -814,8 +805,8 @@ public abstract class CardGameController : IDisposable
 				}
 			}
 		}
-		playerData = PlayerData;
-		foreach (CardPlayerData cardPlayerData3 in playerData)
+		CardPlayerData[] playerData3 = PlayerData;
+		foreach (CardPlayerData cardPlayerData3 in playerData3)
 		{
 			if (cardPlayerData3.HasUser)
 			{

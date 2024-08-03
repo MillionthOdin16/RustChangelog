@@ -9,11 +9,11 @@ namespace VLB;
 [HelpURL("http://saladgamer.com/vlb-doc/comp-lightbeam/")]
 public class BeamGeometry : MonoBehaviour
 {
-	private VolumetricLightBeam m_Master;
+	private VolumetricLightBeam m_Master = null;
 
 	private Matrix4x4 m_ColorGradientMatrix;
 
-	private MeshType m_CurrentMeshType;
+	private MeshType m_CurrentMeshType = MeshType.Shared;
 
 	public MeshRenderer meshRenderer { get; private set; }
 
@@ -74,11 +74,7 @@ public class BeamGeometry : MonoBehaviour
 
 	private static bool IsUsingCustomRenderPipeline()
 	{
-		if (RenderPipelineManager.currentPipeline == null)
-		{
-			return (Object)(object)GraphicsSettings.renderPipelineAsset != (Object)null;
-		}
-		return true;
+		return RenderPipelineManager.currentPipeline != null || (Object)(object)GraphicsSettings.renderPipelineAsset != (Object)null;
 	}
 
 	private void OnEnable()
@@ -99,14 +95,14 @@ public class BeamGeometry : MonoBehaviour
 
 	public void Initialize(VolumetricLightBeam master, Shader shader)
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002b: Expected O, but got Unknown
-		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0105: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0111: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Expected O, but got Unknown
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0115: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0122: Unknown result type (might be due to invalid IL or missing references)
 		HideFlags proceduralObjectsHideFlags = Consts.ProceduralObjectsHideFlags;
 		m_Master = master;
 		((Component)this).transform.SetParent(((Component)master).transform, false);
@@ -134,7 +130,7 @@ public class BeamGeometry : MonoBehaviour
 
 	public void RegenerateMesh()
 	{
-		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d7: Unknown result type (might be due to invalid IL or missing references)
 		Debug.Assert(Object.op_Implicit((Object)(object)m_Master));
 		((Component)this).gameObject.layer = Config.Instance.geometryLayerID;
 		((Component)this).gameObject.tag = Config.Instance.geometryTag;
@@ -163,23 +159,23 @@ public class BeamGeometry : MonoBehaviour
 
 	private void ComputeLocalMatrix()
 	{
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
 		float num = Mathf.Max(m_Master.coneRadiusStart, m_Master.coneRadiusEnd);
 		((Component)this).transform.localScale = new Vector3(num, num, m_Master.fadeEnd);
 	}
 
 	public void UpdateMaterialAndBounds()
 	{
-		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0161: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0124: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0129: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03da: Unknown result type (might be due to invalid IL or missing references)
-		//IL_042c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0431: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0174: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0133: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0138: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0410: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0463: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0468: Unknown result type (might be due to invalid IL or missing references)
 		Debug.Assert(Object.op_Implicit((Object)(object)m_Master));
 		material.renderQueue = Config.Instance.geometryRenderQueue;
 		float num = m_Master.coneAngle * ((float)Math.PI / 180f) / 2f;
@@ -246,12 +242,12 @@ public class BeamGeometry : MonoBehaviour
 
 	public void SetClippingPlane(Plane planeWS)
 	{
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 normal = ((Plane)(ref planeWS)).normal;
 		material.EnableKeyword("VLB_CLIPPING_PLANE");
 		material.SetVector("_ClippingPlaneWS", new Vector4(normal.x, normal.y, normal.z, ((Plane)(ref planeWS)).distance));
@@ -281,24 +277,24 @@ public class BeamGeometry : MonoBehaviour
 
 	private void UpdateCameraRelatedProperties(Camera cam)
 	{
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
 		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fe: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00af: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00da: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0114: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0093: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ad: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ed: Unknown result type (might be due to invalid IL or missing references)
 		if (!Object.op_Implicit((Object)(object)cam) || !Object.op_Implicit((Object)(object)m_Master))
 		{
 			return;

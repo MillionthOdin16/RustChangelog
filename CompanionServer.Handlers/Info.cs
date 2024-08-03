@@ -6,7 +6,7 @@ using ProtoBuf;
 
 namespace CompanionServer.Handlers;
 
-public class Info : BasePlayerHandler<AppEmpty>
+public class Info : BaseHandler<AppEmpty>
 {
 	public override void Execute()
 	{
@@ -23,17 +23,6 @@ public class Info : BasePlayerHandler<AppEmpty>
 		val.queuedPlayers = (uint)SingletonComponent<ServerMgr>.Instance.connectionQueue.Queued;
 		val.seed = World.Seed;
 		val.camerasEnabled = CameraRenderer.enabled;
-		if (NexusServer.Started)
-		{
-			int? nexusId = NexusServer.NexusId;
-			string zoneKey = NexusServer.ZoneKey;
-			if (nexusId.HasValue && zoneKey != null)
-			{
-				val.nexus = Nexus.endpoint;
-				val.nexusId = nexusId.Value;
-				val.nexusZone = zoneKey;
-			}
-		}
 		AppResponse val2 = Pool.Get<AppResponse>();
 		val2.info = val;
 		Send(val2);

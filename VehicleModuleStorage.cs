@@ -33,7 +33,7 @@ public class VehicleModuleStorage : VehicleModuleSeating
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_Open "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_Open "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_Open", 0);
 				try
@@ -52,7 +52,7 @@ public class VehicleModuleStorage : VehicleModuleSeating
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -64,7 +64,7 @@ public class VehicleModuleStorage : VehicleModuleSeating
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -84,12 +84,12 @@ public class VehicleModuleStorage : VehicleModuleSeating
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_TryOpenWithKeycode "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_TryOpenWithKeycode "));
 				}
-				TimeWarning val2 = TimeWarning.New("RPC_TryOpenWithKeycode", 0);
+				TimeWarning val5 = TimeWarning.New("RPC_TryOpenWithKeycode", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					TimeWarning val6 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.MaxDistance.Test(425471188u, "RPC_TryOpenWithKeycode", this, player, 3f))
@@ -99,11 +99,11 @@ public class VehicleModuleStorage : VehicleModuleSeating
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val6)?.Dispose();
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val7 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -115,7 +115,7 @@ public class VehicleModuleStorage : VehicleModuleSeating
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val7)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -126,7 +126,7 @@ public class VehicleModuleStorage : VehicleModuleSeating
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val5)?.Dispose();
 				}
 				return true;
 			}
@@ -150,7 +150,7 @@ public class VehicleModuleStorage : VehicleModuleSeating
 
 	public override void Load(LoadInfo info)
 	{
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
 		base.Load(info);
 		storageUnitInstance.uid = info.msg.simpleUID.uid;
 	}
@@ -204,8 +204,8 @@ public class VehicleModuleStorage : VehicleModuleSeating
 
 	public override void Save(SaveInfo info)
 	{
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
 		base.Save(info);
 		info.msg.simpleUID = Pool.Get<SimpleUID>();
 		info.msg.simpleUID.uid = storageUnitInstance.uid;
@@ -213,8 +213,8 @@ public class VehicleModuleStorage : VehicleModuleSeating
 
 	public void CreateStorageEntity()
 	{
-		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
 		if (IsFullySpawned() && base.isServer && !storageUnitInstance.IsValid(base.isServer))
 		{
 			BaseEntity baseEntity = GameManager.server.CreateEntity(storage.storageUnitPrefab.resourcePath, storage.storageUnitPoint.localPosition, storage.storageUnitPoint.localRotation);

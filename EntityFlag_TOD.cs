@@ -36,11 +36,11 @@ public class EntityFlag_TOD : EntityComponent<BaseEntity>
 
 	private void DoTimeCheck()
 	{
-		bool num = base.baseEntity.HasFlag(desiredFlag);
-		bool flag = WantsOn();
-		if (num != flag)
+		bool flag = base.baseEntity.HasFlag(desiredFlag);
+		bool flag2 = WantsOn();
+		if (flag != flag2)
 		{
-			base.baseEntity.SetFlag(desiredFlag, flag);
+			base.baseEntity.SetFlag(desiredFlag, flag2);
 		}
 	}
 }

@@ -30,7 +30,8 @@ public class BuildingBlockDecay : Decay
 			return true;
 		}
 		BuildingBlock buildingBlock = entity as BuildingBlock;
-		return !Object.op_Implicit((Object)(object)buildingBlock) || buildingBlock.grade == BuildingGrade.Enum.Twigs;
+		BuildingGrade.Enum @enum = (Object.op_Implicit((Object)(object)buildingBlock) ? buildingBlock.grade : BuildingGrade.Enum.Twigs);
+		return @enum == BuildingGrade.Enum.Twigs;
 	}
 
 	protected override void AttributeSetup(GameObject rootObj, string name, bool serverside, bool clientside, bool bundling)

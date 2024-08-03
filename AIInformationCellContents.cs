@@ -11,7 +11,7 @@ public class AIInformationCellContents<T> where T : AIPoint
 
 	public void Init(Bounds cellBounds, GameObject root)
 	{
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
 		Clear();
 		T[] componentsInChildren = root.GetComponentsInChildren<T>(true);
 		foreach (T val in componentsInChildren)

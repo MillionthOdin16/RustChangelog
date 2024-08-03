@@ -12,6 +12,8 @@ public class WaterInflatable : BaseMountable, IPoolVehicle, INotifyTrigger
 		Back
 	}
 
+	public Rigidbody rigidBody;
+
 	public Transform centerOfMass;
 
 	public float forwardPushForce = 5f;
@@ -24,17 +26,17 @@ public class WaterInflatable : BaseMountable, IPoolVehicle, INotifyTrigger
 
 	public float maxPaddleFrequency = 0.5f;
 
-	public SoundDefinition paddleSfx;
+	public SoundDefinition paddleSfx = null;
 
-	public SoundDefinition smallPlayerMovementSound;
+	public SoundDefinition smallPlayerMovementSound = null;
 
-	public SoundDefinition largePlayerMovementSound;
+	public SoundDefinition largePlayerMovementSound = null;
 
 	public BlendedSoundLoops waterLoops;
 
 	public float waterSoundSpeedDivisor = 1f;
 
-	public float additiveDownhillVelocity;
+	public float additiveDownhillVelocity = 0f;
 
 	public GameObjectRef handSplashForwardEffect;
 
@@ -44,13 +46,13 @@ public class WaterInflatable : BaseMountable, IPoolVehicle, INotifyTrigger
 
 	public float animationLerpSpeed = 1f;
 
-	public Transform smoothedEyePosition;
+	public Transform smoothedEyePosition = null;
 
 	public float smoothedEyeSpeed = 1f;
 
-	public Buoyancy buoyancy;
+	public Buoyancy buoyancy = null;
 
-	public bool driftTowardsIsland;
+	public bool driftTowardsIsland = false;
 
 	public GameObjectRef mountEffect;
 
@@ -62,7 +64,7 @@ public class WaterInflatable : BaseMountable, IPoolVehicle, INotifyTrigger
 	public Vector3 modifyEyeOffset = Vector3.zero;
 
 	[Range(0f, 1f)]
-	public float inheritVelocityMultiplier;
+	public float inheritVelocityMultiplier = 0f;
 
 	private TimeSince lastPaddle;
 
@@ -70,25 +72,25 @@ public class WaterInflatable : BaseMountable, IPoolVehicle, INotifyTrigger
 
 	public float movingParticlesThreshold = 0.0005f;
 
-	public Transform headSpaceCheckPosition;
+	public Transform headSpaceCheckPosition = null;
 
 	public float headSpaceCheckRadius = 0.4f;
 
 	private TimeSince landFacingCheck;
 
-	private bool isFacingLand;
+	private bool isFacingLand = false;
 
-	private float landPushAcceleration;
+	private float landPushAcceleration = 0f;
 
 	private TimeSince inPoolCheck;
 
-	private bool isInPool;
+	private bool isInPool = false;
 
 	private Vector3 lastPos = Vector3.zero;
 
 	private Vector3 lastClipCheckPosition;
 
-	private bool forceClippingCheck;
+	private bool forceClippingCheck = false;
 
 	private bool prevSleeping;
 
@@ -109,7 +111,7 @@ public class WaterInflatable : BaseMountable, IPoolVehicle, INotifyTrigger
 
 	public override void ServerInit()
 	{
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
 		base.ServerInit();
 		rigidBody.centerOfMass = centerOfMass.localPosition;
 		prevSleeping = false;
@@ -117,18 +119,18 @@ public class WaterInflatable : BaseMountable, IPoolVehicle, INotifyTrigger
 
 	public override void OnDeployed(BaseEntity parent, BasePlayer deployedBy, Item fromItem)
 	{
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
 		base.OnDeployed(parent, deployedBy, fromItem);
 		if ((Object)(object)deployedBy != (Object)null)
 		{
@@ -142,18 +144,18 @@ public class WaterInflatable : BaseMountable, IPoolVehicle, INotifyTrigger
 
 	public override void VehicleFixedUpdate()
 	{
-		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0110: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0111: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ff: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00be: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0139: Unknown result type (might be due to invalid IL or missing references)
 		base.VehicleFixedUpdate();
 		bool flag = rigidBody.IsSleeping();
 		if (prevSleeping && !flag && (Object)(object)buoyancy != (Object)null)
@@ -176,7 +178,7 @@ public class WaterInflatable : BaseMountable, IPoolVehicle, INotifyTrigger
 			return;
 		}
 		forceClippingCheck = false;
-		if (GamePhysics.CheckSphere(headSpaceCheckPosition.position, headSpaceCheckRadius, 1218511105, (QueryTriggerInteraction)1))
+		if (GamePhysics.CheckSphere(headSpaceCheckPosition.position, headSpaceCheckRadius, 1218511105, (QueryTriggerInteraction)0))
 		{
 			if (!GetDismountPosition(GetMounted(), out var _))
 			{
@@ -189,8 +191,8 @@ public class WaterInflatable : BaseMountable, IPoolVehicle, INotifyTrigger
 
 	public override void OnPlayerMounted()
 	{
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
 		base.OnPlayerMounted();
 		lastPos = ((Component)this).transform.position;
 		forceClippingCheck = true;
@@ -198,66 +200,67 @@ public class WaterInflatable : BaseMountable, IPoolVehicle, INotifyTrigger
 
 	public override void PlayerServerInput(InputState inputState, BasePlayer player)
 	{
-		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0197: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ca: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0112: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0134: Unknown result type (might be due to invalid IL or missing references)
-		//IL_013f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0144: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0163: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0294: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01f0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01f5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01fa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0201: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0206: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0207: Unknown result type (might be due to invalid IL or missing references)
-		//IL_020d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0255: Unknown result type (might be due to invalid IL or missing references)
-		//IL_025a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0261: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0268: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0274: Unknown result type (might be due to invalid IL or missing references)
-		//IL_027e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_021b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0221: Unknown result type (might be due to invalid IL or missing references)
-		//IL_023f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0244: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03b7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03bc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01e3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0203: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0218: Unknown result type (might be due to invalid IL or missing references)
+		//IL_021d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0146: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0156: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0179: Unknown result type (might be due to invalid IL or missing references)
+		//IL_017e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0188: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0199: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ed: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0102: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0113: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0118: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ca: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_024c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0251: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0256: Unknown result type (might be due to invalid IL or missing references)
+		//IL_025e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0263: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0265: Unknown result type (might be due to invalid IL or missing references)
+		//IL_026c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0300: Unknown result type (might be due to invalid IL or missing references)
 		//IL_02c0: Unknown result type (might be due to invalid IL or missing references)
 		//IL_02c5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02d0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02cd: Unknown result type (might be due to invalid IL or missing references)
 		//IL_02d5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02d7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0387: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0398: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02e9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02ee: Unknown result type (might be due to invalid IL or missing references)
-		//IL_030d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0318: Unknown result type (might be due to invalid IL or missing references)
-		//IL_031a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_031f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02e1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02eb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0282: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0289: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02a8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02ad: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0334: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0339: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0344: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0349: Unknown result type (might be due to invalid IL or missing references)
+		//IL_034b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0365: Unknown result type (might be due to invalid IL or missing references)
+		//IL_036a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0427: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0438: Unknown result type (might be due to invalid IL or missing references)
+		//IL_038a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0395: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0397: Unknown result type (might be due to invalid IL or missing references)
+		//IL_039c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_045b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0460: Unknown result type (might be due to invalid IL or missing references)
 		base.PlayerServerInput(inputState, player);
-		if (Vector3.Dot(((Component)this).transform.up, Vector3.up) < 0.1f)
+		float num = Vector3.Dot(((Component)this).transform.up, Vector3.up);
+		if (num < 0.1f)
 		{
 			DismountAllPlayers();
 		}
@@ -307,8 +310,8 @@ public class WaterInflatable : BaseMountable, IPoolVehicle, INotifyTrigger
 				Vector3 position = ((Component)this).transform.position;
 				if (val.y < position.y)
 				{
-					float num = additiveDownhillVelocity * (position.y - val.y);
-					rigidBody.AddForce(num * Time.fixedDeltaTime * ((Component)this).transform.forward, (ForceMode)5);
+					float num2 = additiveDownhillVelocity * (position.y - val.y);
+					rigidBody.AddForce(num2 * Time.fixedDeltaTime * ((Component)this).transform.forward, (ForceMode)5);
 				}
 				Vector3 velocity2 = rigidBody.velocity;
 				rigidBody.velocity = Vector3.Lerp(velocity2, ((Component)this).transform.forward * ((Vector3)(ref velocity2)).magnitude, 0.4f);
@@ -320,10 +323,10 @@ public class WaterInflatable : BaseMountable, IPoolVehicle, INotifyTrigger
 				Vector3 position2 = ((Component)this).transform.position;
 				if (!WaterResource.IsFreshWater(position2))
 				{
-					int num2 = 5;
+					int num3 = 5;
 					Vector3 forward = ((Component)this).transform.forward;
 					forward.y = 0f;
-					for (int i = 1; i <= num2; i++)
+					for (int i = 1; i <= num3; i++)
 					{
 						int mask = 128;
 						if (!TerrainMeta.TopologyMap.GetTopology(position2 + (float)i * 15f * forward, mask))
@@ -349,12 +352,12 @@ public class WaterInflatable : BaseMountable, IPoolVehicle, INotifyTrigger
 
 	private void PaddleTurn(PaddleDirection direction)
 	{
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
 		if (direction != 0 && direction != PaddleDirection.Back)
 		{
 			rigidBody.AddRelativeTorque(rotationForce * ((direction == PaddleDirection.Left) ? (-Vector3.up) : Vector3.up), (ForceMode)1);
@@ -388,8 +391,8 @@ public class WaterInflatable : BaseMountable, IPoolVehicle, INotifyTrigger
 
 	public void WakeUp()
 	{
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)rigidBody != (Object)null)
 		{
 			rigidBody.WakeUp();

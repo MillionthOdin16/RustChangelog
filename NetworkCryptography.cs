@@ -1,5 +1,6 @@
 using System;
 using Network;
+using UnityEngine.Profiling;
 
 public abstract class NetworkCryptography : INetworkCryptography
 {
@@ -7,6 +8,7 @@ public abstract class NetworkCryptography : INetworkCryptography
 
 	public unsafe ArraySegment<byte> EncryptCopy(Connection connection, ArraySegment<byte> data)
 	{
+		Profiler.BeginSample("NetworkCryptography.EncryptCopy");
 		ArraySegment<byte> src = new ArraySegment<byte>(data.Array, data.Offset, data.Count);
 		ArraySegment<byte> dst = new ArraySegment<byte>(buffer, data.Offset, buffer.Length - data.Offset);
 		if (data.Offset > 0)
@@ -20,11 +22,13 @@ public abstract class NetworkCryptography : INetworkCryptography
 			}
 		}
 		EncryptionHandler(connection, src, ref dst);
+		Profiler.EndSample();
 		return dst;
 	}
 
 	public unsafe ArraySegment<byte> DecryptCopy(Connection connection, ArraySegment<byte> data)
 	{
+		Profiler.BeginSample("NetworkCryptography.DecryptCopy");
 		ArraySegment<byte> src = new ArraySegment<byte>(data.Array, data.Offset, data.Count);
 		ArraySegment<byte> dst = new ArraySegment<byte>(buffer, data.Offset, buffer.Length - data.Offset);
 		if (data.Offset > 0)
@@ -38,22 +42,27 @@ public abstract class NetworkCryptography : INetworkCryptography
 			}
 		}
 		DecryptionHandler(connection, src, ref dst);
+		Profiler.EndSample();
 		return dst;
 	}
 
 	public void Encrypt(Connection connection, ref ArraySegment<byte> data)
 	{
+		Profiler.BeginSample("NetworkCryptography.Encrypt");
 		ArraySegment<byte> src = new ArraySegment<byte>(data.Array, data.Offset, data.Count);
 		ArraySegment<byte> dst = new ArraySegment<byte>(data.Array, data.Offset, data.Array.Length - data.Offset);
 		EncryptionHandler(connection, src, ref dst);
+		Profiler.EndSample();
 		data = dst;
 	}
 
 	public void Decrypt(Connection connection, ref ArraySegment<byte> data)
 	{
+		Profiler.BeginSample("NetworkCryptography.Decrypt");
 		ArraySegment<byte> src = new ArraySegment<byte>(data.Array, data.Offset, data.Count);
 		ArraySegment<byte> dst = new ArraySegment<byte>(data.Array, data.Offset, data.Array.Length - data.Offset);
 		DecryptionHandler(connection, src, ref dst);
+		Profiler.EndSample();
 		data = dst;
 	}
 

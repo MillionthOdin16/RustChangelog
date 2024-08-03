@@ -9,6 +9,4 @@ public class SledSeat : BaseVehicleSeat
 	public Transform LeftFoot;
 
 	public Transform RightFoot;
-
-	public float MountedAnimationSpeed;
 }

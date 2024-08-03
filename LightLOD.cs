@@ -2,9 +2,9 @@ using UnityEngine;
 
 public class LightLOD : MonoBehaviour, ILOD, IClientComponent
 {
-	public float DistanceBias;
+	public float DistanceBias = 0f;
 
-	public bool ToggleLight;
+	public bool ToggleLight = false;
 
 	public bool ToggleShadows = true;
 

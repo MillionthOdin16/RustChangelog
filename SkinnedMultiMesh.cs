@@ -20,7 +20,7 @@ public class SkinnedMultiMesh : MonoBehaviour
 
 	internal bool IsVisible = true;
 
-	public bool eyesView;
+	public bool eyesView = false;
 
 	public Skeleton skeleton;
 
@@ -32,7 +32,7 @@ public class SkinnedMultiMesh : MonoBehaviour
 	public List<Part> createdParts = new List<Part>();
 
 	[NonSerialized]
-	public long lastBuildHash;
+	public long lastBuildHash = 0L;
 
 	[NonSerialized]
 	public MaterialPropertyBlock sharedPropertyBlock;
@@ -40,13 +40,13 @@ public class SkinnedMultiMesh : MonoBehaviour
 	[NonSerialized]
 	public MaterialPropertyBlock hairPropertyBlock;
 
-	public float skinNumber;
+	public float skinNumber = 0f;
 
-	public float meshNumber;
+	public float meshNumber = 0f;
 
-	public float hairNumber;
+	public float hairNumber = 0f;
 
-	public int skinType;
+	public int skinType = 0;
 
 	public SkinSetCollection SkinCollection;
 

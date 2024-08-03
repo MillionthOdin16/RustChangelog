@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class DragMeCustomParent : DragMe
 {
-	public Canvas OverrideCanvas;
+	public Canvas OverrideCanvas = null;
 
-	public bool ShouldCancelOnDrop;
+	public bool ShouldCancelOnDrop = false;
 }

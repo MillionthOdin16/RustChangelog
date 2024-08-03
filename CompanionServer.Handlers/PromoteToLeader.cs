@@ -2,7 +2,7 @@ using ProtoBuf;
 
 namespace CompanionServer.Handlers;
 
-public class PromoteToLeader : BasePlayerHandler<AppPromoteToLeader>
+public class PromoteToLeader : BaseHandler<AppPromoteToLeader>
 {
 	public override void Execute()
 	{

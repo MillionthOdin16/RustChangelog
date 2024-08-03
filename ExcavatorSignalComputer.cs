@@ -9,7 +9,7 @@ using UnityEngine.UI;
 
 public class ExcavatorSignalComputer : BaseCombatEntity
 {
-	public float chargePower;
+	public float chargePower = 0f;
 
 	public const Flags Flag_Ready = Flags.Reserved7;
 
@@ -30,7 +30,7 @@ public class ExcavatorSignalComputer : BaseCombatEntity
 	[ServerVar]
 	public static float chargeNeededForSupplies = 600f;
 
-	private float lastChargeTime;
+	private float lastChargeTime = 0f;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -42,7 +42,7 @@ public class ExcavatorSignalComputer : BaseCombatEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RequestSupplies "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RequestSupplies "));
 				}
 				TimeWarning val2 = TimeWarning.New("RequestSupplies", 0);
 				try
@@ -65,7 +65,7 @@ public class ExcavatorSignalComputer : BaseCombatEntity
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -77,7 +77,7 @@ public class ExcavatorSignalComputer : BaseCombatEntity
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -156,15 +156,15 @@ public class ExcavatorSignalComputer : BaseCombatEntity
 	[RPC_Server.CallsPerSecond(5uL)]
 	public void RequestSupplies(RPCMessage rpc)
 	{
-		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
 		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b7: Unknown result type (might be due to invalid IL or missing references)
 		if (HasFlag(Flags.Reserved7) && IsPowered() && chargePower >= chargeNeededForSupplies)
 		{
 			BaseEntity baseEntity = GameManager.server.CreateEntity(supplyPlanePrefab.resourcePath);

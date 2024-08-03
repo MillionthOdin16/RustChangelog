@@ -12,5 +12,5 @@ public class MeshPaintable : BaseMeshPaintable
 
 	public Texture2D targetTexture;
 
-	public bool hasChanges;
+	public bool hasChanges = false;
 }

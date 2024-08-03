@@ -4,7 +4,7 @@ using UnityEngine;
 public class EntityComponent<T> : EntityComponentBase where T : BaseEntity
 {
 	[NonSerialized]
-	private T _baseEntity;
+	private T _baseEntity = null;
 
 	protected T baseEntity
 	{

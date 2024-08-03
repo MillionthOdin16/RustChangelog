@@ -4,6 +4,7 @@ using Facepunch;
 using Network;
 using ProtoBuf;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 public class StagedResourceEntity : ResourceEntity
 {
@@ -17,7 +18,7 @@ public class StagedResourceEntity : ResourceEntity
 
 	public List<ResourceStage> stages = new List<ResourceStage>();
 
-	public int stage;
+	public int stage = 0;
 
 	public GameObjectRef changeStageEffect;
 
@@ -58,12 +59,14 @@ public class StagedResourceEntity : ResourceEntity
 	public override void Save(SaveInfo info)
 	{
 		base.Save(info);
+		Profiler.BeginSample("StagedResourceEntity.Save");
 		if (info.msg.resource == null)
 		{
 			info.msg.resource = Pool.Get<BaseResource>();
 		}
 		info.msg.resource.health = Health();
 		info.msg.resource.stage = stage;
+		Profiler.EndSample();
 	}
 
 	protected override void OnHealthChanged()
@@ -73,7 +76,8 @@ public class StagedResourceEntity : ResourceEntity
 
 	protected virtual void UpdateNetworkStage()
 	{
-		if (FindBestStage() != stage)
+		int num = FindBestStage();
+		if (num != stage)
 		{
 			stage = FindBestStage();
 			SendNetworkUpdate();
@@ -103,10 +107,12 @@ public class StagedResourceEntity : ResourceEntity
 	{
 		if (stages.Count != 0)
 		{
+			Profiler.BeginSample("StagedResouceEntity.UpdateStage");
 			for (int i = 0; i < stages.Count; i++)
 			{
 				stages[i].instance.SetActive(i == stage);
 			}
+			Profiler.EndSample();
 			GroundWatch.PhysicsChanged(((Component)this).gameObject);
 		}
 	}

@@ -2,11 +2,11 @@ using UnityEngine;
 using UnityEngine.Rendering.PostProcessing;
 
 [ExecuteInEditMode]
-public class DofExposer : ListComponent<DofExposer>
+public class DofExposer : SingletonComponent<DofExposer>
 {
-	public PostProcessVolume PostVolume;
+	public PostProcessVolume PostVolume = null;
 
-	public bool DofEnabled;
+	public bool DofEnabled = false;
 
 	public float FocalLength = 15.24f;
 
@@ -14,9 +14,5 @@ public class DofExposer : ListComponent<DofExposer>
 
 	public float FocalAperture = 13.16f;
 
-	public float AnamorphicSqueeze;
-
-	public float AnamorphicBarrel;
-
-	public bool debug;
+	public bool debug = false;
 }

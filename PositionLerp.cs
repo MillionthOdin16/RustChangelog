@@ -1,6 +1,7 @@
 using System;
 using Rust.Interpolation;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 public class PositionLerp : IDisposable
 {
@@ -87,8 +88,9 @@ public class PositionLerp : IDisposable
 
 	public void Snapshot(Vector3 position, Quaternion rotation, float serverTime)
 	{
-		//IL_01a5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d6: Unknown result type (might be due to invalid IL or missing references)
+		Profiler.BeginSample("PositionLerp.Snapshot");
 		float interpolationDelay = target.GetInterpolationDelay();
 		float interpolationSmoothing = target.GetInterpolationSmoothing();
 		float num = interpolationDelay + interpolationSmoothing + 1f;
@@ -119,67 +121,91 @@ public class PositionLerp : IDisposable
 			lastServerTime = serverTime;
 			interpolator.Add(new TransformSnapshot(lerpTime, position, rotation));
 		}
+		Profiler.BeginSample("Cull");
 		interpolator.Cull(lerpTime - num);
+		Profiler.EndSample();
+		Profiler.EndSample();
 	}
 
 	public void Snapshot(Vector3 position, Quaternion rotation)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
 		Snapshot(position, rotation, LerpTime - TimeOffset);
 	}
 
 	public void SnapTo(Vector3 position, Quaternion rotation, float serverTime)
 	{
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
+		Profiler.BeginSample("PositionLerp.SnapTo");
+		Profiler.BeginSample("TransformInterpolator.Clear");
 		interpolator.Clear();
+		Profiler.EndSample();
 		Snapshot(position, rotation, serverTime);
+		Profiler.BeginSample("SetNetworkPosition");
 		target.SetNetworkPosition(position);
+		Profiler.EndSample();
+		Profiler.BeginSample("SetNetworkRotation");
 		target.SetNetworkRotation(rotation);
+		Profiler.EndSample();
+		Profiler.EndSample();
 	}
 
 	public void SnapTo(Vector3 position, Quaternion rotation)
 	{
-		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		Profiler.BeginSample("PositionLerp.SnapTo");
 		interpolator.last = new TransformSnapshot(LerpTime, position, rotation);
 		Wipe();
+		Profiler.EndSample();
 	}
 
 	public void SnapToEnd()
 	{
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0089: Unknown result type (might be due to invalid IL or missing references)
+		Profiler.BeginSample("PositionLerp.SnapToEnd");
 		float interpolationDelay = target.GetInterpolationDelay();
+		Profiler.BeginSample("TransformInterpolator.Query");
 		Interpolator<TransformSnapshot>.Segment segment = interpolator.Query(LerpTime, interpolationDelay, 0f, 0f, ref snapshotPrototype);
+		Profiler.EndSample();
+		Profiler.BeginSample("SetNetworkPosition");
 		target.SetNetworkPosition(segment.tick.pos);
+		Profiler.EndSample();
+		Profiler.BeginSample("SetNetworkRotation");
 		target.SetNetworkRotation(segment.tick.rot);
+		Profiler.EndSample();
 		Wipe();
+		Profiler.EndSample();
 	}
 
 	public void Wipe()
 	{
+		Profiler.BeginSample("TransformInterpolator.Clear");
 		interpolator.Clear();
 		timeOffsetCount = 0;
 		timeOffset0 = float.MaxValue;
 		timeOffset1 = float.MaxValue;
 		timeOffset2 = float.MaxValue;
 		timeOffset3 = float.MaxValue;
+		Profiler.EndSample();
 	}
 
 	public static void WipeAll()
 	{
-		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
 		Enumerator<PositionLerp> enumerator = InstanceList.GetEnumerator();
 		try
 		{
 			while (enumerator.MoveNext())
 			{
-				enumerator.Current.Wipe();
+				PositionLerp current = enumerator.Current;
+				current.Wipe();
 			}
 		}
 		finally
@@ -190,26 +216,30 @@ public class PositionLerp : IDisposable
 
 	protected void DoCycle()
 	{
-		//IL_0166: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0112: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0125: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_013c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0148: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0154: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01eb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0168: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0174: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0186: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0192: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0199: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019e: Unknown result type (might be due to invalid IL or missing references)
 		if (target == null)
 		{
 			return;
 		}
+		Profiler.BeginSample("PositionLerp.Update");
 		float interpolationInertia = target.GetInterpolationInertia();
 		float num = ((interpolationInertia > 0f) ? Mathf.InverseLerp(0f, interpolationInertia, LerpTime - enabledTime) : 1f);
 		float extrapolationTime = target.GetExtrapolationTime();
 		float interpolation = target.GetInterpolationDelay() * num;
 		float num2 = target.GetInterpolationSmoothing() * num;
+		Profiler.BeginSample("TransformInterpolator.Query");
 		Interpolator<TransformSnapshot>.Segment segment = interpolator.Query(LerpTime, interpolation, extrapolationTime, num2, ref snapshotPrototype);
+		Profiler.EndSample();
+		Profiler.BeginSample("PositionLerp.Smoothing");
 		if (segment.next.Time >= interpolator.last.Time)
 		{
 			extrapolatedTime = Mathf.Min(extrapolatedTime + Time.deltaTime, extrapolationTime);
@@ -224,8 +254,13 @@ public class PositionLerp : IDisposable
 			segment.tick.pos = Vector3.Lerp(target.GetNetworkPosition(), segment.tick.pos, num3);
 			segment.tick.rot = Quaternion.Slerp(target.GetNetworkRotation(), segment.tick.rot, num3);
 		}
+		Profiler.EndSample();
+		Profiler.BeginSample("SetNetworkPosition");
 		target.SetNetworkPosition(segment.tick.pos);
+		Profiler.EndSample();
+		Profiler.BeginSample("SetNetworkRotation");
 		target.SetNetworkRotation(segment.tick.rot);
+		Profiler.EndSample();
 		if (DebugDraw)
 		{
 			target.DrawInterpolationState(segment, interpolator.list);
@@ -239,26 +274,27 @@ public class PositionLerp : IDisposable
 			IPosLerpTarget posLerpTarget = target;
 			InvokeHandler.Invoke((Behaviour)((posLerpTarget is Behaviour) ? posLerpTarget : null), idleDisable, 0f);
 		}
+		Profiler.EndSample();
 	}
 
 	public void TransformEntries(Matrix4x4 matrix)
 	{
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ac: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0093: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00be: Unknown result type (might be due to invalid IL or missing references)
 		Quaternion rotation = ((Matrix4x4)(ref matrix)).rotation;
 		for (int i = 0; i < interpolator.list.Count; i++)
 		{
@@ -273,13 +309,17 @@ public class PositionLerp : IDisposable
 
 	public Quaternion GetEstimatedAngularVelocity()
 	{
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00be: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c2: Unknown result type (might be due to invalid IL or missing references)
 		if (target == null)
 		{
 			return Quaternion.identity;
@@ -299,12 +339,16 @@ public class PositionLerp : IDisposable
 
 	public Vector3 GetEstimatedVelocity()
 	{
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00af: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
 		if (target == null)
 		{
 			return Vector3.zero;

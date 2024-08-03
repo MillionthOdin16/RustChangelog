@@ -1,6 +1,7 @@
 using ConVar;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.Profiling;
 
 public abstract class BuildingManager
 {
@@ -18,9 +19,9 @@ public abstract class BuildingManager
 
 		public ListHashSet<NavMeshObstacle> navmeshCarvers;
 
-		public bool isNavMeshCarvingDirty;
+		public bool isNavMeshCarvingDirty = false;
 
-		public bool isNavMeshCarveOptimized;
+		public bool isNavMeshCarveOptimized = false;
 
 		public bool IsEmpty()
 		{
@@ -58,29 +59,17 @@ public abstract class BuildingManager
 
 		public bool HasBuildingPrivileges()
 		{
-			if (buildingPrivileges != null)
-			{
-				return buildingPrivileges.Count > 0;
-			}
-			return false;
+			return buildingPrivileges != null && buildingPrivileges.Count > 0;
 		}
 
 		public bool HasBuildingBlocks()
 		{
-			if (buildingBlocks != null)
-			{
-				return buildingBlocks.Count > 0;
-			}
-			return false;
+			return buildingBlocks != null && buildingBlocks.Count > 0;
 		}
 
 		public bool HasDecayEntities()
 		{
-			if (decayEntities != null)
-			{
-				return decayEntities.Count > 0;
-			}
-			return false;
+			return decayEntities != null && decayEntities.Count > 0;
 		}
 
 		public void AddBuildingPrivilege(BuildingPrivlidge ent)
@@ -173,16 +162,20 @@ public abstract class BuildingManager
 
 		public void Add(DecayEntity ent)
 		{
+			Profiler.BeginSample("BuildingManager.Add");
 			AddDecayEntity(ent);
 			AddBuildingBlock(ent as BuildingBlock);
 			AddBuildingPrivilege(ent as BuildingPrivlidge);
+			Profiler.EndSample();
 		}
 
 		public void Remove(DecayEntity ent)
 		{
+			Profiler.BeginSample("BuildingManager.Remove");
 			RemoveDecayEntity(ent);
 			RemoveBuildingBlock(ent as BuildingBlock);
 			RemoveBuildingPrivilege(ent as BuildingPrivlidge);
+			Profiler.EndSample();
 		}
 
 		public void Dirty()

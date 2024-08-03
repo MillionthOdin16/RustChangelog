@@ -29,7 +29,7 @@ public class Flashbang : TimedExplosive
 
 	public override void Explode()
 	{
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
 		ClientRPC<Vector3>(null, "Client_DoFlash", ((Component)this).transform.position);
 		base.Explode();
 	}

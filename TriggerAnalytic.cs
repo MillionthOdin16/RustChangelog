@@ -23,7 +23,8 @@ public class TriggerAnalytic : TriggerBase, IServerComponent
 		{
 			return null;
 		}
-		if (obj.ToBaseEntity() is BasePlayer basePlayer && !basePlayer.IsNpc && basePlayer.isServer)
+		BaseEntity baseEntity = obj.ToBaseEntity();
+		if (baseEntity is BasePlayer basePlayer && !basePlayer.IsNpc && basePlayer.isServer)
 		{
 			return ((Component)basePlayer).gameObject;
 		}
@@ -32,8 +33,8 @@ public class TriggerAnalytic : TriggerBase, IServerComponent
 
 	internal override void OnEntityEnter(BaseEntity ent)
 	{
-		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
 		if (!Analytics.Server.Enabled)
 		{
 			return;
@@ -57,7 +58,7 @@ public class TriggerAnalytic : TriggerBase, IServerComponent
 
 	private void CheckTimeouts()
 	{
-		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
 		for (int num = recentEntrances.Count - 1; num >= 0; num--)
 		{
 			if (TimeSince.op_Implicit(recentEntrances[num].Time) > Timeout)

@@ -3,7 +3,7 @@ using UnityEngine;
 public class BaseScriptableObject : ScriptableObject
 {
 	[HideInInspector]
-	public uint FilenameStringId;
+	public uint FilenameStringId = 0u;
 
 	public string LookupFileName()
 	{
@@ -35,10 +35,6 @@ public class BaseScriptableObject : ScriptableObject
 
 	public override bool Equals(object o)
 	{
-		if (o != null && o is BaseScriptableObject)
-		{
-			return o as BaseScriptableObject == this;
-		}
-		return false;
+		return o != null && o is BaseScriptableObject && o as BaseScriptableObject == this;
 	}
 }

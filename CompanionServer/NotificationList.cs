@@ -25,7 +25,7 @@ public class NotificationList
 
 	public bool AddSubscription(ulong steamId)
 	{
-		if (steamId == 0L)
+		if (steamId == 0)
 		{
 			return false;
 		}
@@ -98,12 +98,12 @@ public class NotificationList
 
 	public static async Task<NotificationSendResult> SendNotificationTo(ICollection<ulong> steamIds, NotificationChannel channel, string title, string body, Dictionary<string, string> data)
 	{
-		NotificationSendResult notificationSendResult = await SendNotificationImpl(steamIds, channel, title, body, data);
-		if (notificationSendResult == NotificationSendResult.NoTargetsFound)
+		NotificationSendResult result = await SendNotificationImpl(steamIds, channel, title, body, data);
+		if (result == NotificationSendResult.NoTargetsFound)
 		{
-			notificationSendResult = NotificationSendResult.Sent;
+			result = NotificationSendResult.Sent;
 		}
-		return notificationSendResult;
+		return result;
 	}
 
 	public static async Task<NotificationSendResult> SendNotificationTo(ulong steamId, NotificationChannel channel, string title, string body, Dictionary<string, string> data)
@@ -131,95 +131,37 @@ public class NotificationList
 		{
 			return NotificationSendResult.Sent;
 		}
-		List<List<ulong>> batches = Pool.GetList<List<ulong>>();
-		List<ulong> list = null;
+		PushRequest request = Pool.Get<PushRequest>();
+		request.ServerToken = Server.Token;
+		request.Channel = channel;
+		request.Title = title;
+		request.Body = body;
+		request.Data = data;
+		request.SteamIds = Pool.GetList<ulong>();
 		foreach (ulong steamId in steamIds)
 		{
-			if (list == null)
-			{
-				list = Pool.GetList<ulong>();
-			}
-			list.Add(steamId);
-			if (list.Count >= 100)
-			{
-				batches.Add(list);
-				list = null;
-			}
+			request.SteamIds.Add(steamId);
 		}
-		if (list != null && list.Count > 0)
-		{
-			batches.Add(list);
-		}
-		NotificationSendResult? errorResult = null;
-		bool anySent = false;
-		foreach (List<ulong> item in batches)
-		{
-			List<ulong> batchCopy = item;
-			NotificationSendResult notificationSendResult = await SendNotificationBatchImpl(batchCopy, channel, title, body, data);
-			Pool.FreeList<ulong>(ref batchCopy);
-			switch (notificationSendResult)
-			{
-			case NotificationSendResult.Failed:
-				errorResult = NotificationSendResult.Failed;
-				break;
-			case NotificationSendResult.ServerError:
-				if (errorResult != NotificationSendResult.Failed)
-				{
-					errorResult = NotificationSendResult.ServerError;
-				}
-				break;
-			}
-			if (notificationSendResult == NotificationSendResult.Sent)
-			{
-				anySent = true;
-			}
-		}
-		Pool.FreeList<List<ulong>>(ref batches);
-		if (data != null)
-		{
-			data.Clear();
-			Pool.Free<Dictionary<string, string>>(ref data);
-		}
-		if (errorResult.HasValue)
-		{
-			return errorResult.Value;
-		}
-		return anySent ? NotificationSendResult.Sent : NotificationSendResult.NoTargetsFound;
-	}
-
-	private static async Task<NotificationSendResult> SendNotificationBatchImpl(IEnumerable<ulong> steamIds, NotificationChannel channel, string title, string body, Dictionary<string, string> data)
-	{
-		PushRequest pushRequest = Pool.Get<PushRequest>();
-		pushRequest.ServerToken = Server.Token;
-		pushRequest.Channel = channel;
-		pushRequest.Title = title;
-		pushRequest.Body = body;
-		pushRequest.Data = data;
-		pushRequest.SteamIds = Pool.GetList<ulong>();
-		foreach (ulong steamId in steamIds)
-		{
-			pushRequest.SteamIds.Add(steamId);
-		}
-		string text = JsonConvert.SerializeObject((object)pushRequest);
-		Pool.Free<PushRequest>(ref pushRequest);
+		string json = JsonConvert.SerializeObject((object)request);
+		Pool.Free<PushRequest>(ref request);
 		try
 		{
-			StringContent val = new StringContent(text, Encoding.UTF8, "application/json");
-			HttpResponseMessage val2 = await Http.PostAsync("https://companion-rust.facepunch.com/api/push/send", (HttpContent)(object)val);
-			if (!val2.IsSuccessStatusCode)
+			StringContent content = new StringContent(json, Encoding.UTF8, "application/json");
+			HttpResponseMessage response = await Http.PostAsync("https://companion-rust.facepunch.com/api/push/send", content);
+			if (!response.IsSuccessStatusCode)
 			{
-				DebugEx.LogWarning((object)$"Failed to send notification: {val2.StatusCode}", (StackTraceLogType)0);
+				DebugEx.LogWarning((object)$"Failed to send notification: {response.StatusCode}", (StackTraceLogType)0);
 				return NotificationSendResult.ServerError;
 			}
-			if (val2.StatusCode == HttpStatusCode.Accepted)
+			if (response.StatusCode == HttpStatusCode.Accepted)
 			{
 				return NotificationSendResult.NoTargetsFound;
 			}
 			return NotificationSendResult.Sent;
 		}
-		catch (Exception arg)
+		catch (Exception e)
 		{
-			DebugEx.LogWarning((object)$"Exception thrown when sending notification: {arg}", (StackTraceLogType)0);
+			DebugEx.LogWarning((object)$"Exception thrown when sending notification: {e}", (StackTraceLogType)0);
 			return NotificationSendResult.Failed;
 		}
 	}

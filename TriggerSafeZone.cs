@@ -14,8 +14,6 @@ public class TriggerSafeZone : TriggerBase
 	protected void Awake()
 	{
 		triggerCollider = ((Component)this).GetComponent<Collider>();
-		ref LayerMask reference = ref interestLayers;
-		((LayerMask)(ref reference)).value = ((LayerMask)(ref reference)).value | 0x200;
 	}
 
 	protected void OnEnable()
@@ -50,14 +48,14 @@ public class TriggerSafeZone : TriggerBase
 
 	public bool PassesHeightChecks(Vector3 entPos)
 	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
 		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 position = ((Component)this).transform.position;
 		float num = Mathf.Abs(position.y - entPos.y);
 		if (maxDepth != -1f && entPos.y < position.y && num > maxDepth)
@@ -73,11 +71,7 @@ public class TriggerSafeZone : TriggerBase
 
 	public float GetSafeLevel(Vector3 pos)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		if (!PassesHeightChecks(pos))
-		{
-			return 0f;
-		}
-		return 1f;
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		return PassesHeightChecks(pos) ? 1f : 0f;
 	}
 }

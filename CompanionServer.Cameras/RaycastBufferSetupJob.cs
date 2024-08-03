@@ -46,12 +46,12 @@ public struct RaycastBufferSetupJob : IJob
 				int num6 = colliderIds[i];
 				int num8 = (colliderIds[num3] = num5);
 				num8 = (colliderIds[num4] = num6);
-				num4 = i;
-				num3 = num;
+				num6 = i;
+				num5 = num;
 				byte b = colliderMaterials[num];
 				byte b2 = colliderMaterials[i];
-				byte b4 = (colliderMaterials[num4] = b);
-				b4 = (colliderMaterials[num3] = b2);
+				byte b4 = (colliderMaterials[num6] = b);
+				b4 = (colliderMaterials[num5] = b2);
 				i++;
 				num--;
 			}

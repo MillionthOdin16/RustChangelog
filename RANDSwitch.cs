@@ -2,20 +2,21 @@ using UnityEngine;
 
 public class RANDSwitch : ElectricalBlocker
 {
-	private bool rand;
+	private bool rand = false;
 
 	public override int GetPassthroughAmount(int outputSlot = 0)
 	{
-		return base.GetPassthroughAmount(outputSlot) * ((!IsOn()) ? 1 : 0);
+		int passthroughAmount = base.GetPassthroughAmount(outputSlot);
+		return passthroughAmount * ((!IsOn()) ? 1 : 0);
 	}
 
 	public override void UpdateBlocked()
 	{
-		bool num = IsOn();
+		bool flag = IsOn();
 		SetFlag(Flags.On, rand, recursive: false, networkupdate: false);
 		SetFlag(Flags.Reserved8, rand, recursive: false, networkupdate: false);
 		UpdateHasPower(input1Amount + input2Amount, 1);
-		if (num != IsOn())
+		if (flag != IsOn())
 		{
 			MarkDirty();
 		}

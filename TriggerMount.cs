@@ -12,16 +12,16 @@ public class TriggerMount : TriggerBase, IServerComponent
 
 		public EntryInfo(float entryTime, Vector3 entryPos)
 		{
-			//IL_000e: Unknown result type (might be due to invalid IL or missing references)
-			//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0011: Unknown result type (might be due to invalid IL or missing references)
 			this.entryTime = entryTime;
 			this.entryPos = entryPos;
 		}
 
 		public void Set(float entryTime, Vector3 entryPos)
 		{
-			//IL_0008: Unknown result type (might be due to invalid IL or missing references)
 			//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+			//IL_000a: Unknown result type (might be due to invalid IL or missing references)
 			this.entryTime = entryTime;
 			this.entryPos = entryPos;
 		}
@@ -50,7 +50,7 @@ public class TriggerMount : TriggerBase, IServerComponent
 
 	internal override void OnEntityEnter(BaseEntity ent)
 	{
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
 		base.OnEntityEnter(ent);
 		if (entryInfo == null)
 		{
@@ -71,9 +71,9 @@ public class TriggerMount : TriggerBase, IServerComponent
 
 	private void CheckForMount()
 	{
-		//IL_0108: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0155: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ea: Unknown result type (might be due to invalid IL or missing references)
 		if (entityContents == null || entryInfo == null)
 		{
 			return;

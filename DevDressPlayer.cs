@@ -16,11 +16,12 @@ public class DevDressPlayer : MonoBehaviour
 		{
 			DoRandomClothes(component);
 		}
-		foreach (ItemAmount item in clothesToWear)
+		foreach (ItemAmount item2 in clothesToWear)
 		{
-			if (!((Object)(object)item.itemDef == (Object)null))
+			if (!((Object)(object)item2.itemDef == (Object)null))
 			{
-				ItemManager.Create(item.itemDef, 1, 0uL).MoveToContainer(component.inventory.containerWear);
+				Item item = ItemManager.Create(item2.itemDef, 1, 0uL);
+				item.MoveToContainer(component.inventory.containerWear);
 			}
 		}
 	}
@@ -28,13 +29,15 @@ public class DevDressPlayer : MonoBehaviour
 	private void DoRandomClothes(BasePlayer player)
 	{
 		string text = "";
-		foreach (ItemDefinition item in (from x in ItemManager.GetItemDefinitions()
+		IEnumerable<ItemDefinition> enumerable = (from x in ItemManager.GetItemDefinitions()
 			where Object.op_Implicit((Object)(object)((Component)x).GetComponent<ItemModWearable>())
 			orderby Guid.NewGuid()
-			select x).Take(Random.Range(0, 4)))
+			select x).Take(Random.Range(0, 4));
+		foreach (ItemDefinition item2 in enumerable)
 		{
-			ItemManager.Create(item, 1, 0uL).MoveToContainer(player.inventory.containerWear);
-			text = text + item.shortname + " ";
+			Item item = ItemManager.Create(item2, 1, 0uL);
+			item.MoveToContainer(player.inventory.containerWear);
+			text = text + item2.shortname + " ";
 		}
 		text = text.Trim();
 		if (text == "")

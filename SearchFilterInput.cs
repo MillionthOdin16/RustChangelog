@@ -7,5 +7,5 @@ public class SearchFilterInput : MonoBehaviour
 
 	public GameObject ClosedRoot;
 
-	public RustInput InputField;
+	public RustInput InputField = null;
 }

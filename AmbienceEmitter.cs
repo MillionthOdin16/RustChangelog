@@ -10,11 +10,11 @@ public class AmbienceEmitter : MonoBehaviour, IClientComponent, IComparable<Ambi
 
 	public bool isStatic = true;
 
-	public bool followCamera;
+	public bool followCamera = false;
 
-	public bool isBaseEmitter;
+	public bool isBaseEmitter = false;
 
-	public bool active;
+	public bool active = false;
 
 	public float cameraDistanceSq = float.PositiveInfinity;
 

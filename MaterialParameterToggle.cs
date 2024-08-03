@@ -11,7 +11,7 @@ public class MaterialParameterToggle : MonoBehaviour
 	}
 
 	[InspectorFlags]
-	public ToggleMode Toggle;
+	public ToggleMode Toggle = ToggleMode.Detail;
 
 	public Renderer[] TargetRenderers = (Renderer[])(object)new Renderer[0];
 

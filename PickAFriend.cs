@@ -9,9 +9,9 @@ public class PickAFriend : UIDialog
 
 	public RustText headerText;
 
-	public bool AutoSelectInputField;
+	public bool AutoSelectInputField = false;
 
-	public bool AllowMultiple;
+	public bool AllowMultiple = false;
 
 	public Action<ulong, string> onSelected;
 

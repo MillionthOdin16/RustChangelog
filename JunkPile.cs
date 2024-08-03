@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using Facepunch;
 using Network;
 using UnityEngine;
 
@@ -12,7 +14,7 @@ public class JunkPile : BaseEntity
 
 	private const float lifetimeMinutes = 30f;
 
-	protected bool isSinking;
+	protected bool isSinking = false;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -39,18 +41,18 @@ public class JunkPile : BaseEntity
 	private void SpawnInitial()
 	{
 		SpawnGroup[] array = spawngroups;
-		for (int i = 0; i < array.Length; i++)
+		foreach (SpawnGroup spawnGroup in array)
 		{
-			array[i].SpawnInitial();
+			spawnGroup.SpawnInitial();
 		}
 	}
 
 	public bool SpawnGroupsEmpty()
 	{
 		SpawnGroup[] array = spawngroups;
-		for (int i = 0; i < array.Length; i++)
+		foreach (SpawnGroup spawnGroup in array)
 		{
-			if (array[i].currentPopulation > 0)
+			if (spawnGroup.currentPopulation > 0)
 			{
 				return false;
 			}
@@ -64,12 +66,29 @@ public class JunkPile : BaseEntity
 
 	public void CheckEmpty()
 	{
-		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
-		if (SpawnGroupsEmpty() && !BaseNetworkable.HasCloseConnections(((Component)this).transform.position, TimeoutPlayerCheckRadius()))
+		if (SpawnGroupsEmpty() && !PlayersNearby())
 		{
 			((FacepunchBehaviour)this).CancelInvoke((Action)CheckEmpty);
 			SinkAndDestroy();
 		}
+	}
+
+	public bool PlayersNearby()
+	{
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		List<BasePlayer> list = Pool.GetList<BasePlayer>();
+		Vis.Entities(((Component)this).transform.position, TimeoutPlayerCheckRadius(), list, 131072, (QueryTriggerInteraction)2);
+		bool result = false;
+		foreach (BasePlayer item in list)
+		{
+			if (!item.IsSleeping() && item.IsAlive() && !(item is HumanNPC))
+			{
+				result = true;
+				break;
+			}
+		}
+		Pool.FreeList<BasePlayer>(ref list);
+		return result;
 	}
 
 	public virtual float TimeoutPlayerCheckRadius()
@@ -79,26 +98,30 @@ public class JunkPile : BaseEntity
 
 	public void TimeOut()
 	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		if (BaseNetworkable.HasCloseConnections(((Component)this).transform.position, TimeoutPlayerCheckRadius()))
+		if (PlayersNearby())
 		{
 			((FacepunchBehaviour)this).Invoke((Action)TimeOut, 30f);
-			return;
 		}
-		SpawnGroupsEmpty();
-		SinkAndDestroy();
+		else if (SpawnGroupsEmpty())
+		{
+			SinkAndDestroy();
+		}
+		else
+		{
+			SinkAndDestroy();
+		}
 	}
 
 	public void SinkAndDestroy()
 	{
-		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
 		((FacepunchBehaviour)this).CancelInvoke((Action)SinkAndDestroy);
 		SpawnGroup[] array = spawngroups;
-		for (int i = 0; i < array.Length; i++)
+		foreach (SpawnGroup spawnGroup in array)
 		{
-			array[i].Clear();
+			spawnGroup.Clear();
 		}
 		SetFlag(Flags.Reserved8, b: true, recursive: true);
 		if ((Object)(object)NPCSpawn != (Object)null)

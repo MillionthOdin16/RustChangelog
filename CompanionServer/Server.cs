@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -39,17 +40,7 @@ public static class Server
 
 	public static Listener Listener { get; private set; }
 
-	public static bool IsEnabled
-	{
-		get
-		{
-			if (App.port >= 0 && !string.IsNullOrWhiteSpace(App.serverid))
-			{
-				return Listener != null;
-			}
-			return false;
-		}
-	}
+	public static bool IsEnabled => App.port >= 0 && !string.IsNullOrWhiteSpace(App.serverid) && Listener != null;
 
 	public static void Initialize()
 	{
@@ -68,7 +59,8 @@ public static class Server
 			Map.PopulateCache();
 			if (App.port == 0)
 			{
-				App.port = Math.Max(ConVar.Server.port, RCon.Port) + 67;
+				int num = Math.Max(ConVar.Server.port, RCon.Port);
+				App.port = num + 67;
 			}
 			try
 			{
@@ -104,11 +96,6 @@ public static class Server
 		Listener?.EntitySubscribers?.Send(target, broadcast);
 	}
 
-	public static void Broadcast(ClanTarget target, AppBroadcast broadcast)
-	{
-		Listener?.ClanSubscribers?.Send(target, broadcast);
-	}
-
 	public static void Broadcast(CameraTarget target, AppBroadcast broadcast)
 	{
 		Listener?.CameraSubscribers?.Send(target, broadcast);
@@ -116,7 +103,7 @@ public static class Server
 
 	public static bool HasAnySubscribers(CameraTarget target)
 	{
-		return (Listener?.CameraSubscribers?.HasAnySubscribers(target)).GetValueOrDefault();
+		return Listener?.CameraSubscribers?.HasAnySubscribers(target) ?? false;
 	}
 
 	public static bool CanSendPairingNotification(ulong playerId)
@@ -132,25 +119,25 @@ public static class Server
 
 	private static async Task SetupServerRegistration()
 	{
-		_ = 2;
 		try
 		{
 			if (TryLoadServerRegistration(out var _, out var serverToken))
 			{
-				StringContent val = new StringContent(serverToken, Encoding.UTF8, "text/plain");
-				HttpResponseMessage val2 = await Http.PostAsync("https://companion-rust.facepunch.com/api/server/refresh", (HttpContent)(object)val);
-				if (val2.IsSuccessStatusCode)
+				StringContent refreshContent = new StringContent(serverToken, Encoding.UTF8, "text/plain");
+				HttpResponseMessage refreshResponse = await Http.PostAsync("https://companion-rust.facepunch.com/api/server/refresh", refreshContent);
+				if (refreshResponse.IsSuccessStatusCode)
 				{
-					SetServerRegistration(await val2.Content.ReadAsStringAsync());
+					SetServerRegistration(await refreshResponse.Content.ReadAsStringAsync());
 					return;
 				}
 				Debug.LogWarning((object)"Failed to refresh server ID - registering a new one");
 			}
 			SetServerRegistration(await Http.GetStringAsync("https://companion-rust.facepunch.com/api/server/register"));
 		}
-		catch (Exception arg)
+		catch (Exception ex)
 		{
-			Debug.LogError((object)$"Failed to setup companion server registration: {arg}");
+			Exception e = ex;
+			Debug.LogError((object)$"Failed to setup companion server registration: {e}");
 		}
 	}
 
@@ -165,7 +152,8 @@ public static class Server
 		}
 		try
 		{
-			RegisterResponse registerResponse = JsonConvert.DeserializeObject<RegisterResponse>(File.ReadAllText(serverIdPath));
+			string text = File.ReadAllText(serverIdPath);
+			RegisterResponse registerResponse = JsonConvert.DeserializeObject<RegisterResponse>(text);
 			serverId = registerResponse.ServerId;
 			serverToken = registerResponse.ServerToken;
 			return true;
@@ -196,7 +184,8 @@ public static class Server
 		}
 		try
 		{
-			File.WriteAllText(GetServerIdPath(), responseJson);
+			string serverIdPath = GetServerIdPath();
+			File.WriteAllText(serverIdPath, responseJson);
 		}
 		catch (Exception arg2)
 		{
@@ -213,49 +202,67 @@ public static class Server
 		}
 		try
 		{
-			string arg = await App.GetPublicIPAsync();
-			StringContent val = new StringContent("", Encoding.UTF8, "text/plain");
-			HttpResponseMessage testResponse = await Http.PostAsync("https://companion-rust.facepunch.com/api/server" + $"/test_connection?address={arg}&port={App.port}", (HttpContent)(object)val);
-			string text = await testResponse.Content.ReadAsStringAsync();
-			TestConnectionResponse testConnectionResponse = null;
+			string publicIp = await GetPublicIPAsync();
+			StringContent testContent = new StringContent("", Encoding.UTF8, "text/plain");
+			HttpResponseMessage testResponse = await Http.PostAsync("https://companion-rust.facepunch.com/api/server" + $"/test_connection?address={publicIp}&port={App.port}", testContent);
+			string testResponseJson = await testResponse.Content.ReadAsStringAsync();
+			TestConnectionResponse response = null;
 			try
 			{
-				testConnectionResponse = JsonConvert.DeserializeObject<TestConnectionResponse>(text);
+				response = JsonConvert.DeserializeObject<TestConnectionResponse>(testResponseJson);
 			}
-			catch (Exception arg2)
+			catch (Exception ex)
 			{
-				Debug.LogError((object)$"Failed to parse connectivity test response JSON: {text}\n\n{arg2}");
+				Exception e2 = ex;
+				Debug.LogError((object)$"Failed to parse connectivity test response JSON: {testResponseJson}\n\n{e2}");
 			}
-			if (testConnectionResponse == null)
+			if (response == null)
 			{
 				return;
 			}
-			IEnumerable<string> messages = testConnectionResponse.Messages;
-			string text2 = string.Join("\n", messages ?? Enumerable.Empty<string>());
+			IEnumerable<string> messages = response.Messages;
+			string messagesText = string.Join("\n", messages ?? Enumerable.Empty<string>());
 			if (testResponse.StatusCode == (HttpStatusCode)555)
 			{
-				Debug.LogError((object)("Rust+ companion server connectivity test failed! Disabling Rust+ features.\n\n" + text2));
+				Debug.LogError((object)("Rust+ companion server connectivity test failed! Disabling Rust+ features.\n\n" + messagesText));
 				SetServerId(null);
 				return;
 			}
 			testResponse.EnsureSuccessStatusCode();
-			if (!string.IsNullOrWhiteSpace(text2))
+			if (!string.IsNullOrWhiteSpace(messagesText))
 			{
-				Debug.LogWarning((object)("Rust+ companion server connectivity test has warnings:\n" + text2));
+				Debug.LogWarning((object)("Rust+ companion server connectivity test has warnings:\n" + messagesText));
 			}
 		}
-		catch (Exception arg3)
+		catch (Exception e)
 		{
-			Debug.LogError((object)$"Failed to check connectivity to the companion server: {arg3}");
+			Debug.LogError((object)$"Failed to check connectivity to the companion server: {e}");
 		}
+	}
+
+	private static async Task<string> GetPublicIPAsync()
+	{
+		Stopwatch timer = Stopwatch.StartNew();
+		string publicIp;
+		while (true)
+		{
+			bool timedOut = timer.Elapsed.TotalMinutes > 2.0;
+			publicIp = App.GetPublicIP();
+			if (timedOut || (!string.IsNullOrWhiteSpace(publicIp) && publicIp != "0.0.0.0"))
+			{
+				break;
+			}
+			await Task.Delay(10000);
+		}
+		return publicIp;
 	}
 
 	private static void SetServerId(string serverId)
 	{
-		Command obj = Server.Find("app.serverid");
-		if (obj != null)
+		Command val = Server.Find("app.serverid");
+		if (val != null)
 		{
-			obj.Set(serverId ?? "");
+			val.Set(serverId ?? "");
 		}
 	}
 

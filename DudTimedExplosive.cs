@@ -5,6 +5,7 @@ using Network;
 using ProtoBuf;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.Profiling;
 
 public class DudTimedExplosive : TimedExplosive, IIgniteable, ISplashable
 {
@@ -20,9 +21,9 @@ public class DudTimedExplosive : TimedExplosive, IIgniteable, ISplashable
 	public ItemDefinition itemToGive;
 
 	[NonSerialized]
-	private float explodeTime;
+	private float explodeTime = 0f;
 
-	public bool becomeDudInWater;
+	public bool becomeDudInWater = false;
 
 	protected override bool AlwaysRunWaterCheck => becomeDudInWater;
 
@@ -36,7 +37,7 @@ public class DudTimedExplosive : TimedExplosive, IIgniteable, ISplashable
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_Pickup "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_Pickup "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_Pickup", 0);
 				try
@@ -55,7 +56,7 @@ public class DudTimedExplosive : TimedExplosive, IIgniteable, ISplashable
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -67,7 +68,7 @@ public class DudTimedExplosive : TimedExplosive, IIgniteable, ISplashable
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -124,7 +125,8 @@ public class DudTimedExplosive : TimedExplosive, IIgniteable, ISplashable
 	{
 		float randomTimerTime = base.GetRandomTimerTime();
 		float num = 1f;
-		if (Random.Range(0f, 1f) <= 0.15f)
+		float num2 = Random.Range(0f, 1f);
+		if (num2 <= 0.15f)
 		{
 			num = 0.334f;
 		}
@@ -179,17 +181,13 @@ public class DudTimedExplosive : TimedExplosive, IIgniteable, ISplashable
 
 	public override bool CanStickTo(BaseEntity entity)
 	{
-		if (base.CanStickTo(entity))
-		{
-			return IsWickBurning();
-		}
-		return false;
+		return base.CanStickTo(entity) && IsWickBurning();
 	}
 
 	public virtual void BecomeDud()
 	{
-		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
 		bool flag = false;
 		EntityRef entityRef = parentEntity;
 		while (entityRef.IsValid(base.isServer) && !flag)
@@ -219,8 +217,10 @@ public class DudTimedExplosive : TimedExplosive, IIgniteable, ISplashable
 	public override void Save(SaveInfo info)
 	{
 		base.Save(info);
+		Profiler.BeginSample("DudTimedExplosive.Save");
 		info.msg.dudExplosive = Pool.Get<DudExplosive>();
 		info.msg.dudExplosive.fuseTimeLeft = explodeTime - Time.realtimeSinceStartup;
+		Profiler.EndSample();
 	}
 
 	public void Ignite(Vector3 fromPos)
@@ -240,11 +240,7 @@ public class DudTimedExplosive : TimedExplosive, IIgniteable, ISplashable
 
 	public bool WantsSplash(ItemDefinition splashType, int amount)
 	{
-		if (!base.IsDestroyed)
-		{
-			return HasFlag(Flags.On);
-		}
-		return false;
+		return !base.IsDestroyed && HasFlag(Flags.On);
 	}
 
 	public int DoSplash(ItemDefinition splashType, int amount)

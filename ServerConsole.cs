@@ -4,6 +4,7 @@ using Facepunch;
 using Facepunch.Extend;
 using Network;
 using UnityEngine;
+using UnityEngine.Profiling;
 using Windows;
 
 public class ServerConsole : SingletonComponent<ServerConsole>
@@ -12,7 +13,7 @@ public class ServerConsole : SingletonComponent<ServerConsole>
 
 	private ConsoleInput input = new ConsoleInput();
 
-	private float nextUpdate;
+	private float nextUpdate = 0f;
 
 	private DateTime currentGameTime
 	{
@@ -55,7 +56,7 @@ public class ServerConsole : SingletonComponent<ServerConsole>
 
 	private void OnInputText(string obj)
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
 		ConsoleSystem.Run(Option.Server, obj, Array.Empty<object>());
 	}
 
@@ -86,13 +87,14 @@ public class ServerConsole : SingletonComponent<ServerConsole>
 
 	private void HandleLog(string message, string stackTrace, LogType type)
 	{
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002a: Invalid comparison between Unknown and I4
-		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0092: Invalid comparison between Unknown and I4
-		//IL_009d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009f: Invalid comparison between Unknown and I4
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Invalid comparison between Unknown and I4
+		//IL_009e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a0: Invalid comparison between Unknown and I4
+		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b4: Invalid comparison between Unknown and I4
+		//IL_00c8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ca: Invalid comparison between Unknown and I4
 		if (message.StartsWith("[CHAT]") || message.StartsWith("[TEAM CHAT]") || message.StartsWith("[CARDS CHAT]"))
 		{
 			return;
@@ -121,15 +123,21 @@ public class ServerConsole : SingletonComponent<ServerConsole>
 		{
 			System.Console.ForegroundColor = ConsoleColor.Gray;
 		}
+		Profiler.BeginSample("ServerConsole.HandleLog");
 		input.ClearLine(input.statusText.Length);
 		System.Console.WriteLine(message);
 		input.RedrawInputLine();
+		Profiler.EndSample();
 	}
 
 	private void Update()
 	{
+		Profiler.BeginSample("ServerConsoleUpdateStatus");
 		UpdateStatus();
+		Profiler.EndSample();
+		Profiler.BeginSample("ServerConsoleUpdate");
 		input.Update();
+		Profiler.EndSample();
 	}
 
 	private void UpdateStatus()
@@ -142,7 +150,7 @@ public class ServerConsole : SingletonComponent<ServerConsole>
 				string text = NumberExtensions.FormatSeconds((long)Time.realtimeSinceStartup);
 				string text2 = currentGameTime.ToString("[H:mm]");
 				string text3 = " " + text2 + " [" + currentPlayerCount + "/" + maxPlayerCount + "] " + Server.hostname + " [" + Server.level + "]";
-				string text4 = Performance.current.frameRate + "fps " + Performance.current.memoryCollections + "gc " + text;
+				string text4 = (Performance.current.frameRate + "fps " + Performance.current.memoryCollections + "gc " + text) ?? "";
 				string text5 = NumberExtensions.FormatBytes<ulong>(((BaseNetwork)Net.sv).GetStat((Connection)null, (StatTypeLong)3), true) + "/s in, " + NumberExtensions.FormatBytes<ulong>(((BaseNetwork)Net.sv).GetStat((Connection)null, (StatTypeLong)1), true) + "/s out";
 				string text6 = text4.PadLeft(input.lineWidth - 1);
 				text6 = text3 + ((text3.Length < text6.Length) ? text6.Substring(text3.Length) : "");

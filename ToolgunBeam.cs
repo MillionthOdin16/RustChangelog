@@ -12,9 +12,9 @@ public class ToolgunBeam : MonoBehaviour
 
 	public void Update()
 	{
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0089: Unknown result type (might be due to invalid IL or missing references)
 		if (fadeColor.a <= 0f)
 		{
 			Object.Destroy((Object)(object)((Component)this).gameObject);

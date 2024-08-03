@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class MaterialSwap : MonoBehaviour, IClientComponent
 {
-	public int materialIndex;
+	public int materialIndex = 0;
 
 	public Renderer myRenderer;
 

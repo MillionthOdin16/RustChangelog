@@ -1,10 +1,9 @@
 using System;
 using System.Collections.Generic;
 using ConVar;
-using Facepunch;
-using ProtoBuf;
 using Rust;
 using UnityEngine;
+using UnityEngine.Profiling;
 using VacuumBreather;
 
 public class BaseBoat : BaseVehicle
@@ -23,8 +22,6 @@ public class BaseBoat : BaseVehicle
 	public bool preventDecayIndoors = true;
 
 	[Header("Correction Forces")]
-	public bool applyCorrectionForces = true;
-
 	public Transform[] planeFitPoints;
 
 	public Vector3 inAirPID;
@@ -46,44 +43,11 @@ public class BaseBoat : BaseVehicle
 	[ServerVar]
 	public static bool generate_paths = true;
 
-	[ServerVar]
-	public static bool do_shore_drift = true;
-
-	private static int secondsUntilShoreDrift = 7200;
-
-	private static int secondsBetweenShoreDrift = 120;
-
-	[ServerVar]
-	[Help("Shore drift speed in metres per second")]
-	public static float drift_speed = 1f;
+	[NonSerialized]
+	public float gasPedal = 0f;
 
 	[NonSerialized]
-	public float gasPedal;
-
-	[NonSerialized]
-	public float steering;
-
-	private TimeSince shoreDriftTimer;
-
-	private string lastDriftCheckStatus = "Never checked";
-
-	[ServerVar]
-	[Help("Seconds until boat starts drifting to shore if there's nobody around")]
-	public static int seconds_until_shore_drift(Arg arg)
-	{
-		secondsUntilShoreDrift = arg.GetInt(0, secondsUntilShoreDrift);
-		UpdateShoreDriftInvokeOnAll();
-		return secondsUntilShoreDrift;
-	}
-
-	[ServerVar]
-	[Help("Seconds between shore drift teleport ticks")]
-	public static int seconds_between_shore_drift(Arg arg)
-	{
-		secondsBetweenShoreDrift = arg.GetInt(0, secondsBetweenShoreDrift);
-		UpdateShoreDriftInvokeOnAll();
-		return secondsBetweenShoreDrift;
-	}
+	public float steering = 0f;
 
 	public bool InDryDock()
 	{
@@ -97,9 +61,7 @@ public class BaseBoat : BaseVehicle
 
 	public override void ServerInit()
 	{
-		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ed: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
 		base.ServerInit();
 		rigidBody.isKinematic = false;
 		if ((Object)(object)rigidBody == (Object)null)
@@ -120,13 +82,6 @@ public class BaseBoat : BaseVehicle
 		}
 		worldAnchors = (Vector3[])(object)new Vector3[3];
 		pidController = new PidQuaternionController(wavePID.x, wavePID.y, wavePID.z);
-		if (Application.isLoadingSave)
-		{
-			((FacepunchBehaviour)this).InvokeRandomized((Action)CheckDriftToShore, (float)secondsBetweenShoreDrift, (float)secondsBetweenShoreDrift, (float)secondsBetweenShoreDrift * 0.1f);
-			return;
-		}
-		shoreDriftTimer = TimeSince.op_Implicit(0f);
-		((FacepunchBehaviour)this).InvokeRandomized((Action)CheckDriftToShore, (float)secondsUntilShoreDrift, (float)secondsBetweenShoreDrift, (float)secondsBetweenShoreDrift * 0.1f);
 	}
 
 	public override void PlayerServerInput(InputState inputState, BasePlayer player)
@@ -172,8 +127,8 @@ public class BaseBoat : BaseVehicle
 
 	public void WakeUp()
 	{
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)rigidBody != (Object)null)
 		{
 			rigidBody.WakeUp();
@@ -191,29 +146,26 @@ public class BaseBoat : BaseVehicle
 
 	public virtual bool EngineOn()
 	{
-		if (HasDriver())
-		{
-			return !IsFlipped();
-		}
-		return false;
+		return HasDriver() && !IsFlipped();
 	}
 
 	public override void VehicleFixedUpdate()
 	{
-		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00af: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00b9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00df: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e6: Unknown result type (might be due to invalid IL or missing references)
 		base.VehicleFixedUpdate();
+		Profiler.BeginSample("BaseBoat.VehicleFixedUpdate");
 		if (!EngineOn())
 		{
 			gasPedal = 0f;
@@ -232,59 +184,62 @@ public class BaseBoat : BaseVehicle
 		{
 			DismountAllPlayers();
 		}
+		Profiler.EndSample();
 	}
 
 	protected void ApplyCorrectionForces()
 	{
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ce: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00da: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00eb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00be: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e7: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00f3: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00ff: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0104: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0109: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0110: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0111: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0116: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0117: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0126: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0178: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0191: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0196: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0214: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0223: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0228: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0278: Unknown result type (might be due to invalid IL or missing references)
-		//IL_027d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0285: Unknown result type (might be due to invalid IL or missing references)
-		//IL_028f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0294: Unknown result type (might be due to invalid IL or missing references)
-		//IL_029c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0308: Unknown result type (might be due to invalid IL or missing references)
-		//IL_030d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0315: Unknown result type (might be due to invalid IL or missing references)
-		//IL_031f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0324: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0338: Unknown result type (might be due to invalid IL or missing references)
-		if (applyCorrectionForces && planeFitPoints != null && planeFitPoints.Length == 3 && HasDriver() && !(buoyancy.submergedFraction < 0.5f))
+		//IL_0118: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0124: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0129: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0133: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0134: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0135: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0136: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0140: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0145: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ba: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01bf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01fa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0250: Unknown result type (might be due to invalid IL or missing references)
+		//IL_025f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0264: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02b7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02bc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02c4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02ce: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02d3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02db: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0357: Unknown result type (might be due to invalid IL or missing references)
+		//IL_035c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0364: Unknown result type (might be due to invalid IL or missing references)
+		//IL_036e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0373: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0387: Unknown result type (might be due to invalid IL or missing references)
+		if (planeFitPoints != null && planeFitPoints.Length == 3 && HasDriver() && !(buoyancy.submergedFraction < 0.5f))
 		{
 			Matrix4x4 val = Matrix4x4.TRS(((Component)this).transform.position, Quaternion.Euler(0f, ((Component)this).transform.eulerAngles.y, 0f), Vector3.one);
 			for (int i = 0; i < planeFitPoints.Length; i++)
@@ -297,7 +252,8 @@ public class BaseBoat : BaseVehicle
 			((Plane)(ref val3))._002Ector(worldAnchors[0], worldAnchors[1], worldAnchors[2]);
 			Vector3 normal = ((Plane)(ref val3)).normal;
 			Vector3 val4 = Vector3.Normalize(worldAnchors[2] - worldAnchors[1]);
-			Quaternion desiredOrientation = Quaternion.LookRotation(Vector3.Cross(normal, val4), normal);
+			Vector3 val5 = Vector3.Cross(normal, val4);
+			Quaternion desiredOrientation = Quaternion.LookRotation(val5, normal);
 			float y = planeFitPoints[0].localPosition.y;
 			float num = (worldAnchors[0].y + worldAnchors[1].y + worldAnchors[2].y) / 3f - y;
 			float y2 = ((Component)this).transform.position.y;
@@ -315,24 +271,24 @@ public class BaseBoat : BaseVehicle
 				pidController.Kp = inAirPID.x;
 				pidController.Ki = inAirPID.y;
 				pidController.Kd = inAirPID.z;
-				Vector3 val5 = pidController.ComputeRequiredAngularAcceleration(((Component)this).transform.rotation, desiredOrientation, rigidBody.angularVelocity, Time.fixedDeltaTime);
-				rigidBody.AddTorque(val5, (ForceMode)5);
+				Vector3 val6 = pidController.ComputeRequiredAngularAcceleration(((Component)this).transform.rotation, desiredOrientation, rigidBody.angularVelocity, Time.fixedDeltaTime);
+				rigidBody.AddTorque(val6, (ForceMode)5);
 			}
 			else if (y2 > num + correctionRange.x)
 			{
 				pidController.Kp = wavePID.x;
 				pidController.Ki = wavePID.y;
 				pidController.Kd = wavePID.z;
-				Vector3 val6 = pidController.ComputeRequiredAngularAcceleration(((Component)this).transform.rotation, desiredOrientation, rigidBody.angularVelocity, Time.fixedDeltaTime);
-				val6.y = 0f;
-				rigidBody.AddTorque(val6, (ForceMode)5);
+				Vector3 val7 = pidController.ComputeRequiredAngularAcceleration(((Component)this).transform.rotation, desiredOrientation, rigidBody.angularVelocity, Time.fixedDeltaTime);
+				val7.y = 0f;
+				rigidBody.AddTorque(val7, (ForceMode)5);
 			}
 		}
 	}
 
 	public static void WaterVehicleDecay(BaseCombatEntity entity, float decayTickRate, float timeSinceLastUsed, float outsideDecayMinutes, float deepWaterDecayMinutes, float decayStartDelayMinutes, bool preventDecayIndoors)
 	{
-		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
 		if (entity.healthFraction != 0f && !(timeSinceLastUsed < 60f * decayStartDelayMinutes))
 		{
 			float overallWaterDepth = WaterLevel.GetOverallWaterDepth(((Component)entity).transform.position, waves: true, volumes: false);
@@ -355,237 +311,17 @@ public class BaseBoat : BaseVehicle
 		}
 	}
 
-	private void CheckDriftToShore()
-	{
-		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ec: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0110: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0115: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0139: Unknown result type (might be due to invalid IL or missing references)
-		//IL_013e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0163: Unknown result type (might be due to invalid IL or missing references)
-		//IL_018c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01cc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01d1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01d6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01da: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01f8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0203: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0208: Unknown result type (might be due to invalid IL or missing references)
-		//IL_020d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0216: Unknown result type (might be due to invalid IL or missing references)
-		//IL_021b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0220: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0228: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0233: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0238: Unknown result type (might be due to invalid IL or missing references)
-		//IL_023d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0240: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0245: Unknown result type (might be due to invalid IL or missing references)
-		//IL_024a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_024c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_024e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0250: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ac: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0369: Unknown result type (might be due to invalid IL or missing references)
-		//IL_036e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0376: Unknown result type (might be due to invalid IL or missing references)
-		//IL_037e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0383: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0393: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03a3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03b3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03bb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0289: Unknown result type (might be due to invalid IL or missing references)
-		//IL_028e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0309: Unknown result type (might be due to invalid IL or missing references)
-		//IL_030e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0311: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0316: Unknown result type (might be due to invalid IL or missing references)
-		//IL_031b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0325: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0335: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02e7: Unknown result type (might be due to invalid IL or missing references)
-		if (!do_shore_drift)
-		{
-			return;
-		}
-		if (TimeSince.op_Implicit(shoreDriftTimer) < (float)secondsUntilShoreDrift - 1f)
-		{
-			lastDriftCheckStatus = "Was too soon";
-			return;
-		}
-		if ((Object)(object)buoyancy != (Object)null && buoyancy.whenDisabled != Buoyancy.WhenDisabled.GoKinematic && rigidBody.isKinematic)
-		{
-			lastDriftCheckStatus = "Was kinematic";
-			return;
-		}
-		if (IsOn())
-		{
-			lastDriftCheckStatus = "Was on";
-			shoreDriftTimer = TimeSince.op_Implicit(0f);
-			return;
-		}
-		if (AnyPlayersOnBoat())
-		{
-			lastDriftCheckStatus = "Players were on boat";
-			shoreDriftTimer = TimeSince.op_Implicit(0f);
-			return;
-		}
-		if (HasParent())
-		{
-			lastDriftCheckStatus = "Was parented";
-			shoreDriftTimer = TimeSince.op_Implicit(0f);
-			return;
-		}
-		if (IsDead())
-		{
-			lastDriftCheckStatus = "Is dead";
-			shoreDriftTimer = TimeSince.op_Implicit(0f);
-			return;
-		}
-		if (WaterFactor() < 0.1f)
-		{
-			lastDriftCheckStatus = "Not in water";
-			shoreDriftTimer = TimeSince.op_Implicit(0f);
-			return;
-		}
-		if ((Object)(object)TerrainTexturing.Instance == (Object)null)
-		{
-			lastDriftCheckStatus = "No terrain tex";
-			shoreDriftTimer = TimeSince.op_Implicit(0f);
-			return;
-		}
-		if (BaseNetworkable.HasConnections(((Component)this).transform.position))
-		{
-			lastDriftCheckStatus = "Players were nearby";
-			return;
-		}
-		float num = bounds.MaxExtent() + 2f;
-		float num2 = drift_speed * (float)secondsBetweenShoreDrift;
-		float coarseDistanceToShore = TerrainTexturing.Instance.GetCoarseDistanceToShore(((Component)this).transform.position);
-		float num3 = 2f * num;
-		if (coarseDistanceToShore < num3)
-		{
-			shoreDriftTimer = TimeSince.op_Implicit(0f);
-			lastDriftCheckStatus = "Was near shore already";
-			return;
-		}
-		float maxDistance = num2 - num;
-		Vector3 coarseVectorToShore = TerrainTexturing.Instance.GetCoarseVectorToShore(((Component)this).transform.position);
-		coarseVectorToShore.z = coarseVectorToShore.y;
-		coarseVectorToShore.y = 0f;
-		Vector3 val = ((Component)this).transform.position + ((Bounds)(ref bounds)).center + coarseVectorToShore * (num + 1f);
-		Vector3 val2 = ((Component)this).transform.position + ((Bounds)(ref bounds)).center + coarseVectorToShore * num2;
-		Ray ray = new Ray(val, coarseVectorToShore);
-		List<RaycastHit> list = Pool.GetList<RaycastHit>();
-		GamePhysics.TraceAll(ray, num, list, maxDistance, 1235583233, (QueryTriggerInteraction)1, this);
-		if (list.Count > 0)
-		{
-			foreach (RaycastHit item in list)
-			{
-				RaycastHit current = item;
-				if ((Object)(object)((RaycastHit)(ref current)).collider != (Object)null)
-				{
-					BaseEntity baseEntity = ((RaycastHit)(ref current)).collider.ToBaseEntity();
-					if ((Object)(object)baseEntity != (Object)null && baseEntity.HasEntityInParents(this))
-					{
-						continue;
-					}
-				}
-				if (((RaycastHit)(ref current)).distance <= num3)
-				{
-					lastDriftCheckStatus = $"Was blocked by {((Object)((RaycastHit)(ref current)).transform).name} at {((RaycastHit)(ref current)).transform.position}";
-					Pool.FreeList<RaycastHit>(ref list);
-					return;
-				}
-				val2 = ((RaycastHit)(ref current)).point - coarseVectorToShore * num3;
-				val2.y = ((Component)this).transform.position.y + ((Bounds)(ref bounds)).center.y;
-				break;
-			}
-		}
-		Vector3 position = ((Component)this).transform.position;
-		((Component)this).transform.position = val2 - ((Bounds)(ref bounds)).center;
-		rigidBody.velocity = Vector3.zero;
-		rigidBody.angularVelocity = Vector3.zero;
-		lastDriftCheckStatus = $"Drifted {Vector3.Distance(position, ((Component)this).transform.position):F0}m";
-		Pool.FreeList<RaycastHit>(ref list);
-		((FacepunchBehaviour)this).Invoke((Action)GoToSleep, 0f);
-	}
-
-	private void GoToSleep()
-	{
-		rigidBody.Sleep();
-	}
-
-	public virtual bool AnyPlayersOnBoat()
-	{
-		return AnyMounted();
-	}
-
-	public string GetDriftStatus()
-	{
-		return lastDriftCheckStatus;
-	}
-
-	private static void UpdateShoreDriftInvokeOnAll()
-	{
-		BaseBoat[] array = Util.FindAll<BaseBoat>();
-		foreach (BaseBoat baseBoat in array)
-		{
-			if (baseBoat.IsValid())
-			{
-				baseBoat.UpdateShoreDriftInvoke();
-			}
-		}
-	}
-
-	private void UpdateShoreDriftInvoke()
-	{
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		float num = Mathf.Max(0f, (float)secondsUntilShoreDrift - TimeSince.op_Implicit(shoreDriftTimer));
-		((FacepunchBehaviour)this).InvokeRandomized((Action)CheckDriftToShore, num, (float)secondsBetweenShoreDrift, (float)secondsBetweenShoreDrift * 0.1f);
-	}
-
-	public override void Save(SaveInfo info)
-	{
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		base.Save(info);
-		info.msg.baseBoat = Pool.Get<BaseBoat>();
-		info.msg.baseBoat.shoreDriftTimerValue = TimeSince.op_Implicit(shoreDriftTimer);
-	}
-
-	public override void Load(LoadInfo info)
-	{
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		base.Load(info);
-		if (info.msg.baseBoat != null && base.isServer)
-		{
-			shoreDriftTimer = TimeSince.op_Implicit(info.msg.baseBoat.shoreDriftTimerValue);
-		}
-	}
-
 	public virtual bool EngineInWater()
 	{
-		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
 		return TerrainMeta.WaterMap.GetHeight(thrustPoint.position) > thrustPoint.position.y;
 	}
 
 	public override float WaterFactorForPlayer(BasePlayer player)
 	{
-		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
 		if (TerrainMeta.WaterMap.GetHeight(player.eyes.position) >= player.eyes.position.y)
 		{
 			return 1f;
@@ -595,9 +331,9 @@ public class BaseBoat : BaseVehicle
 
 	public static float GetWaterDepth(Vector3 pos)
 	{
-		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
 		if (!Application.isPlaying || (Object)(object)TerrainMeta.WaterMap == (Object)null)
 		{
 			RaycastHit val = default(RaycastHit);
@@ -612,56 +348,59 @@ public class BaseBoat : BaseVehicle
 
 	public static List<Vector3> GenerateOceanPatrolPath(float minDistanceFromShore = 50f, float minWaterDepth = 8f)
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0261: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00db: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00dd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00df: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ed: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00be: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02db: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ea: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ef: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f5: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00fa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fc: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00fe: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0103: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0108: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0100: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0105: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0107: Unknown result type (might be due to invalid IL or missing references)
 		//IL_010c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0164: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0169: Unknown result type (might be due to invalid IL or missing references)
-		//IL_016d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0172: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0174: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0176: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0182: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0187: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0189: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0193: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0195: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0197: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0199: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ae: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0110: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0115: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0117: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0119: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0122: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0127: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0129: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0146: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0148: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01aa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ac: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01bd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01bf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01db: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0247: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ff: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0206: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01eb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ed: Unknown result type (might be due to invalid IL or missing references)
 		//IL_01ef: Unknown result type (might be due to invalid IL or missing references)
-		float x = TerrainMeta.Size.x;
+		//IL_01f4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01fd: Unknown result type (might be due to invalid IL or missing references)
+		Vector3 size = TerrainMeta.Size;
+		float x = size.x;
 		float num = x * 2f * (float)Math.PI;
 		float num2 = 30f;
 		int num3 = Mathf.CeilToInt(num / num2);
@@ -691,26 +430,30 @@ public class BaseBoat : BaseVehicle
 				Vector3 val5 = Vector3.zero - val;
 				Vector3 normalized = ((Vector3)(ref val5)).normalized;
 				Vector3 val6 = val + normalized * num7;
-				if (Vector3.Distance(val6, val2) > num8 || Vector3.Distance(val6, val3) > num8)
+				float num9 = Vector3.Distance(val6, val2);
+				if (num9 > num8 || Vector3.Distance(val6, val3) > num8)
 				{
 					continue;
 				}
 				bool flag2 = true;
-				int num9 = 16;
-				for (int l = 0; l < num9; l++)
+				int num10 = 16;
+				for (int l = 0; l < num10; l++)
 				{
-					float num10 = (float)l / (float)num9 * 360f;
-					val5 = new Vector3(Mathf.Sin(num10 * ((float)Math.PI / 180f)), num5, Mathf.Cos(num10 * ((float)Math.PI / 180f)));
+					float num11 = (float)l / (float)num10 * 360f;
+					val5 = new Vector3(Mathf.Sin(num11 * ((float)Math.PI / 180f)), num5, Mathf.Cos(num11 * ((float)Math.PI / 180f)));
 					Vector3 normalized2 = ((Vector3)(ref val5)).normalized;
 					Vector3 val7 = val6 + normalized2 * 1f;
-					GetWaterDepth(val7);
+					float waterDepth = GetWaterDepth(val7);
+					if (waterDepth < minWaterDepth)
+					{
+					}
 					Vector3 val8 = normalized;
 					if (val7 != Vector3.zero)
 					{
 						val5 = val7 - val6;
 						val8 = ((Vector3)(ref val5)).normalized;
 					}
-					if (Physics.SphereCast(val4, 3f, val8, ref val9, minDistanceFromShore, 1084293377))
+					if (Physics.SphereCast(val4, 3f, val8, ref val9, minDistanceFromShore, 1218511105))
 					{
 						flag2 = false;
 						break;

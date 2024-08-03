@@ -71,10 +71,11 @@ public static class TelephoneManager
 	{
 		foreach (KeyValuePair<int, PhoneController> allTelephone in allTelephones)
 		{
-			if (allTelephone.Value.PhoneNumber != ignoreNumber)
+			if (allTelephone.Value.PhoneNumber == ignoreNumber)
 			{
-				return allTelephone.Value;
+				continue;
 			}
+			return allTelephone.Value;
 		}
 		return null;
 	}
@@ -127,13 +128,13 @@ public static class TelephoneManager
 	[ServerVar]
 	public static void PrintAllPhones(Arg arg)
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0006: Expected O, but got Unknown
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0097: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Expected O, but got Unknown
+		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
 		TextTable val = new TextTable();
 		val.AddColumns(new string[3] { "Number", "Name", "Position" });
 		foreach (KeyValuePair<int, PhoneController> allTelephone in allTelephones)

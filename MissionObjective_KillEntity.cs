@@ -11,7 +11,7 @@ public class MissionObjective_KillEntity : MissionObjective
 
 	public bool shouldUpdateMissionLocation;
 
-	private float nextLocationUpdateTime;
+	private float nextLocationUpdateTime = 0f;
 
 	public override void ObjectiveStarted(BasePlayer playerFor, int index, BaseMission.MissionInstance instance)
 	{
@@ -26,9 +26,9 @@ public class MissionObjective_KillEntity : MissionObjective
 			return;
 		}
 		string[] array = targetPrefabIDs;
-		for (int i = 0; i < array.Length; i++)
+		foreach (string text in array)
 		{
-			if (array[i] == identifier)
+			if (text == identifier)
 			{
 				instance.objectiveStatuses[index].genericInt1 += (int)amount;
 				if (instance.objectiveStatuses[index].genericInt1 >= numToKill)
@@ -43,11 +43,11 @@ public class MissionObjective_KillEntity : MissionObjective
 
 	public override void Think(int index, BaseMission.MissionInstance instance, BasePlayer assignee, float delta)
 	{
-		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0133: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0138: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00da: Unknown result type (might be due to invalid IL or missing references)
 		if (shouldUpdateMissionLocation && IsStarted(index, instance) && Time.realtimeSinceStartup > nextLocationUpdateTime)
 		{
 			nextLocationUpdateTime = Time.realtimeSinceStartup + 1f;

@@ -5,7 +5,7 @@ public class ScaleParticleSystem : ScaleRenderer
 {
 	public ParticleSystem pSystem;
 
-	public bool scaleGravity;
+	public bool scaleGravity = false;
 
 	[NonSerialized]
 	private float startSize;

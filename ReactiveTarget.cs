@@ -31,7 +31,7 @@ public class ReactiveTarget : IOEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_Lower "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_Lower "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_Lower", 0);
 				try
@@ -67,12 +67,12 @@ public class ReactiveTarget : IOEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_Reset "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_Reset "));
 				}
-				TimeWarning val2 = TimeWarning.New("RPC_Reset", 0);
+				TimeWarning val4 = TimeWarning.New("RPC_Reset", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Call", 0);
+					TimeWarning val5 = TimeWarning.New("Call", 0);
 					try
 					{
 						RPCMessage rPCMessage = default(RPCMessage);
@@ -84,7 +84,7 @@ public class ReactiveTarget : IOEntity
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val5)?.Dispose();
 					}
 				}
 				catch (Exception ex2)
@@ -94,7 +94,7 @@ public class ReactiveTarget : IOEntity
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val4)?.Dispose();
 				}
 				return true;
 			}
@@ -108,26 +108,26 @@ public class ReactiveTarget : IOEntity
 
 	public void OnHitShared(HitInfo info)
 	{
-		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0093: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0129: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e6: Unknown result type (might be due to invalid IL or missing references)
 		if (IsKnockedDown())
 		{
 			return;
 		}
-		bool num = info.HitBone == StringPool.Get("target_collider");
-		bool flag = info.HitBone == StringPool.Get("target_collider_bullseye");
-		if ((num || flag) && base.isServer)
+		bool flag = info.HitBone == StringPool.Get("target_collider");
+		bool flag2 = info.HitBone == StringPool.Get("target_collider_bullseye");
+		if ((flag || flag2) && base.isServer)
 		{
-			float num2 = info.damageTypes.Total();
-			if (flag)
+			float num = info.damageTypes.Total();
+			if (flag2)
 			{
-				num2 *= 2f;
+				num *= 2f;
 				Effect.server.Run(bullseyeEffect.resourcePath, this, StringPool.Get("target_collider_bullseye"), Vector3.zero, Vector3.zero);
 			}
-			knockdownHealth -= num2;
+			knockdownHealth -= num;
 			if (knockdownHealth <= 0f)
 			{
 				Effect.server.Run(knockdownEffect.resourcePath, this, StringPool.Get("target_collider_bullseye"), Vector3.zero, Vector3.zero);
@@ -157,11 +157,7 @@ public class ReactiveTarget : IOEntity
 
 	public override bool CanPickup(BasePlayer player)
 	{
-		if (base.CanPickup(player))
-		{
-			return CanToggle();
-		}
-		return false;
+		return base.CanPickup(player) && CanToggle();
 	}
 
 	public bool CanToggle()

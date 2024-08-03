@@ -22,5 +22,5 @@ public class TreeLOD : LODComponent
 	}
 
 	[Horizontal(1, 0)]
-	public State[] States;
+	public State[] States = null;
 }

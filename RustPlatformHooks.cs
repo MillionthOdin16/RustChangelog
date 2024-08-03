@@ -17,7 +17,7 @@ public class RustPlatformHooks : IPlatformHooks
 	{
 		get
 		{
-			//IL_008c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
 			if (Net.sv == null)
 			{
 				return null;
@@ -29,9 +29,10 @@ public class RustPlatformHooks : IPlatformHooks
 			}
 			if (ConVar.Server.queryport <= 0 || ConVar.Server.queryport == ConVar.Server.port)
 			{
-				ConVar.Server.queryport = Math.Max(ConVar.Server.port, RCon.Port) + 1;
+				int num = Math.Max(ConVar.Server.port, RCon.Port);
+				ConVar.Server.queryport = num + 1;
 			}
-			return new ServerParameters("rust", "Rust", 2509.ToString(), ConVar.Server.secure, CommandLine.HasSwitch("-sdrnet"), iPAddress, (ushort)Net.sv.port, (ushort)ConVar.Server.queryport);
+			return new ServerParameters("rust", "Rust", 2402.ToString(), ConVar.Server.secure, CommandLine.HasSwitch("-sdrnet"), iPAddress, (ushort)Net.sv.port, (ushort)ConVar.Server.queryport);
 		}
 	}
 
@@ -47,7 +48,7 @@ public class RustPlatformHooks : IPlatformHooks
 
 	public void AuthSessionValidated(ulong userId, ulong ownerUserId, AuthResponse response, string rawResponse)
 	{
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
 		Analytics.Azure.OnSteamAuth(userId, ownerUserId, rawResponse);
 		SingletonComponent<ServerMgr>.Instance.OnValidateAuthTicketResponse(userId, ownerUserId, response);
 	}

@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class CH47LandingZone : MonoBehaviour
 {
-	public float lastDropTime;
+	public float lastDropTime = 0f;
 
 	private static List<CH47LandingZone> landingZones = new List<CH47LandingZone>();
 
@@ -19,8 +19,8 @@ public class CH47LandingZone : MonoBehaviour
 
 	public static CH47LandingZone GetClosest(Vector3 pos)
 	{
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
 		float num = float.PositiveInfinity;
 		CH47LandingZone result = null;
 		foreach (CH47LandingZone landingZone in landingZones)
@@ -55,12 +55,12 @@ public class CH47LandingZone : MonoBehaviour
 
 	public void OnDrawGizmos()
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
 		Color magenta = Color.magenta;
 		magenta.a = 0.25f;
 		Gizmos.color = magenta;

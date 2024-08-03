@@ -11,7 +11,7 @@ public class ItemEventFlag : MonoBehaviour, IItemUpdate
 
 	internal bool firstRun = true;
 
-	internal bool lastState;
+	internal bool lastState = false;
 
 	public virtual void OnItemUpdate(Item item)
 	{

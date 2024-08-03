@@ -40,7 +40,7 @@ public class ItemBasedFlowRestrictor : IOEntity, IContainerSounds
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_OpenLoot "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_OpenLoot "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_OpenLoot", 0);
 				try
@@ -59,7 +59,7 @@ public class ItemBasedFlowRestrictor : IOEntity, IContainerSounds
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -71,7 +71,7 @@ public class ItemBasedFlowRestrictor : IOEntity, IContainerSounds
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -96,16 +96,16 @@ public class ItemBasedFlowRestrictor : IOEntity, IContainerSounds
 
 	public override void ResetIOState()
 	{
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
 		SetFlag(Flags.On, b: false);
 		if (inventory != null)
 		{
@@ -115,11 +115,7 @@ public class ItemBasedFlowRestrictor : IOEntity, IContainerSounds
 
 	public override int GetPassthroughAmount(int outputSlot = 0)
 	{
-		if (!HasFlag(Flags.Reserved1))
-		{
-			return 0;
-		}
-		return base.GetPassthroughAmount(outputSlot);
+		return HasFlag(Flags.Reserved1) ? base.GetPassthroughAmount(outputSlot) : 0;
 	}
 
 	public override void IOStateChanged(int inputAmount, int inputSlot)

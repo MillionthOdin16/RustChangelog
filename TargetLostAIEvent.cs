@@ -12,8 +12,8 @@ public class TargetLostAIEvent : BaseAIEvent
 
 	public override void Execute(AIMemory memory, AIBrainSenses senses, StateStatus stateStatus)
 	{
-		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
 		base.Result = base.Inverted;
 		BaseEntity baseEntity = memory.Entity.Get(base.InputEntityMemorySlot);
 		if ((Object)(object)baseEntity == (Object)null)

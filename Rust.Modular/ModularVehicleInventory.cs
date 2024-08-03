@@ -55,7 +55,8 @@ public class ModularVehicleInventory : IDisposable
 					return true;
 				}
 				ItemModVehicleModule component = ((Component)item.info).GetComponent<ItemModVehicleModule>();
-				return num + component.socketsTaken - 1 < socketIndex;
+				int num2 = num + component.socketsTaken - 1;
+				return num2 < socketIndex;
 			}
 			num--;
 		}
@@ -136,14 +137,16 @@ public class ModularVehicleInventory : IDisposable
 			Item item = ItemManager.Create(moduleEntity.AssociatedItemDef, 1, 0uL);
 			item.condition = moduleEntity.health;
 			moduleEntity.AssociatedItemInstance = item;
-			bool num = TryAddModuleItem(item, firstSocketIndex);
-			if (num)
+			bool flag = TryAddModuleItem(item, firstSocketIndex);
+			if (flag)
 			{
 				vehicle.SetUpModule(moduleEntity, item);
-				return num;
 			}
-			item.Remove();
-			return num;
+			else
+			{
+				item.Remove();
+			}
+			return flag;
 		}
 		return true;
 	}
@@ -211,9 +214,13 @@ public class ModularVehicleInventory : IDisposable
 	private void ModuleItemAdded(Item moduleItem, int socketIndex)
 	{
 		ItemModVehicleModule component = ((Component)moduleItem.info).GetComponent<ItemModVehicleModule>();
-		if (!Application.isLoadingSave && (Object)(object)vehicle.GetModuleForItem(moduleItem) == (Object)null)
+		if (!Application.isLoadingSave)
 		{
-			vehicle.CreatePhysicalModuleEntity(moduleItem, component, socketIndex);
+			BaseVehicleModule moduleForItem = vehicle.GetModuleForItem(moduleItem);
+			if ((Object)(object)moduleForItem == (Object)null)
+			{
+				vehicle.CreatePhysicalModuleEntity(moduleItem, component, socketIndex);
+			}
 		}
 		moduleItem.OnDirty += OnModuleItemChanged;
 	}

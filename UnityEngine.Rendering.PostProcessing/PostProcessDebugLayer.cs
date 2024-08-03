@@ -9,7 +9,7 @@ public sealed class PostProcessDebugLayer
 	[Serializable]
 	public class OverlaySettings
 	{
-		public bool linearDepth;
+		public bool linearDepth = false;
 
 		[Range(0f, 16f)]
 		public float motionColorIntensity = 4f;
@@ -17,7 +17,7 @@ public sealed class PostProcessDebugLayer
 		[Range(4f, 128f)]
 		public int motionGridSize = 64;
 
-		public ColorBlindnessType colorBlindnessType;
+		public ColorBlindnessType colorBlindnessType = ColorBlindnessType.Deuteranopia;
 
 		[Range(0f, 1f)]
 		public float colorBlindnessStrength = 1f;
@@ -111,15 +111,15 @@ public sealed class PostProcessDebugLayer
 
 	public void PushDebugOverlay(CommandBuffer cmd, RenderTargetIdentifier source, PropertySheet sheet, int pass)
 	{
-		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008d: Expected O, but got Unknown
-		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0089: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009f: Expected O, but got Unknown
 		if ((Object)(object)debugOverlayTarget == (Object)null || !debugOverlayTarget.IsCreated() || ((Texture)debugOverlayTarget).width != frameWidth || ((Texture)debugOverlayTarget).height != frameHeight)
 		{
 			RuntimeUtilities.Destroy((Object)(object)debugOverlayTarget);
@@ -139,26 +139,31 @@ public sealed class PostProcessDebugLayer
 
 	internal DepthTextureMode GetCameraFlags()
 	{
-		if (debugOverlay != DebugOverlay.Depth)
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		if (debugOverlay == DebugOverlay.Depth)
 		{
-			if (debugOverlay != DebugOverlay.Normals)
-			{
-				if (debugOverlay != DebugOverlay.MotionVectors)
-				{
-					return (DepthTextureMode)0;
-				}
-				return (DepthTextureMode)5;
-			}
+			return (DepthTextureMode)1;
+		}
+		if (debugOverlay == DebugOverlay.Normals)
+		{
 			return (DepthTextureMode)2;
 		}
-		return (DepthTextureMode)1;
+		if (debugOverlay == DebugOverlay.MotionVectors)
+		{
+			return (DepthTextureMode)5;
+		}
+		return (DepthTextureMode)0;
 	}
 
 	internal void RenderMonitors(PostProcessRenderContext context)
 	{
-		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bd: Unknown result type (might be due to invalid IL or missing references)
 		bool flag = false;
 		bool flag2 = false;
 		foreach (KeyValuePair<MonitorType, Monitor> monitor in m_Monitors)
@@ -195,16 +200,16 @@ public sealed class PostProcessDebugLayer
 
 	internal void RenderSpecialOverlays(PostProcessRenderContext context)
 	{
-		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ae: Invalid comparison between Unknown and I4
-		//IL_0121: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0133: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_016d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01d8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c1: Invalid comparison between Unknown and I4
+		//IL_014a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00dd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_020d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0220: Unknown result type (might be due to invalid IL or missing references)
 		if (debugOverlay == DebugOverlay.Depth)
 		{
 			PropertySheet propertySheet = context.propertySheets.Get(context.resources.shaders.debugOverlays);

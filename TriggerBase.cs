@@ -5,6 +5,7 @@ using ConVar;
 using Facepunch;
 using Rust;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 public class TriggerBase : BaseMonoBehaviour
 {
@@ -15,10 +16,6 @@ public class TriggerBase : BaseMonoBehaviour
 
 	[NonSerialized]
 	public HashSet<BaseEntity> entityContents;
-
-	public Action<BaseNetworkable> OnEntityEnterTrigger;
-
-	public Action<BaseNetworkable> OnEntityLeaveTrigger;
 
 	public bool HasAnyContents => !contents.IsNullOrEmpty();
 
@@ -56,7 +53,6 @@ public class TriggerBase : BaseMonoBehaviour
 				entityContents = new HashSet<BaseEntity>();
 			}
 			entityContents.Add(ent);
-			OnEntityEnterTrigger?.Invoke(ent);
 		}
 	}
 
@@ -65,7 +61,6 @@ public class TriggerBase : BaseMonoBehaviour
 		if (entityContents != null)
 		{
 			entityContents.Remove(ent);
-			OnEntityLeaveTrigger?.Invoke(ent);
 		}
 	}
 
@@ -115,10 +110,10 @@ public class TriggerBase : BaseMonoBehaviour
 
 	internal void RemoveInvalidEntities()
 	{
-		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
 		if (entityContents.IsNullOrEmpty())
 		{
 			return;
@@ -171,10 +166,10 @@ public class TriggerBase : BaseMonoBehaviour
 
 	internal bool CheckEntity(BaseEntity ent)
 	{
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)ent == (Object)null)
 		{
 			return true;
@@ -286,7 +281,9 @@ public class TriggerBase : BaseMonoBehaviour
 		GameObject val = InterestedInObject(((Component)collider).gameObject);
 		if (!((Object)(object)val == (Object)null))
 		{
+			Profiler.BeginSample("TriggerBase.OnTriggerExit");
 			OnTriggerExit(val);
+			Profiler.EndSample();
 			if (Debugging.checktriggers)
 			{
 				RemoveInvalidEntities();
@@ -296,14 +293,22 @@ public class TriggerBase : BaseMonoBehaviour
 
 	private void OnTriggerExit(GameObject targetObj)
 	{
-		if (contents != null && contents.Contains(targetObj))
+		if (contents == null)
 		{
-			contents.Remove(targetObj);
-			OnObjectRemoved(targetObj);
-			if (contents == null || contents.Count == 0)
-			{
-				OnEmpty();
-			}
+			return;
 		}
+		Profiler.BeginSample("TriggerBase.OnTriggerExit");
+		if (!contents.Contains(targetObj))
+		{
+			Profiler.EndSample();
+			return;
+		}
+		contents.Remove(targetObj);
+		OnObjectRemoved(targetObj);
+		if (contents == null || contents.Count == 0)
+		{
+			OnEmpty();
+		}
+		Profiler.EndSample();
 	}
 }

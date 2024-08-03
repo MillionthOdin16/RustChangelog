@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using ConVar;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 public class SteamStatistics
 {
@@ -30,7 +31,9 @@ public class SteamStatistics
 	{
 		if (PlatformService.Instance.IsValid)
 		{
+			Profiler.BeginSample("PlayerStats.Save");
 			PlatformService.Instance.SavePlayerStats(player.userID);
+			Profiler.EndSample();
 		}
 	}
 

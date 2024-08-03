@@ -14,13 +14,13 @@ public class BuoyancyPoint : MonoBehaviour
 	public bool doSplashEffects = true;
 
 	[NonSerialized]
-	public float randomOffset;
+	public float randomOffset = 0f;
 
 	[NonSerialized]
-	public bool wasSubmergedLastFrame;
+	public bool wasSubmergedLastFrame = false;
 
 	[NonSerialized]
-	public float nexSplashTime;
+	public float nexSplashTime = 0f;
 
 	private static readonly Color gizmoColour = new Color(1f, 0f, 0f, 0.25f);
 
@@ -31,8 +31,8 @@ public class BuoyancyPoint : MonoBehaviour
 
 	public void OnDrawGizmos()
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
 		Gizmos.color = gizmoColour;
 		Gizmos.DrawSphere(((Component)this).transform.position, size * 0.5f);
 	}

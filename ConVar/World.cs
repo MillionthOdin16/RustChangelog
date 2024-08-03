@@ -14,20 +14,14 @@ public class World : ConsoleSystem
 	[ClientVar]
 	public static bool streaming = true;
 
-	[ServerVar]
-	public static string configString = string.Empty;
-
-	[ServerVar]
-	public static string configFile = string.Empty;
-
 	[ClientVar]
 	[ServerVar]
 	public static void monuments(Arg arg)
 	{
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0013: Expected O, but got Unknown
-		//IL_0093: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Expected O, but got Unknown
+		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
 		if (!Object.op_Implicit((Object)(object)TerrainMeta.Path))
 		{
 			return;
@@ -94,9 +88,9 @@ public class World : ConsoleSystem
 
 	private static void RenderMapLayerToFile(Arg arg, string name, MapLayer layer)
 	{
-		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0058: Expected O, but got Unknown
-		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005d: Expected O, but got Unknown
+		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
 		try
 		{
 			MapLayerRenderer orCreate = MapLayerRenderer.GetOrCreate();

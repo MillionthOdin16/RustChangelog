@@ -28,7 +28,7 @@ public class VehicleModuleTaxi : VehicleModuleStorage
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_KickPassengers "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_KickPassengers "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_KickPassengers", 0);
 				try
@@ -47,7 +47,7 @@ public class VehicleModuleTaxi : VehicleModuleStorage
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -59,7 +59,7 @@ public class VehicleModuleTaxi : VehicleModuleStorage
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -84,12 +84,12 @@ public class VehicleModuleTaxi : VehicleModuleStorage
 
 	private bool CanKickPassengers(BasePlayer player)
 	{
-		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
 		if (!base.IsOnAVehicle)
 		{
 			return false;
@@ -107,11 +107,7 @@ public class VehicleModuleTaxi : VehicleModuleStorage
 			return false;
 		}
 		Vector3 val = KickButtonPos - ((Component)player).transform.position;
-		if (Vector3.Dot(val, ((Component)player).transform.forward) < 0f)
-		{
-			return ((Vector3)(ref val)).sqrMagnitude < 4f;
-		}
-		return false;
+		return Vector3.Dot(val, ((Component)player).transform.forward) < 0f && ((Vector3)(ref val)).sqrMagnitude < 4f;
 	}
 
 	[RPC_Server]

@@ -60,8 +60,7 @@ public class Wearable : MonoBehaviour, IItemSetup, IPrefabPreProcess
 		LeftFoot = 0x20000,
 		RightFoot = 0x40000,
 		Mouth = 0x80000,
-		Eyes = 0x100000,
-		Back = 0x200000
+		Eyes = 0x100000
 	}
 
 	[Serializable]
@@ -94,19 +93,17 @@ public class Wearable : MonoBehaviour, IItemSetup, IPrefabPreProcess
 	[InspectorFlags]
 	public OccupationSlots occupationOver;
 
-	public bool IsBackpack;
+	public bool showCensorshipCube = false;
 
-	public bool showCensorshipCube;
+	public bool showCensorshipCubeBreasts = false;
 
-	public bool showCensorshipCubeBreasts;
-
-	public bool forceHideCensorshipBreasts;
+	public bool forceHideCensorshipBreasts = false;
 
 	public string followBone;
 
-	public bool disableRigStripping;
+	public bool disableRigStripping = false;
 
-	public bool overrideDownLimit;
+	public bool overrideDownLimit = false;
 
 	public float downLimit = 70f;
 
@@ -140,9 +137,6 @@ public class Wearable : MonoBehaviour, IItemSetup, IPrefabPreProcess
 	[HideInInspector]
 	public List<ComponentInfo> componentInfos = new List<ComponentInfo>();
 
-	[HideInInspector]
-	public List<WearableNotify> notifies = new List<WearableNotify>();
-
 	public bool HideInEyesView;
 
 	[Header("First Person Legs")]
@@ -151,10 +145,10 @@ public class Wearable : MonoBehaviour, IItemSetup, IPrefabPreProcess
 
 	[Tooltip("Use this if the clothing item clips into the player view. It'll push the chest legs model backwards.")]
 	[Range(0f, 5f)]
-	public float ExtraLeanBack;
+	public float ExtraLeanBack = 0f;
 
 	[Tooltip("Enable this to check for BoneRetargets which need to be preserved in first person view")]
-	public bool PreserveBones;
+	public bool PreserveBones = false;
 
 	public Renderer[] RenderersLod0;
 
@@ -167,6 +161,8 @@ public class Wearable : MonoBehaviour, IItemSetup, IPrefabPreProcess
 	public Renderer[] RenderersLod4;
 
 	public Renderer[] SkipInFirstPersonLegs;
+
+	public WearableNotify[] Notifies;
 
 	private static LOD[] emptyLOD = (LOD[])(object)new LOD[1];
 
@@ -198,7 +194,6 @@ public class Wearable : MonoBehaviour, IItemSetup, IPrefabPreProcess
 		((Component)this).GetComponentsInChildren<SkinnedMeshRenderer>(true, skinnedRenderers);
 		((Component)this).GetComponentsInChildren<SkeletonSkin>(true, skeletonSkins);
 		((Component)this).GetComponentsInChildren<ComponentInfo>(true, componentInfos);
-		((Component)this).GetComponentsInChildren<WearableNotify>(true, notifies);
 		RenderersLod0 = renderers.Where((Renderer x) => ((Object)((Component)x).gameObject).name.EndsWith("0")).ToArray();
 		RenderersLod1 = renderers.Where((Renderer x) => ((Object)((Component)x).gameObject).name.EndsWith("1")).ToArray();
 		RenderersLod2 = renderers.Where((Renderer x) => ((Object)((Component)x).gameObject).name.EndsWith("2")).ToArray();

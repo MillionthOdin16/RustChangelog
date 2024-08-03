@@ -6,7 +6,7 @@ namespace ConVar;
 public class Craft : ConsoleSystem
 {
 	[ServerVar]
-	public static bool instant;
+	public static bool instant = false;
 
 	[ServerUserVar]
 	public static void add(Arg args)

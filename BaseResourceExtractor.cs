@@ -4,13 +4,13 @@ using UnityEngine;
 
 public class BaseResourceExtractor : BaseCombatEntity
 {
-	public bool canExtractLiquid;
+	public bool canExtractLiquid = false;
 
 	public bool canExtractSolid = true;
 
 	public override void ServerInit()
 	{
-		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
 		base.ServerInit();
 		if (base.isClient)
 		{

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using ConVar;
 using Facepunch;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 public class GroundWatch : BaseMonoBehaviour, IServerComponent
 {
@@ -15,13 +16,13 @@ public class GroundWatch : BaseMonoBehaviour, IServerComponent
 	[Header("Whitelist")]
 	public BaseEntity[] whitelist;
 
-	private int fails;
+	private int fails = 0;
 
 	private void OnDrawGizmosSelected()
 	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
 		Gizmos.matrix = ((Component)this).transform.localToWorldMatrix;
 		Gizmos.color = Color.green;
 		Gizmos.DrawSphere(groundPosition, radius);
@@ -29,11 +30,11 @@ public class GroundWatch : BaseMonoBehaviour, IServerComponent
 
 	public static void PhysicsChanged(GameObject obj)
 	{
-		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)obj == (Object)null)
 		{
 			return;
@@ -52,7 +53,9 @@ public class GroundWatch : BaseMonoBehaviour, IServerComponent
 		{
 			if (!item.IsDestroyed && !item.isClient && !(item is BuildingBlock))
 			{
+				Profiler.BeginSample("BroadcastMessage OnPhysicsNeighbourChanged");
 				((Component)item).BroadcastMessage("OnPhysicsNeighbourChanged", (SendMessageOptions)1);
+				Profiler.EndSample();
 			}
 		}
 		Pool.FreeList<BaseEntity>(ref list);
@@ -60,14 +63,16 @@ public class GroundWatch : BaseMonoBehaviour, IServerComponent
 
 	public static void PhysicsChanged(Vector3 origin, float radius, int layerMask)
 	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
 		List<BaseEntity> list = Pool.GetList<BaseEntity>();
 		Vis.Entities(origin, radius, list, layerMask, (QueryTriggerInteraction)2);
 		foreach (BaseEntity item in list)
 		{
 			if (!item.IsDestroyed && !item.isClient && !(item is BuildingBlock))
 			{
+				Profiler.BeginSample("BroadcastMessage OnPhysicsNeighbourChanged - Deployables");
 				((Component)item).BroadcastMessage("OnPhysicsNeighbourChanged", (SendMessageOptions)1);
+				Profiler.EndSample();
 			}
 		}
 		Pool.FreeList<BaseEntity>(ref list);
@@ -103,11 +108,11 @@ public class GroundWatch : BaseMonoBehaviour, IServerComponent
 
 	private bool OnGround()
 	{
-		//IL_00df: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0132: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0137: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0144: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00be: Unknown result type (might be due to invalid IL or missing references)
 		BaseEntity component = ((Component)this).GetComponent<BaseEntity>();
 		if (Object.op_Implicit((Object)(object)component))
 		{
@@ -119,12 +124,12 @@ public class GroundWatch : BaseMonoBehaviour, IServerComponent
 			if ((bool)construction)
 			{
 				Socket_Base[] allSockets = construction.allSockets;
-				for (int i = 0; i < allSockets.Length; i++)
+				foreach (Socket_Base socket_Base in allSockets)
 				{
-					SocketMod[] socketMods = allSockets[i].socketMods;
-					for (int j = 0; j < socketMods.Length; j++)
+					SocketMod[] socketMods = socket_Base.socketMods;
+					foreach (SocketMod socketMod in socketMods)
 					{
-						SocketMod_AreaCheck socketMod_AreaCheck = socketMods[j] as SocketMod_AreaCheck;
+						SocketMod_AreaCheck socketMod_AreaCheck = socketMod as SocketMod_AreaCheck;
 						if ((bool)socketMod_AreaCheck && socketMod_AreaCheck.wantsInside && !socketMod_AreaCheck.DoCheck(((Component)component).transform.position, ((Component)component).transform.rotation, component))
 						{
 							if (Physics.groundwatchdebug)
@@ -165,11 +170,12 @@ public class GroundWatch : BaseMonoBehaviour, IServerComponent
 			}
 			DecayEntity decayEntity = component as DecayEntity;
 			DecayEntity decayEntity2 = baseEntity as DecayEntity;
-			if (!Object.op_Implicit((Object)(object)decayEntity) || decayEntity.buildingID == 0 || !Object.op_Implicit((Object)(object)decayEntity2) || decayEntity2.buildingID == 0 || decayEntity.buildingID == decayEntity2.buildingID)
+			if (Object.op_Implicit((Object)(object)decayEntity) && decayEntity.buildingID != 0 && Object.op_Implicit((Object)(object)decayEntity2) && decayEntity2.buildingID != 0 && decayEntity.buildingID != decayEntity2.buildingID)
 			{
-				Pool.FreeList<Collider>(ref list);
-				return true;
+				continue;
 			}
+			Pool.FreeList<Collider>(ref list);
+			return true;
 		}
 		if (Physics.groundwatchdebug)
 		{

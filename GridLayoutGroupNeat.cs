@@ -5,8 +5,8 @@ public class GridLayoutGroupNeat : GridLayoutGroup
 {
 	private float IdealCellWidth(float cellSize)
 	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
 		Rect rect = ((LayoutGroup)this).rectTransform.rect;
 		float num = ((Rect)(ref rect)).x + (float)(((LayoutGroup)this).padding.left + ((LayoutGroup)this).padding.right) * 0.5f;
 		float num2 = Mathf.Floor(num / cellSize);
@@ -15,11 +15,11 @@ public class GridLayoutGroupNeat : GridLayoutGroup
 
 	public override void SetLayoutHorizontal()
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
 		Vector2 cellSize = base.m_CellSize;
 		base.m_CellSize.x = IdealCellWidth(cellSize.x);
 		((GridLayoutGroup)this).SetLayoutHorizontal();
@@ -28,11 +28,11 @@ public class GridLayoutGroupNeat : GridLayoutGroup
 
 	public override void SetLayoutVertical()
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
 		Vector2 cellSize = base.m_CellSize;
 		base.m_CellSize.x = IdealCellWidth(cellSize.x);
 		((GridLayoutGroup)this).SetLayoutVertical();

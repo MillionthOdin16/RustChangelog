@@ -36,7 +36,7 @@ public class VendingMachineScreen : MonoBehaviour
 
 	public Renderer light2;
 
-	public float nextImageTime;
+	public float nextImageTime = 0f;
 
-	public int currentImageIndex;
+	public int currentImageIndex = 0;
 }

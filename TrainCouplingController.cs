@@ -16,17 +16,7 @@ public class TrainCouplingController
 	[ServerVar(Help = "Maximum difference in velocity for train cars to couple")]
 	public static float max_couple_speed = 9f;
 
-	public bool IsCoupled
-	{
-		get
-		{
-			if (!IsFrontCoupled)
-			{
-				return IsRearCoupled;
-			}
-			return true;
-		}
-	}
+	public bool IsCoupled => IsFrontCoupled || IsRearCoupled;
 
 	public bool IsFrontCoupled => owner.HasFlag(BaseEntity.Flags.Reserved2);
 
@@ -45,25 +35,21 @@ public class TrainCouplingController
 
 	public bool IsCoupledTo(TrainCar them)
 	{
-		if (!frontCoupling.IsCoupledTo(them))
-		{
-			return rearCoupling.IsCoupledTo(them);
-		}
-		return true;
+		return frontCoupling.IsCoupledTo(them) || rearCoupling.IsCoupledTo(them);
 	}
 
 	public bool TryCouple(TrainCar them, TriggerTrainCollisions.Location ourLocation)
 	{
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00dd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ed: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0109: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0114: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0119: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0135: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0145: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0171: Unknown result type (might be due to invalid IL or missing references)
+		//IL_017c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0181: Unknown result type (might be due to invalid IL or missing references)
 		TrainCoupling trainCoupling = ((ourLocation == TriggerTrainCollisions.Location.Front) ? frontCoupling : rearCoupling);
 		if (!trainCoupling.isValid)
 		{
@@ -82,14 +68,15 @@ public class TrainCouplingController
 		{
 			return false;
 		}
-		bool num2 = num < 90f;
-		TrainCoupling trainCoupling2 = ((!num2) ? ((ourLocation == TriggerTrainCollisions.Location.Front) ? them.coupling.frontCoupling : them.coupling.rearCoupling) : ((ourLocation == TriggerTrainCollisions.Location.Front) ? them.coupling.rearCoupling : them.coupling.frontCoupling));
-		float num3 = them.GetTrackSpeed();
-		if (!num2)
+		bool flag = num < 90f;
+		TrainCoupling trainCoupling2 = ((!flag) ? ((ourLocation == TriggerTrainCollisions.Location.Front) ? them.coupling.frontCoupling : them.coupling.rearCoupling) : ((ourLocation == TriggerTrainCollisions.Location.Front) ? them.coupling.rearCoupling : them.coupling.frontCoupling));
+		float num2 = them.GetTrackSpeed();
+		if (!flag)
 		{
-			num3 = 0f - num3;
+			num2 = 0f - num2;
 		}
-		if (Mathf.Abs(num3 - owner.GetTrackSpeed()) > max_couple_speed)
+		float num3 = Mathf.Abs(num2 - owner.GetTrackSpeed());
+		if (num3 > max_couple_speed)
 		{
 			trainCoupling.timeSinceCouplingBlock = TimeSince.op_Implicit(0f);
 			trainCoupling2.timeSinceCouplingBlock = TimeSince.op_Implicit(0f);
@@ -99,7 +86,8 @@ public class TrainCouplingController
 		{
 			return false;
 		}
-		if (Vector3.SqrMagnitude(trainCoupling.couplingPoint.position - trainCoupling2.couplingPoint.position) > 0.5f)
+		float num4 = Vector3.SqrMagnitude(trainCoupling.couplingPoint.position - trainCoupling2.couplingPoint.position);
+		if (num4 > 0.5f)
 		{
 			return false;
 		}

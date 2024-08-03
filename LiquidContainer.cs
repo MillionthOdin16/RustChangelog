@@ -5,14 +5,15 @@ using Facepunch;
 using Network;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.Profiling;
 
 public class LiquidContainer : ContainerIOEntity
 {
 	public ItemDefinition defaultLiquid;
 
-	public int startingAmount;
+	public int startingAmount = 0;
 
-	public bool autofillOutputs;
+	public bool autofillOutputs = false;
 
 	public float autofillTickRate = 2f;
 
@@ -22,7 +23,7 @@ public class LiquidContainer : ContainerIOEntity
 
 	public ItemDefinition[] ValidItems;
 
-	private int currentDrainAmount;
+	private int currentDrainAmount = 0;
 
 	private HashSet<IOEntity> connectedList = new HashSet<IOEntity>();
 
@@ -30,33 +31,23 @@ public class LiquidContainer : ContainerIOEntity
 
 	private const int maxPushTargets = 3;
 
-	private IOEntity considerConnectedTo;
+	private IOEntity considerConnectedTo = null;
 
-	private Action updateDrainAmountAction;
+	private Action updateDrainAmountAction = null;
 
-	private Action updatePushLiquidTargetsAction;
+	private Action updatePushLiquidTargetsAction = null;
 
-	private Action pushLiquidAction;
+	private Action pushLiquidAction = null;
 
-	private Action deductFuelAction;
+	private Action deductFuelAction = null;
 
 	private TimeUntil waterTransferStartTime;
 
-	private float lastOutputDrainUpdate;
+	private float lastOutputDrainUpdate = 0f;
 
 	public override bool IsGravitySource => true;
 
-	protected override bool DisregardGravityRestrictionsOnLiquid
-	{
-		get
-		{
-			if (!HasFlag(Flags.Reserved8))
-			{
-				return base.DisregardGravityRestrictionsOnLiquid;
-			}
-			return true;
-		}
-	}
+	protected override bool DisregardGravityRestrictionsOnLiquid => HasFlag(Flags.Reserved8) || base.DisregardGravityRestrictionsOnLiquid;
 
 	public override bool BlockFluidDraining => true;
 
@@ -70,7 +61,7 @@ public class LiquidContainer : ContainerIOEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SVDrink "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SVDrink "));
 				}
 				TimeWarning val2 = TimeWarning.New("SVDrink", 0);
 				try
@@ -89,7 +80,7 @@ public class LiquidContainer : ContainerIOEntity
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -101,7 +92,7 @@ public class LiquidContainer : ContainerIOEntity
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -145,9 +136,9 @@ public class LiquidContainer : ContainerIOEntity
 			return true;
 		}
 		ItemDefinition[] validItems = ValidItems;
-		for (int i = 0; i < validItems.Length; i++)
+		foreach (ItemDefinition itemDefinition in validItems)
 		{
-			if ((Object)(object)validItems[i] == (Object)(object)item.info)
+			if ((Object)(object)itemDefinition == (Object)(object)item.info)
 			{
 				return true;
 			}
@@ -187,8 +178,8 @@ public class LiquidContainer : ContainerIOEntity
 
 	public override void OnItemAddedOrRemoved(Item item, bool added)
 	{
-		//IL_00d8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00dd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0108: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010d: Unknown result type (might be due to invalid IL or missing references)
 		base.OnItemAddedOrRemoved(item, added);
 		UpdateOnFlag();
 		MarkDirtyForceUpdateOutputs();
@@ -238,17 +229,13 @@ public class LiquidContainer : ContainerIOEntity
 
 	public override int CalculateCurrentEnergy(int inputAmount, int inputSlot)
 	{
-		if (!HasLiquidItem())
-		{
-			return base.CalculateCurrentEnergy(inputAmount, inputSlot);
-		}
-		return GetCurrentEnergy();
+		return HasLiquidItem() ? GetCurrentEnergy() : base.CalculateCurrentEnergy(inputAmount, inputSlot);
 	}
 
 	private void UpdateDrainAmount()
 	{
-		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
 		int amount = 0;
 		Item liquidItem = GetLiquidItem();
 		if (liquidItem != null)
@@ -275,9 +262,9 @@ public class LiquidContainer : ContainerIOEntity
 
 	private void CalculateDrain(IOEntity ent, Vector3 fromSlotWorld, int depth, ref int amount, IOEntity lastEntity, ItemDefinition waterType)
 	{
-		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ec: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f1: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)ent == (Object)(object)this || depth <= 0 || (Object)(object)ent == (Object)null || (Object)(object)lastEntity == (Object)null || ent is LiquidContainer)
 		{
 			return;
@@ -365,11 +352,7 @@ public class LiquidContainer : ContainerIOEntity
 
 	public int GetLiquidCount()
 	{
-		if (!HasLiquidItem())
-		{
-			return 0;
-		}
-		return GetLiquidItem().amount;
+		return HasLiquidItem() ? GetLiquidItem().amount : 0;
 	}
 
 	[RPC_Server]
@@ -383,11 +366,12 @@ public class LiquidContainer : ContainerIOEntity
 		foreach (Item item in base.inventory.itemList)
 		{
 			ItemModConsume component = ((Component)item.info).GetComponent<ItemModConsume>();
-			if (!((Object)(object)component == (Object)null) && component.CanDoAction(item, rpc.player))
+			if ((Object)(object)component == (Object)null || !component.CanDoAction(item, rpc.player))
 			{
-				component.DoAction(item, rpc.player);
-				break;
+				continue;
 			}
+			component.DoAction(item, rpc.player);
+			break;
 		}
 	}
 
@@ -427,7 +411,7 @@ public class LiquidContainer : ContainerIOEntity
 
 	private void PushLiquidThroughOutputs()
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
 		if (TimeUntil.op_Implicit(waterTransferStartTime) > 0f)
 		{
 			return;
@@ -480,19 +464,21 @@ public class LiquidContainer : ContainerIOEntity
 
 	private void CheckPushLiquid(IOEntity connected, Item ourFuel, IOEntity fromSource, int depth)
 	{
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ac: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0110: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0115: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0133: Unknown result type (might be due to invalid IL or missing references)
 		if (depth <= 0 || ourFuel.amount <= 0)
 		{
 			return;
 		}
+		Profiler.BeginSample("CheckPushLiquid.FindGravitySource");
 		Vector3 worldHandlePosition = Vector3.zero;
 		IOEntity iOEntity = connected.FindGravitySource(ref worldHandlePosition, IOEntity.backtracking * 2, ignoreSelf: true);
+		Profiler.EndSample();
 		if (((Object)(object)iOEntity != (Object)null && !connected.AllowLiquidPassthrough(iOEntity, worldHandlePosition)) || (Object)(object)connected == (Object)(object)this || ConsiderConnectedTo(connected))
 		{
 			return;
@@ -505,6 +491,7 @@ public class LiquidContainer : ContainerIOEntity
 		IOSlot[] array = connected.outputs;
 		foreach (IOSlot iOSlot in array)
 		{
+			Profiler.BeginSample("CheckPushLiquid.AllowPassthrough");
 			IOEntity iOEntity2 = iOSlot.connectedTo.Get();
 			Vector3 sourceWorldPosition = ((Component)connected).transform.TransformPoint(iOSlot.handlePosition);
 			if ((Object)(object)iOEntity2 != (Object)null && (Object)(object)iOEntity2 != (Object)(object)fromSource && iOEntity2.AllowLiquidPassthrough(connected, sourceWorldPosition))
@@ -512,9 +499,11 @@ public class LiquidContainer : ContainerIOEntity
 				CheckPushLiquid(iOEntity2, ourFuel, fromSource, depth - 1);
 				if (pushTargets.Count >= 3)
 				{
+					Profiler.EndSample();
 					break;
 				}
 			}
+			Profiler.EndSample();
 		}
 	}
 

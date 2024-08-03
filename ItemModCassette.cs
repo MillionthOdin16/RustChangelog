@@ -1,8 +1,8 @@
 public class ItemModCassette : ItemModAssociatedEntity<Cassette>
 {
-	public int noteSpriteIndex;
+	public int noteSpriteIndex = 0;
 
-	public PreloadedCassetteContent PreloadedContent;
+	public PreloadedCassetteContent PreloadedContent = null;
 
 	protected override bool AllowNullParenting => true;
 

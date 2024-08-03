@@ -5,9 +5,12 @@ using Network;
 using ProtoBuf;
 using Rust;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 public class PhoneController : EntityComponent<BaseEntity>
 {
+	private PhoneController activeCallTo = null;
+
 	public int PhoneNumber;
 
 	public string PhoneName;
@@ -18,21 +21,21 @@ public class PhoneController : EntityComponent<BaseEntity>
 
 	public bool RequirePower = true;
 
-	public bool RequireParent;
+	public bool RequireParent = false;
 
 	public float CallWaitingTime = 12f;
 
-	public bool AppendGridToName;
+	public bool AppendGridToName = false;
 
-	public bool IsMobile;
+	public bool IsMobile = false;
 
-	public bool CanSaveVoicemail;
+	public bool CanSaveVoicemail = false;
 
 	public GameObjectRef PhoneDialog;
 
-	public VoiceProcessor VProcessor;
+	public VoiceProcessor VProcessor = null;
 
-	public PreloadedCassetteContent PreloadedContent;
+	public PreloadedCassetteContent PreloadedContent = null;
 
 	public SoundDefinition DialToneSfx;
 
@@ -42,45 +45,38 @@ public class PhoneController : EntityComponent<BaseEntity>
 
 	public SoundDefinition CallIncomingWhileBusySfx;
 
-	public SoundDefinition PickupHandsetSfx;
+	public SoundDefinition PickupHandsetSfx = null;
 
-	public SoundDefinition PutDownHandsetSfx;
+	public SoundDefinition PutDownHandsetSfx = null;
 
-	public SoundDefinition FailedWrongNumber;
+	public SoundDefinition FailedWrongNumber = null;
 
-	public SoundDefinition FailedNoAnswer;
+	public SoundDefinition FailedNoAnswer = null;
 
-	public SoundDefinition FailedNetworkBusy;
+	public SoundDefinition FailedNetworkBusy = null;
 
-	public SoundDefinition FailedEngaged;
+	public SoundDefinition FailedEngaged = null;
 
-	public SoundDefinition FailedRemoteHangUp;
+	public SoundDefinition FailedRemoteHangUp = null;
 
-	public SoundDefinition FailedSelfHangUp;
+	public SoundDefinition FailedSelfHangUp = null;
 
-	public Light RingingLight;
+	public Light RingingLight = null;
 
 	public float RingingLightFrequency = 0.4f;
 
-	public AudioSource answeringMachineSound;
+	public AudioSource answeringMachineSound = null;
 
-	public EntityRef currentPlayerRef;
+	public EntityRef currentPlayerRef = default(EntityRef);
 
-	public List<VoicemailEntry> savedVoicemail;
+	public List<VoicemailEntry> savedVoicemail = null;
 
-	private PhoneController activeCallTo;
+	public Telephone.CallState serverState { get; set; } = Telephone.CallState.Idle;
 
-	public int MaxVoicemailSlots
-	{
-		get
-		{
-			if (!((Object)(object)cachedCassette != (Object)null))
-			{
-				return 0;
-			}
-			return cachedCassette.MaximumVoicemailSlots;
-		}
-	}
+
+	public uint AnsweringMessageId => (base.baseEntity is Telephone telephone) ? telephone.AnsweringMessageId : 0u;
+
+	public int MaxVoicemailSlots => ((Object)(object)cachedCassette != (Object)null) ? cachedCassette.MaximumVoicemailSlots : 0;
 
 	public BasePlayer currentPlayer
 	{
@@ -98,79 +94,20 @@ public class PhoneController : EntityComponent<BaseEntity>
 		}
 	}
 
-	private bool isServer
-	{
-		get
-		{
-			if ((Object)(object)base.baseEntity != (Object)null)
-			{
-				return base.baseEntity.isServer;
-			}
-			return false;
-		}
-	}
+	private bool isServer => (Object)(object)base.baseEntity != (Object)null && base.baseEntity.isServer;
 
 	public int lastDialedNumber { get; set; }
 
-	public PhoneDirectory savedNumbers { get; set; }
+	public PhoneDirectory savedNumbers { get; set; } = null;
+
 
 	public BaseEntity ParentEntity => base.baseEntity;
 
-	private Cassette cachedCassette
-	{
-		get
-		{
-			if (!((Object)(object)base.baseEntity != (Object)null) || !(base.baseEntity is Telephone telephone))
-			{
-				return null;
-			}
-			return telephone.cachedCassette;
-		}
-	}
-
-	public Telephone.CallState serverState { get; set; }
-
-	public uint AnsweringMessageId
-	{
-		get
-		{
-			if (!(base.baseEntity is Telephone telephone))
-			{
-				return 0u;
-			}
-			return telephone.AnsweringMessageId;
-		}
-	}
-
-	private bool IsPowered()
-	{
-		if ((Object)(object)base.baseEntity != (Object)null && base.baseEntity is IOEntity iOEntity)
-		{
-			return iOEntity.IsPowered();
-		}
-		return false;
-	}
-
-	public bool IsSavedContactValid(string contactName, int contactNumber)
-	{
-		if (contactName.Length <= 0 || contactName.Length > 20)
-		{
-			return false;
-		}
-		if (contactNumber < 10000000 || contactNumber >= 100000000)
-		{
-			return false;
-		}
-		return true;
-	}
-
-	public void OnFlagsChanged(BaseEntity.Flags old, BaseEntity.Flags next)
-	{
-	}
+	private Cassette cachedCassette => ((Object)(object)base.baseEntity != (Object)null && base.baseEntity is Telephone telephone) ? telephone.cachedCassette : null;
 
 	public void ServerInit()
 	{
-		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
 		if (PhoneNumber == 0 && !Application.isLoadingSave)
 		{
 			PhoneNumber = TelephoneManager.GetUnusedTelephoneNumber();
@@ -347,10 +284,10 @@ public class PhoneController : EntityComponent<BaseEntity>
 
 	public void ServerPlayAnsweringMessage(PhoneController fromPhone)
 	{
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0092: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
 		NetworkableId arg = default(NetworkableId);
 		uint num = 0u;
 		uint arg2 = 0u;
@@ -409,9 +346,8 @@ public class PhoneController : EntityComponent<BaseEntity>
 
 	public void BeginCall()
 	{
-		if (IsMobile && (Object)(object)activeCallTo != (Object)null && !activeCallTo.RequirePower)
+		if (!IsMobile || !((Object)(object)activeCallTo != (Object)null) || activeCallTo.RequirePower || (Object)(object)currentPlayer != (Object)null)
 		{
-			_ = (Object)(object)currentPlayer != (Object)null;
 		}
 		SetPhoneStateWithPlayer(Telephone.CallState.InProcess);
 		((FacepunchBehaviour)this).Invoke((Action)TimeOutCall, (float)TelephoneManager.MaxCallLength);
@@ -459,9 +395,9 @@ public class PhoneController : EntityComponent<BaseEntity>
 
 	public void OnReceivedDataFromConnectedPhone(byte[] data)
 	{
-		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
 		BaseEntity obj = base.baseEntity;
 		SendInfo sendInfo = default(SendInfo);
 		((SendInfo)(ref sendInfo))._002Ector(BaseNetworkable.GetConnectionsWithin(((Component)this).transform.position, 15f));
@@ -547,7 +483,8 @@ public class PhoneController : EntityComponent<BaseEntity>
 		if (!((Object)(object)msg.player != (Object)(object)currentPlayer))
 		{
 			uint number = msg.read.UInt32();
-			if (savedNumbers.entries.RemoveAll((DirectoryEntry p) => p.phoneNumber == number) > 0)
+			int num = savedNumbers.entries.RemoveAll((DirectoryEntry p) => p.phoneNumber == number);
+			if (num > 0)
 			{
 				base.baseEntity.SendNetworkUpdate();
 			}
@@ -561,16 +498,17 @@ public class PhoneController : EntityComponent<BaseEntity>
 
 	private static string PositionToGridCoord(Vector3 position)
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
-		Vector2 val = new Vector2(TerrainMeta.NormalizeX(position.x), TerrainMeta.NormalizeZ(position.z));
+		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		Vector2 val = default(Vector2);
+		((Vector2)(ref val))._002Ector(TerrainMeta.NormalizeX(position.x), TerrainMeta.NormalizeZ(position.z));
 		float num = TerrainMeta.Size.x / 1024f;
 		int num2 = 7;
 		Vector2 val2 = val * num * (float)num2;
@@ -593,8 +531,8 @@ public class PhoneController : EntityComponent<BaseEntity>
 
 	public void WatchForDisconnects()
 	{
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
 		bool flag = false;
 		if ((Object)(object)currentPlayer != (Object)null)
 		{
@@ -643,7 +581,9 @@ public class PhoneController : EntityComponent<BaseEntity>
 	{
 		if (!((Object)(object)msg.player == (Object)null))
 		{
+			Profiler.BeginSample("BytesWithSize");
 			byte[] data = msg.read.BytesWithSize(10485760u);
+			Profiler.EndSample();
 			PhoneController telephone = TelephoneManager.GetTelephone(msg.read.Int32());
 			if (!((Object)(object)telephone == (Object)null) && Cassette.IsOggValid(data, telephone.cachedCassette))
 			{
@@ -654,8 +594,8 @@ public class PhoneController : EntityComponent<BaseEntity>
 
 	public void SaveVoicemail(byte[] data, string playerName)
 	{
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0097: Unknown result type (might be due to invalid IL or missing references)
 		uint audioId = FileStorage.server.Store(data, FileStorage.Type.ogg, base.baseEntity.net.ID);
 		if (savedVoicemail == null)
 		{
@@ -687,7 +627,7 @@ public class PhoneController : EntityComponent<BaseEntity>
 
 	public void ServerDeleteVoicemail(BaseEntity.RPCMessage msg)
 	{
-		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
 		uint num = msg.read.UInt32();
 		for (int i = 0; i < savedVoicemail.Count; i++)
 		{
@@ -706,7 +646,7 @@ public class PhoneController : EntityComponent<BaseEntity>
 
 	public void DeleteAllVoicemail()
 	{
-		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
 		if (savedVoicemail == null)
 		{
 			return;
@@ -717,5 +657,27 @@ public class PhoneController : EntityComponent<BaseEntity>
 			FileStorage.server.Remove(item.audioId, FileStorage.Type.ogg, base.baseEntity.net.ID);
 		}
 		Pool.FreeList<VoicemailEntry>(ref savedVoicemail);
+	}
+
+	private bool IsPowered()
+	{
+		return (Object)(object)base.baseEntity != (Object)null && base.baseEntity is IOEntity iOEntity && iOEntity.IsPowered();
+	}
+
+	public bool IsSavedContactValid(string contactName, int contactNumber)
+	{
+		if (contactName.Length <= 0 || contactName.Length > 20)
+		{
+			return false;
+		}
+		if (contactNumber < 10000000 || contactNumber >= 100000000)
+		{
+			return false;
+		}
+		return true;
+	}
+
+	public void OnFlagsChanged(BaseEntity.Flags old, BaseEntity.Flags next)
+	{
 	}
 }

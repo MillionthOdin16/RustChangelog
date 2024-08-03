@@ -4,7 +4,7 @@ public class MicrophoneStandIOEntity : IOEntity, IAudioConnectionSource
 
 	public TriggerBase InstrumentTrigger;
 
-	public bool IsStatic;
+	public bool IsStatic = false;
 
 	public override int DesiredPower()
 	{

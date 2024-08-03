@@ -21,7 +21,7 @@ public class BaseArcadeGame : BaseMonoBehaviour
 
 	public ArcadeEntity[] entityManifest;
 
-	public bool clientside;
+	public bool clientside = false;
 
 	public bool clientsideInput = true;
 
@@ -29,7 +29,7 @@ public class BaseArcadeGame : BaseMonoBehaviour
 
 	public GameObject arcadeEntityPrefab;
 
-	public BaseArcadeMachine ownerMachine;
+	public BaseArcadeMachine ownerMachine = null;
 
 	public static int gameOffsetIndex = 0;
 

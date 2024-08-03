@@ -28,19 +28,19 @@ public class Climate : SingletonComponent<Climate>
 		public float ClearChance = 1f;
 
 		[Range(0f, 1f)]
-		public float DustChance;
+		public float DustChance = 0f;
 
 		[Range(0f, 1f)]
-		public float FogChance;
+		public float FogChance = 0f;
 
 		[Range(0f, 1f)]
-		public float OvercastChance;
+		public float OvercastChance = 0f;
 
 		[Range(0f, 1f)]
-		public float StormChance;
+		public float StormChance = 0f;
 
 		[Range(0f, 1f)]
-		public float RainChance;
+		public float RainChance = 0f;
 	}
 
 	public class Value4<T>
@@ -114,7 +114,7 @@ public class Climate : SingletonComponent<Climate>
 
 	public float FogDarknessDistance = 200f;
 
-	public bool DebugLUTBlending;
+	public bool DebugLUTBlending = false;
 
 	public WeatherParameters Weather;
 
@@ -302,8 +302,8 @@ public class Climate : SingletonComponent<Climate>
 
 	public static float GetRainbow(Vector3 position)
 	{
-		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
 		if (!Initialized())
 		{
 			return 0f;
@@ -327,17 +327,19 @@ public class Climate : SingletonComponent<Climate>
 		{
 			return rainbow * num;
 		}
-		if (SingletonComponent<Climate>.Instance.WeatherState.Rainbow <= 0f)
+		float rainbow2 = SingletonComponent<Climate>.Instance.WeatherState.Rainbow;
+		if (rainbow2 <= 0f)
 		{
 			return 0f;
 		}
-		if (SingletonComponent<Climate>.Instance.WeatherStateTarget.Rainbow > 0f)
+		float rainbow3 = SingletonComponent<Climate>.Instance.WeatherStateTarget.Rainbow;
+		if (rainbow3 > 0f)
 		{
 			return 0f;
 		}
-		float rainbow2 = SingletonComponent<Climate>.Instance.WeatherStatePrevious.Rainbow;
+		float rainbow4 = SingletonComponent<Climate>.Instance.WeatherStatePrevious.Rainbow;
 		float num2 = SeedRandom.Value(SingletonComponent<Climate>.Instance.WeatherSeedPrevious);
-		if (rainbow2 < num2)
+		if (rainbow4 < num2)
 		{
 			return 0f;
 		}
@@ -346,9 +348,9 @@ public class Climate : SingletonComponent<Climate>
 
 	public static float GetAurora(Vector3 position)
 	{
-		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
 		if (!Initialized())
 		{
 			return 0f;
@@ -366,17 +368,13 @@ public class Climate : SingletonComponent<Climate>
 		{
 			return 0f;
 		}
-		if (!Object.op_Implicit((Object)(object)TerrainMeta.BiomeMap))
-		{
-			return 0f;
-		}
-		return TerrainMeta.BiomeMap.GetBiome(position, 8);
+		return Object.op_Implicit((Object)(object)TerrainMeta.BiomeMap) ? TerrainMeta.BiomeMap.GetBiome(position, 8) : 0f;
 	}
 
 	public static float GetRain(Vector3 position)
 	{
-		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
 		if (!Initialized())
 		{
 			return 0f;
@@ -388,7 +386,7 @@ public class Climate : SingletonComponent<Climate>
 
 	public static float GetSnow(Vector3 position)
 	{
-		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
 		if (!Initialized())
 		{
 			return 0f;
@@ -399,7 +397,7 @@ public class Climate : SingletonComponent<Climate>
 
 	public static float GetTemperature(Vector3 position)
 	{
-		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
 		if (!Initialized())
 		{
 			return 15f;
@@ -478,9 +476,9 @@ public class Climate : SingletonComponent<Climate>
 
 	private float FindBlendParameters(Vector3 pos, out ClimateParameters src, out ClimateParameters dst)
 	{
-		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
 		if (climateLookup == null)
 		{
 			climateLookup = new ClimateParameters[4] { Arid, Temperate, Tundra, Arctic };

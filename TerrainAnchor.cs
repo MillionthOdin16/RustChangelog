@@ -5,19 +5,19 @@ public class TerrainAnchor : PrefabAttribute
 {
 	public float Extents = 1f;
 
-	public float Offset;
+	public float Offset = 0f;
 
-	public float Radius;
+	public float Radius = 0f;
 
 	public void Apply(out float height, out float min, out float max, Vector3 pos, Vector3 scale)
 	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
 		float num = Extents * scale.y;
 		float num2 = Offset * scale.y;
 		height = TerrainMeta.HeightMap.GetHeight(pos);

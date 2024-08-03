@@ -8,7 +8,7 @@ public class AnimalSkin : MonoBehaviour, IClientComponent
 
 	private Model model;
 
-	public bool dontRandomizeOnStart;
+	public bool dontRandomizeOnStart = false;
 
 	private void Start()
 	{

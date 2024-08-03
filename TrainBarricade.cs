@@ -53,7 +53,7 @@ public class TrainBarricade : BaseCombatEntity, ITrainCollidable, TrainTrackSpli
 
 	public override void ServerInit()
 	{
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
 		base.ServerInit();
 		if (TrainTrackSpline.TryFindTrackNear(((Component)this).transform.position, 3f, out var splineResult, out var distResult))
 		{
@@ -108,24 +108,26 @@ public class TrainBarricade : BaseCombatEntity, ITrainCollidable, TrainTrackSpli
 
 	private void PushForceTick()
 	{
-		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ac: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00be: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00ca: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00da: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00df: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ee: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ef: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00af: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00de: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00eb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fe: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0103: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0113: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0115: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0117: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)hitTrain == (Object)null || (Object)(object)hitTrainTrigger == (Object)null || hitTrain.IsDead() || hitTrain.IsDestroyed || IsDead())
 		{
 			ClearHitTrain();
@@ -139,17 +141,18 @@ public class TrainBarricade : BaseCombatEntity, ITrainCollidable, TrainTrackSpli
 			Vector3 val2 = ((hitTrainTrigger.location != 0) ? hitTrainTrigger.owner.GetRearOfTrainPos() : hitTrainTrigger.owner.GetFrontOfTrainPos());
 			Vector3 val3 = ((Component)this).transform.position + ((Bounds)(ref bounds)).ClosestPoint(val2 - ((Component)this).transform.position);
 			Debug.DrawRay(val3, Vector3.up, Color.red, 10f);
-			flag = Vector3.SqrMagnitude(val3 - val2) < 1f;
+			float num = Vector3.SqrMagnitude(val3 - val2);
+			flag = num < 1f;
 		}
 		if (flag)
 		{
-			float num = hitTrainTrigger.owner.completeTrain.TotalForces;
+			float num2 = hitTrainTrigger.owner.completeTrain.TotalForces;
 			if (hitTrainTrigger.location == TriggerTrainCollisions.Location.Rear)
 			{
-				num *= -1f;
+				num2 *= -1f;
 			}
-			num = Mathf.Max(0f, num);
-			Hurt(0.002f * num);
+			num2 = Mathf.Max(0f, num2);
+			Hurt(0.002f * num2);
 			if (IsDead())
 			{
 				hitTrain.completeTrain.FreeStaticCollision();

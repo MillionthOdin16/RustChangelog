@@ -36,10 +36,10 @@ public class Projectile : BaseMonoBehaviour
 
 	public float gravityModifier = 1f;
 
-	public float thickness;
+	public float thickness = 0f;
 
 	[Tooltip("This projectile will raycast for this many units, and then become a projectile. This is typically done for bullets.")]
-	public float initialDistance;
+	public float initialDistance = 0f;
 
 	[Header("Impact Rules")]
 	public bool remainInWorld;
@@ -73,9 +73,9 @@ public class Projectile : BaseMonoBehaviour
 	public List<DamageTypeEntry> damageTypes = new List<DamageTypeEntry>();
 
 	[Header("Rendering")]
-	public ScaleRenderer rendererToScale;
+	public ScaleRenderer rendererToScale = null;
 
-	public ScaleRenderer firstPersonRenderer;
+	public ScaleRenderer firstPersonRenderer = null;
 
 	public bool createDecals = true;
 
@@ -92,7 +92,7 @@ public class Projectile : BaseMonoBehaviour
 	public float closeFlybyDistance = 3f;
 
 	[Header("Tumble")]
-	public float tumbleSpeed;
+	public float tumbleSpeed = 0f;
 
 	public Vector3 tumbleAxis = Vector3.right;
 
@@ -135,13 +135,13 @@ public class Projectile : BaseMonoBehaviour
 	public Modifier modifier = Modifier.Default;
 
 	[NonSerialized]
-	public bool invisible;
+	public bool invisible = false;
 
-	private static uint _fleshMaterialID;
+	private static uint _fleshMaterialID = 0u;
 
-	private static uint _waterMaterialID;
+	private static uint _waterMaterialID = 0u;
 
-	private static uint cachedWaterString;
+	private static uint cachedWaterString = 0u;
 
 	public void CalculateDamage(HitInfo info, Modifier mod, float scale)
 	{
@@ -190,7 +190,7 @@ public class Projectile : BaseMonoBehaviour
 
 	public static bool ShouldStopProjectile(RaycastHit hit)
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
 		BaseEntity entity = hit.GetEntity();
 		if ((Object)(object)entity != (Object)null && !entity.ShouldBlockProjectiles())
 		{

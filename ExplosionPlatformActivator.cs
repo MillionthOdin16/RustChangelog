@@ -4,7 +4,7 @@ public class ExplosionPlatformActivator : MonoBehaviour
 {
 	public GameObject Effect;
 
-	public float TimeDelay;
+	public float TimeDelay = 0f;
 
 	public float DefaultRepeatTime = 5f;
 

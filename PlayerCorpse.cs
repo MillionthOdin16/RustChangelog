@@ -1,6 +1,7 @@
 using Facepunch;
 using ProtoBuf;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 public class PlayerCorpse : LootableCorpse
 {
@@ -17,7 +18,7 @@ public class PlayerCorpse : LootableCorpse
 
 	public override bool OnStartBeingLooted(BasePlayer baseEntity)
 	{
-		if ((baseEntity.InSafeZone() || InSafeZone()) && baseEntity.userID != playerSteamID)
+		if (baseEntity.InSafeZone() && baseEntity.userID != playerSteamID)
 		{
 			return false;
 		}
@@ -51,6 +52,7 @@ public class PlayerCorpse : LootableCorpse
 	public override void Save(SaveInfo info)
 	{
 		base.Save(info);
+		Profiler.BeginSample("PlayerCorpse.Save");
 		if (info.msg.lootableCorpse != null)
 		{
 			info.msg.lootableCorpse.underwearSkin = underwearSkin;
@@ -60,6 +62,7 @@ public class PlayerCorpse : LootableCorpse
 			info.msg.storageBox = Pool.Get<StorageBox>();
 			info.msg.storageBox.contents = containers[1].Save();
 		}
+		Profiler.EndSample();
 	}
 
 	public override string Categorize()

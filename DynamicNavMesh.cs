@@ -9,7 +9,7 @@ using UnityEngine.AI;
 
 public class DynamicNavMesh : SingletonComponent<DynamicNavMesh>, IServerComponent
 {
-	public int NavMeshAgentTypeIndex;
+	public int NavMeshAgentTypeIndex = 0;
 
 	[Tooltip("The default area associated with the NavMeshAgent index.")]
 	public string DefaultAreaName = "Walkable";
@@ -29,13 +29,13 @@ public class DynamicNavMesh : SingletonComponent<DynamicNavMesh>, IServerCompone
 	public NavMeshCollectGeometry NavMeshCollectGeometry;
 
 	[ServerVar]
-	public static bool use_baked_terrain_mesh;
+	public static bool use_baked_terrain_mesh = false;
 
 	private List<NavMeshBuildSource> sources;
 
 	private AsyncOperation BuildingOperation;
 
-	private bool HasBuildOperationStarted;
+	private bool HasBuildOperationStarted = false;
 
 	private Stopwatch BuildTimer = new Stopwatch();
 
@@ -57,10 +57,10 @@ public class DynamicNavMesh : SingletonComponent<DynamicNavMesh>, IServerCompone
 
 	private void OnEnable()
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002a: Expected O, but got Unknown
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Expected O, but got Unknown
 		NavMeshBuildSettings settingsByIndex = NavMesh.GetSettingsByIndex(NavMeshAgentTypeIndex);
 		agentTypeId = ((NavMeshBuildSettings)(ref settingsByIndex)).agentTypeID;
 		NavMeshData = new NavMeshData(agentTypeId);
@@ -81,10 +81,10 @@ public class DynamicNavMesh : SingletonComponent<DynamicNavMesh>, IServerCompone
 	[ContextMenu("Update Nav Mesh")]
 	public void UpdateNavMeshAsync()
 	{
-		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
 		if (!HasBuildOperationStarted && !AiManager.nav_disable)
 		{
 			float realtimeSinceStartup = Time.realtimeSinceStartup;
@@ -113,14 +113,14 @@ public class DynamicNavMesh : SingletonComponent<DynamicNavMesh>, IServerCompone
 		HasBuildOperationStarted = false;
 		((Bounds)(ref Bounds)).size = TerrainMeta.Size;
 		NavMesh.pathfindingIterationsPerFrame = AiManager.pathfindingIterationsPerFrame;
-		IEnumerator enumerator = NavMeshTools.CollectSourcesAsync(Bounds, LayerMask.op_Implicit(LayerMask), NavMeshCollectGeometry, defaultArea, use_baked_terrain_mesh, AsyncTerrainNavMeshBakeCellSize, sources, AppendModifierVolumes, UpdateNavMeshAsync, null);
+		IEnumerator collectSourcesAsync = NavMeshTools.CollectSourcesAsync(Bounds, LayerMask.op_Implicit(LayerMask), NavMeshCollectGeometry, defaultArea, use_baked_terrain_mesh, AsyncTerrainNavMeshBakeCellSize, sources, AppendModifierVolumes, UpdateNavMeshAsync, null);
 		if (AiManager.nav_wait)
 		{
-			yield return enumerator;
+			yield return collectSourcesAsync;
 		}
 		else
 		{
-			((MonoBehaviour)this).StartCoroutine(enumerator);
+			((MonoBehaviour)this).StartCoroutine(collectSourcesAsync);
 		}
 		if (!AiManager.nav_wait)
 		{
@@ -134,11 +134,11 @@ public class DynamicNavMesh : SingletonComponent<DynamicNavMesh>, IServerCompone
 		}
 		while (BuildingOperation != null)
 		{
-			int num = (int)(BuildingOperation.progress * 100f);
-			if (lastPct != num)
+			int pctDone = (int)(BuildingOperation.progress * 100f);
+			if (lastPct != pctDone)
 			{
-				Debug.LogFormat("{0}%", new object[1] { num });
-				lastPct = num;
+				Debug.LogFormat("{0}%", new object[1] { pctDone });
+				lastPct = pctDone;
 			}
 			yield return CoroutineEx.waitForSecondsRealtime(0.25f);
 			FinishBuildingNavmesh();
@@ -147,38 +147,39 @@ public class DynamicNavMesh : SingletonComponent<DynamicNavMesh>, IServerCompone
 
 	private void AppendModifierVolumes(List<NavMeshBuildSource> sources)
 	{
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ee: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0100: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0117: Unknown result type (might be due to invalid IL or missing references)
+		List<NavMeshModifierVolume> activeModifiers = NavMeshModifierVolume.activeModifiers;
 		Vector3 size = default(Vector3);
-		foreach (NavMeshModifierVolume activeModifier in NavMeshModifierVolume.activeModifiers)
+		foreach (NavMeshModifierVolume item2 in activeModifiers)
 		{
-			if ((LayerMask.op_Implicit(LayerMask) & (1 << ((Component)activeModifier).gameObject.layer)) != 0 && activeModifier.AffectsAgentType(agentTypeId))
+			if ((LayerMask.op_Implicit(LayerMask) & (1 << ((Component)item2).gameObject.layer)) != 0 && item2.AffectsAgentType(agentTypeId))
 			{
-				Vector3 val = ((Component)activeModifier).transform.TransformPoint(activeModifier.center);
-				Vector3 lossyScale = ((Component)activeModifier).transform.lossyScale;
-				((Vector3)(ref size))._002Ector(activeModifier.size.x * Mathf.Abs(lossyScale.x), activeModifier.size.y * Mathf.Abs(lossyScale.y), activeModifier.size.z * Mathf.Abs(lossyScale.z));
+				Vector3 val = ((Component)item2).transform.TransformPoint(item2.center);
+				Vector3 lossyScale = ((Component)item2).transform.lossyScale;
+				((Vector3)(ref size))._002Ector(item2.size.x * Mathf.Abs(lossyScale.x), item2.size.y * Mathf.Abs(lossyScale.y), item2.size.z * Mathf.Abs(lossyScale.z));
 				NavMeshBuildSource item = default(NavMeshBuildSource);
 				((NavMeshBuildSource)(ref item)).shape = (NavMeshBuildSourceShape)5;
-				((NavMeshBuildSource)(ref item)).transform = Matrix4x4.TRS(val, ((Component)activeModifier).transform.rotation, Vector3.one);
+				((NavMeshBuildSource)(ref item)).transform = Matrix4x4.TRS(val, ((Component)item2).transform.rotation, Vector3.one);
 				((NavMeshBuildSource)(ref item)).size = size;
-				((NavMeshBuildSource)(ref item)).area = activeModifier.area;
+				((NavMeshBuildSource)(ref item)).area = item2.area;
 				sources.Add(item);
 			}
 		}
@@ -186,8 +187,8 @@ public class DynamicNavMesh : SingletonComponent<DynamicNavMesh>, IServerCompone
 
 	public void FinishBuildingNavmesh()
 	{
-		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
 		if (BuildingOperation != null && BuildingOperation.isDone)
 		{
 			if (!((NavMeshDataInstance)(ref NavMeshDataInstance)).valid)

@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class TweakUI : SingletonComponent<TweakUI>
 {
-	public static bool isOpen;
+	public static bool isOpen = false;
 
 	private void Update()
 	{
@@ -24,7 +24,7 @@ public class TweakUI : SingletonComponent<TweakUI>
 
 	public void SetVisible(bool b)
 	{
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
 		if (b)
 		{
 			isOpen = true;

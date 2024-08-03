@@ -7,6 +7,7 @@ using Network;
 using ProtoBuf;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.Profiling;
 
 public class MixingTable : StorageContainer
 {
@@ -14,19 +15,19 @@ public class MixingTable : StorageContainer
 
 	public RecipeList Recipes;
 
-	public bool OnlyAcceptValidIngredients;
+	public bool OnlyAcceptValidIngredients = false;
 
-	private float lastTickTimestamp;
+	private float lastTickTimestamp = 0f;
 
 	private List<Item> inventoryItems = new List<Item>();
 
 	private const float mixTickInterval = 1f;
 
-	private Recipe currentRecipe;
+	private Recipe currentRecipe = null;
 
-	private int currentQuantity;
+	private int currentQuantity = 0;
 
-	protected ItemDefinition currentProductionItem;
+	protected ItemDefinition currentProductionItem = null;
 
 	public float RemainingMixTime { get; private set; }
 
@@ -44,7 +45,7 @@ public class MixingTable : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SVSwitch "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SVSwitch "));
 				}
 				TimeWarning val2 = TimeWarning.New("SVSwitch", 0);
 				try
@@ -63,7 +64,7 @@ public class MixingTable : StorageContainer
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -75,7 +76,7 @@ public class MixingTable : StorageContainer
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -121,11 +122,7 @@ public class MixingTable : StorageContainer
 		{
 			item = item.contents.itemList[0];
 		}
-		if (!((Object)(object)item.info == (Object)(object)currentProductionItem))
-		{
-			return RecipeDictionary.ValidIngredientForARecipe(item, Recipes);
-		}
-		return true;
+		return (Object)(object)item.info == (Object)(object)currentProductionItem || RecipeDictionary.ValidIngredientForARecipe(item, Recipes);
 	}
 
 	protected override void OnInventoryDirty()
@@ -254,10 +251,10 @@ public class MixingTable : StorageContainer
 
 	private void ReturnExcessItems(List<Item> orderedContainerItems, BasePlayer player)
 	{
-		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0104: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0116: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011c: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)player == (Object)null || (Object)(object)currentRecipe == (Object)null || orderedContainerItems == null || orderedContainerItems.Count != currentRecipe.Ingredients.Length)
 		{
 			return;
@@ -284,10 +281,10 @@ public class MixingTable : StorageContainer
 
 	protected virtual void CreateRecipeItems(Recipe recipe, int quantity)
 	{
-		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d5: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)recipe == (Object)null || (Object)(object)recipe.ProducedItem == (Object)null)
 		{
 			return;
@@ -367,6 +364,7 @@ public class MixingTable : StorageContainer
 		{
 			return null;
 		}
+		Profiler.BeginSample("MixingTable.GetOrderedInventoryItems");
 		inventoryItems.Clear();
 		bool flag = false;
 		for (int i = 0; i < container.capacity; i++)
@@ -388,6 +386,7 @@ public class MixingTable : StorageContainer
 			}
 			inventoryItems.Add(item);
 		}
+		Profiler.EndSample();
 		return inventoryItems;
 	}
 }

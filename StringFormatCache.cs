@@ -22,20 +22,12 @@ public static class StringFormatCache
 
 		public override bool Equals(object other)
 		{
-			if (!(other is Key1))
-			{
-				return false;
-			}
-			return Equals((Key1)other);
+			return other is Key1 && Equals((Key1)other);
 		}
 
 		public bool Equals(Key1 other)
 		{
-			if (format == other.format)
-			{
-				return value1 == other.value1;
-			}
-			return false;
+			return format == other.format && value1 == other.value1;
 		}
 	}
 
@@ -61,20 +53,12 @@ public static class StringFormatCache
 
 		public override bool Equals(object other)
 		{
-			if (!(other is Key2))
-			{
-				return false;
-			}
-			return Equals((Key2)other);
+			return other is Key2 && Equals((Key2)other);
 		}
 
 		public bool Equals(Key2 other)
 		{
-			if (format == other.format && value1 == other.value1)
-			{
-				return value2 == other.value2;
-			}
-			return false;
+			return format == other.format && value1 == other.value1 && value2 == other.value2;
 		}
 	}
 
@@ -103,20 +87,12 @@ public static class StringFormatCache
 
 		public override bool Equals(object other)
 		{
-			if (!(other is Key3))
-			{
-				return false;
-			}
-			return Equals((Key3)other);
+			return other is Key3 && Equals((Key3)other);
 		}
 
 		public bool Equals(Key3 other)
 		{
-			if (format == other.format && value1 == other.value1 && value2 == other.value2)
-			{
-				return value3 == other.value3;
-			}
-			return false;
+			return format == other.format && value1 == other.value1 && value2 == other.value2 && value3 == other.value3;
 		}
 	}
 
@@ -148,20 +124,12 @@ public static class StringFormatCache
 
 		public override bool Equals(object other)
 		{
-			if (!(other is Key4))
-			{
-				return false;
-			}
-			return Equals((Key4)other);
+			return other is Key4 && Equals((Key4)other);
 		}
 
 		public bool Equals(Key4 other)
 		{
-			if (format == other.format && value1 == other.value1 && value2 == other.value2 && value3 == other.value3)
-			{
-				return value4 == other.value4;
-			}
-			return false;
+			return format == other.format && value1 == other.value1 && value2 == other.value2 && value3 == other.value3 && value4 == other.value4;
 		}
 	}
 

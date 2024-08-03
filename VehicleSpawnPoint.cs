@@ -5,11 +5,15 @@ public class VehicleSpawnPoint : SpaceCheckingSpawnPoint
 	public override void ObjectSpawned(SpawnPointInstance instance)
 	{
 		base.ObjectSpawned(instance);
-		AddStartingFuel(((Component)instance).gameObject.ToBaseEntity() as VehicleSpawner.IVehicleSpawnUser);
+		BaseEntity baseEntity = ((Component)instance).gameObject.ToBaseEntity();
+		AddStartingFuel(baseEntity as BaseVehicle);
 	}
 
-	public static void AddStartingFuel(VehicleSpawner.IVehicleSpawnUser vehicle)
+	public static void AddStartingFuel(BaseVehicle vehicle)
 	{
-		vehicle?.GetFuelSystem()?.AddStartingFuel(vehicle.StartingFuelUnits());
+		if (!((Object)(object)vehicle == (Object)null))
+		{
+			vehicle.GetFuelSystem()?.AddStartingFuel(vehicle.StartingFuelUnits());
+		}
 	}
 }

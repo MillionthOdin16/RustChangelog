@@ -12,7 +12,7 @@ public class Workbench : StorageContainer
 
 	public const int experimentSlot = 1;
 
-	public bool Static;
+	public bool Static = false;
 
 	public int Workbenchlevel;
 
@@ -26,13 +26,13 @@ public class Workbench : StorageContainer
 
 	public TechTreeData techTree;
 
-	public bool supportsIndustrialCrafter;
+	public bool supportsIndustrialCrafter = false;
 
 	public static ItemDefinition blueprintBaseDef;
 
-	private ItemDefinition pendingBlueprint;
+	private ItemDefinition pendingBlueprint = null;
 
-	private bool creatingBlueprint;
+	private bool creatingBlueprint = false;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -44,7 +44,7 @@ public class Workbench : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_BeginExperiment "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_BeginExperiment "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_BeginExperiment", 0);
 				try
@@ -63,7 +63,7 @@ public class Workbench : StorageContainer
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -75,7 +75,7 @@ public class Workbench : StorageContainer
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -95,12 +95,12 @@ public class Workbench : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_TechTreeUnlock "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_TechTreeUnlock "));
 				}
-				TimeWarning val2 = TimeWarning.New("RPC_TechTreeUnlock", 0);
+				TimeWarning val5 = TimeWarning.New("RPC_TechTreeUnlock", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					TimeWarning val6 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsVisible.Test(4127240744u, "RPC_TechTreeUnlock", this, player, 3f))
@@ -110,11 +110,11 @@ public class Workbench : StorageContainer
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val6)?.Dispose();
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val7 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -126,7 +126,7 @@ public class Workbench : StorageContainer
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val7)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -137,7 +137,7 @@ public class Workbench : StorageContainer
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val5)?.Dispose();
 				}
 				return true;
 			}
@@ -174,11 +174,7 @@ public class Workbench : StorageContainer
 
 	public override bool CanPickup(BasePlayer player)
 	{
-		if (children.Count == 0)
-		{
-			return base.CanPickup(player);
-		}
-		return false;
+		return children.Count == 0 && base.CanPickup(player);
 	}
 
 	[RPC_Server]
@@ -186,11 +182,11 @@ public class Workbench : StorageContainer
 	public void RPC_TechTreeUnlock(RPCMessage msg)
 	{
 		BasePlayer player = msg.player;
-		int id = msg.read.Int32();
-		TechTreeData.NodeInstance byID = techTree.GetByID(id);
+		int num = msg.read.Int32();
+		TechTreeData.NodeInstance byID = techTree.GetByID(num);
 		if (byID == null)
 		{
-			Debug.Log((object)("Node for unlock not found :" + id));
+			Debug.Log((object)("Node for unlock not found :" + num));
 		}
 		else
 		{
@@ -206,20 +202,21 @@ public class Workbench : StorageContainer
 					if (byID2 != null && (Object)(object)byID2.itemDef != (Object)null)
 					{
 						player.blueprints.Unlock(byID2.itemDef);
-						Analytics.Azure.OnBlueprintLearned(player, byID2.itemDef, "techtree", 0, this);
+						Analytics.Azure.OnBlueprintLearned(player, byID2.itemDef, "techtree", this);
 					}
 				}
 				Debug.Log((object)("Player unlocked group :" + byID.groupName));
 			}
 			else if ((Object)(object)byID.itemDef != (Object)null)
 			{
-				int num = ResearchTable.ScrapForResearch(byID.itemDef, ResearchTable.ResearchType.TechTree);
+				int num2 = ResearchTable.ScrapForResearch(byID.itemDef, ResearchTable.ResearchType.TechTree);
 				int itemid = ItemManager.FindItemDefinition("scrap").itemid;
-				if (player.inventory.GetAmount(itemid) >= num)
+				int amount = player.inventory.GetAmount(itemid);
+				if (amount >= num2)
 				{
-					player.inventory.Take(null, itemid, num);
+					player.inventory.Take(null, itemid, num2);
 					player.blueprints.Unlock(byID.itemDef);
-					Analytics.Azure.OnBlueprintLearned(player, byID.itemDef, "techtree", num, this);
+					Analytics.Azure.OnBlueprintLearned(player, byID.itemDef, "techtree", this);
 				}
 			}
 		}
@@ -238,12 +235,12 @@ public class Workbench : StorageContainer
 	[RPC_Server.IsVisible(3f)]
 	public void RPC_BeginExperiment(RPCMessage msg)
 	{
-		//IL_01a0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0161: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0168: Unknown result type (might be due to invalid IL or missing references)
-		//IL_016e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_021a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_021f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01cd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01da: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01e0: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer player = msg.player;
 		if ((Object)(object)player == (Object)null || IsWorking())
 		{
@@ -318,12 +315,12 @@ public class Workbench : StorageContainer
 
 	public void ExperimentComplete()
 	{
-		//IL_008b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ac: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e6: Unknown result type (might be due to invalid IL or missing references)
 		Item experimentResourceItem = GetExperimentResourceItem();
 		int scrapForExperiment = GetScrapForExperiment();
 		if ((Object)(object)pendingBlueprint == (Object)null)

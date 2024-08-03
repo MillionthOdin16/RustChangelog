@@ -15,11 +15,6 @@ public class VirtualScroll : MonoBehaviour
 		void SetItemData(int i, GameObject obj);
 	}
 
-	public interface IVisualUpdate
-	{
-		void OnVisualUpdate(int i, GameObject obj);
-	}
-
 	public int ItemHeight = 40;
 
 	public int ItemSpacing = 10;
@@ -92,19 +87,19 @@ public class VirtualScroll : MonoBehaviour
 
 	public void Rebuild()
 	{
-		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ac: Unknown result type (might be due to invalid IL or missing references)
 		if (dataSource == null)
 		{
 			return;
 		}
 		int itemCount = dataSource.GetItemCount();
-		object obj = (((Object)(object)OverrideContentRoot != (Object)null) ? ((object)OverrideContentRoot) : ((object)/*isinst with value type is only supported in some contexts*/));
-		((RectTransform)obj).SetSizeWithCurrentAnchors((Axis)1, (float)(BlockHeight * itemCount - ItemSpacing + Padding.top + Padding.bottom));
+		RectTransform val = (RectTransform)(((Object)(object)OverrideContentRoot != (Object)null) ? ((object)OverrideContentRoot) : ((object)/*isinst with value type is only supported in some contexts*/));
+		val.SetSizeWithCurrentAnchors((Axis)1, (float)(BlockHeight * itemCount - ItemSpacing + Padding.top + Padding.bottom));
 		Rect rect = ScrollRect.viewport.rect;
 		int num = Mathf.Max(2, Mathf.CeilToInt(((Rect)(ref rect)).height / (float)BlockHeight));
-		int num2 = Mathf.FloorToInt((((RectTransform)obj).anchoredPosition.y - (float)Padding.top) / (float)BlockHeight);
+		int num2 = Mathf.FloorToInt((val.anchoredPosition.y - (float)Padding.top) / (float)BlockHeight);
 		int num3 = num2 + num;
 		RecycleOutOfRange(num2, num3);
 		for (int i = num2; i <= num3; i++)
@@ -116,24 +111,13 @@ public class VirtualScroll : MonoBehaviour
 		}
 	}
 
-	public void Update()
-	{
-		if (!(dataSource is IVisualUpdate visualUpdate))
-		{
-			return;
-		}
-		foreach (KeyValuePair<int, GameObject> item in ActivePool)
-		{
-			visualUpdate.OnVisualUpdate(item.Key, item.Value);
-		}
-	}
-
 	private void RecycleOutOfRange(int startVisible, float endVisible)
 	{
 		int[] array = (from x in ActivePool.Keys
 			where x < startVisible || (float)x > endVisible
 			select (x)).ToArray();
-		foreach (int key in array)
+		int[] array2 = array;
+		foreach (int key in array2)
 		{
 			Recycle(key);
 		}
@@ -149,34 +133,34 @@ public class VirtualScroll : MonoBehaviour
 
 	private void BuildItem(int i)
 	{
-		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0106: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00de: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011f: Unknown result type (might be due to invalid IL or missing references)
 		if (i >= 0 && !ActivePool.ContainsKey(i))
 		{
 			GameObject item = GetItem();
 			item.SetActive(true);
 			dataSource.SetItemData(i, item);
 			Transform transform = item.transform;
-			Transform obj = ((transform is RectTransform) ? transform : null);
-			((RectTransform)obj).anchorMin = new Vector2(0f, 1f);
-			((RectTransform)obj).anchorMax = new Vector2(1f, 1f);
-			((RectTransform)obj).pivot = new Vector2(0.5f, 1f);
-			((RectTransform)obj).offsetMin = new Vector2(0f, 0f);
-			((RectTransform)obj).offsetMax = new Vector2(0f, (float)ItemHeight);
-			((RectTransform)obj).sizeDelta = new Vector2((float)((Padding.left + Padding.right) * -1), (float)ItemHeight);
-			((RectTransform)obj).anchoredPosition = new Vector2((float)(Padding.left - Padding.right) * 0.5f, (float)(-1 * (i * BlockHeight + Padding.top)));
+			RectTransform val = (RectTransform)(object)((transform is RectTransform) ? transform : null);
+			val.anchorMin = new Vector2(0f, 1f);
+			val.anchorMax = new Vector2(1f, 1f);
+			val.pivot = new Vector2(0.5f, 1f);
+			val.offsetMin = new Vector2(0f, 0f);
+			val.offsetMax = new Vector2(0f, (float)ItemHeight);
+			val.sizeDelta = new Vector2((float)((Padding.left + Padding.right) * -1), (float)ItemHeight);
+			val.anchoredPosition = new Vector2((float)(Padding.left - Padding.right) * 0.5f, (float)(-1 * (i * BlockHeight + Padding.top)));
 			ActivePool[i] = item;
 		}
 	}
 
 	private GameObject GetItem()
 	{
-		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
 		if (InactivePool.Count == 0)
 		{
 			GameObject val = Object.Instantiate<GameObject>(SourceObject);

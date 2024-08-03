@@ -5,10 +5,10 @@ using ConVar;
 using Epic.OnlineServices;
 using Epic.OnlineServices.AntiCheatCommon;
 using Epic.OnlineServices.AntiCheatServer;
-using Epic.OnlineServices.Connect;
 using Epic.OnlineServices.Reports;
 using Network;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 public static class EACServer
 {
@@ -24,29 +24,9 @@ public static class EACServer
 
 	private static uint clientHandleCounter = 0u;
 
-	private static bool CanEnableGameplayData
-	{
-		get
-		{
-			if (Server.official)
-			{
-				return Server.stats;
-			}
-			return false;
-		}
-	}
+	private static bool CanEnableGameplayData => Server.official && Server.stats;
 
-	private static bool CanSendAnalytics
-	{
-		get
-		{
-			if (CanEnableGameplayData)
-			{
-				return (Handle)(object)Interface != (Handle)null;
-			}
-			return false;
-		}
-	}
+	private static bool CanSendAnalytics => CanEnableGameplayData && (Handle)(object)Interface != (Handle)null;
 
 	private static bool CanSendReports => (Handle)(object)Reports != (Handle)null;
 
@@ -57,18 +37,21 @@ public static class EACServer
 
 	public static void Encrypt(Connection connection, ArraySegment<byte> src, ref ArraySegment<byte> dst)
 	{
-		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a9: Invalid comparison between Unknown and I4
+		//IL_00d4: Unknown result type (might be due to invalid IL or missing references)
 		uint count = (uint)dst.Count;
 		dst = new ArraySegment<byte>(dst.Array, dst.Offset, 0);
 		if (!((Handle)(object)Interface != (Handle)null))
 		{
 			return;
 		}
+		Profiler.BeginSample("EACServer.Encrypt");
 		IntPtr client = GetClient(connection);
 		if (client != IntPtr.Zero)
 		{
@@ -77,33 +60,39 @@ public static class EACServer
 			((ProtectMessageOptions)(ref val)).Data = src;
 			((ProtectMessageOptions)(ref val)).OutBufferSizeBytes = count;
 			ProtectMessageOptions val2 = val;
+			Profiler.BeginSample("Interface.ProtectMessage");
 			uint count2 = default(uint);
 			Result val3 = Interface.ProtectMessage(ref val2, dst, ref count2);
+			Profiler.EndSample();
 			if ((int)val3 == 0)
 			{
 				dst = new ArraySegment<byte>(dst.Array, dst.Offset, (int)count2);
 			}
 			else
 			{
-				Debug.LogWarning((object)("[EAC] ProtectMessage failed: " + ((object)(Result)(ref val3)).ToString()));
+				Debug.LogWarning((object)("[EAC] ProtectMessage failed: " + val3));
 			}
 		}
+		Profiler.EndSample();
 	}
 
 	public static void Decrypt(Connection connection, ArraySegment<byte> src, ref ArraySegment<byte> dst)
 	{
-		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a9: Invalid comparison between Unknown and I4
+		//IL_00d4: Unknown result type (might be due to invalid IL or missing references)
 		uint count = (uint)dst.Count;
 		dst = new ArraySegment<byte>(dst.Array, dst.Offset, 0);
 		if (!((Handle)(object)Interface != (Handle)null))
 		{
 			return;
 		}
+		Profiler.BeginSample("EACServer.Decrypt");
 		IntPtr client = GetClient(connection);
 		if (client != IntPtr.Zero)
 		{
@@ -112,17 +101,20 @@ public static class EACServer
 			((UnprotectMessageOptions)(ref val)).Data = src;
 			((UnprotectMessageOptions)(ref val)).OutBufferSizeBytes = count;
 			UnprotectMessageOptions val2 = val;
+			Profiler.BeginSample("Interface.UnprotectMessage");
 			uint count2 = default(uint);
 			Result val3 = Interface.UnprotectMessage(ref val2, dst, ref count2);
+			Profiler.EndSample();
 			if ((int)val3 == 0)
 			{
 				dst = new ArraySegment<byte>(dst.Array, dst.Offset, (int)count2);
 			}
 			else
 			{
-				Debug.LogWarning((object)("[EAC] UnprotectMessage failed: " + ((object)(Result)(ref val3)).ToString()));
+				Debug.LogWarning((object)("[EAC] UnprotectMessage failed: " + val3));
 			}
 		}
+		Profiler.EndSample();
 	}
 
 	private static IntPtr GetClient(Connection connection)
@@ -139,8 +131,8 @@ public static class EACServer
 
 	public static bool IsAuthenticated(Connection connection)
 	{
-		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0010: Invalid comparison between Unknown and I4
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Invalid comparison between Unknown and I4
 		connection2status.TryGetValue(connection, out var value);
 		return (int)value == 2;
 	}
@@ -159,64 +151,16 @@ public static class EACServer
 		connection2status[connection] = (AntiCheatCommonClientAuthStatus)2;
 	}
 
-	private static void OnVerifyIdToken(ref VerifyIdTokenCallbackInfo data)
-	{
-		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
-		if (!Server.anticheattoken)
-		{
-			Debug.LogWarning((object)"[EAC] Verify ID token skipped: server.anticheattoken == false");
-			return;
-		}
-		IntPtr client = (IntPtr)((VerifyIdTokenCallbackInfo)(ref data)).ClientData;
-		Connection connection = GetConnection(client);
-		if (connection == null)
-		{
-			Debug.LogError((object)("[EAC] Verify ID token for invalid client: " + client));
-			return;
-		}
-		if (connection.IsDevelopmentBuild())
-		{
-			Debug.LogWarning((object)("[EAC] Verify ID token skipped for unprotected client: " + ((object)connection).ToString()));
-			return;
-		}
-		if ((int)((VerifyIdTokenCallbackInfo)(ref data)).ResultCode != 0)
-		{
-			Result resultCode = ((VerifyIdTokenCallbackInfo)(ref data)).ResultCode;
-			string text = "Verify ID token " + ((object)(Result)(ref resultCode)).ToString();
-			Debug.Log((object)$"[EAC] Kicking {connection.userid} / {connection.username} ({text})");
-			connection.authStatus = "eactoken";
-			Net.sv.Kick(connection, "EAC: " + text, false);
-			return;
-		}
-		string text2 = ((object)((VerifyIdTokenCallbackInfo)(ref data)).AccountId).ToString();
-		string text3 = connection.userid.ToString();
-		if (text2 != text3)
-		{
-			string text4 = "Verify ID token account mismatch with " + text2 + " != " + text3;
-			Debug.Log((object)$"[EAC] Kicking {connection.userid} / {connection.username} ({text4})");
-			connection.authStatus = "eactoken";
-			Net.sv.Kick(connection, "EAC: " + text4, false);
-		}
-	}
-
 	private static void OnClientAuthStatusChanged(ref OnClientAuthStatusChangedCallbackInfo data)
 	{
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0040: Invalid comparison between Unknown and I4
-		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0079: Invalid comparison between Unknown and I4
-		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ca: Expected O, but got Unknown
+		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0046: Invalid comparison between Unknown and I4
+		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008b: Invalid comparison between Unknown and I4
+		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
 		TimeWarning val = TimeWarning.New("AntiCheatKickPlayer", 10);
 		try
 		{
@@ -238,11 +182,6 @@ public static class EACServer
 			else if ((int)((OnClientAuthStatusChangedCallbackInfo)(ref data)).ClientAuthStatus == 2)
 			{
 				OnAuthenticatedRemote(connection);
-				IdToken val4 = default(IdToken);
-				((IdToken)(ref val4)).ProductUserId = ProductUserId.FromString(Utf8String.op_Implicit(connection.anticheatId));
-				((IdToken)(ref val4)).JsonWebToken = Utf8String.op_Implicit(connection.anticheatToken);
-				IdToken val5 = val4;
-				EOS.VerifyIdToken(clientHandle, val5, new OnVerifyIdTokenCallback(OnVerifyIdToken));
 			}
 		}
 		finally
@@ -253,18 +192,20 @@ public static class EACServer
 
 	private static void OnClientActionRequired(ref OnClientActionRequiredCallbackInfo data)
 	{
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0040: Invalid comparison between Unknown and I4
-		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a3: Invalid comparison between Unknown and I4
-		//IL_00f5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fc: Invalid comparison between Unknown and I4
-		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ad: Invalid comparison between Unknown and I4
-		//IL_010c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0125: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004d: Invalid comparison between Unknown and I4
+		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b5: Invalid comparison between Unknown and I4
+		//IL_00b8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bf: Invalid comparison between Unknown and I4
+		//IL_0132: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0141: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0143: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0112: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0119: Invalid comparison between Unknown and I4
 		TimeWarning val = TimeWarning.New("OnClientActionRequired", 10);
 		try
 		{
@@ -273,34 +214,33 @@ public static class EACServer
 			if (connection == null)
 			{
 				Debug.LogError((object)("[EAC] Status update for invalid client: " + clientHandle));
+				return;
 			}
-			else
+			AntiCheatCommonClientAction clientAction = ((OnClientActionRequiredCallbackInfo)(ref data)).ClientAction;
+			if ((int)clientAction != 1)
 			{
-				if ((int)((OnClientActionRequiredCallbackInfo)(ref data)).ClientAction != 1)
-				{
-					return;
-				}
-				Utf8String actionReasonDetailsString = ((OnClientActionRequiredCallbackInfo)(ref data)).ActionReasonDetailsString;
-				Debug.Log((object)$"[EAC] Kicking {connection.userid} / {connection.username} ({actionReasonDetailsString})");
-				connection.authStatus = "eac";
-				Net.sv.Kick(connection, Utf8String.op_Implicit(Utf8String.op_Implicit("EAC: ") + actionReasonDetailsString), false);
-				if ((int)((OnClientActionRequiredCallbackInfo)(ref data)).ActionReasonCode == 10 || (int)((OnClientActionRequiredCallbackInfo)(ref data)).ActionReasonCode == 9)
-				{
-					connection.authStatus = "eacbanned";
-					ConsoleNetwork.BroadcastToAllClients("chat.add", 2, 0, "<color=#fff>SERVER</color> Kicking " + connection.username + " (banned by anticheat)");
-					if ((int)((OnClientActionRequiredCallbackInfo)(ref data)).ActionReasonCode == 10)
-					{
-						Entity.DeleteBy(connection.userid);
-					}
-				}
-				UnregisterClientOptions val2 = default(UnregisterClientOptions);
-				((UnregisterClientOptions)(ref val2)).ClientHandle = clientHandle;
-				UnregisterClientOptions val3 = val2;
-				Interface.UnregisterClient(ref val3);
-				client2connection.TryRemove((uint)(int)clientHandle, out var _);
-				connection2client.TryRemove(connection, out var _);
-				connection2status.TryRemove(connection, out var _);
+				return;
 			}
+			Utf8String actionReasonDetailsString = ((OnClientActionRequiredCallbackInfo)(ref data)).ActionReasonDetailsString;
+			Debug.Log((object)$"[EAC] Kicking {connection.userid} / {connection.username} ({actionReasonDetailsString})");
+			connection.authStatus = "eac";
+			Net.sv.Kick(connection, Utf8String.op_Implicit(Utf8String.op_Implicit("EAC: ") + actionReasonDetailsString), false);
+			if ((int)((OnClientActionRequiredCallbackInfo)(ref data)).ActionReasonCode == 10 || (int)((OnClientActionRequiredCallbackInfo)(ref data)).ActionReasonCode == 9)
+			{
+				connection.authStatus = "eacbanned";
+				ConsoleNetwork.BroadcastToAllClients("chat.add", 2, 0, "<color=#fff>SERVER</color> Kicking " + connection.username + " (banned by anticheat)");
+				if ((int)((OnClientActionRequiredCallbackInfo)(ref data)).ActionReasonCode == 10)
+				{
+					Entity.DeleteBy(connection.userid);
+				}
+			}
+			UnregisterClientOptions val2 = default(UnregisterClientOptions);
+			((UnregisterClientOptions)(ref val2)).ClientHandle = clientHandle;
+			UnregisterClientOptions val3 = val2;
+			Interface.UnregisterClient(ref val3);
+			client2connection.TryRemove((uint)(int)clientHandle, out var _);
+			connection2client.TryRemove(connection, out var _);
+			connection2status.TryRemove(connection, out var _);
 		}
 		finally
 		{
@@ -310,7 +250,7 @@ public static class EACServer
 
 	private static void SendToClient(ref OnMessageToClientCallbackInfo data)
 	{
-		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009d: Unknown result type (might be due to invalid IL or missing references)
 		IntPtr clientHandle = ((OnMessageToClientCallbackInfo)(ref data)).ClientHandle;
 		Connection connection = GetConnection(clientHandle);
 		if (connection == null)
@@ -318,38 +258,41 @@ public static class EACServer
 			Debug.LogError((object)("[EAC] Network packet for invalid client: " + clientHandle));
 			return;
 		}
-		NetWrite obj = ((BaseNetwork)Net.sv).StartWrite();
-		obj.PacketID((Type)22);
-		obj.UInt32((uint)((OnMessageToClientCallbackInfo)(ref data)).MessageData.Count);
-		((Stream)(object)obj).Write(((OnMessageToClientCallbackInfo)(ref data)).MessageData.Array, ((OnMessageToClientCallbackInfo)(ref data)).MessageData.Offset, ((OnMessageToClientCallbackInfo)(ref data)).MessageData.Count);
-		obj.Send(new SendInfo(connection));
+		Profiler.BeginSample("EAC.SendToClient");
+		NetWrite val = ((BaseNetwork)Net.sv).StartWrite();
+		val.PacketID((Type)22);
+		val.UInt32((uint)((OnMessageToClientCallbackInfo)(ref data)).MessageData.Count);
+		((Stream)(object)val).Write(((OnMessageToClientCallbackInfo)(ref data)).MessageData.Array, ((OnMessageToClientCallbackInfo)(ref data)).MessageData.Offset, ((OnMessageToClientCallbackInfo)(ref data)).MessageData.Count);
+		val.Send(new SendInfo(connection));
+		Profiler.EndSample();
 	}
 
 	public static void DoStartup()
 	{
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0089: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f0: Expected O, but got Unknown
-		//IL_0100: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010a: Expected O, but got Unknown
-		//IL_011a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0124: Expected O, but got Unknown
-		//IL_012c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0139: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0102: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010c: Expected O, but got Unknown
+		//IL_011c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0126: Expected O, but got Unknown
+		//IL_0136: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0140: Expected O, but got Unknown
+		//IL_0148: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0155: Unknown result type (might be due to invalid IL or missing references)
+		Profiler.BeginSample("EAC.DoStartup");
 		if (Server.secure && !Application.isEditor)
 		{
 			client2connection.Clear();
@@ -381,22 +324,26 @@ public static class EACServer
 			connection2client.Clear();
 			connection2status.Clear();
 		}
+		Profiler.EndSample();
 	}
 
 	public static void DoUpdate()
 	{
+		Profiler.BeginSample("EAC.DoUpdate");
 		if (Server.secure && !Application.isEditor)
 		{
 			EOS.Tick();
 		}
+		Profiler.EndSample();
 	}
 
 	public static void DoShutdown()
 	{
-		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
+		Profiler.BeginSample("EAC.DoShutdown");
 		if (Server.secure && !Application.isEditor)
 		{
 			client2connection.Clear();
@@ -417,14 +364,16 @@ public static class EACServer
 			connection2client.Clear();
 			connection2status.Clear();
 		}
+		Profiler.EndSample();
 	}
 
 	public static void OnLeaveGame(Connection connection)
 	{
-		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
+		Profiler.BeginSample("EAC.UnregisterClient");
 		AntiCheatCommonClientAuthStatus value3;
 		if (Server.secure && !Application.isEditor)
 		{
@@ -447,52 +396,48 @@ public static class EACServer
 		{
 			connection2status.TryRemove(connection, out value3);
 		}
+		Profiler.EndSample();
 	}
 
 	public static void OnJoinGame(Connection connection)
 	{
-		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00eb: Invalid comparison between Unknown and I4
-		//IL_0104: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0126: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0128: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0130: Unknown result type (might be due to invalid IL or missing references)
-		//IL_013d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0120: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0123: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0147: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0149: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0152: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015f: Unknown result type (might be due to invalid IL or missing references)
+		Profiler.BeginSample("EAC.RegisterClient");
 		if (Server.secure && !Application.isEditor)
 		{
-			if (!((Handle)(object)Interface != (Handle)null))
+			if ((Handle)(object)Interface != (Handle)null)
 			{
-				return;
+				IntPtr intPtr = GenerateCompatibilityClient();
+				if (intPtr == IntPtr.Zero)
+				{
+					Debug.LogError((object)("[EAC] GenerateCompatibilityClient returned invalid client: " + intPtr));
+					Profiler.EndSample();
+					return;
+				}
+				RegisterClientOptions val = default(RegisterClientOptions);
+				((RegisterClientOptions)(ref val)).ClientHandle = intPtr;
+				((RegisterClientOptions)(ref val)).AccountId = Utf8String.op_Implicit(connection.userid.ToString());
+				((RegisterClientOptions)(ref val)).IpAddress = Utf8String.op_Implicit(connection.IPAddressWithoutPort());
+				((RegisterClientOptions)(ref val)).ClientType = (AntiCheatCommonClientType)((connection.authLevel >= 3 && connection.os == "editor") ? 1 : 0);
+				((RegisterClientOptions)(ref val)).ClientPlatform = (AntiCheatCommonClientPlatform)((connection.os == "windows") ? 1 : ((connection.os == "linux") ? 3 : ((connection.os == "mac") ? 2 : 0)));
+				RegisterClientOptions val2 = val;
+				SetClientDetailsOptions val3 = default(SetClientDetailsOptions);
+				((SetClientDetailsOptions)(ref val3)).ClientHandle = intPtr;
+				((SetClientDetailsOptions)(ref val3)).ClientFlags = (AntiCheatCommonClientFlags)((connection.authLevel != 0) ? 1 : 0);
+				SetClientDetailsOptions val4 = val3;
+				Interface.RegisterClient(ref val2);
+				Interface.SetClientDetails(ref val4);
+				client2connection.TryAdd((uint)(int)intPtr, connection);
+				connection2client.TryAdd(connection, (uint)(int)intPtr);
+				connection2status.TryAdd(connection, (AntiCheatCommonClientAuthStatus)0);
 			}
-			IntPtr intPtr = GenerateCompatibilityClient();
-			if (intPtr == IntPtr.Zero)
-			{
-				Debug.LogError((object)("[EAC] GenerateCompatibilityClient returned invalid client: " + intPtr));
-				return;
-			}
-			RegisterClientOptions val = default(RegisterClientOptions);
-			((RegisterClientOptions)(ref val)).ClientHandle = intPtr;
-			((RegisterClientOptions)(ref val)).AccountId = Utf8String.op_Implicit(connection.userid.ToString());
-			((RegisterClientOptions)(ref val)).IpAddress = Utf8String.op_Implicit(connection.IPAddressWithoutPort());
-			((RegisterClientOptions)(ref val)).ClientType = (AntiCheatCommonClientType)(connection.IsDevelopmentBuild() ? 1 : 0);
-			((RegisterClientOptions)(ref val)).ClientPlatform = (AntiCheatCommonClientPlatform)((connection.os == "windows") ? 1 : ((connection.os == "linux") ? 3 : ((connection.os == "mac") ? 2 : 0)));
-			RegisterClientOptions val2 = val;
-			if ((int)((RegisterClientOptions)(ref val2)).ClientType == 1)
-			{
-				Debug.LogWarning((object)("[EAC] Joining game as unprotected client: " + ((object)connection).ToString()));
-			}
-			SetClientDetailsOptions val3 = default(SetClientDetailsOptions);
-			((SetClientDetailsOptions)(ref val3)).ClientHandle = intPtr;
-			((SetClientDetailsOptions)(ref val3)).ClientFlags = (AntiCheatCommonClientFlags)((connection.authLevel != 0) ? 1 : 0);
-			SetClientDetailsOptions val4 = val3;
-			Interface.RegisterClient(ref val2);
-			Interface.SetClientDetails(ref val4);
-			client2connection.TryAdd((uint)(int)intPtr, connection);
-			connection2client.TryAdd(connection, (uint)(int)intPtr);
-			connection2status.TryAdd(connection, (AntiCheatCommonClientAuthStatus)0);
 		}
 		else
 		{
@@ -500,14 +445,16 @@ public static class EACServer
 			OnAuthenticatedLocal(connection);
 			OnAuthenticatedRemote(connection);
 		}
+		Profiler.EndSample();
 	}
 
 	public static void OnStartLoading(Connection connection)
 	{
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		Profiler.BeginSample("EAC.SetClientNetworkState");
 		if ((Handle)(object)Interface != (Handle)null)
 		{
 			IntPtr client = GetClient(connection);
@@ -520,14 +467,16 @@ public static class EACServer
 				Interface.SetClientNetworkState(ref val2);
 			}
 		}
+		Profiler.EndSample();
 	}
 
 	public static void OnFinishLoading(Connection connection)
 	{
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		Profiler.BeginSample("EAC.SetClientNetworkState");
 		if ((Handle)(object)Interface != (Handle)null)
 		{
 			IntPtr client = GetClient(connection);
@@ -540,14 +489,15 @@ public static class EACServer
 				Interface.SetClientNetworkState(ref val2);
 			}
 		}
+		Profiler.EndSample();
 	}
 
 	public static void OnMessageReceived(Message message)
 	{
-		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
 		IntPtr client = GetClient(message.connection);
 		byte[] array = default(byte[]);
 		int count = default(int);
@@ -567,25 +517,25 @@ public static class EACServer
 
 	public static void LogPlayerUseWeapon(BasePlayer player, BaseProjectile weapon)
 	{
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0092: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0089: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
 		//IL_009f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ba: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00dc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0110: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0123: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ad: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ca: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ee: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0108: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0126: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013a: Unknown result type (might be due to invalid IL or missing references)
 		if (CanSendAnalytics && player.net.connection != null)
 		{
 			TimeWarning val = TimeWarning.New("EAC.LogPlayerShooting", 0);
@@ -622,8 +572,8 @@ public static class EACServer
 
 	public static void LogPlayerSpawn(BasePlayer player)
 	{
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
 		if (CanSendAnalytics && player.net.connection != null)
 		{
 			TimeWarning val = TimeWarning.New("EAC.LogPlayerSpawn", 0);
@@ -642,8 +592,8 @@ public static class EACServer
 
 	public static void LogPlayerDespawn(BasePlayer player)
 	{
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
 		if (CanSendAnalytics && player.net.connection != null)
 		{
 			TimeWarning val = TimeWarning.New("EAC.LogPlayerDespawn", 0);
@@ -662,42 +612,42 @@ public static class EACServer
 
 	public static void LogPlayerTakeDamage(BasePlayer player, HitInfo info)
 	{
-		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0191: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0196: Unknown result type (might be due to invalid IL or missing references)
-		//IL_019e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ab: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01bd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01cb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01d9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0104: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01cd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01da: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01e2: Unknown result type (might be due to invalid IL or missing references)
 		//IL_01e7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01f3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0203: Unknown result type (might be due to invalid IL or missing references)
-		//IL_020b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0219: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0227: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0235: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0241: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0251: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0259: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0267: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0275: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0281: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ef: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01fa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0202: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0211: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0220: Unknown result type (might be due to invalid IL or missing references)
+		//IL_022d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_023e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0246: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0255: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0264: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0273: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0280: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0291: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0299: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02a7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02b5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02c3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02cf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02a8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02b7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02c4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02d5: Unknown result type (might be due to invalid IL or missing references)
 		//IL_02dd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02ef: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02ec: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02fb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_030a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0317: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0326: Unknown result type (might be due to invalid IL or missing references)
+		//IL_033a: Unknown result type (might be due to invalid IL or missing references)
 		if (!CanSendAnalytics || !((Object)(object)info.Initiator != (Object)null) || !(info.Initiator is BasePlayer))
 		{
 			return;
@@ -782,37 +732,37 @@ public static class EACServer
 
 	public static void LogPlayerTick(BasePlayer player)
 	{
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00be: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0107: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0104: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0112: Unknown result type (might be due to invalid IL or missing references)
 		//IL_011e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0124: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0135: Unknown result type (might be due to invalid IL or missing references)
-		//IL_013b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0152: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0163: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0169: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0180: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0191: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0197: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0149: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0167: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0185: Unknown result type (might be due to invalid IL or missing references)
+		//IL_018b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ca: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01e2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01e8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_021b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0200: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0206: Unknown result type (might be due to invalid IL or missing references)
 		if (!CanSendAnalytics || player.net == null || player.net.connection == null)
 		{
 			return;
@@ -820,8 +770,13 @@ public static class EACServer
 		TimeWarning val = TimeWarning.New("EAC.LogPlayerTick", 0);
 		try
 		{
+			Profiler.BeginSample("GetPosition");
 			Vector3 position = player.eyes.position;
+			Profiler.EndSample();
+			Profiler.BeginSample("GetRotation");
 			Quaternion rotation = player.eyes.rotation;
+			Profiler.EndSample();
+			Profiler.BeginSample("playerState");
 			LogPlayerTickOptions val2 = default(LogPlayerTickOptions);
 			((LogPlayerTickOptions)(ref val2)).PlayerHandle = GetClient(player.net.connection);
 			Vec3f value = default(Vec3f);
@@ -864,6 +819,7 @@ public static class EACServer
 			{
 				((LogPlayerTickOptions)(ref val2)).PlayerMovementState = (AntiCheatCommonPlayerMovementState)(((LogPlayerTickOptions)(ref val2)).PlayerMovementState | 6);
 			}
+			Profiler.EndSample();
 			Interface.LogPlayerTick(ref val2);
 		}
 		finally
@@ -874,8 +830,8 @@ public static class EACServer
 
 	public static void LogPlayerRevive(BasePlayer source, BasePlayer target)
 	{
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
 		if (CanSendAnalytics && target.net.connection != null && (Object)(object)source != (Object)null && source.net.connection != null)
 		{
 			TimeWarning val = TimeWarning.New("EAC.LogPlayerRevive", 0);
@@ -895,10 +851,10 @@ public static class EACServer
 
 	public static void SendPlayerBehaviorReport(BasePlayer reporter, PlayerReportsCategory reportCategory, string reportedID, string reportText)
 	{
-		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
 		if (CanSendReports)
 		{
 			SendPlayerBehaviorReportOptions val = default(SendPlayerBehaviorReportOptions);
@@ -913,10 +869,10 @@ public static class EACServer
 
 	public static void SendPlayerBehaviorReport(PlayerReportsCategory reportCategory, string reportedID, string reportText)
 	{
-		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
 		if (CanSendReports)
 		{
 			SendPlayerBehaviorReportOptions val = default(SendPlayerBehaviorReportOptions);

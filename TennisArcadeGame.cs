@@ -24,15 +24,15 @@ public class TennisArcadeGame : BaseArcadeGame
 
 	public ArcadeEntity[] paddle2ScoreNodes;
 
-	public int paddle1Score;
+	public int paddle1Score = 0;
 
-	public int paddle2Score;
+	public int paddle2Score = 0;
 
 	public float sensitivity = 1f;
 
 	public ArcadeEntity logo;
 
-	public bool OnMainMenu;
+	public bool OnMainMenu = false;
 
-	public bool GameActive;
+	public bool GameActive = false;
 }

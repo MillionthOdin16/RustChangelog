@@ -9,9 +9,9 @@ public class ItemTextValue : MonoBehaviour
 
 	public Color good;
 
-	public bool negativestat;
+	public bool negativestat = false;
 
-	public bool asPercentage;
+	public bool asPercentage = false;
 
 	public bool useColors = true;
 
@@ -23,8 +23,8 @@ public class ItemTextValue : MonoBehaviour
 
 	public void SetValue(float val, int numDecimals = 0, string overrideText = "")
 	{
-		//IL_00ef: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0102: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fa: Unknown result type (might be due to invalid IL or missing references)
 		val *= multiplier;
 		text.text = ((overrideText == "") ? string.Format("{0}{1:n" + numDecimals + "}", (val > 0f && signed) ? "+" : "", val) : overrideText);
 		if (asPercentage)

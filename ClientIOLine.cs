@@ -11,11 +11,11 @@ public class ClientIOLine : BaseMonoBehaviour
 
 	public Material defaultMaterial;
 
-	public IOEntity.IOType lineType;
+	public IOEntity.IOType lineType = IOEntity.IOType.Electric;
 
 	public static List<ClientIOLine> _allLines = new List<ClientIOLine>();
 
-	public WireTool.WireColour colour;
+	public WireTool.WireColour colour = WireTool.WireColour.Default;
 
-	public IOEntity ownerIOEnt;
+	public IOEntity ownerIOEnt = null;
 }

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class GenerateRailMeshes : ProceduralComponent
@@ -6,59 +7,54 @@ public class GenerateRailMeshes : ProceduralComponent
 
 	public const bool SnapToTerrain = false;
 
-	public Mesh RailMesh;
+	public Mesh RailMesh = null;
 
-	public Mesh[] RailMeshes;
+	public Mesh[] RailMeshes = null;
 
-	public Material RailMaterial;
+	public Material RailMaterial = null;
 
-	public PhysicMaterial RailPhysicMaterial;
+	public PhysicMaterial RailPhysicMaterial = null;
 
 	public override bool RunOnCache => true;
 
 	public override void Process(uint seed)
 	{
-		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d3: Expected O, but got Unknown
-		//IL_00d3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00da: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b7: Expected O, but got Unknown
+		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
 		if (RailMeshes == null || RailMeshes.Length == 0)
 		{
 			RailMeshes = (Mesh[])(object)new Mesh[1] { RailMesh };
 		}
-		foreach (PathList rail in TerrainMeta.Path.Rails)
+		List<PathList> rails = TerrainMeta.Path.Rails;
+		foreach (PathList item in rails)
 		{
-			foreach (PathList.MeshObject item in rail.CreateMesh(RailMeshes, 0f, snapToTerrain: false, !rail.Path.Circular && !rail.Start, !rail.Path.Circular && !rail.End))
+			foreach (PathList.MeshObject item2 in item.CreateMesh(RailMeshes, 0f, snapToTerrain: false, !item.Path.Circular && !item.Start, !item.Path.Circular && !item.End))
 			{
 				GameObject val = new GameObject("Rail Mesh");
-				val.transform.position = item.Position;
+				val.transform.position = item2.Position;
 				val.tag = "Railway";
 				val.layer = 16;
-				GameObjectEx.SetHierarchyGroup(val, rail.Name);
+				val.SetHierarchyGroup(item.Name);
 				val.SetActive(false);
-				MeshCollider obj = val.AddComponent<MeshCollider>();
-				((Collider)obj).sharedMaterial = RailPhysicMaterial;
-				obj.sharedMesh = item.Meshes[0];
+				MeshCollider val2 = val.AddComponent<MeshCollider>();
+				((Collider)val2).sharedMaterial = RailPhysicMaterial;
+				val2.sharedMesh = item2.Meshes[0];
 				val.AddComponent<AddToHeightMap>();
 				val.SetActive(true);
 			}
-			AddTrackSpline(rail);
+			AddTrackSpline(item);
 		}
 	}
 
 	private void AddTrackSpline(PathList rail)
 	{
-		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bc: Unknown result type (might be due to invalid IL or missing references)
-		TrainTrackSpline trainTrackSpline = HierarchyUtil.GetRoot(rail.Name).AddComponent<TrainTrackSpline>();
+		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d6: Unknown result type (might be due to invalid IL or missing references)
+		GameObject root = HierarchyUtil.GetRoot(rail.Name);
+		TrainTrackSpline trainTrackSpline = root.AddComponent<TrainTrackSpline>();
 		trainTrackSpline.aboveGroundSpawn = rail.Hierarchy == 2;
 		trainTrackSpline.hierarchy = rail.Hierarchy;
 		if (trainTrackSpline.aboveGroundSpawn)

@@ -30,7 +30,7 @@ public class NGSS_Directional : MonoBehaviour
 	public float BANDING_NOISE_AMOUNT = 1f;
 
 	[Tooltip("Recommended values: Mobile = 16, Consoles = 25, Desktop Low = 32, Desktop High = 64")]
-	public SAMPLER_COUNT SAMPLERS_COUNT;
+	public SAMPLER_COUNT SAMPLERS_COUNT = SAMPLER_COUNT.SAMPLERS_16;
 
 	private void Update()
 	{

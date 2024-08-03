@@ -10,7 +10,7 @@ public class ChatEntry : MonoBehaviour
 
 	public CanvasGroup canvasGroup;
 
-	public float lifeStarted;
+	public float lifeStarted = 0f;
 
 	public ulong steamid;
 
@@ -20,7 +20,5 @@ public class ChatEntry : MonoBehaviour
 
 	public Phrase TeamPhrase = new Phrase("team", "team");
 
-	public TmProEmojiRedirector EmojiRedirector;
-
-	public Phrase ClanPhrase = new Phrase("clan", "clan");
+	public TmProEmojiRedirector EmojiRedirector = null;
 }

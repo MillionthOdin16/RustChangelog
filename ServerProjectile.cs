@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using Facepunch;
 using UnityEngine;
 
 public class ServerProjectile : EntityComponent<BaseEntity>, IServerComponent
@@ -18,17 +16,17 @@ public class ServerProjectile : EntityComponent<BaseEntity>, IServerComponent
 
 	public float speed = 15f;
 
-	public float scanRange;
+	public float scanRange = 0f;
 
 	public Vector3 swimScale;
 
 	public Vector3 swimSpeed;
 
-	public float radius;
+	public float radius = 0f;
 
-	private bool impacted;
+	private bool impacted = false;
 
-	private float swimRandom;
+	private float swimRandom = 0f;
 
 	public virtual bool HasRangeLimit => true;
 
@@ -38,7 +36,7 @@ public class ServerProjectile : EntityComponent<BaseEntity>, IServerComponent
 
 	public float GetMaxRange(float maxFuseTime)
 	{
-		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
 		if (gravityModifier == 0f)
 		{
 			return float.PositiveInfinity;
@@ -56,57 +54,50 @@ public class ServerProjectile : EntityComponent<BaseEntity>, IServerComponent
 		}
 	}
 
-	public virtual bool ShouldSwim()
-	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		return swimScale != Vector3.zero;
-	}
-
 	public virtual bool DoMovement()
 	{
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
 		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0117: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0133: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0138: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0139: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0141: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0235: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0240: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0246: Unknown result type (might be due to invalid IL or missing references)
+		//IL_024b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_025e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0263: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0113: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0115: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0116: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0118: Unknown result type (might be due to invalid IL or missing references)
 		//IL_011d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0120: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0125: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00eb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ed: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0155: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0245: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0250: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0256: Unknown result type (might be due to invalid IL or missing references)
-		//IL_025b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_026d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0272: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ce: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ea: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ef: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0207: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0209: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ca: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0217: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0218: Unknown result type (might be due to invalid IL or missing references)
 		if (impacted)
 		{
 			return false;
 		}
 		CurrentVelocity += Physics.gravity * gravityModifier * Time.fixedDeltaTime * Time.timeScale;
 		Vector3 val = CurrentVelocity;
-		if (ShouldSwim())
+		if (swimScale != Vector3.zero)
 		{
 			if (swimRandom == 0f)
 			{
@@ -118,24 +109,20 @@ public class ServerProjectile : EntityComponent<BaseEntity>, IServerComponent
 			val2 = ((Component)this).transform.InverseTransformDirection(val2);
 			val += val2;
 		}
-		List<RaycastHit> list = Pool.GetList<RaycastHit>();
 		float num2 = ((Vector3)(ref val)).magnitude * Time.fixedDeltaTime;
 		Vector3 position = ((Component)this).transform.position;
-		GamePhysics.TraceAll(new Ray(position, ((Vector3)(ref val)).normalized), radius, list, num2 + scanRange, mask, (QueryTriggerInteraction)1);
-		foreach (RaycastHit item in list)
+		if (GamePhysics.Trace(new Ray(position, ((Vector3)(ref val)).normalized), radius, out var hitInfo, num2 + scanRange, mask, (QueryTriggerInteraction)1))
 		{
-			RaycastHit current = item;
-			BaseEntity entity = current.GetEntity();
-			if ((!((Object)(object)entity != (Object)null) || !entity.isClient) && IsAValidHit(entity))
+			BaseEntity entity = hitInfo.GetEntity();
+			if (IsAValidHit(entity))
 			{
-				ColliderInfo colliderInfo = (((Object)(object)((RaycastHit)(ref current)).collider != (Object)null) ? ((Component)((RaycastHit)(ref current)).collider).GetComponent<ColliderInfo>() : null);
+				ColliderInfo colliderInfo = (((Object)(object)((RaycastHit)(ref hitInfo)).collider != (Object)null) ? ((Component)((RaycastHit)(ref hitInfo)).collider).GetComponent<ColliderInfo>() : null);
 				if ((Object)(object)colliderInfo == (Object)null || colliderInfo.HasFlag(ColliderInfo.Flags.Shootable))
 				{
 					Transform transform = ((Component)this).transform;
-					transform.position += ((Component)this).transform.forward * Mathf.Max(0f, ((RaycastHit)(ref current)).distance - 0.1f);
-					((Component)this).GetComponent<IProjectileImpact>()?.ProjectileImpact(current, position);
+					transform.position += ((Component)this).transform.forward * Mathf.Max(0f, ((RaycastHit)(ref hitInfo)).distance - 0.1f);
+					((Component)this).GetComponent<IProjectileImpact>()?.ProjectileImpact(hitInfo, position);
 					impacted = true;
-					Pool.FreeList<RaycastHit>(ref list);
 					return false;
 				}
 			}
@@ -143,28 +130,23 @@ public class ServerProjectile : EntityComponent<BaseEntity>, IServerComponent
 		Transform transform2 = ((Component)this).transform;
 		transform2.position += ((Component)this).transform.forward * num2;
 		((Component)this).transform.rotation = Quaternion.LookRotation(((Vector3)(ref val)).normalized);
-		Pool.FreeList<RaycastHit>(ref list);
 		return true;
 	}
 
 	protected virtual bool IsAValidHit(BaseEntity hitEnt)
 	{
-		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
-		if (hitEnt.IsValid() && base.baseEntity.creatorEntity.IsValid())
-		{
-			return hitEnt.net.ID != base.baseEntity.creatorEntity.net.ID;
-		}
-		return true;
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		return !hitEnt.IsValid() || !base.baseEntity.creatorEntity.IsValid() || hitEnt.net.ID != base.baseEntity.creatorEntity.net.ID;
 	}
 
 	public virtual void InitializeVelocity(Vector3 overrideVel)
 	{
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
 		((Component)this).transform.rotation = Quaternion.LookRotation(((Vector3)(ref overrideVel)).normalized);
 		initialVelocity = overrideVel;
 		CurrentVelocity = overrideVel;

@@ -54,19 +54,19 @@ public class SlotMachine : BaseMountable
 
 	public float SpinDuration = 2f;
 
-	private int SpinResult1;
+	private int SpinResult1 = 0;
 
-	private int SpinResult2;
+	private int SpinResult2 = 0;
 
-	private int SpinResult3;
+	private int SpinResult3 = 0;
 
-	private int SpinResultPrevious1;
+	private int SpinResultPrevious1 = 0;
 
-	private int SpinResultPrevious2;
+	private int SpinResultPrevious2 = 0;
 
-	private int SpinResultPrevious3;
+	private int SpinResultPrevious3 = 0;
 
-	private float SpinTime;
+	private float SpinTime = 0f;
 
 	public GameObjectRef StoragePrefab;
 
@@ -74,9 +74,9 @@ public class SlotMachine : BaseMountable
 
 	public SoundDefinition SpinSound;
 
-	public SlotMachinePayoutDisplay PayoutDisplay;
+	public SlotMachinePayoutDisplay PayoutDisplay = null;
 
-	public SlotMachinePayoutSettings PayoutSettings;
+	public SlotMachinePayoutSettings PayoutSettings = null;
 
 	public Transform HandIkTarget;
 
@@ -84,7 +84,7 @@ public class SlotMachine : BaseMountable
 
 	private const Flags IsSpinningFlag = Flags.Reserved2;
 
-	public Material PayoutIconMaterial;
+	public Material PayoutIconMaterial = null;
 
 	public bool UseTimeOfDayAdjustedSprite = true;
 
@@ -115,7 +115,7 @@ public class SlotMachine : BaseMountable
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_Deposit "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_Deposit "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_Deposit", 0);
 				try
@@ -134,7 +134,7 @@ public class SlotMachine : BaseMountable
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -146,7 +146,7 @@ public class SlotMachine : BaseMountable
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -166,12 +166,12 @@ public class SlotMachine : BaseMountable
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_Spin "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_Spin "));
 				}
-				TimeWarning val2 = TimeWarning.New("RPC_Spin", 0);
+				TimeWarning val5 = TimeWarning.New("RPC_Spin", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					TimeWarning val6 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.MaxDistance.Test(1455840454u, "RPC_Spin", this, player, 3f))
@@ -181,11 +181,11 @@ public class SlotMachine : BaseMountable
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val6)?.Dispose();
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val7 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -197,7 +197,7 @@ public class SlotMachine : BaseMountable
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val7)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -208,7 +208,7 @@ public class SlotMachine : BaseMountable
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val5)?.Dispose();
 				}
 				return true;
 			}
@@ -217,12 +217,12 @@ public class SlotMachine : BaseMountable
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_RequestMultiplierChange "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_RequestMultiplierChange "));
 				}
-				TimeWarning val2 = TimeWarning.New("Server_RequestMultiplierChange", 0);
+				TimeWarning val8 = TimeWarning.New("Server_RequestMultiplierChange", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					TimeWarning val9 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.CallsPerSecond.Test(3942337446u, "Server_RequestMultiplierChange", this, player, 5uL))
@@ -236,11 +236,11 @@ public class SlotMachine : BaseMountable
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val9)?.Dispose();
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val10 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -252,7 +252,7 @@ public class SlotMachine : BaseMountable
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val10)?.Dispose();
 						}
 					}
 					catch (Exception ex3)
@@ -263,7 +263,7 @@ public class SlotMachine : BaseMountable
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val8)?.Dispose();
 				}
 				return true;
 			}
@@ -277,8 +277,8 @@ public class SlotMachine : BaseMountable
 
 	public override void Save(SaveInfo info)
 	{
-		//IL_00d8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00dd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00da: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00df: Unknown result type (might be due to invalid IL or missing references)
 		base.Save(info);
 		info.msg.slotMachine = Pool.Get<SlotMachine>();
 		info.msg.slotMachine.oldResult1 = SpinResultPrevious1;
@@ -295,7 +295,7 @@ public class SlotMachine : BaseMountable
 
 	public override void Load(LoadInfo info)
 	{
-		//IL_00e0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00eb: Unknown result type (might be due to invalid IL or missing references)
 		base.Load(info);
 		if (info.msg.slotMachine != null)
 		{
@@ -325,10 +325,10 @@ public class SlotMachine : BaseMountable
 
 	public override void Spawn()
 	{
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
 		base.Spawn();
 		if (!Application.isLoadingSave)
 		{
@@ -408,16 +408,17 @@ public class SlotMachine : BaseMountable
 		BasePlayer player = rpc.player;
 		if (!((Object)(object)player == (Object)null) && !HasFlag(Flags.Reserved2) && StorageInstance.IsValid(base.isServer))
 		{
-			((Component)StorageInstance.Get(base.isServer)).GetComponent<StorageContainer>().PlayerOpenLoot(player, "", doPositionChecks: false);
+			StorageContainer component = ((Component)StorageInstance.Get(base.isServer)).GetComponent<StorageContainer>();
+			component.PlayerOpenLoot(player, "", doPositionChecks: false);
 		}
 	}
 
 	private void CheckPayout()
 	{
-		//IL_0165: Unknown result type (might be due to invalid IL or missing references)
-		//IL_016a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ae: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f6: Unknown result type (might be due to invalid IL or missing references)
 		bool flag = false;
 		if ((Object)(object)PayoutSettings != (Object)null)
 		{
@@ -435,7 +436,8 @@ public class SlotMachine : BaseMountable
 					}
 					else
 					{
-						ItemManager.Create(info.Item.itemDef, num, 0uL).MoveToContainer(slotMachineStorage.inventory, 1);
+						Item item = ItemManager.Create(info.Item.itemDef, num, 0uL);
+						item.MoveToContainer(slotMachineStorage.inventory, 1);
 					}
 				}
 				if (CurrentSpinPlayer.IsValid() && (Object)(object)CurrentSpinPlayer == (Object)(object)_mounted)
@@ -501,7 +503,8 @@ public class SlotMachine : BaseMountable
 
 	private int RandomSpinResult()
 	{
-		int num = new Random(Random.Range(0, 1000)).Next(0, PayoutSettings.TotalStops);
+		Random random = new Random(Random.Range(0, 1000));
+		int num = random.Next(0, PayoutSettings.TotalStops);
 		int num2 = 0;
 		int num3 = 0;
 		int[] virtualFaces = PayoutSettings.VirtualFaces;
@@ -571,9 +574,9 @@ public class SlotMachine : BaseMountable
 			}
 		}
 		SlotMachinePayoutSettings.PayoutInfo[] payouts = PayoutSettings.Payouts;
-		for (int i = 0; i < payouts.Length; i++)
+		for (int j = 0; j < payouts.Length; j++)
 		{
-			SlotMachinePayoutSettings.PayoutInfo payoutInfo = payouts[i];
+			SlotMachinePayoutSettings.PayoutInfo payoutInfo = payouts[j];
 			if (payoutInfo.Result1 == SpinResult1 && payoutInfo.Result2 == SpinResult2 && payoutInfo.Result3 == SpinResult3)
 			{
 				info = payoutInfo;

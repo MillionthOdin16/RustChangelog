@@ -4,5 +4,5 @@ public class AdminUI : MonoBehaviour
 {
 	public bool AllowInDemo;
 
-	public GameObject TargetGameObject;
+	public GameObject TargetGameObject = null;
 }

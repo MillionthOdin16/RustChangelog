@@ -11,7 +11,7 @@ public class CameraMan : SingletonComponent<CameraMan>
 
 	public bool OnlyControlWhenCursorHidden = true;
 
-	public bool NeedBothMouseButtonsToZoom;
+	public bool NeedBothMouseButtonsToZoom = false;
 
 	public float LookSensitivity = 1f;
 

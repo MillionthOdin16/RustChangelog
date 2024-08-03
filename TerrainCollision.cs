@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 public class TerrainCollision : TerrainExtension
 {
@@ -16,8 +17,8 @@ public class TerrainCollision : TerrainExtension
 
 	public void Clear()
 	{
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
 		if (!Object.op_Implicit((Object)(object)terrainCollider))
 		{
 			return;
@@ -27,7 +28,8 @@ public class TerrainCollision : TerrainExtension
 		{
 			while (enumerator.MoveNext())
 			{
-				Physics.IgnoreCollision(enumerator.Current, (Collider)(object)terrainCollider, false);
+				Collider current = enumerator.Current;
+				Physics.IgnoreCollision(current, (Collider)(object)terrainCollider, false);
 			}
 		}
 		finally
@@ -48,18 +50,17 @@ public class TerrainCollision : TerrainExtension
 
 	public bool GetIgnore(Vector3 pos, float radius = 0.01f)
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		return GamePhysics.CheckSphere<TerrainCollisionTrigger>(pos, radius, 262144, (QueryTriggerInteraction)2);
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		Profiler.BeginSample("TerrainCollision.GetIgnore");
+		bool result = GamePhysics.CheckSphere<TerrainCollisionTrigger>(pos, radius, 262144, (QueryTriggerInteraction)2);
+		Profiler.EndSample();
+		return result;
 	}
 
 	public bool GetIgnore(RaycastHit hit)
 	{
-		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-		if (((RaycastHit)(ref hit)).collider is TerrainCollider)
-		{
-			return GetIgnore(((RaycastHit)(ref hit)).point);
-		}
-		return false;
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		return ((RaycastHit)(ref hit)).collider is TerrainCollider && GetIgnore(((RaycastHit)(ref hit)).point);
 	}
 
 	public bool GetIgnore(Collider collider)

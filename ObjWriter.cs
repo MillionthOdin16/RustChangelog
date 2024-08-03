@@ -6,21 +6,21 @@ public static class ObjWriter
 {
 	public static string MeshToString(Mesh mesh)
 	{
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0095: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0104: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0110: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0109: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0117: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0123: Unknown result type (might be due to invalid IL or missing references)
 		StringBuilder stringBuilder = new StringBuilder();
 		stringBuilder.Append("g ").Append(((Object)mesh).name).Append("\n");
 		Vector3[] vertices = mesh.vertices;
@@ -29,25 +29,25 @@ public static class ObjWriter
 			stringBuilder.Append($"v {0f - val.x} {val.y} {val.z}\n");
 		}
 		stringBuilder.Append("\n");
-		vertices = mesh.normals;
-		foreach (Vector3 val2 in vertices)
+		Vector3[] normals = mesh.normals;
+		foreach (Vector3 val2 in normals)
 		{
 			stringBuilder.Append($"vn {0f - val2.x} {val2.y} {val2.z}\n");
 		}
 		stringBuilder.Append("\n");
 		Vector2[] uv = mesh.uv;
-		for (int i = 0; i < uv.Length; i++)
+		for (int k = 0; k < uv.Length; k++)
 		{
-			Vector3 val3 = Vector2.op_Implicit(uv[i]);
+			Vector3 val3 = Vector2.op_Implicit(uv[k]);
 			stringBuilder.Append($"vt {val3.x} {val3.y}\n");
 		}
 		stringBuilder.Append("\n");
 		int[] triangles = mesh.triangles;
-		for (int j = 0; j < triangles.Length; j += 3)
+		for (int l = 0; l < triangles.Length; l += 3)
 		{
-			int num = triangles[j] + 1;
-			int num2 = triangles[j + 1] + 1;
-			int num3 = triangles[j + 2] + 1;
+			int num = triangles[l] + 1;
+			int num2 = triangles[l + 1] + 1;
+			int num3 = triangles[l + 2] + 1;
 			stringBuilder.Append(string.Format("f {1}/{1}/{1} {0}/{0}/{0} {2}/{2}/{2}\n", num, num2, num3));
 		}
 		return stringBuilder.ToString();

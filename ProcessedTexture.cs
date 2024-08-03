@@ -14,20 +14,13 @@ public class ProcessedTexture
 
 	protected RenderTexture CreateRenderTexture(string name, int width, int height, bool linear)
 	{
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0036: Expected O, but got Unknown
-		RenderTexture val = new RenderTexture(width, height, 0, (RenderTextureFormat)0, (RenderTextureReadWrite)(linear ? 1 : 2))
-		{
-			hideFlags = (HideFlags)52,
-			name = name,
-			filterMode = (FilterMode)1,
-			anisoLevel = 0
-		};
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Expected O, but got Unknown
+		RenderTexture val = new RenderTexture(width, height, 0, (RenderTextureFormat)0, (RenderTextureReadWrite)(linear ? 1 : 2));
+		((Object)val).hideFlags = (HideFlags)52;
+		((Object)val).name = name;
+		((Texture)val).filterMode = (FilterMode)1;
+		((Texture)val).anisoLevel = 0;
 		val.Create();
 		return val;
 	}
@@ -43,7 +36,7 @@ public class ProcessedTexture
 
 	protected RenderTexture CreateTemporary()
 	{
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
 		return RenderTexture.GetTemporary(((Texture)result).width, ((Texture)result).height, result.depth, result.format, (RenderTextureReadWrite)((!result.sRGB) ? 1 : 2));
 	}
 
@@ -59,13 +52,11 @@ public class ProcessedTexture
 
 	protected Material CreateMaterial(Shader shader)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000f: Expected O, but got Unknown
-		return new Material(shader)
-		{
-			hideFlags = (HideFlags)52
-		};
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0008: Expected O, but got Unknown
+		Material val = new Material(shader);
+		((Object)val).hideFlags = (HideFlags)52;
+		return val;
 	}
 
 	protected void DestroyMaterial(ref Material mat)

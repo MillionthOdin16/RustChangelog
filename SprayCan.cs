@@ -43,11 +43,11 @@ public class SprayCan : HeldEntity
 
 	public const float MaxFreeSprayStartingDistance = 3f;
 
-	private SprayCanSpray_Freehand paintingLine;
+	private SprayCanSpray_Freehand paintingLine = null;
 
 	public const Flags IsFreeSpraying = Flags.Reserved1;
 
-	public SoundDefinition SpraySound;
+	public SoundDefinition SpraySound = null;
 
 	public GameObjectRef SkinSelectPanel;
 
@@ -57,7 +57,7 @@ public class SprayCan : HeldEntity
 
 	public float ConditionLossPerReskin = 10f;
 
-	public GameObjectRef LinePrefab;
+	public GameObjectRef LinePrefab = null;
 
 	public Color[] SprayColours = (Color[])(object)new Color[0];
 
@@ -67,11 +67,11 @@ public class SprayCan : HeldEntity
 
 	public GameObjectRef ReskinEffect;
 
-	public ItemDefinition SprayDecalItem;
+	public ItemDefinition SprayDecalItem = null;
 
-	public GameObjectRef SprayDecalEntityRef;
+	public GameObjectRef SprayDecalEntityRef = null;
 
-	public SteamInventoryItem FreeSprayUnlockItem;
+	public SteamInventoryItem FreeSprayUnlockItem = null;
 
 	public MinMaxGradient DecalSprayGradient;
 
@@ -104,7 +104,7 @@ public class SprayCan : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - BeginFreehandSpray "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - BeginFreehandSpray "));
 				}
 				TimeWarning val2 = TimeWarning.New("BeginFreehandSpray", 0);
 				try
@@ -123,7 +123,7 @@ public class SprayCan : HeldEntity
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val4 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -135,7 +135,7 @@ public class SprayCan : HeldEntity
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val4)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -155,12 +155,12 @@ public class SprayCan : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ChangeItemSkin "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ChangeItemSkin "));
 				}
-				TimeWarning val2 = TimeWarning.New("ChangeItemSkin", 0);
+				TimeWarning val5 = TimeWarning.New("ChangeItemSkin", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					TimeWarning val6 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.CallsPerSecond.Test(151738090u, "ChangeItemSkin", this, player, 2uL))
@@ -174,11 +174,11 @@ public class SprayCan : HeldEntity
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val6)?.Dispose();
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val7 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -190,7 +190,7 @@ public class SprayCan : HeldEntity
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val7)?.Dispose();
 						}
 					}
 					catch (Exception ex2)
@@ -201,7 +201,7 @@ public class SprayCan : HeldEntity
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val5)?.Dispose();
 				}
 				return true;
 			}
@@ -210,12 +210,12 @@ public class SprayCan : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - CreateSpray "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - CreateSpray "));
 				}
-				TimeWarning val2 = TimeWarning.New("CreateSpray", 0);
+				TimeWarning val8 = TimeWarning.New("CreateSpray", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					TimeWarning val9 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.IsActiveItem.Test(396000799u, "CreateSpray", this, player))
@@ -225,11 +225,11 @@ public class SprayCan : HeldEntity
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val9)?.Dispose();
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val10 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -241,7 +241,7 @@ public class SprayCan : HeldEntity
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val10)?.Dispose();
 						}
 					}
 					catch (Exception ex3)
@@ -252,7 +252,7 @@ public class SprayCan : HeldEntity
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val8)?.Dispose();
 				}
 				return true;
 			}
@@ -261,12 +261,12 @@ public class SprayCan : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_SetBlockColourId "));
+					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_SetBlockColourId "));
 				}
-				TimeWarning val2 = TimeWarning.New("Server_SetBlockColourId", 0);
+				TimeWarning val11 = TimeWarning.New("Server_SetBlockColourId", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					TimeWarning val12 = TimeWarning.New("Conditions", 0);
 					try
 					{
 						if (!RPC_Server.CallsPerSecond.Test(14517645u, "Server_SetBlockColourId", this, player, 3uL))
@@ -280,11 +280,11 @@ public class SprayCan : HeldEntity
 					}
 					finally
 					{
-						((IDisposable)val3)?.Dispose();
+						((IDisposable)val12)?.Dispose();
 					}
 					try
 					{
-						val3 = TimeWarning.New("Call", 0);
+						TimeWarning val13 = TimeWarning.New("Call", 0);
 						try
 						{
 							RPCMessage rPCMessage = default(RPCMessage);
@@ -296,7 +296,7 @@ public class SprayCan : HeldEntity
 						}
 						finally
 						{
-							((IDisposable)val3)?.Dispose();
+							((IDisposable)val13)?.Dispose();
 						}
 					}
 					catch (Exception ex4)
@@ -307,7 +307,7 @@ public class SprayCan : HeldEntity
 				}
 				finally
 				{
-					((IDisposable)val2)?.Dispose();
+					((IDisposable)val11)?.Dispose();
 				}
 				return true;
 			}
@@ -323,17 +323,17 @@ public class SprayCan : HeldEntity
 	[RPC_Server.IsActiveItem]
 	private void BeginFreehandSpray(RPCMessage msg)
 	{
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0095: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0118: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0097: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014f: Unknown result type (might be due to invalid IL or missing references)
 		if (!IsBusy() && CanSprayFreehand(msg.player))
 		{
 			Vector3 val = msg.read.Vector3();
@@ -377,20 +377,12 @@ public class SprayCan : HeldEntity
 		{
 			return true;
 		}
-		if ((Object)(object)FreeSprayUnlockItem != (Object)null)
-		{
-			if (!player.blueprints.steamInventory.HasItem(FreeSprayUnlockItem.id))
-			{
-				return FreeSprayUnlockItem.HasUnlocked(player.userID);
-			}
-			return true;
-		}
-		return false;
+		return (Object)(object)FreeSprayUnlockItem != (Object)null && (player.blueprints.steamInventory.HasItem(FreeSprayUnlockItem.id) || FreeSprayUnlockItem.HasUnlocked(player.userID));
 	}
 
 	private bool IsSprayBlockedByTrigger(Vector3 pos)
 	{
-		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer ownerPlayer = GetOwnerPlayer();
 		if ((Object)(object)ownerPlayer == (Object)null)
 		{
@@ -409,35 +401,35 @@ public class SprayCan : HeldEntity
 	[RPC_Server.CallsPerSecond(2uL)]
 	private void ChangeItemSkin(RPCMessage msg)
 	{
-		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00dd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_065e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0297: Unknown result type (might be due to invalid IL or missing references)
-		//IL_029c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02a5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02aa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_041c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_041e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0411: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0352: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0101: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0110: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0115: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0122: Unknown result type (might be due to invalid IL or missing references)
+		//IL_079e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0357: Unknown result type (might be due to invalid IL or missing references)
+		//IL_035c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0365: Unknown result type (might be due to invalid IL or missing references)
 		//IL_036a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0438: Unknown result type (might be due to invalid IL or missing references)
-		//IL_043d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_043f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_042d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_045e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_046c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_05f7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_060f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0419: Unknown result type (might be due to invalid IL or missing references)
+		//IL_041e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_042c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0431: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0502: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0504: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04f7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_051e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0523: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0525: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0513: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0545: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0554: Unknown result type (might be due to invalid IL or missing references)
+		//IL_072e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0747: Unknown result type (might be due to invalid IL or missing references)
 		if (IsBusy())
 		{
 			return;
@@ -459,165 +451,163 @@ public class SprayCan : HeldEntity
 			SprayFailResponse(SprayFailReason.SkinNotOwned);
 			return;
 		}
-		if ((Object)(object)baseNetworkable != (Object)null)
+		if ((Object)(object)baseNetworkable != (Object)null && baseNetworkable is BaseEntity baseEntity2)
 		{
-			BaseEntity baseEntity2 = baseNetworkable as BaseEntity;
-			if (baseEntity2 != null)
+			OBB val = baseEntity2.WorldSpaceBounds();
+			Vector3 position = ((OBB)(ref val)).ClosestPoint(msg.player.eyes.position);
+			if (!msg.player.IsVisible(position, 3f))
 			{
-				OBB val = baseEntity2.WorldSpaceBounds();
-				Vector3 position = ((OBB)(ref val)).ClosestPoint(msg.player.eyes.position);
-				if (!msg.player.IsVisible(position, 3f))
+				SprayFailResponse(SprayFailReason.LineOfSight);
+				return;
+			}
+			if (baseNetworkable is Door door)
+			{
+				if (!door.GetPlayerLockPermission(msg.player))
 				{
-					SprayFailResponse(SprayFailReason.LineOfSight);
+					msg.player.ChatMessage("Door must be openable");
 					return;
 				}
-				if (baseNetworkable is Door door)
+				if (door.IsOpen())
 				{
-					if (!door.GetPlayerLockPermission(msg.player))
-					{
-						msg.player.ChatMessage("Door must be openable");
-						return;
-					}
-					if (door.IsOpen())
-					{
-						msg.player.ChatMessage("Door must be closed");
-						return;
-					}
-				}
-				if (!GetItemDefinitionForEntity(baseEntity2, out var def))
-				{
-					SprayFailResponse(SprayFailReason.InvalidItem);
+					msg.player.ChatMessage("Door must be closed");
 					return;
 				}
-				ItemDefinition itemDefinition = null;
-				ulong num = ItemDefinition.FindSkin(def.itemid, targetSkin);
-				ItemSkinDirectory.Skin skin = def.skins.FirstOrDefault((ItemSkinDirectory.Skin x) => x.id == targetSkin);
-				if ((Object)(object)skin.invItem != (Object)null && skin.invItem is ItemSkin itemSkin)
+			}
+			if (!GetItemDefinitionForEntity(baseEntity2, out var def))
+			{
+				SprayFailResponse(SprayFailReason.InvalidItem);
+				return;
+			}
+			ItemDefinition itemDefinition = null;
+			ulong num = ItemDefinition.FindSkin(def.itemid, targetSkin);
+			ItemSkinDirectory.Skin skin = def.skins.FirstOrDefault((ItemSkinDirectory.Skin x) => x.id == targetSkin);
+			if ((Object)(object)skin.invItem != (Object)null && skin.invItem is ItemSkin itemSkin)
+			{
+				if ((Object)(object)itemSkin.Redirect != (Object)null)
 				{
-					if ((Object)(object)itemSkin.Redirect != (Object)null)
-					{
-						itemDefinition = itemSkin.Redirect;
-					}
-					else if (GetItemDefinitionForEntity(baseEntity2, out def, useRedirect: false) && (Object)(object)def.isRedirectOf != (Object)null)
-					{
-						itemDefinition = def.isRedirectOf;
-					}
+					itemDefinition = itemSkin.Redirect;
 				}
-				else if ((Object)(object)def.isRedirectOf != (Object)null || (GetItemDefinitionForEntity(baseEntity2, out def, useRedirect: false) && (Object)(object)def.isRedirectOf != (Object)null))
+				else if (GetItemDefinitionForEntity(baseEntity2, out def, useRedirect: false) && (Object)(object)def.isRedirectOf != (Object)null)
 				{
 					itemDefinition = def.isRedirectOf;
 				}
-				if ((Object)(object)itemDefinition == (Object)null)
+			}
+			else if ((Object)(object)def.isRedirectOf != (Object)null || (GetItemDefinitionForEntity(baseEntity2, out def, useRedirect: false) && (Object)(object)def.isRedirectOf != (Object)null))
+			{
+				itemDefinition = def.isRedirectOf;
+			}
+			if ((Object)(object)itemDefinition == (Object)null)
+			{
+				baseEntity2.skinID = num;
+				baseEntity2.SendNetworkUpdate();
+				Analytics.Server.SkinUsed(def.shortname, targetSkin);
+			}
+			else
+			{
+				if (!CanEntityBeRespawned(baseEntity2, out var reason2))
 				{
-					baseEntity2.skinID = num;
-					baseEntity2.SendNetworkUpdate();
-					Analytics.Server.SkinUsed(def.shortname, targetSkin);
+					SprayFailResponse(reason2);
+					return;
+				}
+				if (!GetEntityPrefabPath(itemDefinition, out var resourcePath))
+				{
+					Debug.LogWarning((object)("Cannot find resource path of redirect entity to spawn! " + ((Object)((Component)itemDefinition).gameObject).name));
+					SprayFailResponse(SprayFailReason.InvalidItem);
+					return;
+				}
+				Vector3 localPosition = ((Component)baseEntity2).transform.localPosition;
+				Quaternion localRotation = ((Component)baseEntity2).transform.localRotation;
+				BaseEntity baseEntity3 = baseEntity2.GetParentEntity();
+				float health = baseEntity2.Health();
+				EntityRef[] slots = baseEntity2.GetSlots();
+				float lastAttackedTime = ((baseEntity2 is BaseCombatEntity baseCombatEntity) ? baseCombatEntity.lastAttackedTime : 0f);
+				bool flag2 = baseEntity2 is Door;
+				Dictionary<ContainerSet, List<Item>> dictionary2 = new Dictionary<ContainerSet, List<Item>>();
+				SaveEntityStorage(baseEntity2, dictionary2, 0);
+				List<ChildPreserveInfo> list = Pool.GetList<ChildPreserveInfo>();
+				if (flag2)
+				{
+					foreach (BaseEntity child in baseEntity2.children)
+					{
+						list.Add(new ChildPreserveInfo
+						{
+							TargetEntity = child,
+							TargetBone = child.parentBone,
+							LocalPosition = ((Component)child).transform.localPosition,
+							LocalRotation = ((Component)child).transform.localRotation
+						});
+					}
+					foreach (ChildPreserveInfo item in list)
+					{
+						item.TargetEntity.SetParent(null, worldPositionStays: true);
+					}
 				}
 				else
 				{
-					if (!CanEntityBeRespawned(baseEntity2, out var reason2))
+					for (int i = 0; i < baseEntity2.children.Count; i++)
 					{
-						SprayFailResponse(reason2);
-						return;
+						BaseEntity baseEntity4 = baseEntity2.children[i];
+						SaveEntityStorage(baseEntity4, dictionary2, -1);
 					}
-					if (!GetEntityPrefabPath(itemDefinition, out var resourcePath))
-					{
-						Debug.LogWarning((object)("Cannot find resource path of redirect entity to spawn! " + ((Object)((Component)itemDefinition).gameObject).name));
-						SprayFailResponse(SprayFailReason.InvalidItem);
-						return;
-					}
-					Vector3 localPosition = ((Component)baseEntity2).transform.localPosition;
-					Quaternion localRotation = ((Component)baseEntity2).transform.localRotation;
-					BaseEntity baseEntity3 = baseEntity2.GetParentEntity();
-					float health = baseEntity2.Health();
-					EntityRef[] slots = baseEntity2.GetSlots();
-					float lastAttackedTime = ((baseEntity2 is BaseCombatEntity baseCombatEntity) ? baseCombatEntity.lastAttackedTime : 0f);
-					bool flag2 = baseEntity2 is Door;
-					Dictionary<ContainerSet, List<Item>> dictionary2 = new Dictionary<ContainerSet, List<Item>>();
-					SaveEntityStorage(baseEntity2, dictionary2, 0);
-					List<ChildPreserveInfo> list = Pool.GetList<ChildPreserveInfo>();
-					if (flag2)
-					{
-						foreach (BaseEntity child in baseEntity2.children)
-						{
-							list.Add(new ChildPreserveInfo
-							{
-								TargetEntity = child,
-								TargetBone = child.parentBone,
-								LocalPosition = ((Component)child).transform.localPosition,
-								LocalRotation = ((Component)child).transform.localRotation
-							});
-						}
-						foreach (ChildPreserveInfo item in list)
-						{
-							item.TargetEntity.SetParent(null, worldPositionStays: true);
-						}
-					}
-					else
-					{
-						for (int i = 0; i < baseEntity2.children.Count; i++)
-						{
-							SaveEntityStorage(baseEntity2.children[i], dictionary2, -1);
-						}
-					}
-					baseEntity2.Kill();
-					baseEntity2 = GameManager.server.CreateEntity(resourcePath, ((Object)(object)baseEntity3 != (Object)null) ? ((Component)baseEntity3).transform.TransformPoint(localPosition) : localPosition, ((Object)(object)baseEntity3 != (Object)null) ? (((Component)baseEntity3).transform.rotation * localRotation) : localRotation);
-					baseEntity2.SetParent(baseEntity3);
-					((Component)baseEntity2).transform.localPosition = localPosition;
-					((Component)baseEntity2).transform.localRotation = localRotation;
-					if (GetItemDefinitionForEntity(baseEntity2, out var def2, useRedirect: false) && (Object)(object)def2.isRedirectOf != (Object)null)
-					{
-						baseEntity2.skinID = 0uL;
-					}
-					else
-					{
-						baseEntity2.skinID = num;
-					}
-					if (baseEntity2 is DecayEntity decayEntity)
-					{
-						decayEntity.AttachToBuilding(null);
-					}
-					baseEntity2.Spawn();
-					if (baseEntity2 is BaseCombatEntity baseCombatEntity2)
-					{
-						baseCombatEntity2.SetHealth(health);
-						baseCombatEntity2.lastAttackedTime = lastAttackedTime;
-					}
-					if (dictionary2.Count > 0)
-					{
-						RestoreEntityStorage(baseEntity2, 0, dictionary2);
-						if (!flag2)
-						{
-							for (int j = 0; j < baseEntity2.children.Count; j++)
-							{
-								RestoreEntityStorage(baseEntity2.children[j], -1, dictionary2);
-							}
-						}
-						foreach (KeyValuePair<ContainerSet, List<Item>> item2 in dictionary2)
-						{
-							foreach (Item item3 in item2.Value)
-							{
-								Debug.Log((object)$"Deleting {item3} as it has no new container");
-								item3.Remove();
-							}
-						}
-						Analytics.Server.SkinUsed(def.shortname, targetSkin);
-					}
-					if (flag2)
-					{
-						foreach (ChildPreserveInfo item4 in list)
-						{
-							item4.TargetEntity.SetParent(baseEntity2, item4.TargetBone, worldPositionStays: true);
-							((Component)item4.TargetEntity).transform.localPosition = item4.LocalPosition;
-							((Component)item4.TargetEntity).transform.localRotation = item4.LocalRotation;
-							item4.TargetEntity.SendNetworkUpdate();
-						}
-						baseEntity2.SetSlots(slots);
-					}
-					Pool.FreeList<ChildPreserveInfo>(ref list);
 				}
-				ClientRPC<int, NetworkableId>(null, "Client_ReskinResult", 1, baseEntity2.net.ID);
+				baseEntity2.Kill();
+				baseEntity2 = GameManager.server.CreateEntity(resourcePath, ((Object)(object)baseEntity3 != (Object)null) ? ((Component)baseEntity3).transform.TransformPoint(localPosition) : localPosition, ((Object)(object)baseEntity3 != (Object)null) ? (((Component)baseEntity3).transform.rotation * localRotation) : localRotation);
+				baseEntity2.SetParent(baseEntity3);
+				((Component)baseEntity2).transform.localPosition = localPosition;
+				((Component)baseEntity2).transform.localRotation = localRotation;
+				if (GetItemDefinitionForEntity(baseEntity2, out var def2, useRedirect: false) && (Object)(object)def2.isRedirectOf != (Object)null)
+				{
+					baseEntity2.skinID = 0uL;
+				}
+				else
+				{
+					baseEntity2.skinID = num;
+				}
+				if (baseEntity2 is DecayEntity decayEntity)
+				{
+					decayEntity.AttachToBuilding(null);
+				}
+				baseEntity2.Spawn();
+				if (baseEntity2 is BaseCombatEntity baseCombatEntity2)
+				{
+					baseCombatEntity2.SetHealth(health);
+					baseCombatEntity2.lastAttackedTime = lastAttackedTime;
+				}
+				if (dictionary2.Count > 0)
+				{
+					RestoreEntityStorage(baseEntity2, 0, dictionary2);
+					if (!flag2)
+					{
+						for (int j = 0; j < baseEntity2.children.Count; j++)
+						{
+							BaseEntity baseEntity5 = baseEntity2.children[j];
+							RestoreEntityStorage(baseEntity5, -1, dictionary2);
+						}
+					}
+					foreach (KeyValuePair<ContainerSet, List<Item>> item2 in dictionary2)
+					{
+						foreach (Item item3 in item2.Value)
+						{
+							Debug.Log((object)$"Deleting {item3} as it has no new container");
+							item3.Remove();
+						}
+					}
+					Analytics.Server.SkinUsed(def.shortname, targetSkin);
+				}
+				if (flag2)
+				{
+					foreach (ChildPreserveInfo item4 in list)
+					{
+						item4.TargetEntity.SetParent(baseEntity2, item4.TargetBone, worldPositionStays: true);
+						((Component)item4.TargetEntity).transform.localPosition = item4.LocalPosition;
+						((Component)item4.TargetEntity).transform.localRotation = item4.LocalRotation;
+						item4.TargetEntity.SendNetworkUpdate();
+					}
+					baseEntity2.SetSlots(slots);
+				}
+				Pool.FreeList<ChildPreserveInfo>(ref list);
 			}
+			ClientRPC<int, NetworkableId>(null, "Client_ReskinResult", 1, baseEntity2.net.ID);
 		}
 		LoseCondition(ConditionLossPerReskin);
 		ClientRPC(null, "Client_ChangeSprayColour", -1);
@@ -701,32 +691,34 @@ public class SprayCan : HeldEntity
 	[RPC_Server.IsActiveItem]
 	private void CreateSpray(RPCMessage msg)
 	{
-		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
 		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
 		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0097: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ad: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00be: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_013b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_013c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0165: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ac: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ba: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00dd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0171: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0172: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a3: Unknown result type (might be due to invalid IL or missing references)
 		if (IsBusy())
 		{
 			return;
@@ -742,9 +734,10 @@ public class SprayCan : HeldEntity
 		{
 			Plane val4 = default(Plane);
 			((Plane)(ref val4))._002Ector(val2, val);
-			Vector3 val5 = ((Plane)(ref val4)).ClosestPointOnPlane(val3) - val;
-			Quaternion val6 = Quaternion.LookRotation(((Vector3)(ref val5)).normalized, val2);
-			val6 *= Quaternion.Euler(0f, 0f, 90f);
+			Vector3 val5 = ((Plane)(ref val4)).ClosestPointOnPlane(val3);
+			Vector3 val6 = val5 - val;
+			Quaternion val7 = Quaternion.LookRotation(((Vector3)(ref val6)).normalized, val2);
+			val7 *= Quaternion.Euler(0f, 0f, 90f);
 			bool flag = false;
 			if (msg.player.IsDeveloper)
 			{
@@ -756,7 +749,7 @@ public class SprayCan : HeldEntity
 				return;
 			}
 			ulong num2 = ItemDefinition.FindSkin(SprayDecalItem.itemid, num);
-			BaseEntity baseEntity = GameManager.server.CreateEntity(SprayDecalEntityRef.resourcePath, val, val6);
+			BaseEntity baseEntity = GameManager.server.CreateEntity(SprayDecalEntityRef.resourcePath, val, val7);
 			baseEntity.skinID = num2;
 			baseEntity.OnDeployed(null, GetOwnerPlayer(), GetItem());
 			baseEntity.Spawn();
@@ -798,9 +791,9 @@ public class SprayCan : HeldEntity
 	[RPC_Server.CallsPerSecond(3uL)]
 	private void Server_SetBlockColourId(RPCMessage msg)
 	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
 		NetworkableId uid = msg.read.EntityID();
 		uint num = msg.read.UInt32();
 		BasePlayer player = msg.player;
@@ -814,7 +807,8 @@ public class SprayCan : HeldEntity
 		BuildingBlock buildingBlock = BaseNetworkable.serverEntities.Find(uid) as BuildingBlock;
 		if ((Object)(object)buildingBlock != (Object)null)
 		{
-			if (player.Distance((BaseEntity)buildingBlock) > 4f)
+			float num2 = player.Distance((BaseEntity)buildingBlock);
+			if (num2 > 4f)
 			{
 				return;
 			}
