@@ -4,6 +4,7 @@ using System.IO;
 using Newtonsoft.Json;
 using UnityEngine;
 
+[JsonModel]
 public class WorldConfig
 {
 	public string JsonString = string.Empty;

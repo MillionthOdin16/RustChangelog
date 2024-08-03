@@ -102,7 +102,7 @@ public class MLRS : BaseMountable
 	private ParticleSystem bottomScreenShutdown;
 
 	[ServerVar(Help = "How many minutes before the MLRS recovers from use and can be used again")]
-	public static float brokenDownMinutes = 10f;
+	public static float brokenDownMinutes = 20f;
 
 	public const Flags FLAG_FIRING_ROCKETS = Flags.Reserved6;
 
@@ -637,8 +637,8 @@ public class MLRS : BaseMountable
 	public override void VehicleFixedUpdate()
 	{
 		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01f5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01fb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01fa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0200: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00d2: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00e4: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
@@ -658,12 +658,12 @@ public class MLRS : BaseMountable
 		//IL_00b8: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00bd: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0208: Unknown result type (might be due to invalid IL or missing references)
-		//IL_020e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01be: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ea: Unknown result type (might be due to invalid IL or missing references)
+		//IL_020d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0213: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01bd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f2: Unknown result type (might be due to invalid IL or missing references)
 		base.VehicleFixedUpdate();
 		if (IsBroken())
 		{
@@ -702,7 +702,8 @@ public class MLRS : BaseMountable
 					HRotation = Mathf.MoveTowardsAngle(HRotation, hRot, Time.deltaTime * hRotSpeed);
 				}
 				CurGravityMultiplier = num;
-				TrueHitPos = Ballistics.GetPhysicsProjectileHitPos(firingPoint.position, firingPoint.forward, rocketSpeed, Physics.gravity.y * CurGravityMultiplier, 2f, 0.66f, 128f, this);
+				Ballistics.TryGetPhysicsProjectileHitPos(firingPoint.position, firingPoint.forward, rocketSpeed, Physics.gravity.y * CurGravityMultiplier, out var result, 2f, 0.66f, 128f, this);
+				TrueHitPos = result;
 			}
 		}
 		if (UserTargetHitPos != lastSentTargetHitPos || TrueHitPos != lastSentTrueHitPos || RocketAmmoCount != rocketAmmoCount)
@@ -900,6 +901,11 @@ public class MLRS : BaseMountable
 
 	private bool TryGetAimingModule(out Item item)
 	{
+		if ((Object)(object)GetDashboardContainer() == (Object)null)
+		{
+			item = null;
+			return false;
+		}
 		ItemContainer inventory = GetDashboardContainer().inventory;
 		if (!inventory.IsEmpty())
 		{

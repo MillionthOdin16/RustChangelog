@@ -14,7 +14,385 @@ public class NexusClanWrapper : IClan
 {
 	[StructLayout(LayoutKind.Auto)]
 	[CompilerGenerated]
-	private struct _003CGetLogs_003Ed__47 : IAsyncStateMachine
+	private struct _003CAcceptInvite_003Ed__58 : IAsyncStateMachine
+	{
+		public int _003C_003E1__state;
+
+		public AsyncValueTaskMethodBuilder<ClanResult> _003C_003Et__builder;
+
+		public NexusClanWrapper _003C_003E4__this;
+
+		public ulong steamId;
+
+		private TaskAwaiter<NexusClanResultCode> _003C_003Eu__1;
+
+		private void MoveNext()
+		{
+			//IL_0074: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0079: Unknown result type (might be due to invalid IL or missing references)
+			//IL_007e: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
+			int num = _003C_003E1__state;
+			NexusClanWrapper nexusClanWrapper = _003C_003E4__this;
+			ClanResult result;
+			try
+			{
+				TaskAwaiter<NexusClanResultCode> awaiter;
+				if (num != 0)
+				{
+					awaiter = nexusClanWrapper.Internal.AcceptInvite(NexusClanUtil.GetPlayerId(steamId)).GetAwaiter();
+					if (!awaiter.IsCompleted)
+					{
+						num = (_003C_003E1__state = 0);
+						_003C_003Eu__1 = awaiter;
+						_003C_003Et__builder.AwaitUnsafeOnCompleted<TaskAwaiter<NexusClanResultCode>, _003CAcceptInvite_003Ed__58>(ref awaiter, ref this);
+						return;
+					}
+				}
+				else
+				{
+					awaiter = _003C_003Eu__1;
+					_003C_003Eu__1 = default(TaskAwaiter<NexusClanResultCode>);
+					num = (_003C_003E1__state = -1);
+				}
+				result = awaiter.GetResult().ToClanResult();
+			}
+			catch (Exception exception)
+			{
+				_003C_003E1__state = -2;
+				_003C_003Et__builder.SetException(exception);
+				return;
+			}
+			_003C_003E1__state = -2;
+			_003C_003Et__builder.SetResult(result);
+		}
+
+		void IAsyncStateMachine.MoveNext()
+		{
+			//ILSpy generated this explicit interface implementation from .override directive in MoveNext
+			this.MoveNext();
+		}
+
+		[DebuggerHidden]
+		private void SetStateMachine(IAsyncStateMachine stateMachine)
+		{
+			_003C_003Et__builder.SetStateMachine(stateMachine);
+		}
+
+		void IAsyncStateMachine.SetStateMachine(IAsyncStateMachine stateMachine)
+		{
+			//ILSpy generated this explicit interface implementation from .override directive in SetStateMachine
+			this.SetStateMachine(stateMachine);
+		}
+	}
+
+	[StructLayout(LayoutKind.Auto)]
+	[CompilerGenerated]
+	private struct _003CCancelInvite_003Ed__57 : IAsyncStateMachine
+	{
+		public int _003C_003E1__state;
+
+		public AsyncValueTaskMethodBuilder<ClanResult> _003C_003Et__builder;
+
+		public NexusClanWrapper _003C_003E4__this;
+
+		public ulong steamId;
+
+		public ulong bySteamId;
+
+		private TaskAwaiter<NexusClanResultCode> _003C_003Eu__1;
+
+		private void MoveNext()
+		{
+			//IL_007f: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0084: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0089: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
+			int num = _003C_003E1__state;
+			NexusClanWrapper nexusClanWrapper = _003C_003E4__this;
+			ClanResult result;
+			try
+			{
+				TaskAwaiter<NexusClanResultCode> awaiter;
+				if (num != 0)
+				{
+					awaiter = nexusClanWrapper.Internal.CancelInvite(NexusClanUtil.GetPlayerId(steamId), NexusClanUtil.GetPlayerId(bySteamId)).GetAwaiter();
+					if (!awaiter.IsCompleted)
+					{
+						num = (_003C_003E1__state = 0);
+						_003C_003Eu__1 = awaiter;
+						_003C_003Et__builder.AwaitUnsafeOnCompleted<TaskAwaiter<NexusClanResultCode>, _003CCancelInvite_003Ed__57>(ref awaiter, ref this);
+						return;
+					}
+				}
+				else
+				{
+					awaiter = _003C_003Eu__1;
+					_003C_003Eu__1 = default(TaskAwaiter<NexusClanResultCode>);
+					num = (_003C_003E1__state = -1);
+				}
+				result = awaiter.GetResult().ToClanResult();
+			}
+			catch (Exception exception)
+			{
+				_003C_003E1__state = -2;
+				_003C_003Et__builder.SetException(exception);
+				return;
+			}
+			_003C_003E1__state = -2;
+			_003C_003Et__builder.SetResult(result);
+		}
+
+		void IAsyncStateMachine.MoveNext()
+		{
+			//ILSpy generated this explicit interface implementation from .override directive in MoveNext
+			this.MoveNext();
+		}
+
+		[DebuggerHidden]
+		private void SetStateMachine(IAsyncStateMachine stateMachine)
+		{
+			_003C_003Et__builder.SetStateMachine(stateMachine);
+		}
+
+		void IAsyncStateMachine.SetStateMachine(IAsyncStateMachine stateMachine)
+		{
+			//ILSpy generated this explicit interface implementation from .override directive in SetStateMachine
+			this.SetStateMachine(stateMachine);
+		}
+	}
+
+	[StructLayout(LayoutKind.Auto)]
+	[CompilerGenerated]
+	private struct _003CCreateRole_003Ed__62 : IAsyncStateMachine
+	{
+		public int _003C_003E1__state;
+
+		public AsyncValueTaskMethodBuilder<ClanResult> _003C_003Et__builder;
+
+		public NexusClanWrapper _003C_003E4__this;
+
+		public ClanRole role;
+
+		public ulong bySteamId;
+
+		private TaskAwaiter<NexusClanResultCode> _003C_003Eu__1;
+
+		private void MoveNext()
+		{
+			//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+			//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+			//IL_007f: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0084: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0089: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
+			int num = _003C_003E1__state;
+			NexusClanWrapper nexusClanWrapper = _003C_003E4__this;
+			ClanResult result;
+			try
+			{
+				TaskAwaiter<NexusClanResultCode> awaiter;
+				if (num != 0)
+				{
+					awaiter = nexusClanWrapper.Internal.CreateRole(role.ToRoleParameters(), NexusClanUtil.GetPlayerId(bySteamId)).GetAwaiter();
+					if (!awaiter.IsCompleted)
+					{
+						num = (_003C_003E1__state = 0);
+						_003C_003Eu__1 = awaiter;
+						_003C_003Et__builder.AwaitUnsafeOnCompleted<TaskAwaiter<NexusClanResultCode>, _003CCreateRole_003Ed__62>(ref awaiter, ref this);
+						return;
+					}
+				}
+				else
+				{
+					awaiter = _003C_003Eu__1;
+					_003C_003Eu__1 = default(TaskAwaiter<NexusClanResultCode>);
+					num = (_003C_003E1__state = -1);
+				}
+				result = awaiter.GetResult().ToClanResult();
+			}
+			catch (Exception exception)
+			{
+				_003C_003E1__state = -2;
+				_003C_003Et__builder.SetException(exception);
+				return;
+			}
+			_003C_003E1__state = -2;
+			_003C_003Et__builder.SetResult(result);
+		}
+
+		void IAsyncStateMachine.MoveNext()
+		{
+			//ILSpy generated this explicit interface implementation from .override directive in MoveNext
+			this.MoveNext();
+		}
+
+		[DebuggerHidden]
+		private void SetStateMachine(IAsyncStateMachine stateMachine)
+		{
+			_003C_003Et__builder.SetStateMachine(stateMachine);
+		}
+
+		void IAsyncStateMachine.SetStateMachine(IAsyncStateMachine stateMachine)
+		{
+			//ILSpy generated this explicit interface implementation from .override directive in SetStateMachine
+			this.SetStateMachine(stateMachine);
+		}
+	}
+
+	[StructLayout(LayoutKind.Auto)]
+	[CompilerGenerated]
+	private struct _003CDeleteRole_003Ed__65 : IAsyncStateMachine
+	{
+		public int _003C_003E1__state;
+
+		public AsyncValueTaskMethodBuilder<ClanResult> _003C_003Et__builder;
+
+		public NexusClanWrapper _003C_003E4__this;
+
+		public int roleId;
+
+		public ulong bySteamId;
+
+		private TaskAwaiter<NexusClanResultCode> _003C_003Eu__1;
+
+		private void MoveNext()
+		{
+			//IL_007a: Unknown result type (might be due to invalid IL or missing references)
+			//IL_007f: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0084: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
+			int num = _003C_003E1__state;
+			NexusClanWrapper nexusClanWrapper = _003C_003E4__this;
+			ClanResult result;
+			try
+			{
+				TaskAwaiter<NexusClanResultCode> awaiter;
+				if (num != 0)
+				{
+					awaiter = nexusClanWrapper.Internal.DeleteRole(roleId, NexusClanUtil.GetPlayerId(bySteamId)).GetAwaiter();
+					if (!awaiter.IsCompleted)
+					{
+						num = (_003C_003E1__state = 0);
+						_003C_003Eu__1 = awaiter;
+						_003C_003Et__builder.AwaitUnsafeOnCompleted<TaskAwaiter<NexusClanResultCode>, _003CDeleteRole_003Ed__65>(ref awaiter, ref this);
+						return;
+					}
+				}
+				else
+				{
+					awaiter = _003C_003Eu__1;
+					_003C_003Eu__1 = default(TaskAwaiter<NexusClanResultCode>);
+					num = (_003C_003E1__state = -1);
+				}
+				result = awaiter.GetResult().ToClanResult();
+			}
+			catch (Exception exception)
+			{
+				_003C_003E1__state = -2;
+				_003C_003Et__builder.SetException(exception);
+				return;
+			}
+			_003C_003E1__state = -2;
+			_003C_003Et__builder.SetResult(result);
+		}
+
+		void IAsyncStateMachine.MoveNext()
+		{
+			//ILSpy generated this explicit interface implementation from .override directive in MoveNext
+			this.MoveNext();
+		}
+
+		[DebuggerHidden]
+		private void SetStateMachine(IAsyncStateMachine stateMachine)
+		{
+			_003C_003Et__builder.SetStateMachine(stateMachine);
+		}
+
+		void IAsyncStateMachine.SetStateMachine(IAsyncStateMachine stateMachine)
+		{
+			//ILSpy generated this explicit interface implementation from .override directive in SetStateMachine
+			this.SetStateMachine(stateMachine);
+		}
+	}
+
+	[StructLayout(LayoutKind.Auto)]
+	[CompilerGenerated]
+	private struct _003CDisband_003Ed__66 : IAsyncStateMachine
+	{
+		public int _003C_003E1__state;
+
+		public AsyncValueTaskMethodBuilder<ClanResult> _003C_003Et__builder;
+
+		public NexusClanWrapper _003C_003E4__this;
+
+		public ulong bySteamId;
+
+		private TaskAwaiter<NexusClanResultCode> _003C_003Eu__1;
+
+		private void MoveNext()
+		{
+			//IL_0074: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0079: Unknown result type (might be due to invalid IL or missing references)
+			//IL_007e: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
+			int num = _003C_003E1__state;
+			NexusClanWrapper nexusClanWrapper = _003C_003E4__this;
+			ClanResult result;
+			try
+			{
+				TaskAwaiter<NexusClanResultCode> awaiter;
+				if (num != 0)
+				{
+					awaiter = nexusClanWrapper.Internal.Disband(NexusClanUtil.GetPlayerId(bySteamId)).GetAwaiter();
+					if (!awaiter.IsCompleted)
+					{
+						num = (_003C_003E1__state = 0);
+						_003C_003Eu__1 = awaiter;
+						_003C_003Et__builder.AwaitUnsafeOnCompleted<TaskAwaiter<NexusClanResultCode>, _003CDisband_003Ed__66>(ref awaiter, ref this);
+						return;
+					}
+				}
+				else
+				{
+					awaiter = _003C_003Eu__1;
+					_003C_003Eu__1 = default(TaskAwaiter<NexusClanResultCode>);
+					num = (_003C_003E1__state = -1);
+				}
+				result = awaiter.GetResult().ToClanResult();
+			}
+			catch (Exception exception)
+			{
+				_003C_003E1__state = -2;
+				_003C_003Et__builder.SetException(exception);
+				return;
+			}
+			_003C_003E1__state = -2;
+			_003C_003Et__builder.SetResult(result);
+		}
+
+		void IAsyncStateMachine.MoveNext()
+		{
+			//ILSpy generated this explicit interface implementation from .override directive in MoveNext
+			this.MoveNext();
+		}
+
+		[DebuggerHidden]
+		private void SetStateMachine(IAsyncStateMachine stateMachine)
+		{
+			_003C_003Et__builder.SetStateMachine(stateMachine);
+		}
+
+		void IAsyncStateMachine.SetStateMachine(IAsyncStateMachine stateMachine)
+		{
+			//ILSpy generated this explicit interface implementation from .override directive in SetStateMachine
+			this.SetStateMachine(stateMachine);
+		}
+	}
+
+	[StructLayout(LayoutKind.Auto)]
+	[CompilerGenerated]
+	private struct _003CGetLogs_003Ed__51 : IAsyncStateMachine
 	{
 		public int _003C_003E1__state;
 
@@ -54,7 +432,7 @@ public class NexusClanWrapper : IClan
 					{
 						num = (_003C_003E1__state = 0);
 						_003C_003Eu__1 = awaiter;
-						_003C_003Et__builder.AwaitUnsafeOnCompleted<TaskAwaiter<NexusClanResult<List<ClanLogEntry>>>, _003CGetLogs_003Ed__47>(ref awaiter, ref this);
+						_003C_003Et__builder.AwaitUnsafeOnCompleted<TaskAwaiter<NexusClanResult<List<ClanLogEntry>>>, _003CGetLogs_003Ed__51>(ref awaiter, ref this);
 						return;
 					}
 				}
@@ -121,7 +499,118 @@ public class NexusClanWrapper : IClan
 
 	[StructLayout(LayoutKind.Auto)]
 	[CompilerGenerated]
-	private struct _003CUpdateLastSeen_003Ed__48 : IAsyncStateMachine
+	private struct _003CGetScoreEvents_003Ed__67 : IAsyncStateMachine
+	{
+		public int _003C_003E1__state;
+
+		public AsyncValueTaskMethodBuilder<ClanValueResult<ClanScoreEvents>> _003C_003Et__builder;
+
+		public NexusClanWrapper _003C_003E4__this;
+
+		public ulong bySteamId;
+
+		public int limit;
+
+		private TaskAwaiter<NexusClanResult<List<ClanScoreEventEntry>>> _003C_003Eu__1;
+
+		private void MoveNext()
+		{
+			//IL_0080: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0085: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00ed: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00f2: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00f7: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00fc: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0126: Unknown result type (might be due to invalid IL or missing references)
+			//IL_009c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00e1: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00e3: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00e8: Unknown result type (might be due to invalid IL or missing references)
+			int num = _003C_003E1__state;
+			NexusClanWrapper nexusClanWrapper = _003C_003E4__this;
+			ClanValueResult<ClanScoreEvents> result2;
+			try
+			{
+				TaskAwaiter<NexusClanResult<List<ClanScoreEventEntry>>> awaiter;
+				if (num != 0)
+				{
+					awaiter = nexusClanWrapper.Internal.GetScoreEvents(NexusClanUtil.GetPlayerId(bySteamId), limit).GetAwaiter();
+					if (!awaiter.IsCompleted)
+					{
+						num = (_003C_003E1__state = 0);
+						_003C_003Eu__1 = awaiter;
+						_003C_003Et__builder.AwaitUnsafeOnCompleted<TaskAwaiter<NexusClanResult<List<ClanScoreEventEntry>>>, _003CGetScoreEvents_003Ed__67>(ref awaiter, ref this);
+						return;
+					}
+				}
+				else
+				{
+					awaiter = _003C_003Eu__1;
+					_003C_003Eu__1 = default(TaskAwaiter<NexusClanResult<List<ClanScoreEventEntry>>>);
+					num = (_003C_003E1__state = -1);
+				}
+				NexusClanResult<List<ClanScoreEventEntry>> result = awaiter.GetResult();
+				List<ClanScoreEventEntry> source = default(List<ClanScoreEventEntry>);
+				if (result.IsSuccess && result.TryGetResponse(ref source))
+				{
+					ClanScoreEvents val = default(ClanScoreEvents);
+					val.ClanId = nexusClanWrapper.ClanId;
+					val.ScoreEvents = source.Select(delegate(ClanScoreEventEntry e)
+					{
+						//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+						//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+						//IL_0097: Unknown result type (might be due to invalid IL or missing references)
+						ClanScoreEvent result3 = default(ClanScoreEvent);
+						result3.Timestamp = ((ClanScoreEventEntry)(ref e)).Timestamp * 1000;
+						result3.Type = (ClanScoreEventType)((ClanScoreEventEntry)(ref e)).Type;
+						result3.Score = ((ClanScoreEventEntry)(ref e)).Score;
+						result3.Multiplier = ((ClanScoreEventEntry)(ref e)).Multiplier;
+						result3.SteamId = NexusClanUtil.TryGetSteamId(((ClanScoreEventEntry)(ref e)).PlayerId);
+						result3.OtherSteamId = NexusClanUtil.TryGetSteamId(((ClanScoreEventEntry)(ref e)).OtherPlayerId);
+						result3.OtherClanId = ((ClanScoreEventEntry)(ref e)).OtherClanId;
+						result3.Arg1 = ((ClanScoreEventEntry)(ref e)).Arg1;
+						result3.Arg2 = ((ClanScoreEventEntry)(ref e)).Arg2;
+						return result3;
+					}).ToList();
+					result2 = ClanValueResult<ClanScoreEvents>.op_Implicit(val);
+				}
+				else
+				{
+					result2 = ClanValueResult<ClanScoreEvents>.op_Implicit(result.ResultCode.ToClanResult());
+				}
+			}
+			catch (Exception exception)
+			{
+				_003C_003E1__state = -2;
+				_003C_003Et__builder.SetException(exception);
+				return;
+			}
+			_003C_003E1__state = -2;
+			_003C_003Et__builder.SetResult(result2);
+		}
+
+		void IAsyncStateMachine.MoveNext()
+		{
+			//ILSpy generated this explicit interface implementation from .override directive in MoveNext
+			this.MoveNext();
+		}
+
+		[DebuggerHidden]
+		private void SetStateMachine(IAsyncStateMachine stateMachine)
+		{
+			_003C_003Et__builder.SetStateMachine(stateMachine);
+		}
+
+		void IAsyncStateMachine.SetStateMachine(IAsyncStateMachine stateMachine)
+		{
+			//ILSpy generated this explicit interface implementation from .override directive in SetStateMachine
+			this.SetStateMachine(stateMachine);
+		}
+	}
+
+	[StructLayout(LayoutKind.Auto)]
+	[CompilerGenerated]
+	private struct _003CInvite_003Ed__56 : IAsyncStateMachine
 	{
 		public int _003C_003E1__state;
 
@@ -131,14 +620,16 @@ public class NexusClanWrapper : IClan
 
 		public ulong steamId;
 
+		public ulong bySteamId;
+
 		private TaskAwaiter<NexusClanResultCode> _003C_003Eu__1;
 
 		private void MoveNext()
 		{
-			//IL_0074: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0079: Unknown result type (might be due to invalid IL or missing references)
-			//IL_007e: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
+			//IL_007f: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0084: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0089: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
 			int num = _003C_003E1__state;
 			NexusClanWrapper nexusClanWrapper = _003C_003E4__this;
 			ClanResult result;
@@ -147,12 +638,12 @@ public class NexusClanWrapper : IClan
 				TaskAwaiter<NexusClanResultCode> awaiter;
 				if (num != 0)
 				{
-					awaiter = nexusClanWrapper.Internal.UpdateLastSeen(NexusClanUtil.GetPlayerId(steamId)).GetAwaiter();
+					awaiter = nexusClanWrapper.Internal.Invite(NexusClanUtil.GetPlayerId(steamId), NexusClanUtil.GetPlayerId(bySteamId)).GetAwaiter();
 					if (!awaiter.IsCompleted)
 					{
 						num = (_003C_003E1__state = 0);
 						_003C_003Eu__1 = awaiter;
-						_003C_003Et__builder.AwaitUnsafeOnCompleted<TaskAwaiter<NexusClanResultCode>, _003CUpdateLastSeen_003Ed__48>(ref awaiter, ref this);
+						_003C_003Et__builder.AwaitUnsafeOnCompleted<TaskAwaiter<NexusClanResultCode>, _003CInvite_003Ed__56>(ref awaiter, ref this);
 						return;
 					}
 				}
@@ -195,7 +686,7 @@ public class NexusClanWrapper : IClan
 
 	[StructLayout(LayoutKind.Auto)]
 	[CompilerGenerated]
-	private struct _003CSetMotd_003Ed__49 : IAsyncStateMachine
+	private struct _003CKick_003Ed__59 : IAsyncStateMachine
 	{
 		public int _003C_003E1__state;
 
@@ -203,64 +694,42 @@ public class NexusClanWrapper : IClan
 
 		public NexusClanWrapper _003C_003E4__this;
 
-		public ulong bySteamId;
+		public ulong steamId;
 
-		public string newMotd;
+		public ulong bySteamId;
 
 		private TaskAwaiter<NexusClanResultCode> _003C_003Eu__1;
 
 		private void MoveNext()
 		{
-			//IL_0136: Unknown result type (might be due to invalid IL or missing references)
-			//IL_013b: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0140: Unknown result type (might be due to invalid IL or missing references)
-			//IL_016a: Unknown result type (might be due to invalid IL or missing references)
-			//IL_005c: Unknown result type (might be due to invalid IL or missing references)
-			//IL_008a: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00af: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00df: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+			//IL_007f: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0084: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0089: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
 			int num = _003C_003E1__state;
 			NexusClanWrapper nexusClanWrapper = _003C_003E4__this;
 			ClanResult result;
 			try
 			{
 				TaskAwaiter<NexusClanResultCode> awaiter;
-				if (num == 0)
+				if (num != 0)
 				{
-					awaiter = _003C_003Eu__1;
-					_003C_003Eu__1 = default(TaskAwaiter<NexusClanResultCode>);
-					num = (_003C_003E1__state = -1);
-					goto IL_0134;
-				}
-				if (nexusClanWrapper.CheckRole(bySteamId, (ClanRole r) => r.CanSetMotd))
-				{
-					string playerId = NexusClanUtil.GetPlayerId(bySteamId);
-					NexusClan @internal = nexusClanWrapper.Internal;
-					ClanVariablesUpdate val = default(ClanVariablesUpdate);
-					((ClanVariablesUpdate)(ref val)).Variables = new List<VariableUpdate>(2)
-					{
-						new VariableUpdate("motd", newMotd, (bool?)null, (bool?)null),
-						new VariableUpdate("motd_author", playerId, (bool?)null, (bool?)null)
-					};
-					((ClanVariablesUpdate)(ref val)).EventKey = "set_motd";
-					((ClanVariablesUpdate)(ref val)).Arg1 = playerId;
-					((ClanVariablesUpdate)(ref val)).Arg2 = newMotd;
-					awaiter = @internal.UpdateVariables(val).GetAwaiter();
+					awaiter = nexusClanWrapper.Internal.Kick(NexusClanUtil.GetPlayerId(steamId), NexusClanUtil.GetPlayerId(bySteamId)).GetAwaiter();
 					if (!awaiter.IsCompleted)
 					{
 						num = (_003C_003E1__state = 0);
 						_003C_003Eu__1 = awaiter;
-						_003C_003Et__builder.AwaitUnsafeOnCompleted<TaskAwaiter<NexusClanResultCode>, _003CSetMotd_003Ed__49>(ref awaiter, ref this);
+						_003C_003Et__builder.AwaitUnsafeOnCompleted<TaskAwaiter<NexusClanResultCode>, _003CKick_003Ed__59>(ref awaiter, ref this);
 						return;
 					}
-					goto IL_0134;
 				}
-				result = (ClanResult)5;
-				goto end_IL_000e;
-				IL_0134:
+				else
+				{
+					awaiter = _003C_003Eu__1;
+					_003C_003Eu__1 = default(TaskAwaiter<NexusClanResultCode>);
+					num = (_003C_003E1__state = -1);
+				}
 				result = awaiter.GetResult().ToClanResult();
-				end_IL_000e:;
 			}
 			catch (Exception exception)
 			{
@@ -293,79 +762,74 @@ public class NexusClanWrapper : IClan
 
 	[StructLayout(LayoutKind.Auto)]
 	[CompilerGenerated]
-	private struct _003CSetLogo_003Ed__50 : IAsyncStateMachine
+	private struct _003CRefreshIfStale_003Ed__50 : IAsyncStateMachine
 	{
 		public int _003C_003E1__state;
 
-		public AsyncValueTaskMethodBuilder<ClanResult> _003C_003Et__builder;
+		public AsyncValueTaskMethodBuilder _003C_003Et__builder;
 
 		public NexusClanWrapper _003C_003E4__this;
 
-		public ulong bySteamId;
-
-		public byte[] newLogo;
-
-		private TaskAwaiter<NexusClanResultCode> _003C_003Eu__1;
+		private TaskAwaiter _003C_003Eu__1;
 
 		private void MoveNext()
 		{
-			//IL_0109: Unknown result type (might be due to invalid IL or missing references)
-			//IL_010e: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0113: Unknown result type (might be due to invalid IL or missing references)
-			//IL_013d: Unknown result type (might be due to invalid IL or missing references)
-			//IL_005c: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0076: Unknown result type (might be due to invalid IL or missing references)
-			//IL_008f: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+			//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0031: Unknown result type (might be due to invalid IL or missing references)
 			int num = _003C_003E1__state;
 			NexusClanWrapper nexusClanWrapper = _003C_003E4__this;
-			ClanResult result;
 			try
 			{
-				TaskAwaiter<NexusClanResultCode> awaiter;
 				if (num == 0)
 				{
-					awaiter = _003C_003Eu__1;
-					_003C_003Eu__1 = default(TaskAwaiter<NexusClanResultCode>);
-					num = (_003C_003E1__state = -1);
-					goto IL_0107;
+					goto IL_0037;
 				}
-				if (nexusClanWrapper.CheckRole(bySteamId, (ClanRole r) => r.CanSetLogo))
+				if (RealTimeSince.op_Implicit(nexusClanWrapper._sinceLastRefresh) > 30f)
 				{
-					string playerId = NexusClanUtil.GetPlayerId(bySteamId);
-					NexusClan @internal = nexusClanWrapper.Internal;
-					ClanVariablesUpdate val = default(ClanVariablesUpdate);
-					((ClanVariablesUpdate)(ref val)).Variables = new List<VariableUpdate>(1)
-					{
-						new VariableUpdate("logo", Memory<byte>.op_Implicit(newLogo), (bool?)null, (bool?)null)
-					};
-					((ClanVariablesUpdate)(ref val)).EventKey = "set_logo";
-					((ClanVariablesUpdate)(ref val)).Arg1 = playerId;
-					awaiter = @internal.UpdateVariables(val).GetAwaiter();
-					if (!awaiter.IsCompleted)
-					{
-						num = (_003C_003E1__state = 0);
-						_003C_003Eu__1 = awaiter;
-						_003C_003Et__builder.AwaitUnsafeOnCompleted<TaskAwaiter<NexusClanResultCode>, _003CSetLogo_003Ed__50>(ref awaiter, ref this);
-						return;
-					}
-					goto IL_0107;
+					nexusClanWrapper._sinceLastRefresh = RealTimeSince.op_Implicit(0f);
+					goto IL_0037;
 				}
-				result = (ClanResult)5;
 				goto end_IL_000e;
-				IL_0107:
-				result = awaiter.GetResult().ToClanResult();
+				IL_0037:
+				try
+				{
+					TaskAwaiter awaiter;
+					if (num != 0)
+					{
+						awaiter = nexusClanWrapper.Internal.Refresh().GetAwaiter();
+						if (!awaiter.IsCompleted)
+						{
+							num = (_003C_003E1__state = 0);
+							_003C_003Eu__1 = awaiter;
+							((AsyncValueTaskMethodBuilder)(ref _003C_003Et__builder)).AwaitUnsafeOnCompleted<TaskAwaiter, _003CRefreshIfStale_003Ed__50>(ref awaiter, ref this);
+							return;
+						}
+					}
+					else
+					{
+						awaiter = _003C_003Eu__1;
+						_003C_003Eu__1 = default(TaskAwaiter);
+						num = (_003C_003E1__state = -1);
+					}
+					awaiter.GetResult();
+					nexusClanWrapper.UpdateValuesInternal();
+				}
+				catch (Exception ex)
+				{
+					Debug.LogError((object)$"Failed to refresh nexus clan ID {nexusClanWrapper.ClanId}");
+					Debug.LogException(ex);
+				}
 				end_IL_000e:;
 			}
 			catch (Exception exception)
 			{
 				_003C_003E1__state = -2;
-				_003C_003Et__builder.SetException(exception);
+				((AsyncValueTaskMethodBuilder)(ref _003C_003Et__builder)).SetException(exception);
 				return;
 			}
 			_003C_003E1__state = -2;
-			_003C_003Et__builder.SetResult(result);
+			((AsyncValueTaskMethodBuilder)(ref _003C_003Et__builder)).SetResult();
 		}
 
 		void IAsyncStateMachine.MoveNext()
@@ -377,7 +841,7 @@ public class NexusClanWrapper : IClan
 		[DebuggerHidden]
 		private void SetStateMachine(IAsyncStateMachine stateMachine)
 		{
-			_003C_003Et__builder.SetStateMachine(stateMachine);
+			((AsyncValueTaskMethodBuilder)(ref _003C_003Et__builder)).SetStateMachine(stateMachine);
 		}
 
 		void IAsyncStateMachine.SetStateMachine(IAsyncStateMachine stateMachine)
@@ -389,7 +853,7 @@ public class NexusClanWrapper : IClan
 
 	[StructLayout(LayoutKind.Auto)]
 	[CompilerGenerated]
-	private struct _003CSetColor_003Ed__51 : IAsyncStateMachine
+	private struct _003CSetColor_003Ed__55 : IAsyncStateMachine
 	{
 		public int _003C_003E1__state;
 
@@ -445,7 +909,7 @@ public class NexusClanWrapper : IClan
 					{
 						num = (_003C_003E1__state = 0);
 						_003C_003Eu__1 = awaiter;
-						_003C_003Et__builder.AwaitUnsafeOnCompleted<TaskAwaiter<NexusClanResultCode>, _003CSetColor_003Ed__51>(ref awaiter, ref this);
+						_003C_003Et__builder.AwaitUnsafeOnCompleted<TaskAwaiter<NexusClanResultCode>, _003CSetColor_003Ed__55>(ref awaiter, ref this);
 						return;
 					}
 					goto IL_0127;
@@ -487,354 +951,70 @@ public class NexusClanWrapper : IClan
 
 	[StructLayout(LayoutKind.Auto)]
 	[CompilerGenerated]
-	private struct _003CInvite_003Ed__52 : IAsyncStateMachine
+	private struct _003CSetLogo_003Ed__54 : IAsyncStateMachine
 	{
 		public int _003C_003E1__state;
 
 		public AsyncValueTaskMethodBuilder<ClanResult> _003C_003Et__builder;
 
 		public NexusClanWrapper _003C_003E4__this;
-
-		public ulong steamId;
 
 		public ulong bySteamId;
 
-		private TaskAwaiter<NexusClanResultCode> _003C_003Eu__1;
-
-		private void MoveNext()
-		{
-			//IL_007f: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0084: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0089: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
-			int num = _003C_003E1__state;
-			NexusClanWrapper nexusClanWrapper = _003C_003E4__this;
-			ClanResult result;
-			try
-			{
-				TaskAwaiter<NexusClanResultCode> awaiter;
-				if (num != 0)
-				{
-					awaiter = nexusClanWrapper.Internal.Invite(NexusClanUtil.GetPlayerId(steamId), NexusClanUtil.GetPlayerId(bySteamId)).GetAwaiter();
-					if (!awaiter.IsCompleted)
-					{
-						num = (_003C_003E1__state = 0);
-						_003C_003Eu__1 = awaiter;
-						_003C_003Et__builder.AwaitUnsafeOnCompleted<TaskAwaiter<NexusClanResultCode>, _003CInvite_003Ed__52>(ref awaiter, ref this);
-						return;
-					}
-				}
-				else
-				{
-					awaiter = _003C_003Eu__1;
-					_003C_003Eu__1 = default(TaskAwaiter<NexusClanResultCode>);
-					num = (_003C_003E1__state = -1);
-				}
-				result = awaiter.GetResult().ToClanResult();
-			}
-			catch (Exception exception)
-			{
-				_003C_003E1__state = -2;
-				_003C_003Et__builder.SetException(exception);
-				return;
-			}
-			_003C_003E1__state = -2;
-			_003C_003Et__builder.SetResult(result);
-		}
-
-		void IAsyncStateMachine.MoveNext()
-		{
-			//ILSpy generated this explicit interface implementation from .override directive in MoveNext
-			this.MoveNext();
-		}
-
-		[DebuggerHidden]
-		private void SetStateMachine(IAsyncStateMachine stateMachine)
-		{
-			_003C_003Et__builder.SetStateMachine(stateMachine);
-		}
-
-		void IAsyncStateMachine.SetStateMachine(IAsyncStateMachine stateMachine)
-		{
-			//ILSpy generated this explicit interface implementation from .override directive in SetStateMachine
-			this.SetStateMachine(stateMachine);
-		}
-	}
-
-	[StructLayout(LayoutKind.Auto)]
-	[CompilerGenerated]
-	private struct _003CCancelInvite_003Ed__53 : IAsyncStateMachine
-	{
-		public int _003C_003E1__state;
-
-		public AsyncValueTaskMethodBuilder<ClanResult> _003C_003Et__builder;
-
-		public NexusClanWrapper _003C_003E4__this;
-
-		public ulong steamId;
-
-		public ulong bySteamId;
+		public byte[] newLogo;
 
 		private TaskAwaiter<NexusClanResultCode> _003C_003Eu__1;
 
 		private void MoveNext()
 		{
-			//IL_007f: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0084: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0089: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
-			int num = _003C_003E1__state;
-			NexusClanWrapper nexusClanWrapper = _003C_003E4__this;
-			ClanResult result;
-			try
-			{
-				TaskAwaiter<NexusClanResultCode> awaiter;
-				if (num != 0)
-				{
-					awaiter = nexusClanWrapper.Internal.CancelInvite(NexusClanUtil.GetPlayerId(steamId), NexusClanUtil.GetPlayerId(bySteamId)).GetAwaiter();
-					if (!awaiter.IsCompleted)
-					{
-						num = (_003C_003E1__state = 0);
-						_003C_003Eu__1 = awaiter;
-						_003C_003Et__builder.AwaitUnsafeOnCompleted<TaskAwaiter<NexusClanResultCode>, _003CCancelInvite_003Ed__53>(ref awaiter, ref this);
-						return;
-					}
-				}
-				else
-				{
-					awaiter = _003C_003Eu__1;
-					_003C_003Eu__1 = default(TaskAwaiter<NexusClanResultCode>);
-					num = (_003C_003E1__state = -1);
-				}
-				result = awaiter.GetResult().ToClanResult();
-			}
-			catch (Exception exception)
-			{
-				_003C_003E1__state = -2;
-				_003C_003Et__builder.SetException(exception);
-				return;
-			}
-			_003C_003E1__state = -2;
-			_003C_003Et__builder.SetResult(result);
-		}
-
-		void IAsyncStateMachine.MoveNext()
-		{
-			//ILSpy generated this explicit interface implementation from .override directive in MoveNext
-			this.MoveNext();
-		}
-
-		[DebuggerHidden]
-		private void SetStateMachine(IAsyncStateMachine stateMachine)
-		{
-			_003C_003Et__builder.SetStateMachine(stateMachine);
-		}
-
-		void IAsyncStateMachine.SetStateMachine(IAsyncStateMachine stateMachine)
-		{
-			//ILSpy generated this explicit interface implementation from .override directive in SetStateMachine
-			this.SetStateMachine(stateMachine);
-		}
-	}
-
-	[StructLayout(LayoutKind.Auto)]
-	[CompilerGenerated]
-	private struct _003CAcceptInvite_003Ed__54 : IAsyncStateMachine
-	{
-		public int _003C_003E1__state;
-
-		public AsyncValueTaskMethodBuilder<ClanResult> _003C_003Et__builder;
-
-		public NexusClanWrapper _003C_003E4__this;
-
-		public ulong steamId;
-
-		private TaskAwaiter<NexusClanResultCode> _003C_003Eu__1;
-
-		private void MoveNext()
-		{
-			//IL_0074: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0079: Unknown result type (might be due to invalid IL or missing references)
-			//IL_007e: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
-			int num = _003C_003E1__state;
-			NexusClanWrapper nexusClanWrapper = _003C_003E4__this;
-			ClanResult result;
-			try
-			{
-				TaskAwaiter<NexusClanResultCode> awaiter;
-				if (num != 0)
-				{
-					awaiter = nexusClanWrapper.Internal.AcceptInvite(NexusClanUtil.GetPlayerId(steamId)).GetAwaiter();
-					if (!awaiter.IsCompleted)
-					{
-						num = (_003C_003E1__state = 0);
-						_003C_003Eu__1 = awaiter;
-						_003C_003Et__builder.AwaitUnsafeOnCompleted<TaskAwaiter<NexusClanResultCode>, _003CAcceptInvite_003Ed__54>(ref awaiter, ref this);
-						return;
-					}
-				}
-				else
-				{
-					awaiter = _003C_003Eu__1;
-					_003C_003Eu__1 = default(TaskAwaiter<NexusClanResultCode>);
-					num = (_003C_003E1__state = -1);
-				}
-				result = awaiter.GetResult().ToClanResult();
-			}
-			catch (Exception exception)
-			{
-				_003C_003E1__state = -2;
-				_003C_003Et__builder.SetException(exception);
-				return;
-			}
-			_003C_003E1__state = -2;
-			_003C_003Et__builder.SetResult(result);
-		}
-
-		void IAsyncStateMachine.MoveNext()
-		{
-			//ILSpy generated this explicit interface implementation from .override directive in MoveNext
-			this.MoveNext();
-		}
-
-		[DebuggerHidden]
-		private void SetStateMachine(IAsyncStateMachine stateMachine)
-		{
-			_003C_003Et__builder.SetStateMachine(stateMachine);
-		}
-
-		void IAsyncStateMachine.SetStateMachine(IAsyncStateMachine stateMachine)
-		{
-			//ILSpy generated this explicit interface implementation from .override directive in SetStateMachine
-			this.SetStateMachine(stateMachine);
-		}
-	}
-
-	[StructLayout(LayoutKind.Auto)]
-	[CompilerGenerated]
-	private struct _003CKick_003Ed__55 : IAsyncStateMachine
-	{
-		public int _003C_003E1__state;
-
-		public AsyncValueTaskMethodBuilder<ClanResult> _003C_003Et__builder;
-
-		public NexusClanWrapper _003C_003E4__this;
-
-		public ulong steamId;
-
-		public ulong bySteamId;
-
-		private TaskAwaiter<NexusClanResultCode> _003C_003Eu__1;
-
-		private void MoveNext()
-		{
-			//IL_007f: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0084: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0089: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
-			int num = _003C_003E1__state;
-			NexusClanWrapper nexusClanWrapper = _003C_003E4__this;
-			ClanResult result;
-			try
-			{
-				TaskAwaiter<NexusClanResultCode> awaiter;
-				if (num != 0)
-				{
-					awaiter = nexusClanWrapper.Internal.Kick(NexusClanUtil.GetPlayerId(steamId), NexusClanUtil.GetPlayerId(bySteamId)).GetAwaiter();
-					if (!awaiter.IsCompleted)
-					{
-						num = (_003C_003E1__state = 0);
-						_003C_003Eu__1 = awaiter;
-						_003C_003Et__builder.AwaitUnsafeOnCompleted<TaskAwaiter<NexusClanResultCode>, _003CKick_003Ed__55>(ref awaiter, ref this);
-						return;
-					}
-				}
-				else
-				{
-					awaiter = _003C_003Eu__1;
-					_003C_003Eu__1 = default(TaskAwaiter<NexusClanResultCode>);
-					num = (_003C_003E1__state = -1);
-				}
-				result = awaiter.GetResult().ToClanResult();
-			}
-			catch (Exception exception)
-			{
-				_003C_003E1__state = -2;
-				_003C_003Et__builder.SetException(exception);
-				return;
-			}
-			_003C_003E1__state = -2;
-			_003C_003Et__builder.SetResult(result);
-		}
-
-		void IAsyncStateMachine.MoveNext()
-		{
-			//ILSpy generated this explicit interface implementation from .override directive in MoveNext
-			this.MoveNext();
-		}
-
-		[DebuggerHidden]
-		private void SetStateMachine(IAsyncStateMachine stateMachine)
-		{
-			_003C_003Et__builder.SetStateMachine(stateMachine);
-		}
-
-		void IAsyncStateMachine.SetStateMachine(IAsyncStateMachine stateMachine)
-		{
-			//ILSpy generated this explicit interface implementation from .override directive in SetStateMachine
-			this.SetStateMachine(stateMachine);
-		}
-	}
-
-	[StructLayout(LayoutKind.Auto)]
-	[CompilerGenerated]
-	private struct _003CSetPlayerRole_003Ed__56 : IAsyncStateMachine
-	{
-		public int _003C_003E1__state;
-
-		public AsyncValueTaskMethodBuilder<ClanResult> _003C_003Et__builder;
-
-		public NexusClanWrapper _003C_003E4__this;
-
-		public ulong steamId;
-
-		public int newRoleId;
-
-		public ulong bySteamId;
-
-		private TaskAwaiter<NexusClanResultCode> _003C_003Eu__1;
-
-		private void MoveNext()
-		{
-			//IL_0085: Unknown result type (might be due to invalid IL or missing references)
-			//IL_008a: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0109: Unknown result type (might be due to invalid IL or missing references)
+			//IL_010e: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0113: Unknown result type (might be due to invalid IL or missing references)
+			//IL_013d: Unknown result type (might be due to invalid IL or missing references)
+			//IL_005c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0076: Unknown result type (might be due to invalid IL or missing references)
 			//IL_008f: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00b9: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0042: Unknown result type (might be due to invalid IL or missing references)
 			int num = _003C_003E1__state;
 			NexusClanWrapper nexusClanWrapper = _003C_003E4__this;
 			ClanResult result;
 			try
 			{
 				TaskAwaiter<NexusClanResultCode> awaiter;
-				if (num != 0)
-				{
-					awaiter = nexusClanWrapper.Internal.SetPlayerRole(NexusClanUtil.GetPlayerId(steamId), newRoleId, NexusClanUtil.GetPlayerId(bySteamId)).GetAwaiter();
-					if (!awaiter.IsCompleted)
-					{
-						num = (_003C_003E1__state = 0);
-						_003C_003Eu__1 = awaiter;
-						_003C_003Et__builder.AwaitUnsafeOnCompleted<TaskAwaiter<NexusClanResultCode>, _003CSetPlayerRole_003Ed__56>(ref awaiter, ref this);
-						return;
-					}
-				}
-				else
+				if (num == 0)
 				{
 					awaiter = _003C_003Eu__1;
 					_003C_003Eu__1 = default(TaskAwaiter<NexusClanResultCode>);
 					num = (_003C_003E1__state = -1);
+					goto IL_0107;
 				}
+				if (nexusClanWrapper.CheckRole(bySteamId, (ClanRole r) => r.CanSetLogo))
+				{
+					string playerId = NexusClanUtil.GetPlayerId(bySteamId);
+					NexusClan @internal = nexusClanWrapper.Internal;
+					ClanVariablesUpdate val = default(ClanVariablesUpdate);
+					((ClanVariablesUpdate)(ref val)).Variables = new List<VariableUpdate>(1)
+					{
+						new VariableUpdate("logo", Memory<byte>.op_Implicit(newLogo), (bool?)null, (bool?)null)
+					};
+					((ClanVariablesUpdate)(ref val)).EventKey = "set_logo";
+					((ClanVariablesUpdate)(ref val)).Arg1 = playerId;
+					awaiter = @internal.UpdateVariables(val).GetAwaiter();
+					if (!awaiter.IsCompleted)
+					{
+						num = (_003C_003E1__state = 0);
+						_003C_003Eu__1 = awaiter;
+						_003C_003Et__builder.AwaitUnsafeOnCompleted<TaskAwaiter<NexusClanResultCode>, _003CSetLogo_003Ed__54>(ref awaiter, ref this);
+						return;
+					}
+					goto IL_0107;
+				}
+				result = (ClanResult)5;
+				goto end_IL_000e;
+				IL_0107:
 				result = awaiter.GetResult().ToClanResult();
+				end_IL_000e:;
 			}
 			catch (Exception exception)
 			{
@@ -867,7 +1047,105 @@ public class NexusClanWrapper : IClan
 
 	[StructLayout(LayoutKind.Auto)]
 	[CompilerGenerated]
-	private struct _003CSetPlayerNotes_003Ed__57 : IAsyncStateMachine
+	private struct _003CSetMotd_003Ed__53 : IAsyncStateMachine
+	{
+		public int _003C_003E1__state;
+
+		public AsyncValueTaskMethodBuilder<ClanResult> _003C_003Et__builder;
+
+		public NexusClanWrapper _003C_003E4__this;
+
+		public ulong bySteamId;
+
+		public string newMotd;
+
+		private TaskAwaiter<NexusClanResultCode> _003C_003Eu__1;
+
+		private void MoveNext()
+		{
+			//IL_0136: Unknown result type (might be due to invalid IL or missing references)
+			//IL_013b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0140: Unknown result type (might be due to invalid IL or missing references)
+			//IL_016a: Unknown result type (might be due to invalid IL or missing references)
+			//IL_005c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_008a: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00af: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00df: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+			int num = _003C_003E1__state;
+			NexusClanWrapper nexusClanWrapper = _003C_003E4__this;
+			ClanResult result;
+			try
+			{
+				TaskAwaiter<NexusClanResultCode> awaiter;
+				if (num == 0)
+				{
+					awaiter = _003C_003Eu__1;
+					_003C_003Eu__1 = default(TaskAwaiter<NexusClanResultCode>);
+					num = (_003C_003E1__state = -1);
+					goto IL_0134;
+				}
+				if (nexusClanWrapper.CheckRole(bySteamId, (ClanRole r) => r.CanSetMotd))
+				{
+					string playerId = NexusClanUtil.GetPlayerId(bySteamId);
+					NexusClan @internal = nexusClanWrapper.Internal;
+					ClanVariablesUpdate val = default(ClanVariablesUpdate);
+					((ClanVariablesUpdate)(ref val)).Variables = new List<VariableUpdate>(2)
+					{
+						new VariableUpdate("motd", newMotd, (bool?)null, (bool?)null),
+						new VariableUpdate("motd_author", playerId, (bool?)null, (bool?)null)
+					};
+					((ClanVariablesUpdate)(ref val)).EventKey = "set_motd";
+					((ClanVariablesUpdate)(ref val)).Arg1 = playerId;
+					((ClanVariablesUpdate)(ref val)).Arg2 = newMotd;
+					awaiter = @internal.UpdateVariables(val).GetAwaiter();
+					if (!awaiter.IsCompleted)
+					{
+						num = (_003C_003E1__state = 0);
+						_003C_003Eu__1 = awaiter;
+						_003C_003Et__builder.AwaitUnsafeOnCompleted<TaskAwaiter<NexusClanResultCode>, _003CSetMotd_003Ed__53>(ref awaiter, ref this);
+						return;
+					}
+					goto IL_0134;
+				}
+				result = (ClanResult)5;
+				goto end_IL_000e;
+				IL_0134:
+				result = awaiter.GetResult().ToClanResult();
+				end_IL_000e:;
+			}
+			catch (Exception exception)
+			{
+				_003C_003E1__state = -2;
+				_003C_003Et__builder.SetException(exception);
+				return;
+			}
+			_003C_003E1__state = -2;
+			_003C_003Et__builder.SetResult(result);
+		}
+
+		void IAsyncStateMachine.MoveNext()
+		{
+			//ILSpy generated this explicit interface implementation from .override directive in MoveNext
+			this.MoveNext();
+		}
+
+		[DebuggerHidden]
+		private void SetStateMachine(IAsyncStateMachine stateMachine)
+		{
+			_003C_003Et__builder.SetStateMachine(stateMachine);
+		}
+
+		void IAsyncStateMachine.SetStateMachine(IAsyncStateMachine stateMachine)
+		{
+			//ILSpy generated this explicit interface implementation from .override directive in SetStateMachine
+			this.SetStateMachine(stateMachine);
+		}
+	}
+
+	[StructLayout(LayoutKind.Auto)]
+	[CompilerGenerated]
+	private struct _003CSetPlayerNotes_003Ed__61 : IAsyncStateMachine
 	{
 		public int _003C_003E1__state;
 
@@ -925,7 +1203,7 @@ public class NexusClanWrapper : IClan
 					{
 						num = (_003C_003E1__state = 0);
 						_003C_003Eu__1 = awaiter;
-						_003C_003Et__builder.AwaitUnsafeOnCompleted<TaskAwaiter<NexusClanResultCode>, _003CSetPlayerNotes_003Ed__57>(ref awaiter, ref this);
+						_003C_003Et__builder.AwaitUnsafeOnCompleted<TaskAwaiter<NexusClanResultCode>, _003CSetPlayerNotes_003Ed__61>(ref awaiter, ref this);
 						return;
 					}
 					goto IL_0126;
@@ -967,7 +1245,7 @@ public class NexusClanWrapper : IClan
 
 	[StructLayout(LayoutKind.Auto)]
 	[CompilerGenerated]
-	private struct _003CCreateRole_003Ed__58 : IAsyncStateMachine
+	private struct _003CSetPlayerRole_003Ed__60 : IAsyncStateMachine
 	{
 		public int _003C_003E1__state;
 
@@ -975,7 +1253,9 @@ public class NexusClanWrapper : IClan
 
 		public NexusClanWrapper _003C_003E4__this;
 
-		public ClanRole role;
+		public ulong steamId;
+
+		public int newRoleId;
 
 		public ulong bySteamId;
 
@@ -983,90 +1263,10 @@ public class NexusClanWrapper : IClan
 
 		private void MoveNext()
 		{
-			//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-			//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-			//IL_007f: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0084: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0089: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
-			int num = _003C_003E1__state;
-			NexusClanWrapper nexusClanWrapper = _003C_003E4__this;
-			ClanResult result;
-			try
-			{
-				TaskAwaiter<NexusClanResultCode> awaiter;
-				if (num != 0)
-				{
-					awaiter = nexusClanWrapper.Internal.CreateRole(role.ToRoleParameters(), NexusClanUtil.GetPlayerId(bySteamId)).GetAwaiter();
-					if (!awaiter.IsCompleted)
-					{
-						num = (_003C_003E1__state = 0);
-						_003C_003Eu__1 = awaiter;
-						_003C_003Et__builder.AwaitUnsafeOnCompleted<TaskAwaiter<NexusClanResultCode>, _003CCreateRole_003Ed__58>(ref awaiter, ref this);
-						return;
-					}
-				}
-				else
-				{
-					awaiter = _003C_003Eu__1;
-					_003C_003Eu__1 = default(TaskAwaiter<NexusClanResultCode>);
-					num = (_003C_003E1__state = -1);
-				}
-				result = awaiter.GetResult().ToClanResult();
-			}
-			catch (Exception exception)
-			{
-				_003C_003E1__state = -2;
-				_003C_003Et__builder.SetException(exception);
-				return;
-			}
-			_003C_003E1__state = -2;
-			_003C_003Et__builder.SetResult(result);
-		}
-
-		void IAsyncStateMachine.MoveNext()
-		{
-			//ILSpy generated this explicit interface implementation from .override directive in MoveNext
-			this.MoveNext();
-		}
-
-		[DebuggerHidden]
-		private void SetStateMachine(IAsyncStateMachine stateMachine)
-		{
-			_003C_003Et__builder.SetStateMachine(stateMachine);
-		}
-
-		void IAsyncStateMachine.SetStateMachine(IAsyncStateMachine stateMachine)
-		{
-			//ILSpy generated this explicit interface implementation from .override directive in SetStateMachine
-			this.SetStateMachine(stateMachine);
-		}
-	}
-
-	[StructLayout(LayoutKind.Auto)]
-	[CompilerGenerated]
-	private struct _003CUpdateRole_003Ed__59 : IAsyncStateMachine
-	{
-		public int _003C_003E1__state;
-
-		public AsyncValueTaskMethodBuilder<ClanResult> _003C_003Et__builder;
-
-		public NexusClanWrapper _003C_003E4__this;
-
-		public ClanRole role;
-
-		public ulong bySteamId;
-
-		private TaskAwaiter<NexusClanResultCode> _003C_003Eu__1;
-
-		private void MoveNext()
-		{
-			//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0085: Unknown result type (might be due to invalid IL or missing references)
 			//IL_008a: Unknown result type (might be due to invalid IL or missing references)
 			//IL_008f: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0094: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00be: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00b9: Unknown result type (might be due to invalid IL or missing references)
 			int num = _003C_003E1__state;
 			NexusClanWrapper nexusClanWrapper = _003C_003E4__this;
 			ClanResult result;
@@ -1075,12 +1275,12 @@ public class NexusClanWrapper : IClan
 				TaskAwaiter<NexusClanResultCode> awaiter;
 				if (num != 0)
 				{
-					awaiter = nexusClanWrapper.Internal.UpdateRole(role.RoleId, role.ToRoleParameters(), NexusClanUtil.GetPlayerId(bySteamId)).GetAwaiter();
+					awaiter = nexusClanWrapper.Internal.SetPlayerRole(NexusClanUtil.GetPlayerId(steamId), newRoleId, NexusClanUtil.GetPlayerId(bySteamId)).GetAwaiter();
 					if (!awaiter.IsCompleted)
 					{
 						num = (_003C_003E1__state = 0);
 						_003C_003Eu__1 = awaiter;
-						_003C_003Et__builder.AwaitUnsafeOnCompleted<TaskAwaiter<NexusClanResultCode>, _003CUpdateRole_003Ed__59>(ref awaiter, ref this);
+						_003C_003Et__builder.AwaitUnsafeOnCompleted<TaskAwaiter<NexusClanResultCode>, _003CSetPlayerRole_003Ed__60>(ref awaiter, ref this);
 						return;
 					}
 				}
@@ -1123,7 +1323,7 @@ public class NexusClanWrapper : IClan
 
 	[StructLayout(LayoutKind.Auto)]
 	[CompilerGenerated]
-	private struct _003CSwapRoleRanks_003Ed__60 : IAsyncStateMachine
+	private struct _003CSwapRoleRanks_003Ed__64 : IAsyncStateMachine
 	{
 		public int _003C_003E1__state;
 
@@ -1158,7 +1358,7 @@ public class NexusClanWrapper : IClan
 					{
 						num = (_003C_003E1__state = 0);
 						_003C_003Eu__1 = awaiter;
-						_003C_003Et__builder.AwaitUnsafeOnCompleted<TaskAwaiter<NexusClanResultCode>, _003CSwapRoleRanks_003Ed__60>(ref awaiter, ref this);
+						_003C_003Et__builder.AwaitUnsafeOnCompleted<TaskAwaiter<NexusClanResultCode>, _003CSwapRoleRanks_003Ed__64>(ref awaiter, ref this);
 						return;
 					}
 				}
@@ -1201,7 +1401,7 @@ public class NexusClanWrapper : IClan
 
 	[StructLayout(LayoutKind.Auto)]
 	[CompilerGenerated]
-	private struct _003CDeleteRole_003Ed__61 : IAsyncStateMachine
+	private struct _003CUpdateLastSeen_003Ed__52 : IAsyncStateMachine
 	{
 		public int _003C_003E1__state;
 
@@ -1209,83 +1409,7 @@ public class NexusClanWrapper : IClan
 
 		public NexusClanWrapper _003C_003E4__this;
 
-		public int roleId;
-
-		public ulong bySteamId;
-
-		private TaskAwaiter<NexusClanResultCode> _003C_003Eu__1;
-
-		private void MoveNext()
-		{
-			//IL_007a: Unknown result type (might be due to invalid IL or missing references)
-			//IL_007f: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0084: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
-			int num = _003C_003E1__state;
-			NexusClanWrapper nexusClanWrapper = _003C_003E4__this;
-			ClanResult result;
-			try
-			{
-				TaskAwaiter<NexusClanResultCode> awaiter;
-				if (num != 0)
-				{
-					awaiter = nexusClanWrapper.Internal.DeleteRole(roleId, NexusClanUtil.GetPlayerId(bySteamId)).GetAwaiter();
-					if (!awaiter.IsCompleted)
-					{
-						num = (_003C_003E1__state = 0);
-						_003C_003Eu__1 = awaiter;
-						_003C_003Et__builder.AwaitUnsafeOnCompleted<TaskAwaiter<NexusClanResultCode>, _003CDeleteRole_003Ed__61>(ref awaiter, ref this);
-						return;
-					}
-				}
-				else
-				{
-					awaiter = _003C_003Eu__1;
-					_003C_003Eu__1 = default(TaskAwaiter<NexusClanResultCode>);
-					num = (_003C_003E1__state = -1);
-				}
-				result = awaiter.GetResult().ToClanResult();
-			}
-			catch (Exception exception)
-			{
-				_003C_003E1__state = -2;
-				_003C_003Et__builder.SetException(exception);
-				return;
-			}
-			_003C_003E1__state = -2;
-			_003C_003Et__builder.SetResult(result);
-		}
-
-		void IAsyncStateMachine.MoveNext()
-		{
-			//ILSpy generated this explicit interface implementation from .override directive in MoveNext
-			this.MoveNext();
-		}
-
-		[DebuggerHidden]
-		private void SetStateMachine(IAsyncStateMachine stateMachine)
-		{
-			_003C_003Et__builder.SetStateMachine(stateMachine);
-		}
-
-		void IAsyncStateMachine.SetStateMachine(IAsyncStateMachine stateMachine)
-		{
-			//ILSpy generated this explicit interface implementation from .override directive in SetStateMachine
-			this.SetStateMachine(stateMachine);
-		}
-	}
-
-	[StructLayout(LayoutKind.Auto)]
-	[CompilerGenerated]
-	private struct _003CDisband_003Ed__62 : IAsyncStateMachine
-	{
-		public int _003C_003E1__state;
-
-		public AsyncValueTaskMethodBuilder<ClanResult> _003C_003Et__builder;
-
-		public NexusClanWrapper _003C_003E4__this;
-
-		public ulong bySteamId;
+		public ulong steamId;
 
 		private TaskAwaiter<NexusClanResultCode> _003C_003Eu__1;
 
@@ -1303,12 +1427,90 @@ public class NexusClanWrapper : IClan
 				TaskAwaiter<NexusClanResultCode> awaiter;
 				if (num != 0)
 				{
-					awaiter = nexusClanWrapper.Internal.Disband(NexusClanUtil.GetPlayerId(bySteamId)).GetAwaiter();
+					awaiter = nexusClanWrapper.Internal.UpdateLastSeen(NexusClanUtil.GetPlayerId(steamId)).GetAwaiter();
 					if (!awaiter.IsCompleted)
 					{
 						num = (_003C_003E1__state = 0);
 						_003C_003Eu__1 = awaiter;
-						_003C_003Et__builder.AwaitUnsafeOnCompleted<TaskAwaiter<NexusClanResultCode>, _003CDisband_003Ed__62>(ref awaiter, ref this);
+						_003C_003Et__builder.AwaitUnsafeOnCompleted<TaskAwaiter<NexusClanResultCode>, _003CUpdateLastSeen_003Ed__52>(ref awaiter, ref this);
+						return;
+					}
+				}
+				else
+				{
+					awaiter = _003C_003Eu__1;
+					_003C_003Eu__1 = default(TaskAwaiter<NexusClanResultCode>);
+					num = (_003C_003E1__state = -1);
+				}
+				result = awaiter.GetResult().ToClanResult();
+			}
+			catch (Exception exception)
+			{
+				_003C_003E1__state = -2;
+				_003C_003Et__builder.SetException(exception);
+				return;
+			}
+			_003C_003E1__state = -2;
+			_003C_003Et__builder.SetResult(result);
+		}
+
+		void IAsyncStateMachine.MoveNext()
+		{
+			//ILSpy generated this explicit interface implementation from .override directive in MoveNext
+			this.MoveNext();
+		}
+
+		[DebuggerHidden]
+		private void SetStateMachine(IAsyncStateMachine stateMachine)
+		{
+			_003C_003Et__builder.SetStateMachine(stateMachine);
+		}
+
+		void IAsyncStateMachine.SetStateMachine(IAsyncStateMachine stateMachine)
+		{
+			//ILSpy generated this explicit interface implementation from .override directive in SetStateMachine
+			this.SetStateMachine(stateMachine);
+		}
+	}
+
+	[StructLayout(LayoutKind.Auto)]
+	[CompilerGenerated]
+	private struct _003CUpdateRole_003Ed__63 : IAsyncStateMachine
+	{
+		public int _003C_003E1__state;
+
+		public AsyncValueTaskMethodBuilder<ClanResult> _003C_003Et__builder;
+
+		public NexusClanWrapper _003C_003E4__this;
+
+		public ClanRole role;
+
+		public ulong bySteamId;
+
+		private TaskAwaiter<NexusClanResultCode> _003C_003Eu__1;
+
+		private void MoveNext()
+		{
+			//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+			//IL_008a: Unknown result type (might be due to invalid IL or missing references)
+			//IL_008f: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0094: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00be: Unknown result type (might be due to invalid IL or missing references)
+			int num = _003C_003E1__state;
+			NexusClanWrapper nexusClanWrapper = _003C_003E4__this;
+			ClanResult result;
+			try
+			{
+				TaskAwaiter<NexusClanResultCode> awaiter;
+				if (num != 0)
+				{
+					awaiter = nexusClanWrapper.Internal.UpdateRole(role.RoleId, role.ToRoleParameters(), NexusClanUtil.GetPlayerId(bySteamId)).GetAwaiter();
+					if (!awaiter.IsCompleted)
+					{
+						num = (_003C_003E1__state = 0);
+						_003C_003Eu__1 = awaiter;
+						_003C_003Et__builder.AwaitUnsafeOnCompleted<TaskAwaiter<NexusClanResultCode>, _003CUpdateRole_003Ed__63>(ref awaiter, ref this);
 						return;
 					}
 				}
@@ -1363,6 +1565,8 @@ public class NexusClanWrapper : IClan
 
 	private readonly List<ClanChatEntry> _chatHistory;
 
+	private RealTimeSince _sinceLastRefresh;
+
 	public long ClanId => Internal.ClanId;
 
 	public string Name => Internal.Name;
@@ -1381,6 +1585,8 @@ public class NexusClanWrapper : IClan
 
 	public Color32 Color { get; private set; }
 
+	public long Score => Internal.Score;
+
 	public IReadOnlyList<ClanRole> Roles => _roles;
 
 	public IReadOnlyList<ClanMember> Members => _members;
@@ -1391,12 +1597,15 @@ public class NexusClanWrapper : IClan
 
 	public NexusClanWrapper(NexusClan clan, NexusClanChatCollector chatCollector)
 	{
+		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
 		Internal = clan ?? throw new ArgumentNullException("clan");
 		_chatCollector = chatCollector ?? throw new ArgumentNullException("chatCollector");
 		_roles = new List<ClanRole>();
 		_members = new List<ClanMember>();
 		_invites = new List<ClanInvite>();
 		_chatHistory = new List<ClanChatEntry>(20);
+		_sinceLastRefresh = RealTimeSince.op_Implicit(0f);
 		UpdateValuesInternal();
 	}
 
@@ -1432,70 +1641,84 @@ public class NexusClanWrapper : IClan
 		}
 	}
 
-	[AsyncStateMachine(typeof(_003CGetLogs_003Ed__47))]
+	[AsyncStateMachine(typeof(_003CRefreshIfStale_003Ed__50))]
+	public ValueTask RefreshIfStale()
+	{
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		_003CRefreshIfStale_003Ed__50 _003CRefreshIfStale_003Ed__ = default(_003CRefreshIfStale_003Ed__50);
+		_003CRefreshIfStale_003Ed__._003C_003Et__builder = AsyncValueTaskMethodBuilder.Create();
+		_003CRefreshIfStale_003Ed__._003C_003E4__this = this;
+		_003CRefreshIfStale_003Ed__._003C_003E1__state = -1;
+		((AsyncValueTaskMethodBuilder)(ref _003CRefreshIfStale_003Ed__._003C_003Et__builder)).Start<_003CRefreshIfStale_003Ed__50>(ref _003CRefreshIfStale_003Ed__);
+		return ((AsyncValueTaskMethodBuilder)(ref _003CRefreshIfStale_003Ed__._003C_003Et__builder)).Task;
+	}
+
+	[AsyncStateMachine(typeof(_003CGetLogs_003Ed__51))]
 	public ValueTask<ClanValueResult<ClanLogs>> GetLogs(int limit, ulong bySteamId)
 	{
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
-		_003CGetLogs_003Ed__47 _003CGetLogs_003Ed__ = default(_003CGetLogs_003Ed__47);
+		_003CGetLogs_003Ed__51 _003CGetLogs_003Ed__ = default(_003CGetLogs_003Ed__51);
 		_003CGetLogs_003Ed__._003C_003Et__builder = AsyncValueTaskMethodBuilder<ClanValueResult<ClanLogs>>.Create();
 		_003CGetLogs_003Ed__._003C_003E4__this = this;
 		_003CGetLogs_003Ed__.limit = limit;
 		_003CGetLogs_003Ed__.bySteamId = bySteamId;
 		_003CGetLogs_003Ed__._003C_003E1__state = -1;
-		_003CGetLogs_003Ed__._003C_003Et__builder.Start<_003CGetLogs_003Ed__47>(ref _003CGetLogs_003Ed__);
+		_003CGetLogs_003Ed__._003C_003Et__builder.Start<_003CGetLogs_003Ed__51>(ref _003CGetLogs_003Ed__);
 		return _003CGetLogs_003Ed__._003C_003Et__builder.Task;
 	}
 
-	[AsyncStateMachine(typeof(_003CUpdateLastSeen_003Ed__48))]
+	[AsyncStateMachine(typeof(_003CUpdateLastSeen_003Ed__52))]
 	public ValueTask<ClanResult> UpdateLastSeen(ulong steamId)
 	{
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-		_003CUpdateLastSeen_003Ed__48 _003CUpdateLastSeen_003Ed__ = default(_003CUpdateLastSeen_003Ed__48);
+		_003CUpdateLastSeen_003Ed__52 _003CUpdateLastSeen_003Ed__ = default(_003CUpdateLastSeen_003Ed__52);
 		_003CUpdateLastSeen_003Ed__._003C_003Et__builder = AsyncValueTaskMethodBuilder<ClanResult>.Create();
 		_003CUpdateLastSeen_003Ed__._003C_003E4__this = this;
 		_003CUpdateLastSeen_003Ed__.steamId = steamId;
 		_003CUpdateLastSeen_003Ed__._003C_003E1__state = -1;
-		_003CUpdateLastSeen_003Ed__._003C_003Et__builder.Start<_003CUpdateLastSeen_003Ed__48>(ref _003CUpdateLastSeen_003Ed__);
+		_003CUpdateLastSeen_003Ed__._003C_003Et__builder.Start<_003CUpdateLastSeen_003Ed__52>(ref _003CUpdateLastSeen_003Ed__);
 		return _003CUpdateLastSeen_003Ed__._003C_003Et__builder.Task;
 	}
 
-	[AsyncStateMachine(typeof(_003CSetMotd_003Ed__49))]
+	[AsyncStateMachine(typeof(_003CSetMotd_003Ed__53))]
 	public ValueTask<ClanResult> SetMotd(string newMotd, ulong bySteamId)
 	{
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
-		_003CSetMotd_003Ed__49 _003CSetMotd_003Ed__ = default(_003CSetMotd_003Ed__49);
+		_003CSetMotd_003Ed__53 _003CSetMotd_003Ed__ = default(_003CSetMotd_003Ed__53);
 		_003CSetMotd_003Ed__._003C_003Et__builder = AsyncValueTaskMethodBuilder<ClanResult>.Create();
 		_003CSetMotd_003Ed__._003C_003E4__this = this;
 		_003CSetMotd_003Ed__.newMotd = newMotd;
 		_003CSetMotd_003Ed__.bySteamId = bySteamId;
 		_003CSetMotd_003Ed__._003C_003E1__state = -1;
-		_003CSetMotd_003Ed__._003C_003Et__builder.Start<_003CSetMotd_003Ed__49>(ref _003CSetMotd_003Ed__);
+		_003CSetMotd_003Ed__._003C_003Et__builder.Start<_003CSetMotd_003Ed__53>(ref _003CSetMotd_003Ed__);
 		return _003CSetMotd_003Ed__._003C_003Et__builder.Task;
 	}
 
-	[AsyncStateMachine(typeof(_003CSetLogo_003Ed__50))]
+	[AsyncStateMachine(typeof(_003CSetLogo_003Ed__54))]
 	public ValueTask<ClanResult> SetLogo(byte[] newLogo, ulong bySteamId)
 	{
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
-		_003CSetLogo_003Ed__50 _003CSetLogo_003Ed__ = default(_003CSetLogo_003Ed__50);
+		_003CSetLogo_003Ed__54 _003CSetLogo_003Ed__ = default(_003CSetLogo_003Ed__54);
 		_003CSetLogo_003Ed__._003C_003Et__builder = AsyncValueTaskMethodBuilder<ClanResult>.Create();
 		_003CSetLogo_003Ed__._003C_003E4__this = this;
 		_003CSetLogo_003Ed__.newLogo = newLogo;
 		_003CSetLogo_003Ed__.bySteamId = bySteamId;
 		_003CSetLogo_003Ed__._003C_003E1__state = -1;
-		_003CSetLogo_003Ed__._003C_003Et__builder.Start<_003CSetLogo_003Ed__50>(ref _003CSetLogo_003Ed__);
+		_003CSetLogo_003Ed__._003C_003Et__builder.Start<_003CSetLogo_003Ed__54>(ref _003CSetLogo_003Ed__);
 		return _003CSetLogo_003Ed__._003C_003Et__builder.Task;
 	}
 
-	[AsyncStateMachine(typeof(_003CSetColor_003Ed__51))]
+	[AsyncStateMachine(typeof(_003CSetColor_003Ed__55))]
 	public ValueTask<ClanResult> SetColor(Color32 newColor, ulong bySteamId)
 	{
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
@@ -1503,114 +1726,114 @@ public class NexusClanWrapper : IClan
 		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
-		_003CSetColor_003Ed__51 _003CSetColor_003Ed__ = default(_003CSetColor_003Ed__51);
+		_003CSetColor_003Ed__55 _003CSetColor_003Ed__ = default(_003CSetColor_003Ed__55);
 		_003CSetColor_003Ed__._003C_003Et__builder = AsyncValueTaskMethodBuilder<ClanResult>.Create();
 		_003CSetColor_003Ed__._003C_003E4__this = this;
 		_003CSetColor_003Ed__.newColor = newColor;
 		_003CSetColor_003Ed__.bySteamId = bySteamId;
 		_003CSetColor_003Ed__._003C_003E1__state = -1;
-		_003CSetColor_003Ed__._003C_003Et__builder.Start<_003CSetColor_003Ed__51>(ref _003CSetColor_003Ed__);
+		_003CSetColor_003Ed__._003C_003Et__builder.Start<_003CSetColor_003Ed__55>(ref _003CSetColor_003Ed__);
 		return _003CSetColor_003Ed__._003C_003Et__builder.Task;
 	}
 
-	[AsyncStateMachine(typeof(_003CInvite_003Ed__52))]
+	[AsyncStateMachine(typeof(_003CInvite_003Ed__56))]
 	public ValueTask<ClanResult> Invite(ulong steamId, ulong bySteamId)
 	{
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
-		_003CInvite_003Ed__52 _003CInvite_003Ed__ = default(_003CInvite_003Ed__52);
+		_003CInvite_003Ed__56 _003CInvite_003Ed__ = default(_003CInvite_003Ed__56);
 		_003CInvite_003Ed__._003C_003Et__builder = AsyncValueTaskMethodBuilder<ClanResult>.Create();
 		_003CInvite_003Ed__._003C_003E4__this = this;
 		_003CInvite_003Ed__.steamId = steamId;
 		_003CInvite_003Ed__.bySteamId = bySteamId;
 		_003CInvite_003Ed__._003C_003E1__state = -1;
-		_003CInvite_003Ed__._003C_003Et__builder.Start<_003CInvite_003Ed__52>(ref _003CInvite_003Ed__);
+		_003CInvite_003Ed__._003C_003Et__builder.Start<_003CInvite_003Ed__56>(ref _003CInvite_003Ed__);
 		return _003CInvite_003Ed__._003C_003Et__builder.Task;
 	}
 
-	[AsyncStateMachine(typeof(_003CCancelInvite_003Ed__53))]
+	[AsyncStateMachine(typeof(_003CCancelInvite_003Ed__57))]
 	public ValueTask<ClanResult> CancelInvite(ulong steamId, ulong bySteamId)
 	{
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
-		_003CCancelInvite_003Ed__53 _003CCancelInvite_003Ed__ = default(_003CCancelInvite_003Ed__53);
+		_003CCancelInvite_003Ed__57 _003CCancelInvite_003Ed__ = default(_003CCancelInvite_003Ed__57);
 		_003CCancelInvite_003Ed__._003C_003Et__builder = AsyncValueTaskMethodBuilder<ClanResult>.Create();
 		_003CCancelInvite_003Ed__._003C_003E4__this = this;
 		_003CCancelInvite_003Ed__.steamId = steamId;
 		_003CCancelInvite_003Ed__.bySteamId = bySteamId;
 		_003CCancelInvite_003Ed__._003C_003E1__state = -1;
-		_003CCancelInvite_003Ed__._003C_003Et__builder.Start<_003CCancelInvite_003Ed__53>(ref _003CCancelInvite_003Ed__);
+		_003CCancelInvite_003Ed__._003C_003Et__builder.Start<_003CCancelInvite_003Ed__57>(ref _003CCancelInvite_003Ed__);
 		return _003CCancelInvite_003Ed__._003C_003Et__builder.Task;
 	}
 
-	[AsyncStateMachine(typeof(_003CAcceptInvite_003Ed__54))]
+	[AsyncStateMachine(typeof(_003CAcceptInvite_003Ed__58))]
 	public ValueTask<ClanResult> AcceptInvite(ulong steamId)
 	{
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-		_003CAcceptInvite_003Ed__54 _003CAcceptInvite_003Ed__ = default(_003CAcceptInvite_003Ed__54);
+		_003CAcceptInvite_003Ed__58 _003CAcceptInvite_003Ed__ = default(_003CAcceptInvite_003Ed__58);
 		_003CAcceptInvite_003Ed__._003C_003Et__builder = AsyncValueTaskMethodBuilder<ClanResult>.Create();
 		_003CAcceptInvite_003Ed__._003C_003E4__this = this;
 		_003CAcceptInvite_003Ed__.steamId = steamId;
 		_003CAcceptInvite_003Ed__._003C_003E1__state = -1;
-		_003CAcceptInvite_003Ed__._003C_003Et__builder.Start<_003CAcceptInvite_003Ed__54>(ref _003CAcceptInvite_003Ed__);
+		_003CAcceptInvite_003Ed__._003C_003Et__builder.Start<_003CAcceptInvite_003Ed__58>(ref _003CAcceptInvite_003Ed__);
 		return _003CAcceptInvite_003Ed__._003C_003Et__builder.Task;
 	}
 
-	[AsyncStateMachine(typeof(_003CKick_003Ed__55))]
+	[AsyncStateMachine(typeof(_003CKick_003Ed__59))]
 	public ValueTask<ClanResult> Kick(ulong steamId, ulong bySteamId)
 	{
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
-		_003CKick_003Ed__55 _003CKick_003Ed__ = default(_003CKick_003Ed__55);
+		_003CKick_003Ed__59 _003CKick_003Ed__ = default(_003CKick_003Ed__59);
 		_003CKick_003Ed__._003C_003Et__builder = AsyncValueTaskMethodBuilder<ClanResult>.Create();
 		_003CKick_003Ed__._003C_003E4__this = this;
 		_003CKick_003Ed__.steamId = steamId;
 		_003CKick_003Ed__.bySteamId = bySteamId;
 		_003CKick_003Ed__._003C_003E1__state = -1;
-		_003CKick_003Ed__._003C_003Et__builder.Start<_003CKick_003Ed__55>(ref _003CKick_003Ed__);
+		_003CKick_003Ed__._003C_003Et__builder.Start<_003CKick_003Ed__59>(ref _003CKick_003Ed__);
 		return _003CKick_003Ed__._003C_003Et__builder.Task;
 	}
 
-	[AsyncStateMachine(typeof(_003CSetPlayerRole_003Ed__56))]
+	[AsyncStateMachine(typeof(_003CSetPlayerRole_003Ed__60))]
 	public ValueTask<ClanResult> SetPlayerRole(ulong steamId, int newRoleId, ulong bySteamId)
 	{
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
-		_003CSetPlayerRole_003Ed__56 _003CSetPlayerRole_003Ed__ = default(_003CSetPlayerRole_003Ed__56);
+		_003CSetPlayerRole_003Ed__60 _003CSetPlayerRole_003Ed__ = default(_003CSetPlayerRole_003Ed__60);
 		_003CSetPlayerRole_003Ed__._003C_003Et__builder = AsyncValueTaskMethodBuilder<ClanResult>.Create();
 		_003CSetPlayerRole_003Ed__._003C_003E4__this = this;
 		_003CSetPlayerRole_003Ed__.steamId = steamId;
 		_003CSetPlayerRole_003Ed__.newRoleId = newRoleId;
 		_003CSetPlayerRole_003Ed__.bySteamId = bySteamId;
 		_003CSetPlayerRole_003Ed__._003C_003E1__state = -1;
-		_003CSetPlayerRole_003Ed__._003C_003Et__builder.Start<_003CSetPlayerRole_003Ed__56>(ref _003CSetPlayerRole_003Ed__);
+		_003CSetPlayerRole_003Ed__._003C_003Et__builder.Start<_003CSetPlayerRole_003Ed__60>(ref _003CSetPlayerRole_003Ed__);
 		return _003CSetPlayerRole_003Ed__._003C_003Et__builder.Task;
 	}
 
-	[AsyncStateMachine(typeof(_003CSetPlayerNotes_003Ed__57))]
+	[AsyncStateMachine(typeof(_003CSetPlayerNotes_003Ed__61))]
 	public ValueTask<ClanResult> SetPlayerNotes(ulong steamId, string notes, ulong bySteamId)
 	{
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
-		_003CSetPlayerNotes_003Ed__57 _003CSetPlayerNotes_003Ed__ = default(_003CSetPlayerNotes_003Ed__57);
+		_003CSetPlayerNotes_003Ed__61 _003CSetPlayerNotes_003Ed__ = default(_003CSetPlayerNotes_003Ed__61);
 		_003CSetPlayerNotes_003Ed__._003C_003Et__builder = AsyncValueTaskMethodBuilder<ClanResult>.Create();
 		_003CSetPlayerNotes_003Ed__._003C_003E4__this = this;
 		_003CSetPlayerNotes_003Ed__.steamId = steamId;
 		_003CSetPlayerNotes_003Ed__.notes = notes;
 		_003CSetPlayerNotes_003Ed__.bySteamId = bySteamId;
 		_003CSetPlayerNotes_003Ed__._003C_003E1__state = -1;
-		_003CSetPlayerNotes_003Ed__._003C_003Et__builder.Start<_003CSetPlayerNotes_003Ed__57>(ref _003CSetPlayerNotes_003Ed__);
+		_003CSetPlayerNotes_003Ed__._003C_003Et__builder.Start<_003CSetPlayerNotes_003Ed__61>(ref _003CSetPlayerNotes_003Ed__);
 		return _003CSetPlayerNotes_003Ed__._003C_003Et__builder.Task;
 	}
 
-	[AsyncStateMachine(typeof(_003CCreateRole_003Ed__58))]
+	[AsyncStateMachine(typeof(_003CCreateRole_003Ed__62))]
 	public ValueTask<ClanResult> CreateRole(ClanRole role, ulong bySteamId)
 	{
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
@@ -1618,17 +1841,17 @@ public class NexusClanWrapper : IClan
 		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
-		_003CCreateRole_003Ed__58 _003CCreateRole_003Ed__ = default(_003CCreateRole_003Ed__58);
+		_003CCreateRole_003Ed__62 _003CCreateRole_003Ed__ = default(_003CCreateRole_003Ed__62);
 		_003CCreateRole_003Ed__._003C_003Et__builder = AsyncValueTaskMethodBuilder<ClanResult>.Create();
 		_003CCreateRole_003Ed__._003C_003E4__this = this;
 		_003CCreateRole_003Ed__.role = role;
 		_003CCreateRole_003Ed__.bySteamId = bySteamId;
 		_003CCreateRole_003Ed__._003C_003E1__state = -1;
-		_003CCreateRole_003Ed__._003C_003Et__builder.Start<_003CCreateRole_003Ed__58>(ref _003CCreateRole_003Ed__);
+		_003CCreateRole_003Ed__._003C_003Et__builder.Start<_003CCreateRole_003Ed__62>(ref _003CCreateRole_003Ed__);
 		return _003CCreateRole_003Ed__._003C_003Et__builder.Task;
 	}
 
-	[AsyncStateMachine(typeof(_003CUpdateRole_003Ed__59))]
+	[AsyncStateMachine(typeof(_003CUpdateRole_003Ed__63))]
 	public ValueTask<ClanResult> UpdateRole(ClanRole role, ulong bySteamId)
 	{
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
@@ -1636,62 +1859,107 @@ public class NexusClanWrapper : IClan
 		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
-		_003CUpdateRole_003Ed__59 _003CUpdateRole_003Ed__ = default(_003CUpdateRole_003Ed__59);
+		_003CUpdateRole_003Ed__63 _003CUpdateRole_003Ed__ = default(_003CUpdateRole_003Ed__63);
 		_003CUpdateRole_003Ed__._003C_003Et__builder = AsyncValueTaskMethodBuilder<ClanResult>.Create();
 		_003CUpdateRole_003Ed__._003C_003E4__this = this;
 		_003CUpdateRole_003Ed__.role = role;
 		_003CUpdateRole_003Ed__.bySteamId = bySteamId;
 		_003CUpdateRole_003Ed__._003C_003E1__state = -1;
-		_003CUpdateRole_003Ed__._003C_003Et__builder.Start<_003CUpdateRole_003Ed__59>(ref _003CUpdateRole_003Ed__);
+		_003CUpdateRole_003Ed__._003C_003Et__builder.Start<_003CUpdateRole_003Ed__63>(ref _003CUpdateRole_003Ed__);
 		return _003CUpdateRole_003Ed__._003C_003Et__builder.Task;
 	}
 
-	[AsyncStateMachine(typeof(_003CSwapRoleRanks_003Ed__60))]
+	[AsyncStateMachine(typeof(_003CSwapRoleRanks_003Ed__64))]
 	public ValueTask<ClanResult> SwapRoleRanks(int roleIdA, int roleIdB, ulong bySteamId)
 	{
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
-		_003CSwapRoleRanks_003Ed__60 _003CSwapRoleRanks_003Ed__ = default(_003CSwapRoleRanks_003Ed__60);
+		_003CSwapRoleRanks_003Ed__64 _003CSwapRoleRanks_003Ed__ = default(_003CSwapRoleRanks_003Ed__64);
 		_003CSwapRoleRanks_003Ed__._003C_003Et__builder = AsyncValueTaskMethodBuilder<ClanResult>.Create();
 		_003CSwapRoleRanks_003Ed__._003C_003E4__this = this;
 		_003CSwapRoleRanks_003Ed__.roleIdA = roleIdA;
 		_003CSwapRoleRanks_003Ed__.roleIdB = roleIdB;
 		_003CSwapRoleRanks_003Ed__.bySteamId = bySteamId;
 		_003CSwapRoleRanks_003Ed__._003C_003E1__state = -1;
-		_003CSwapRoleRanks_003Ed__._003C_003Et__builder.Start<_003CSwapRoleRanks_003Ed__60>(ref _003CSwapRoleRanks_003Ed__);
+		_003CSwapRoleRanks_003Ed__._003C_003Et__builder.Start<_003CSwapRoleRanks_003Ed__64>(ref _003CSwapRoleRanks_003Ed__);
 		return _003CSwapRoleRanks_003Ed__._003C_003Et__builder.Task;
 	}
 
-	[AsyncStateMachine(typeof(_003CDeleteRole_003Ed__61))]
+	[AsyncStateMachine(typeof(_003CDeleteRole_003Ed__65))]
 	public ValueTask<ClanResult> DeleteRole(int roleId, ulong bySteamId)
 	{
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
-		_003CDeleteRole_003Ed__61 _003CDeleteRole_003Ed__ = default(_003CDeleteRole_003Ed__61);
+		_003CDeleteRole_003Ed__65 _003CDeleteRole_003Ed__ = default(_003CDeleteRole_003Ed__65);
 		_003CDeleteRole_003Ed__._003C_003Et__builder = AsyncValueTaskMethodBuilder<ClanResult>.Create();
 		_003CDeleteRole_003Ed__._003C_003E4__this = this;
 		_003CDeleteRole_003Ed__.roleId = roleId;
 		_003CDeleteRole_003Ed__.bySteamId = bySteamId;
 		_003CDeleteRole_003Ed__._003C_003E1__state = -1;
-		_003CDeleteRole_003Ed__._003C_003Et__builder.Start<_003CDeleteRole_003Ed__61>(ref _003CDeleteRole_003Ed__);
+		_003CDeleteRole_003Ed__._003C_003Et__builder.Start<_003CDeleteRole_003Ed__65>(ref _003CDeleteRole_003Ed__);
 		return _003CDeleteRole_003Ed__._003C_003Et__builder.Task;
 	}
 
-	[AsyncStateMachine(typeof(_003CDisband_003Ed__62))]
+	[AsyncStateMachine(typeof(_003CDisband_003Ed__66))]
 	public ValueTask<ClanResult> Disband(ulong bySteamId)
 	{
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-		_003CDisband_003Ed__62 _003CDisband_003Ed__ = default(_003CDisband_003Ed__62);
+		_003CDisband_003Ed__66 _003CDisband_003Ed__ = default(_003CDisband_003Ed__66);
 		_003CDisband_003Ed__._003C_003Et__builder = AsyncValueTaskMethodBuilder<ClanResult>.Create();
 		_003CDisband_003Ed__._003C_003E4__this = this;
 		_003CDisband_003Ed__.bySteamId = bySteamId;
 		_003CDisband_003Ed__._003C_003E1__state = -1;
-		_003CDisband_003Ed__._003C_003Et__builder.Start<_003CDisband_003Ed__62>(ref _003CDisband_003Ed__);
+		_003CDisband_003Ed__._003C_003Et__builder.Start<_003CDisband_003Ed__66>(ref _003CDisband_003Ed__);
 		return _003CDisband_003Ed__._003C_003Et__builder.Task;
+	}
+
+	[AsyncStateMachine(typeof(_003CGetScoreEvents_003Ed__67))]
+	public ValueTask<ClanValueResult<ClanScoreEvents>> GetScoreEvents(int limit, ulong bySteamId)
+	{
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		_003CGetScoreEvents_003Ed__67 _003CGetScoreEvents_003Ed__ = default(_003CGetScoreEvents_003Ed__67);
+		_003CGetScoreEvents_003Ed__._003C_003Et__builder = AsyncValueTaskMethodBuilder<ClanValueResult<ClanScoreEvents>>.Create();
+		_003CGetScoreEvents_003Ed__._003C_003E4__this = this;
+		_003CGetScoreEvents_003Ed__.limit = limit;
+		_003CGetScoreEvents_003Ed__.bySteamId = bySteamId;
+		_003CGetScoreEvents_003Ed__._003C_003E1__state = -1;
+		_003CGetScoreEvents_003Ed__._003C_003Et__builder.Start<_003CGetScoreEvents_003Ed__67>(ref _003CGetScoreEvents_003Ed__);
+		return _003CGetScoreEvents_003Ed__._003C_003Et__builder.Task;
+	}
+
+	public ValueTask<ClanResult> AddScoreEvent(ClanScoreEvent scoreEvent)
+	{
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Expected I4, but got Unknown
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
+		NexusClan @internal = Internal;
+		NewClanScoreEventEntry val = default(NewClanScoreEventEntry);
+		((NewClanScoreEventEntry)(ref val)).Type = (int)scoreEvent.Type;
+		((NewClanScoreEventEntry)(ref val)).Score = scoreEvent.Score;
+		((NewClanScoreEventEntry)(ref val)).Multiplier = scoreEvent.Multiplier;
+		((NewClanScoreEventEntry)(ref val)).PlayerId = NexusClanUtil.GetPlayerId(scoreEvent.SteamId);
+		((NewClanScoreEventEntry)(ref val)).OtherPlayerId = NexusClanUtil.GetPlayerId(scoreEvent.OtherSteamId);
+		((NewClanScoreEventEntry)(ref val)).OtherClanId = scoreEvent.OtherClanId;
+		((NewClanScoreEventEntry)(ref val)).Arg1 = scoreEvent.Arg1;
+		((NewClanScoreEventEntry)(ref val)).Arg2 = scoreEvent.Arg2;
+		@internal.AddScoreEvent(val);
+		return new ValueTask<ClanResult>((ClanResult)1);
 	}
 
 	public ValueTask<ClanValueResult<ClanChatScrollback>> GetChatScrollback()

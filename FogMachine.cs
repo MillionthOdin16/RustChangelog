@@ -219,6 +219,11 @@ public class FogMachine : ContainerIOEntity
 		}
 	}
 
+	public override int ConsumptionAmount()
+	{
+		return 0;
+	}
+
 	public virtual bool MotionModeEnabled()
 	{
 		return true;

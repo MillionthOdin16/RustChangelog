@@ -66,7 +66,7 @@ public class PlayerModifiers : BaseModifiers<BasePlayer>
 		PlayerModifiers val = Save();
 		try
 		{
-			base.baseEntity.ClientRPCPlayer<PlayerModifiers>(null, base.baseEntity, "UpdateModifiers", val);
+			base.baseEntity.ClientRPC<PlayerModifiers>(RpcTarget.Player("UpdateModifiers", base.baseEntity), val);
 		}
 		finally
 		{

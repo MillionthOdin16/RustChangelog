@@ -1,8 +1,12 @@
+using System.Collections.Generic;
+using Facepunch;
 using UnityEngine;
 
 public class NPCMissionProvider : NPCTalking, IMissionProvider
 {
 	public MissionManifest manifest;
+
+	public GameObjectRef MarkerPrefab;
 
 	public NetworkableId ProviderID()
 	{
@@ -21,19 +25,51 @@ public class NPCMissionProvider : NPCTalking, IMissionProvider
 		return this;
 	}
 
+	public override void ServerInit()
+	{
+		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
+		base.ServerInit();
+		if (MarkerPrefab != null && MarkerPrefab.isValid)
+		{
+			List<BaseMission> list = Pool.GetList<BaseMission>();
+			ConversationData[] array = conversations;
+			for (int i = 0; i < array.Length; i++)
+			{
+				array[i].FindAllMissionAssignments(list);
+			}
+			if (list.Count > 0)
+			{
+				MapMarkerMissionProvider obj = GameManager.server.CreateEntity(MarkerPrefab.resourcePath, ((Component)this).transform.position, ((Component)this).transform.rotation) as MapMarkerMissionProvider;
+				obj.AssignMissions(list, GetProviderToken());
+				obj.Spawn();
+			}
+			Pool.FreeList<BaseMission>(ref list);
+		}
+	}
+
+	private string GetProviderToken()
+	{
+		ConversationData[] array = conversations;
+		int num = 0;
+		if (num < array.Length)
+		{
+			return array[num].providerNameTranslated.token;
+		}
+		return string.Empty;
+	}
+
 	public override void OnConversationEnded(BasePlayer player)
 	{
 		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		player.ProcessMissionEvent(BaseMission.MissionEventType.CONVERSATION, ProviderID().Value.ToString(), 0f);
+		player.ProcessMissionEvent(BaseMission.MissionEventType.CONVERSATION, ProviderID(), 0f);
 		base.OnConversationEnded(player);
 	}
 
 	public override void OnConversationStarted(BasePlayer speakingTo)
 	{
 		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		speakingTo.ProcessMissionEvent(BaseMission.MissionEventType.CONVERSATION, ProviderID().Value.ToString(), 1f);
+		speakingTo.ProcessMissionEvent(BaseMission.MissionEventType.CONVERSATION, ProviderID(), 1f);
 		base.OnConversationStarted(speakingTo);
 	}
 
@@ -88,7 +124,7 @@ public class NPCMissionProvider : NPCTalking, IMissionProvider
 
 	public override void OnConversationAction(BasePlayer player, string action)
 	{
-		if (action.Contains("assignmission"))
+		if (action.StartsWith("assignmission "))
 		{
 			int num = action.IndexOf(" ");
 			BaseMission fromShortName = MissionManifest.GetFromShortName(action.Substring(num + 1));

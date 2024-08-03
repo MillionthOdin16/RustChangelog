@@ -31,6 +31,11 @@ public class Sprinkler : IOEntity
 		return 2;
 	}
 
+	public override int DesiredPower(int inputIndex = 0)
+	{
+		return Mathf.Clamp(currentEnergy, 0, ConsumptionAmount());
+	}
+
 	public override void UpdateHasPower(int inputAmount, int inputSlot)
 	{
 		base.UpdateHasPower(inputAmount, inputSlot);

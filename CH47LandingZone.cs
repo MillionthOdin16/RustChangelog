@@ -9,6 +9,8 @@ public class CH47LandingZone : MonoBehaviour
 
 	public float dropoffScale = 1f;
 
+	public static bool HasAnyLandingZones => !landingZones.IsNullOrEmpty();
+
 	public void Awake()
 	{
 		if (!landingZones.Contains(this))

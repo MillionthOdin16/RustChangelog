@@ -86,7 +86,7 @@ public class NPCShopKeeper : NPCPlayer
 		EndSleeping();
 	}
 
-	public void GreetPlayer(BasePlayer player)
+	public virtual void GreetPlayer(BasePlayer player)
 	{
 		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
 		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
@@ -95,7 +95,7 @@ public class NPCShopKeeper : NPCPlayer
 		if ((Object)(object)player != (Object)null)
 		{
 			SignalBroadcast(Signal.Gesture, "wave");
-			SetAimDirection(Vector3Ex.Direction2D(player.eyes.position, eyes.position));
+			SetAimDirection(Vector3Ex.Direction2D(player.eyes.position, base.eyes.position));
 			lastWavedAtPlayer = player;
 		}
 		else
@@ -104,7 +104,7 @@ public class NPCShopKeeper : NPCPlayer
 		}
 	}
 
-	public void Greeting()
+	public virtual void Greeting()
 	{
 		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
@@ -123,7 +123,7 @@ public class NPCShopKeeper : NPCPlayer
 		BasePlayer basePlayer = null;
 		foreach (BasePlayer item in list)
 		{
-			if (!item.isClient && !item.IsNpc && !((Object)(object)item == (Object)(object)this) && item.IsVisible(eyes.position) && !((Object)(object)item == (Object)(object)lastWavedAtPlayer) && !(Vector3.Dot(Vector3Ex.Direction2D(item.eyes.position, eyes.position), initialFacingDir) < 0.2f))
+			if (!item.isClient && !item.IsNpc && !((Object)(object)item == (Object)(object)this) && item.IsVisible(base.eyes.position) && !((Object)(object)item == (Object)(object)lastWavedAtPlayer) && !(Vector3.Dot(Vector3Ex.Direction2D(item.eyes.position, base.eyes.position), initialFacingDir) < 0.2f))
 			{
 				basePlayer = item;
 				break;
@@ -136,7 +136,7 @@ public class NPCShopKeeper : NPCPlayer
 		if ((Object)(object)basePlayer != (Object)null)
 		{
 			SignalBroadcast(Signal.Gesture, "wave");
-			SetAimDirection(Vector3Ex.Direction2D(basePlayer.eyes.position, eyes.position));
+			SetAimDirection(Vector3Ex.Direction2D(basePlayer.eyes.position, base.eyes.position));
 			lastWavedAtPlayer = basePlayer;
 		}
 		else

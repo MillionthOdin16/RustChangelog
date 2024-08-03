@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -25,6 +26,7 @@ public class SeekerTarget
 		void OnEntityMessage(BaseEntity from, string msg);
 	}
 
+	[NonSerialized]
 	public SeekerStrength strength;
 
 	public ISeekerTargetOwner owner;

@@ -63,4 +63,15 @@ public class ItemSkinDirectory : ScriptableObject
 	{
 		return Instance.skins.Where((Skin x) => x.id == id).FirstOrDefault();
 	}
+
+	public static bool TryGetItemFromDefinitionID(int id, out ItemDefinition result)
+	{
+		result = null;
+		Skin skin = FindByInventoryDefinitionId(id);
+		if ((Object)(object)skin.invItem != (Object)null)
+		{
+			result = skin.invItem.itemDefinition;
+		}
+		return (Object)(object)result != (Object)null;
+	}
 }

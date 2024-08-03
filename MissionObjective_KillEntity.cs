@@ -1,41 +1,64 @@
+using System;
 using System.Collections.Generic;
-using Facepunch;
+using System.Linq;
+using Facepunch.Extend;
 using UnityEngine;
 
 [CreateAssetMenu(menuName = "Rust/Missions/OBJECTIVES/Kill")]
 public class MissionObjective_KillEntity : MissionObjective
 {
-	public string[] targetPrefabIDs;
+	public BaseEntityRef[] targetEntities;
 
 	public int numToKill;
 
 	public bool shouldUpdateMissionLocation;
 
-	private float nextLocationUpdateTime;
+	public bool pingTargets;
 
-	public override void ObjectiveStarted(BasePlayer playerFor, int index, BaseMission.MissionInstance instance)
+	private bool isInitalized;
+
+	private uint[] targetPrefabIDs;
+
+	private Func<BaseCombatEntity, bool> searchFilter;
+
+	private void EnsureInitialized()
 	{
-		base.ObjectiveStarted(playerFor, index, instance);
+		if (!isInitalized)
+		{
+			isInitalized = true;
+			targetPrefabIDs = (from e in targetEntities
+				where e.isValid
+				select e.Get().prefabID).ToArray();
+		}
 	}
 
-	public override void ProcessMissionEvent(BasePlayer playerFor, BaseMission.MissionInstance instance, int index, BaseMission.MissionEventType type, string identifier, float amount)
+	public override void MissionStarted(int index, BaseMission.MissionInstance instance, BasePlayer forPlayer)
 	{
-		base.ProcessMissionEvent(playerFor, instance, index, type, identifier, amount);
-		if (IsCompleted(index, instance) || !CanProgress(index, instance) || type != BaseMission.MissionEventType.KILL_ENTITY)
+		base.MissionStarted(index, instance, forPlayer);
+		instance.objectiveStatuses[index].progressCurrent = 0f;
+		instance.objectiveStatuses[index].progressTarget = numToKill;
+	}
+
+	public override void ProcessMissionEvent(BasePlayer playerFor, BaseMission.MissionInstance instance, int index, BaseMission.MissionEventType type, BaseMission.MissionEventPayload payload, float amount)
+	{
+		base.ProcessMissionEvent(playerFor, instance, index, type, payload, amount);
+		if (type != BaseMission.MissionEventType.KILL_ENTITY || IsCompleted(index, instance) || !CanProgress(index, instance))
 		{
 			return;
 		}
-		string[] array = targetPrefabIDs;
+		EnsureInitialized();
+		uint[] array = targetPrefabIDs;
 		for (int i = 0; i < array.Length; i++)
 		{
-			if (array[i] == identifier)
+			if (array[i] == payload.UintIdentifier)
 			{
-				instance.objectiveStatuses[index].genericInt1 += (int)amount;
-				if (instance.objectiveStatuses[index].genericInt1 >= numToKill)
+				instance.objectiveStatuses[index].progressCurrent += (int)amount;
+				if (instance.objectiveStatuses[index].progressCurrent >= (float)numToKill)
 				{
 					CompleteObjective(index, instance, playerFor);
-					playerFor.MissionDirty();
 				}
+				playerFor.DeregisterPingedEntitiesOfType(BasePlayer.PingType.Hostile);
+				playerFor.MissionDirty();
 				break;
 			}
 		}
@@ -43,46 +66,41 @@ public class MissionObjective_KillEntity : MissionObjective
 
 	public override void Think(int index, BaseMission.MissionInstance instance, BasePlayer assignee, float delta)
 	{
-		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
-		if (shouldUpdateMissionLocation && IsStarted(index, instance) && Time.realtimeSinceStartup > nextLocationUpdateTime)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bb: Unknown result type (might be due to invalid IL or missing references)
+		base.Think(index, instance, assignee, delta);
+		if (!shouldUpdateMissionLocation || !IsStarted(index, instance))
 		{
-			nextLocationUpdateTime = Time.realtimeSinceStartup + 1f;
-			string[] array = targetPrefabIDs;
-			foreach (string s in array)
+			return;
+		}
+		ref RealTimeSince sinceLastThink = ref instance.objectiveStatuses[index].sinceLastThink;
+		if (RealTimeSince.op_Implicit(sinceLastThink) < 1f)
+		{
+			return;
+		}
+		EnsureInitialized();
+		sinceLastThink = RealTimeSince.op_Implicit(0f);
+		if (searchFilter == null)
+		{
+			searchFilter = (BaseCombatEntity e) => List.TryFindWith<uint, uint>((IReadOnlyCollection<uint>)(object)targetPrefabIDs, (Func<uint, uint>)((uint id) => id), e.prefabID, (IEqualityComparer<uint>)null).HasValue && e.IsAlive();
+		}
+		if (IsCompleted(index, instance))
+		{
+			return;
+		}
+		assignee.DeregisterPingedEntitiesOfType(BasePlayer.PingType.Hostile);
+		if (TryFindNearby(((Component)assignee).transform.position, searchFilter, out var entity, pingTargets ? 200f : 20f))
+		{
+			instance.missionLocation = ((Component)entity).transform.position;
+			assignee.MissionDirty();
+			if (pingTargets)
 			{
-				uint result = 0u;
-				uint.TryParse(s, out result);
-				List<BaseCombatEntity> list = Pool.GetList<BaseCombatEntity>();
-				Vis.Entities(((Component)assignee).transform.position, 20f, list, 133120, (QueryTriggerInteraction)2);
-				int num = -1;
-				float num2 = float.PositiveInfinity;
-				for (int j = 0; j < list.Count; j++)
-				{
-					BaseCombatEntity baseCombatEntity = list[j];
-					if (baseCombatEntity.IsAlive() && baseCombatEntity.prefabID == result)
-					{
-						float num3 = Vector3.Distance(((Component)baseCombatEntity).transform.position, ((Component)assignee).transform.position);
-						if (num3 < num2)
-						{
-							num = j;
-							num2 = num3;
-						}
-					}
-				}
-				if (num != -1)
-				{
-					instance.missionLocation = ((Component)list[num]).transform.position;
-					assignee.MissionDirty();
-					Pool.FreeList<BaseCombatEntity>(ref list);
-					break;
-				}
-				Pool.FreeList<BaseCombatEntity>(ref list);
+				assignee.RegisterPingedEntity(entity, BasePlayer.PingType.Hostile);
 			}
 		}
-		base.Think(index, instance, assignee, delta);
 	}
 }

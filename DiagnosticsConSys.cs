@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Facepunch.Rust;
 using Network;
 using UnityEngine;
 
@@ -71,6 +72,7 @@ public class DiagnosticsConSys : ConsoleSystem
 		DumpNetwork(targetFolder);
 		DumpPhysics(targetFolder);
 		DumpAnimators(targetFolder);
+		DumpWarmup(targetFolder);
 	}
 
 	private static void DumpSystemInformation(string targetFolder)
@@ -176,7 +178,8 @@ public class DiagnosticsConSys : ConsoleSystem
 			{
 				BasePlayer current = enumerator.Current;
 				stringBuilder.AppendLine("Name: " + current.displayName);
-				stringBuilder.AppendLine("SteamID: " + current.userID);
+				BasePlayer.EncryptedValue<ulong> userID = current.userID;
+				stringBuilder.AppendLine("SteamID: " + userID.ToString());
 				stringBuilder.Append((current.net == null) ? "INVALID - NET IS NULL" : ((BaseNetwork)Net.sv).GetDebug(current.net.connection).Replace("\n", "\r\n"));
 				stringBuilder.AppendLine();
 				stringBuilder.AppendLine();
@@ -357,11 +360,10 @@ public class DiagnosticsConSys : ConsoleSystem
 		{
 			return;
 		}
-		for (int i = 0; i < indent; i++)
-		{
-			str.Append(" ");
-		}
-		str.AppendFormat("{0} {1:N0}", ((Object)tx).name, ((Component)tx).GetComponents<Component>().Length - 1);
+		str.Append(' ', indent);
+		str.Append(((Component)tx).gameObject.activeSelf ? "+ " : "- ");
+		str.Append(((Object)tx).name);
+		str.Append(" [").Append(((Component)tx).GetComponents<Component>().Length - 1).Append(']');
 		str.AppendLine();
 		if (includeComponents)
 		{
@@ -370,18 +372,86 @@ public class DiagnosticsConSys : ConsoleSystem
 			{
 				if (!(val is Transform))
 				{
-					for (int k = 0; k < indent + 1; k++)
+					str.Append(' ', indent + 3);
+					bool? flag = val.IsEnabled();
+					if (!flag.HasValue)
 					{
-						str.Append(" ");
+						str.Append("[~] ");
 					}
-					str.AppendFormat("[c] {0}", ((Object)(object)val == (Object)null) ? "NULL" : ((object)val).GetType().ToString());
+					else if (flag == true)
+					{
+						str.Append("[✓] ");
+					}
+					else
+					{
+						str.Append("[ ] ");
+					}
+					str.Append(((Object)(object)val == (Object)null) ? "NULL" : ((object)val).GetType().ToString());
 					str.AppendLine();
 				}
 			}
 		}
-		for (int l = 0; l < tx.childCount; l++)
+		for (int j = 0; j < tx.childCount; j++)
 		{
-			DumpGameObjectRecursive(str, tx.GetChild(l), indent + 2, includeComponents);
+			DumpGameObjectRecursive(str, tx.GetChild(j), indent + 4, includeComponents);
 		}
+	}
+
+	private static void DumpWarmup(string targetFolder)
+	{
+		DumpWarmupTimings(targetFolder);
+		DumpWorldSpawnTimings(targetFolder);
+	}
+
+	private static void DumpWarmupTimings(string targetFolder)
+	{
+		if (!FileSystem_Warmup.GetWarmupTimes().Any())
+		{
+			return;
+		}
+		StringBuilder stringBuilder = new StringBuilder();
+		stringBuilder.AppendLine("index,prefab,time");
+		int num = 0;
+		foreach (var warmupTime in FileSystem_Warmup.GetWarmupTimes())
+		{
+			object arg = num;
+			var (arg2, timeSpan) = warmupTime;
+			stringBuilder.AppendLine($"{arg},{arg2},{timeSpan.Ticks * EventRecord.TicksToNS}");
+			num++;
+		}
+		WriteTextToFile(targetFolder + "Asset.Warmup.csv", stringBuilder.ToString());
+	}
+
+	private static void DumpWorldSpawnTimings(string targetFolder)
+	{
+		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
+		if (!World.GetSpawnTimings().Any())
+		{
+			return;
+		}
+		StringBuilder stringBuilder = new StringBuilder();
+		stringBuilder.AppendLine("index,prefab,time,category,position,rotation");
+		int num = 0;
+		foreach (World.SpawnTiming spawnTiming in World.GetSpawnTimings())
+		{
+			object[] obj = new object[6]
+			{
+				num,
+				spawnTiming.prefab.Name,
+				null,
+				null,
+				null,
+				null
+			};
+			TimeSpan time = spawnTiming.time;
+			obj[2] = time.Ticks * EventRecord.TicksToNS;
+			obj[3] = spawnTiming.category;
+			obj[4] = spawnTiming.position;
+			obj[5] = spawnTiming.rotation;
+			stringBuilder.AppendLine(string.Format("{0},{1},{2},{3},{4},{5}", obj));
+			num++;
+		}
+		WriteTextToFile(targetFolder + "World.Spawn.csv", stringBuilder.ToString());
 	}
 }

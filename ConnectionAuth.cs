@@ -1,15 +1,23 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Facepunch;
 using Facepunch.Extend;
 using Facepunch.Math;
 using Network;
+using Newtonsoft.Json.Linq;
 using UnityEngine;
 
 public class ConnectionAuth : MonoBehaviour
 {
 	[NonSerialized]
 	public static List<Connection> m_AuthConnection = new List<Connection>();
+
+	private static RealTimeSince _sinceClientRequirementRefresh;
+
+	private static (int, int)? _clientRequirementCache;
+
+	private static string _clientVersionMismatchMessage;
 
 	public bool IsAuthed(ulong iSteamID)
 	{
@@ -59,7 +67,7 @@ public class ConnectionAuth : MonoBehaviour
 			Reject(connection, "Invalid SteamID");
 			return;
 		}
-		if (connection.protocol != 2515)
+		if (connection.protocol != 2555)
 		{
 			if (!DeveloperList.Contains(connection.userid))
 			{
@@ -101,16 +109,113 @@ public class ConnectionAuth : MonoBehaviour
 		yield return ((MonoBehaviour)this).StartCoroutine(Auth_EAC.Run(connection));
 		yield return ((MonoBehaviour)this).StartCoroutine(Auth_CentralizedBans.Run(connection));
 		yield return ((MonoBehaviour)this).StartCoroutine(Auth_Nexus.Run(connection));
-		if (!connection.rejected && connection.active)
+		if (connection.rejected || !connection.active)
 		{
-			if (IsAuthed(connection.userid))
+			yield break;
+		}
+		if (IsAuthed(connection.userid))
+		{
+			Reject(connection, "You are already connected as a player!");
+			yield break;
+		}
+		if (connection.authLevel == 0)
+		{
+			(int, int)? minClientRequirement = GetMinClientRequirement();
+			if (minClientRequirement.HasValue && (connection.clientChangeset < minClientRequirement.Value.Item1 || connection.clientBuildTime < minClientRequirement.Value.Item2))
 			{
-				Reject(connection, "You are already connected as a player!");
+				Reject(connection, GetClientVersionMismatchMessage());
+				yield break;
+			}
+		}
+		Approve(connection);
+	}
+
+	private static (int Changeset, int BuildTime)? GetMinClientRequirement()
+	{
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009a: Invalid comparison between Unknown and I4
+		if (RealTimeSince.op_Implicit(_sinceClientRequirementRefresh) < 10f)
+		{
+			return _clientRequirementCache;
+		}
+		_sinceClientRequirementRefresh = RealTimeSince.op_Implicit(0f);
+		_clientRequirementCache = null;
+		try
+		{
+			BuildInfo current = BuildInfo.Current;
+			object obj;
+			if (current == null)
+			{
+				obj = null;
 			}
 			else
 			{
-				Approve(connection);
+				ScmInfo scm = current.Scm;
+				obj = ((scm != null) ? scm.Branch : null);
+			}
+			if (obj == null)
+			{
+				obj = "";
+			}
+			string text = (string)obj;
+			if (!string.IsNullOrWhiteSpace(text))
+			{
+				JObject obj2 = Application.Manifest?.Metadata;
+				object obj3;
+				if (obj2 == null)
+				{
+					obj3 = null;
+				}
+				else
+				{
+					JToken obj4 = obj2["ClientVersions"];
+					obj3 = ((obj4 != null) ? obj4[(object)text] : null);
+				}
+				JToken val = (JToken)obj3;
+				if (val != null && (int)val.Type == 1)
+				{
+					int item = val.Value<int>((object)"Changeset");
+					int item2 = val.Value<int>((object)"Timestamp");
+					_clientRequirementCache = (item, item2);
+				}
 			}
 		}
+		catch (Exception ex)
+		{
+			Debug.LogException(ex);
+			_clientRequirementCache = null;
+		}
+		return _clientRequirementCache;
+	}
+
+	private static string GetClientVersionMismatchMessage()
+	{
+		if (!string.IsNullOrEmpty(_clientVersionMismatchMessage))
+		{
+			return _clientVersionMismatchMessage;
+		}
+		BuildInfo current = BuildInfo.Current;
+		object obj;
+		if (current == null)
+		{
+			obj = null;
+		}
+		else
+		{
+			ScmInfo scm = current.Scm;
+			obj = ((scm != null) ? scm.Branch : null);
+		}
+		if (obj == null)
+		{
+			obj = "unknown";
+		}
+		string text = (string)obj;
+		string text2 = text.ToLowerInvariant();
+		string clientVersionMismatchMessage = ((text2 == "release") ? "Client update required. Close Rust and apply update from Steam." : ((!(text2 == "main")) ? ("Client update required. Apply \"Rust - Staging Branch\" (" + text + " beta) update from Steam.") : "Client update required. Apply \"Rust - Staging Branch\" update from Steam."));
+		_clientVersionMismatchMessage = clientVersionMismatchMessage;
+		return _clientVersionMismatchMessage;
 	}
 }

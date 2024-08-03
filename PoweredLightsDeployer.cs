@@ -160,7 +160,7 @@ public class PoweredLightsDeployer : HeldEntity
 		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
 		bool result = true;
 		List<BaseEntity> list = Pool.GetList<BaseEntity>();
-		Vis.Entities(position, radius, list, 10551297, (QueryTriggerInteraction)2);
+		Vis.Entities(position, radius, list, layerMask, (QueryTriggerInteraction)2);
 		foreach (BaseEntity item in list)
 		{
 			if (item is AnimatedBuildingBlock)
@@ -191,31 +191,32 @@ public class PoweredLightsDeployer : HeldEntity
 		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0133: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0135: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0136: Unknown result type (might be due to invalid IL or missing references)
-		//IL_016d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_016f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0170: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0172: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0179: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0183: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0118: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0154: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0159: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ab: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ac: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ae: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ba: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01bf: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 val = msg.read.Vector3();
 		Vector3 val2 = msg.read.Vector3();
+		float slackLevel = msg.read.Float();
 		BasePlayer player = msg.player;
 		if (GetItem() == null || GetItem().amount < 1 || !IsVisible(val) || !CanPlayerUse(player) || Vector3.Distance(val, player.eyes.position) > maxPlaceDistance || !CheckValidPlacement(val, 0.1f, 10551297))
 		{
@@ -228,6 +229,10 @@ public class PoweredLightsDeployer : HeldEntity
 			component.Spawn();
 			active = component;
 			num = 1;
+			if (player.IsInCreativeMode && Creative.unlimitedIo)
+			{
+				num = 0;
+			}
 		}
 		else
 		{
@@ -244,6 +249,10 @@ public class PoweredLightsDeployer : HeldEntity
 			}
 			num2 = Mathf.Max(num2, lengthPerAmount);
 			float num3 = (float)GetItem().amount * lengthPerAmount;
+			if (player.IsInCreativeMode && Creative.unlimitedIo)
+			{
+				num3 = 200f;
+			}
 			if (num2 > num3)
 			{
 				num2 = num3;
@@ -251,8 +260,12 @@ public class PoweredLightsDeployer : HeldEntity
 			}
 			num2 = Mathf.Min(num3, num2);
 			num = Mathf.CeilToInt(num2 / lengthPerAmount);
+			if (player.IsInCreativeMode && Creative.unlimitedIo)
+			{
+				num = 0;
+			}
 		}
-		active.AddPoint(val, val2);
+		active.AddPoint(val, val2, slackLevel);
 		SetFlag(Flags.Reserved8, (Object)(object)active != (Object)null);
 		int iAmount = num;
 		UseItemAmount(iAmount);

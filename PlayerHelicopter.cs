@@ -16,8 +16,6 @@ public class PlayerHelicopter : BaseHelicopter, IEngineControllerUser, IEntity, 
 
 		public Transform visualBone;
 
-		public bool groundedTest = true;
-
 		public Flags groundedFlag = Flags.Reserved1;
 
 		[NonSerialized]
@@ -152,6 +150,10 @@ public class PlayerHelicopter : BaseHelicopter, IEngineControllerUser, IEntity, 
 
 	private bool isPushing;
 
+	private float[] recentVelocities = new float[10];
+
+	private int recentVelIndex;
+
 	private float lastEngineOnTime;
 
 	public VehicleEngineController<PlayerHelicopter>.EngineState CurEngineState
@@ -265,7 +267,8 @@ public class PlayerHelicopter : BaseHelicopter, IEngineControllerUser, IEntity, 
 	public override void InitShared()
 	{
 		base.InitShared();
-		engineController = new VehicleEngineController<PlayerHelicopter>(this, base.isServer, 5f, fuelStoragePrefab, waterSample, Flags.Reserved4);
+		EntityFuelSystem fuelSystem = new EntityFuelSystem(base.isServer, fuelStoragePrefab, children);
+		engineController = new VehicleEngineController<PlayerHelicopter>(this, fuelSystem, base.isServer, 5f, waterSample, Flags.Reserved4);
 	}
 
 	public float GetFuelFraction(bool force = false)
@@ -302,11 +305,11 @@ public class PlayerHelicopter : BaseHelicopter, IEngineControllerUser, IEntity, 
 
 	public override void Load(LoadInfo info)
 	{
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
 		base.Load(info);
 		if (info.msg.miniCopter != null)
 		{
-			engineController.FuelSystem.fuelStorageInstance.uid = info.msg.miniCopter.fuelStorageID;
+			engineController.FuelSystem.SetInstanceID(info.msg.miniCopter.fuelStorageID);
 			cachedFuelFraction = info.msg.miniCopter.fuelFraction;
 			cachedPitch = info.msg.miniCopter.pitch * maxPitchAnim;
 			cachedRoll = info.msg.miniCopter.roll * maxRollAnim;
@@ -317,9 +320,16 @@ public class PlayerHelicopter : BaseHelicopter, IEngineControllerUser, IEntity, 
 	public override void OnFlagsChanged(Flags old, Flags next)
 	{
 		base.OnFlagsChanged(old, next);
-		if (base.isServer && CurEngineState == VehicleEngineController<PlayerHelicopter>.EngineState.Off)
+		if (base.isServer)
 		{
-			lastEngineOnTime = Time.time;
+			if (CurEngineState == VehicleEngineController<PlayerHelicopter>.EngineState.Off)
+			{
+				lastEngineOnTime = Time.time;
+			}
+			if ((Object)(object)rigidBody != (Object)null)
+			{
+				rigidBody.isKinematic = IsTransferProtected();
+			}
 		}
 	}
 
@@ -337,7 +347,7 @@ public class PlayerHelicopter : BaseHelicopter, IEngineControllerUser, IEntity, 
 		return HotAirBalloon.serviceCeiling;
 	}
 
-	public override EntityFuelSystem GetFuelSystem()
+	public override IFuelSystem GetFuelSystem()
 	{
 		return engineController.FuelSystem;
 	}
@@ -349,6 +359,10 @@ public class PlayerHelicopter : BaseHelicopter, IEngineControllerUser, IEntity, 
 
 	public bool IsValidSAMTarget(bool staticRespawn)
 	{
+		if (rigidBody.IsSleeping() || rigidBody.isKinematic)
+		{
+			return false;
+		}
 		if (staticRespawn)
 		{
 			return true;
@@ -375,7 +389,7 @@ public class PlayerHelicopter : BaseHelicopter, IEngineControllerUser, IEntity, 
 		cachedPitch = currentInputState.pitch;
 	}
 
-	public bool Grounded()
+	public bool IsGrounded()
 	{
 		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
@@ -386,15 +400,16 @@ public class PlayerHelicopter : BaseHelicopter, IEngineControllerUser, IEntity, 
 		{
 			return Physics.Raycast(((Component)this).transform.position + Vector3.up * 0.1f, Vector3.down, 0.5f);
 		}
+		float num = 1f;
 		Wheel[] array = wheels;
-		foreach (Wheel wheel in array)
+		for (int i = 0; i < array.Length; i++)
 		{
-			if (wheel.groundedTest && !wheel.wheelCollider.isGrounded)
+			if (!array[i].wheelCollider.isGrounded)
 			{
-				return false;
+				num -= 1f / (float)wheels.Length;
 			}
 		}
-		return true;
+		return num >= 0.5f;
 	}
 
 	public override void SetDefaultInputState()
@@ -407,7 +422,7 @@ public class PlayerHelicopter : BaseHelicopter, IEngineControllerUser, IEntity, 
 		cachedRoll = 0f;
 		cachedYaw = 0f;
 		cachedPitch = 0f;
-		if (Grounded())
+		if (IsGrounded())
 		{
 			return;
 		}
@@ -511,12 +526,13 @@ public class PlayerHelicopter : BaseHelicopter, IEngineControllerUser, IEntity, 
 			{
 				wheel.steerAngle = num3;
 			}
+			SetWheelFrictionMultiplier(wheel, 1f);
 		}
 	}
 
 	public override void MovementUpdate()
 	{
-		if (Grounded())
+		if (IsGrounded())
 		{
 			if (wheels.Length != 0)
 			{
@@ -527,7 +543,7 @@ public class PlayerHelicopter : BaseHelicopter, IEngineControllerUser, IEntity, 
 				ApplyForceWithoutWheels();
 			}
 		}
-		if (!currentInputState.groundControl || !Grounded())
+		if (!currentInputState.groundControl || !IsGrounded())
 		{
 			base.MovementUpdate();
 		}
@@ -586,9 +602,12 @@ public class PlayerHelicopter : BaseHelicopter, IEngineControllerUser, IEntity, 
 
 	public override void VehicleFixedUpdate()
 	{
-		base.VehicleFixedUpdate();
-		engineController.CheckEngineState();
-		engineController.TickFuel(fuelPerSec);
+		if (!IsTransferProtected())
+		{
+			base.VehicleFixedUpdate();
+			engineController.CheckEngineState();
+			engineController.TickFuel(fuelPerSec);
+		}
 	}
 
 	public void UpdateNetwork()
@@ -645,11 +664,11 @@ public class PlayerHelicopter : BaseHelicopter, IEngineControllerUser, IEntity, 
 
 	public override void Save(SaveInfo info)
 	{
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
 		base.Save(info);
 		info.msg.miniCopter = Pool.Get<Minicopter>();
-		info.msg.miniCopter.fuelStorageID = engineController.FuelSystem.fuelStorageInstance.uid;
+		info.msg.miniCopter.fuelStorageID = engineController.FuelSystem.GetInstanceID();
 		info.msg.miniCopter.fuelFraction = GetFuelFraction(force: true);
 		info.msg.miniCopter.pitch = currentInputState.pitch;
 		info.msg.miniCopter.roll = currentInputState.roll;
@@ -708,11 +727,6 @@ public class PlayerHelicopter : BaseHelicopter, IEngineControllerUser, IEntity, 
 	private void DisablePushing()
 	{
 		isPushing = false;
-		Wheel[] array = wheels;
-		foreach (Wheel wheel in array)
-		{
-			ApplyWheelForce(wheel.wheelCollider, 0f, 20f, 0f);
-		}
 	}
 
 	public override bool IsValidHomingTarget()
@@ -733,6 +747,157 @@ public class PlayerHelicopter : BaseHelicopter, IEngineControllerUser, IEntity, 
 				engineController.FuelSystem.LootFuel(player);
 			}
 		}
+	}
+
+	public override bool ShouldDisableTransferProtectionOnLoad(BasePlayer player)
+	{
+		if (!IsDriver(player))
+		{
+			return !HasDriver();
+		}
+		return true;
+	}
+
+	public override void DisableTransferProtection()
+	{
+		SwapDriverIfInactive();
+		if ((Object)(object)GetDriver() != (Object)null && IsOn())
+		{
+			SetDefaultInputState();
+			lastPlayerInputTime = Time.time;
+		}
+		base.DisableTransferProtection();
+	}
+
+	private void SwapDriverIfInactive()
+	{
+		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c4: Unknown result type (might be due to invalid IL or missing references)
+		BasePlayer driver = GetDriver();
+		if ((Object)(object)driver == (Object)null || IsPlayerActive(driver))
+		{
+			return;
+		}
+		MountPointInfo mountPoint = GetMountPoint(GetPlayerSeat(driver));
+		if (mountPoint == null)
+		{
+			Debug.LogError((object)"Helicopter driver is inactive but the driver seat was not found");
+			return;
+		}
+		BasePlayer basePlayer = FindActivePassenger();
+		if ((Object)(object)basePlayer == (Object)null)
+		{
+			Debug.LogError((object)"Helicopter driver is inactive and there is no passenger we can swap in");
+			return;
+		}
+		MountPointInfo mountPoint2 = GetMountPoint(GetPlayerSeat(basePlayer));
+		BaseEntity entity = basePlayer.GetParentEntity();
+		Vector3 position = ((Component)basePlayer).transform.position;
+		Quaternion rotation = ((Component)basePlayer).transform.rotation;
+		driver.EnsureDismounted();
+		basePlayer.EnsureDismounted();
+		mountPoint.mountable.MountPlayer(basePlayer);
+		if (mountPoint2 == null)
+		{
+			driver.SetParent(entity);
+			driver.MovePosition(position);
+			driver.ForceUpdateTriggers();
+			((Component)driver).transform.rotation = rotation;
+			driver.ServerRotation = rotation;
+		}
+		else
+		{
+			mountPoint2.mountable.MountPlayer(driver);
+		}
+		driver.SendNetworkUpdateImmediate();
+		basePlayer.SendNetworkUpdateImmediate();
+		BasePlayer FindActivePassenger()
+		{
+			foreach (MountPointInfo allMountPoint in base.allMountPoints)
+			{
+				if (!allMountPoint.isDriver && !((Object)(object)allMountPoint.mountable == (Object)null))
+				{
+					BasePlayer mounted = allMountPoint.mountable.GetMounted();
+					if (!((Object)(object)mounted == (Object)null) && IsPlayerActive(mounted))
+					{
+						return mounted;
+					}
+				}
+			}
+			foreach (BaseEntity child in children)
+			{
+				if (!((Object)(object)child == (Object)null) && child is BasePlayer basePlayer2 && IsPlayerActive(basePlayer2))
+				{
+					return basePlayer2;
+				}
+			}
+			return null;
+		}
+		static bool IsPlayerActive(BasePlayer player)
+		{
+			if (player.IsConnected && !player.IsSleeping())
+			{
+				return !player.IsLoadingAfterTransfer();
+			}
+			return false;
+		}
+	}
+
+	protected override void ApplyHandbrake()
+	{
+		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
+		if (!IsGrounded() || rigidBody.IsSleeping())
+		{
+			return;
+		}
+		Wheel[] array = wheels;
+		foreach (Wheel wheel in array)
+		{
+			wheel.wheelCollider.motorTorque = 0f;
+			wheel.wheelCollider.brakeTorque = 10000f;
+			SetWheelFrictionMultiplier(wheel.wheelCollider, 3f);
+		}
+		float[] array2 = recentVelocities;
+		int num = recentVelIndex;
+		Vector3 velocity = rigidBody.velocity;
+		array2[num] = ((Vector3)(ref velocity)).sqrMagnitude;
+		recentVelIndex = ++recentVelIndex % recentVelocities.Length;
+		bool flag = true;
+		float[] array3 = recentVelocities;
+		for (int i = 0; i < array3.Length; i++)
+		{
+			if (array3[i] >= 0.05f)
+			{
+				flag = false;
+				break;
+			}
+		}
+		if (flag && Time.time > lastEngineOnTime + 5f)
+		{
+			rigidBody.Sleep();
+		}
+	}
+
+	private void SetWheelFrictionMultiplier(WheelCollider wheel, float multiplier)
+	{
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		WheelFrictionCurve val = wheel.forwardFriction;
+		((WheelFrictionCurve)(ref val)).stiffness = multiplier;
+		wheel.forwardFriction = val;
+		val = wheel.sidewaysFriction;
+		((WheelFrictionCurve)(ref val)).stiffness = multiplier;
+		wheel.sidewaysFriction = val;
 	}
 
 	void IEngineControllerUser.Invoke(Action action, float time)

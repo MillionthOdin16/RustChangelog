@@ -2,6 +2,10 @@ using UnityEngine;
 
 public class ItemModReveal : ItemMod
 {
+	public static readonly Phrase RevealItemTitle = new Phrase("reveal_item", "Reveal BP");
+
+	public static readonly Phrase RevealItemDesc = new Phrase("reveal_item_desc", "Reveal blueprint");
+
 	public int numForReveal = 10;
 
 	public ItemDefinition revealedItemOverride;

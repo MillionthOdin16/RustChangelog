@@ -11,7 +11,7 @@ public class GenericLerp<T> : IDisposable where T : ISnapshot<T>, new()
 
 	private static T snapshotPrototype = new T();
 
-	private static float TimeOffset = 0f;
+	private static float timeOffset = 0f;
 
 	private float timeOffset0 = float.MaxValue;
 
@@ -22,8 +22,6 @@ public class GenericLerp<T> : IDisposable where T : ISnapshot<T>, new()
 	private float timeOffset3 = float.MaxValue;
 
 	private int timeOffsetCount;
-
-	private float extrapolatedTime;
 
 	private int TimeOffsetInterval => PositionLerp.TimeOffsetInterval;
 
@@ -39,30 +37,16 @@ public class GenericLerp<T> : IDisposable where T : ISnapshot<T>, new()
 	{
 		if (target != null)
 		{
-			float extrapolationTime = target.GetExtrapolationTime();
-			float interpolationDelay = target.GetInterpolationDelay();
+			float interpolationDelay = target.GetInterpolationDelay(ILerpInfo.LerpType.Generic);
 			float interpolationSmoothing = target.GetInterpolationSmoothing();
-			Interpolator<T>.Segment segment = interpolator.Query(LerpTime, interpolationDelay, extrapolationTime, interpolationSmoothing, ref snapshotPrototype);
-			if (segment.next.Time >= interpolator.last.Time)
-			{
-				extrapolatedTime = Mathf.Min(extrapolatedTime + Time.deltaTime, extrapolationTime);
-			}
-			else
-			{
-				extrapolatedTime = Mathf.Max(extrapolatedTime - Time.deltaTime, 0f);
-			}
-			if (extrapolatedTime > 0f && extrapolationTime > 0f && interpolationSmoothing > 0f)
-			{
-				float delta = Time.deltaTime / (extrapolatedTime / extrapolationTime * interpolationSmoothing);
-				segment.tick.Lerp(target.GetCurrentState(), segment.tick, delta);
-			}
+			Interpolator<T>.Segment segment = interpolator.Query(LerpTime, interpolationDelay, 0f, interpolationSmoothing, ref snapshotPrototype);
 			target.SetFrom(segment.tick);
 		}
 	}
 
 	public void Snapshot(T snapshot)
 	{
-		float interpolationDelay = target.GetInterpolationDelay();
+		float interpolationDelay = target.GetInterpolationDelay(ILerpInfo.LerpType.Generic);
 		float interpolationSmoothing = target.GetInterpolationSmoothing();
 		float num = interpolationDelay + interpolationSmoothing + 1f;
 		float lerpTime = LerpTime;
@@ -76,8 +60,8 @@ public class GenericLerp<T> : IDisposable where T : ISnapshot<T>, new()
 			timeOffset0 = float.MaxValue;
 			timeOffsetCount = 0;
 		}
-		TimeOffset = Mathx.Min(timeOffset0, timeOffset1, timeOffset2, timeOffset3);
-		lerpTime = (snapshot.Time += TimeOffset);
+		timeOffset = Mathx.Min(timeOffset0, timeOffset1, timeOffset2, timeOffset3);
+		lerpTime = (snapshot.Time += timeOffset);
 		interpolator.Add(snapshot);
 		interpolator.Cull(lerpTime - num);
 	}
@@ -98,7 +82,7 @@ public class GenericLerp<T> : IDisposable where T : ISnapshot<T>, new()
 
 	public void SnapToEnd()
 	{
-		float interpolationDelay = target.GetInterpolationDelay();
+		float interpolationDelay = target.GetInterpolationDelay(ILerpInfo.LerpType.Generic);
 		Interpolator<T>.Segment segment = interpolator.Query(LerpTime, interpolationDelay, 0f, 0f, ref snapshotPrototype);
 		target.SetFrom(segment.tick);
 		Wipe();
@@ -112,7 +96,6 @@ public class GenericLerp<T> : IDisposable where T : ISnapshot<T>, new()
 		timeOffset1 = float.MaxValue;
 		timeOffset2 = float.MaxValue;
 		timeOffset3 = float.MaxValue;
-		extrapolatedTime = 0f;
 		timeOffsetCount = 0;
 	}
 

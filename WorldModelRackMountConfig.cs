@@ -42,6 +42,8 @@ public class WorldModelRackMountConfig : MonoBehaviour
 
 	public Bounds ManualRenderBounds;
 
+	public bool CanReloadOnWeaponRack = true;
+
 	[Header("Special Rack Types")]
 	public List<CustomPosition> CustomPositions = new List<CustomPosition>();
 

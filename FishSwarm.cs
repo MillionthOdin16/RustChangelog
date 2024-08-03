@@ -8,8 +8,6 @@ public class FishSwarm : MonoBehaviour
 
 	public FishShoal[] fishShoals;
 
-	private Vector3? lastFishUpdatePosition;
-
 	private void Awake()
 	{
 		fishShoals = new FishShoal[fishTypes.Length];
@@ -24,20 +22,15 @@ public class FishSwarm : MonoBehaviour
 	{
 		while (true)
 		{
-			if (!Object.op_Implicit((Object)(object)TerrainMeta.WaterMap) || !Object.op_Implicit((Object)(object)TerrainMeta.HeightMap))
+			yield return CoroutineEx.waitForEndOfFrame;
+			if (Object.op_Implicit((Object)(object)TerrainMeta.WaterMap) && Object.op_Implicit((Object)(object)TerrainMeta.HeightMap))
 			{
-				yield return CoroutineEx.waitForEndOfFrame;
-				continue;
-			}
-			if (lastFishUpdatePosition.HasValue && Vector3.Distance(((Component)this).transform.position, lastFishUpdatePosition.Value) < 5f)
-			{
-				yield return CoroutineEx.waitForEndOfFrame;
-			}
-			FishShoal[] array = fishShoals;
-			for (int i = 0; i < array.Length; i++)
-			{
-				array[i].TrySpawn(float3.op_Implicit(((Component)this).transform.position));
-				yield return CoroutineEx.waitForEndOfFrame;
+				FishShoal[] array = fishShoals;
+				for (int i = 0; i < array.Length; i++)
+				{
+					array[i].TrySpawn(float3.op_Implicit(((Component)this).transform.position));
+					yield return CoroutineEx.waitForEndOfFrame;
+				}
 			}
 		}
 	}

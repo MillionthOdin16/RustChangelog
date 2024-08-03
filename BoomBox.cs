@@ -112,7 +112,6 @@ public class BoomBox : EntityComponent<BaseEntity>, INotifyLOD
 			SetFlag(BaseEntity.Flags.On, play);
 			if (base.baseEntity is IOEntity iOEntity)
 			{
-				iOEntity.SendChangedToRoot(forceUpdate: true);
 				iOEntity.MarkDirtyForceUpdateOutputs();
 			}
 			if (play && !((FacepunchBehaviour)this).IsInvoking((Action)DeductCondition) && ConditionLossRate > 0f)
@@ -128,10 +127,10 @@ public class BoomBox : EntityComponent<BaseEntity>, INotifyLOD
 
 	public void OnCassetteInserted(Cassette c)
 	{
-		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
 		if (!((Object)(object)base.baseEntity == (Object)null))
 		{
-			base.baseEntity.ClientRPC<NetworkableId>(null, "Client_OnCassetteInserted", c.net.ID);
+			base.baseEntity.ClientRPC<NetworkableId>(RpcTarget.NetworkGroup("Client_OnCassetteInserted"), c.net.ID);
 			ServerTogglePlay(play: false);
 			SetFlag(BaseEntity.Flags.Reserved1, state: true);
 			base.baseEntity.SendNetworkUpdate();
@@ -142,7 +141,7 @@ public class BoomBox : EntityComponent<BaseEntity>, INotifyLOD
 	{
 		if (!((Object)(object)base.baseEntity == (Object)null))
 		{
-			base.baseEntity.ClientRPC(null, "Client_OnCassetteRemoved");
+			base.baseEntity.ClientRPC(RpcTarget.NetworkGroup("Client_OnCassetteRemoved"));
 			ServerTogglePlay(play: false);
 			SetFlag(BaseEntity.Flags.Reserved1, state: false);
 		}
@@ -275,11 +274,11 @@ public class BoomBox : EntityComponent<BaseEntity>, INotifyLOD
 		{
 			if ((Object)(object)msg.player != (Object)null)
 			{
-				ulong userID = msg.player.userID;
-				AssignedRadioBy = userID;
+				ulong assignedRadioBy = msg.player.userID.Get();
+				AssignedRadioBy = assignedRadioBy;
 			}
 			CurrentRadioIp = text;
-			base.baseEntity.ClientRPC(null, "OnRadioIPChanged", CurrentRadioIp);
+			base.baseEntity.ClientRPC(RpcTarget.NetworkGroup("OnRadioIPChanged"), CurrentRadioIp);
 			if (IsOn())
 			{
 				ServerTogglePlay(play: false);

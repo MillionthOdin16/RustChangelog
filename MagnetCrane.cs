@@ -407,9 +407,14 @@ public class MagnetCrane : GroundVehicle, CarPhysics<MagnetCrane>.ICar
 		return steerInput;
 	}
 
-	public bool GetSteerModInput()
+	public bool GetSteerSpeedMod(float speed)
 	{
 		return false;
+	}
+
+	public float GetSteerMaxMult(float speed)
+	{
+		return 1f;
 	}
 
 	public override void OnEngineStartFailed()
@@ -434,7 +439,7 @@ public class MagnetCrane : GroundVehicle, CarPhysics<MagnetCrane>.ICar
 		//IL_019b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_01b6: Unknown result type (might be due to invalid IL or missing references)
 		//IL_01bc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0302: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0306: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0210: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0215: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0238: Unknown result type (might be due to invalid IL or missing references)
@@ -442,8 +447,8 @@ public class MagnetCrane : GroundVehicle, CarPhysics<MagnetCrane>.ICar
 		//IL_0247: Unknown result type (might be due to invalid IL or missing references)
 		//IL_024c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0251: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0344: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0349: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0348: Unknown result type (might be due to invalid IL or missing references)
+		//IL_034d: Unknown result type (might be due to invalid IL or missing references)
 		base.VehicleFixedUpdate();
 		rigidBody.ResetInertiaTensor();
 		rigidBody.inertiaTensor = Vector3.Lerp(rigidBody.inertiaTensor, customInertiaTensor, 0.5f);

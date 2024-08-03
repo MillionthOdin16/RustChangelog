@@ -28,12 +28,12 @@ public class EnvSync : PointEntity
 			{
 				double num2 = Math.Truncate(num);
 				double num3 = (num - num2) * 24.0;
-				float num4 = time.TimeCurve.Evaluate((float)num3);
+				float num4 = time.EvaulateTimeCurve((float)num3);
 				num = num2 + (double)(num4 / 24f);
 			}
-			float num5 = (float)(num * 24.0);
-			DateTime dateTime = dateTimeOffset.Date.AddHours(num5);
-			TOD_Sky.Instance.Cycle.DateTime = dateTime.ToUniversalTime();
+			double value = num * 24.0;
+			DateTime dateTime = dateTimeOffset.Date.AddHours(value);
+			TOD_Sky.Instance.Cycle.DateTime = dateTime;
 		}
 		SendNetworkUpdate();
 	}

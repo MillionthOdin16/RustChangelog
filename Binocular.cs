@@ -5,4 +5,6 @@ public class Binocular : AttackEntity
 	public GameObjectRef fovChangeEffect;
 
 	public float smoothSpeed = 0.05f;
+
+	public GameObjectRef rangePrefab;
 }

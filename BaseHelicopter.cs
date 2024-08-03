@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Rust;
 using UnityEngine;
 
-public class BaseHelicopter : BaseVehicle, SeekerTarget.ISeekerTargetOwner
+public abstract class BaseHelicopter : BaseVehicle, SeekerTarget.ISeekerTargetOwner
 {
 	[Serializable]
 	protected class GroundEffect
@@ -211,7 +211,8 @@ public class BaseHelicopter : BaseVehicle, SeekerTarget.ISeekerTargetOwner
 
 	public override void VehicleFixedUpdate()
 	{
-		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
 		base.VehicleFixedUpdate();
 		if (Time.time > lastPlayerInputTime + 0.5f)
 		{
@@ -221,6 +222,10 @@ public class BaseHelicopter : BaseVehicle, SeekerTarget.ISeekerTargetOwner
 		if (IsEngineOn() || ForceMovementHandling)
 		{
 			MovementUpdate();
+		}
+		else if (!HasDriver() && TimeSince.op_Implicit(timeSinceLastPush) > 2f)
+		{
+			ApplyHandbrake();
 		}
 		SetFlag(Flags.Reserved6, TOD_Sky.Instance.IsNight);
 		GameObject[] array = killTriggers;
@@ -247,6 +252,8 @@ public class BaseHelicopter : BaseVehicle, SeekerTarget.ISeekerTargetOwner
 	protected virtual void TryStartEngine(BasePlayer player)
 	{
 	}
+
+	protected abstract void ApplyHandbrake();
 
 	public void ClearDamageTorque()
 	{
@@ -366,13 +373,13 @@ public class BaseHelicopter : BaseVehicle, SeekerTarget.ISeekerTargetOwner
 		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00b0: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0161: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0166: Unknown result type (might be due to invalid IL or missing references)
-		//IL_016a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0183: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0188: Unknown result type (might be due to invalid IL or missing references)
-		//IL_018c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0162: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0167: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_017d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0184: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0189: Unknown result type (might be due to invalid IL or missing references)
+		//IL_018d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0105: Unknown result type (might be due to invalid IL or missing references)
 		//IL_010a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_010e: Unknown result type (might be due to invalid IL or missing references)
@@ -404,12 +411,12 @@ public class BaseHelicopter : BaseVehicle, SeekerTarget.ISeekerTargetOwner
 				return;
 			}
 		}
-		float num = Mathf.InverseLerp(5f, 30f, magnitude);
+		float num = Mathf.InverseLerp(7f, 30f, magnitude);
 		if (!(num > 0f))
 		{
 			return;
 		}
-		pendingImpactDamage += Mathf.Max(num, 0.15f);
+		pendingImpactDamage += Mathf.Max(num, 0.05f);
 		if (Vector3.Dot(((Component)this).transform.up, Vector3.up) < 0.5f)
 		{
 			pendingImpactDamage *= 5f;
@@ -441,37 +448,38 @@ public class BaseHelicopter : BaseVehicle, SeekerTarget.ISeekerTargetOwner
 
 	public override void OnKilled(HitInfo info)
 	{
-		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
 		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0100: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0105: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00da: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0101: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0106: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0120: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0132: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0137: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0155: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0168: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0181: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0121: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0133: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0138: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0156: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0160: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0169: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0182: Unknown result type (might be due to invalid IL or missing references)
-		//IL_018d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0192: Unknown result type (might be due to invalid IL or missing references)
-		//IL_013b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0183: Unknown result type (might be due to invalid IL or missing references)
+		//IL_018e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0193: Unknown result type (might be due to invalid IL or missing references)
 		//IL_013c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0140: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0145: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0141: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0146: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014b: Unknown result type (might be due to invalid IL or missing references)
 		if (base.isClient)
 		{
 			base.OnKilled(info);
@@ -525,6 +533,7 @@ public class BaseHelicopter : BaseVehicle, SeekerTarget.ISeekerTargetOwner
 				}
 			}
 		}
+		SeismicSensor.Notify(((Component)this).transform.position, 1);
 		base.OnKilled(info);
 	}
 

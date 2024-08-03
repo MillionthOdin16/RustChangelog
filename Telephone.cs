@@ -913,18 +913,18 @@ public class Telephone : ContainerIOEntity, ICassettePlayer
 
 	public void OnCassetteInserted(Cassette c)
 	{
-		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
 		cachedCassette = c;
-		ClientRPC<NetworkableId>(null, "ClientOnCassetteChanged", c.net.ID);
+		ClientRPC<NetworkableId>(RpcTarget.NetworkGroup("ClientOnCassetteChanged"), c.net.ID);
 	}
 
 	public void OnCassetteRemoved(Cassette c)
 	{
-		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
 		cachedCassette = null;
 		Controller.DeleteAllVoicemail();
-		ClientRPC<NetworkableId>(null, "ClientOnCassetteChanged", default(NetworkableId));
+		ClientRPC<NetworkableId>(RpcTarget.NetworkGroup("ClientOnCassetteChanged"), default(NetworkableId));
 	}
 
 	private bool CanAcceptItem(Item item, int targetSlot)

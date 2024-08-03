@@ -2,8 +2,12 @@ using System.Collections.Generic;
 
 namespace Rust.Interpolation;
 
-public interface IGenericLerpTarget<T> : ILerpInfo where T : ISnapshot<T>, new()
+public interface IGenericLerpTarget<T> where T : ISnapshot<T>, new()
 {
+	float GetInterpolationDelay(ILerpInfo.LerpType lerpType);
+
+	float GetInterpolationSmoothing();
+
 	void SetFrom(T snapshot);
 
 	T GetCurrentState();

@@ -18,7 +18,7 @@ public class DungeonBaseLink : MonoBehaviour
 
 	internal DungeonBaseInfo Dungeon;
 
-	public MeshRenderer[] MapRenderers;
+	public RendererLOD[] MapRendererLods = new RendererLOD[0];
 
 	private List<DungeonBaseSocket> sockets;
 

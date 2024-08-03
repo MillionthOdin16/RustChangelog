@@ -115,4 +115,18 @@ public class WeaponRackSlot
 		AmmoMax = 0;
 		ReloadTime = 0f;
 	}
+
+	public bool CanBeReloadedAtWeaponRack()
+	{
+		if ((Object)(object)ItemDef == (Object)null)
+		{
+			return false;
+		}
+		WorldModelRackMountConfig forItemDef = WorldModelRackMountConfig.GetForItemDef(ItemDef);
+		if ((Object)(object)forItemDef == (Object)null)
+		{
+			return false;
+		}
+		return forItemDef.CanReloadOnWeaponRack;
+	}
 }

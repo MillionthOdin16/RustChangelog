@@ -64,6 +64,8 @@ public class PlayerHeliSounds : MonoBehaviour, IClientComponent
 
 	public SoundDefinition noFlaresDef;
 
+	public SoundDefinition flaresReadyDef;
+
 	public SoundDefinition flightControlMovementSoundDef;
 
 	public GameObject flightControlSoundPosition;

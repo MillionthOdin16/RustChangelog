@@ -33,4 +33,39 @@ public static class ClanLogExtensions
 		obj.logEntries = list;
 		return obj;
 	}
+
+	public static ClanScoreEvents ToProto(this ClanScoreEvents clanScoreEvents)
+	{
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Expected I4, but got Unknown
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
+		List<Entry> list = Pool.GetList<Entry>();
+		foreach (ClanScoreEvent scoreEvent in clanScoreEvents.ScoreEvents)
+		{
+			Entry val = Pool.Get<Entry>();
+			val.timestamp = scoreEvent.Timestamp;
+			val.type = (int)scoreEvent.Type;
+			val.score = scoreEvent.Score;
+			val.multiplier = scoreEvent.Multiplier;
+			val.steamId = scoreEvent.SteamId.GetValueOrDefault();
+			val.otherSteamId = scoreEvent.OtherSteamId.GetValueOrDefault();
+			val.otherClanId = scoreEvent.OtherClanId.GetValueOrDefault();
+			val.arg1 = scoreEvent.Arg1;
+			val.arg2 = scoreEvent.Arg2;
+			list.Add(val);
+		}
+		ClanScoreEvents obj = Pool.Get<ClanScoreEvents>();
+		obj.clanId = clanScoreEvents.ClanId;
+		obj.scoreEvents = list;
+		return obj;
+	}
 }

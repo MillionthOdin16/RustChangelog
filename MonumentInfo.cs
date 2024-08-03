@@ -42,6 +42,10 @@ public class MonumentInfo : LandmarkInfo, IPrefabPreProcess
 		}
 	}
 
+	private void Start()
+	{
+	}
+
 	public bool CheckPlacement(Vector3 pos, Quaternion rot, Vector3 scale)
 	{
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)

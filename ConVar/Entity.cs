@@ -335,27 +335,31 @@ public class Entity : ConsoleSystem
 	}
 
 	[ServerVar(Name = "spawn")]
-	public static string svspawn(string name, Vector3 pos, Vector3 dir)
+	public static string svspawn(string name, Vector3 pos, Vector3 dir, int forceUp = 1)
 	{
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ca: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0093: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ea: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00eb: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer arg = ConsoleSystem.CurrentArgs.Player();
 		EntitySpawnRequest spawnEntityFromName = GetSpawnEntityFromName(name);
 		if (!spawnEntityFromName.Valid)
 		{
 			return spawnEntityFromName.Error;
 		}
-		BaseEntity baseEntity = GameManager.server.CreateEntity(spawnEntityFromName.PrefabName, pos, Quaternion.LookRotation(dir, Vector3.up));
+		bool flag = forceUp == 1;
+		BaseEntity baseEntity = GameManager.server.CreateEntity(spawnEntityFromName.PrefabName, pos, flag ? Quaternion.LookRotation(dir, Vector3.up) : Quaternion.Euler(dir));
 		if ((Object)(object)baseEntity == (Object)null)
 		{
 			Debug.Log((object)$"{arg} failed to spawn \"{spawnEntityFromName.PrefabName}\" (tried to spawn \"{name}\")");
@@ -364,8 +368,15 @@ public class Entity : ConsoleSystem
 		BasePlayer basePlayer = baseEntity as BasePlayer;
 		if ((Object)(object)basePlayer != (Object)null)
 		{
-			Quaternion val = Quaternion.LookRotation(dir, Vector3.up);
-			basePlayer.OverrideViewAngles(((Quaternion)(ref val)).eulerAngles);
+			if (flag)
+			{
+				Quaternion val = Quaternion.LookRotation(dir, Vector3.up);
+				basePlayer.OverrideViewAngles(((Quaternion)(ref val)).eulerAngles);
+			}
+			else
+			{
+				basePlayer.OverrideViewAngles(dir);
+			}
 		}
 		baseEntity.Spawn();
 		Debug.Log((object)$"{arg} spawned \"{baseEntity}\" at {pos}");

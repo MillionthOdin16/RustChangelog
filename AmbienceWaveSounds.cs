@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class AmbienceWaveSounds : MonoBehaviour, IClientComponent
+public class AmbienceWaveSounds : SingletonComponent<AmbienceWaveSounds>, IClientComponent
 {
 	[Serializable]
 	public class WaveLayer

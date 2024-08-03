@@ -563,7 +563,7 @@ public abstract class BaseCardGameEntity : BaseVehicle
 	{
 		foreach (MountPointInfo mountPoint in mountPoints)
 		{
-			if ((Object)(object)mountPoint.mountable != (Object)null && (Object)(object)mountPoint.mountable.GetMounted() != (Object)null && mountPoint.mountable.GetMounted().userID == id)
+			if ((Object)(object)mountPoint.mountable != (Object)null && (Object)(object)mountPoint.mountable.GetMounted() != (Object)null && (ulong)mountPoint.mountable.GetMounted().userID == id)
 			{
 				return mountPoint.mountable.GetMounted();
 			}
@@ -600,7 +600,7 @@ public abstract class BaseCardGameEntity : BaseVehicle
 			if ((Object)(object)mountable != (Object)null)
 			{
 				BasePlayer mounted = mountable.GetMounted();
-				if ((Object)(object)mounted != (Object)null && mounted.userID == playerID)
+				if ((Object)(object)mounted != (Object)null && (ulong)mounted.userID == playerID)
 				{
 					num = i;
 				}

@@ -1009,8 +1009,12 @@ public class CompleteTrain : IDisposable
 
 	private float HandleRigidbodyCollision(bool atOurFront, float trackSpeed, Vector3 forwardVector, float ourTotalMass, Rigidbody theirRB, float theirTotalMass, float deltaTime, bool calcSecondaryForces)
 	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		if (theirTotalMass < 500f)
+		{
+			return trackSpeed;
+		}
 		float num = Vector3.Dot(forwardVector, theirRB.velocity);
 		float num2 = trackSpeed - num;
 		if ((atOurFront && num2 <= 0f) || (!atOurFront && num2 >= 0f))

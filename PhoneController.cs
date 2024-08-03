@@ -329,7 +329,7 @@ public class PhoneController : EntityComponent<BaseEntity>
 	public void OnDialFailed(Telephone.DialFailReason reason)
 	{
 		SetPhoneState(Telephone.CallState.Idle);
-		base.baseEntity.ClientRPC(null, "ClientOnDialFailed", (int)reason);
+		base.baseEntity.ClientRPC(RpcTarget.NetworkGroup("ClientOnDialFailed"), (int)reason);
 		activeCallTo = null;
 		if (((FacepunchBehaviour)this).IsInvoking((Action)TimeOutCall))
 		{
@@ -348,7 +348,7 @@ public class PhoneController : EntityComponent<BaseEntity>
 	public void ServerPlayAnsweringMessage(PhoneController fromPhone)
 	{
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0092: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
 		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
 		NetworkableId arg = default(NetworkableId);
@@ -365,7 +365,7 @@ public class PhoneController : EntityComponent<BaseEntity>
 		}
 		if (((NetworkableId)(ref arg)).IsValid)
 		{
-			base.baseEntity.ClientRPC<NetworkableId, uint, uint, int, int>(null, "ClientPlayAnsweringMessage", arg, num, arg2, fromPhone.HasVoicemailSlot() ? 1 : 0, activeCallTo.PhoneNumber);
+			base.baseEntity.ClientRPC<NetworkableId, uint, uint, int, int>(RpcTarget.NetworkGroup("ClientPlayAnsweringMessage"), arg, num, arg2, fromPhone.HasVoicemailSlot() ? 1 : 0, activeCallTo.PhoneNumber);
 			((FacepunchBehaviour)this).Invoke((Action)TriggerTimeOut, activeCallTo.cachedCassette.MaxCassetteLength);
 		}
 		else
@@ -382,7 +382,7 @@ public class PhoneController : EntityComponent<BaseEntity>
 	public void SetPhoneStateWithPlayer(Telephone.CallState state)
 	{
 		serverState = state;
-		base.baseEntity.ClientRPC(null, "SetClientState", (int)serverState, ((Object)(object)activeCallTo != (Object)null) ? activeCallTo.PhoneNumber : 0);
+		base.baseEntity.ClientRPC(RpcTarget.NetworkGroup("SetClientState"), (int)serverState, ((Object)(object)activeCallTo != (Object)null) ? activeCallTo.PhoneNumber : 0);
 		if (base.baseEntity is MobilePhone mobilePhone)
 		{
 			mobilePhone.ToggleRinging(state == Telephone.CallState.Ringing);
@@ -396,7 +396,7 @@ public class PhoneController : EntityComponent<BaseEntity>
 			base.baseEntity.SetFlag(BaseEntity.Flags.Busy, b: false);
 		}
 		serverState = state;
-		base.baseEntity.ClientRPC(null, "SetClientState", (int)serverState, ((Object)(object)activeCallTo != (Object)null) ? activeCallTo.PhoneNumber : 0);
+		base.baseEntity.ClientRPC(RpcTarget.NetworkGroup("SetClientState"), (int)serverState, ((Object)(object)activeCallTo != (Object)null) ? activeCallTo.PhoneNumber : 0);
 		if (base.baseEntity is Telephone telephone)
 		{
 			telephone.MarkDirtyForceUpdateOutputs();
@@ -459,19 +459,19 @@ public class PhoneController : EntityComponent<BaseEntity>
 
 	public void OnReceivedDataFromConnectedPhone(byte[] data)
 	{
-		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
 		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
 		BaseEntity obj = base.baseEntity;
 		SendInfo sendInfo = default(SendInfo);
 		((SendInfo)(ref sendInfo))._002Ector(BaseNetworkable.GetConnectionsWithin(((Component)this).transform.position, 15f));
 		sendInfo.priority = (Priority)0;
-		obj.ClientRPCEx(sendInfo, null, "OnReceivedVoice", data.Length, data);
+		obj.ClientRPC(RpcTarget.SendInfo("OnReceivedVoice", sendInfo), data.Length, data);
 	}
 
 	public void OnIncomingCallWhileBusy()
 	{
-		base.baseEntity.ClientRPC(null, "OnIncomingCallDuringCall");
+		base.baseEntity.ClientRPC(RpcTarget.NetworkGroup("OnIncomingCallDuringCall"));
 	}
 
 	public void DestroyShared()
@@ -507,7 +507,7 @@ public class PhoneController : EntityComponent<BaseEntity>
 		try
 		{
 			TelephoneManager.GetPhoneDirectory(PhoneNumber, page, 12, val);
-			base.baseEntity.ClientRPC<PhoneDirectory>(null, "ReceivePhoneDirectory", val);
+			base.baseEntity.ClientRPC<PhoneDirectory>(RpcTarget.NetworkGroup("ReceivePhoneDirectory"), val);
 		}
 		finally
 		{
@@ -677,12 +677,12 @@ public class PhoneController : EntityComponent<BaseEntity>
 
 	public void ServerPlayVoicemail(BaseEntity.RPCMessage msg)
 	{
-		base.baseEntity.ClientRPC(null, "ClientToggleVoicemail", 1, msg.read.UInt32());
+		base.baseEntity.ClientRPC(RpcTarget.NetworkGroup("ClientToggleVoicemail"), 1, msg.read.UInt32());
 	}
 
 	public void ServerStopVoicemail(BaseEntity.RPCMessage msg)
 	{
-		base.baseEntity.ClientRPC(null, "ClientToggleVoicemail", 0, msg.read.UInt32());
+		base.baseEntity.ClientRPC(RpcTarget.NetworkGroup("ClientToggleVoicemail"), 0, msg.read.UInt32());
 	}
 
 	public void ServerDeleteVoicemail(BaseEntity.RPCMessage msg)

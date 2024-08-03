@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using ConVar;
 using Network;
 using Rust;
 using UnityEngine;
@@ -13,16 +15,16 @@ public class Effect : EffectData
 
 	public static class client
 	{
-		public static void Run(Type fxtype, BaseEntity ent, uint boneID, Vector3 posLocal, Vector3 normLocal)
+		public static void Run(Type fxtype, BaseEntity ent, uint boneID = 0u, Vector3 posLocal = default(Vector3), Vector3 normLocal = default(Vector3))
 		{
 		}
 
-		public static void Run(string strName, BaseEntity ent, uint boneID, Vector3 posLocal, Vector3 normLocal)
+		public static void Run(string strName, BaseEntity ent, uint boneID = 0u, Vector3 posLocal = default(Vector3), Vector3 normLocal = default(Vector3))
 		{
 			string.IsNullOrEmpty(strName);
 		}
 
-		public static void Run(Type fxtype, Vector3 posWorld, Vector3 normWorld, Vector3 up = default(Vector3))
+		public static void Run(Type fxtype, Vector3 posWorld = default(Vector3), Vector3 normWorld = default(Vector3), Vector3 up = default(Vector3))
 		{
 		}
 
@@ -141,16 +143,17 @@ public class Effect : EffectData
 
 	public static class server
 	{
-		public static void Run(Type fxtype, BaseEntity ent, uint boneID, Vector3 posLocal, Vector3 normLocal, Connection sourceConnection = null, bool broadcast = false)
+		public static void Run(Type fxtype, BaseEntity ent, uint boneID = 0u, Vector3 posLocal = default(Vector3), Vector3 normLocal = default(Vector3), Connection sourceConnection = null, bool broadcast = false, List<Connection> targets = null)
 		{
 			//IL_0008: Unknown result type (might be due to invalid IL or missing references)
 			//IL_0009: Unknown result type (might be due to invalid IL or missing references)
 			reusableInstace.Init(fxtype, ent, boneID, posLocal, normLocal, sourceConnection);
 			reusableInstace.broadcast = broadcast;
+			reusableInstace.targets = targets;
 			EffectNetwork.Send(reusableInstace);
 		}
 
-		public static void Run(string strName, BaseEntity ent, uint boneID, Vector3 posLocal, Vector3 normLocal, Connection sourceConnection = null, bool broadcast = false)
+		public static void Run(string strName, BaseEntity ent, uint boneID = 0u, Vector3 posLocal = default(Vector3), Vector3 normLocal = default(Vector3), Connection sourceConnection = null, bool broadcast = false, List<Connection> targets = null)
 		{
 			//IL_0011: Unknown result type (might be due to invalid IL or missing references)
 			//IL_0012: Unknown result type (might be due to invalid IL or missing references)
@@ -159,20 +162,22 @@ public class Effect : EffectData
 				reusableInstace.Init(Type.Generic, ent, boneID, posLocal, normLocal, sourceConnection);
 				reusableInstace.pooledString = strName;
 				reusableInstace.broadcast = broadcast;
+				reusableInstace.targets = targets;
 				EffectNetwork.Send(reusableInstace);
 			}
 		}
 
-		public static void Run(Type fxtype, Vector3 posWorld, Vector3 normWorld, Connection sourceConnection = null, bool broadcast = false)
+		public static void Run(Type fxtype, Vector3 posWorld = default(Vector3), Vector3 normWorld = default(Vector3), Connection sourceConnection = null, bool broadcast = false, List<Connection> targets = null)
 		{
 			//IL_0006: Unknown result type (might be due to invalid IL or missing references)
 			//IL_0007: Unknown result type (might be due to invalid IL or missing references)
 			reusableInstace.Init(fxtype, posWorld, normWorld, sourceConnection);
 			reusableInstace.broadcast = broadcast;
+			reusableInstace.targets = targets;
 			EffectNetwork.Send(reusableInstace);
 		}
 
-		public static void Run(string strName, Vector3 posWorld = default(Vector3), Vector3 normWorld = default(Vector3), Connection sourceConnection = null, bool broadcast = false)
+		public static void Run(string strName, Vector3 posWorld = default(Vector3), Vector3 normWorld = default(Vector3), Connection sourceConnection = null, bool broadcast = false, List<Connection> targets = null)
 		{
 			//IL_000f: Unknown result type (might be due to invalid IL or missing references)
 			//IL_0010: Unknown result type (might be due to invalid IL or missing references)
@@ -181,14 +186,15 @@ public class Effect : EffectData
 				reusableInstace.Init(Type.Generic, posWorld, normWorld, sourceConnection);
 				reusableInstace.pooledString = strName;
 				reusableInstace.broadcast = broadcast;
+				reusableInstace.targets = targets;
 				EffectNetwork.Send(reusableInstace);
 			}
 		}
 
 		public static void DoAdditiveImpactEffect(HitInfo info, string effectName)
 		{
-			//IL_0035: Unknown result type (might be due to invalid IL or missing references)
-			//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+			//IL_003c: Unknown result type (might be due to invalid IL or missing references)
 			//IL_001b: Unknown result type (might be due to invalid IL or missing references)
 			//IL_0021: Unknown result type (might be due to invalid IL or missing references)
 			if (info.HitEntity.IsValid())
@@ -203,10 +209,10 @@ public class Effect : EffectData
 
 		public static void ImpactEffect(HitInfo info)
 		{
-			//IL_01b2: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01b8: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01cb: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01d1: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01be: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01c4: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01d8: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01de: Unknown result type (might be due to invalid IL or missing references)
 			//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
 			//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
 			//IL_00d7: Unknown result type (might be due to invalid IL or missing references)
@@ -214,15 +220,15 @@ public class Effect : EffectData
 			//IL_00e7: Unknown result type (might be due to invalid IL or missing references)
 			//IL_00f4: Unknown result type (might be due to invalid IL or missing references)
 			//IL_004d: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0172: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0178: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0197: Unknown result type (might be due to invalid IL or missing references)
-			//IL_019d: Unknown result type (might be due to invalid IL or missing references)
+			//IL_017c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0182: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01a2: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01a8: Unknown result type (might be due to invalid IL or missing references)
 			//IL_005a: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0248: Unknown result type (might be due to invalid IL or missing references)
-			//IL_024e: Unknown result type (might be due to invalid IL or missing references)
-			//IL_022c: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0232: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0257: Unknown result type (might be due to invalid IL or missing references)
+			//IL_025d: Unknown result type (might be due to invalid IL or missing references)
+			//IL_023a: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0240: Unknown result type (might be due to invalid IL or missing references)
 			//IL_012d: Unknown result type (might be due to invalid IL or missing references)
 			if (!info.DoHitEffects)
 			{
@@ -251,7 +257,10 @@ public class Effect : EffectData
 					if ((Object)(object)initiatorPlayer != (Object)null && ((object)initiatorPlayer).GetType() == typeof(BasePlayer))
 					{
 						float num2 = Mathf.Sqrt(((Bounds)(ref bounds)).SqrDistance(info.HitPositionLocal));
-						AntiHack.Log(initiatorPlayer, AntiHackType.EffectHack, $"Tried to run an impact effect outside of entity '{info.HitEntity.ShortPrefabName}' bounds by {num2}m");
+						if (num2 > ConVar.AntiHack.impact_effect_distance_forgiveness)
+						{
+							AntiHack.Log(initiatorPlayer, AntiHackType.EffectHack, $"Tried to run an impact effect outside of entity '{info.HitEntity.ShortPrefabName}' bounds by {num2}m");
+						}
 					}
 					return;
 				}
@@ -305,6 +314,8 @@ public class Effect : EffectData
 	public string pooledString;
 
 	public bool broadcast;
+
+	public List<Connection> targets;
 
 	private static Effect reusableInstace = new Effect();
 
@@ -396,5 +407,6 @@ public class Effect : EffectData
 		gameObject = null;
 		pooledString = null;
 		broadcast = false;
+		targets = null;
 	}
 }

@@ -810,11 +810,11 @@ public class WeaponRack : StorageContainer
 
 	private void GivePlayerWeapon(BasePlayer player, int mountSlotIndex, int playerBeltIndex = -1, bool tryHold = true, bool sendUpdate = true)
 	{
-		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00be: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)player == (Object)null)
 		{
 			return;
@@ -834,9 +834,9 @@ public class WeaponRack : StorageContainer
 		{
 			if ((tryHold && (Object)(object)player.GetHeldEntity() == (Object)null) || playerBeltIndex != -1)
 			{
-				ClientRPCPlayer<int, ItemId>(null, player, "SetActiveBeltSlot", slot.position, slot.uid);
+				ClientRPC<int, ItemId>(RpcTarget.Player("SetActiveBeltSlot", player), slot.position, slot.uid);
 			}
-			ClientRPCPlayer(null, player, "PlayGrabSound", slot.info.itemid);
+			ClientRPC(RpcTarget.Player("PlayGrabSound", player), slot.info.itemid);
 		}
 		else if (!slot.MoveToContainer(player.inventory.containerMain))
 		{
@@ -903,7 +903,7 @@ public class WeaponRack : StorageContainer
 			return;
 		}
 		WeaponRackSlot weaponAtIndex = GetWeaponAtIndex(mountSlotIndex);
-		if (weaponAtIndex == null)
+		if (weaponAtIndex == null || !weaponAtIndex.CanBeReloadedAtWeaponRack())
 		{
 			return;
 		}
@@ -922,7 +922,7 @@ public class WeaponRack : StorageContainer
 				component.UnloadAmmo(slot, player);
 				SetSlotAmmoDetails(weaponAtIndex, slot);
 				SendNetworkUpdateImmediate();
-				ClientRPCPlayer(null, player, "PlayAmmoSound", ammoType.itemid, 1);
+				ClientRPC(RpcTarget.Player("PlayAmmoSound", player), ammoType.itemid, 1);
 			}
 		}
 	}
@@ -1002,7 +1002,7 @@ public class WeaponRack : StorageContainer
 			SetupSlot(slot);
 			if ((Object)(object)player != (Object)null)
 			{
-				ClientRPCPlayer(null, player, "PlayMountSound", itemid);
+				ClientRPC(RpcTarget.Player("PlayMountSound", player), itemid);
 			}
 		}
 		if (sendUpdate)
@@ -1015,13 +1015,13 @@ public class WeaponRack : StorageContainer
 
 	private void PlayMountSound(int itemID)
 	{
-		ClientRPC(null, "PlayMountSound", itemID);
+		ClientRPC(RpcTarget.NetworkGroup("PlayMountSound"), itemID);
 	}
 
 	[RPC_Server]
 	private void LoadWeaponAmmo(RPCMessage msg)
 	{
-		//IL_00dd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e6: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer player = msg.player;
 		if (!Object.op_Implicit((Object)(object)player))
 		{
@@ -1030,7 +1030,7 @@ public class WeaponRack : StorageContainer
 		int gridIndex = msg.read.Int32();
 		int num = msg.read.Int32();
 		WeaponRackSlot weaponAtIndex = GetWeaponAtIndex(gridIndex);
-		if (weaponAtIndex == null)
+		if (weaponAtIndex == null || !weaponAtIndex.CanBeReloadedAtWeaponRack())
 		{
 			return;
 		}
@@ -1079,7 +1079,7 @@ public class WeaponRack : StorageContainer
 			component.TryReloadMagazine(player.inventory);
 			SetSlotAmmoDetails(weaponAtIndex, slot);
 			SendNetworkUpdateImmediate();
-			ClientRPCPlayer(null, player, "PlayAmmoSound", itemDefinition.itemid, 0);
+			ClientRPC(RpcTarget.Player("PlayAmmoSound", player), itemDefinition.itemid, 0);
 		}
 	}
 }

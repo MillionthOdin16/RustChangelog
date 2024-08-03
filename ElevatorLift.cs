@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using ConVar;
 using Network;
 using UnityEngine;
@@ -38,9 +39,13 @@ public class ElevatorLift : BaseCombatEntity
 
 	public Vector3 lastPosition;
 
+	public List<BaseEntity> vehicleWhitelist;
+
 	private const Flags PressedUp = Flags.Reserved1;
 
 	private const Flags PressedDown = Flags.Reserved2;
+
+	private HashSet<uint> vehiclePrefabWhitelist = new HashSet<uint>();
 
 	private Elevator owner => GetParentEntity() as Elevator;
 
@@ -111,6 +116,7 @@ public class ElevatorLift : BaseCombatEntity
 	public override void ServerInit()
 	{
 		base.ServerInit();
+		FillVehicleWhitelist();
 		ToggleHurtTrigger(state: false);
 	}
 
@@ -126,19 +132,24 @@ public class ElevatorLift : BaseCombatEntity
 	[RPC_Server.IsVisible(3f)]
 	public void Server_RaiseLowerFloor(RPCMessage msg)
 	{
-		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
-		if (CanMove())
+		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
+		Elevator.Direction direction = (Elevator.Direction)msg.read.Int32();
+		bool goTopBottom = msg.read.Bit();
+		SetFlag((direction == Elevator.Direction.Up) ? Flags.Reserved1 : Flags.Reserved2, b: true);
+		owner.Server_RaiseLowerElevator(direction, goTopBottom);
+		((FacepunchBehaviour)this).Invoke((Action)ClearDirection, 0.7f);
+		if (liftButtonPressedEffect.isValid)
 		{
-			Elevator.Direction direction = (Elevator.Direction)msg.read.Int32();
-			bool goTopBottom = msg.read.Bit();
-			SetFlag((direction == Elevator.Direction.Up) ? Flags.Reserved1 : Flags.Reserved2, b: true);
-			owner.Server_RaiseLowerElevator(direction, goTopBottom);
-			((FacepunchBehaviour)this).Invoke((Action)ClearDirection, 0.7f);
-			if (liftButtonPressedEffect.isValid)
-			{
-				Effect.server.Run(liftButtonPressedEffect.resourcePath, ((Component)this).transform.position, Vector3.up);
-			}
+			Effect.server.Run(liftButtonPressedEffect.resourcePath, ((Component)this).transform.position, Vector3.up);
+		}
+	}
+
+	private void FillVehicleWhitelist()
+	{
+		foreach (BaseEntity item in vehicleWhitelist)
+		{
+			vehiclePrefabWhitelist.Add(item.prefabID);
 		}
 	}
 
@@ -180,7 +191,7 @@ public class ElevatorLift : BaseCombatEntity
 		{
 			foreach (BaseEntity entityContent in VehicleTrigger.entityContents)
 			{
-				if (!(entityContent is Drone))
+				if (!vehiclePrefabWhitelist.Contains(entityContent.prefabID))
 				{
 					return false;
 				}

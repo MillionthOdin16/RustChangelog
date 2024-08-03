@@ -11,6 +11,8 @@ public class SamSite : ContainerIOEntity
 {
 	public interface ISamSiteTarget
 	{
+		static List<ISamSiteTarget> serverList;
+
 		SamTargetType SAMTargetType { get; }
 
 		bool isClient { get; }
@@ -22,6 +24,11 @@ public class SamSite : ContainerIOEntity
 		Vector3 GetWorldVelocity();
 
 		bool IsVisible(Vector3 position, float maxDistance = float.PositiveInfinity);
+
+		static ISamSiteTarget()
+		{
+			serverList = new List<ISamSiteTarget>();
+		}
 	}
 
 	public class SamTargetType
@@ -91,7 +98,9 @@ public class SamSite : ContainerIOEntity
 
 	public int lowAmmoThreshold = 5;
 
-	public Flags Flag_DefenderMode = Flags.Reserved9;
+	public Flags Flag_TargetMode = Flags.Reserved9;
+
+	public Flags Flag_ManuallySetMode = Flags.Reserved10;
 
 	public static SamTargetType targetTypeUnknown;
 
@@ -116,6 +125,8 @@ public class SamSite : ContainerIOEntity
 	private int firedCount;
 
 	private float nextBurstTime;
+
+	private int input1Amount;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -201,7 +212,7 @@ public class SamSite : ContainerIOEntity
 
 	public bool IsInDefenderMode()
 	{
-		return HasFlag(Flag_DefenderMode);
+		return HasFlag(Flag_TargetMode);
 	}
 
 	public override void Load(LoadInfo info)
@@ -247,7 +258,7 @@ public class SamSite : ContainerIOEntity
 		targetTypeMissile = new SamTargetType(missileScanRadius, 2.25f, 3.5f);
 		mostRecentTargetType = targetTypeUnknown;
 		ClearTarget();
-		((FacepunchBehaviour)this).InvokeRandomized((Action)TargetScan, 1f, 3f, 1f);
+		((FacepunchBehaviour)this).InvokeRandomized((Action)TargetScan, 1f, 3f, 0.2f);
 		currentAimDir = ((Component)this).transform.forward;
 		if (base.inventory != null && !staticRespawn)
 		{
@@ -444,11 +455,41 @@ public class SamSite : ContainerIOEntity
 		return !HasAmmo();
 	}
 
+	private void AddTargetSet(List<ISamSiteTarget> allTargets, float scanRadius)
+	{
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		foreach (ISamSiteTarget server in ISamSiteTarget.serverList)
+		{
+			if (!(server is MLRSRocket) && Vector3.Distance(server.CenterPoint(), ((Component)eyePoint).transform.position) < scanRadius)
+			{
+				allTargets.Add(server);
+			}
+		}
+	}
+
+	private void AddMLRSRockets(List<ISamSiteTarget> allTargets, float scanRadius)
+	{
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
+		if (MLRSRocket.serverList.Count == 0)
+		{
+			return;
+		}
+		foreach (MLRSRocket server in MLRSRocket.serverList)
+		{
+			if (Vector3.Distance(((Component)server).transform.position, ((Component)this).transform.position) < scanRadius)
+			{
+				allTargets.Add(server);
+			}
+		}
+	}
+
 	public void TargetScan()
 	{
-		//IL_0100: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0115: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0124: Unknown result type (might be due to invalid IL or missing references)
 		if (!IsPowered())
 		{
 			lastTargetVisibleTime = 0f;
@@ -476,9 +517,9 @@ public class SamSite : ContainerIOEntity
 		List<ISamSiteTarget> list = Pool.GetList<ISamSiteTarget>();
 		if (!IsInDefenderMode())
 		{
-			AddTargetSet(list, 32768, targetTypeVehicle.scanRadius);
+			AddTargetSet(list, targetTypeVehicle.scanRadius);
 		}
-		AddTargetSet(list, 1048576, targetTypeMissile.scanRadius);
+		AddMLRSRockets(list, targetTypeMissile.scanRadius);
 		ISamSiteTarget samSiteTarget = null;
 		foreach (ISamSiteTarget item in list)
 		{
@@ -505,14 +546,6 @@ public class SamSite : ContainerIOEntity
 		else
 		{
 			((FacepunchBehaviour)this).InvokeRandomized((Action)WeaponTick, 0f, 0.5f, 0.2f);
-		}
-		void AddTargetSet(List<ISamSiteTarget> allTargets, int layerMask, float scanRadius)
-		{
-			//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-			List<ISamSiteTarget> list2 = Pool.GetList<ISamSiteTarget>();
-			Vis.Entities(((Component)eyePoint).transform.position, scanRadius, list2, layerMask, (QueryTriggerInteraction)1);
-			allTargets.AddRange(list2);
-			Pool.FreeList<ISamSiteTarget>(ref list2);
 		}
 	}
 
@@ -678,8 +711,35 @@ public class SamSite : ContainerIOEntity
 			bool flag = msg.read.Bit();
 			if (flag != IsInDefenderMode())
 			{
-				SetFlag(Flag_DefenderMode, flag);
+				SetFlag(Flag_ManuallySetMode, flag);
+				SetFlag(Flag_TargetMode, flag);
 			}
+		}
+	}
+
+	public override void UpdateHasPower(int inputAmount, int inputSlot)
+	{
+		if (inputSlot == 0)
+		{
+			base.UpdateHasPower(inputAmount, inputSlot);
+		}
+	}
+
+	public override void UpdateFromInput(int inputAmount, int inputSlot)
+	{
+		switch (inputSlot)
+		{
+		case 0:
+			base.UpdateFromInput(inputAmount, inputSlot);
+			break;
+		case 1:
+			if (input1Amount != inputAmount)
+			{
+				bool flag = HasFlag(Flag_ManuallySetMode);
+				SetFlag(Flag_TargetMode, (inputAmount == 0) ? flag : (!flag));
+			}
+			input1Amount = inputAmount;
+			break;
 		}
 	}
 }

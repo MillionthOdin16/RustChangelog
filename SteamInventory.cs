@@ -114,7 +114,7 @@ public class SteamInventory : EntityComponent<BasePlayer>
 		{
 			Debug.LogWarning((object)"UpdateSteamInventory: player is null");
 		}
-		else if (!val.BelongsTo(base.baseEntity.userID))
+		else if (!val.BelongsTo((ulong)base.baseEntity.userID))
 		{
 			Debug.LogWarning((object)$"UpdateSteamPlayer: inventory belongs to someone else (userID={base.baseEntity.userID})");
 		}

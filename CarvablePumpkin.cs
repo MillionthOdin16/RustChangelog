@@ -31,6 +31,8 @@ public class CarvablePumpkin : BaseOven, ILOD, ISignage, IUGCBrowserEntity
 
 	public uint[] GetContentCRCs => textureIDs;
 
+	public override bool ShouldTransferAssociatedFiles => true;
+
 	public BaseNetworkable UgcEntity => this;
 
 	public Vector2i TextureSize
@@ -248,7 +250,7 @@ public class CarvablePumpkin : BaseOven, ILOD, ISignage, IUGCBrowserEntity
 		}
 		if (IsLocked())
 		{
-			return player.userID == base.OwnerID;
+			return (ulong)player.userID == base.OwnerID;
 		}
 		return true;
 	}

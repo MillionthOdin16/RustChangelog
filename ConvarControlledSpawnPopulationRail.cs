@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class ConvarControlledSpawnPopulationRail : ConvarControlledSpawnPopulation
 {
-	private const float MIN_MARGIN = 60f;
+	private const float MIN_MARGIN = 75f;
 
 	public override bool GetSpawnPosOverride(Prefab<Spawnable> prefab, ref Vector3 newPos, ref Quaternion newRot)
 	{
@@ -133,13 +133,13 @@ public class ConvarControlledSpawnPopulationRail : ConvarControlledSpawnPopulati
 		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
 		float length = spline.GetLength();
-		if (length < 65f)
+		if (length < 80f)
 		{
 			pos = Vector3.zero;
 			rot = Quaternion.identity;
 			return false;
 		}
-		float distance = Random.Range(60f, length - 60f);
+		float distance = Random.Range(75f, length - 75f);
 		pos = spline.GetPointAndTangentCubicHermiteWorld(distance, out var tangent) + Vector3.up * 0.5f;
 		rot = Quaternion.LookRotation(tangent);
 		float radius = Vector3Ex.Max(((Bounds)(ref trainCar.bounds)).extents);

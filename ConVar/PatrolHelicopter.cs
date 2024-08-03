@@ -8,7 +8,7 @@ public class PatrolHelicopter : ConsoleSystem
 	private const string path = "assets/prefabs/npc/patrol helicopter/patrolhelicopter.prefab";
 
 	[ServerVar]
-	public static float lifetimeMinutes = 15f;
+	public static float lifetimeMinutes = 30f;
 
 	[ServerVar]
 	public static int guns = 1;
@@ -96,33 +96,144 @@ public class PatrolHelicopter : ConsoleSystem
 	[ServerVar]
 	public static void strafe(Arg arg)
 	{
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer basePlayer = arg.Player();
 		if (Object.op_Implicit((Object)(object)basePlayer))
 		{
 			PatrolHelicopterAI heliInstance = PatrolHelicopterAI.heliInstance;
-			RaycastHit val = default(RaycastHit);
 			if ((Object)(object)heliInstance == (Object)null)
 			{
 				Debug.Log((object)"no heli instance");
+				return;
 			}
-			else if (Physics.Raycast(basePlayer.eyes.HeadRay(), ref val, 1000f, 1218652417))
+			heliInstance.strafe_target = basePlayer;
+			heliInstance.interestZoneOrigin = ((Component)basePlayer).transform.position;
+			heliInstance.ExitCurrentState();
+			heliInstance.State_Strafe_Enter(basePlayer);
+		}
+	}
+
+	[ServerVar]
+	public static void orbit(Arg arg)
+	{
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		BasePlayer basePlayer = arg.Player();
+		if (Object.op_Implicit((Object)(object)basePlayer))
+		{
+			PatrolHelicopterAI heliInstance = PatrolHelicopterAI.heliInstance;
+			if ((Object)(object)heliInstance == (Object)null)
 			{
-				Vector3 point = ((RaycastHit)(ref val)).point;
-				Debug.Log((object)("strafing :" + ((object)(Vector3)(ref point)).ToString()));
-				heliInstance.interestZoneOrigin = ((RaycastHit)(ref val)).point;
-				heliInstance.ExitCurrentState();
-				heliInstance.State_Strafe_Enter(((RaycastHit)(ref val)).point);
+				Debug.Log((object)"no heli instance");
+				return;
 			}
-			else
+			heliInstance.interestZoneOrigin = ((Component)basePlayer).transform.position;
+			heliInstance.ExitCurrentState();
+			heliInstance.State_Orbit_Enter(70f);
+		}
+	}
+
+	[ServerVar]
+	public static void orbitstrafe(Arg arg)
+	{
+		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		BasePlayer basePlayer = arg.Player();
+		if (Object.op_Implicit((Object)(object)basePlayer))
+		{
+			PatrolHelicopterAI heliInstance = PatrolHelicopterAI.heliInstance;
+			if ((Object)(object)heliInstance == (Object)null)
 			{
-				Debug.Log((object)"strafe ray missed");
+				Debug.Log((object)"no heli instance");
+				return;
 			}
+			heliInstance.strafe_target = basePlayer;
+			heliInstance.interestZoneOrigin = ((Component)basePlayer).transform.position;
+			heliInstance.ExitCurrentState();
+			heliInstance.State_OrbitStrafe_Enter();
+		}
+	}
+
+	[ServerVar]
+	public static void move(Arg arg)
+	{
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+		BasePlayer basePlayer = arg.Player();
+		if (Object.op_Implicit((Object)(object)basePlayer))
+		{
+			PatrolHelicopterAI heliInstance = PatrolHelicopterAI.heliInstance;
+			if ((Object)(object)heliInstance == (Object)null)
+			{
+				Debug.Log((object)"no heli instance");
+				return;
+			}
+			heliInstance.interestZoneOrigin = ((Component)basePlayer).transform.position;
+			heliInstance.ExitCurrentState();
+			heliInstance.State_Move_Enter(((Component)basePlayer).transform.position);
+		}
+	}
+
+	[ServerVar]
+	public static void flee(Arg arg)
+	{
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+		BasePlayer basePlayer = arg.Player();
+		if (Object.op_Implicit((Object)(object)basePlayer))
+		{
+			PatrolHelicopterAI heliInstance = PatrolHelicopterAI.heliInstance;
+			if ((Object)(object)heliInstance == (Object)null)
+			{
+				Debug.Log((object)"no heli instance");
+				return;
+			}
+			heliInstance.interestZoneOrigin = ((Component)basePlayer).transform.position;
+			heliInstance.ExitCurrentState();
+			heliInstance.State_Flee_Enter(((Component)basePlayer).transform.position);
+		}
+	}
+
+	[ServerVar]
+	public static void patrol(Arg arg)
+	{
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		BasePlayer basePlayer = arg.Player();
+		if (Object.op_Implicit((Object)(object)basePlayer))
+		{
+			PatrolHelicopterAI heliInstance = PatrolHelicopterAI.heliInstance;
+			if ((Object)(object)heliInstance == (Object)null)
+			{
+				Debug.Log((object)"no heli instance");
+				return;
+			}
+			heliInstance.interestZoneOrigin = ((Component)basePlayer).transform.position;
+			heliInstance.ExitCurrentState();
+			heliInstance.State_Patrol_Enter();
+		}
+	}
+
+	[ServerVar]
+	public static void death(Arg arg)
+	{
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		BasePlayer basePlayer = arg.Player();
+		if (Object.op_Implicit((Object)(object)basePlayer))
+		{
+			PatrolHelicopterAI heliInstance = PatrolHelicopterAI.heliInstance;
+			if ((Object)(object)heliInstance == (Object)null)
+			{
+				Debug.Log((object)"no heli instance");
+				return;
+			}
+			heliInstance.interestZoneOrigin = ((Component)basePlayer).transform.position;
+			heliInstance.ExitCurrentState();
+			heliInstance.State_Death_Enter();
 		}
 	}
 

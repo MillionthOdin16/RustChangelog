@@ -14,19 +14,17 @@ public class PlayerCorpse : LootableCorpse
 
 	public PlayerBonePosData bonePosData;
 
-	private Ragdoll corpseRagdollScript;
-
-	private Action cachedSleepCheck;
-
 	private Vector3 prevLocalPos;
 
 	private const float SLEEP_CHECK_FREQUENCY = 10f;
 
+	public Ragdoll CorpseRagdollScript { get; private set; }
+
+	public override bool CorpseIsRagdoll => (Object)(object)CorpseRagdollScript != (Object)null;
+
 	protected override float PositionTickRate => 0.05f;
 
 	protected override bool PositionTickFixedTime => true;
-
-	private bool CorpseIsRagdoll => (Object)(object)corpseRagdollScript != (Object)null;
 
 	public bool IsBuoyant()
 	{
@@ -35,7 +33,7 @@ public class PlayerCorpse : LootableCorpse
 
 	public override bool OnStartBeingLooted(BasePlayer baseEntity)
 	{
-		if ((baseEntity.InSafeZone() || InSafeZone()) && baseEntity.userID != playerSteamID)
+		if ((baseEntity.InSafeZone() || InSafeZone()) && (ulong)baseEntity.userID != playerSteamID)
 		{
 			return false;
 		}
@@ -57,16 +55,13 @@ public class PlayerCorpse : LootableCorpse
 		}
 		if (Application.isLoadingSave)
 		{
-			corpseRagdollScript = ((Component)this).GetComponent<Ragdoll>();
+			CorpseRagdollScript = ((Component)this).GetComponent<Ragdoll>();
 		}
 		if (CorpseIsRagdoll)
 		{
-			corpseRagdollScript.simOnServer = true;
-			corpseRagdollScript.ServerInit();
-			if (HasParent())
-			{
-				OnParented();
-			}
+			CorpseRagdollScript.simOnServer = true;
+			CorpseRagdollScript.ServerInit();
+			((FacepunchBehaviour)this).InvokeRandomized((Action)SleepCheck, 5f, 10f, Random.Range(-1f, 1f));
 		}
 	}
 
@@ -84,7 +79,7 @@ public class PlayerCorpse : LootableCorpse
 		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
 		parentEnt = pr;
 		BasePlayer basePlayer = (BasePlayer)pr;
-		corpseRagdollScript = ((Component)this).GetComponent<Ragdoll>();
+		CorpseRagdollScript = ((Component)this).GetComponent<Ragdoll>();
 		SpawnPointInstance component = ((Component)this).GetComponent<SpawnPointInstance>();
 		if ((Object)(object)component != (Object)null)
 		{
@@ -169,7 +164,7 @@ public class PlayerCorpse : LootableCorpse
 		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
 		if (CorpseIsRagdoll)
 		{
-			corpseRagdollScript.BecomeActive();
+			CorpseRagdollScript.BecomeActive();
 			prevLocalPos = ((Component)this).transform.localPosition;
 		}
 	}
@@ -178,69 +173,79 @@ public class PlayerCorpse : LootableCorpse
 	{
 		if (CorpseIsRagdoll)
 		{
-			corpseRagdollScript.BecomeInactive();
+			CorpseRagdollScript.BecomeInactive();
 		}
 	}
 
-	public override void OnParentChanging(BaseEntity oldParent, BaseEntity newParent)
+	protected override void PushRagdoll(HitInfo info)
 	{
-		base.OnParentChanging(oldParent, newParent);
-		if ((Object)(object)newParent != (Object)null && (Object)(object)newParent != (Object)(object)oldParent)
-		{
-			OnParented();
-		}
-		else if ((Object)(object)newParent == (Object)null && (Object)(object)oldParent != (Object)null)
-		{
-			OnUnparented();
-		}
-	}
-
-	private void OnParented()
-	{
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
 		if (CorpseIsRagdoll)
 		{
-			if (cachedSleepCheck == null)
-			{
-				cachedSleepCheck = SleepCheck;
-			}
-			((FacepunchBehaviour)this).InvokeRandomized(cachedSleepCheck, 5f, 10f, Random.Range(-1f, 1f));
+			BecomeActive();
+			PushRigidbodies(CorpseRagdollScript.rigidbodies, info.HitPositionWorld, info.attackNormal);
 		}
-	}
-
-	private void OnUnparented()
-	{
-		if (CorpseIsRagdoll && cachedSleepCheck != null)
+		else
 		{
-			((FacepunchBehaviour)this).CancelInvoke(cachedSleepCheck);
+			base.PushRagdoll(info);
 		}
 	}
 
 	private void SleepCheck()
 	{
-		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
-		if (!CorpseIsRagdoll || !HasParent())
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0097: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
+		if (!CorpseIsRagdoll)
 		{
 			return;
 		}
-		if (corpseRagdollScript.IsInactive)
+		if (CorpseRagdollScript.IsKinematic)
 		{
-			if (!GamePhysics.Trace(new Ray(CenterPoint(), Vector3.down), 0f, out var _, 0.25f, -928830719, (QueryTriggerInteraction)1, this))
+			if (!GamePhysics.Trace(new Ray(CenterPoint(), Vector3.down), 0f, out var _, 0.25f, -928830701, (QueryTriggerInteraction)1, this))
 			{
 				BecomeActive();
 			}
 		}
-		else if (Vector3.SqrMagnitude(((Component)this).transform.localPosition - prevLocalPos) < 0.1f)
+		else if (!rigidBody.IsSleeping() && !buoyancy.ShouldWake() && Vector3.SqrMagnitude(((Component)this).transform.localPosition - prevLocalPos) < 0.1f)
 		{
 			BecomeInactive();
 		}
 		prevLocalPos = ((Component)this).transform.localPosition;
+	}
+
+	public override bool BuoyancySleep(bool inWater)
+	{
+		if (CorpseIsRagdoll)
+		{
+			if (!rigidBody.IsSleeping())
+			{
+				BecomeInactive();
+			}
+			return true;
+		}
+		return base.BuoyancySleep(inWater);
+	}
+
+	public override bool BuoyancyWake()
+	{
+		if (CorpseIsRagdoll)
+		{
+			BecomeActive();
+			return true;
+		}
+		return base.BuoyancyWake();
+	}
+
+	private void OnPhysicsNeighbourChanged()
+	{
+		BecomeActive();
 	}
 
 	public override void Save(SaveInfo info)

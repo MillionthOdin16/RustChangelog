@@ -30,6 +30,9 @@ public abstract class GroundVehicle : BaseVehicle, IEngineControllerUser, IEntit
 	[SerializeField]
 	private float collisionDamageMultiplier = 1f;
 
+	[SerializeField]
+	private Rigidbody secondaryRigidbody;
+
 	protected VehicleEngineController<GroundVehicle> engineController;
 
 	private Dictionary<BaseEntity, float> damageSinceLastTick = new Dictionary<BaseEntity, float>();
@@ -53,7 +56,7 @@ public abstract class GroundVehicle : BaseVehicle, IEngineControllerUser, IEntit
 	public override void InitShared()
 	{
 		base.InitShared();
-		engineController = new VehicleEngineController<GroundVehicle>(this, base.isServer, engineStartupTime, fuelStoragePrefab, waterloggedPoint);
+		engineController = new VehicleEngineController<GroundVehicle>(this, CreateFuelSystem(), base.isServer, engineStartupTime, waterloggedPoint);
 	}
 
 	public override void OnFlagsChanged(Flags old, Flags next)
@@ -95,6 +98,11 @@ public abstract class GroundVehicle : BaseVehicle, IEngineControllerUser, IEntit
 		return !pusher.IsStandingOnEntity(this, 8192);
 	}
 
+	protected virtual IFuelSystem CreateFuelSystem()
+	{
+		return new EntityFuelSystem(base.isServer, fuelStoragePrefab, children);
+	}
+
 	public override void ServerInit()
 	{
 		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
@@ -117,7 +125,7 @@ public abstract class GroundVehicle : BaseVehicle, IEngineControllerUser, IEntit
 	{
 		if (base.isServer)
 		{
-			ProcessCollision(collision);
+			ProcessCollision(collision, rigidBody);
 		}
 	}
 
@@ -172,19 +180,26 @@ public abstract class GroundVehicle : BaseVehicle, IEngineControllerUser, IEntit
 		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
 		if (!base.isClient && !hurtEntity.IsDestroyed)
 		{
 			Vector3 val = hurtEntity.GetLocalVelocity() - Velocity;
 			Vector3 val2 = ClosestPoint(((Component)hurtEntity).transform.position);
-			Vector3 val3 = hurtEntity.RealisticMass * val;
+			Vector3 val3 = Mathf.Min(hurtEntity.RealisticMass, RealisticMass) * val;
 			rigidBody.AddForceAtPosition(val3 * 1.25f, val2, (ForceMode)1);
-			QueueCollisionDamage(this, ((Vector3)(ref val3)).magnitude * 0.75f / Time.deltaTime);
+			if ((Object)(object)secondaryRigidbody != (Object)null)
+			{
+				secondaryRigidbody.AddForceAtPosition(val3 * 1.25f, val2, (ForceMode)1);
+			}
+			QueueCollisionDamage(this, ((Vector3)(ref val3)).magnitude * 0.1f / Time.deltaTime);
 			SetTempDrag(2.25f, 1f);
 		}
 	}
@@ -215,29 +230,30 @@ public abstract class GroundVehicle : BaseVehicle, IEngineControllerUser, IEntit
 		Hurt(damage, DamageType.Collision, this, useProtection: false);
 	}
 
-	private void ProcessCollision(Collision collision)
+	protected void ProcessCollision(Collision collision, Rigidbody ourRigidbody)
 	{
 		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
 		if (base.isClient || collision == null || (Object)(object)collision.gameObject == (Object)null || (Object)(object)collision.gameObject == (Object)null)
 		{
 			return;
 		}
 		ContactPoint contact = collision.GetContact(0);
 		BaseEntity baseEntity = null;
-		if ((Object)(object)((ContactPoint)(ref contact)).otherCollider.attachedRigidbody == (Object)(object)rigidBody)
+		if ((Object)(object)((ContactPoint)(ref contact)).otherCollider.attachedRigidbody == (Object)(object)ourRigidbody)
 		{
 			baseEntity = ((ContactPoint)(ref contact)).otherCollider.ToBaseEntity();
 		}
-		else if ((Object)(object)((ContactPoint)(ref contact)).thisCollider.attachedRigidbody == (Object)(object)rigidBody)
+		else if ((Object)(object)((ContactPoint)(ref contact)).thisCollider.attachedRigidbody == (Object)(object)ourRigidbody)
 		{
 			baseEntity = ((ContactPoint)(ref contact)).thisCollider.ToBaseEntity();
 		}
 		if ((Object)(object)baseEntity != (Object)null)
 		{
 			Vector3 impulse = collision.impulse;
+			impulse.y *= 0.5f;
 			float forceMagnitude = ((Vector3)(ref impulse)).magnitude / Time.fixedDeltaTime;
 			if (QueueCollisionDamage(baseEntity, forceMagnitude) > 0f)
 			{
@@ -252,7 +268,7 @@ public abstract class GroundVehicle : BaseVehicle, IEngineControllerUser, IEntit
 		return (1f - Mathf.InverseLerp(0f, dragModDuration, TimeSince.op_Implicit(timeSinceDragModSet))) * dragMod;
 	}
 
-	public override EntityFuelSystem GetFuelSystem()
+	public override IFuelSystem GetFuelSystem()
 	{
 		return engineController.FuelSystem;
 	}

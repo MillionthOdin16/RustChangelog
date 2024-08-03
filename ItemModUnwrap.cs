@@ -2,6 +2,10 @@ using UnityEngine;
 
 public class ItemModUnwrap : ItemMod
 {
+	public static readonly Phrase UnwrapGiftTitle = new Phrase("unwrap_gift", "Unwrap");
+
+	public static readonly Phrase UnwrapGiftDesc = new Phrase("unwrap_gift_desc", "Unwrap the gift");
+
 	public LootSpawn revealList;
 
 	public GameObjectRef successEffect;

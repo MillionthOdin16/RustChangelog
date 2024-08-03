@@ -18,6 +18,8 @@ public class Landmine : BaseTrap
 
 	public float explosionRadius;
 
+	public int vibrationLevel = 1;
+
 	public bool blocked;
 
 	private ulong triggerPlayerID;
@@ -168,10 +170,12 @@ public class Landmine : BaseTrap
 	{
 		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
 		base.health = float.PositiveInfinity;
 		Effect.server.Run(explosionEffect.resourcePath, PivotPoint(), ((Component)this).transform.up, null, broadcast: true);
 		DamageUtil.RadiusDamage(this, LookupPrefab(), CenterPoint(), minExplosionRadius, explosionRadius, damageTypes, 2263296, useLineOfSight: true);
+		SeismicSensor.Notify(CenterPoint(), vibrationLevel);
 		if (!base.IsDestroyed)
 		{
 			Kill();
@@ -206,7 +210,7 @@ public class Landmine : BaseTrap
 	[RPC_Server.MaxDistance(3f)]
 	private void RPC_Disarm(RPCMessage rpc)
 	{
-		if (rpc.player.userID != triggerPlayerID && Armed())
+		if ((ulong)rpc.player.userID != triggerPlayerID && Armed())
 		{
 			SetFlag(Flags.On, b: false);
 			if (Random.Range(0, 100) < 15)

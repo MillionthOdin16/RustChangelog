@@ -89,7 +89,7 @@ public class PatternFirework : MortarFirework, IUGCBrowserEntity
 	{
 		if (PlayerCanModify(rpc.player))
 		{
-			ClientRPCPlayer(null, rpc.player, "OpenDesigner");
+			ClientRPC(RpcTarget.Player("OpenDesigner", rpc.player));
 		}
 	}
 

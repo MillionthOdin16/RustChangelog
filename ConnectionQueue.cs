@@ -1,14 +1,39 @@
 using System.Collections.Generic;
+using ConVar;
+using Facepunch;
 using Network;
 using UnityEngine;
 
 public class ConnectionQueue
 {
+	private class ReservedServerSlot : IPooled
+	{
+		public ulong UserId;
+
+		public float Expiry;
+
+		public void EnterPool()
+		{
+		}
+
+		public void LeavePool()
+		{
+			UserId = 0uL;
+			Expiry = 0f;
+		}
+	}
+
 	private List<Connection> queue = new List<Connection>();
 
 	private List<Connection> joining = new List<Connection>();
 
+	private List<ReservedServerSlot> reservedSlots = new List<ReservedServerSlot>();
+
+	private float nextCleanupReservedSlots;
+
 	private float nextMessageTime;
+
+	public int ReservedCount => reservedSlots.Count;
 
 	public int Queued => queue.Count;
 
@@ -41,6 +66,11 @@ public class ConnectionQueue
 
 	public void Cycle(int availableSlots)
 	{
+		if (Time.realtimeSinceStartup > nextCleanupReservedSlots)
+		{
+			nextCleanupReservedSlots = Time.realtimeSinceStartup + 1f;
+			CleanupExpiredReservedSlots();
+		}
 		if (queue.Count != 0)
 		{
 			if (availableSlots - Joining > 0)
@@ -84,11 +114,24 @@ public class ConnectionQueue
 		joining.Remove(connection);
 	}
 
+	public void TryAddReservedSlot(Connection connection)
+	{
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Invalid comparison between Unknown and I4
+		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0010: Invalid comparison between Unknown and I4
+		if ((int)connection.state == 4 || (int)connection.state == 3)
+		{
+			AddReservation(connection.userid);
+		}
+	}
+
 	private void JoinGame(Connection connection)
 	{
 		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
 		queue.Remove(connection);
 		connection.state = (State)3;
+		RemoveReservedSlot(connection.userid);
 		nextMessageTime = 0f;
 		joining.Add(connection);
 		SingletonComponent<ServerMgr>.Instance.JoinGame(connection);
@@ -97,6 +140,63 @@ public class ConnectionQueue
 	public void JoinedGame(Connection connection)
 	{
 		RemoveConnection(connection);
+	}
+
+	private void AddReservation(ulong userId)
+	{
+		ReservedServerSlot reservedServerSlot = FindQueueSpot(userId);
+		if (reservedServerSlot == null)
+		{
+			reservedServerSlot = Pool.Get<ReservedServerSlot>();
+			reservedSlots.Add(reservedServerSlot);
+		}
+		reservedServerSlot.UserId = userId;
+		reservedServerSlot.Expiry = Time.realtimeSinceStartup + (float)Server.rejoin_delay;
+	}
+
+	private void CleanupExpiredReservedSlots()
+	{
+		if (reservedSlots.Count == 0)
+		{
+			return;
+		}
+		float realtimeSinceStartup = Time.realtimeSinceStartup;
+		for (int i = 0; i < reservedSlots.Count; i++)
+		{
+			ReservedServerSlot reservedServerSlot = reservedSlots[i];
+			if (realtimeSinceStartup > reservedServerSlot.Expiry)
+			{
+				reservedSlots.RemoveAt(i);
+				i--;
+				Pool.Free<ReservedServerSlot>(ref reservedServerSlot);
+			}
+		}
+	}
+
+	private ReservedServerSlot FindQueueSpot(ulong userId)
+	{
+		foreach (ReservedServerSlot reservedSlot in reservedSlots)
+		{
+			if (reservedSlot.UserId == userId)
+			{
+				return reservedSlot;
+			}
+		}
+		return null;
+	}
+
+	private void RemoveReservedSlot(ulong userId)
+	{
+		for (int i = 0; i < reservedSlots.Count; i++)
+		{
+			ReservedServerSlot reservedServerSlot = reservedSlots[i];
+			if (reservedServerSlot.UserId == userId)
+			{
+				reservedSlots.RemoveAt(i);
+				i--;
+				Pool.Free<ReservedServerSlot>(ref reservedServerSlot);
+			}
+		}
 	}
 
 	private bool CanJumpQueue(Connection connection)
@@ -117,6 +217,13 @@ public class ConnectionQueue
 		if (user != null && user.group == ServerUsers.UserGroup.SkipQueue)
 		{
 			return true;
+		}
+		for (int i = 0; i < reservedSlots.Count; i++)
+		{
+			if (reservedSlots[i].UserId == connection.userid && reservedSlots[i].Expiry > Time.realtimeSinceStartup)
+			{
+				return true;
+			}
 		}
 		return false;
 	}

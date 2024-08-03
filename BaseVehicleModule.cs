@@ -486,10 +486,6 @@ public class BaseVehicleModule : BaseVehicle, IPrefabPreProcess
 		return false;
 	}
 
-	public virtual void NonUserSpawn()
-	{
-	}
-
 	public override void VehicleFixedUpdate()
 	{
 		//IL_002d: Unknown result type (might be due to invalid IL or missing references)

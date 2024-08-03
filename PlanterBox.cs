@@ -434,7 +434,7 @@ public class PlanterBox : StorageContainer, ISplashable
 	{
 		if ((Object)(object)msg.player != (Object)null)
 		{
-			ClientRPCPlayer(null, msg.player, "RPC_ReceiveSaturationUpdate", soilSaturation);
+			ClientRPC(RpcTarget.Player("RPC_ReceiveSaturationUpdate", msg.player), soilSaturation);
 		}
 	}
 

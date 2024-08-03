@@ -58,7 +58,7 @@ public class ReclaimManager : BaseEntity
 
 	private static ReclaimManager _instance;
 
-	public List<PlayerReclaimEntry> entries = new List<PlayerReclaimEntry>();
+	private List<PlayerReclaimEntry> entries = new List<PlayerReclaimEntry>();
 
 	private float lastTickTime;
 

@@ -11,7 +11,7 @@ public class ConstructionGrade : PrefabAttribute
 
 	public GameObjectRef skinObject;
 
-	internal List<ItemAmount> _costToBuild;
+	private Dictionary<BuildingGrade.Enum, List<ItemAmount>> _costs;
 
 	public float maxHealth
 	{
@@ -25,22 +25,25 @@ public class ConstructionGrade : PrefabAttribute
 		}
 	}
 
+	protected override void AttributeSetup(GameObject rootObj, string name, bool serverside, bool clientside, bool bundling)
+	{
+		base.AttributeSetup(rootObj, name, serverside, clientside, bundling);
+		_costs = new Dictionary<BuildingGrade.Enum, List<ItemAmount>>();
+		foreach (BuildingGrade.Enum value in Enum.GetValues(typeof(BuildingGrade.Enum)))
+		{
+			List<ItemAmount> list = new List<ItemAmount>();
+			float num = ((value == gradeBase.type) ? 0.2f : 1f);
+			foreach (ItemAmount item in gradeBase.baseCost)
+			{
+				list.Add(new ItemAmount(item.itemDef, Mathf.Ceil(item.amount * construction.costMultiplier * num)));
+			}
+			_costs.Add(value, list);
+		}
+	}
+
 	public List<ItemAmount> CostToBuild(BuildingGrade.Enum fromGrade = BuildingGrade.Enum.None)
 	{
-		if (_costToBuild == null)
-		{
-			_costToBuild = new List<ItemAmount>();
-		}
-		else
-		{
-			_costToBuild.Clear();
-		}
-		float num = ((fromGrade == gradeBase.type) ? 0.2f : 1f);
-		foreach (ItemAmount item in gradeBase.baseCost)
-		{
-			_costToBuild.Add(new ItemAmount(item.itemDef, Mathf.Ceil(item.amount * construction.costMultiplier * num)));
-		}
-		return _costToBuild;
+		return _costs[fromGrade];
 	}
 
 	protected override Type GetIndexedType()

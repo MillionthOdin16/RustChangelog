@@ -10,27 +10,29 @@ public class ElectricalBranch : IOEntity
 
 	public GameObjectRef branchPanelPrefab;
 
-	private float nextChangeTime;
-
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
 		TimeWarning val = TimeWarning.New("ElectricalBranch.OnRpcMessage", 0);
 		try
 		{
-			if (rpc == 643124146 && (Object)(object)player != (Object)null)
+			if (rpc == 4207410429u && (Object)(object)player != (Object)null)
 			{
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SetBranchOffPower "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_SetBranchOffPower "));
 				}
-				TimeWarning val2 = TimeWarning.New("SetBranchOffPower", 0);
+				TimeWarning val2 = TimeWarning.New("RPC_SetBranchOffPower", 0);
 				try
 				{
 					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
-						if (!RPC_Server.IsVisible.Test(643124146u, "SetBranchOffPower", this, player, 3f))
+						if (!RPC_Server.CallsPerSecond.Test(4207410429u, "RPC_SetBranchOffPower", this, player, 5uL))
+						{
+							return true;
+						}
+						if (!RPC_Server.IsVisible.Test(4207410429u, "RPC_SetBranchOffPower", this, player, 3f))
 						{
 							return true;
 						}
@@ -48,8 +50,8 @@ public class ElectricalBranch : IOEntity
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage branchOffPower = rPCMessage;
-							SetBranchOffPower(branchOffPower);
+							RPCMessage msg2 = rPCMessage;
+							RPC_SetBranchOffPower(msg2);
 						}
 						finally
 						{
@@ -59,7 +61,7 @@ public class ElectricalBranch : IOEntity
 					catch (Exception ex)
 					{
 						Debug.LogException(ex);
-						player.Kick("RPC Error in SetBranchOffPower");
+						player.Kick("RPC Error in RPC_SetBranchOffPower");
 					}
 				}
 				finally
@@ -76,40 +78,35 @@ public class ElectricalBranch : IOEntity
 		return base.OnRpcMessage(player, rpc, msg);
 	}
 
+	public override int ConsumptionAmount()
+	{
+		return 0;
+	}
+
 	[RPC_Server]
 	[RPC_Server.IsVisible(3f)]
-	public void SetBranchOffPower(RPCMessage msg)
+	[RPC_Server.CallsPerSecond(5uL)]
+	public void RPC_SetBranchOffPower(RPCMessage msg)
 	{
 		BasePlayer player = msg.player;
-		if (!((Object)(object)player == (Object)null) && player.CanBuild() && !(Time.time < nextChangeTime))
+		if (!((Object)(object)player == (Object)null) && player.CanBuild())
 		{
-			nextChangeTime = Time.time + 1f;
-			int num = msg.read.Int32();
-			num = Mathf.Clamp(num, 2, 10000000);
-			branchAmount = num;
-			MarkDirtyForceUpdateOutputs();
-			SendNetworkUpdate();
+			int branchOffPower = msg.read.Int32();
+			SetBranchOffPower(branchOffPower);
 		}
+	}
+
+	public void SetBranchOffPower(int power)
+	{
+		power = Mathf.Clamp(power, 1, 10000000);
+		branchAmount = power;
+		MarkDirtyForceUpdateOutputs();
+		SendNetworkUpdate();
 	}
 
 	public override bool AllowDrainFrom(int outputSlot)
 	{
-		if (outputSlot == 1)
-		{
-			return false;
-		}
 		return true;
-	}
-
-	public override int DesiredPower()
-	{
-		return branchAmount;
-	}
-
-	public void SetBranchAmount(int newAmount)
-	{
-		newAmount = Mathf.Clamp(newAmount, 2, 100000000);
-		branchAmount = newAmount;
 	}
 
 	public override int GetPassthroughAmount(int outputSlot = 0)

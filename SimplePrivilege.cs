@@ -18,7 +18,7 @@ public class SimplePrivilege : BaseEntity
 
 	public bool IsAuthed(BasePlayer player)
 	{
-		return authorizedPlayers.Any((PlayerNameID x) => x.userid == player.userID);
+		return authorizedPlayers.Any((PlayerNameID x) => x.userid == (ulong)player.userID);
 	}
 
 	public bool IsAuthed(ulong userID)

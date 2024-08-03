@@ -141,6 +141,8 @@ public class PlayerModel : ListComponent<PlayerModel>
 
 	public Vector3 rightHandTarget;
 
+	public bool isPreview;
+
 	[Header("IK")]
 	public Vector3 leftHandTargetPosition;
 
@@ -171,6 +173,8 @@ public class PlayerModel : ListComponent<PlayerModel>
 	public RuntimeAnimatorController SleepGesture;
 
 	public RuntimeAnimatorController CrawlToIncapacitatedGesture;
+
+	public RuntimeAnimatorController CrawlToIncapacitatedGestureHandcuff;
 
 	public RuntimeAnimatorController StandToIncapacitatedGesture;
 

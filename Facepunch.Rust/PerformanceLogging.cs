@@ -1,6 +1,5 @@
 using System;
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -10,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ConVar;
 using Epic.OnlineServices.Version;
+using Facepunch.Ping;
 using Network;
 using UnityEngine;
 
@@ -76,6 +76,8 @@ public class PerformanceLogging
 
 	private List<GarbageCollect> garbageCollections = new List<GarbageCollect>();
 
+	private Dictionary<string, int> pendingTimings = new Dictionary<string, int>();
+
 	private bool isClient;
 
 	private Stopwatch frameWatch = new Stopwatch();
@@ -94,13 +96,9 @@ public class PerformanceLogging
 
 	private int lastFrameGC;
 
-	private ConcurrentQueue<PerformancePool> pool = new ConcurrentQueue<PerformancePool>();
-
 	private Type oxideType;
 
 	private bool hasOxideType;
-
-	private List<TimeSpan> sortedList = new List<TimeSpan>();
 
 	public PerformanceLogging(bool client)
 	{
@@ -144,28 +142,48 @@ public class PerformanceLogging
 		}
 		if (utcNow > nextFlushTime)
 		{
-			if (nextFlushTime == default(DateTime))
+			try
 			{
-				nextFlushTime = DateTime.UtcNow.Add(GetFlushInterval());
+				FlushMainThread();
 			}
-			else
+			catch (Exception ex)
 			{
-				Flush();
+				Debug.LogError((object)("Failed to flush analytics: " + ex));
 			}
 		}
 	}
 
-	public void Flush()
+	private Dictionary<string, string> FindModifiedConvars()
+	{
+		Dictionary<string, string> dictionary = new Dictionary<string, string>();
+		Command[] all = Index.All;
+		foreach (Command val in all)
+		{
+			if (val.DefaultValue != null && val.GetOveride != null)
+			{
+				string text = val.GetOveride();
+				if (text != val.DefaultValue)
+				{
+					dictionary[val.FullName] = text;
+				}
+			}
+		}
+		return dictionary;
+	}
+
+	public void FlushMainThread()
 	{
 		nextFlushTime = DateTime.UtcNow.Add(GetFlushInterval());
-		if (!isClient && BasePlayer.activePlayerList.Count == 0 && !Analytics.Azure.Stats)
+		if (!isClient && (BasePlayer.activePlayerList.Count == 0 || !Analytics.ServerPerformanceConVar))
 		{
 			ResetMeasurements();
 			return;
 		}
 		Stopwatch stopwatch = Stopwatch.StartNew();
 		EventRecord record = EventRecord.New(isClient ? "client_performance" : "server_performance", !isClient);
-		record.AddField("lag_spike_count", lagSpikes.Count).AddField("lag_spike_threshold", GetLagSpikeThreshold()).AddField("gc_count", garbageCollections.Count)
+		record.AddObject("modified_convars", FindModifiedConvars());
+		record.AddField("command_line", CommandLine.Full);
+		record.AddField("lag_spike_count", lagSpikes.Count).AddLegacyTimespan("lag_spike_threshold", GetLagSpikeThreshold()).AddField("gc_count", garbageCollections.Count)
 			.AddField("ram_managed", System.GC.GetTotalMemory(forceFullCollection: false))
 			.AddField("ram_total", SystemInfoEx.systemMemoryUsed)
 			.AddField("total_session_id", totalSessionId.ToString("N"))
@@ -174,6 +192,16 @@ public class PerformanceLogging
 			.AddField("world_size", World.Size)
 			.AddField("world_seed", World.Seed)
 			.AddField("active_scene", LevelManager.CurrentLevelName);
+		if (pendingTimings.Count > 0)
+		{
+			record.AddObject("load_times", pendingTimings);
+			pendingTimings.Clear();
+		}
+		IPingEstimateResults estimateToAllRegions = PingEstimater.GetEstimateToAllRegions();
+		if (estimateToAllRegions != null)
+		{
+			record.AddObject("ping_regions", estimateToAllRegions.GetAllRegions());
+		}
 		if (!isClient && !isClient)
 		{
 			int value = (int)((Net.sv != null) ? ((BaseNetwork)Net.sv).GetStat((Connection)null, (StatTypeLong)3) : 0);
@@ -288,8 +316,16 @@ public class PerformanceLogging
 			["gpu_ram"] = SystemInfo.graphicsMemorySize.ToString(),
 			["gpu_vendor"] = SystemInfo.graphicsDeviceVendor,
 			["gpu_version"] = SystemInfo.graphicsDeviceVersion,
+			["gpu_shader_level"] = SystemInfo.graphicsShaderLevel.ToString(),
+			["gpu_max_buffer_size"] = SystemInfo.maxGraphicsBufferSize.ToString(),
+			["gpu_device_version"] = SystemInfo.graphicsDeviceVersion.ToString(),
 			["cpu_cores"] = SystemInfo.processorCount.ToString(),
+			["max_compute_work_size"] = SystemInfo.maxComputeWorkGroupSize.ToString(),
+			["max_compute_work_size_x"] = SystemInfo.maxComputeWorkGroupSizeX.ToString(),
+			["max_compute_work_size_y"] = SystemInfo.maxComputeWorkGroupSizeY.ToString(),
+			["max_compute_work_size_z"] = SystemInfo.maxComputeWorkGroupSizeZ.ToString(),
 			["cpu_frequency"] = SystemInfo.processorFrequency.ToString(),
+			["gpu_max_texture_size"] = SystemInfo.maxTextureSize.ToString(),
 			["cpu_name"] = SystemInfo.processorType.Trim(),
 			["system_memory"] = SystemInfo.systemMemorySize.ToString(),
 			["os"] = SystemInfo.operatingSystem,
@@ -304,7 +340,7 @@ public class PerformanceLogging
 		obj3["changeset"] = ((current2 != null) ? current2.Scm.ChangeId : null) ?? "editor";
 		BuildInfo current3 = BuildInfo.Current;
 		obj3["branch"] = ((current3 != null) ? current3.Scm.Branch : null) ?? "editor";
-		obj3["network_version"] = 2515.ToString();
+		obj3["network_version"] = 2555.ToString();
 		Dictionary<string, string> dictionary = obj3;
 		dictionary["eos_sdk"] = ((object)VersionInterface.GetVersion())?.ToString() ?? "disabled";
 		record.AddObject("hardware", data).AddObject("application", dictionary);
@@ -330,7 +366,7 @@ public class PerformanceLogging
 	{
 		if (!isClient)
 		{
-			if (Analytics.Azure.Stats)
+			if (Analytics.Azure.GameplayAnalytics)
 			{
 				return ServerInterval;
 			}
@@ -344,12 +380,6 @@ public class PerformanceLogging
 		nextFlushTime = DateTime.UtcNow.Add(GetFlushInterval());
 		if (Frametimes.Count != 0)
 		{
-			PerformancePool result;
-			while (pool.TryDequeue(out result))
-			{
-				Pool.FreeList<TimeSpan>(ref result.Frametimes);
-				Pool.FreeList<int>(ref result.Ping);
-			}
 			Frametimes = Pool.GetList<TimeSpan>();
 			PingHistory = Pool.GetList<int>();
 			lagSpikes.Clear();
@@ -363,30 +393,31 @@ public class PerformanceLogging
 		{
 			return Task.CompletedTask;
 		}
-		sortedList.Clear();
-		sortedList.AddRange(frametimes);
-		sortedList.Sort();
+		List<TimeSpan> list = Pool.GetList<TimeSpan>();
+		list.Clear();
+		list.AddRange(frametimes);
+		list.Sort();
 		int count = frametimes.Count;
 		Mathf.Max(1, frametimes.Count / 100);
 		Mathf.Max(1, frametimes.Count / 1000);
 		TimeSpan value = default(TimeSpan);
 		for (int i = 0; i < count; i++)
 		{
-			TimeSpan timeSpan = sortedList[i];
+			TimeSpan timeSpan = list[i];
 			value += timeSpan;
 		}
 		double frametime_average = value.TotalMilliseconds / (double)count;
-		double value2 = Math.Sqrt(sortedList.Sum((TimeSpan x) => Math.Pow(x.TotalMilliseconds - frametime_average, 2.0)) / (double)sortedList.Count - 1.0);
-		record.AddField("total_time", value).AddField("frames", count).AddField("frametime_average", value.TotalSeconds / (double)count)
-			.AddField("frametime_99_9", sortedList[Mathf.Clamp(count - count / 1000, 0, count - 1)])
-			.AddField("frametime_99", sortedList[Mathf.Clamp(count - count / 100, 0, count - 1)])
-			.AddField("frametime_90", sortedList[Mathf.Clamp(count - count / 10, 0, count - 1)])
-			.AddField("frametime_75", sortedList[Mathf.Clamp(count - count / 4, 0, count - 1)])
-			.AddField("frametime_50", sortedList[count / 2])
-			.AddField("frametime_25", sortedList[count / 4])
-			.AddField("frametime_10", sortedList[count / 10])
-			.AddField("frametime_1", sortedList[count / 100])
-			.AddField("frametime_0_1", sortedList[count / 1000])
+		double value2 = Math.Sqrt(list.Sum((TimeSpan x) => Math.Pow(x.TotalMilliseconds - frametime_average, 2.0)) / (double)list.Count - 1.0);
+		record.AddLegacyTimespan("total_time", value).AddField("frames", count).AddField("frametime_average", value.TotalSeconds / (double)count)
+			.AddLegacyTimespan("frametime_99_9", list[Mathf.Clamp(count - count / 1000, 0, count - 1)])
+			.AddLegacyTimespan("frametime_99", list[Mathf.Clamp(count - count / 100, 0, count - 1)])
+			.AddLegacyTimespan("frametime_90", list[Mathf.Clamp(count - count / 10, 0, count - 1)])
+			.AddLegacyTimespan("frametime_75", list[Mathf.Clamp(count - count / 4, 0, count - 1)])
+			.AddLegacyTimespan("frametime_50", list[count / 2])
+			.AddLegacyTimespan("frametime_25", list[count / 4])
+			.AddLegacyTimespan("frametime_10", list[count / 10])
+			.AddLegacyTimespan("frametime_1", list[count / 100])
+			.AddLegacyTimespan("frametime_0_1", list[count / 1000])
 			.AddField("frametime_std_dev", value2)
 			.AddField("gc_generations", System.GC.MaxGeneration)
 			.AddField("gc_total", System.GC.CollectionCount(System.GC.MaxGeneration));
@@ -395,13 +426,14 @@ public class PerformanceLogging
 			record.AddField("ping_average", (ping.Count != 0) ? ((int)ping.Average()) : 0).AddField("ping_count", ping.Count);
 		}
 		record.Submit();
-		frametimes.Clear();
-		ping.Clear();
-		pool.Enqueue(new PerformancePool
-		{
-			Frametimes = frametimes,
-			Ping = ping
-		});
+		Pool.FreeList<TimeSpan>(ref list);
+		Pool.FreeList<TimeSpan>(ref frametimes);
+		Pool.FreeList<int>(ref ping);
 		return Task.CompletedTask;
+	}
+
+	public void SetTiming(string category, TimeSpan elapsed)
+	{
+		pendingTimings[category] = (int)elapsed.TotalMilliseconds;
 	}
 }

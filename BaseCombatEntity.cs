@@ -65,6 +65,9 @@ public class BaseCombatEntity : BaseEntity
 		[ItemSelector(ItemCategory.All)]
 		public ItemDefinition itemTarget;
 
+		[ItemSelector(ItemCategory.All)]
+		public ItemDefinition ignoreForRepair;
+
 		public GameObjectRef repairEffect;
 
 		public GameObjectRef repairFullEffect;
@@ -123,6 +126,7 @@ public class BaseCombatEntity : BaseEntity
 	[NonSerialized]
 	public BaseEntity lastAttacker;
 
+	[NonSerialized]
 	public BaseEntity lastDealtDamageTo;
 
 	[NonSerialized]
@@ -321,6 +325,11 @@ public class BaseCombatEntity : BaseEntity
 		}
 	}
 
+	public void SetJustAttacked()
+	{
+		lastAttackedTime = Time.time;
+	}
+
 	public override void Load(LoadInfo info)
 	{
 		if (base.isServer)
@@ -373,7 +382,7 @@ public class BaseCombatEntity : BaseEntity
 				if (base.isServer && (!flag || sendsMeleeHitNotification))
 				{
 					bool arg = info.Initiator.net.connection == info.Predicted;
-					ClientRPCPlayerAndSpectators(null, info.Initiator as BasePlayer, "HitNotify", arg);
+					ClientRPC(RpcTarget.PlayerAndSpectators("HitNotify", info.Initiator as BasePlayer), arg);
 				}
 			}
 		}
@@ -411,15 +420,11 @@ public class BaseCombatEntity : BaseEntity
 
 	public virtual bool CanPickup(BasePlayer player)
 	{
-		if (pickup.enabled)
+		if (pickup.enabled && (!pickup.requireBuildingPrivilege || player.CanBuild()) && (!pickup.requireHammer || player.IsHoldingEntity<Hammer>()))
 		{
-			if (!pickup.requireBuildingPrivilege || player.CanBuild())
+			if ((Object)(object)player != (Object)null)
 			{
-				if (pickup.requireHammer)
-				{
-					return player.IsHoldingEntity<Hammer>();
-				}
-				return true;
+				return !player.IsInTutorial;
 			}
 			return false;
 		}
@@ -482,9 +487,12 @@ public class BaseCombatEntity : BaseEntity
 		List<ItemAmount> list2 = new List<ItemAmount>();
 		foreach (ItemAmount item in list)
 		{
-			list2.Add(new ItemAmount(item.itemDef, Mathf.Max(Mathf.RoundToInt(item.amount * RepairCostFraction() * healthMissingFraction), 1)));
+			if (!((Object)(object)repair.ignoreForRepair != (Object)null) || item.itemDef.itemid != repair.ignoreForRepair.itemid)
+			{
+				list2.Add(new ItemAmount(item.itemDef, Mathf.Max(Mathf.RoundToInt(item.amount * RepairCostFraction() * healthMissingFraction), 1)));
+			}
 		}
-		RepairBench.StripComponentRepairCost(list2);
+		RepairBench.StripComponentRepairCost(list2, RepairCostFraction() * healthMissingFraction);
 		return list2;
 	}
 
@@ -523,7 +531,7 @@ public class BaseCombatEntity : BaseEntity
 			ItemAmountList val = ItemAmount.SerialiseList(requirements);
 			try
 			{
-				player.ClientRPCPlayer<ItemAmountList>(null, player, "Client_OnRepairFailedResources", val);
+				player.ClientRPC<ItemAmountList>(RpcTarget.Player("Client_OnRepairFailedResources", player), val);
 			}
 			finally
 			{
@@ -539,6 +547,10 @@ public class BaseCombatEntity : BaseEntity
 			return;
 		}
 		float num = 30f;
+		if (player.IsInCreativeMode && Creative.freeRepair)
+		{
+			num = 0f;
+		}
 		if (SecondsSinceAttacked <= num)
 		{
 			OnRepairFailed(player, $"Unable to repair: Recently damaged. Repairable in: {num - SecondsSinceAttacked:N0}s.");
@@ -558,6 +570,10 @@ public class BaseCombatEntity : BaseEntity
 		}
 		float num4 = list.Sum((ItemAmount x) => x.amount);
 		float healthBefore = health;
+		if (player.IsInCreativeMode && Creative.freeRepair)
+		{
+			num4 = 0f;
+		}
 		if (num4 > 0f)
 		{
 			float num5 = list.Min((ItemAmount x) => Mathf.Clamp01((float)player.inventory.GetAmount(x.itemid) / x.amount));
@@ -650,11 +666,12 @@ public class BaseCombatEntity : BaseEntity
 	{
 		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02b4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02bf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02c4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02c9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02cd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02d1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02dc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02e1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02e6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02ea: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0268: Unknown result type (might be due to invalid IL or missing references)
 		Assert.IsTrue(base.isServer, "This should be called serverside only");
 		if (IsDead() || IsTransferProtected())
 		{
@@ -686,11 +703,12 @@ public class BaseCombatEntity : BaseEntity
 				info.damageTypes.Scale(DamageType.Fun_Water, 0f);
 			}
 			DebugHurt(info);
-			health = num - info.damageTypes.Total();
+			float num2 = info.damageTypes.Total();
+			health = num - num2;
 			SendNetworkUpdate();
 			if (Global.developer > 1)
 			{
-				Debug.Log((object)("[Combat]".PadRight(10) + ((Object)((Component)this).gameObject).name + " hurt " + info.damageTypes.GetMajorityDamageType().ToString() + "/" + info.damageTypes.Total() + " - " + health.ToString("0") + " health left"));
+				Debug.Log((object)("[Combat]".PadRight(10) + ((Object)((Component)this).gameObject).name + " hurt " + info.damageTypes.GetMajorityDamageType().ToString() + "/" + num2 + " - " + health.ToString("0") + " health left"));
 			}
 			lastDamage = info.damageTypes.GetMajorityDamageType();
 			lastAttacker = info.Initiator;
@@ -702,6 +720,10 @@ public class BaseCombatEntity : BaseEntity
 					baseCombatEntity.lastDealtDamageTime = Time.time;
 					baseCombatEntity.lastDealtDamageTo = this;
 				}
+				if (this.IsValid() && lastAttacker is BasePlayer basePlayer)
+				{
+					basePlayer.ProcessMissionEvent(BaseMission.MissionEventType.HURT_ENTITY, net.ID, num2);
+				}
 			}
 			BaseCombatEntity baseCombatEntity2 = lastAttacker as BaseCombatEntity;
 			if (markAttackerHostile && (Object)(object)baseCombatEntity2 != (Object)null && (Object)(object)baseCombatEntity2 != (Object)(object)this)
@@ -710,7 +732,7 @@ public class BaseCombatEntity : BaseEntity
 			}
 			if (lastDamage.IsConsideredAnAttack())
 			{
-				lastAttackedTime = Time.time;
+				SetJustAttacked();
 				if ((Object)(object)lastAttacker != (Object)null)
 				{
 					Vector3 val2 = ((Component)lastAttacker).transform.position - ((Component)this).transform.position;
@@ -832,7 +854,7 @@ public class BaseCombatEntity : BaseEntity
 			BasePlayer initiatorPlayer = info.InitiatorPlayer;
 			if ((Object)(object)initiatorPlayer != (Object)null && initiatorPlayer.GetActiveMission() != -1 && !initiatorPlayer.IsNpc)
 			{
-				initiatorPlayer.ProcessMissionEvent(BaseMission.MissionEventType.KILL_ENTITY, prefabID.ToString(), 1f);
+				initiatorPlayer.ProcessMissionEvent(BaseMission.MissionEventType.KILL_ENTITY, prefabID, 1f);
 			}
 		}
 		TimeWarning val = TimeWarning.New("OnKilled", 0);

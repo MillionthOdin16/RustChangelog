@@ -69,6 +69,12 @@ public class Server : ConsoleSystem
 	public static bool anticheattoken = true;
 
 	[ServerVar]
+	public static bool strictauth_eac = false;
+
+	[ServerVar]
+	public static bool strictauth_steam = false;
+
+	[ServerVar]
 	public static int tickrate = 10;
 
 	[ServerVar]
@@ -97,6 +103,9 @@ public class Server : ConsoleSystem
 
 	[ServerVar]
 	public static float itemdespawn_container_scale = 2f;
+
+	[ServerVar]
+	public static int itemdespawn_container_max_multiplier = 24;
 
 	[ServerVar]
 	public static float itemdespawn_quick = 30f;
@@ -130,6 +139,14 @@ public class Server : ConsoleSystem
 
 	[ServerVar]
 	public static bool statBackup = false;
+
+	[ServerVar]
+	public static int rejoin_delay = 300;
+
+	[ServerVar]
+	public static string ping_region_code_override = "";
+
+	private static string _favoritesEndpoint = "";
 
 	[ServerVar(Saved = true, ShowInAdminUI = true)]
 	public static string headerimage = "";
@@ -270,6 +287,9 @@ public class Server : ConsoleSystem
 	public static int max_sleeping_bags = 15;
 
 	[ReplicatedVar]
+	public static int max_shelters = 1;
+
+	[ReplicatedVar]
 	public static bool bag_quota_item_amount = true;
 
 	[ServerVar]
@@ -317,8 +337,7 @@ public class Server : ConsoleSystem
 	[ServerVar]
 	public static string gamemode = "";
 
-	[ServerVar(Help = "Comma-separated server browser tag values (see wiki)", Saved = true, ShowInAdminUI = true)]
-	public static string tags = "";
+	private static string _tags = "";
 
 	[ServerVar(Help = "Censors the Steam player list to make player tracking more difficult")]
 	public static bool censorplayerlist = true;
@@ -368,6 +387,12 @@ public class Server : ConsoleSystem
 	[ServerVar(Help = "How long per frame to spend on industrial jobs", Saved = true, ShowInAdminUI = true)]
 	public static float industrialFrameBudgetMs = 0.5f;
 
+	[ServerVar(Help = "When enabled industrial transfers will abort if they start to take too long. Will lead to inconsistent splitting but should retain performance", Saved = true)]
+	public static bool industrialTransferStrictTimeLimits = false;
+
+	[ServerVar(Help = "Enables a faster way to move items around during conveyor transfers. Should be on unless there's a issue")]
+	public static bool industrialAllowQuickMove = true;
+
 	[ReplicatedVar(Help = "How many markers each player can place", Saved = true, ShowInAdminUI = true)]
 	public static int maximumMapMarkers = 5;
 
@@ -384,6 +409,24 @@ public class Server : ConsoleSystem
 	public static float parachuteRepackTime = 8f;
 
 	public static bool emojiOwnershipCheck = false;
+
+	[ReplicatedVar(Help = "Skip death screen fade", Saved = false, ShowInAdminUI = false)]
+	public static bool skipDeathScreenFade = false;
+
+	[ReplicatedVar(Help = "Controls whether the tutorial is enabled on this server", Saved = true, ShowInAdminUI = true, Default = "false")]
+	public static bool tutorialEnabled = false;
+
+	[ReplicatedVar(Help = "How much of a tax to apply to workbench T1 tech unlocks. 10 = additional 10% scrap cost", Saved = true)]
+	public static float workbench1TaxRate = 0f;
+
+	[ServerVar(Help = "Automatically upload procedurally generated maps so that players download them (faster) instead of re-generating them", Saved = true, ShowInAdminUI = true)]
+	public static bool autoUploadMap = true;
+
+	[ReplicatedVar(Help = "How much of a tax to apply to workbench T2 tech unlocks. 10 = additional 10% scrap cost", Saved = true)]
+	public static float workbench2TaxRate = 10f;
+
+	[ReplicatedVar(Help = "How much of a tax to apply to workbench  T3tech unlocks. 10 = additional 10% scrap cost", Saved = true)]
+	public static float workbench3TaxRate = 20f;
 
 	[ServerVar(Saved = true)]
 	public static bool showHolsteredItems = true;
@@ -421,6 +464,50 @@ public class Server : ConsoleSystem
 	[ServerVar]
 	public static bool rpclog_enabled = false;
 
+	[ServerVar(Saved = true)]
+	public static string server_id
+	{
+		get
+		{
+			return DemoConVars.ServerId;
+		}
+		set
+		{
+			DemoConVars.ServerId = value;
+		}
+	}
+
+	[ServerVar(ShowInAdminUI = true, Saved = true, Help = "Domain name to save when players favorite your server. The port can be omitted if using the default port or a SRV DNS record is created.")]
+	public static string favoritesEndpoint
+	{
+		get
+		{
+			return _favoritesEndpoint;
+		}
+		set
+		{
+			if (string.IsNullOrWhiteSpace(value))
+			{
+				_favoritesEndpoint = "";
+				return;
+			}
+			value = value.Trim();
+			if (value.StartsWith("https://"))
+			{
+				string text = value;
+				int length = "https://".Length;
+				value = text.Substring(length, text.Length - length);
+			}
+			if (value.StartsWith("http://"))
+			{
+				string text = value;
+				int length = "http://".Length;
+				value = text.Substring(length, text.Length - length);
+			}
+			_favoritesEndpoint = value.Trim().ToLowerInvariant();
+		}
+	}
+
 	[ServerVar]
 	public static int anticheatlog
 	{
@@ -434,6 +521,19 @@ public class Server : ConsoleSystem
 		{
 			//IL_0001: Unknown result type (might be due to invalid IL or missing references)
 			EOS.LogLevel = (LogLevel)value;
+		}
+	}
+
+	[ServerVar(Help = "Comma-separated server browser tag values (see wiki)", Saved = true, ShowInAdminUI = true)]
+	public static string tags
+	{
+		get
+		{
+			return _tags;
+		}
+		set
+		{
+			_tags = AutoCorrectTags(value);
 		}
 	}
 
@@ -611,7 +711,7 @@ public class Server : ConsoleSystem
 	{
 		get
 		{
-			return SingletonComponent<ServerMgr>.Instance.playerStateManager.CacheSize;
+			return SingletonComponent<ServerMgr>.Instance?.playerStateManager.CacheSize ?? 0;
 		}
 		set
 		{
@@ -674,6 +774,24 @@ public class Server : ConsoleSystem
 		{
 			Net.sv.logging = value;
 		}
+	}
+
+	public static float GetTaxRateForWorkbenchUnlock(int workbenchLevel)
+	{
+		float num = 0f;
+		switch (workbenchLevel)
+		{
+		case 0:
+			num = workbench1TaxRate;
+			break;
+		case 1:
+			num = workbench2TaxRate;
+			break;
+		case 2:
+			num = workbench3TaxRate;
+			break;
+		}
+		return Mathf.Clamp(num, 0f, 100f);
 	}
 
 	public static float TickDelta()
@@ -781,7 +899,7 @@ public class Server : ConsoleSystem
 			string text2 = item3.Item2.ToString();
 			val.AddRow(new string[2] { text, text2 });
 		}
-		if (!arg.HasArg("--json"))
+		if (!arg.HasArg("--json", false))
 		{
 			return ((object)val).ToString();
 		}
@@ -950,11 +1068,46 @@ public class Server : ConsoleSystem
 		}
 	}
 
+	[ServerVar(Help = "Get info on player corpses on the server")]
+	public static void corpseinfo(Arg arg)
+	{
+		PlayerCorpse[] array = BaseNetworkable.serverEntities.OfType<PlayerCorpse>().ToArray();
+		int num = 0;
+		int num2 = 0;
+		int num3 = 0;
+		int num4 = 0;
+		PlayerCorpse[] array2 = array;
+		foreach (PlayerCorpse playerCorpse in array2)
+		{
+			if (playerCorpse.isClient)
+			{
+				continue;
+			}
+			num++;
+			if (playerCorpse.CorpseIsRagdoll)
+			{
+				num2++;
+				if (playerCorpse.CorpseRagdollScript.IsKinematic)
+				{
+					num3++;
+				}
+				else if (playerCorpse.CorpseRagdollScript.IsFullySleeping())
+				{
+					num4++;
+				}
+			}
+		}
+		int num5 = num2 - num3 - num4;
+		float num6 = ((num2 > 0) ? ((float)num5 / (float)num2) : 0f);
+		string text = $"Found {num} player corpses in the world, " + $"of which {num2} are using server-side ragdolls. " + $"{num5} of those are active ({num6:0%}), {num4} are sleeping, and {num3} are kinematic.";
+		arg.ReplyWith(text);
+	}
+
 	[ServerAllVar(Help = "Get the player combat log")]
 	public static string combatlog(Arg arg)
 	{
-		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer basePlayer = arg.Player();
 		if (arg.HasArgs(1) && arg.IsAdmin)
 		{
@@ -966,7 +1119,7 @@ public class Server : ConsoleSystem
 		}
 		CombatLog combat = basePlayer.stats.combat;
 		int count = combatlogsize;
-		bool json = arg.HasArg("--json");
+		bool json = arg.HasArg("--json", false);
 		bool isAdmin = arg.IsAdmin;
 		ulong requestingUser = arg.Connection?.userid ?? 0;
 		return combat.Get(count, default(NetworkableId), json, isAdmin, requestingUser);
@@ -985,7 +1138,7 @@ public class Server : ConsoleSystem
 		{
 			return "invalid player";
 		}
-		return basePlayer.stats.combat.Get(combatlogsize, basePlayer.net.ID, arg.HasArg("--json"), arg.IsAdmin, arg.Connection?.userid ?? 0);
+		return basePlayer.stats.combat.Get(combatlogsize, basePlayer.net.ID, arg.HasArg("--json", false), arg.IsAdmin, arg.Connection?.userid ?? 0);
 	}
 
 	[ServerVar(Help = "Print the current player position.")]
@@ -1090,10 +1243,10 @@ public class Server : ConsoleSystem
 		//IL_0006: Expected O, but got Unknown
 		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
 		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0089: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
 		TextTable val = new TextTable();
 		val.AddColumns(new string[4] { "SteamID", "DisplayName", "POS", "ROT" });
 		Enumerator<BasePlayer> enumerator = BasePlayer.activePlayerList.GetEnumerator();
@@ -1120,7 +1273,7 @@ public class Server : ConsoleSystem
 		{
 			((IDisposable)enumerator).Dispose();
 		}
-		arg.ReplyWith(arg.HasArg("--json") ? val.ToJson() : ((object)val).ToString());
+		arg.ReplyWith(arg.HasArg("--json", false) ? val.ToJson() : ((object)val).ToString());
 	}
 
 	[ServerVar(Help = "Prints all the vending machines on the server")]
@@ -1145,7 +1298,7 @@ public class Server : ConsoleSystem
 			obj[2] = StringExtensions.QuoteSafe(item.shopName);
 			val.AddRow(obj);
 		}
-		arg.ReplyWith(arg.HasArg("--json") ? val.ToJson() : ((object)val).ToString());
+		arg.ReplyWith(arg.HasArg("--json", false) ? val.ToJson() : ((object)val).ToString());
 	}
 
 	[ServerVar(Help = "Prints all the Tool Cupboards on the server")]
@@ -1170,7 +1323,7 @@ public class Server : ConsoleSystem
 			obj[2] = item.authorizedPlayers.Count.ToString();
 			val.AddRow(obj);
 		}
-		arg.ReplyWith(arg.HasArg("--json") ? val.ToJson() : ((object)val).ToString());
+		arg.ReplyWith(arg.HasArg("--json", false) ? val.ToJson() : ((object)val).ToString());
 	}
 
 	[ServerVar]
@@ -1203,5 +1356,42 @@ public class Server : ConsoleSystem
 	public static void ResetServerEmoji()
 	{
 		RustEmojiLibrary.ResetServerEmoji();
+	}
+
+	private static string AutoCorrectTags(string value)
+	{
+		List<string> inputValues = (from s in value.Split(',', StringSplitOptions.RemoveEmptyEntries)
+			select s.Trim().ToLowerInvariant()).ToList();
+		List<string> outputValues = new List<string>();
+		Add(new string[3] { "monthly", "biweekly", "weekly" });
+		Add(new string[3] { "vanilla", "hardcore", "softcore" });
+		Add(new string[1] { "roleplay" });
+		Add(new string[1] { "creative" });
+		Add(new string[1] { "minigame" });
+		Add(new string[1] { "training" });
+		Add(new string[1] { "battlefield" });
+		Add(new string[1] { "broyale" });
+		Add(new string[1] { "builds" });
+		Add(new string[7] { "NA", "SA", "EU", "WA", "EA", "OC", "AF" });
+		Add(new string[1] { "tut" });
+		if (!pve)
+		{
+			Add(new string[1] { "pve" });
+		}
+		return string.Join<string>(',', (IEnumerable<string>)outputValues);
+		void Add(string[] options)
+		{
+			if (outputValues.Count < 4)
+			{
+				foreach (string text in options)
+				{
+					if (inputValues.Contains(text, StringComparer.InvariantCultureIgnoreCase))
+					{
+						outputValues.Add(text);
+						break;
+					}
+				}
+			}
+		}
 	}
 }

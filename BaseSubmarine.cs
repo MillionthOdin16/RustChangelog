@@ -469,21 +469,22 @@ public class BaseSubmarine : BaseVehicle, IEngineControllerUser, IEntity, IAirSu
 	{
 		base.InitShared();
 		waterLayerMask = LayerMask.GetMask(new string[1] { "Water" });
-		engineController = new VehicleEngineController<BaseSubmarine>(this, base.isServer, engineStartupTime, fuelStoragePrefab);
+		EntityFuelSystem fuelSystem = new EntityFuelSystem(base.isServer, fuelStoragePrefab, children);
+		engineController = new VehicleEngineController<BaseSubmarine>(this, fuelSystem, base.isServer, engineStartupTime);
 	}
 
 	public override void Load(LoadInfo info)
 	{
-		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d1: Unknown result type (might be due to invalid IL or missing references)
 		base.Load(info);
 		if (info.msg.submarine != null)
 		{
 			ThrottleInput = info.msg.submarine.throttle;
 			UpDownInput = info.msg.submarine.upDown;
 			RudderInput = info.msg.submarine.rudder;
-			engineController.FuelSystem.fuelStorageInstance.uid = info.msg.submarine.fuelStorageID;
+			engineController.FuelSystem.SetInstanceID(info.msg.submarine.fuelStorageID);
 			cachedFuelAmount = info.msg.submarine.fuelAmount;
 			torpedoStorageInstance.uid = info.msg.submarine.torpedoStorageID;
 			Oxygen = info.msg.submarine.oxygen;
@@ -700,7 +701,7 @@ public class BaseSubmarine : BaseVehicle, IEngineControllerUser, IEntity, IAirSu
 		return 10f;
 	}
 
-	public override EntityFuelSystem GetFuelSystem()
+	public override IFuelSystem GetFuelSystem()
 	{
 		return engineController.FuelSystem;
 	}
@@ -714,7 +715,7 @@ public class BaseSubmarine : BaseVehicle, IEngineControllerUser, IEntity, IAirSu
 	{
 		if (CanMount(player) && MountEligable(player))
 		{
-			BaseMountable baseMountable = (HasDriver() ? GetIdealMountPointFor(player) : mountPoints[0].mountable);
+			BaseMountable baseMountable = ((HasDriver() || player.IsRestrained) ? GetIdealMountPointFor(player) : mountPoints[0].mountable);
 			if ((Object)(object)baseMountable != (Object)null)
 			{
 				baseMountable.AttemptMount(player, doMountChecks);
@@ -797,13 +798,13 @@ public class BaseSubmarine : BaseVehicle, IEngineControllerUser, IEntity, IAirSu
 		//IL_02d6: Unknown result type (might be due to invalid IL or missing references)
 		//IL_03c8: Unknown result type (might be due to invalid IL or missing references)
 		//IL_03cf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0560: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0568: Unknown result type (might be due to invalid IL or missing references)
 		//IL_048c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0513: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0517: Unknown result type (might be due to invalid IL or missing references)
 		//IL_04b9: Unknown result type (might be due to invalid IL or missing references)
 		//IL_04c4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_052a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_052f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_052e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0533: Unknown result type (might be due to invalid IL or missing references)
 		//IL_04e0: Unknown result type (might be due to invalid IL or missing references)
 		//IL_04e5: Unknown result type (might be due to invalid IL or missing references)
 		base.VehicleFixedUpdate();
@@ -903,13 +904,13 @@ public class BaseSubmarine : BaseVehicle, IEngineControllerUser, IEntity, IAirSu
 					timeSinceTorpedoFired = TimeSince.op_Implicit(0f);
 					flag = false;
 					driver.MarkHostileFor();
-					ClientRPC(null, "TorpedoFired");
+					ClientRPC(RpcTarget.NetworkGroup("TorpedoFired"));
 				}
 			}
 			if (!prevPrimaryFireInput && flag && TimeSince.op_Implicit(timeSinceFailRPCSent) > 0.5f)
 			{
 				timeSinceFailRPCSent = TimeSince.op_Implicit(0f);
-				ClientRPCPlayer(null, driver, "TorpedoFireFailed");
+				ClientRPC(RpcTarget.Player("TorpedoFireFailed", driver));
 			}
 		}
 		else if ((Object)(object)driver == (Object)null)
@@ -984,18 +985,18 @@ public class BaseSubmarine : BaseVehicle, IEngineControllerUser, IEntity, IAirSu
 
 	public override void Save(SaveInfo info)
 	{
+		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00a0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00d1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d6: Unknown result type (might be due to invalid IL or missing references)
 		base.Save(info);
 		info.msg.submarine = Pool.Get<Submarine>();
 		info.msg.submarine.throttle = ThrottleInput;
 		info.msg.submarine.upDown = UpDownInput;
 		info.msg.submarine.rudder = RudderInput;
-		info.msg.submarine.fuelStorageID = GetFuelSystem().fuelStorageInstance.uid;
+		info.msg.submarine.fuelStorageID = GetFuelSystem().GetInstanceID();
 		info.msg.submarine.fuelAmount = GetFuelAmount();
 		info.msg.submarine.torpedoStorageID = torpedoStorageInstance.uid;
 		info.msg.submarine.oxygen = Oxygen;
@@ -1009,7 +1010,7 @@ public class BaseSubmarine : BaseVehicle, IEngineControllerUser, IEntity, IAirSu
 
 	public void OnEngineStartFailed()
 	{
-		ClientRPC(null, "EngineStartFailed");
+		ClientRPC(RpcTarget.NetworkGroup("EngineStartFailed"));
 	}
 
 	public StorageContainer GetTorpedoContainer()
@@ -1062,7 +1063,7 @@ public class BaseSubmarine : BaseVehicle, IEngineControllerUser, IEntity, IAirSu
 			byte b = (byte)((UpDownInput + 1f) * 7f);
 			byte arg = (byte)(num + (b << 4));
 			int arg2 = Mathf.CeilToInt(GetFuelAmount());
-			ClientRPC(null, "SubmarineUpdate", RudderInput, arg, arg2, Oxygen);
+			ClientRPC(RpcTarget.NetworkGroup("SubmarineUpdate"), RudderInput, arg, arg2, Oxygen);
 		}
 	}
 

@@ -58,16 +58,16 @@ public class Underwear : ScriptableObject
 
 	public static bool IsFemale(BasePlayer player)
 	{
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-		ulong userID = player.userID;
-		long num = 4332L;
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		ulong num = player.userID.Get();
+		long num2 = 4332L;
 		State state = Random.state;
-		Random.InitState((int)(num + (long)userID));
-		float num2 = Random.Range(0f, 1f);
+		Random.InitState((int)(num2 + (long)num));
+		float num3 = Random.Range(0f, 1f);
 		Random.state = state;
-		if (!(num2 > 0.5f))
+		if (!(num3 > 0.5f))
 		{
 			return false;
 		}

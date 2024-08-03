@@ -1,7 +1,7 @@
 using Rust.Workshop;
 using UnityEngine;
 
-[CreateAssetMenu(menuName = "Rust/ItemSkin")]
+[CreateAssetMenu(menuName = "Rust/Skins/ItemSkin")]
 public class ItemSkin : SteamInventoryItem
 {
 	public Skinnable Skinnable;

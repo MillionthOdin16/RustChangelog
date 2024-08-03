@@ -1,9 +1,9 @@
-using System;
 using Rust.UI;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
-public class ItemStoreItemInfoModal : MonoBehaviour
+public class ItemStoreItemInfoModal : FacepunchBehaviour
 {
 	public HttpImage Icon;
 
@@ -13,25 +13,32 @@ public class ItemStoreItemInfoModal : MonoBehaviour
 
 	public TextMeshProUGUI Description;
 
-	private IPlayerItemDefinition item;
+	public RustText itemCategory;
 
-	public void Show(IPlayerItemDefinition item)
-	{
-		this.item = item;
-		Icon.Load(item.IconUrl);
-		((TMP_Text)Name).text = item.Name;
-		((TMP_Text)Description).text = StringExtensions.BBCodeToUnity(item.Description);
-		((TMP_Text)Price).text = item.LocalPriceFormatted;
-		((Component)this).gameObject.SetActive(true);
-		((Component)this).GetComponent<CanvasGroup>().alpha = 0f;
-		LeanTween.alphaCanvas(((Component)this).GetComponent<CanvasGroup>(), 1f, 0.1f);
-	}
+	public RawImage skinViewerImage;
 
-	public void Hide()
-	{
-		LeanTween.alphaCanvas(((Component)this).GetComponent<CanvasGroup>(), 0f, 0.2f).setOnComplete((Action)delegate
-		{
-			((Component)this).gameObject.SetActive(false);
-		});
-	}
+	public GameObjectRef skinViewerPrefab;
+
+	public RectTransform sectionReplaces;
+
+	public Image replacesIcon;
+
+	public RustText replacesName;
+
+	public RectTransform sectionBreakdown;
+
+	public RectTransform breakdownCloth;
+
+	public RectTransform breakdownMetal;
+
+	public RectTransform breakdownWood;
+
+	[SerializeField]
+	private GameObject icon2D;
+
+	[SerializeField]
+	private GameObject icon3D;
+
+	[SerializeField]
+	private Image loadingSpinner;
 }

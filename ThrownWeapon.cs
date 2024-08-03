@@ -2,8 +2,6 @@ using System;
 using ConVar;
 using Facepunch.Rust;
 using Network;
-using Rust;
-using Rust.Ai;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -182,10 +180,6 @@ public class ThrownWeapon : AttackEntity
 		//IL_0113: Unknown result type (might be due to invalid IL or missing references)
 		//IL_017e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0189: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0282: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0287: Unknown result type (might be due to invalid IL or missing references)
-		//IL_022a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_022f: Unknown result type (might be due to invalid IL or missing references)
 		if (base.isClient || !HasItemAmount() || HasAttackCooldown())
 		{
 			return;
@@ -224,36 +218,9 @@ public class ThrownWeapon : AttackEntity
 		baseEntity.Spawn();
 		StartAttackCooldown(repeatDelay);
 		UseItemAmount(1);
-		TimedExplosive timedExplosive = baseEntity as TimedExplosive;
-		if ((Object)(object)timedExplosive != (Object)null)
+		if ((Object)(object)(baseEntity as TimedExplosive) != (Object)null)
 		{
 			Analytics.Azure.OnExplosiveLaunched(ownerPlayer, baseEntity);
-			float num3 = 0f;
-			foreach (DamageTypeEntry damageType in timedExplosive.damageTypes)
-			{
-				num3 += damageType.amount;
-			}
-			Sensation sensation = default(Sensation);
-			sensation.Type = SensationType.ThrownWeapon;
-			sensation.Position = ((Component)ownerPlayer).transform.position;
-			sensation.Radius = 50f;
-			sensation.DamagePotential = num3;
-			sensation.InitiatorPlayer = ownerPlayer;
-			sensation.Initiator = ownerPlayer;
-			sensation.UsedEntity = timedExplosive;
-			Sense.Stimulate(sensation);
-		}
-		else
-		{
-			Sensation sensation = default(Sensation);
-			sensation.Type = SensationType.ThrownWeapon;
-			sensation.Position = ((Component)ownerPlayer).transform.position;
-			sensation.Radius = 50f;
-			sensation.DamagePotential = 0f;
-			sensation.InitiatorPlayer = ownerPlayer;
-			sensation.Initiator = ownerPlayer;
-			sensation.UsedEntity = this;
-			Sense.Stimulate(sensation);
 		}
 	}
 
@@ -316,10 +283,6 @@ public class ThrownWeapon : AttackEntity
 		//IL_0175: Unknown result type (might be due to invalid IL or missing references)
 		//IL_01ba: Unknown result type (might be due to invalid IL or missing references)
 		//IL_01c5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02d3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02d8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0278: Unknown result type (might be due to invalid IL or missing references)
-		//IL_027d: Unknown result type (might be due to invalid IL or missing references)
 		if (!HasItemAmount() || HasAttackCooldown())
 		{
 			return;
@@ -341,60 +304,24 @@ public class ThrownWeapon : AttackEntity
 			return;
 		}
 		BaseEntity baseEntity = GameManager.server.CreateEntity(prefabToThrow.resourcePath, val, Quaternion.LookRotation((overrideAngle == Vector3.zero) ? (-normalized) : overrideAngle));
-		if ((Object)(object)baseEntity == (Object)null)
+		if (!((Object)(object)baseEntity == (Object)null))
 		{
-			return;
-		}
-		Item ownerItem = GetOwnerItem();
-		if (ownerItem != null && ownerItem.instanceData != null && ownerItem.HasFlag(Item.Flag.IsOn))
-		{
-			((Component)baseEntity).gameObject.SendMessage("SetFrequency", (object)GetOwnerItem().instanceData.dataInt, (SendMessageOptions)1);
-		}
-		baseEntity.SetCreatorEntity(msg.player);
-		baseEntity.skinID = skinID;
-		baseEntity.SetVelocity(GetInheritedVelocity(msg.player, normalized) + normalized * maxThrowVelocity * num + msg.player.estimatedVelocity * 0.5f);
-		if (tumbleVelocity > 0f)
-		{
-			baseEntity.SetAngularVelocity(new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f)) * tumbleVelocity);
-		}
-		baseEntity.Spawn();
-		SetUpThrownWeapon(baseEntity);
-		StartAttackCooldown(repeatDelay);
-		UseItemAmount(1);
-		BasePlayer player = msg.player;
-		if (!((Object)(object)player != (Object)null))
-		{
-			return;
-		}
-		TimedExplosive timedExplosive = baseEntity as TimedExplosive;
-		if ((Object)(object)timedExplosive != (Object)null)
-		{
-			float num2 = 0f;
-			foreach (DamageTypeEntry damageType in timedExplosive.damageTypes)
+			Item ownerItem = GetOwnerItem();
+			if (ownerItem != null && ownerItem.instanceData != null && ownerItem.HasFlag(Item.Flag.IsOn))
 			{
-				num2 += damageType.amount;
+				((Component)baseEntity).gameObject.SendMessage("SetFrequency", (object)GetOwnerItem().instanceData.dataInt, (SendMessageOptions)1);
 			}
-			Sensation sensation = default(Sensation);
-			sensation.Type = SensationType.ThrownWeapon;
-			sensation.Position = ((Component)player).transform.position;
-			sensation.Radius = 50f;
-			sensation.DamagePotential = num2;
-			sensation.InitiatorPlayer = player;
-			sensation.Initiator = player;
-			sensation.UsedEntity = timedExplosive;
-			Sense.Stimulate(sensation);
-		}
-		else
-		{
-			Sensation sensation = default(Sensation);
-			sensation.Type = SensationType.ThrownWeapon;
-			sensation.Position = ((Component)player).transform.position;
-			sensation.Radius = 50f;
-			sensation.DamagePotential = 0f;
-			sensation.InitiatorPlayer = player;
-			sensation.Initiator = player;
-			sensation.UsedEntity = this;
-			Sense.Stimulate(sensation);
+			baseEntity.SetCreatorEntity(msg.player);
+			baseEntity.skinID = skinID;
+			baseEntity.SetVelocity(GetInheritedVelocity(msg.player, normalized) + normalized * maxThrowVelocity * num + msg.player.estimatedVelocity * 0.5f);
+			if (tumbleVelocity > 0f)
+			{
+				baseEntity.SetAngularVelocity(new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f)) * tumbleVelocity);
+			}
+			baseEntity.Spawn();
+			SetUpThrownWeapon(baseEntity);
+			StartAttackCooldown(repeatDelay);
+			UseItemAmount(1);
 		}
 	}
 

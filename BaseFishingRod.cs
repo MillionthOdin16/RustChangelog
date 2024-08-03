@@ -106,8 +106,6 @@ public class BaseFishingRod : HeldEntity
 
 	public static UpdateFishingRod updateFishingRodQueue = new UpdateFishingRod();
 
-	private FishLookup fishLookup;
-
 	private TimeUntil nextFishStateChange;
 
 	private TimeSince fishCatchDuration;
@@ -347,6 +345,7 @@ public class BaseFishingRod : HeldEntity
 		//IL_0207: Unknown result type (might be due to invalid IL or missing references)
 		//IL_020c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_01c2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0221: Unknown result type (might be due to invalid IL or missing references)
 		RaycastHit hitInfo;
 		bool num = GamePhysics.Trace(new Ray(pos + Vector3.up, Vector3.down), 0f, out hitInfo, 1.5f, 16, (QueryTriggerInteraction)0);
 		if (num)
@@ -406,6 +405,11 @@ public class BaseFishingRod : HeldEntity
 			reason = FailReason.Obstructed;
 			return false;
 		}
+		if (GamePhysics.CheckSphere(pos, 0.25f, 153092352, (QueryTriggerInteraction)0))
+		{
+			reason = FailReason.Obstructed;
+			return false;
+		}
 		reason = FailReason.Success;
 		return true;
 	}
@@ -448,18 +452,18 @@ public class BaseFishingRod : HeldEntity
 		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00ce: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0119: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0167: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0197: Unknown result type (might be due to invalid IL or missing references)
-		//IL_019c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01be: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0201: Unknown result type (might be due to invalid IL or missing references)
-		//IL_021d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0222: Unknown result type (might be due to invalid IL or missing references)
-		//IL_022e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0233: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_018e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0193: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0214: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0219: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0225: Unknown result type (might be due to invalid IL or missing references)
+		//IL_022a: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 pos = msg.read.Vector3();
 		BasePlayer ownerPlayer = GetOwnerPlayer();
 		Item currentLure = GetCurrentLure();
@@ -476,17 +480,17 @@ public class BaseFishingRod : HeldEntity
 		FishingBobber component = ((Component)base.gameManager.CreateEntity(FishingBobberRef.resourcePath, ((Component)this).transform.position + Vector3.up * 2.8f + ownerPlayer.eyes.BodyForward() * 1.8f, GetOwnerPlayer().ServerRotation)).GetComponent<FishingBobber>();
 		((Component)component).transform.forward = GetOwnerPlayer().eyes.BodyForward();
 		component.Spawn();
-		component.InitialiseBobber(ownerPlayer, surfaceBody, pos);
-		lureUsed = currentLure.info;
-		currentLure.UseItem();
-		if (fishLookup == null)
+		component.InitialiseBobber(ownerPlayer, surfaceBody, pos, 150f);
+		int usedLureAmount = 0;
+		if (FishLookup.Instance != null)
 		{
-			fishLookup = PrefabAttribute.server.Find<FishLookup>(prefabID);
+			currentFishTarget = FishLookup.Instance.GetFish(((Component)component).transform.position, surfaceBody, currentLure, out fishableModifier, lastFish, out usedLureAmount);
 		}
-		currentFishTarget = fishLookup.GetFish(((Component)component).transform.position, surfaceBody, lureUsed, out fishableModifier, lastFish);
+		lureUsed = currentLure.info;
+		currentLure.UseItem(usedLureAmount);
 		lastFish = fishableModifier;
 		currentBobber.Set(component);
-		ClientRPC<NetworkableId>(null, "Client_ReceiveCastPoint", component.net.ID);
+		ClientRPC<NetworkableId>(RpcTarget.NetworkGroup("Client_ReceiveCastPoint"), component.net.ID);
 		ownerPlayer.SignalBroadcast(Signal.Attack);
 		catchTime = TimeUntil.op_Implicit(ImmediateHook ? 0f : Random.Range(10f, 20f));
 		catchTime = TimeUntil.op_Implicit(TimeUntil.op_Implicit(catchTime) * fishableModifier.CatchWaitTimeMultiplier);
@@ -504,7 +508,7 @@ public class BaseFishingRod : HeldEntity
 	private void FailedCast(FailReason reason)
 	{
 		CurrentState = CatchState.None;
-		ClientRPC(null, "Client_ResetLine", (int)reason);
+		ClientRPC(RpcTarget.NetworkGroup("Client_ResetLine"), (int)reason);
 	}
 
 	private void CatchProcess()
@@ -542,28 +546,28 @@ public class BaseFishingRod : HeldEntity
 		//IL_0107: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0127: Unknown result type (might be due to invalid IL or missing references)
 		//IL_012c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01e6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ea: Unknown result type (might be due to invalid IL or missing references)
 		//IL_017f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02d5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01bc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01cc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_026b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0270: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0243: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0248: Unknown result type (might be due to invalid IL or missing references)
-		//IL_034f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0354: Unknown result type (might be due to invalid IL or missing references)
-		//IL_035f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02a3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02ae: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03a0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0379: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0384: Unknown result type (might be due to invalid IL or missing references)
-		//IL_04e2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0517: Unknown result type (might be due to invalid IL or missing references)
-		//IL_051c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02d9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01bb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01cb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_026f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0274: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0247: Unknown result type (might be due to invalid IL or missing references)
+		//IL_024c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0353: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0358: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0363: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02a7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02b2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03a4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_037d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0388: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04e6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_051f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0524: Unknown result type (might be due to invalid IL or missing references)
 		inQueue = false;
 		FishingBobber fishingBobber = currentBobber.Get(serverside: true);
 		BasePlayer ownerPlayer = GetOwnerPlayer();
@@ -604,7 +608,7 @@ public class BaseFishingRod : HeldEntity
 		{
 			if (TimeUntil.op_Implicit(catchTime) < 0f)
 			{
-				ClientRPC(null, "Client_HookedSomething");
+				ClientRPC(RpcTarget.NetworkGroup("Client_HookedSomething"));
 				CurrentState = CatchState.Catching;
 				fishingBobber.SetFlag(Flags.Reserved1, b: true);
 				nextFishStateChange = TimeUntil.op_Implicit(0f);
@@ -708,7 +712,7 @@ public class BaseFishingRod : HeldEntity
 		SetFlag(Flags.Reserved1, flag4 && num5 > 0.25f);
 		if (TimeSince.op_Implicit(lastStrainUpdate) > 0.4f || fishState != currentFishState)
 		{
-			ClientRPC(null, "Client_UpdateFishState", (int)currentFishState, num5);
+			ClientRPC(RpcTarget.NetworkGroup("Client_UpdateFishState"), (int)currentFishState, num5);
 			lastStrainUpdate = TimeSince.op_Implicit(0f);
 		}
 		if (strainTimer > 7f || ForceFail)
@@ -734,11 +738,11 @@ public class BaseFishingRod : HeldEntity
 				{
 					ownerPlayer.stats.Add(fishableModifier.SteamStatName, 1);
 					ownerPlayer.stats.Save(forceSteamSave: true);
-					fishLookup.CheckCatchAllAchievement(ownerPlayer);
+					FishLookup.Instance.CheckCatchAllAchievement(ownerPlayer);
 				}
 			}
 			Analytics.Server.FishCaught(currentFishTarget);
-			ClientRPC(null, "Client_OnCaughtFish", currentFishTarget.itemid);
+			ClientRPC(RpcTarget.NetworkGroup("Client_OnCaughtFish"), currentFishTarget.itemid);
 			ownerPlayer.SignalBroadcast(Signal.Alt_Attack);
 			((FacepunchBehaviour)this).Invoke((Action)ResetLine, 6f);
 			fishingBobber.Kill();
@@ -779,7 +783,7 @@ public class BaseFishingRod : HeldEntity
 			fishingBobber.Kill();
 			currentBobber.Set(null);
 		}
-		ClientRPC(null, "Client_ResetLine", (int)reason);
+		ClientRPC(RpcTarget.NetworkGroup("Client_ResetLine"), (int)reason);
 	}
 
 	public override void OnHeldChanged()

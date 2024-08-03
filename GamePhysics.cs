@@ -153,6 +153,15 @@ public static class GamePhysics
 		BufferToList(colBuffer, count, list);
 	}
 
+	public static bool OverlapSphere(Vector3 position, float radius, int layerMask = -5, QueryTriggerInteraction triggerInteraction = 1)
+	{
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		layerMask = HandleIgnoreCollision(position, layerMask);
+		return Physics.OverlapSphereNonAlloc(position, radius, colBuffer, layerMask, triggerInteraction) > 0;
+	}
+
 	public static void CapsuleSweep(Vector3 position0, Vector3 position1, float radius, Vector3 direction, float distance, List<RaycastHit> list, int layerMask = -5, QueryTriggerInteraction triggerInteraction = 1)
 	{
 		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
@@ -381,28 +390,28 @@ public static class GamePhysics
 
 	public static void TraceAllUnordered(Ray ray, float radius, List<RaycastHit> hits, float maxDistance = float.PositiveInfinity, int layerMask = -5, QueryTriggerInteraction triggerInteraction = 0, BaseEntity ignoreEntity = null)
 	{
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bc: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00be: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
-		int num = 0;
-		num = ((radius != 0f) ? Physics.SphereCastNonAlloc(ray, radius, hitBuffer, maxDistance, layerMask, triggerInteraction) : Physics.RaycastNonAlloc(ray, hitBuffer, maxDistance, layerMask, triggerInteraction));
+		//IL_00c2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d1: Unknown result type (might be due to invalid IL or missing references)
+		int num = ((radius != 0f) ? Physics.SphereCastNonAlloc(ray, radius, hitBuffer, maxDistance, layerMask, triggerInteraction) : Physics.RaycastNonAlloc(ray, hitBuffer, maxDistance, layerMask, triggerInteraction));
 		if (num < hitBuffer.Length && ((uint)layerMask & 0x10u) != 0 && WaterSystem.Trace(ray, out var position, out var normal, maxDistance))
 		{
 			RaycastHit val = default(RaycastHit);
@@ -424,7 +433,7 @@ public static class GamePhysics
 		for (int i = 0; i < num; i++)
 		{
 			RaycastHit val4 = hitBuffer[i];
-			if (Verify(val4, ignoreEntity))
+			if (Verify(val4, ((Ray)(ref ray)).origin, ignoreEntity))
 			{
 				hits.Add(val4);
 			}
@@ -501,11 +510,11 @@ public static class GamePhysics
 		//IL_00ef: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00fc: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0105: Unknown result type (might be due to invalid IL or missing references)
-		if (!ValidBounds.Test(p0))
+		if (!ValidBounds.TestOuterBounds(p0))
 		{
 			return false;
 		}
-		if (!ValidBounds.Test(p1))
+		if (!ValidBounds.TestOuterBounds(p1))
 		{
 			return false;
 		}
@@ -553,10 +562,21 @@ public static class GamePhysics
 		return false;
 	}
 
-	public static bool Verify(RaycastHit hitInfo, BaseEntity ignoreEntity = null)
+	public static bool Verify(RaycastHit hitInfo, Vector3 rayOrigin, BaseEntity ignoreEntity = null)
 	{
-		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
-		return Verify(((RaycastHit)(ref hitInfo)).collider, ((RaycastHit)(ref hitInfo)).point, ignoreEntity);
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		Vector3 val = ((RaycastHit)(ref hitInfo)).point;
+		if (((RaycastHit)(ref hitInfo)).collider is TerrainCollider && val == Vector3.zero && ((RaycastHit)(ref hitInfo)).distance == 0f)
+		{
+			val = rayOrigin;
+		}
+		return Verify(((RaycastHit)(ref hitInfo)).collider, val, ignoreEntity);
 	}
 
 	public static bool Verify(Collider collider, Vector3 point, BaseEntity ignoreEntity = null)

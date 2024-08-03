@@ -252,7 +252,7 @@ public class ItemBasedFlowRestrictor : IOEntity, IContainerSounds
 				SetFlag(Flags.Open, b: true);
 				player.inventory.loot.AddContainer(inventory);
 				player.inventory.loot.SendImmediate();
-				player.ClientRPCPlayer(null, player, "RPC_OpenLootPanel", lootPanelName);
+				player.ClientRPC(RpcTarget.Player("RPC_OpenLootPanel", player), lootPanelName);
 				SendNetworkUpdate();
 			}
 		}

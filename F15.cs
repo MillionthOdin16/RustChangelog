@@ -27,7 +27,7 @@ public class F15 : BaseCombatEntity
 
 	private float nextMissileTime;
 
-	public float blockTurningFor;
+	private float blockTurningFor;
 
 	private bool isRetiring;
 

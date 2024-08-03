@@ -96,6 +96,8 @@ public class Wearable : MonoBehaviour, IItemSetup, IPrefabPreProcess
 
 	public bool IsBackpack;
 
+	public bool HideInPlayerPreview;
+
 	public bool showCensorshipCube;
 
 	public bool showCensorshipCubeBreasts;
@@ -109,6 +111,9 @@ public class Wearable : MonoBehaviour, IItemSetup, IPrefabPreProcess
 	public bool overrideDownLimit;
 
 	public float downLimit = 70f;
+
+	[Range(0f, 1f)]
+	public float handcuffsSize;
 
 	[HideInInspector]
 	public PlayerModelHair playerModelHair;
@@ -155,6 +160,8 @@ public class Wearable : MonoBehaviour, IItemSetup, IPrefabPreProcess
 
 	[Tooltip("Enable this to check for BoneRetargets which need to be preserved in first person view")]
 	public bool PreserveBones;
+
+	public bool LegFade;
 
 	public Renderer[] RenderersLod0;
 

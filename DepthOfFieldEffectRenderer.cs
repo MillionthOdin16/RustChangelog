@@ -1,4 +1,3 @@
-using System;
 using ConVar;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -75,15 +74,15 @@ public class DepthOfFieldEffectRenderer : PostProcessEffectRenderer<DepthOfField
 	{
 		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
 		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0121: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0166: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01be: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01d0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0195: Unknown result type (might be due to invalid IL or missing references)
-		//IL_019b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0246: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0269: Unknown result type (might be due to invalid IL or missing references)
-		//IL_026f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0139: Unknown result type (might be due to invalid IL or missing references)
+		//IL_017e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01e8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ad: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_025e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0281: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0287: Unknown result type (might be due to invalid IL or missing references)
 		PropertySheet propertySheet = context.propertySheets.Get(dofShader);
 		CommandBuffer command = context.command;
 		int width = context.width;
@@ -97,8 +96,8 @@ public class DepthOfFieldEffectRenderer : PostProcessEffectRenderer<DepthOfField
 		float value5 = base.settings.maxBlurSize.value;
 		int num = Shader.PropertyToID("DOFrtLow");
 		int num2 = Shader.PropertyToID("DOFrtLow2");
-		value4 = Math.Max(value4, 0f);
-		value5 = Math.Max(value5, 0.1f);
+		value4 = Mathf.Clamp(value4, 1f, 32f);
+		value5 = Mathf.Clamp(value5, 0.1f, 32f * ((float)context.height / 1080f));
 		value2 = Mathf.Clamp(value2, 0f, 2f);
 		internalBlurWidth = Mathf.Max(value5, 0f);
 		focalDistance01 = FocalDistance01(context.camera, value3);

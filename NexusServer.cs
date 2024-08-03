@@ -401,7 +401,7 @@ public static class NexusServer
 		try
 		{
 			_database = new NexusDB();
-			((Database)_database).Open($"{ConVar.Server.rootFolder}/nexus.{244}.db", true);
+			((Database)_database).Open($"{ConVar.Server.rootFolder}/nexus.{253}.db", true);
 			_database.Initialize();
 		}
 		catch (Exception ex2)
@@ -1146,7 +1146,7 @@ public static class NexusServer
 		try
 		{
 			int valueOrDefault = (World.Config?.JsonString?.GetHashCode()).GetValueOrDefault();
-			string key = $"{2515}##{244}##{World.Name}##{World.Size}##{World.Seed}##{World.Salt}##{Nexus.mapImageScale}##{valueOrDefault}##{5}";
+			string key = $"{2555}##{253}##{World.Name}##{World.Size}##{World.Seed}##{World.Salt}##{Nexus.mapImageScale}##{valueOrDefault}##{5}";
 			if (!force && (await ZoneClient.CheckUploadedMap()).Key == key)
 			{
 				Debug.Log((object)"Nexus already has this map's image uploaded, will not render and upload again");
@@ -1174,7 +1174,7 @@ public static class NexusServer
 		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
 		try
 		{
-			if (packet.protocol != 244)
+			if (packet.protocol != 253)
 			{
 				Debug.LogWarning((object)"Received a nexus message with wrong protocol, ignoring");
 				return;
@@ -1220,7 +1220,7 @@ public static class NexusServer
 	{
 		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
 		Packet val = Pool.Get<Packet>();
-		val.protocol = 244u;
+		val.protocol = 253u;
 		val.sourceZone = ZoneClient.Zone.ZoneId;
 		val.request = request;
 		return SendPacket(id, val, toZoneKey, ttl);
@@ -1231,7 +1231,7 @@ public static class NexusServer
 		try
 		{
 			Packet val = Pool.Get<Packet>();
-			val.protocol = 244u;
+			val.protocol = 253u;
 			val.sourceZone = ZoneClient.Zone.ZoneId;
 			val.response = response;
 			await SendPacket(Uuid.Generate(), val, toZoneKey, ttl);
@@ -1654,11 +1654,11 @@ public static class NexusServer
 		UpdateFerries();
 	}
 
-	public static async Task TransferEntity(BaseEntity entity, string toZoneKey, string method)
+	public static async Task TransferEntity(BaseEntity entity, string toZoneKey, string method, bool includeFerry = true)
 	{
 		try
 		{
-			await TransferEntityImpl(FindRootEntity(entity), toZoneKey, method, ZoneKey, toZoneKey);
+			await TransferEntityImpl(FindRootEntity(entity, includeFerry), toZoneKey, method, ZoneKey, toZoneKey);
 		}
 		catch (Exception ex)
 		{
@@ -1730,7 +1730,9 @@ public static class NexusServer
 			if ((Object)(object)item4 != (Object)null && item4.IsConnected)
 			{
 				ConsoleNetwork.SendClientCommandImmediate(item4.net.connection, "nexus.redirect", toZone.IpAddress, toZone.GamePort, toZone.ConnectionProtocol());
-				item4.Kick("Redirecting to another zone...");
+				item4.limitNetworking = true;
+				item4.EnableSaving(wants: false);
+				((FacepunchBehaviour)item4).Invoke((Action)item4.KickAfterServerTransfer, 1f);
 			}
 		}
 		for (int num = networkables.Count - 1; num >= 0; num--)
@@ -1744,7 +1746,14 @@ public static class NexusServer
 					{
 						UnparentUnknown(entity, transferEntityIds);
 					}
-					baseNetworkable.Kill();
+					if (baseNetworkable is BasePlayer basePlayer && players.Contains(basePlayer))
+					{
+						basePlayer.SetParent(null, worldPositionStays: true);
+					}
+					else
+					{
+						baseNetworkable.Kill();
+					}
 				}
 			}
 			catch (Exception ex)
@@ -1786,9 +1795,9 @@ public static class NexusServer
 
 	private static void BuildTransferRequest(BaseEntity rootEntity, string method, string from, string to, out Request request, out List<BaseNetworkable> networkables, out List<BasePlayer> players, out List<string> playerIds)
 	{
-		//IL_00ff: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0162: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0110: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0173: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d2: Unknown result type (might be due to invalid IL or missing references)
 		List<BaseNetworkable> entitiesList = (networkables = Pool.GetList<BaseNetworkable>());
 		List<BasePlayer> playerList = (players = Pool.GetList<BasePlayer>());
 		List<string> playerIdsList = (playerIds = Pool.GetList<string>());
@@ -1840,15 +1849,32 @@ public static class NexusServer
 		Pool.Free<Queue<BaseNetworkable>>(ref pendingEntities);
 		Entity AddEntity(BaseNetworkable entity)
 		{
+			//IL_008b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_008c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_009e: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
 			BaseNetworkable.SaveInfo saveInfo = default(BaseNetworkable.SaveInfo);
 			saveInfo.forDisk = true;
 			saveInfo.forTransfer = true;
 			saveInfo.msg = Pool.Get<Entity>();
 			BaseNetworkable.SaveInfo info = saveInfo;
 			entity.Save(info);
+			if (entity == rootEntity && info.msg.parent != null)
+			{
+				info.msg.parent.Dispose();
+				info.msg.parent = null;
+				if (info.msg.baseEntity != null)
+				{
+					Vector3 pos = default(Vector3);
+					Quaternion val3 = default(Quaternion);
+					((Component)rootEntity).transform.GetPositionAndRotation(ref pos, ref val3);
+					info.msg.baseEntity.pos = pos;
+					info.msg.baseEntity.rot = ((Quaternion)(ref val3)).eulerAngles;
+				}
+			}
 			serializedEntities.Add(info.msg);
 			entitiesList.Add(entity);
-			if (entity is BasePlayer basePlayer && ((object)basePlayer).GetType() == typeof(BasePlayer) && basePlayer.userID > uint.MaxValue)
+			if (entity is BasePlayer basePlayer && ((object)basePlayer).GetType() == typeof(BasePlayer) && (ulong)basePlayer.userID > uint.MaxValue)
 			{
 				playerList.Add(basePlayer);
 				playerIdsList.Add(basePlayer.UserIDString);
@@ -1884,14 +1910,18 @@ public static class NexusServer
 		{
 			return false;
 		}
+		if (networkable is BasePlayer basePlayer && !basePlayer.IsAlive())
+		{
+			return false;
+		}
 		return true;
 	}
 
-	public static BaseEntity FindRootEntity(BaseEntity startEntity)
+	public static BaseEntity FindRootEntity(BaseEntity startEntity, bool includeFerry)
 	{
 		BaseEntity baseEntity = startEntity;
 		BaseEntity parent2;
-		while (TryGetParent(baseEntity, out parent2))
+		while (TryGetParent(baseEntity, out parent2) && (includeFerry || !(parent2 is NexusFerry)))
 		{
 			baseEntity = parent2;
 		}
@@ -1899,7 +1929,7 @@ public static class NexusServer
 		static bool TryGetParent(BaseEntity entity, out BaseEntity parent)
 		{
 			BaseEntity parentEntity = entity.GetParentEntity();
-			if ((Object)(object)parentEntity != (Object)null && !(parentEntity is NexusFerry))
+			if ((Object)(object)parentEntity != (Object)null && parentEntity.enableSaving)
 			{
 				parent = parentEntity;
 				return true;
@@ -1907,7 +1937,7 @@ public static class NexusServer
 			if (entity is BasePlayer basePlayer)
 			{
 				BaseMountable mounted = basePlayer.GetMounted();
-				if ((Object)(object)mounted != (Object)null)
+				if ((Object)(object)mounted != (Object)null && mounted.enableSaving)
 				{
 					parent = mounted;
 					return true;

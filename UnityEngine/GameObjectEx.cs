@@ -7,19 +7,19 @@ namespace UnityEngine;
 
 public static class GameObjectEx
 {
-	public static BaseEntity ToBaseEntity(this GameObject go)
+	public static BaseEntity ToBaseEntity(this GameObject go, bool allowDestroyed = false)
 	{
-		return go.transform.ToBaseEntity();
+		return go.transform.ToBaseEntity(allowDestroyed);
 	}
 
-	public static BaseEntity ToBaseEntity(this Collider collider)
+	public static BaseEntity ToBaseEntity(this Collider collider, bool allowDestroyed = false)
 	{
-		return ((Component)collider).transform.ToBaseEntity();
+		return ((Component)collider).transform.ToBaseEntity(allowDestroyed);
 	}
 
-	public static BaseEntity ToBaseEntity(this Transform transform)
+	public static BaseEntity ToBaseEntity(this Transform transform, bool allowDestroyed = false)
 	{
-		IEntity val = GetEntityFromRegistry(transform);
+		IEntity val = GetEntityFromRegistry(transform, allowDestroyed);
 		if (val == null && !((Component)transform).gameObject.activeInHierarchy)
 		{
 			val = GetEntityFromComponent(transform);
@@ -43,7 +43,7 @@ public static class GameObjectEx
 		return false;
 	}
 
-	private static IEntity GetEntityFromRegistry(Transform transform)
+	private static IEntity GetEntityFromRegistry(Transform transform, bool allowDestroyed = false)
 	{
 		Transform val = transform;
 		IEntity val2 = Entity.Get(val);
@@ -52,11 +52,11 @@ public static class GameObjectEx
 			val = val.parent;
 			val2 = Entity.Get(val);
 		}
-		if (val2 != null && !val2.IsDestroyed)
+		if (val2 == null || (val2.IsDestroyed && !allowDestroyed))
 		{
-			return val2;
+			return null;
 		}
-		return null;
+		return val2;
 	}
 
 	private static IEntity GetEntityFromComponent(Transform transform)
@@ -94,5 +94,23 @@ public static class GameObjectEx
 			((Behaviour)(object)item).enabled = enabled;
 		}
 		Pool.FreeList<T>(ref list);
+	}
+
+	public static GameObject FindInChildren(this GameObject parent, string name)
+	{
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		if (((Object)parent).name == name)
+		{
+			return parent;
+		}
+		foreach (Transform item in parent.transform)
+		{
+			GameObject val = ((Component)item).gameObject.FindInChildren(name);
+			if ((Object)(object)val != (Object)null)
+			{
+				return val;
+			}
+		}
+		return null;
 	}
 }

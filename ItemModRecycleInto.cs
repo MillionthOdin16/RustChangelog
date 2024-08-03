@@ -2,6 +2,10 @@ using UnityEngine;
 
 public class ItemModRecycleInto : ItemMod
 {
+	public static readonly Phrase RecycleIntoTitle = new Phrase("recycle_into", "MISSING RECYCLE INTO PHRASE");
+
+	public static readonly Phrase RecycleIntoDesc = new Phrase("recycle_into_desc", "MISSING RECYCLE INTO DESC PHRASE");
+
 	public ItemDefinition recycleIntoItem;
 
 	public int numRecycledItemMin = 1;

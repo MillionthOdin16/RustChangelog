@@ -47,6 +47,18 @@ public class Render : ConsoleSystem
 
 	public static bool IsInstancingEnabled => !IsInstancingDisabled;
 
+	[ClientVar(Name = "show_building_blocked", Saved = true)]
+	public static bool show_building_blocked_client { get; set; } = true;
+
+
+	[ClientVar(Name = "building_blocked_preview_distance", Help = "Distance from the border of building blocked to show the red preview")]
+	public static float building_blocked_preview_distance { get; set; } = 100f;
+
+
+	[ReplicatedVar]
+	public static bool show_building_blocked_server { get; set; } = true;
+
+
 	public static bool IsMultidrawEnabled => multidraw;
 
 	[ClientVar(Name = "print_tree_counts", ClientAdmin = true, Help = "Print off count of trees to ensure server sent them all")]

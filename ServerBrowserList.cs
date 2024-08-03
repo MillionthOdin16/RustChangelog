@@ -10,6 +10,8 @@ public class ServerBrowserList : ServerBrowserListBase, VirtualScroll.IDataSourc
 		public string tag;
 
 		public ServerBrowserList serverList;
+
+		public string CompressedTag { get; set; }
 	}
 
 	public enum QueryType
@@ -48,11 +50,13 @@ public class ServerBrowserList : ServerBrowserListBase, VirtualScroll.IDataSourc
 
 	public bool alwaysIncludeEmptyServers;
 
-	public bool clampPlayerCountsToTrustedValues;
+	public bool clampPlayerCountsToTrustedValues = true;
+
+	private static string[] pingStrings = new string[3] { ".", "..", "..." };
 
 	public QueryType queryType;
 
-	public static string VersionTag = "v" + 2515;
+	public static string VersionTag = "v" + 2555;
 
 	public ServerKeyvalues[] keyValues = new ServerKeyvalues[0];
 

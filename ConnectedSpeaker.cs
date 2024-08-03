@@ -27,8 +27,8 @@ public class ConnectedSpeaker : IOEntity
 
 	public override void OnFlagsChanged(Flags old, Flags next)
 	{
-		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
 		base.OnFlagsChanged(old, next);
 		if (!base.isServer || old.HasFlag(Flags.Reserved8) == next.HasFlag(Flags.Reserved8))
 		{
@@ -39,13 +39,13 @@ public class ConnectedSpeaker : IOEntity
 			IAudioConnectionSource connectionSource = GetConnectionSource(this, BoomBox.BacktrackLength);
 			if (connectionSource != null)
 			{
-				ClientRPC<NetworkableId>(null, "Client_PlayAudioFrom", connectionSource.ToEntity().net.ID);
+				ClientRPC<NetworkableId>(RpcTarget.NetworkGroup("Client_PlayAudioFrom"), connectionSource.ToEntity().net.ID);
 				connectedTo.Set(connectionSource.ToEntity());
 			}
 		}
 		else if (connectedTo.IsSet)
 		{
-			ClientRPC<NetworkableId>(null, "Client_StopPlayingAudio", connectedTo.uid);
+			ClientRPC<NetworkableId>(RpcTarget.NetworkGroup("Client_StopPlayingAudio"), connectedTo.uid);
 			connectedTo.Set(null);
 		}
 	}

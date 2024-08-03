@@ -227,6 +227,8 @@ public class NexusFerry : BaseEntity
 		}
 	}
 
+	public static readonly Phrase RetiringPhrase = new Phrase("ferry.not_in_service", "Not In Service");
+
 	[Header("NexusFerry")]
 	public float TravelVelocity = 20f;
 

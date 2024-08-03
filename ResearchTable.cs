@@ -105,7 +105,7 @@ public class ResearchTable : StorageContainer
 		researchFinishedTime = 0f;
 	}
 
-	public override int GetIdealSlot(BasePlayer player, Item item)
+	public override int GetIdealSlot(BasePlayer player, ItemContainer container, Item item)
 	{
 		if (item.info.shortname == "scrap")
 		{
@@ -119,7 +119,7 @@ public class ResearchTable : StorageContainer
 				return 1;
 			}
 		}
-		return base.GetIdealSlot(player, item);
+		return base.GetIdealSlot(player, container, item);
 	}
 
 	public bool IsResearching()
@@ -204,50 +204,6 @@ public class ResearchTable : StorageContainer
 			return ConVar.Server.defaultBlueprintResearchCost;
 		}
 		return result;
-	}
-
-	public static int ScrapForResearch(ItemDefinition info, ResearchType type)
-	{
-		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0009: Invalid comparison between Unknown and I4
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0015: Invalid comparison between Unknown and I4
-		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0021: Invalid comparison between Unknown and I4
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002d: Invalid comparison between Unknown and I4
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
-		int num = 0;
-		if ((int)info.rarity == 1)
-		{
-			num = 20;
-		}
-		if ((int)info.rarity == 2)
-		{
-			num = 75;
-		}
-		if ((int)info.rarity == 3)
-		{
-			num = 125;
-		}
-		if ((int)info.rarity == 4 || (int)info.rarity == 0)
-		{
-			num = 500;
-		}
-		BaseGameMode activeGameMode = BaseGameMode.GetActiveGameMode(serverside: true);
-		if ((Object)(object)activeGameMode != (Object)null)
-		{
-			BaseGameMode.ResearchCostResult scrapCostForResearch = activeGameMode.GetScrapCostForResearch(info, type);
-			if (scrapCostForResearch.Scale.HasValue)
-			{
-				num = Mathf.RoundToInt((float)num * scrapCostForResearch.Scale.Value);
-			}
-			else if (scrapCostForResearch.Amount.HasValue)
-			{
-				num = scrapCostForResearch.Amount.Value;
-			}
-		}
-		return num;
 	}
 
 	public bool IsItemResearchable(Item item)

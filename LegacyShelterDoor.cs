@@ -1,7 +1,10 @@
+using Rust;
 using UnityEngine;
 
 public class LegacyShelterDoor : Door
 {
+	public GameObjectRef includedLockPrefab;
+
 	private LegacyShelter shelter;
 
 	public void SetupDoor(LegacyShelter shelter)
@@ -11,6 +14,19 @@ public class LegacyShelterDoor : Door
 
 	public override void DecayTick()
 	{
+	}
+
+	protected override void OnChildAdded(BaseEntity child)
+	{
+		base.OnChildAdded(child);
+		if (Application.isLoadingSave && child.prefabID == includedLockPrefab.GetEntity().prefabID && child.IsValid())
+		{
+			BaseLock baseLock = (BaseLock)child;
+			if ((Object)(object)baseLock != (Object)null)
+			{
+				baseLock.CanRemove = false;
+			}
+		}
 	}
 
 	protected override void OnPlayerOpenedDoor(BasePlayer p)

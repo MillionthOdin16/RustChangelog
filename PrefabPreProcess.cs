@@ -4,6 +4,7 @@ using System.Linq;
 using ConVar;
 using Facepunch;
 using Rust.UI;
+using Unity.AI.Navigation;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.EventSystems;
@@ -55,10 +56,13 @@ public class PrefabPreProcess : IPrefabProcessor
 		typeof(GraphicRaycaster)
 	};
 
-	public static Type[] serversideOnlyTypes = new Type[2]
+	public static Type[] serversideOnlyTypes = new Type[5]
 	{
 		typeof(IServerComponent),
-		typeof(NavMeshObstacle)
+		typeof(NavMeshLink),
+		typeof(NavMeshSurface),
+		typeof(NavMeshObstacle),
+		typeof(NavMeshModifierVolume)
 	};
 
 	public bool isClientside;

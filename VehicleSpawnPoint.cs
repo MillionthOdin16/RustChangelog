@@ -10,6 +10,6 @@ public class VehicleSpawnPoint : SpaceCheckingSpawnPoint
 
 	public static void AddStartingFuel(VehicleSpawner.IVehicleSpawnUser vehicle)
 	{
-		vehicle?.GetFuelSystem()?.AddStartingFuel(vehicle.StartingFuelUnits());
+		vehicle?.GetFuelSystem()?.AddFuel(vehicle.StartingFuelUnits());
 	}
 }

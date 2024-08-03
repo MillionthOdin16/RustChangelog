@@ -2,7 +2,7 @@ using Network;
 
 public class EntityComponentBase : BaseMonoBehaviour
 {
-	protected virtual BaseEntity GetBaseEntity()
+	public virtual BaseEntity GetBaseEntity()
 	{
 		return null;
 	}

@@ -11,7 +11,10 @@ public class SwapKeycard : MonoBehaviour
 		{
 			array[i].SetActive(false);
 		}
-		accessLevels[level - 1].SetActive(true);
+		if (level > 0 && accessLevels.Length >= level)
+		{
+			accessLevels[level - 1].SetActive(true);
+		}
 	}
 
 	public void SetRootActive(int index)
