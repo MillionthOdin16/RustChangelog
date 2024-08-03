@@ -5,16 +5,19 @@ using Facepunch;
 
 public static class ClanPushNotifications
 {
-	public static async void SendClanAnnouncement(IClan clan, ulong ignorePlayer)
+	public static async void SendClanAnnouncement(IClan clan, long previousTimestamp, ulong ignorePlayer)
 	{
-		if (ClanUtility.Timestamp() - clan.MotdTimestamp < 300000)
+		if (ClanUtility.Timestamp() - previousTimestamp < 300000)
 		{
 			return;
 		}
 		List<ulong> steamIds = Pool.GetList<ulong>();
 		foreach (ClanMember member in clan.Members)
 		{
-			steamIds.Add(member.SteamId);
+			if (member.SteamId != ignorePlayer)
+			{
+				steamIds.Add(member.SteamId);
+			}
 		}
 		Dictionary<string, string> serverPairingData = Util.GetServerPairingData();
 		serverPairingData.Add("type", "clan");

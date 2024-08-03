@@ -1,5 +1,7 @@
 using UnityEngine;
 
+[ExecuteInEditMode]
+[MapGeneration]
 public class EnvironmentVolume : MonoBehaviour
 {
 	[InspectorFlags]

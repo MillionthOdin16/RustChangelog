@@ -258,8 +258,7 @@ public class GenerateRoadRing : ProceduralComponent
 		}
 		if (list2.Count >= 2)
 		{
-			int count = TerrainMeta.Path.Roads.Count;
-			PathList pathList = new PathList("Road " + count, list2.ToArray());
+			PathList pathList = new PathList("Road " + TerrainMeta.Path.Roads.Count, list2.ToArray());
 			pathList.Spline = true;
 			pathList.Width = 12f;
 			pathList.InnerPadding = 1f;
@@ -280,7 +279,7 @@ public class GenerateRoadRing : ProceduralComponent
 			pathList.Path.Resample(7.5f);
 			pathList.Path.RecalculateTangents();
 			pathList.AdjustPlacementMap(24f);
-			TerrainMeta.Path.Roads.Add(pathList);
+			TerrainMeta.Path.AddRoad(pathList);
 		}
 	}
 }

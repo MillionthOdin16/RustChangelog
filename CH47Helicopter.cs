@@ -1,8 +1,23 @@
 using UnityEngine;
 
-public class CH47Helicopter : BaseHelicopterVehicle
+public class CH47Helicopter : BaseHelicopter
 {
 	public GameObjectRef mapMarkerEntityPrefab;
+
+	[Header("Sounds")]
+	public SoundDefinition flightEngineSoundDef;
+
+	public SoundDefinition flightThwopsSoundDef;
+
+	public float rotorGainModSmoothing = 0.25f;
+
+	public float engineGainMin = 0.5f;
+
+	public float engineGainMax = 1f;
+
+	public float thwopGainMin = 0.5f;
+
+	public float thwopGainMax = 1f;
 
 	private BaseEntity mapMarkerInstance;
 
@@ -11,11 +26,6 @@ public class CH47Helicopter : BaseHelicopterVehicle
 		rigidBody.isKinematic = false;
 		base.ServerInit();
 		CreateMapMarker();
-	}
-
-	public override void PlayerServerInput(InputState inputState, BasePlayer player)
-	{
-		base.PlayerServerInput(inputState, player);
 	}
 
 	public void CreateMapMarker()
@@ -30,6 +40,15 @@ public class CH47Helicopter : BaseHelicopterVehicle
 		baseEntity.Spawn();
 		baseEntity.SetParent(this);
 		mapMarkerInstance = baseEntity;
+	}
+
+	public override bool IsValidHomingTarget()
+	{
+		return false;
+	}
+
+	protected override void ApplyHandbrake()
+	{
 	}
 
 	protected override bool CanPushNow(BasePlayer pusher)

@@ -132,6 +132,11 @@ public class StrobeLight : IOEntity
 		SetStrobe(strobe);
 	}
 
+	public override int ConsumptionAmount()
+	{
+		return 0;
+	}
+
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
 		TimeWarning val = TimeWarning.New("StrobeLight.OnRpcMessage", 0);
@@ -142,7 +147,7 @@ public class StrobeLight : IOEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SetStrobe "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SetStrobe "));
 				}
 				TimeWarning val2 = TimeWarning.New("SetStrobe", 0);
 				try
@@ -193,7 +198,7 @@ public class StrobeLight : IOEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SetStrobeSpeed "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SetStrobeSpeed "));
 				}
 				TimeWarning val2 = TimeWarning.New("SetStrobeSpeed", 0);
 				try

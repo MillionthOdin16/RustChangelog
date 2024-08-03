@@ -261,15 +261,16 @@ public class UIPrimitiveBase : MaskableGraphic, ILayoutElement, ICanvasRaycastFi
 		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
 		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
 		UIVertex[] array = (UIVertex[])(object)new UIVertex[4];
 		for (int i = 0; i < vertices.Length; i++)
 		{
 			UIVertex simpleVert = UIVertex.simpleVert;
 			simpleVert.color = Color32.op_Implicit(((Graphic)this).color);
 			simpleVert.position = Vector2.op_Implicit(vertices[i]);
-			simpleVert.uv0 = uvs[i];
+			simpleVert.uv0 = Vector4.op_Implicit(uvs[i]);
 			array[i] = simpleVert;
 		}
 		return array;

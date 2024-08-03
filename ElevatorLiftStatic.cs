@@ -1,3 +1,4 @@
+using Rust;
 using UnityEngine;
 
 public class ElevatorLiftStatic : ElevatorLift
@@ -14,10 +15,10 @@ public class ElevatorLiftStatic : ElevatorLift
 
 	public override void ServerInit()
 	{
-		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0089: Unknown result type (might be due to invalid IL or missing references)
 		base.ServerInit();
-		if (!ElevatorDoorRef.isValid || !((Object)(object)ElevatorDoorLocation != (Object)null))
+		if (!ElevatorDoorRef.isValid || !((Object)(object)ElevatorDoorLocation != (Object)null) || Application.isLoadingSave)
 		{
 			return;
 		}

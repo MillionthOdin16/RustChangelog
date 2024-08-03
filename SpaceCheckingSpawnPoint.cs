@@ -8,25 +8,25 @@ public class SpaceCheckingSpawnPoint : GenericSpawnPoint
 
 	public float customBoundsCheckScale = 1f;
 
-	public override bool IsAvailableTo(GameObjectRef prefabRef)
+	public override bool IsAvailableTo(GameObject prefab)
 	{
-		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
 		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
-		if (!base.IsAvailableTo(prefabRef))
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		if (!base.IsAvailableTo(prefab))
 		{
 			return false;
 		}
 		if (useCustomBoundsCheckMask)
 		{
-			return SpawnHandler.CheckBounds(prefabRef.Get(), ((Component)this).transform.position, ((Component)this).transform.rotation, Vector3.one * customBoundsCheckScale, customBoundsCheckMask);
+			return SpawnHandler.CheckBounds(prefab, ((Component)this).transform.position, ((Component)this).transform.rotation, Vector3.one * customBoundsCheckScale, customBoundsCheckMask);
 		}
-		return SingletonComponent<SpawnHandler>.Instance.CheckBounds(prefabRef.Get(), ((Component)this).transform.position, ((Component)this).transform.rotation, Vector3.one * customBoundsCheckScale);
+		return SingletonComponent<SpawnHandler>.Instance.CheckBounds(prefab, ((Component)this).transform.position, ((Component)this).transform.rotation, Vector3.one * customBoundsCheckScale);
 	}
 }

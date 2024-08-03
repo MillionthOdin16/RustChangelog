@@ -41,7 +41,7 @@ public class SpinnerWheel : Signage
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_AnyoneSpin "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_AnyoneSpin "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_AnyoneSpin", 0);
 				try
@@ -92,7 +92,7 @@ public class SpinnerWheel : Signage
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_Spin "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_Spin "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_Spin", 0);
 				try
@@ -160,8 +160,8 @@ public class SpinnerWheel : Signage
 		base.Save(info);
 		info.msg.spinnerWheel = Pool.Get<SpinnerWheel>();
 		SpinnerWheel spinnerWheel = info.msg.spinnerWheel;
-		Quaternion rotation = wheel.rotation;
-		spinnerWheel.spin = ((Quaternion)(ref rotation)).eulerAngles;
+		Quaternion localRotation = wheel.localRotation;
+		spinnerWheel.spin = ((Quaternion)(ref localRotation)).eulerAngles;
 	}
 
 	public override void Load(LoadInfo info)
@@ -169,14 +169,20 @@ public class SpinnerWheel : Signage
 		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
 		base.Load(info);
 		if (info.msg.spinnerWheel != null)
 		{
-			Quaternion rotation = Quaternion.Euler(info.msg.spinnerWheel.spin);
+			Quaternion localRotation = Quaternion.Euler(info.msg.spinnerWheel.spin);
+			if (base.isServer && info.fromDisk)
+			{
+				localRotation = Quaternion.identity;
+			}
 			if (base.isServer)
 			{
-				((Component)wheel).transform.rotation = rotation;
+				((Component)wheel).transform.localRotation = localRotation;
 			}
 		}
 	}

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using CompanionServer;
 using ConVar;
@@ -12,6 +13,7 @@ using Facepunch.Extend;
 using Facepunch.Math;
 using Facepunch.Models;
 using Facepunch.Rust;
+using JetBrains.Annotations;
 using Network;
 using Network.Visibility;
 using Newtonsoft.Json;
@@ -22,7 +24,7 @@ using SilentOrbit.ProtocolBuffers;
 using UnityEngine;
 using UnityEngine.Assertions;
 
-public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotEntity
+public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotEntity, PlayerInventory.ICanMoveFrom
 {
 	public enum CameraMode
 	{
@@ -134,13 +136,23 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		Workbench2 = 0x200000,
 		Workbench3 = 0x400000,
 		VoiceRangeBoost = 0x800000,
-		ModifyClan = 0x800000,
-		LoadingAfterTransfer = 0x1000000
+		ModifyClan = 0x1000000,
+		LoadingAfterTransfer = 0x2000000,
+		NoRespawnZone = 0x4000000,
+		IsInTutorial = 0x8000000,
+		IsRestrained = 0x10000000,
+		CreativeMode = 0x20000000
 	}
 
 	public static class GestureIds
 	{
 		public const uint FlashBlindId = 235662700u;
+	}
+
+	public enum GestureStartSource
+	{
+		ServerAction,
+		Player
 	}
 
 	public enum MapNoteType
@@ -157,10 +169,11 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		Loot = 3,
 		Node = 4,
 		Gun = 5,
-		LAST = 5
+		Build = 6,
+		LAST = 6
 	}
 
-	private struct PingStyle
+	public struct PingStyle
 	{
 		public int IconIndex;
 
@@ -225,6 +238,8 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 
 		public Vector3 position;
 
+		public Vector3 initialPositionOffset;
+
 		public Vector3 positionOffset;
 
 		public Vector3 velocity;
@@ -247,9 +262,11 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 
 		public int id;
 
+		public BasePlayer attacker;
+
 		public List<FiredProjectileUpdate> updates = new List<FiredProjectileUpdate>();
 
-		public BasePlayer attacker;
+		public List<Vector3> simulatedPositions = new List<Vector3>();
 
 		public void EnterPool()
 		{
@@ -281,13 +298,21 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			lastEntityHit = null;
 			desyncLifeTime = 0f;
 			id = 0;
-			updates.Clear();
 			attacker = null;
+			updates.Clear();
+			simulatedPositions.Clear();
 		}
 
 		public void LeavePool()
 		{
 		}
+	}
+
+	public class SpawnPoint
+	{
+		public Vector3 pos;
+
+		public Quaternion rot;
 	}
 
 	public enum TimeCategory
@@ -318,11 +343,32 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		}
 	}
 
-	public class SpawnPoint
+	private class NearbyStash
 	{
-		public Vector3 pos;
+		public StashContainer Entity;
 
-		public Quaternion rot;
+		public float LookingAtTime;
+
+		public NearbyStash(StashContainer stash)
+		{
+			Entity = stash;
+			LookingAtTime = 0f;
+		}
+	}
+
+	public enum TutorialItemAllowance
+	{
+		AlwaysAllowed = -1,
+		None = 0,
+		Level1_HatchetPickaxe = 10,
+		Level2_Planner = 20,
+		Level3_Bag_TC_Door = 30,
+		Level3_Hammer = 35,
+		Level4_Spear_Fire = 40,
+		Level5_PrepareForCombat = 50,
+		Level6_Furnace = 60,
+		Level7_WorkBench = 70,
+		Level8_Kayak = 80
 	}
 
 	[Serializable]
@@ -341,6 +387,42 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			this.height = height;
 			this.radius = radius;
 			this.center = center;
+		}
+	}
+
+	public struct EncryptedValue<TInner> where TInner : unmanaged
+	{
+		private TInner _value;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public TInner Get()
+		{
+			return _value;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Set(TInner value)
+		{
+			_value = value;
+		}
+
+		public override string ToString()
+		{
+			return Get().ToString();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static implicit operator EncryptedValue<TInner>(TInner value)
+		{
+			EncryptedValue<TInner> result = default(EncryptedValue<TInner>);
+			result.Set(value);
+			return result;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static implicit operator TInner(EncryptedValue<TInner> encrypted)
+		{
+			return encrypted.Get();
 		}
 	}
 
@@ -381,6 +463,24 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 	public float flyhackDistanceHorizontal;
 
 	[NonSerialized]
+	public Vector3 lastGroundedPosition;
+
+	[NonSerialized]
+	public float fallingVelocity;
+
+	[NonSerialized]
+	public float fallingDistance;
+
+	[NonSerialized]
+	public float timeInAir;
+
+	[NonSerialized]
+	public float waterDelay;
+
+	[NonSerialized]
+	public Vector3 initialVelocity;
+
+	[NonSerialized]
 	public TimeAverageValueLookup<uint> rpcHistory = new TimeAverageValueLookup<uint>();
 
 	public static readonly Phrase ClanInviteSuccess = new Phrase("clan.action.invite.success", "Invited {name} to your clan.");
@@ -391,6 +491,9 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 
 	[NonSerialized]
 	public long clanId;
+
+	[NonSerialized]
+	public IClan serverClan;
 
 	public ViewModel GestureViewModel;
 
@@ -448,6 +551,10 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 
 	private float timeSinceMissionThink;
 
+	private BaseMission followupMission;
+
+	private IMissionProvider followupMissionProvider;
+
 	private int _activeMission = -1;
 
 	[NonSerialized]
@@ -466,6 +573,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 
 	public BaseEntity PetEntity;
 
+	[NonSerialized]
 	public IPet Pet;
 
 	private float lastPetCommandIssuedTime;
@@ -506,61 +614,26 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 
 	private static readonly PingStyle GunMarker = new PingStyle(9, 5, GunTitle, GunDesc, PingType.Gun);
 
+	private static readonly PingStyle BuildMarker = new PingStyle(12, 5, new Phrase("", ""), new Phrase("", ""), PingType.Build);
+
 	private TimeSince lastTick;
+
+	private List<(ItemDefinition item, PingType pingType)> tutorialDesiredResource = new List<(ItemDefinition, PingType)>();
+
+	private List<(NetworkableId id, PingType pingType)> pingedEntities = new List<(NetworkableId, PingType)>();
+
+	private TimeSince lastResourcePingUpdate;
 
 	private bool _playerStateDirty;
 
 	private string _wipeId;
 
+	private BaseEntity cachedPrivilegeFromOther;
+
+	private float cachedPrivilegeFromOtherTime;
+
+	[NonSerialized]
 	public Dictionary<int, FiredProjectile> firedProjectiles = new Dictionary<int, FiredProjectile>();
-
-	private const int WILDERNESS = 1;
-
-	private const int MONUMENT = 2;
-
-	private const int BASE = 4;
-
-	private const int FLYING = 8;
-
-	private const int BOATING = 16;
-
-	private const int SWIMMING = 32;
-
-	private const int DRIVING = 64;
-
-	[ServerVar]
-	[Help("How many milliseconds to budget for processing life story updates per frame")]
-	public static float lifeStoryFramebudgetms = 0.25f;
-
-	[NonSerialized]
-	public PlayerLifeStory lifeStory;
-
-	[NonSerialized]
-	public PlayerLifeStory previousLifeStory;
-
-	private const float TimeCategoryUpdateFrequency = 7f;
-
-	private float nextTimeCategoryUpdate;
-
-	private bool hasSentPresenceState;
-
-	private bool LifeStoryInWilderness;
-
-	private bool LifeStoryInMonument;
-
-	private bool LifeStoryInBase;
-
-	private bool LifeStoryFlying;
-
-	private bool LifeStoryBoating;
-
-	private bool LifeStorySwimming;
-
-	private bool LifeStoryDriving;
-
-	private bool waitingForLifeStoryUpdate;
-
-	public static LifeStoryWorkQueue lifeStoryQueue = new LifeStoryWorkQueue();
 
 	[NonSerialized]
 	public PlayerStatistics stats;
@@ -612,9 +685,68 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 
 	private PersistantPlayer cachedPersistantPlayer;
 
+	private static OceanPaths cachedOceanPaths = null;
+
+	private const int WILDERNESS = 1;
+
+	private const int MONUMENT = 2;
+
+	private const int BASE = 4;
+
+	private const int FLYING = 8;
+
+	private const int BOATING = 16;
+
+	private const int SWIMMING = 32;
+
+	private const int DRIVING = 64;
+
+	[ServerVar]
+	[Help("How many milliseconds to budget for processing life story updates per frame")]
+	public static float lifeStoryFramebudgetms = 0.25f;
+
+	[NonSerialized]
+	public PlayerLifeStory lifeStory;
+
+	[NonSerialized]
+	public PlayerLifeStory previousLifeStory;
+
+	private const float TimeCategoryUpdateFrequency = 7f;
+
+	private float nextTimeCategoryUpdate;
+
+	private bool hasSentPresenceState;
+
+	private bool LifeStoryInWilderness;
+
+	private bool LifeStoryInMonument;
+
+	private bool LifeStoryInBase;
+
+	private bool LifeStoryFlying;
+
+	private bool LifeStoryBoating;
+
+	private bool LifeStorySwimming;
+
+	private bool LifeStoryDriving;
+
+	private bool waitingForLifeStoryUpdate;
+
+	public static LifeStoryWorkQueue lifeStoryQueue = new LifeStoryWorkQueue();
+
+	[CanBeNull]
+	private DeathInfo cachedOverrideDeathInfo;
+
+	private bool IsSpectatingTeamInfo;
+
+	private TimeSince lastSpectateTeamInfoUpdate;
+
 	private int SpectateOffset = 1000000;
 
 	private string spectateFilter = "";
+
+	private List<NearbyStash> nearbyStashes = new List<NearbyStash>();
 
 	private float lastUpdateTime = float.NegativeInfinity;
 
@@ -622,18 +754,6 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 
 	[NonSerialized]
 	public float weaponDrawnDuration;
-
-	public const int serverTickRateDefault = 16;
-
-	public const int clientTickRateDefault = 20;
-
-	public int serverTickRate = 16;
-
-	public int clientTickRate = 20;
-
-	public float serverTickInterval = 0.0625f;
-
-	public float clientTickInterval = 0.05f;
 
 	[NonSerialized]
 	private float lastTickTime;
@@ -644,19 +764,27 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 	[NonSerialized]
 	private float lastInputTime;
 
+	[NonSerialized]
+	private float tutorialKickTime;
+
+	[NonSerialized]
+	public ItemId? restraintItemId;
+
 	private PlayerTick lastReceivedTick = new PlayerTick();
 
 	private float tickDeltaTime;
 
 	private bool tickNeedsFinalizing;
 
-	private TimeAverageValue ticksPerSecond = new TimeAverageValue();
+	private readonly TimeAverageValue ticksPerSecond = new TimeAverageValue();
 
-	private TickInterpolator tickInterpolator = new TickInterpolator();
+	private readonly TickInterpolator tickInterpolator = new TickInterpolator();
 
 	public Deque<Vector3> eyeHistory = new Deque<Vector3>(8);
 
 	public TickHistory tickHistory = new TickHistory();
+
+	private float startTutorialCooldown;
 
 	private float nextUnderwearValidationTime;
 
@@ -684,11 +812,9 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 	[InspectorFlags]
 	public PlayerFlags playerFlags;
 
-	[NonSerialized]
-	public PlayerEyes eyes;
+	private HiddenValue<PlayerEyes> eyesValue = Pool.Get<HiddenValue<PlayerEyes>>();
 
-	[NonSerialized]
-	public PlayerInventory inventory;
+	private HiddenValue<PlayerInventory> inventoryValue = Pool.Get<HiddenValue<PlayerInventory>>();
 
 	[NonSerialized]
 	public PlayerBlueprints blueprints;
@@ -699,14 +825,14 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 	[NonSerialized]
 	public PlayerModifiers modifiers;
 
-	private CapsuleCollider playerCollider;
+	private HiddenValue<CapsuleCollider> colliderValue = Pool.Get<HiddenValue<CapsuleCollider>>();
 
 	public PlayerBelt Belt;
 
 	private Rigidbody playerRigidbody;
 
 	[NonSerialized]
-	public ulong userID;
+	public EncryptedValue<ulong> userID = 0uL;
 
 	[NonSerialized]
 	public string UserIDString;
@@ -741,6 +867,8 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 
 	private float nextColliderRefreshTime = -1f;
 
+	public float weaponMoveSpeedScale = 1f;
+
 	public bool clothingBlocksAiming;
 
 	public float clothingMoveSpeedReduction;
@@ -764,6 +892,18 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 	public bool IsAdmin => HasPlayerFlag(PlayerFlags.IsAdmin);
 
 	public bool IsDeveloper => HasPlayerFlag(PlayerFlags.IsDeveloper);
+
+	public bool IsInCreativeMode
+	{
+		get
+		{
+			if (!Creative.allUsers)
+			{
+				return HasPlayerFlag(PlayerFlags.CreativeMode);
+			}
+			return true;
+		}
+	}
 
 	public bool UnlockAllSkins
 	{
@@ -816,6 +956,32 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				return true;
 			}
 			return false;
+		}
+	}
+
+	public bool IsInTutorial => HasPlayerFlag(PlayerFlags.IsInTutorial);
+
+	public bool IsRestrained
+	{
+		get
+		{
+			if (IsAlive())
+			{
+				return HasPlayerFlag(PlayerFlags.IsRestrained);
+			}
+			return false;
+		}
+	}
+
+	public bool IsRestrainedOrSurrendering
+	{
+		get
+		{
+			if (!IsRestrained)
+			{
+				return CurrentGestureIsSurrendering;
+			}
+			return true;
 		}
 	}
 
@@ -872,6 +1038,30 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		}
 	}
 
+	public bool CurrentGestureIsUpperBody
+	{
+		get
+		{
+			if (InGesture)
+			{
+				return currentGesture.playerModelLayer == GestureConfig.PlayerModelLayer.UpperBody;
+			}
+			return false;
+		}
+	}
+
+	public bool CurrentGestureIsSurrendering
+	{
+		get
+		{
+			if (InGesture)
+			{
+				return currentGesture.actionType == GestureConfig.GestureActionType.Surrender;
+			}
+			return false;
+		}
+	}
+
 	private bool InGestureCancelCooldown => TimeSince.op_Implicit(blockHeldInputTimer) < 0.5f;
 
 	public RelationshipManager.PlayerTeam Team
@@ -898,6 +1088,8 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		}
 	}
 
+	public bool HasPendingFollowupMission => ((FacepunchBehaviour)this).IsInvoking((Action)AssignFollowUpMission);
+
 	public ModelState modelStateTick { get; private set; }
 
 	public bool isMounted => mounted.IsValid(base.isServer);
@@ -914,11 +1106,23 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		}
 	}
 
+	private int TotalPingCount
+	{
+		get
+		{
+			if (State.pings == null)
+			{
+				return 0;
+			}
+			return State.pings.Count;
+		}
+	}
+
 	public PlayerState State
 	{
 		get
 		{
-			if (userID == 0L)
+			if ((ulong)userID == 0L)
 			{
 				throw new InvalidOperationException("Cannot get player state without a SteamID");
 			}
@@ -938,10 +1142,6 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		}
 	}
 
-	public bool hasPreviousLife => previousLifeStory != null;
-
-	public int currentTimeCategory { get; private set; }
-
 	public virtual BaseNpc.AiStatistics.FamilyEnum Family => BaseNpc.AiStatistics.FamilyEnum.Player;
 
 	protected override float PositionTickRate => -1f;
@@ -949,6 +1149,8 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 	public int DebugMapMarkerIndex { get; set; }
 
 	public uint LastBlockColourChangeId { get; set; }
+
+	public bool PlayHeavyLandingAnimation { get; set; }
 
 	public Vector3 estimatedVelocity { get; private set; }
 
@@ -1070,32 +1272,6 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		}
 	}
 
-	public float currentSafeLevel
-	{
-		get
-		{
-			//IL_0036: Unknown result type (might be due to invalid IL or missing references)
-			float num = 0f;
-			if (triggers == null)
-			{
-				return num;
-			}
-			for (int i = 0; i < triggers.Count; i++)
-			{
-				TriggerSafeZone triggerSafeZone = triggers[i] as TriggerSafeZone;
-				if (!((Object)(object)triggerSafeZone == (Object)null))
-				{
-					float safeLevel = triggerSafeZone.GetSafeLevel(((Component)this).transform.position);
-					if (safeLevel > num)
-					{
-						num = safeLevel;
-					}
-				}
-			}
-			return num;
-		}
-	}
-
 	public PersistantPlayer PersistantPlayerInfo
 	{
 		get
@@ -1117,6 +1293,10 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		}
 	}
 
+	public bool hasPreviousLife => previousLifeStory != null;
+
+	public int currentTimeCategory { get; private set; }
+
 	public bool IsBeingSpectated { get; private set; }
 
 	public InputState serverInput { get; private set; } = new InputState();
@@ -1131,6 +1311,18 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				return 0f;
 			}
 			return Time.time - lastTickTime;
+		}
+	}
+
+	public float timeSinceLastStall
+	{
+		get
+		{
+			if (lastStallTime == 0f)
+			{
+				return 60f;
+			}
+			return Time.time - lastStallTime;
 		}
 	}
 
@@ -1150,15 +1342,17 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 	{
 		get
 		{
-			if (IsDead())
+			if (IsDead() || IsSleeping())
 			{
+				lastStallTime = 0f;
 				return false;
 			}
-			if (IsSleeping())
+			if (timeSinceLastTick != 0f && timeSinceLastTick > ConVar.AntiHack.rpcstallthreshold)
 			{
-				return false;
+				lastStallTime = Time.time;
+				return true;
 			}
-			return timeSinceLastTick > 1f;
+			return false;
 		}
 	}
 
@@ -1166,11 +1360,11 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 	{
 		get
 		{
-			if (isStalled)
+			if (!isStalled)
 			{
-				lastStallTime = Time.time;
+				return timeSinceLastStall < ConVar.AntiHack.rpcstallfade;
 			}
-			return Time.time - lastStallTime < 1f;
+			return true;
 		}
 	}
 
@@ -1192,6 +1386,8 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		}
 	}
 
+	public TutorialItemAllowance CurrentTutorialAllowance { get; private set; }
+
 	public float TimeSinceWoundedStarted => Time.realtimeSinceStartup - lastWoundedStartTime;
 
 	public Connection Connection
@@ -1206,7 +1402,23 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		}
 	}
 
-	public bool IsBot => userID < 10000000;
+	public bool IsBot => (ulong)userID < 10000000;
+
+	public PlayerEyes eyes
+	{
+		get
+		{
+			return eyesValue?.Get();
+		}
+		set
+		{
+			eyesValue.Set(value);
+		}
+	}
+
+	public PlayerInventory inventory => inventoryValue?.Get();
+
+	private CapsuleCollider playerCollider => colliderValue?.Get();
 
 	public string displayName
 	{
@@ -1240,7 +1452,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ClientKeepConnectionAlive "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ClientKeepConnectionAlive "));
 				}
 				TimeWarning val2 = TimeWarning.New("ClientKeepConnectionAlive", 0);
 				try
@@ -1291,7 +1503,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ClientLoadingComplete "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ClientLoadingComplete "));
 				}
 				TimeWarning val2 = TimeWarning.New("ClientLoadingComplete", 0);
 				try
@@ -1342,7 +1554,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - IssuePetCommand "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - IssuePetCommand "));
 				}
 				TimeWarning val2 = TimeWarning.New("IssuePetCommand", 0);
 				try
@@ -1378,7 +1590,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - IssuePetCommandRaycast "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - IssuePetCommandRaycast "));
 				}
 				TimeWarning val2 = TimeWarning.New("IssuePetCommandRaycast", 0);
 				try
@@ -1409,12 +1621,48 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				}
 				return true;
 			}
+			if (rpc == 495414158 && (Object)(object)player != (Object)null)
+			{
+				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
+				if (Global.developer > 2)
+				{
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - NotifyDebugCameraEnded "));
+				}
+				TimeWarning val2 = TimeWarning.New("NotifyDebugCameraEnded", 0);
+				try
+				{
+					TimeWarning val3 = TimeWarning.New("Call", 0);
+					try
+					{
+						RPCMessage rPCMessage = default(RPCMessage);
+						rPCMessage.connection = msg.connection;
+						rPCMessage.player = player;
+						rPCMessage.read = msg.read;
+						RPCMessage msg6 = rPCMessage;
+						NotifyDebugCameraEnded(msg6);
+					}
+					finally
+					{
+						((IDisposable)val3)?.Dispose();
+					}
+				}
+				catch (Exception ex5)
+				{
+					Debug.LogException(ex5);
+					player.Kick("RPC Error in NotifyDebugCameraEnded");
+				}
+				finally
+				{
+					((IDisposable)val2)?.Dispose();
+				}
+				return true;
+			}
 			if (rpc == 3441821928u && (Object)(object)player != (Object)null)
 			{
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - OnFeedbackReport "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - OnFeedbackReport "));
 				}
 				TimeWarning val2 = TimeWarning.New("OnFeedbackReport", 0);
 				try
@@ -1440,17 +1688,17 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg6 = rPCMessage;
-							OnFeedbackReport(msg6);
+							RPCMessage msg7 = rPCMessage;
+							OnFeedbackReport(msg7);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex5)
+					catch (Exception ex6)
 					{
-						Debug.LogException(ex5);
+						Debug.LogException(ex6);
 						player.Kick("RPC Error in OnFeedbackReport");
 					}
 				}
@@ -1465,7 +1713,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - OnPlayerLanded "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - OnPlayerLanded "));
 				}
 				TimeWarning val2 = TimeWarning.New("OnPlayerLanded", 0);
 				try
@@ -1491,17 +1739,17 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg7 = rPCMessage;
-							OnPlayerLanded(msg7);
+							RPCMessage msg8 = rPCMessage;
+							OnPlayerLanded(msg8);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex6)
+					catch (Exception ex7)
 					{
-						Debug.LogException(ex6);
+						Debug.LogException(ex7);
 						player.Kick("RPC Error in OnPlayerLanded");
 					}
 				}
@@ -1516,7 +1764,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - OnPlayerReported "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - OnPlayerReported "));
 				}
 				TimeWarning val2 = TimeWarning.New("OnPlayerReported", 0);
 				try
@@ -1542,17 +1790,17 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg8 = rPCMessage;
-							OnPlayerReported(msg8);
+							RPCMessage msg9 = rPCMessage;
+							OnPlayerReported(msg9);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex7)
+					catch (Exception ex8)
 					{
-						Debug.LogException(ex7);
+						Debug.LogException(ex8);
 						player.Kick("RPC Error in OnPlayerReported");
 					}
 				}
@@ -1567,7 +1815,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - OnProjectileAttack "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - OnProjectileAttack "));
 				}
 				TimeWarning val2 = TimeWarning.New("OnProjectileAttack", 0);
 				try
@@ -1593,17 +1841,17 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg9 = rPCMessage;
-							OnProjectileAttack(msg9);
+							RPCMessage msg10 = rPCMessage;
+							OnProjectileAttack(msg10);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex8)
+					catch (Exception ex9)
 					{
-						Debug.LogException(ex8);
+						Debug.LogException(ex9);
 						player.Kick("RPC Error in OnProjectileAttack");
 					}
 				}
@@ -1618,7 +1866,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - OnProjectileRicochet "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - OnProjectileRicochet "));
 				}
 				TimeWarning val2 = TimeWarning.New("OnProjectileRicochet", 0);
 				try
@@ -1644,17 +1892,17 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg10 = rPCMessage;
-							OnProjectileRicochet(msg10);
+							RPCMessage msg11 = rPCMessage;
+							OnProjectileRicochet(msg11);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex9)
+					catch (Exception ex10)
 					{
-						Debug.LogException(ex9);
+						Debug.LogException(ex10);
 						player.Kick("RPC Error in OnProjectileRicochet");
 					}
 				}
@@ -1669,7 +1917,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - OnProjectileUpdate "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - OnProjectileUpdate "));
 				}
 				TimeWarning val2 = TimeWarning.New("OnProjectileUpdate", 0);
 				try
@@ -1695,17 +1943,17 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg11 = rPCMessage;
-							OnProjectileUpdate(msg11);
+							RPCMessage msg12 = rPCMessage;
+							OnProjectileUpdate(msg12);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex10)
+					catch (Exception ex11)
 					{
-						Debug.LogException(ex10);
+						Debug.LogException(ex11);
 						player.Kick("RPC Error in OnProjectileUpdate");
 					}
 				}
@@ -1720,7 +1968,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - PerformanceReport "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - PerformanceReport "));
 				}
 				TimeWarning val2 = TimeWarning.New("PerformanceReport", 0);
 				try
@@ -1746,17 +1994,17 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg12 = rPCMessage;
-							PerformanceReport(msg12);
+							RPCMessage msg13 = rPCMessage;
+							PerformanceReport(msg13);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex11)
+					catch (Exception ex12)
 					{
-						Debug.LogException(ex11);
+						Debug.LogException(ex12);
 						player.Kick("RPC Error in PerformanceReport");
 					}
 				}
@@ -1771,7 +2019,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - PerformanceReport_Frametime "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - PerformanceReport_Frametime "));
 				}
 				TimeWarning val2 = TimeWarning.New("PerformanceReport_Frametime", 0);
 				try
@@ -1797,18 +2045,124 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg13 = rPCMessage;
-							PerformanceReport_Frametime(msg13);
+							RPCMessage msg14 = rPCMessage;
+							PerformanceReport_Frametime(msg14);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex12)
+					catch (Exception ex13)
 					{
-						Debug.LogException(ex12);
+						Debug.LogException(ex13);
 						player.Kick("RPC Error in PerformanceReport_Frametime");
+					}
+				}
+				finally
+				{
+					((IDisposable)val2)?.Dispose();
+				}
+				return true;
+			}
+			if (rpc == 4081064578u && (Object)(object)player != (Object)null)
+			{
+				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
+				if (Global.developer > 2)
+				{
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - PlayerRequestedTutorialStart "));
+				}
+				TimeWarning val2 = TimeWarning.New("PlayerRequestedTutorialStart", 0);
+				try
+				{
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					try
+					{
+						if (!RPC_Server.CallsPerSecond.Test(4081064578u, "PlayerRequestedTutorialStart", this, player, 1uL))
+						{
+							return true;
+						}
+					}
+					finally
+					{
+						((IDisposable)val3)?.Dispose();
+					}
+					try
+					{
+						val3 = TimeWarning.New("Call", 0);
+						try
+						{
+							RPCMessage rPCMessage = default(RPCMessage);
+							rPCMessage.connection = msg.connection;
+							rPCMessage.player = player;
+							rPCMessage.read = msg.read;
+							RPCMessage msg15 = rPCMessage;
+							PlayerRequestedTutorialStart(msg15);
+						}
+						finally
+						{
+							((IDisposable)val3)?.Dispose();
+						}
+					}
+					catch (Exception ex14)
+					{
+						Debug.LogException(ex14);
+						player.Kick("RPC Error in PlayerRequestedTutorialStart");
+					}
+				}
+				finally
+				{
+					((IDisposable)val2)?.Dispose();
+				}
+				return true;
+			}
+			if (rpc == 1024003327 && (Object)(object)player != (Object)null)
+			{
+				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
+				if (Global.developer > 2)
+				{
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RequestParachuteDeploy "));
+				}
+				TimeWarning val2 = TimeWarning.New("RequestParachuteDeploy", 0);
+				try
+				{
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					try
+					{
+						if (!RPC_Server.CallsPerSecond.Test(1024003327u, "RequestParachuteDeploy", this, player, 5uL))
+						{
+							return true;
+						}
+						if (!RPC_Server.FromOwner.Test(1024003327u, "RequestParachuteDeploy", this, player))
+						{
+							return true;
+						}
+					}
+					finally
+					{
+						((IDisposable)val3)?.Dispose();
+					}
+					try
+					{
+						val3 = TimeWarning.New("Call", 0);
+						try
+						{
+							RPCMessage rPCMessage = default(RPCMessage);
+							rPCMessage.connection = msg.connection;
+							rPCMessage.player = player;
+							rPCMessage.read = msg.read;
+							RPCMessage msg16 = rPCMessage;
+							RequestParachuteDeploy(msg16);
+						}
+						finally
+						{
+							((IDisposable)val3)?.Dispose();
+						}
+					}
+					catch (Exception ex15)
+					{
+						Debug.LogException(ex15);
+						player.Kick("RPC Error in RequestParachuteDeploy");
 					}
 				}
 				finally
@@ -1822,7 +2176,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RequestRespawnInformation "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RequestRespawnInformation "));
 				}
 				TimeWarning val2 = TimeWarning.New("RequestRespawnInformation", 0);
 				try
@@ -1852,17 +2206,17 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg14 = rPCMessage;
-							RequestRespawnInformation(msg14);
+							RPCMessage msg17 = rPCMessage;
+							RequestRespawnInformation(msg17);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex13)
+					catch (Exception ex16)
 					{
-						Debug.LogException(ex13);
+						Debug.LogException(ex16);
 						player.Kick("RPC Error in RequestRespawnInformation");
 					}
 				}
@@ -1877,25 +2231,40 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RequestServerEmoji "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RequestServerEmoji "));
 				}
 				TimeWarning val2 = TimeWarning.New("RequestServerEmoji", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Call", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
-						RequestServerEmoji();
+						if (!RPC_Server.CallsPerSecond.Test(1774681338u, "RequestServerEmoji", this, player, 1uL))
+						{
+							return true;
+						}
 					}
 					finally
 					{
 						((IDisposable)val3)?.Dispose();
 					}
-				}
-				catch (Exception ex14)
-				{
-					Debug.LogException(ex14);
-					player.Kick("RPC Error in RequestServerEmoji");
+					try
+					{
+						val3 = TimeWarning.New("Call", 0);
+						try
+						{
+							RequestServerEmoji();
+						}
+						finally
+						{
+							((IDisposable)val3)?.Dispose();
+						}
+					}
+					catch (Exception ex17)
+					{
+						Debug.LogException(ex17);
+						player.Kick("RPC Error in RequestServerEmoji");
+					}
 				}
 				finally
 				{
@@ -1908,7 +2277,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_Assist "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_Assist "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_Assist", 0);
 				try
@@ -1934,17 +2303,17 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg15 = rPCMessage;
-							RPC_Assist(msg15);
+							RPCMessage msg18 = rPCMessage;
+							RPC_Assist(msg18);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex15)
+					catch (Exception ex18)
 					{
-						Debug.LogException(ex15);
+						Debug.LogException(ex18);
 						player.Kick("RPC Error in RPC_Assist");
 					}
 				}
@@ -1959,7 +2328,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_KeepAlive "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_KeepAlive "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_KeepAlive", 0);
 				try
@@ -1985,17 +2354,17 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg16 = rPCMessage;
-							RPC_KeepAlive(msg16);
+							RPCMessage msg19 = rPCMessage;
+							RPC_KeepAlive(msg19);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex16)
+					catch (Exception ex19)
 					{
-						Debug.LogException(ex16);
+						Debug.LogException(ex19);
 						player.Kick("RPC Error in RPC_KeepAlive");
 					}
 				}
@@ -2010,7 +2379,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_LootPlayer "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_LootPlayer "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_LootPlayer", 0);
 				try
@@ -2036,18 +2405,372 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg17 = rPCMessage;
-							RPC_LootPlayer(msg17);
+							RPCMessage msg20 = rPCMessage;
+							RPC_LootPlayer(msg20);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex17)
+					catch (Exception ex20)
 					{
-						Debug.LogException(ex17);
+						Debug.LogException(ex20);
 						player.Kick("RPC Error in RPC_LootPlayer");
+					}
+				}
+				finally
+				{
+					((IDisposable)val2)?.Dispose();
+				}
+				return true;
+			}
+			if (rpc == 439739525 && (Object)(object)player != (Object)null)
+			{
+				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
+				if (Global.developer > 2)
+				{
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_ReqDoPush "));
+				}
+				TimeWarning val2 = TimeWarning.New("RPC_ReqDoPush", 0);
+				try
+				{
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					try
+					{
+						if (!RPC_Server.CallsPerSecond.Test(439739525u, "RPC_ReqDoPush", this, player, 5uL))
+						{
+							return true;
+						}
+						if (!RPC_Server.IsVisible.Test(439739525u, "RPC_ReqDoPush", this, player, 3f))
+						{
+							return true;
+						}
+						if (!RPC_Server.MaxDistance.Test(439739525u, "RPC_ReqDoPush", this, player, 3f))
+						{
+							return true;
+						}
+					}
+					finally
+					{
+						((IDisposable)val3)?.Dispose();
+					}
+					try
+					{
+						val3 = TimeWarning.New("Call", 0);
+						try
+						{
+							RPCMessage rPCMessage = default(RPCMessage);
+							rPCMessage.connection = msg.connection;
+							rPCMessage.player = player;
+							rPCMessage.read = msg.read;
+							RPCMessage rpc2 = rPCMessage;
+							RPC_ReqDoPush(rpc2);
+						}
+						finally
+						{
+							((IDisposable)val3)?.Dispose();
+						}
+					}
+					catch (Exception ex21)
+					{
+						Debug.LogException(ex21);
+						player.Kick("RPC Error in RPC_ReqDoPush");
+					}
+				}
+				finally
+				{
+					((IDisposable)val2)?.Dispose();
+				}
+				return true;
+			}
+			if (rpc == 3974264977u && (Object)(object)player != (Object)null)
+			{
+				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
+				if (Global.developer > 2)
+				{
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_ReqEquipHood "));
+				}
+				TimeWarning val2 = TimeWarning.New("RPC_ReqEquipHood", 0);
+				try
+				{
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					try
+					{
+						if (!RPC_Server.CallsPerSecond.Test(3974264977u, "RPC_ReqEquipHood", this, player, 5uL))
+						{
+							return true;
+						}
+						if (!RPC_Server.IsVisible.Test(3974264977u, "RPC_ReqEquipHood", this, player, 3f))
+						{
+							return true;
+						}
+						if (!RPC_Server.MaxDistance.Test(3974264977u, "RPC_ReqEquipHood", this, player, 3f))
+						{
+							return true;
+						}
+					}
+					finally
+					{
+						((IDisposable)val3)?.Dispose();
+					}
+					try
+					{
+						val3 = TimeWarning.New("Call", 0);
+						try
+						{
+							RPCMessage rPCMessage = default(RPCMessage);
+							rPCMessage.connection = msg.connection;
+							rPCMessage.player = player;
+							rPCMessage.read = msg.read;
+							RPCMessage rpc3 = rPCMessage;
+							RPC_ReqEquipHood(rpc3);
+						}
+						finally
+						{
+							((IDisposable)val3)?.Dispose();
+						}
+					}
+					catch (Exception ex22)
+					{
+						Debug.LogException(ex22);
+						player.Kick("RPC Error in RPC_ReqEquipHood");
+					}
+				}
+				finally
+				{
+					((IDisposable)val2)?.Dispose();
+				}
+				return true;
+			}
+			if (rpc == 4144905368u && (Object)(object)player != (Object)null)
+			{
+				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
+				if (Global.developer > 2)
+				{
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_ReqForceMountNearest "));
+				}
+				TimeWarning val2 = TimeWarning.New("RPC_ReqForceMountNearest", 0);
+				try
+				{
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					try
+					{
+						if (!RPC_Server.CallsPerSecond.Test(4144905368u, "RPC_ReqForceMountNearest", this, player, 5uL))
+						{
+							return true;
+						}
+						if (!RPC_Server.IsVisible.Test(4144905368u, "RPC_ReqForceMountNearest", this, player, 3f))
+						{
+							return true;
+						}
+						if (!RPC_Server.MaxDistance.Test(4144905368u, "RPC_ReqForceMountNearest", this, player, 3f))
+						{
+							return true;
+						}
+					}
+					finally
+					{
+						((IDisposable)val3)?.Dispose();
+					}
+					try
+					{
+						val3 = TimeWarning.New("Call", 0);
+						try
+						{
+							RPCMessage rPCMessage = default(RPCMessage);
+							rPCMessage.connection = msg.connection;
+							rPCMessage.player = player;
+							rPCMessage.read = msg.read;
+							RPCMessage rpc4 = rPCMessage;
+							RPC_ReqForceMountNearest(rpc4);
+						}
+						finally
+						{
+							((IDisposable)val3)?.Dispose();
+						}
+					}
+					catch (Exception ex23)
+					{
+						Debug.LogException(ex23);
+						player.Kick("RPC Error in RPC_ReqForceMountNearest");
+					}
+				}
+				finally
+				{
+					((IDisposable)val2)?.Dispose();
+				}
+				return true;
+			}
+			if (rpc == 3816898909u && (Object)(object)player != (Object)null)
+			{
+				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
+				if (Global.developer > 2)
+				{
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_ReqForceSwapSeat "));
+				}
+				TimeWarning val2 = TimeWarning.New("RPC_ReqForceSwapSeat", 0);
+				try
+				{
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					try
+					{
+						if (!RPC_Server.CallsPerSecond.Test(3816898909u, "RPC_ReqForceSwapSeat", this, player, 5uL))
+						{
+							return true;
+						}
+						if (!RPC_Server.IsVisible.Test(3816898909u, "RPC_ReqForceSwapSeat", this, player, 3f))
+						{
+							return true;
+						}
+						if (!RPC_Server.MaxDistance.Test(3816898909u, "RPC_ReqForceSwapSeat", this, player, 3f))
+						{
+							return true;
+						}
+					}
+					finally
+					{
+						((IDisposable)val3)?.Dispose();
+					}
+					try
+					{
+						val3 = TimeWarning.New("Call", 0);
+						try
+						{
+							RPCMessage rPCMessage = default(RPCMessage);
+							rPCMessage.connection = msg.connection;
+							rPCMessage.player = player;
+							rPCMessage.read = msg.read;
+							RPCMessage rpc5 = rPCMessage;
+							RPC_ReqForceSwapSeat(rpc5);
+						}
+						finally
+						{
+							((IDisposable)val3)?.Dispose();
+						}
+					}
+					catch (Exception ex24)
+					{
+						Debug.LogException(ex24);
+						player.Kick("RPC Error in RPC_ReqForceSwapSeat");
+					}
+				}
+				finally
+				{
+					((IDisposable)val2)?.Dispose();
+				}
+				return true;
+			}
+			if (rpc == 626234931 && (Object)(object)player != (Object)null)
+			{
+				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
+				if (Global.developer > 2)
+				{
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_ReqRemoveCuffs "));
+				}
+				TimeWarning val2 = TimeWarning.New("RPC_ReqRemoveCuffs", 0);
+				try
+				{
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					try
+					{
+						if (!RPC_Server.CallsPerSecond.Test(626234931u, "RPC_ReqRemoveCuffs", this, player, 5uL))
+						{
+							return true;
+						}
+						if (!RPC_Server.IsVisible.Test(626234931u, "RPC_ReqRemoveCuffs", this, player, 3f))
+						{
+							return true;
+						}
+						if (!RPC_Server.MaxDistance.Test(626234931u, "RPC_ReqRemoveCuffs", this, player, 3f))
+						{
+							return true;
+						}
+					}
+					finally
+					{
+						((IDisposable)val3)?.Dispose();
+					}
+					try
+					{
+						val3 = TimeWarning.New("Call", 0);
+						try
+						{
+							RPCMessage rPCMessage = default(RPCMessage);
+							rPCMessage.connection = msg.connection;
+							rPCMessage.player = player;
+							rPCMessage.read = msg.read;
+							RPCMessage rpc6 = rPCMessage;
+							RPC_ReqRemoveCuffs(rpc6);
+						}
+						finally
+						{
+							((IDisposable)val3)?.Dispose();
+						}
+					}
+					catch (Exception ex25)
+					{
+						Debug.LogException(ex25);
+						player.Kick("RPC Error in RPC_ReqRemoveCuffs");
+					}
+				}
+				finally
+				{
+					((IDisposable)val2)?.Dispose();
+				}
+				return true;
+			}
+			if (rpc == 2289764809u && (Object)(object)player != (Object)null)
+			{
+				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
+				if (Global.developer > 2)
+				{
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_ReqRemoveHood "));
+				}
+				TimeWarning val2 = TimeWarning.New("RPC_ReqRemoveHood", 0);
+				try
+				{
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					try
+					{
+						if (!RPC_Server.CallsPerSecond.Test(2289764809u, "RPC_ReqRemoveHood", this, player, 5uL))
+						{
+							return true;
+						}
+						if (!RPC_Server.IsVisible.Test(2289764809u, "RPC_ReqRemoveHood", this, player, 3f))
+						{
+							return true;
+						}
+						if (!RPC_Server.MaxDistance.Test(2289764809u, "RPC_ReqRemoveHood", this, player, 3f))
+						{
+							return true;
+						}
+					}
+					finally
+					{
+						((IDisposable)val3)?.Dispose();
+					}
+					try
+					{
+						val3 = TimeWarning.New("Call", 0);
+						try
+						{
+							RPCMessage rPCMessage = default(RPCMessage);
+							rPCMessage.connection = msg.connection;
+							rPCMessage.player = player;
+							rPCMessage.read = msg.read;
+							RPCMessage rpc7 = rPCMessage;
+							RPC_ReqRemoveHood(rpc7);
+						}
+						finally
+						{
+							((IDisposable)val3)?.Dispose();
+						}
+					}
+					catch (Exception ex26)
+					{
+						Debug.LogException(ex26);
+						player.Kick("RPC Error in RPC_ReqRemoveHood");
 					}
 				}
 				finally
@@ -2061,7 +2784,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_StartClimb "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_StartClimb "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_StartClimb", 0);
 				try
@@ -2073,17 +2796,17 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 						rPCMessage.connection = msg.connection;
 						rPCMessage.player = player;
 						rPCMessage.read = msg.read;
-						RPCMessage msg18 = rPCMessage;
-						RPC_StartClimb(msg18);
+						RPCMessage msg21 = rPCMessage;
+						RPC_StartClimb(msg21);
 					}
 					finally
 					{
 						((IDisposable)val3)?.Dispose();
 					}
 				}
-				catch (Exception ex18)
+				catch (Exception ex27)
 				{
-					Debug.LogException(ex18);
+					Debug.LogException(ex27);
 					player.Kick("RPC Error in RPC_StartClimb");
 				}
 				finally
@@ -2097,7 +2820,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_AddMarker "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_AddMarker "));
 				}
 				TimeWarning val2 = TimeWarning.New("Server_AddMarker", 0);
 				try
@@ -2127,17 +2850,17 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg19 = rPCMessage;
-							Server_AddMarker(msg19);
+							RPCMessage msg22 = rPCMessage;
+							Server_AddMarker(msg22);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex19)
+					catch (Exception ex28)
 					{
-						Debug.LogException(ex19);
+						Debug.LogException(ex28);
 						player.Kick("RPC Error in Server_AddMarker");
 					}
 				}
@@ -2152,7 +2875,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_AddPing "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_AddPing "));
 				}
 				TimeWarning val2 = TimeWarning.New("Server_AddPing", 0);
 				try
@@ -2182,17 +2905,17 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg20 = rPCMessage;
-							Server_AddPing(msg20);
+							RPCMessage msg23 = rPCMessage;
+							Server_AddPing(msg23);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex20)
+					catch (Exception ex29)
 					{
-						Debug.LogException(ex20);
+						Debug.LogException(ex29);
 						player.Kick("RPC Error in Server_AddPing");
 					}
 				}
@@ -2207,7 +2930,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_CancelGesture "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_CancelGesture "));
 				}
 				TimeWarning val2 = TimeWarning.New("Server_CancelGesture", 0);
 				try
@@ -2240,9 +2963,9 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex21)
+					catch (Exception ex30)
 					{
-						Debug.LogException(ex21);
+						Debug.LogException(ex30);
 						player.Kick("RPC Error in Server_CancelGesture");
 					}
 				}
@@ -2257,7 +2980,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_ClearMapMarkers "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_ClearMapMarkers "));
 				}
 				TimeWarning val2 = TimeWarning.New("Server_ClearMapMarkers", 0);
 				try
@@ -2287,17 +3010,17 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg21 = rPCMessage;
-							Server_ClearMapMarkers(msg21);
+							RPCMessage msg24 = rPCMessage;
+							Server_ClearMapMarkers(msg24);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex22)
+					catch (Exception ex31)
 					{
-						Debug.LogException(ex22);
+						Debug.LogException(ex31);
 						player.Kick("RPC Error in Server_ClearMapMarkers");
 					}
 				}
@@ -2312,7 +3035,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_RemovePing "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_RemovePing "));
 				}
 				TimeWarning val2 = TimeWarning.New("Server_RemovePing", 0);
 				try
@@ -2342,17 +3065,17 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg22 = rPCMessage;
-							Server_RemovePing(msg22);
+							RPCMessage msg25 = rPCMessage;
+							Server_RemovePing(msg25);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex23)
+					catch (Exception ex32)
 					{
-						Debug.LogException(ex23);
+						Debug.LogException(ex32);
 						player.Kick("RPC Error in Server_RemovePing");
 					}
 				}
@@ -2367,7 +3090,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_RemovePointOfInterest "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_RemovePointOfInterest "));
 				}
 				TimeWarning val2 = TimeWarning.New("Server_RemovePointOfInterest", 0);
 				try
@@ -2397,17 +3120,17 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg23 = rPCMessage;
-							Server_RemovePointOfInterest(msg23);
+							RPCMessage msg26 = rPCMessage;
+							Server_RemovePointOfInterest(msg26);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex24)
+					catch (Exception ex33)
 					{
-						Debug.LogException(ex24);
+						Debug.LogException(ex33);
 						player.Kick("RPC Error in Server_RemovePointOfInterest");
 					}
 				}
@@ -2422,7 +3145,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_RequestMarkers "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_RequestMarkers "));
 				}
 				TimeWarning val2 = TimeWarning.New("Server_RequestMarkers", 0);
 				try
@@ -2452,17 +3175,17 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg24 = rPCMessage;
-							Server_RequestMarkers(msg24);
+							RPCMessage msg27 = rPCMessage;
+							Server_RequestMarkers(msg27);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex25)
+					catch (Exception ex34)
 					{
-						Debug.LogException(ex25);
+						Debug.LogException(ex34);
 						player.Kick("RPC Error in Server_RequestMarkers");
 					}
 				}
@@ -2477,7 +3200,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_StartGesture "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_StartGesture "));
 				}
 				TimeWarning val2 = TimeWarning.New("Server_StartGesture", 0);
 				try
@@ -2507,17 +3230,17 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg25 = rPCMessage;
-							Server_StartGesture(msg25);
+							RPCMessage msg28 = rPCMessage;
+							Server_StartGesture(msg28);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex26)
+					catch (Exception ex35)
 					{
-						Debug.LogException(ex26);
+						Debug.LogException(ex35);
 						player.Kick("RPC Error in Server_StartGesture");
 					}
 				}
@@ -2532,7 +3255,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_UpdateMarker "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_UpdateMarker "));
 				}
 				TimeWarning val2 = TimeWarning.New("Server_UpdateMarker", 0);
 				try
@@ -2562,17 +3285,17 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg26 = rPCMessage;
-							Server_UpdateMarker(msg26);
+							RPCMessage msg29 = rPCMessage;
+							Server_UpdateMarker(msg29);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex27)
+					catch (Exception ex36)
 					{
-						Debug.LogException(ex27);
+						Debug.LogException(ex36);
 						player.Kick("RPC Error in Server_UpdateMarker");
 					}
 				}
@@ -2587,30 +3310,45 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ServerRequestEmojiData "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ServerRequestEmojiData "));
 				}
 				TimeWarning val2 = TimeWarning.New("ServerRequestEmojiData", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Call", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
-						RPCMessage rPCMessage = default(RPCMessage);
-						rPCMessage.connection = msg.connection;
-						rPCMessage.player = player;
-						rPCMessage.read = msg.read;
-						RPCMessage msg27 = rPCMessage;
-						ServerRequestEmojiData(msg27);
+						if (!RPC_Server.CallsPerSecond.Test(2192544725u, "ServerRequestEmojiData", this, player, 3uL))
+						{
+							return true;
+						}
 					}
 					finally
 					{
 						((IDisposable)val3)?.Dispose();
 					}
-				}
-				catch (Exception ex28)
-				{
-					Debug.LogException(ex28);
-					player.Kick("RPC Error in ServerRequestEmojiData");
+					try
+					{
+						val3 = TimeWarning.New("Call", 0);
+						try
+						{
+							RPCMessage rPCMessage = default(RPCMessage);
+							rPCMessage.connection = msg.connection;
+							rPCMessage.player = player;
+							rPCMessage.read = msg.read;
+							RPCMessage msg30 = rPCMessage;
+							ServerRequestEmojiData(msg30);
+						}
+						finally
+						{
+							((IDisposable)val3)?.Dispose();
+						}
+					}
+					catch (Exception ex37)
+					{
+						Debug.LogException(ex37);
+						player.Kick("RPC Error in ServerRequestEmojiData");
+					}
 				}
 				finally
 				{
@@ -2623,7 +3361,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ServerRPC_UnderwearChange "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ServerRPC_UnderwearChange "));
 				}
 				TimeWarning val2 = TimeWarning.New("ServerRPC_UnderwearChange", 0);
 				try
@@ -2635,18 +3373,54 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 						rPCMessage.connection = msg.connection;
 						rPCMessage.player = player;
 						rPCMessage.read = msg.read;
-						RPCMessage msg28 = rPCMessage;
-						ServerRPC_UnderwearChange(msg28);
+						RPCMessage msg31 = rPCMessage;
+						ServerRPC_UnderwearChange(msg31);
 					}
 					finally
 					{
 						((IDisposable)val3)?.Dispose();
 					}
 				}
-				catch (Exception ex29)
+				catch (Exception ex38)
 				{
-					Debug.LogException(ex29);
+					Debug.LogException(ex38);
 					player.Kick("RPC Error in ServerRPC_UnderwearChange");
+				}
+				finally
+				{
+					((IDisposable)val2)?.Dispose();
+				}
+				return true;
+			}
+			if (rpc == 3222472445u && (Object)(object)player != (Object)null)
+			{
+				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
+				if (Global.developer > 2)
+				{
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - StartTutorial "));
+				}
+				TimeWarning val2 = TimeWarning.New("StartTutorial", 0);
+				try
+				{
+					TimeWarning val3 = TimeWarning.New("Call", 0);
+					try
+					{
+						RPCMessage rPCMessage = default(RPCMessage);
+						rPCMessage.connection = msg.connection;
+						rPCMessage.player = player;
+						rPCMessage.read = msg.read;
+						RPCMessage msg32 = rPCMessage;
+						StartTutorial(msg32);
+					}
+					finally
+					{
+						((IDisposable)val3)?.Dispose();
+					}
+				}
+				catch (Exception ex39)
+				{
+					Debug.LogException(ex39);
+					player.Kick("RPC Error in StartTutorial");
 				}
 				finally
 				{
@@ -2659,7 +3433,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SV_Drink "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SV_Drink "));
 				}
 				TimeWarning val2 = TimeWarning.New("SV_Drink", 0);
 				try
@@ -2671,18 +3445,73 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 						rPCMessage.connection = msg.connection;
 						rPCMessage.player = player;
 						rPCMessage.read = msg.read;
-						RPCMessage msg29 = rPCMessage;
-						SV_Drink(msg29);
+						RPCMessage msg33 = rPCMessage;
+						SV_Drink(msg33);
 					}
 					finally
 					{
 						((IDisposable)val3)?.Dispose();
 					}
 				}
-				catch (Exception ex30)
+				catch (Exception ex40)
 				{
-					Debug.LogException(ex30);
+					Debug.LogException(ex40);
 					player.Kick("RPC Error in SV_Drink");
+				}
+				finally
+				{
+					((IDisposable)val2)?.Dispose();
+				}
+				return true;
+			}
+			if (rpc == 1361044246 && (Object)(object)player != (Object)null)
+			{
+				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
+				if (Global.developer > 2)
+				{
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - UpdateSpectatePositionFromDebugCamera "));
+				}
+				TimeWarning val2 = TimeWarning.New("UpdateSpectatePositionFromDebugCamera", 0);
+				try
+				{
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					try
+					{
+						if (!RPC_Server.CallsPerSecond.Test(1361044246u, "UpdateSpectatePositionFromDebugCamera", this, player, 10uL))
+						{
+							return true;
+						}
+						if (!RPC_Server.FromOwner.Test(1361044246u, "UpdateSpectatePositionFromDebugCamera", this, player))
+						{
+							return true;
+						}
+					}
+					finally
+					{
+						((IDisposable)val3)?.Dispose();
+					}
+					try
+					{
+						val3 = TimeWarning.New("Call", 0);
+						try
+						{
+							RPCMessage rPCMessage = default(RPCMessage);
+							rPCMessage.connection = msg.connection;
+							rPCMessage.player = player;
+							rPCMessage.read = msg.read;
+							RPCMessage msg34 = rPCMessage;
+							UpdateSpectatePositionFromDebugCamera(msg34);
+						}
+						finally
+						{
+							((IDisposable)val3)?.Dispose();
+						}
+					}
+					catch (Exception ex41)
+					{
+						Debug.LogException(ex41);
+						player.Kick("RPC Error in UpdateSpectatePositionFromDebugCamera");
+					}
 				}
 				finally
 				{
@@ -2747,9 +3576,13 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 
 	public bool CanModifyClan()
 	{
+		if (!Clan.editsRequireClanTable)
+		{
+			return true;
+		}
 		if (base.isServer)
 		{
-			if (triggers == null)
+			if (triggers == null || (Object)(object)ClanManager.ServerInstance == (Object)null)
 			{
 				return false;
 			}
@@ -2770,36 +3603,38 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		ClanManager clanManager = ClanManager.ServerInstance;
 		if (!((Object)(object)clanManager == (Object)null))
 		{
-			Networkable obj = net;
-			if (((obj != null) ? obj.connection : null) != null)
-			{
-				LoadClanInfoImpl();
-			}
+			LoadClanInfoImpl();
 		}
 		async void LoadClanInfoImpl()
 		{
 			try
 			{
-				ClanValueResult<IClan> val = await clanManager.Backend.GetByMember(userID);
+				ClanValueResult<IClan> val = await clanManager.Backend.GetByMember((ulong)userID);
 				if (!val.IsSuccess)
 				{
 					if ((int)val.Result != 3)
 					{
 						Debug.LogError((object)$"Failed to find clan for {userID}: {val.Result}");
-						((FacepunchBehaviour)this).Invoke((Action)LoadClanInfo, 60f);
+						((FacepunchBehaviour)this).Invoke((Action)LoadClanInfo, (float)(45 + Random.Range(0, 30)));
 						return;
 					}
+					serverClan = null;
 					clanId = 0L;
 				}
 				else
 				{
-					clanId = val.Value.ClanId;
+					serverClan = val.Value;
+					clanId = serverClan.ClanId;
 				}
 				SendNetworkUpdate();
-				UpdateClanLastSeen();
-				if (clanId != 0L)
+				Networkable obj = net;
+				if (((obj != null) ? obj.connection : null) != null)
 				{
-					clanManager.ClanMemberConnectionsChanged(clanId);
+					UpdateClanLastSeen();
+					if (clanId != 0L)
+					{
+						clanManager.ClanMemberConnectionsChanged(clanId);
+					}
 				}
 			}
 			catch (Exception ex)
@@ -2828,7 +3663,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				}
 				else
 				{
-					ClanResult val2 = await val.Value.UpdateLastSeen(userID);
+					ClanResult val2 = await val.Value.UpdateLastSeen((ulong)userID);
 					if ((int)val2 != 1)
 					{
 						Debug.LogWarning((object)$"Couldn't update clan last seen for {userID}: {val2}");
@@ -2842,13 +3677,55 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		}
 	}
 
+	public void AddClanScore(ClanScoreEventType type, int multiplier = 1, BasePlayer otherPlayer = null, IClan otherClan = null, string arg1 = null, string arg2 = null)
+	{
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010f: Unknown result type (might be due to invalid IL or missing references)
+		ClanManager serverInstance = ClanManager.ServerInstance;
+		if (!((Object)(object)serverInstance == (Object)null) && serverClan != null && !IsBot && !IsNpc && multiplier != 0)
+		{
+			int scoreForEvent = Clan.GetScoreForEvent(type);
+			if (scoreForEvent != 0)
+			{
+				bool flag = (Object)(object)otherPlayer != (Object)null && !otherPlayer.IsBot && !otherPlayer.IsNpc;
+				serverInstance.AddScore(serverClan, new ClanScoreEvent
+				{
+					Type = type,
+					SteamId = userID,
+					Score = scoreForEvent,
+					Multiplier = multiplier,
+					OtherSteamId = (flag ? new ulong?(otherPlayer.userID) : null),
+					OtherClanId = ((otherClan != null && otherClan != serverClan) ? new long?(otherClan.ClanId) : ((flag && otherPlayer.clanId != 0L) ? new long?(otherPlayer.clanId) : null)),
+					Arg1 = arg1,
+					Arg2 = arg2
+				});
+			}
+		}
+	}
+
+	private void HandleClanPlayerKilled(BasePlayer killedByPlayer)
+	{
+		if (serverClan != null && killedByPlayer.serverClan != null && serverClan != killedByPlayer.serverClan)
+		{
+			AddClanScore((ClanScoreEventType)2, 1, killedByPlayer);
+			killedByPlayer.AddClanScore((ClanScoreEventType)1, 1, this);
+		}
+		if (!HasPlayerFlag(PlayerFlags.DisplaySash) && killedByPlayer.serverClan != null)
+		{
+			killedByPlayer.AddClanScore((ClanScoreEventType)3, 1, this);
+		}
+	}
+
 	public override bool CanBeLooted(BasePlayer player)
 	{
 		if ((Object)(object)player == (Object)(object)this)
 		{
 			return false;
 		}
-		if ((IsWounded() || IsSleeping()) && !IsLoadingAfterTransfer())
+		if ((IsWounded() || IsSleeping() || CurrentGestureIsSurrendering || IsRestrainedOrSurrendering) && !IsLoadingAfterTransfer())
 		{
 			return !IsTransferring();
 		}
@@ -2866,7 +3743,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			player.inventory.loot.AddContainer(inventory.containerWear);
 			player.inventory.loot.AddContainer(inventory.containerBelt);
 			player.inventory.loot.SendImmediate();
-			player.ClientRPCPlayer(null, player, "RPC_OpenLootPanel", "player_corpse");
+			player.ClientRPC(RpcTarget.Player("RPC_OpenLootPanel", player), "player_corpse");
 		}
 	}
 
@@ -2960,9 +3837,9 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		//IL_0101: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0106: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0134: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0172: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0162: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0163: Unknown result type (might be due to invalid IL or missing references)
+		//IL_017a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0166: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0167: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer player = msg.player;
 		bool flag = msg.read.Bit();
 		Vector3 val = msg.read.Vector3();
@@ -2985,43 +3862,36 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			player.ForceUpdateTriggers();
 			if (flag)
 			{
-				player.ClientRPCPlayer<Vector3, NetworkableId>(null, player, "ForcePositionToParentOffset", val, val2);
+				player.ClientRPC<Vector3, NetworkableId>(RpcTarget.Player("ForcePositionToParentOffset", player), val, val2);
 			}
 			else
 			{
-				player.ClientRPCPlayer<Vector3>(null, player, "ForcePositionTo", val3);
+				player.ClientRPC<Vector3>(RpcTarget.Player("ForcePositionTo", player), val3);
 			}
 		}
 	}
 
 	[RPC_Server]
+	[RPC_Server.CallsPerSecond(1uL)]
 	private void RequestServerEmoji()
 	{
 		RustEmojiLibrary.FindAllServerEmoji();
-		if (RustEmojiLibrary.allServerEmoji.Count <= 0)
+		if (RustEmojiLibrary.allServerEmoji.Count > 0)
 		{
-			return;
+			ClientRPCPlayerList(null, this, "ClientReceiveEmojiList", RustEmojiLibrary.cachedServerList);
 		}
-		List<string> list = Pool.GetList<string>();
-		foreach (KeyValuePair<string, RustEmojiLibrary.ServerEmojiConfig> item in RustEmojiLibrary.allServerEmoji)
-		{
-			list.Add(item.Key);
-			list.Add(item.Value.CRC.ToString());
-			list.Add(((int)item.Value.FileType).ToString());
-		}
-		ClientRPCPlayerList(null, this, "ClientReceiveEmojiList", list);
-		Pool.FreeList<string>(ref list);
 	}
 
 	[RPC_Server]
+	[RPC_Server.CallsPerSecond(3uL)]
 	private void ServerRequestEmojiData(RPCMessage msg)
 	{
-		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
-		string text = msg.read.String(256);
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		string text = msg.read.String(256, false);
 		if (RustEmojiLibrary.allServerEmoji.TryGetValue(text, out var value))
 		{
 			byte[] array = FileStorage.server.Get(value.CRC, value.FileType, RustEmojiLibrary.EmojiStorageNetworkId);
-			ClientRPCPlayer(null, msg.player, "ClientReceiveEmojiData", (uint)array.Length, array, text, value.CRC, (int)value.FileType);
+			ClientRPC(RpcTarget.Player("ClientReceiveEmojiData", msg.player), (uint)array.Length, array, text, value.CRC, (int)value.FileType);
 		}
 	}
 
@@ -3260,13 +4130,13 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		}
 	}
 
-	public void Server_StartGesture(GestureConfig toPlay)
+	public void Server_StartGesture(GestureConfig toPlay, GestureStartSource startSource = GestureStartSource.Player)
 	{
-		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0089: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e1: Unknown result type (might be due to invalid IL or missing references)
-		if (!((Object)(object)toPlay != (Object)null) || !toPlay.IsOwnedBy(this) || !toPlay.CanBeUsedBy(this))
+		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ef: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0104: Unknown result type (might be due to invalid IL or missing references)
+		if (((Object)(object)toPlay != (Object)null && toPlay.hideInWheel && startSource == GestureStartSource.Player && !ConVar.Server.cinematic) || !((Object)(object)toPlay != (Object)null) || !toPlay.IsOwnedBy(this) || !toPlay.CanBeUsedBy(this))
 		{
 			return;
 		}
@@ -3278,22 +4148,35 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		{
 			((FacepunchBehaviour)this).InvokeRepeating((Action)MonitorLoopingGesture, 0f, 0f);
 		}
-		ClientRPC(null, "Client_StartGesture", toPlay.gestureId);
+		ClientRPC(RpcTarget.NetworkGroup("Client_StartGesture"), toPlay.gestureId);
 		gestureFinishedTime = TimeUntil.op_Implicit(toPlay.duration);
 		currentGesture = toPlay;
-		if (toPlay.actionType == GestureConfig.GestureActionType.DanceAchievement)
+		switch (toPlay.actionType)
+		{
+		case GestureConfig.GestureActionType.Surrender:
+			inventory.SetLockedByRestraint(flag: true);
+			break;
+		case GestureConfig.GestureActionType.ShowNameTag:
+			if (GameInfo.HasAchievements)
+			{
+				int val = CountWaveTargets(((Component)this).transform.position, 4f, 0.6f, eyes.HeadForward(), recentWaveTargets, 5);
+				stats.Add("waved_at_players", val);
+				stats.Save(forceSteamSave: true);
+			}
+			break;
+		case GestureConfig.GestureActionType.DanceAchievement:
 		{
 			TriggerDanceAchievement triggerDanceAchievement = FindTrigger<TriggerDanceAchievement>();
 			if ((Object)(object)triggerDanceAchievement != (Object)null)
 			{
 				triggerDanceAchievement.NotifyDanceStarted();
 			}
+			break;
 		}
-		else if (toPlay.actionType == GestureConfig.GestureActionType.ShowNameTag && GameInfo.HasAchievements)
+		}
+		if (toPlay.animationType == GestureConfig.AnimationType.Loop)
 		{
-			int val = CountWaveTargets(((Component)this).transform.position, 4f, 0.6f, eyes.HeadForward(), recentWaveTargets, 5);
-			stats.Add("waved_at_players", val);
-			stats.Save(forceSteamSave: true);
+			SendNetworkUpdate();
 		}
 	}
 
@@ -3307,17 +4190,26 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 	[RPC_Server.CallsPerSecond(10uL)]
 	public void Server_CancelGesture()
 	{
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		if ((Object)(object)currentGesture != (Object)null && currentGesture.actionType == GestureConfig.GestureActionType.Surrender)
+		{
+			Handcuffs handcuffs = GetHeldEntity() as Handcuffs;
+			if ((Object)(object)handcuffs == (Object)null || !handcuffs.Locked)
+			{
+				inventory.SetLockedByRestraint(flag: false);
+			}
+		}
 		currentGesture = null;
 		blockHeldInputTimer = TimeSince.op_Implicit(0f);
-		ClientRPC(null, "Client_RemoteCancelledGesture");
+		ClientRPC(RpcTarget.NetworkGroup("Client_RemoteCancelledGesture"));
 		((FacepunchBehaviour)this).CancelInvoke((Action)MonitorLoopingGesture);
 	}
 
 	private void MonitorLoopingGesture()
 	{
-		if (((!((Object)(object)currentGesture != (Object)null) || !currentGesture.canDuckDuringGesture) && modelState.ducked) || modelState.sleeping || IsWounded() || IsSwimming() || IsDead() || (isMounted && GetMounted().allowedGestures == BaseMountable.MountGestureType.UpperBody && currentGesture.playerModelLayer == GestureConfig.PlayerModelLayer.FullBody) || (isMounted && GetMounted().allowedGestures == BaseMountable.MountGestureType.None))
+		bool flag = (Object)(object)currentGesture != (Object)null && currentGesture.canDuckDuringGesture;
+		if (modelState == null || (!flag && modelState.ducked) || modelState.sleeping || IsWounded() || IsSwimming() || IsDead() || (isMounted && GetMounted().allowedGestures == BaseMountable.MountGestureType.UpperBody && CurrentGestureIsUpperBody) || (isMounted && GetMounted().allowedGestures == BaseMountable.MountGestureType.None))
 		{
 			Server_CancelGesture();
 		}
@@ -3415,9 +4307,9 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		{
 			flag = false;
 		}
-		if (!(IsWounded() || flag) && !IsDead())
+		if (!(IsWounded() || flag) && !IsDead() && !IsSleeping())
 		{
-			return IsSleeping();
+			return IsRestrained;
 		}
 		return true;
 	}
@@ -3434,9 +4326,9 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 
 	public void TeamUpdate(bool fullTeamUpdate)
 	{
-		//IL_0124: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0116: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0129: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0139: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013e: Unknown result type (might be due to invalid IL or missing references)
 		if (!RelationshipManager.TeamsEnabled() || !IsConnected || currentTeam == 0L)
 		{
 			return;
@@ -3460,6 +4352,10 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			foreach (ulong member in playerTeam.members)
 			{
 				BasePlayer basePlayer = RelationshipManager.FindByID(member);
+				if (Object.op_Implicit((Object)(object)basePlayer) && basePlayer.IsInTutorial)
+				{
+					continue;
+				}
 				TeamMember val2 = Pool.Get<TeamMember>();
 				val2.displayName = (((Object)(object)basePlayer != (Object)null) ? basePlayer.displayName : (SingletonComponent<ServerMgr>.Instance.persistance.GetPlayerName(member) ?? "DEAD"));
 				val2.healthFraction = (((Object)(object)basePlayer != (Object)null && basePlayer.IsAlive()) ? basePlayer.healthFraction : 0f);
@@ -3517,7 +4413,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 					val.leaderMapNotes.Add(item);
 				}
 			}
-			ClientRPCPlayerAndSpectators<PlayerTeam>(null, this, "CLIENT_ReceiveTeamInfo", val);
+			ClientRPC<PlayerTeam>(RpcTarget.PlayerAndSpectators("CLIENT_ReceiveTeamInfo", this), val);
 			if (val.leaderMapNotes != null)
 			{
 				val.leaderMapNotes.Clear();
@@ -3555,13 +4451,13 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 	public void ClearTeam()
 	{
 		currentTeam = 0uL;
-		ClientRPCPlayerAndSpectators(null, this, "CLIENT_ClearTeam");
+		ClientRPC(RpcTarget.PlayerAndSpectators("CLIENT_ClearTeam", this));
 		SendNetworkUpdate();
 	}
 
 	public void ClearPendingInvite()
 	{
-		ClientRPCPlayer(null, this, "CLIENT_PendingInvite", "", 0);
+		ClientRPC(RpcTarget.Player("CLIENT_PendingInvite", this), "", 0);
 	}
 
 	public HeldEntity GetHeldEntity()
@@ -3625,6 +4521,22 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		return false;
 	}
 
+	public void ClearDeathMarker(bool sendToClient = false)
+	{
+		if (!IsNpc)
+		{
+			if (ServerCurrentDeathNote != null)
+			{
+				Pool.Free<MapNote>(ref State.deathMarker);
+			}
+			DirtyPlayerState();
+			if (sendToClient)
+			{
+				SendMarkersToClient();
+			}
+		}
+	}
+
 	public void Server_LogDeathMarker(Vector3 position)
 	{
 		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
@@ -3637,7 +4549,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				ServerCurrentDeathNote.noteType = 0;
 			}
 			ServerCurrentDeathNote.worldPosition = position;
-			ClientRPCPlayer<MapNote>(null, this, "Client_AddNewDeathMarker", ServerCurrentDeathNote);
+			ClientRPC<MapNote>(RpcTarget.Player("Client_AddNewDeathMarker", this), ServerCurrentDeathNote);
 			DirtyPlayerState();
 		}
 	}
@@ -3794,7 +4706,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			{
 				val.notes.AddRange(State.pointsOfInterest);
 			}
-			ClientRPCPlayer<MapNoteList>(null, this, "Client_ReceiveMarkers", val);
+			ClientRPC<MapNoteList>(RpcTarget.Player("Client_ReceiveMarkers", this), val);
 			val.notes.Clear();
 		}
 		finally
@@ -3813,6 +4725,11 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			}
 		}
 		return false;
+	}
+
+	public bool CanAcceptMission(BaseMission mission)
+	{
+		return CanAcceptMission(mission.id);
 	}
 
 	public bool CanAcceptMission(uint missionID)
@@ -3862,11 +4779,11 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		{
 			bool num = HasCompletedMission(missionID);
 			bool flag2 = HasFailedMission(missionID);
-			if (num && fromID.repeatDelaySecondsSuccess == -1)
+			if (num && fromID.repeatDelaySecondsSuccess <= -1)
 			{
 				return false;
 			}
-			if (flag2 && fromID.repeatDelaySecondsFailed == -1)
+			if (flag2 && fromID.repeatDelaySecondsFailed <= -1)
 			{
 				return false;
 			}
@@ -3970,12 +4887,6 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		}
 	}
 
-	public void AddMission(BaseMission.MissionInstance instance)
-	{
-		missions.Add(instance);
-		MissionDirty();
-	}
-
 	public void ThinkMissions(float delta)
 	{
 		if (!BaseMission.missionsenabled)
@@ -3994,13 +4905,6 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		timeSinceMissionThink = 0f;
 	}
 
-	public void ClearMissions()
-	{
-		missions.Clear();
-		State.missions = SaveMissions();
-		DirtyPlayerState();
-	}
-
 	public void MissionDirty(bool shouldSendNetworkUpdate = true)
 	{
 		if (BaseMission.missionsenabled)
@@ -4014,7 +4918,44 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		}
 	}
 
-	public void ProcessMissionEvent(BaseMission.MissionEventType type, string identifier, float amount)
+	public void ProcessMissionEvent(BaseMission.MissionEventType type, uint identifier, float amount)
+	{
+		ProcessMissionEvent(type, new BaseMission.MissionEventPayload
+		{
+			UintIdentifier = identifier
+		}, amount);
+	}
+
+	public void ProcessMissionEvent(BaseMission.MissionEventType type, uint identifier, float amount, Vector3 worldPos)
+	{
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		ProcessMissionEvent(type, new BaseMission.MissionEventPayload
+		{
+			UintIdentifier = identifier,
+			WorldPosition = worldPos
+		}, amount);
+	}
+
+	public void ProcessMissionEvent(BaseMission.MissionEventType type, int identifier, float amount)
+	{
+		ProcessMissionEvent(type, new BaseMission.MissionEventPayload
+		{
+			IntIdentifier = identifier
+		}, amount);
+	}
+
+	public void ProcessMissionEvent(BaseMission.MissionEventType type, NetworkableId identifier, float amount)
+	{
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		ProcessMissionEvent(type, new BaseMission.MissionEventPayload
+		{
+			NetworkIdentifier = identifier
+		}, amount);
+	}
+
+	public void ProcessMissionEvent(BaseMission.MissionEventType type, BaseMission.MissionEventPayload payload, float amount)
 	{
 		if (!BaseMission.missionsenabled)
 		{
@@ -4022,90 +4963,105 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		}
 		foreach (BaseMission.MissionInstance mission in missions)
 		{
-			mission.ProcessMissionEvent(this, type, identifier, amount);
+			mission.ProcessMissionEvent(this, type, payload, amount);
+		}
+	}
+
+	private void AssignFollowUpMission()
+	{
+		if (followupMission != null && followupMissionProvider != null)
+		{
+			BaseMission.AssignMission(this, followupMissionProvider, followupMission);
+		}
+		followupMission = null;
+		followupMissionProvider = null;
+	}
+
+	public void RegisterFollowupMission(BaseMission targetMission, IMissionProvider provider)
+	{
+		followupMission = targetMission;
+		followupMissionProvider = provider;
+		if (followupMission != null && followupMissionProvider != null)
+		{
+			((FacepunchBehaviour)this).Invoke((Action)AssignFollowUpMission, 1.5f);
 		}
 	}
 
 	private Missions SaveMissions()
 	{
-		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ad: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0203: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00da: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00df: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0121: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0126: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0246: Unknown result type (might be due to invalid IL or missing references)
+		//IL_024b: Unknown result type (might be due to invalid IL or missing references)
 		Missions val = Pool.Get<Missions>();
 		val.missions = Pool.GetList<MissionInstance>();
 		val.activeMission = GetActiveMission();
-		val.protocol = 239;
+		val.protocol = 252;
 		val.seed = World.Seed;
 		val.saveCreatedTime = Epoch.FromDateTime(SaveRestore.SaveCreatedTime);
 		foreach (BaseMission.MissionInstance mission in missions)
 		{
 			MissionInstance val2 = Pool.Get<MissionInstance>();
-			val2.providerID = mission.providerID;
 			val2.missionID = mission.missionID;
 			val2.missionStatus = (uint)mission.status;
-			val2.completionScale = mission.completionScale;
-			val2.startTime = Time.realtimeSinceStartup - mission.startTime;
-			val2.endTime = mission.endTime;
-			val2.missionLocation = mission.missionLocation;
-			val2.missionPoints = Pool.GetList<MissionPoint>();
+			val.missions.Add(val2);
+			if (mission.status != BaseMission.MissionStatus.Active && mission.status != BaseMission.MissionStatus.Accomplished)
+			{
+				continue;
+			}
+			MissionInstanceData val3 = (val2.instanceData = Pool.Get<MissionInstanceData>());
+			val3.providerID = mission.providerID;
+			val3.startTime = Time.time - mission.startTime;
+			val3.endTime = mission.endTime;
+			val3.missionLocation = mission.missionLocation;
+			val3.missionPoints = Pool.GetList<MissionPoint>();
 			foreach (KeyValuePair<string, Vector3> missionPoint in mission.missionPoints)
 			{
-				MissionPoint val3 = Pool.Get<MissionPoint>();
-				val3.identifier = missionPoint.Key;
-				val3.location = missionPoint.Value;
-				val2.missionPoints.Add(val3);
+				MissionPoint val4 = Pool.Get<MissionPoint>();
+				val4.identifier = missionPoint.Key;
+				val4.location = missionPoint.Value;
+				val3.missionPoints.Add(val4);
 			}
-			val2.objectiveStatuses = Pool.GetList<ObjectiveStatus>();
+			val3.objectiveStatuses = Pool.GetList<ObjectiveStatus>();
 			BaseMission.MissionInstance.ObjectiveStatus[] objectiveStatuses = mission.objectiveStatuses;
 			foreach (BaseMission.MissionInstance.ObjectiveStatus objectiveStatus in objectiveStatuses)
 			{
-				ObjectiveStatus val4 = Pool.Get<ObjectiveStatus>();
-				val4.completed = objectiveStatus.completed;
-				val4.failed = objectiveStatus.failed;
-				val4.started = objectiveStatus.started;
-				val4.genericFloat1 = objectiveStatus.genericFloat1;
-				val4.genericInt1 = objectiveStatus.genericInt1;
-				val2.objectiveStatuses.Add(val4);
+				ObjectiveStatus val5 = Pool.Get<ObjectiveStatus>();
+				val5.completed = objectiveStatus.completed;
+				val5.failed = objectiveStatus.failed;
+				val5.started = objectiveStatus.started;
+				val5.progressCurrent = objectiveStatus.progressCurrent;
+				val5.progressTarget = objectiveStatus.progressTarget;
+				val3.objectiveStatuses.Add(val5);
 			}
-			val2.createdEntities = Pool.GetList<NetworkableId>();
-			if (mission.createdEntities != null)
+			val3.missionEntities = Pool.GetList<MissionEntity>();
+			foreach (KeyValuePair<string, MissionEntity> missionEntity in mission.missionEntities)
 			{
-				foreach (MissionEntity createdEntity in mission.createdEntities)
+				BaseEntity baseEntity = (((Object)(object)missionEntity.Value != (Object)null) ? missionEntity.Value.GetEntity() : null);
+				if (baseEntity.IsValid())
 				{
-					if (!((Object)(object)createdEntity == (Object)null))
-					{
-						BaseEntity entity = createdEntity.GetEntity();
-						if (Object.op_Implicit((Object)(object)entity))
-						{
-							val2.createdEntities.Add(entity.net.ID);
-						}
-					}
+					MissionEntity val6 = Pool.Get<MissionEntity>();
+					val6.identifier = missionEntity.Key;
+					val6.entityID = baseEntity.net.ID;
+					val3.missionEntities.Add(val6);
 				}
 			}
-			if (mission.rewards != null && mission.rewards.Length != 0)
-			{
-				val2.rewards = Pool.GetList<MissionReward>();
-				ItemAmount[] rewards = mission.rewards;
-				foreach (ItemAmount itemAmount in rewards)
-				{
-					MissionReward val5 = Pool.Get<MissionReward>();
-					val5.itemID = itemAmount.itemid;
-					val5.itemAmount = Mathf.FloorToInt(itemAmount.amount);
-					val2.rewards.Add(val5);
-				}
-			}
-			val.missions.Add(val2);
 		}
 		return val;
 	}
 
 	public void SetActiveMission(int index)
 	{
+		_ = _activeMission;
 		_activeMission = index;
+		if (IsInTutorial && (Object)(object)GetCurrentTutorialIsland() != (Object)null)
+		{
+			GetCurrentTutorialIsland().OnPlayerStartedMission(this);
+		}
 	}
 
 	public int GetActiveMission()
@@ -4118,16 +5074,28 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		return GetActiveMission() != -1;
 	}
 
+	public BaseMission.MissionInstance GetActiveMissionInstance()
+	{
+		int activeMission = GetActiveMission();
+		if (activeMission >= 0 && activeMission < missions.Count)
+		{
+			return missions[activeMission];
+		}
+		return null;
+	}
+
 	private void LoadMissions(Missions loadedMissions)
 	{
-		//IL_00f2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0151: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0188: Unknown result type (might be due to invalid IL or missing references)
-		//IL_027a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_027f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0291: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0135: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0165: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02c1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02c8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02ce: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02e1: Unknown result type (might be due to invalid IL or missing references)
 		if (missions.Count > 0)
 		{
 			for (int num = missions.Count - 1; num >= 0; num--)
@@ -4146,7 +5114,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			uint seed = loadedMissions.seed;
 			int saveCreatedTime = loadedMissions.saveCreatedTime;
 			int num2 = Epoch.FromDateTime(SaveRestore.SaveCreatedTime);
-			if (239 != protocol || World.Seed != seed || num2 != saveCreatedTime)
+			if (252 != protocol || World.Seed != seed || num2 != saveCreatedTime)
 			{
 				Debug.Log((object)"Missions were from old protocol or different seed, or not from a loaded save. Clearing");
 				loadedMissions.activeMission = -1;
@@ -4157,73 +5125,59 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		}
 		if (loadedMissions != null && loadedMissions.missions.Count > 0)
 		{
-			foreach (MissionInstance mission in loadedMissions.missions)
+			MissionEntity missionEntity2 = default(MissionEntity);
+			foreach (MissionInstance mission2 in loadedMissions.missions)
 			{
+				if (MissionManifest.GetFromID(mission2.missionID) == null)
+				{
+					continue;
+				}
 				BaseMission.MissionInstance missionInstance2 = Pool.Get<BaseMission.MissionInstance>();
-				missionInstance2.providerID = mission.providerID;
-				missionInstance2.missionID = mission.missionID;
-				missionInstance2.status = (BaseMission.MissionStatus)mission.missionStatus;
-				missionInstance2.completionScale = mission.completionScale;
-				missionInstance2.startTime = Time.realtimeSinceStartup - mission.startTime;
-				missionInstance2.endTime = mission.endTime;
-				missionInstance2.missionLocation = mission.missionLocation;
-				if (mission.missionPoints != null)
+				missionInstance2.missionID = mission2.missionID;
+				missionInstance2.status = (BaseMission.MissionStatus)mission2.missionStatus;
+				MissionInstanceData instanceData = mission2.instanceData;
+				if (instanceData != null)
 				{
-					foreach (MissionPoint missionPoint in mission.missionPoints)
+					missionInstance2.providerID = instanceData.providerID;
+					missionInstance2.startTime = Time.time - instanceData.startTime;
+					missionInstance2.endTime = instanceData.endTime;
+					missionInstance2.missionLocation = instanceData.missionLocation;
+					if (base.isServer && instanceData.missionPoints != null)
 					{
-						missionInstance2.missionPoints.Add(missionPoint.identifier, missionPoint.location);
-					}
-				}
-				missionInstance2.objectiveStatuses = new BaseMission.MissionInstance.ObjectiveStatus[mission.objectiveStatuses.Count];
-				for (int i = 0; i < mission.objectiveStatuses.Count; i++)
-				{
-					ObjectiveStatus val = mission.objectiveStatuses[i];
-					BaseMission.MissionInstance.ObjectiveStatus objectiveStatus = new BaseMission.MissionInstance.ObjectiveStatus();
-					objectiveStatus.completed = val.completed;
-					objectiveStatus.failed = val.failed;
-					objectiveStatus.started = val.started;
-					objectiveStatus.genericInt1 = val.genericInt1;
-					objectiveStatus.genericFloat1 = val.genericFloat1;
-					missionInstance2.objectiveStatuses[i] = objectiveStatus;
-				}
-				if (mission.createdEntities != null)
-				{
-					if (missionInstance2.createdEntities == null)
-					{
-						missionInstance2.createdEntities = Pool.GetList<MissionEntity>();
-					}
-					foreach (NetworkableId createdEntity in mission.createdEntities)
-					{
-						BaseNetworkable baseNetworkable = null;
-						if (base.isServer)
+						foreach (MissionPoint missionPoint in instanceData.missionPoints)
 						{
-							baseNetworkable = BaseNetworkable.serverEntities.Find(createdEntity);
+							missionInstance2.missionPoints.Add(missionPoint.identifier, missionPoint.location);
+							BaseMission.AddBlocker(missionPoint.location);
 						}
-						if ((Object)(object)baseNetworkable != (Object)null)
+					}
+					missionInstance2.objectiveStatuses = new BaseMission.MissionInstance.ObjectiveStatus[instanceData.objectiveStatuses.Count];
+					for (int i = 0; i < instanceData.objectiveStatuses.Count; i++)
+					{
+						ObjectiveStatus val = instanceData.objectiveStatuses[i];
+						BaseMission.MissionInstance.ObjectiveStatus objectiveStatus = new BaseMission.MissionInstance.ObjectiveStatus();
+						objectiveStatus.completed = val.completed;
+						objectiveStatus.failed = val.failed;
+						objectiveStatus.started = val.started;
+						objectiveStatus.progressCurrent = val.progressCurrent;
+						objectiveStatus.progressTarget = val.progressTarget;
+						missionInstance2.objectiveStatuses[i] = objectiveStatus;
+					}
+					if (base.isServer && instanceData.missionEntities != null)
+					{
+						missionInstance2.missionEntities.Clear();
+						BaseMission mission = missionInstance2.GetMission();
+						foreach (MissionEntity missionEntity3 in instanceData.missionEntities)
 						{
-							MissionEntity component = ((Component)baseNetworkable).GetComponent<MissionEntity>();
-							if (Object.op_Implicit((Object)(object)component))
+							MissionEntity missionEntity = null;
+							BaseNetworkable baseNetworkable = ((missionEntity3.entityID != default(NetworkableId)) ? BaseNetworkable.serverEntities.Find(missionEntity3.entityID) : null);
+							if ((Object)(object)baseNetworkable != (Object)null)
 							{
-								missionInstance2.createdEntities.Add(component);
+								missionEntity = (((Component)baseNetworkable).gameObject.TryGetComponent<MissionEntity>(ref missionEntity2) ? missionEntity2 : ((Component)baseNetworkable).gameObject.AddComponent<MissionEntity>());
+								BaseMission.MissionEntityEntry missionEntityEntry = ((mission != null) ? List.FindWith<BaseMission.MissionEntityEntry, string>((IReadOnlyCollection<BaseMission.MissionEntityEntry>)(object)mission.missionEntities, (Func<BaseMission.MissionEntityEntry, string>)((BaseMission.MissionEntityEntry ed) => ed.identifier), missionEntity3.identifier, (IEqualityComparer<string>)null) : null);
+								missionEntity.Setup(this, missionInstance2, missionEntity3.identifier, missionEntityEntry?.cleanupOnMissionSuccess ?? true, missionEntityEntry?.cleanupOnMissionFailed ?? true);
 							}
+							missionInstance2.missionEntities.Add(missionEntity3.identifier, missionEntity);
 						}
-					}
-				}
-				if (mission.rewards != null && mission.rewards.Count > 0)
-				{
-					missionInstance2.rewards = new ItemAmount[mission.rewards.Count];
-					for (int j = 0; j < mission.rewards.Count; j++)
-					{
-						MissionReward val2 = mission.rewards[j];
-						ItemAmount itemAmount = new ItemAmount();
-						ItemDefinition itemDefinition = ItemManager.FindItemDefinition(val2.itemID);
-						if ((Object)(object)itemDefinition == (Object)null)
-						{
-							Debug.LogError((object)"MISSION LOAD UNABLE TO FIND REWARD ITEM, HUGE ERROR!");
-						}
-						itemAmount.itemDef = itemDefinition;
-						itemAmount.amount = val2.itemAmount;
-						missionInstance2.rewards[j] = itemAmount;
 					}
 				}
 				missions.Add(missionInstance2);
@@ -4233,6 +5187,10 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		else
 		{
 			SetActiveMission(-1);
+		}
+		if (base.isServer)
+		{
+			GetActiveMissionInstance()?.PostServerLoad(this);
 		}
 	}
 
@@ -4258,7 +5216,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				modelState.onPhone = HasActiveTelephone && !activeTelephone.IsMobile;
 				modelState.crawling = IsCrawling();
 				modelState.loading = IsLoadingAfterTransfer();
-				ClientRPC<ModelState>(null, "OnModelState", modelState);
+				ClientRPC<ModelState>(RpcTarget.NetworkGroup("OnModelState"), modelState);
 			}
 		}
 	}
@@ -4358,18 +5316,14 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		PlayerSecondaryData val = Pool.Get<PlayerSecondaryData>();
 		val.userId = userID;
 		PlayerState val2 = State.Copy();
-		List<MapNote> pointsOfInterest = val2.pointsOfInterest;
-		if (pointsOfInterest != null)
+		if (val2.pointsOfInterest != null)
 		{
-			List.FreeList<MapNote>(pointsOfInterest);
+			Pool.FreeListAndItems<MapNote>(ref val2.pointsOfInterest);
 		}
-		val2.pointsOfInterest = null;
-		List<MapNote> pings = val2.pings;
-		if (pings != null)
+		if (val2.pings != null)
 		{
-			List.FreeList<MapNote>(pings);
+			Pool.FreeListAndItems<MapNote>(ref val2.pings);
 		}
-		val2.pings = null;
 		MapNote deathMarker = val2.deathMarker;
 		if (deathMarker != null)
 		{
@@ -4389,7 +5343,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			if (playerTeam != null)
 			{
 				val.teamId = playerTeam.teamID;
-				val.isTeamLeader = playerTeam.teamLeader == userID;
+				val.isTeamLeader = playerTeam.teamLeader == (ulong)userID;
 			}
 		}
 		val.relationships = Pool.GetList<RelationshipData>();
@@ -4403,7 +5357,10 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		return val;
 		ArraySegment<byte> GetPoolableMugshotData(RelationshipManager.PlayerRelationshipInfo relationshipInfo)
 		{
-			//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+			//IL_006a: Unknown result type (might be due to invalid IL or missing references)
+			//IL_006f: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0074: Unknown result type (might be due to invalid IL or missing references)
 			if (relationshipInfo.mugshotCrc == 0)
 			{
 				return default(ArraySegment<byte>);
@@ -4417,7 +5374,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 					return default(ArraySegment<byte>);
 				}
 				byte[] array2 = ArrayPool<byte>.Shared.Rent(array.Length);
-				new System.Span<byte>(array).CopyTo(System.Span<byte>.op_Implicit(array2));
+				new Span<byte>(array).CopyTo(Span<byte>.op_Implicit(array2));
 				return new ArraySegment<byte>(array2, 0, array.Length);
 			}
 			catch (Exception ex)
@@ -4430,12 +5387,15 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 
 	public void LoadSecondaryData(PlayerSecondaryData data)
 	{
-		//IL_0101: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ce: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0110: Unknown result type (might be due to invalid IL or missing references)
 		if (data == null)
 		{
 			return;
 		}
-		if (data.userId != userID)
+		if (data.userId != (ulong)userID)
 		{
 			Debug.LogError((object)$"Attempted to load secondary data with an incorrect userID! Expected {data.userId} but player has {userID}, not loading it.");
 			return;
@@ -4458,7 +5418,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				try
 				{
 					byte[] array = new byte[relationship.mugshotData.Count];
-					MemoryExtensions.AsSpan<byte>(relationship.mugshotData).CopyTo(System.Span<byte>.op_Implicit(array));
+					MemoryExtensions.AsSpan<byte>(relationship.mugshotData).CopyTo(Span<byte>.op_Implicit(array));
 					uint steamIdHash = RelationshipManager.GetSteamIdHash(userID, relationship.info.playerID);
 					uint num = FileStorage.server.Store(array, FileStorage.Type.jpg, RelationshipManager.ServerInstance.net.ID, steamIdHash);
 					if (num != relationship.info.mugshotCrc)
@@ -4484,24 +5444,119 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		{
 			vehicleParent.DisableTransferProtection();
 		}
+		BaseMountable baseMountable = GetMounted();
+		if ((Object)(object)baseMountable != (Object)null && baseMountable.IsTransferProtected())
+		{
+			baseMountable.DisableTransferProtection();
+		}
 		base.DisableTransferProtection();
+	}
+
+	public void KickAfterServerTransfer()
+	{
+		if (IsConnected)
+		{
+			Kick("Redirecting to another zone...");
+		}
+		Kill();
+	}
+
+	[RPC_Server]
+	[RPC_Server.FromOwner]
+	[RPC_Server.CallsPerSecond(5uL)]
+	private void RequestParachuteDeploy(RPCMessage msg)
+	{
+		RequestParachuteDeploy();
+	}
+
+	public void RequestParachuteDeploy()
+	{
+		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
+		if (isMounted || !CheckParachuteClearance())
+		{
+			return;
+		}
+		Item slot = inventory.containerWear.GetSlot(7);
+		ItemModParachute itemModParachute = default(ItemModParachute);
+		if (slot == null || !(slot.conditionNormalized > 0f) || slot.isBroken || !((Component)slot.info).TryGetComponent<ItemModParachute>(ref itemModParachute))
+		{
+			return;
+		}
+		Parachute parachute = GameManager.server.CreateEntity(itemModParachute.ParachuteVehiclePrefab.resourcePath, ((Component)this).transform.position, eyes.rotation) as Parachute;
+		if ((Object)(object)parachute != (Object)null)
+		{
+			parachute.skinID = slot.skin;
+			parachute.Spawn();
+			parachute.SetHealth(parachute.MaxHealth() * slot.conditionNormalized);
+			parachute.AttemptMount(this);
+			if (isMounted)
+			{
+				slot.Remove();
+				ItemManager.DoRemoves();
+				SendNetworkUpdate();
+			}
+			else
+			{
+				parachute.Kill();
+			}
+		}
+	}
+
+	public bool CheckParachuteClearance()
+	{
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
+		Vector3 position = ((Component)this).transform.position;
+		if (!WaterLevel.Test(position - Vector3.up * 5f, waves: false, volumes: true, this) && !GamePhysics.Trace(new Ray(position, -Vector3.up), 1f, out var _, 6f, 1218543873, (QueryTriggerInteraction)0))
+		{
+			return !GamePhysics.CheckSphere(position + Vector3.up * 3.5f, 2f, 1218543873, (QueryTriggerInteraction)0);
+		}
+		return false;
+	}
+
+	public bool HasValidParachuteEquipped()
+	{
+		if ((Object)(object)inventory == (Object)null || inventory.containerWear == null)
+		{
+			return false;
+		}
+		Item slot = inventory.containerWear.GetSlot(7);
+		ItemModParachute itemModParachute = default(ItemModParachute);
+		if (slot != null && slot.conditionNormalized > 0f && !slot.isBroken && ((Component)slot.info).TryGetComponent<ItemModParachute>(ref itemModParachute))
+		{
+			return true;
+		}
+		return false;
 	}
 
 	public void ClearClientPetLink()
 	{
-		ClientRPCPlayer(null, this, "CLIENT_SetPetPrefabID", 0, 0);
+		ClientRPC(RpcTarget.Player("CLIENT_SetPetPrefabID", this), 0, 0);
 	}
 
 	public void SendClientPetLink()
 	{
-		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)PetEntity == (Object)null && BasePet.ActivePetByOwnerID.TryGetValue(userID, out var value) && (Object)(object)value.Brain != (Object)null)
 		{
 			value.Brain.SetOwningPlayer(this);
 		}
-		ClientRPCPlayer<uint, NetworkableId>(null, this, "CLIENT_SetPetPrefabID", ((Object)(object)PetEntity != (Object)null) ? PetEntity.prefabID : 0u, (NetworkableId)(((Object)(object)PetEntity != (Object)null) ? PetEntity.net.ID : default(NetworkableId)));
+		ClientRPC<uint, NetworkableId>(RpcTarget.Player("CLIENT_SetPetPrefabID", this), ((Object)(object)PetEntity != (Object)null) ? PetEntity.prefabID : 0u, (NetworkableId)(((Object)(object)PetEntity != (Object)null) ? PetEntity.net.ID : default(NetworkableId)));
 		if ((Object)(object)PetEntity != (Object)null)
 		{
 			SendClientPetStateIndex();
@@ -4513,7 +5568,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		BasePet basePet = PetEntity as BasePet;
 		if (!((Object)(object)basePet == (Object)null))
 		{
-			ClientRPCPlayer(null, this, "CLIENT_SetPetPetLoadedStateIndex", basePet.Brain.LoadedDesignIndex());
+			ClientRPC(RpcTarget.Player("CLIENT_SetPetPetLoadedStateIndex", this), basePet.Brain.LoadedDesignIndex());
 		}
 	}
 
@@ -4569,7 +5624,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		return false;
 	}
 
-	private PingStyle GetPingStyle(PingType t)
+	public static PingStyle GetPingStyle(PingType t)
 	{
 		PingStyle pingStyle = default(PingStyle);
 		return t switch
@@ -4580,6 +5635,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			PingType.Loot => LootMarker, 
 			PingType.Node => NodeMarker, 
 			PingType.Gun => GunMarker, 
+			PingType.Build => BuildMarker, 
 			_ => pingStyle, 
 		};
 	}
@@ -4598,12 +5654,12 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 	{
 		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0093: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0095: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f8: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00f9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fa: Unknown result type (might be due to invalid IL or missing references)
 		if (State.pings == null)
 		{
 			State.pings = new List<MapNote>();
@@ -4613,7 +5669,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			return;
 		}
 		Vector3 val = msg.read.Vector3();
-		PingType pingType = (PingType)Mathf.Clamp(msg.read.Int32(), 0, 5);
+		PingType pingType = (PingType)Mathf.Clamp(msg.read.Int32(), 0, 6);
 		bool wasViaWheel = msg.read.Bit();
 		PingStyle pingStyle = GetPingStyle(pingType);
 		foreach (MapNote ping in State.pings)
@@ -4643,6 +5699,63 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		Analytics.Azure.OnPlayerPinged(this, pingType, wasViaWheel);
 	}
 
+	public void AddPingAtLocation(PingType type, Vector3 location, float time, NetworkableId associatedId)
+	{
+		//IL_0092: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0093: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
+		if (State.pings != null)
+		{
+			PingStyle pingStyle = GetPingStyle(type);
+			foreach (MapNote ping in State.pings)
+			{
+				if (ping.icon == pingStyle.IconIndex && Vector3.Distance(location, ping.worldPosition) < 0.25f)
+				{
+					return;
+				}
+			}
+		}
+		if (State.pings == null)
+		{
+			State.pings = new List<MapNote>();
+		}
+		MapNote val = Pool.Get<MapNote>();
+		val.worldPosition = location;
+		val.isPing = true;
+		val.timeRemaining = (val.totalDuration = time);
+		val.associatedId = associatedId;
+		ApplyPingStyle(val, type);
+		State.pings.Add(val);
+		DirtyPlayerState();
+		SendPingsToClient();
+		TeamUpdate(fullTeamUpdate: false);
+	}
+
+	public void RemovePingAtLocation(PingType type, Vector3 location, float tolerance, NetworkableId associatedId)
+	{
+		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		if (State.pings == null)
+		{
+			return;
+		}
+		PingStyle pingStyle = GetPingStyle(type);
+		for (int i = 0; i < State.pings.Count; i++)
+		{
+			MapNote val = State.pings[i];
+			if (val.icon == pingStyle.IconIndex && Vector3.Distance(location, val.worldPosition) < tolerance)
+			{
+				State.pings.RemoveAt(i);
+				DirtyPlayerState();
+				SendPingsToClient();
+				TeamUpdate(fullTeamUpdate: false);
+			}
+		}
+	}
+
 	[RPC_Server]
 	[RPC_Server.FromOwner]
 	[RPC_Server.CallsPerSecond(3uL)]
@@ -4669,7 +5782,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		{
 			val.notes = Pool.GetList<MapNote>();
 			val.notes.AddRange(State.pings);
-			ClientRPCPlayer<MapNoteList>(null, this, "Client_ReceivePings", val);
+			ClientRPC<MapNoteList>(RpcTarget.Player("Client_ReceivePings", this), val);
 			val.notes.Clear();
 		}
 		finally
@@ -4685,13 +5798,14 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
 		if (TimeSince.op_Implicit(lastTick) < 0.5f)
 		{
 			return;
 		}
 		TimeSince val = lastTick;
 		lastTick = TimeSince.op_Implicit(0f);
+		UpdateResourcePings();
 		if (State.pings == null)
 		{
 			return;
@@ -4722,6 +5836,281 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		}
 	}
 
+	public void RegisterPingedEntity(BaseEntity entity, PingType type)
+	{
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		if (!pingedEntities.Contains((entity.net.ID, type)))
+		{
+			pingedEntities.Add((entity.net.ID, type));
+		}
+	}
+
+	public void DeregisterPingedEntitiesOfType(PingType type)
+	{
+		List<(NetworkableId, PingType)> list = Pool.GetList<(NetworkableId, PingType)>();
+		foreach (var pingedEntity in pingedEntities)
+		{
+			if (pingedEntity.pingType == type)
+			{
+				list.Add(pingedEntity);
+			}
+		}
+		foreach (var item in list)
+		{
+			pingedEntities.Remove(item);
+		}
+		Pool.FreeList<(NetworkableId, PingType)>(ref list);
+	}
+
+	public void DeregisterPingedEntity(NetworkableId id, PingType type)
+	{
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		if (!pingedEntities.Contains((id, type)))
+		{
+			return;
+		}
+		pingedEntities.Remove((id, type));
+		for (int i = 0; i < State.pings.Count; i++)
+		{
+			if (State.pings[i].associatedId == id)
+			{
+				State.pings.RemoveAt(i);
+				break;
+			}
+		}
+		DirtyPlayerState();
+		SendPingsToClient();
+	}
+
+	public void EnableResourcePings(ItemDefinition forItem, PingType pingType)
+	{
+		if (!tutorialDesiredResource.Contains((forItem, pingType)))
+		{
+			tutorialDesiredResource.Add((forItem, pingType));
+		}
+	}
+
+	private void UpdateResourcePings()
+	{
+		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0095: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_023b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_032e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_033f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0374: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0480: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0491: Unknown result type (might be due to invalid IL or missing references)
+		if (State == null || TimeSince.op_Implicit(lastResourcePingUpdate) < 3f || !IsInTutorial)
+		{
+			return;
+		}
+		lastResourcePingUpdate = TimeSince.op_Implicit(0f);
+		if (State.pings == null)
+		{
+			State.pings = new List<MapNote>();
+		}
+		List<BaseEntity> list = Pool.GetList<BaseEntity>();
+		List<(BaseEntity, PingType)> list2 = Pool.GetList<(BaseEntity, PingType)>();
+		List<BaseEntity> list3 = Pool.GetList<BaseEntity>();
+		ResourceDispenser resourceDispenser = default(ResourceDispenser);
+		foreach (var item2 in tutorialDesiredResource)
+		{
+			list3.Clear();
+			Enumerator<Networkable> enumerator2 = net.group.networkables.GetEnumerator();
+			try
+			{
+				while (enumerator2.MoveNext())
+				{
+					Networkable current2 = enumerator2.Current;
+					BaseEntity baseEntity = BaseNetworkable.serverEntities.Find(current2.ID) as BaseEntity;
+					if ((Object)(object)baseEntity != (Object)null && Distance(baseEntity) < 128f && baseEntity.isServer)
+					{
+						if (((Component)baseEntity).TryGetComponent<ResourceDispenser>(ref resourceDispenser) && resourceDispenser.HasItemToDispense(item2.item))
+						{
+							list3.Add(baseEntity);
+						}
+						else if (baseEntity is CollectibleEntity collectibleEntity && collectibleEntity.HasItem(item2.item))
+						{
+							list3.Add(baseEntity);
+						}
+						else if (baseEntity is StorageContainer storageContainer && storageContainer.inventory != null && storageContainer.inventory.HasItem(item2.item))
+						{
+							list3.Add(baseEntity);
+						}
+					}
+				}
+			}
+			finally
+			{
+				((IDisposable)enumerator2).Dispose();
+			}
+			if (list3.Count <= 0)
+			{
+				continue;
+			}
+			float num = float.MaxValue;
+			BaseEntity baseEntity2 = null;
+			foreach (BaseEntity item3 in list3)
+			{
+				float num2 = Distance(item3);
+				if (num2 < num)
+				{
+					num = num2;
+					baseEntity2 = item3;
+				}
+			}
+			if ((Object)(object)baseEntity2 != (Object)null)
+			{
+				list2.Add((baseEntity2, item2.pingType));
+			}
+		}
+		List<(NetworkableId, PingType)> list4 = Pool.GetList<(NetworkableId, PingType)>();
+		foreach (var pingedEntity in pingedEntities)
+		{
+			BaseNetworkable baseNetworkable = BaseNetworkable.serverEntities.Find(pingedEntity.id);
+			if ((Object)(object)baseNetworkable != (Object)null && !baseNetworkable.IsDestroyed)
+			{
+				list2.Add((baseNetworkable as BaseEntity, pingedEntity.pingType));
+			}
+			else
+			{
+				list4.Add(pingedEntity);
+			}
+		}
+		foreach (var item4 in list4)
+		{
+			pingedEntities.Remove(item4);
+		}
+		Pool.FreeList<(NetworkableId, PingType)>(ref list4);
+		Pool.FreeList<BaseEntity>(ref list3);
+		List<MapNote> list5 = Pool.GetList<MapNote>();
+		foreach (MapNote ping in State.pings)
+		{
+			if (ping.associatedId.Value == 0L)
+			{
+				continue;
+			}
+			bool flag = false;
+			foreach (var item5 in list2)
+			{
+				if (ping.associatedId == item5.Item1.net.ID)
+				{
+					flag = true;
+					break;
+				}
+			}
+			if (!flag)
+			{
+				BaseNetworkable baseNetworkable2 = BaseNetworkable.serverEntities.Find(ping.associatedId);
+				if ((Object)(object)baseNetworkable2 != (Object)null && baseNetworkable2 is IEntityPingSource entityPingSource && entityPingSource.IsPingValid(ping))
+				{
+					flag = true;
+				}
+			}
+			if (!flag)
+			{
+				list5.Add(ping);
+			}
+		}
+		bool flag2 = list5.Count > 0;
+		foreach (MapNote item6 in list5)
+		{
+			if (State.pings.Contains(item6))
+			{
+				State.pings.Remove(item6);
+			}
+		}
+		Pool.FreeList<MapNote>(ref list5);
+		foreach (var item7 in list2)
+		{
+			if (HasPingForEntity(item7.Item1))
+			{
+				continue;
+			}
+			PingType item = item7.Item2;
+			foreach (var pingedEntity2 in pingedEntities)
+			{
+				if (pingedEntity2.id == item7.Item1.net.ID)
+				{
+					item = pingedEntity2.pingType;
+				}
+			}
+			State.pings.Add(CreatePingForEntity(item7.Item1, item));
+			flag2 = true;
+		}
+		if (flag2)
+		{
+			DirtyPlayerState();
+			SendPingsToClient();
+		}
+		Pool.FreeList<BaseEntity>(ref list);
+	}
+
+	private MapNote CreatePingForEntity(BaseEntity baseEntity, PingType type)
+	{
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		MapNote val = Pool.Get<MapNote>();
+		val.worldPosition = ((Component)baseEntity).transform.position;
+		val.isPing = true;
+		val.timeRemaining = (val.totalDuration = 30f);
+		val.associatedId = baseEntity.net.ID;
+		ApplyPingStyle(val, type);
+		return val;
+	}
+
+	private bool HasPingForEntity(BaseEntity ent)
+	{
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		return HasPingForEntity(ent.net.ID);
+	}
+
+	private bool HasPingForEntity(NetworkableId id)
+	{
+		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		foreach (MapNote ping in State.pings)
+		{
+			if (ping.associatedId == id)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public void DisableResourcePings(ItemDefinition forItem, PingType type)
+	{
+		if (tutorialDesiredResource.Contains((forItem, type)))
+		{
+			tutorialDesiredResource.Remove((forItem, type));
+		}
+		if (tutorialDesiredResource.Count == 0)
+		{
+			UpdateResourcePings();
+		}
+	}
+
+	private void ClearAllPings()
+	{
+		if (State != null && State.pings != null)
+		{
+			State.pings.Clear();
+		}
+		tutorialDesiredResource.Clear();
+		pingedEntities.Clear();
+	}
+
 	public void DirtyPlayerState()
 	{
 		_playerStateDirty = true;
@@ -4739,7 +6128,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 	public void ResetPlayerState()
 	{
 		SingletonComponent<ServerMgr>.Instance.playerStateManager.Reset(userID);
-		ClientRPCPlayer(null, this, "SetHostileLength", 0f);
+		ClientRPC(RpcTarget.Player("SetHostileLength", this), 0f);
 		SendMarkersToClient();
 		WipeMissions();
 		MissionDirty();
@@ -4776,6 +6165,10 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		{
 			return false;
 		}
+		if (IsBuildingBlockedByEntity())
+		{
+			return false;
+		}
 		BuildingPrivlidge buildingPrivilege = GetBuildingPrivilege();
 		if ((Object)(object)buildingPrivilege == (Object)null)
 		{
@@ -4791,9 +6184,14 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		//IL_0004: Unknown result type (might be due to invalid IL or missing references)
 		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
 		OBB obb = default(OBB);
 		((OBB)(ref obb))._002Ector(position, rotation, bounds);
 		if (IsBuildingBlockedByVehicle(obb))
+		{
+			return false;
+		}
+		if (IsBuildingBlockedByEntity(obb))
 		{
 			return false;
 		}
@@ -4809,7 +6207,12 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 	{
 		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
 		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
 		if (IsBuildingBlockedByVehicle(obb))
+		{
+			return false;
+		}
+		if (IsBuildingBlockedByEntity(obb))
 		{
 			return false;
 		}
@@ -4824,6 +6227,10 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 	public bool IsBuildingBlocked()
 	{
 		if (IsBuildingBlockedByVehicle())
+		{
+			return true;
+		}
+		if (IsBuildingBlockedByEntity())
 		{
 			return true;
 		}
@@ -4842,9 +6249,14 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		//IL_0004: Unknown result type (might be due to invalid IL or missing references)
 		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
 		OBB obb = default(OBB);
 		((OBB)(ref obb))._002Ector(position, rotation, bounds);
 		if (IsBuildingBlockedByVehicle(obb))
+		{
+			return true;
+		}
+		if (IsBuildingBlockedByEntity(obb))
 		{
 			return true;
 		}
@@ -4860,7 +6272,12 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 	{
 		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
 		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
 		if (IsBuildingBlockedByVehicle(obb))
+		{
+			return true;
+		}
+		if (IsBuildingBlockedByEntity(obb))
 		{
 			return true;
 		}
@@ -4875,6 +6292,10 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 	public bool IsBuildingAuthed()
 	{
 		if (IsBuildingBlockedByVehicle())
+		{
+			return false;
+		}
+		if (IsBuildingBlockedByEntity())
 		{
 			return false;
 		}
@@ -4893,9 +6314,14 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		//IL_0004: Unknown result type (might be due to invalid IL or missing references)
 		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
 		OBB obb = default(OBB);
 		((OBB)(ref obb))._002Ector(position, rotation, bounds);
 		if (IsBuildingBlockedByVehicle(obb))
+		{
+			return false;
+		}
+		if (IsBuildingBlockedByEntity(obb))
 		{
 			return false;
 		}
@@ -4911,7 +6337,12 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 	{
 		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
 		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
 		if (IsBuildingBlockedByVehicle(obb))
+		{
+			return false;
+		}
+		if (IsBuildingBlockedByEntity(obb))
 		{
 			return false;
 		}
@@ -4929,6 +6360,10 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		{
 			return false;
 		}
+		if (IsBuildingBlockedByEntity())
+		{
+			return false;
+		}
 		return (Object)(object)GetBuildingPrivilege() == (Object)null;
 	}
 
@@ -4939,9 +6374,14 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		//IL_0004: Unknown result type (might be due to invalid IL or missing references)
 		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
 		OBB obb = default(OBB);
 		((OBB)(ref obb))._002Ector(position, rotation, bounds);
 		if (IsBuildingBlockedByVehicle(obb))
+		{
+			return false;
+		}
+		if (IsBuildingBlockedByEntity(obb))
 		{
 			return false;
 		}
@@ -4952,7 +6392,12 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 	{
 		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
 		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
 		if (IsBuildingBlockedByVehicle(obb))
+		{
+			return false;
+		}
+		if (IsBuildingBlockedByEntity(obb))
 		{
 			return false;
 		}
@@ -4962,6 +6407,10 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 	public bool IsNearEnemyBase()
 	{
 		if (IsBuildingBlockedByVehicle())
+		{
+			return true;
+		}
+		if (IsBuildingBlockedByEntity())
 		{
 			return true;
 		}
@@ -4984,9 +6433,14 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		//IL_0004: Unknown result type (might be due to invalid IL or missing references)
 		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
 		OBB obb = default(OBB);
 		((OBB)(ref obb))._002Ector(position, rotation, bounds);
 		if (IsBuildingBlockedByVehicle(obb))
+		{
+			return true;
+		}
+		if (IsBuildingBlockedByEntity(obb))
 		{
 			return true;
 		}
@@ -5006,7 +6460,12 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 	{
 		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
 		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
 		if (IsBuildingBlockedByVehicle(obb))
+		{
+			return true;
+		}
+		if (IsBuildingBlockedByEntity(obb))
 		{
 			return true;
 		}
@@ -5028,13 +6487,24 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		return IsBuildingBlockedByVehicle(WorldSpaceBounds());
 	}
 
-	private bool IsBuildingBlockedByVehicle(Vector3 position, Quaternion rotation, Bounds bounds)
+	public bool IsBuildingBlockedByEntity()
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0004: Unknown result type (might be due to invalid IL or missing references)
-		return IsBuildingBlockedByVehicle(new OBB(position, rotation, bounds));
+		return IsBuildingBlockedByEntity(WorldSpaceBounds());
+	}
+
+	public bool HasPrivilegeFromOther()
+	{
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		if (Time.time - cachedPrivilegeFromOtherTime > 1f)
+		{
+			cachedPrivilegeFromOtherTime = Time.time;
+			cachedPrivilegeFromOther = null;
+			IsBuildingBlockedByEntity(WorldSpaceBounds());
+			IsBuildingBlockedByVehicle(WorldSpaceBounds());
+		}
+		return (Object)(object)cachedPrivilegeFromOther != (Object)null;
 	}
 
 	private bool IsBuildingBlockedByVehicle(OBB obb)
@@ -5047,13 +6517,46 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		for (int i = 0; i < list.Count; i++)
 		{
 			BaseVehicle baseVehicle = list[i];
-			if (baseVehicle.isServer == base.isServer && !baseVehicle.IsDead() && !(((OBB)(ref obb)).Distance(baseVehicle.WorldSpaceBounds()) > 2f) && !baseVehicle.IsAuthed(this))
+			if (baseVehicle.isServer == base.isServer && !baseVehicle.IsDead() && !(((OBB)(ref obb)).Distance(baseVehicle.WorldSpaceBounds()) > 2f))
 			{
-				Pool.FreeList<BaseVehicle>(ref list);
-				return true;
+				if (!baseVehicle.IsAuthed(this))
+				{
+					Pool.FreeList<BaseVehicle>(ref list);
+					return true;
+				}
+				cachedPrivilegeFromOther = baseVehicle;
 			}
 		}
 		Pool.FreeList<BaseVehicle>(ref list);
+		return false;
+	}
+
+	private bool IsBuildingBlockedByEntity(OBB obb)
+	{
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
+		List<BaseEntity> list = Pool.GetList<BaseEntity>();
+		Vis.Entities(obb.position, 3f + ((Vector3)(ref obb.extents)).magnitude, list, 2097152, (QueryTriggerInteraction)2);
+		for (int i = 0; i < list.Count; i++)
+		{
+			BaseEntity baseEntity = list[i];
+			if (baseEntity.isServer != base.isServer || ((OBB)(ref obb)).Distance(baseEntity.WorldSpaceBounds()) > 3f)
+			{
+				continue;
+			}
+			EntityPrivilege entityBuildingPrivilege = baseEntity.GetEntityBuildingPrivilege();
+			if (!((Object)(object)entityBuildingPrivilege == (Object)null))
+			{
+				if (!entityBuildingPrivilege.IsAuthed(this))
+				{
+					Pool.FreeList<BaseEntity>(ref list);
+					return true;
+				}
+				cachedPrivilegeFromOther = baseEntity;
+			}
+		}
+		Pool.FreeList<BaseEntity>(ref list);
 		return false;
 	}
 
@@ -5063,117 +6566,140 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 	{
 		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0279: Unknown result type (might be due to invalid IL or missing references)
 		//IL_027e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0281: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0283: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0286: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0289: Unknown result type (might be due to invalid IL or missing references)
+		//IL_028b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_028e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02b8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02c8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02cd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1205: Unknown result type (might be due to invalid IL or missing references)
-		//IL_120a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1211: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1216: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0449: Unknown result type (might be due to invalid IL or missing references)
-		//IL_044f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_059b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_05a5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0293: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0296: Unknown result type (might be due to invalid IL or missing references)
+		//IL_029b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02c5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02d5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02da: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1518: Unknown result type (might be due to invalid IL or missing references)
+		//IL_151d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1524: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1529: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1565: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0456: Unknown result type (might be due to invalid IL or missing references)
+		//IL_045c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_05aa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_05af: Unknown result type (might be due to invalid IL or missing references)
-		//IL_064e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0653: Unknown result type (might be due to invalid IL or missing references)
+		//IL_05b4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_05b9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_05be: Unknown result type (might be due to invalid IL or missing references)
+		//IL_066c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0671: Unknown result type (might be due to invalid IL or missing references)
-		//IL_086a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_086f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0e90: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0e95: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0e98: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0e9d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0ea0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0ea5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0afa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0aff: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0eca: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0ecc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0ed1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0ed3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0ed8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0eda: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0edf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0eab: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0eb3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0ebd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0ec2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0ec7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0f29: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0f2b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0f2d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0f32: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0f34: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0f36: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0eed: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0eef: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0ef1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0ef6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0efa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0f04: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0f09: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0f0b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0f0d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0f0f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0f14: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0f18: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0f22: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0f27: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0f4a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0f4c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0f4e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0f53: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0b29: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0b38: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0b3a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0b3c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0b41: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0b43: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0b45: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0b52: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0f64: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0f66: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0c1c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0c1e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0c24: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0c29: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0764: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0769: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0793: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0c38: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0c3a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0c4a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0c4f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_10a8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_068f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_088a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_088f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1050: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1055: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1058: Unknown result type (might be due to invalid IL or missing references)
+		//IL_105d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1060: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1065: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0b67: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0b76: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0b78: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0b7a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0b7f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0b81: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0b83: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0b90: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0bb4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0b26: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0b2b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_108a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_108c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1091: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1093: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1098: Unknown result type (might be due to invalid IL or missing references)
+		//IL_109a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_109f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_106b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1073: Unknown result type (might be due to invalid IL or missing references)
+		//IL_107d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1082: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1087: Unknown result type (might be due to invalid IL or missing references)
+		//IL_10e9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_10eb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_10ed: Unknown result type (might be due to invalid IL or missing references)
+		//IL_10f2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_10f4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_10f6: Unknown result type (might be due to invalid IL or missing references)
 		//IL_10ad: Unknown result type (might be due to invalid IL or missing references)
+		//IL_10af: Unknown result type (might be due to invalid IL or missing references)
+		//IL_10b1: Unknown result type (might be due to invalid IL or missing references)
 		//IL_10b6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_10bb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_10bf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_10ba: Unknown result type (might be due to invalid IL or missing references)
 		//IL_10c4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_10c9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_10cb: Unknown result type (might be due to invalid IL or missing references)
 		//IL_10cd: Unknown result type (might be due to invalid IL or missing references)
 		//IL_10cf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_102c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_103e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1051: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1065: Unknown result type (might be due to invalid IL or missing references)
+		//IL_10d4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_10d8: Unknown result type (might be due to invalid IL or missing references)
 		//IL_10e2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_10e4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_10fe: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1100: Unknown result type (might be due to invalid IL or missing references)
+		//IL_10e7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_08e5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_08ea: Unknown result type (might be due to invalid IL or missing references)
+		//IL_110a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_110c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_110e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_1113: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1115: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1180: Unknown result type (might be due to invalid IL or missing references)
-		//IL_1192: Unknown result type (might be due to invalid IL or missing references)
-		//IL_11a5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_11b9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0dd9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0ddb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0de1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0de6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1124: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1126: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0df5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0df7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1141: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1143: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0e07: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0e0c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0783: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0788: Unknown result type (might be due to invalid IL or missing references)
+		//IL_07b2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1154: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1156: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1191: Unknown result type (might be due to invalid IL or missing references)
+		//IL_11a3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_11ac: Unknown result type (might be due to invalid IL or missing references)
+		//IL_11c4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_11cf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1392: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1397: Unknown result type (might be due to invalid IL or missing references)
+		//IL_13a0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_13a5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_13a9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_13ae: Unknown result type (might be due to invalid IL or missing references)
+		//IL_13b7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_13b9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_13cc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_13ce: Unknown result type (might be due to invalid IL or missing references)
+		//IL_12f0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_12f2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_130c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_130e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1329: Unknown result type (might be due to invalid IL or missing references)
+		//IL_132b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1347: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1349: Unknown result type (might be due to invalid IL or missing references)
+		//IL_13e8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_13ea: Unknown result type (might be due to invalid IL or missing references)
+		//IL_13fd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_13ff: Unknown result type (might be due to invalid IL or missing references)
+		//IL_146a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_146c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1486: Unknown result type (might be due to invalid IL or missing references)
+		//IL_1488: Unknown result type (might be due to invalid IL or missing references)
+		//IL_14a3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_14a5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_14c1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_14c3: Unknown result type (might be due to invalid IL or missing references)
 		PlayerProjectileAttack val = PlayerProjectileAttack.Deserialize((Stream)(object)msg.read);
 		if (val == null)
 		{
@@ -5186,6 +6712,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		hitInfo.ProjectileID = playerAttack.projectileID;
 		hitInfo.ProjectileDistance = val.hitDistance;
 		hitInfo.ProjectileVelocity = val.hitVelocity;
+		hitInfo.ProjectileTravelTime = val.travelTime;
 		hitInfo.Predicted = msg.connection;
 		if (hitInfo.IsNaNOrInfinity() || float.IsNaN(val.travelTime) || float.IsInfinity(val.travelTime))
 		{
@@ -5197,7 +6724,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		}
 		if (!firedProjectiles.TryGetValue(playerAttack.projectileID, out var value))
 		{
-			AntiHack.Log(this, AntiHackType.ProjectileHack, "Missing ID (" + playerAttack.projectileID + ")");
+			AntiHack.Log(this, AntiHackType.ProjectileHack, "Missing ID (" + playerAttack.projectileID + ")", logToAnalytics: false);
 			val.ResetToPool();
 			val = null;
 			stats.combat.LogInvalid(hitInfo, "projectile_invalid");
@@ -5205,7 +6732,6 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		}
 		hitInfo.ProjectileHits = value.hits;
 		hitInfo.ProjectileIntegrity = value.integrity;
-		hitInfo.ProjectileTravelTime = value.travelTime;
 		hitInfo.ProjectileTrajectoryMismatch = value.trajectoryMismatch;
 		if (value.integrity <= 0f)
 		{
@@ -5239,6 +6765,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		hitInfo.ProjectilePrefab = value.projectilePrefab;
 		hitInfo.damageProperties = value.projectilePrefab.damageProperties;
 		Vector3 position = value.position;
+		Vector3 initialPositionOffset = value.initialPositionOffset;
 		Vector3 positionOffset = value.positionOffset;
 		Vector3 velocity = value.velocity;
 		float partialTime = value.partialTime;
@@ -5258,10 +6785,12 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		bool flag8 = hitInfo.HitMaterial == Projectile.WaterMaterialID();
 		bool flag9;
 		int num15;
+		Vector3 val2;
 		Vector3 position2;
 		Vector3 pointStart;
 		Vector3 val4;
 		Vector3 val5;
+		bool flag10;
 		int num36;
 		if (value.protection > 0)
 		{
@@ -5281,7 +6810,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			float num12 = ((value.protection >= 6) ? ((desyncTimeClamped + num9 + num10) * num2) : num11);
 			float num13 = (num5 - desyncTimeClamped - num9 - num10) * num3;
 			float num14 = Vector3.Distance(value.initialPosition, hitInfo.HitPositionWorld);
-			num15 = 2162688;
+			num15 = 1075904512;
 			if (ConVar.AntiHack.projectile_terraincheck)
 			{
 				num15 |= 0x800000;
@@ -5319,10 +6848,9 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 					flag9 = false;
 				}
 			}
-			Vector3 val2;
 			if (value.protection >= 2)
 			{
-				if (flag6)
+				if (flag6 || (value.protection < 6 && flag))
 				{
 					float num16 = hitEntity.MaxVelocity();
 					val2 = hitEntity.GetParentVelocity();
@@ -5374,6 +6902,8 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				float magnitude2 = ((Vector3)(ref value.initialVelocity)).magnitude;
 				float num26 = hitInfo.ProjectilePrefab.initialDistance + num11 * magnitude2;
 				float num27 = hitInfo.ProjectileDistance + 1f + ((Vector3)(ref positionOffset)).magnitude + num25;
+				val2 = estimatedVelocity;
+				float num28 = num27 + ((Vector3)(ref val2)).magnitude;
 				if (num14 > num26)
 				{
 					string name6 = ((Object)hitInfo.ProjectilePrefab).name;
@@ -5383,11 +6913,11 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 					stats.combat.LogInvalid(hitInfo, "projectile_maxspeed");
 					flag9 = false;
 				}
-				if (num14 > num27)
+				if (num14 > num28)
 				{
 					string name7 = ((Object)hitInfo.ProjectilePrefab).name;
 					string text5 = (flag6 ? hitEntity.ShortPrefabName : "world");
-					AntiHack.Log(this, AntiHackType.ProjectileHack, "Projectile too far away (" + name7 + " on " + text5 + " with " + num14 + "m > " + num27 + "m in " + num11 + "s)");
+					AntiHack.Log(this, AntiHackType.ProjectileHack, "Projectile too far away (" + name7 + " on " + text5 + " with " + num14 + "m > " + num28 + "m in " + num11 + "s)");
 					Analytics.Azure.OnProjectileHackViolation(value);
 					stats.combat.LogInvalid(hitInfo, "projectile_distance");
 					flag9 = false;
@@ -5404,30 +6934,47 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			}
 			if (value.protection >= 4)
 			{
-				float num28;
-				if (!flag6)
+				float num29 = 0f;
+				if (flag6)
 				{
-					num28 = 0f;
-				}
-				else
-				{
-					float num29 = hitEntity.MaxVelocity();
 					val2 = hitEntity.GetParentVelocity();
-					num28 = num29 + ((Vector3)(ref val2)).magnitude;
+					float num30 = ((Vector3)(ref val2)).magnitude;
+					if (hitEntity is CargoShip || hitEntity is Tugboat)
+					{
+						num30 += hitEntity.MaxVelocity();
+					}
+					num29 = num12 * num30;
 				}
-				float num30 = num28;
-				float num31 = (flag6 ? (num12 * num30) : 0f);
 				SimulateProjectile(ref position, ref velocity, ref partialTime, num - travelTime, gravity, drag, out var prevPosition, out var prevVelocity);
 				Line val3 = default(Line);
 				((Line)(ref val3))._002Ector(prevPosition - prevVelocity, position + prevVelocity);
-				float num32 = Mathf.Max(((Line)(ref val3)).Distance(hitInfo.HitPositionWorld) - ((Vector3)(ref positionOffset)).magnitude - num31, 0f);
-				if (num32 > ConVar.AntiHack.projectile_trajectory)
+				float num31 = Mathf.Max(((Line)(ref val3)).Distance(hitInfo.PointStart) - ((Vector3)(ref initialPositionOffset)).magnitude - num29, 0f);
+				float num32 = Mathf.Max(((Line)(ref val3)).Distance(hitInfo.HitPositionWorld) - ((Vector3)(ref initialPositionOffset)).magnitude - num29, 0f);
+				if (num31 > ConVar.AntiHack.projectile_trajectory)
 				{
 					string name9 = ((Object)value.projectilePrefab).name;
 					string text7 = (flag6 ? hitEntity.ShortPrefabName : "world");
-					AntiHack.Log(this, AntiHackType.ProjectileHack, "Hit position trajectory (" + name9 + " on " + text7 + " with " + num32 + "m > " + ConVar.AntiHack.projectile_trajectory + "m)");
+					AntiHack.Log(this, AntiHackType.ProjectileHack, "Start position trajectory (" + name9 + " on " + text7 + " with " + num31 + "m > " + ConVar.AntiHack.projectile_trajectory + "m)");
 					Analytics.Azure.OnProjectileHackViolation(value);
-					stats.combat.LogInvalid(hitInfo, "trajectory");
+					stats.combat.LogInvalid(hitInfo, "trajectory_start");
+					flag9 = false;
+				}
+				if (num32 > ConVar.AntiHack.projectile_trajectory)
+				{
+					string name10 = ((Object)value.projectilePrefab).name;
+					string text8 = (flag6 ? hitEntity.ShortPrefabName : "world");
+					AntiHack.Log(this, AntiHackType.ProjectileHack, "End position trajectory (" + name10 + " on " + text8 + " with " + num32 + "m > " + ConVar.AntiHack.projectile_trajectory + "m)");
+					Analytics.Azure.OnProjectileHackViolation(value);
+					stats.combat.LogInvalid(hitInfo, "trajectory_end");
+					flag9 = false;
+				}
+				if (hitInfo.ProjectileTrajectoryMismatch > ConVar.AntiHack.projectile_trajectory)
+				{
+					string name11 = ((Object)value.projectilePrefab).name;
+					string text9 = (flag6 ? hitEntity.ShortPrefabName : "world");
+					AntiHack.Log(this, AntiHackType.ProjectileHack, "Update position trajectory (" + name11 + " on " + text9 + " with " + hitInfo.ProjectileTrajectoryMismatch + "m > " + ConVar.AntiHack.projectile_trajectory + "m)");
+					Analytics.Azure.OnProjectileHackViolation(value);
+					stats.combat.LogInvalid(hitInfo, "trajectory_update_total");
 					flag9 = false;
 				}
 				hitInfo.ProjectileVelocity = velocity;
@@ -5437,18 +6984,18 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 					float num34 = ((Vector3)(ref val.hitVelocity)).magnitude / ((Vector3)(ref velocity)).magnitude;
 					if (num33 > ConVar.AntiHack.projectile_anglechange)
 					{
-						string name10 = ((Object)value.projectilePrefab).name;
-						string text8 = (flag6 ? hitEntity.ShortPrefabName : "world");
-						AntiHack.Log(this, AntiHackType.ProjectileHack, "Trajectory angle change (" + name10 + " on " + text8 + " with " + num33 + "deg > " + ConVar.AntiHack.projectile_anglechange + "deg)");
+						string name12 = ((Object)value.projectilePrefab).name;
+						string text10 = (flag6 ? hitEntity.ShortPrefabName : "world");
+						AntiHack.Log(this, AntiHackType.ProjectileHack, "Trajectory angle change (" + name12 + " on " + text10 + " with " + num33 + "deg > " + ConVar.AntiHack.projectile_anglechange + "deg)");
 						Analytics.Azure.OnProjectileHackViolation(value);
 						stats.combat.LogInvalid(hitInfo, "angle_change");
 						flag9 = false;
 					}
 					if (num34 > ConVar.AntiHack.projectile_velocitychange)
 					{
-						string name11 = ((Object)value.projectilePrefab).name;
-						string text9 = (flag6 ? hitEntity.ShortPrefabName : "world");
-						AntiHack.Log(this, AntiHackType.ProjectileHack, "Trajectory velocity change (" + name11 + " on " + text9 + " with " + num34 + " > " + ConVar.AntiHack.projectile_velocitychange + ")");
+						string name13 = ((Object)value.projectilePrefab).name;
+						string text11 = (flag6 ? hitEntity.ShortPrefabName : "world");
+						AntiHack.Log(this, AntiHackType.ProjectileHack, "Trajectory velocity change (" + name13 + " on " + text11 + " with " + num34 + " > " + ConVar.AntiHack.projectile_velocitychange + ")");
 						Analytics.Azure.OnProjectileHackViolation(value);
 						stats.combat.LogInvalid(hitInfo, "velocity_change");
 						flag9 = false;
@@ -5458,9 +7005,9 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				float num35 = num13 * magnitude3;
 				if (num14 < num35)
 				{
-					string name12 = ((Object)hitInfo.ProjectilePrefab).name;
-					string text10 = (flag6 ? hitEntity.ShortPrefabName : "world");
-					AntiHack.Log(this, AntiHackType.ProjectileHack, "Projectile too slow (" + name12 + " on " + text10 + " with " + num14 + "m < " + num35 + "m in " + num13 + "s)");
+					string name14 = ((Object)hitInfo.ProjectilePrefab).name;
+					string text12 = (flag6 ? hitEntity.ShortPrefabName : "world");
+					AntiHack.Log(this, AntiHackType.ProjectileHack, "Projectile too slow (" + name14 + " on " + text12 + " with " + num14 + "m < " + num35 + "m in " + num13 + "s)");
 					Analytics.Azure.OnProjectileHackViolation(value);
 					stats.combat.LogInvalid(hitInfo, "projectile_minspeed");
 					flag9 = false;
@@ -5485,33 +7032,81 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 					val2 = val5 - pointStart;
 					val7 = ((Vector3)(ref val2)).normalized * ConVar.AntiHack.projectile_backtracking;
 				}
-				if (GamePhysics.LineOfSight(position2 - val6, pointStart + val6, num15, value.lastEntityHit) && GamePhysics.LineOfSight(pointStart - val7, val5, num15, value.lastEntityHit))
+				flag10 = GamePhysics.LineOfSight(position2 - val6, pointStart + val6, num15, value.lastEntityHit) && GamePhysics.LineOfSight(pointStart - val7, val5, num15, value.lastEntityHit) && GamePhysics.LineOfSight(val5, val4, num15, value.lastEntityHit);
+				bool flag11 = true;
+				if (flag10)
 				{
-					num36 = (GamePhysics.LineOfSight(val5, val4, num15, value.lastEntityHit) ? 1 : 0);
-					if (num36 != 0)
+					flag11 = GamePhysics.LineOfSight(position2, val4, num15, value.lastEntityHit) && GamePhysics.LineOfSight(val4, position2, num15, value.lastEntityHit);
+				}
+				bool flag12 = true;
+				if (flag10)
+				{
+					List<Vector3> simulatedPositions = value.simulatedPositions;
+					if (simulatedPositions.Count > ConVar.AntiHack.projectile_update_limit)
 					{
-						stats.Add("hit_" + (flag6 ? hitEntity.Categorize() : "world") + "_direct_los", 1, Stats.Server);
-						goto IL_0fd9;
+						flag12 = false;
+					}
+					else
+					{
+						simulatedPositions.Add(position2);
+						for (int i = 1; i < simulatedPositions.Count; i++)
+						{
+							if (!GamePhysics.LineOfSight(simulatedPositions[i - 1], simulatedPositions[i], num15, value.lastEntityHit) || !GamePhysics.LineOfSight(simulatedPositions[i], simulatedPositions[i - 1], num15, value.lastEntityHit))
+							{
+								flag12 = false;
+								break;
+							}
+						}
 					}
 				}
-				else
+				if (flag10)
 				{
-					num36 = 0;
+					if (!(value.simulatedPositions.Count > 1 && flag12))
+					{
+						num36 = ((value.simulatedPositions.Count <= 1 && flag11) ? 1 : 0);
+						if (num36 == 0)
+						{
+							goto IL_122d;
+						}
+					}
+					else
+					{
+						num36 = 1;
+					}
+					stats.Add("hit_" + (flag6 ? hitEntity.Categorize() : "world") + "_direct_los", 1, Stats.Server);
+					goto IL_128b;
 				}
-				stats.Add("hit_" + (flag6 ? hitEntity.Categorize() : "world") + "_indirect_los", 1, Stats.Server);
-				goto IL_0fd9;
+				num36 = 0;
+				goto IL_122d;
 			}
-			goto IL_11ea;
+			goto IL_14fd;
 		}
-		goto IL_1203;
-		IL_0fd9:
+		goto IL_1516;
+		IL_128b:
 		if (num36 == 0)
 		{
-			string name13 = ((Object)hitInfo.ProjectilePrefab).name;
-			string text11 = (flag6 ? hitEntity.ShortPrefabName : "world");
-			AntiHack.Log(this, AntiHackType.ProjectileHack, string.Concat("Line of sight (", name13, " on ", text11, ") ", position2, " ", pointStart, " ", val5, " ", val4));
+			string name15 = ((Object)hitInfo.ProjectilePrefab).name;
+			string text13 = (flag6 ? hitEntity.ShortPrefabName : "world");
+			string description = ((!flag10) ? "projectile_los" : "projectile_los_detailed");
+			string[] obj = new string[12]
+			{
+				"Line of sight (", name15, " on ", text13, ") ", null, null, null, null, null,
+				null, null
+			};
+			val2 = position2;
+			obj[5] = ((object)(Vector3)(ref val2)).ToString();
+			obj[6] = " ";
+			val2 = pointStart;
+			obj[7] = ((object)(Vector3)(ref val2)).ToString();
+			obj[8] = " ";
+			val2 = val5;
+			obj[9] = ((object)(Vector3)(ref val2)).ToString();
+			obj[10] = " ";
+			val2 = val4;
+			obj[11] = ((object)(Vector3)(ref val2)).ToString();
+			AntiHack.Log(this, AntiHackType.ProjectileHack, string.Concat(obj));
 			Analytics.Azure.OnProjectileHackViolation(value);
-			stats.combat.LogInvalid(hitInfo, "projectile_los");
+			stats.combat.LogInvalid(hitInfo, description);
 			flag9 = false;
 		}
 		if (flag9 && flag && !flag7)
@@ -5520,29 +7115,59 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			Vector3 position3 = basePlayer.eyes.position;
 			Vector3 val8 = basePlayer.CenterPoint();
 			float projectile_losforgiveness = ConVar.AntiHack.projectile_losforgiveness;
-			bool flag10 = GamePhysics.LineOfSight(hitPositionWorld, position3, num15, 0f, projectile_losforgiveness) && GamePhysics.LineOfSight(position3, hitPositionWorld, num15, projectile_losforgiveness, 0f);
-			if (!flag10)
+			bool flag13 = GamePhysics.LineOfSight(hitPositionWorld, position3, num15, 0f, projectile_losforgiveness) && GamePhysics.LineOfSight(position3, hitPositionWorld, num15, projectile_losforgiveness, 0f);
+			if (!flag13)
 			{
-				flag10 = GamePhysics.LineOfSight(hitPositionWorld, val8, num15, 0f, projectile_losforgiveness) && GamePhysics.LineOfSight(val8, hitPositionWorld, num15, projectile_losforgiveness, 0f);
+				flag13 = GamePhysics.LineOfSight(hitPositionWorld, val8, num15, 0f, projectile_losforgiveness) && GamePhysics.LineOfSight(val8, hitPositionWorld, num15, projectile_losforgiveness, 0f);
 			}
-			if (!flag10)
+			if (!flag13)
 			{
-				string name14 = ((Object)hitInfo.ProjectilePrefab).name;
-				string text12 = (flag6 ? hitEntity.ShortPrefabName : "world");
-				AntiHack.Log(this, AntiHackType.ProjectileHack, string.Concat("Line of sight (", name14, " on ", text12, ") ", hitPositionWorld, " ", position3, " or ", hitPositionWorld, " ", val8));
+				string name16 = ((Object)hitInfo.ProjectilePrefab).name;
+				string text14 = (flag6 ? hitEntity.ShortPrefabName : "world");
+				string[] obj2 = new string[12]
+				{
+					"Line of sight (", name16, " on ", text14, ") ", null, null, null, null, null,
+					null, null
+				};
+				val2 = hitPositionWorld;
+				obj2[5] = ((object)(Vector3)(ref val2)).ToString();
+				obj2[6] = " ";
+				val2 = position3;
+				obj2[7] = ((object)(Vector3)(ref val2)).ToString();
+				obj2[8] = " or ";
+				val2 = hitPositionWorld;
+				obj2[9] = ((object)(Vector3)(ref val2)).ToString();
+				obj2[10] = " ";
+				val2 = val8;
+				obj2[11] = ((object)(Vector3)(ref val2)).ToString();
+				AntiHack.Log(this, AntiHackType.ProjectileHack, string.Concat(obj2));
 				Analytics.Azure.OnProjectileHackViolation(value);
 				stats.combat.LogInvalid(hitInfo, "projectile_los");
 				flag9 = false;
 			}
 		}
-		goto IL_11ea;
-		IL_1203:
+		goto IL_14fd;
+		IL_14fd:
+		if (!flag9)
+		{
+			AntiHack.AddViolation(this, AntiHackType.ProjectileHack, ConVar.AntiHack.projectile_penalty);
+			val.ResetToPool();
+			val = null;
+			return;
+		}
+		goto IL_1516;
+		IL_122d:
+		stats.Add("hit_" + (flag6 ? hitEntity.Categorize() : "world") + "_indirect_los", 1, Stats.Server);
+		goto IL_128b;
+		IL_1516:
 		value.position = hitInfo.HitPositionWorld;
 		value.velocity = val.hitVelocity;
 		value.travelTime = num;
 		value.partialTime = partialTime;
 		value.hits++;
 		value.lastEntityHit = hitEntity;
+		value.simulatedPositions.Clear();
+		value.simulatedPositions.Add(position);
 		hitInfo.ProjectilePrefab.CalculateDamage(hitInfo, value.projectileModifier, value.integrity);
 		if (flag8)
 		{
@@ -5575,6 +7200,10 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				CreateWorldProjectile(hitInfo, value.itemDef, value.itemMod, hitInfo.ProjectilePrefab, value.pickupItem);
 			}
 		}
+		else if (value.hits == ConVar.AntiHack.projectile_impactspawndepth)
+		{
+			value.itemMod.ServerProjectileHit(hitInfo);
+		}
 		firedProjectiles[playerAttack.projectileID] = value;
 		if (flag6)
 		{
@@ -5591,16 +7220,6 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		Effect.server.ImpactEffect(hitInfo);
 		val.ResetToPool();
 		val = null;
-		return;
-		IL_11ea:
-		if (!flag9)
-		{
-			AntiHack.AddViolation(this, AntiHackType.ProjectileHack, ConVar.AntiHack.projectile_penalty);
-			val.ResetToPool();
-			val = null;
-			return;
-		}
-		goto IL_1203;
 	}
 
 	[RPC_Server]
@@ -5623,7 +7242,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			}
 			else if (!firedProjectiles.TryGetValue(val.projectileID, out value))
 			{
-				AntiHack.Log(this, AntiHackType.ProjectileHack, "Missing ID (" + val.projectileID + ")");
+				AntiHack.Log(this, AntiHackType.ProjectileHack, "Missing ID (" + val.projectileID + ")", logToAnalytics: false);
 				val.ResetToPool();
 				val = null;
 			}
@@ -5649,72 +7268,122 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 	{
 		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
 		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0131: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0136: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0138: Unknown result type (might be due to invalid IL or missing references)
-		//IL_013d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_016f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0184: Unknown result type (might be due to invalid IL or missing references)
-		//IL_05a8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_05ad: Unknown result type (might be due to invalid IL or missing references)
-		//IL_05b5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_05ba: Unknown result type (might be due to invalid IL or missing references)
-		//IL_05c2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_05c7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_05cf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_05d4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_05f4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_05f9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0600: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0605: Unknown result type (might be due to invalid IL or missing references)
-		//IL_028c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0292: Unknown result type (might be due to invalid IL or missing references)
-		//IL_039e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03a3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03a6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03ab: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03ad: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03b2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0476: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0485: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0487: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0489: Unknown result type (might be due to invalid IL or missing references)
-		//IL_048e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0133: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0135: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0141: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0173: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0183: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0188: Unknown result type (might be due to invalid IL or missing references)
+		//IL_07a4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_07a9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_07b1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_07b6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_07be: Unknown result type (might be due to invalid IL or missing references)
+		//IL_07c3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_07cb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_07d0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_07f0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_07f5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_07fc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0801: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0828: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02b7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02bd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_05d9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_05de: Unknown result type (might be due to invalid IL or missing references)
+		//IL_05e1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_05e6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_05e8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_05ed: Unknown result type (might be due to invalid IL or missing references)
+		//IL_06c3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_06d6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_06de: Unknown result type (might be due to invalid IL or missing references)
+		//IL_06e0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_06e2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_06e7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_06e8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_06ea: Unknown result type (might be due to invalid IL or missing references)
+		//IL_06f9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0619: Unknown result type (might be due to invalid IL or missing references)
+		//IL_061b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_061d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0622: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0624: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0626: Unknown result type (might be due to invalid IL or missing references)
+		//IL_05fb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_05fd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_05ff: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0604: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0608: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0612: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0617: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03bf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03c4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03c7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03cc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0722: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0727: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0666: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0668: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0682: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0684: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03de: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03d7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_078c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_078e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0734: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0739: Unknown result type (might be due to invalid IL or missing references)
+		//IL_073b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0740: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0743: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0748: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03e0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03ec: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03f3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03f8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0777: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0779: Unknown result type (might be due to invalid IL or missing references)
+		//IL_077f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0784: Unknown result type (might be due to invalid IL or missing references)
+		//IL_041d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_041f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0421: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0426: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0428: Unknown result type (might be due to invalid IL or missing references)
+		//IL_042a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_042e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0433: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0438: Unknown result type (might be due to invalid IL or missing references)
+		//IL_043a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_043c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_043e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0443: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0445: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0447: Unknown result type (might be due to invalid IL or missing references)
+		//IL_044b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0450: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0455: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0484: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0486: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0488: Unknown result type (might be due to invalid IL or missing references)
+		//IL_048d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_048f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0491: Unknown result type (might be due to invalid IL or missing references)
-		//IL_04a0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03de: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03e0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03e2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03e7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03e9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03eb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03c0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03c2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03c4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03c9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03cd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03d7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03dc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_053c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0541: Unknown result type (might be due to invalid IL or missing references)
-		//IL_042b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_043d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0590: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0592: Unknown result type (might be due to invalid IL or missing references)
-		//IL_054e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0553: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0555: Unknown result type (might be due to invalid IL or missing references)
-		//IL_055a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_055d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0562: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0583: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0588: Unknown result type (might be due to invalid IL or missing references)
-		//IL_057b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_057d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0495: Unknown result type (might be due to invalid IL or missing references)
+		//IL_049a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_049f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04a1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04a3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04a5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04aa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04ac: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04ae: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04b2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04b7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04bc: Unknown result type (might be due to invalid IL or missing references)
 		PlayerProjectileUpdate val = PlayerProjectileUpdate.Deserialize((Stream)(object)msg.read);
 		if (val == null)
 		{
@@ -5729,7 +7398,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		}
 		if (!firedProjectiles.TryGetValue(val.projectileID, out var value))
 		{
-			AntiHack.Log(this, AntiHackType.ProjectileHack, "Missing ID (" + val.projectileID + ")");
+			AntiHack.Log(this, AntiHackType.ProjectileHack, "Missing ID (" + val.projectileID + ")", logToAnalytics: false);
 			val.ResetToPool();
 			val = null;
 			return;
@@ -5757,48 +7426,93 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		float partialTime = value.partialTime;
 		float travelTime = value.travelTime;
 		float num2 = Mathf.Clamp(val.travelTime, value.travelTime, 8f);
-		Vector3 gravity = Physics.gravity * value.projectilePrefab.gravityModifier;
+		Vector3 val2 = Physics.gravity * value.projectilePrefab.gravityModifier;
 		float drag = value.projectilePrefab.drag;
 		if (value.protection > 0)
 		{
-			float num3 = 1f + ConVar.AntiHack.projectile_forgiveness;
+			float num3 = 1f - ConVar.AntiHack.projectile_forgiveness;
+			float num4 = 1f + ConVar.AntiHack.projectile_forgiveness;
 			float projectile_clientframes = ConVar.AntiHack.projectile_clientframes;
 			float projectile_serverframes = ConVar.AntiHack.projectile_serverframes;
-			float num4 = Mathx.Decrement(value.firedTime);
-			float num5 = Mathf.Clamp(Mathx.Increment(Time.realtimeSinceStartup) - num4, 0f, 8f);
-			float num6 = num2;
-			float num7 = (value.desyncLifeTime = Mathf.Abs(num5 - num6));
-			float num8 = Mathf.Min(num5, num6);
-			float num9 = projectile_clientframes / 60f;
-			float num10 = projectile_serverframes * Mathx.Max(Time.deltaTime, Time.smoothDeltaTime, Time.fixedDeltaTime);
-			float num11 = (desyncTimeClamped + num8 + num9 + num10) * num3;
-			int num12 = 2162688;
+			float num5 = Mathx.Decrement(value.firedTime);
+			float num6 = Mathf.Clamp(Mathx.Increment(Time.realtimeSinceStartup) - num5, 0f, 8f);
+			float num7 = num2;
+			float num8 = (value.desyncLifeTime = Mathf.Abs(num6 - num7));
+			float num9 = Mathf.Min(num6, num7);
+			float num10 = projectile_clientframes / 60f;
+			float num11 = projectile_serverframes * Mathx.Max(Time.deltaTime, Time.smoothDeltaTime, Time.fixedDeltaTime);
+			float num12 = (num9 + desyncTimeClamped + num10 + num11) * num4;
+			float num13 = Mathf.Max(0f, (num9 - desyncTimeClamped - num10 - num11) * num3);
+			int num14 = 1075904512;
 			if (ConVar.AntiHack.projectile_terraincheck)
 			{
-				num12 |= 0x800000;
+				num14 |= 0x800000;
 			}
 			if (ConVar.AntiHack.projectile_vehiclecheck)
 			{
-				num12 |= 0x8000000;
+				num14 |= 0x8000000;
 			}
 			if (value.protection >= 1)
 			{
-				float magnitude = ((Vector3)(ref value.initialVelocity)).magnitude;
-				float num13 = value.projectilePrefab.initialDistance + num11 * magnitude;
-				float num14 = Vector3.Distance(value.initialPosition, val.curPosition);
-				if (num14 > num13)
+				float num15 = value.projectilePrefab.initialDistance + num12 * ((Vector3)(ref value.initialVelocity)).magnitude;
+				float num16 = Vector3.Distance(value.initialPosition, val.curPosition);
+				if (num16 > num15)
 				{
 					string name = ((Object)value.projectilePrefab).name;
-					AntiHack.Log(this, AntiHackType.ProjectileHack, "Projectile too fast (" + name + " with " + num14 + "m > " + num13 + "m in " + num11 + "s)");
+					AntiHack.Log(this, AntiHackType.ProjectileHack, "Projectile distance (" + name + " with " + num16 + "m > " + num15 + "m in " + num12 + "s)");
 					Analytics.Azure.OnProjectileHackViolation(value);
 					val.ResetToPool();
 					val = null;
 					return;
 				}
-				if (num7 > ConVar.AntiHack.projectile_desync)
+				if (num8 > ConVar.AntiHack.projectile_desync)
 				{
 					string name2 = ((Object)value.projectilePrefab).name;
-					AntiHack.Log(this, AntiHackType.ProjectileHack, "Projectile desync (" + name2 + " with " + num7 + "s > " + ConVar.AntiHack.projectile_desync + "s)");
+					AntiHack.Log(this, AntiHackType.ProjectileHack, "Projectile desync (" + name2 + " with " + num8 + "s > " + ConVar.AntiHack.projectile_desync + "s)");
+					Analytics.Azure.OnProjectileHackViolation(value);
+					val.ResetToPool();
+					val = null;
+					return;
+				}
+				Vector3 curVelocity = val.curVelocity;
+				Vector3 val3 = value.initialVelocity;
+				Vector3 val4 = ((value.hits == 0) ? val3 : value.velocity);
+				float num17 = drag * (1f / 32f);
+				Vector3 val5 = val2 * (1f / 32f);
+				int num18 = Mathf.FloorToInt(num13 / (1f / 32f));
+				int num19 = Mathf.CeilToInt(num12 / (1f / 32f));
+				for (int i = 0; i < num18; i++)
+				{
+					val3 += val5;
+					val3 -= val3 * num17;
+					val4 += val5;
+					val4 -= val4 * num17;
+				}
+				float magnitude = ((Vector3)(ref curVelocity)).magnitude;
+				float magnitude2 = ((Vector3)(ref val3)).magnitude;
+				float magnitude3 = ((Vector3)(ref val4)).magnitude;
+				for (int j = num18; j < num19; j++)
+				{
+					val3 += val5;
+					val3 -= val3 * num17;
+					val4 += val5;
+					val4 -= val4 * num17;
+				}
+				magnitude3 = Mathf.Min(magnitude3, ((Vector3)(ref val4)).magnitude);
+				magnitude2 = Mathf.Max(magnitude2, ((Vector3)(ref val3)).magnitude);
+				if (magnitude < magnitude3 * num3)
+				{
+					string name3 = ((Object)value.projectilePrefab).name;
+					AntiHack.Log(this, AntiHackType.ProjectileHack, "Projectile velocity too low (" + name3 + " with " + magnitude + " < " + magnitude3 + ")");
+					Analytics.Azure.OnProjectileHackViolation(value);
+					val.ResetToPool();
+					val = null;
+					return;
+				}
+				if (magnitude > magnitude2 * num4)
+				{
+					string name4 = ((Object)value.projectilePrefab).name;
+					AntiHack.Log(this, AntiHackType.ProjectileHack, "Projectile velocity too high (" + name4 + " with " + magnitude + " > " + magnitude2 + ")");
 					Analytics.Azure.OnProjectileHackViolation(value);
 					val.ResetToPool();
 					val = null;
@@ -5809,16 +7523,23 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			{
 				Vector3 position2 = value.position;
 				Vector3 curPosition = val.curPosition;
-				Vector3 val2 = Vector3.zero;
+				Vector3 val6 = Vector3.zero;
+				Vector3 val7;
 				if (ConVar.AntiHack.projectile_backtracking > 0f)
 				{
-					Vector3 val3 = curPosition - position2;
-					val2 = ((Vector3)(ref val3)).normalized * ConVar.AntiHack.projectile_backtracking;
+					val7 = curPosition - position2;
+					val6 = ((Vector3)(ref val7)).normalized * ConVar.AntiHack.projectile_backtracking;
 				}
-				if (!GamePhysics.LineOfSight(position2 - val2, curPosition + val2, num12, value.lastEntityHit))
+				if (!GamePhysics.LineOfSight(position2 - val6, curPosition + val6, num14, value.lastEntityHit))
 				{
-					string name3 = ((Object)value.projectilePrefab).name;
-					AntiHack.Log(this, AntiHackType.ProjectileHack, string.Concat("Line of sight (", name3, " on update) ", position2, " ", curPosition));
+					string name5 = ((Object)value.projectilePrefab).name;
+					string[] obj = new string[6] { "Line of sight (", name5, " on update) ", null, null, null };
+					val7 = position2;
+					obj[3] = ((object)(Vector3)(ref val7)).ToString();
+					obj[4] = " ";
+					val7 = curPosition;
+					obj[5] = ((object)(Vector3)(ref val7)).ToString();
+					AntiHack.Log(this, AntiHackType.ProjectileHack, string.Concat(obj));
 					Analytics.Azure.OnProjectileHackViolation(value);
 					val.ResetToPool();
 					val = null;
@@ -5827,29 +7548,21 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			}
 			if (value.protection >= 4)
 			{
-				SimulateProjectile(ref position, ref velocity, ref partialTime, num2 - travelTime, gravity, drag, out var prevPosition, out var prevVelocity);
-				Line val4 = default(Line);
-				((Line)(ref val4))._002Ector(prevPosition - prevVelocity, position + prevVelocity);
-				num += Mathf.Max(((Line)(ref val4)).Distance(val.curPosition) - ((Vector3)(ref positionOffset)).magnitude, 0f);
-				if (num > ConVar.AntiHack.projectile_trajectory)
-				{
-					string name4 = ((Object)value.projectilePrefab).name;
-					AntiHack.Log(this, AntiHackType.ProjectileHack, "Update position trajectory (" + name4 + " on update with " + num + "m > " + ConVar.AntiHack.projectile_trajectory + "m)");
-					Analytics.Azure.OnProjectileHackViolation(value);
-					val.ResetToPool();
-					val = null;
-					return;
-				}
+				SimulateProjectile(ref position, ref velocity, ref partialTime, num2 - travelTime, val2, drag, out var prevPosition, out var prevVelocity);
+				value.simulatedPositions.Add(position);
+				Line val8 = default(Line);
+				((Line)(ref val8))._002Ector(prevPosition - prevVelocity, position + prevVelocity);
+				num += Mathf.Max(((Line)(ref val8)).Distance(val.curPosition) - ((Vector3)(ref positionOffset)).magnitude, 0f);
 			}
 			if (value.protection >= 5)
 			{
 				if (value.inheritedVelocity != Vector3.zero)
 				{
-					Vector3 curVelocity = value.inheritedVelocity + velocity;
-					Vector3 curVelocity2 = val.curVelocity;
-					if (((Vector3)(ref curVelocity2)).magnitude > 2f * ((Vector3)(ref curVelocity)).magnitude)
+					Vector3 curVelocity2 = value.inheritedVelocity + velocity;
+					Vector3 curVelocity3 = val.curVelocity;
+					if (((Vector3)(ref curVelocity3)).magnitude > 2f * ((Vector3)(ref curVelocity2)).magnitude || ((Vector3)(ref curVelocity3)).magnitude < 0.5f * ((Vector3)(ref curVelocity2)).magnitude)
 					{
-						val.curVelocity = curVelocity;
+						val.curVelocity = curVelocity2;
 					}
 					value.inheritedVelocity = Vector3.zero;
 				}
@@ -5873,6 +7586,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		value.travelTime = val.travelTime;
 		value.partialTime = partialTime;
 		value.trajectoryMismatch = num;
+		value.positionOffset = default(Vector3);
 		firedProjectiles[val.projectileID] = value;
 		val.ResetToPool();
 		val = null;
@@ -5900,10 +7614,9 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		//IL_00c1: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00c8: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00ce: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00db: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00dc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e1: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
 		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
@@ -5913,35 +7626,34 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0101: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0106: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0113: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0120: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0126: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0130: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0137: Unknown result type (might be due to invalid IL or missing references)
-		//IL_013c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_013f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0144: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0149: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0150: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0156: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0163: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0168: Unknown result type (might be due to invalid IL or missing references)
-		//IL_016d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_018f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0102: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0116: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0122: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0127: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0133: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0138: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0140: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0145: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0152: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0160: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0165: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0187: Unknown result type (might be due to invalid IL or missing references)
+		//IL_018c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0194: Unknown result type (might be due to invalid IL or missing references)
-		//IL_019c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ae: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ba: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01bf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0199: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ad: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b7: Unknown result type (might be due to invalid IL or missing references)
 		float num = 1f / 32f;
 		prevPosition = position;
 		prevVelocity = velocity;
@@ -5960,7 +7672,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			prevVelocity = velocity;
 			position += velocity * num2;
 			velocity += gravity * num;
-			velocity -= velocity * drag * num;
+			velocity -= velocity * (drag * num);
 			travelTime -= num2;
 		}
 		int num3 = Mathf.FloorToInt(travelTime / num);
@@ -5970,7 +7682,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			prevVelocity = velocity;
 			position += velocity * num;
 			velocity += gravity * num;
-			velocity -= velocity * drag * num;
+			velocity -= velocity * (drag * num);
 		}
 		partialTime = travelTime - num * (float)num3;
 		if (partialTime > Mathf.Epsilon)
@@ -6041,7 +7753,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			DroppedItem droppedItem = baseEntity as DroppedItem;
 			if ((Object)(object)droppedItem != (Object)null)
 			{
-				droppedItem.GoKinematic();
+				droppedItem.StickIn();
 			}
 			else
 			{
@@ -6077,22 +7789,24 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 	{
 		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_028b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_028c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0293: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0295: Unknown result type (might be due to invalid IL or missing references)
-		//IL_029c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_029d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02a4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02a5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02ac: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02ad: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02b4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02b6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
+		//IL_028e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_028f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0296: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0298: Unknown result type (might be due to invalid IL or missing references)
+		//IL_029f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02a1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02a8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02a9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02b0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02b1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02b8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02b9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02c0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02c2: Unknown result type (might be due to invalid IL or missing references)
 		BaseProjectile baseProjectile = attackEnt as BaseProjectile;
 		ItemModProjectile component = ((Component)firedItemDef).GetComponent<ItemModProjectile>();
 		Projectile component2 = component.projectileObject.Get().GetComponent<Projectile>();
@@ -6147,6 +7861,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		firedProjectile.pickupItem = pickupItem;
 		firedProjectile.integrity = 1f;
 		firedProjectile.position = startPos;
+		firedProjectile.initialPositionOffset = positionOffset;
 		firedProjectile.positionOffset = positionOffset;
 		firedProjectile.velocity = startVel;
 		firedProjectile.initialPosition = startPos;
@@ -6179,6 +7894,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		//IL_0110: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0117: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0119: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014d: Unknown result type (might be due to invalid IL or missing references)
 		BaseProjectile baseProjectile = attackEnt as BaseProjectile;
 		ItemModProjectile component = ((Component)firedItemDef).GetComponent<ItemModProjectile>();
 		Projectile component2 = component.projectileObject.Get().GetComponent<Projectile>();
@@ -6209,6 +7925,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			firedProjectile.hits = 0;
 			firedProjectile.id = projectileid;
 			firedProjectile.attacker = this;
+			firedProjectile.simulatedPositions.Add(startPos);
 			firedProjectiles.Add(projectileid, firedProjectile);
 		}
 	}
@@ -6218,6 +7935,10 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		if (net == null)
 		{
 			return true;
+		}
+		if (connection.authLevel != 0)
+		{
+			return false;
 		}
 		if (net.connection != connection)
 		{
@@ -6234,17 +7955,18 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 
 	public override void Save(SaveInfo info)
 	{
-		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03c1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03c6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_035a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_035f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_044d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_038e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0393: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00dd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0428: Unknown result type (might be due to invalid IL or missing references)
+		//IL_042d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03bd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03c2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04d9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03f5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03fa: Unknown result type (might be due to invalid IL or missing references)
 		base.Save(info);
 		bool flag = net != null && net.connection == info.forConnection;
+		bool flag2 = !info.forDisk && (Object)(object)info.forConnection.player != (Object)null && info.forConnection.player is BasePlayer basePlayer && basePlayer.IsAdmin;
 		info.msg.basePlayer = Pool.Get<BasePlayer>();
 		info.msg.basePlayer.userid = userID;
 		info.msg.basePlayer.name = displayName;
@@ -6280,10 +8002,14 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		}
 		if (!info.forDisk && !flag)
 		{
-			BasePlayer basePlayer = info.msg.basePlayer;
-			basePlayer.playerFlags &= -5;
 			BasePlayer basePlayer2 = info.msg.basePlayer;
-			basePlayer2.playerFlags &= -129;
+			basePlayer2.playerFlags &= -5;
+			BasePlayer basePlayer3 = info.msg.basePlayer;
+			basePlayer3.playerFlags &= -129;
+			if (info.msg.baseCombat != null && !flag2)
+			{
+				info.msg.baseCombat.health = 100f;
+			}
 		}
 		info.msg.basePlayer.inventory = inventory.Save(info.forDisk || flag);
 		modelState.sleeping = IsSleeping();
@@ -6322,8 +8048,9 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			{
 				info.msg.basePlayer.missions = State.missions.Copy();
 			}
-			info.msg.basePlayer.bagCount = SleepingBag.GetSleepingBagCount(userID);
 		}
+		info.msg.basePlayer.bagCount = SleepingBag.GetSleepingBagCount(userID);
+		info.msg.basePlayer.shelterCount = LegacyShelter.GetShelterCount(userID);
 		if (info.forDisk)
 		{
 			info.msg.basePlayer.loadingTimeout = RealTimeUntil.op_Implicit(timeUntilLoadingExpires);
@@ -6336,53 +8063,59 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		}
 		if (info.forDisk)
 		{
+			info.msg.basePlayer.itemCrafter = inventory.crafting.Save();
+		}
+		if (info.forDisk)
+		{
 			SavePlayerState();
 		}
+		info.msg.basePlayer.tutorialAllowance = (int)CurrentTutorialAllowance;
 	}
 
 	public override void Load(LoadInfo info)
 	{
-		//IL_0129: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0134: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0146: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0209: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0139: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0151: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0214: Unknown result type (might be due to invalid IL or missing references)
 		base.Load(info);
-		if (info.msg.basePlayer != null)
+		if (info.msg.basePlayer == null)
 		{
-			BasePlayer basePlayer = info.msg.basePlayer;
-			userID = basePlayer.userid;
-			UserIDString = userID.ToString();
-			if (basePlayer.name != null)
+			return;
+		}
+		BasePlayer basePlayer = info.msg.basePlayer;
+		userID = basePlayer.userid;
+		UserIDString = userID.ToString();
+		if (basePlayer.name != null)
+		{
+			displayName = basePlayer.name;
+		}
+		_ = playerFlags;
+		playerFlags = (PlayerFlags)basePlayer.playerFlags;
+		currentTeam = basePlayer.currentTeam;
+		reputation = basePlayer.reputation;
+		if (basePlayer.metabolism != null)
+		{
+			metabolism.Load(basePlayer.metabolism);
+		}
+		if (basePlayer.modifiers != null && (Object)(object)modifiers != (Object)null)
+		{
+			modifiers.Load(basePlayer.modifiers);
+		}
+		if (basePlayer.inventory != null)
+		{
+			inventory.Load(basePlayer.inventory);
+		}
+		if (basePlayer.modelState != null)
+		{
+			if (modelState != null)
 			{
-				displayName = basePlayer.name;
+				modelState.ResetToPool();
+				modelState = null;
 			}
-			_ = playerFlags;
-			playerFlags = (PlayerFlags)basePlayer.playerFlags;
-			currentTeam = basePlayer.currentTeam;
-			reputation = basePlayer.reputation;
-			if (basePlayer.metabolism != null)
-			{
-				metabolism.Load(basePlayer.metabolism);
-			}
-			if (basePlayer.modifiers != null && (Object)(object)modifiers != (Object)null)
-			{
-				modifiers.Load(basePlayer.modifiers);
-			}
-			if (basePlayer.inventory != null)
-			{
-				inventory.Load(basePlayer.inventory);
-			}
-			if (basePlayer.modelState != null)
-			{
-				if (modelState != null)
-				{
-					modelState.ResetToPool();
-					modelState = null;
-				}
-				modelState = basePlayer.modelState;
-				basePlayer.modelState = null;
-			}
+			modelState = basePlayer.modelState;
+			basePlayer.modelState = null;
 		}
 		if (info.fromDisk)
 		{
@@ -6415,332 +8148,16 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				Die();
 			}
 			respawnId = info.msg.basePlayer.respawnId;
+			if (info.msg.basePlayer.itemCrafter?.queue != null)
+			{
+				inventory.crafting.Load(info.msg.basePlayer.itemCrafter);
+			}
 		}
 		if (!info.fromDisk)
 		{
 			clanId = info.msg.basePlayer.clanId;
 		}
-	}
-
-	internal void LifeStoryStart()
-	{
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002b: Expected O, but got Unknown
-		if (lifeStory != null)
-		{
-			Debug.LogError((object)"Stomping old lifeStory");
-			lifeStory = null;
-		}
-		lifeStory = new PlayerLifeStory
-		{
-			ShouldPool = false
-		};
-		lifeStory.timeBorn = (uint)Epoch.Current;
-		hasSentPresenceState = false;
-	}
-
-	internal void LifeStoryEnd()
-	{
-		SingletonComponent<ServerMgr>.Instance.persistance.AddLifeStory(userID, lifeStory);
-		previousLifeStory = lifeStory;
-		lifeStory = null;
-	}
-
-	internal void LifeStoryUpdate(float deltaTime, float moveSpeed)
-	{
-		if (lifeStory != null)
-		{
-			PlayerLifeStory obj = lifeStory;
-			obj.secondsAlive += deltaTime;
-			nextTimeCategoryUpdate -= deltaTime * ((moveSpeed > 0.1f) ? 1f : 0.25f);
-			if (nextTimeCategoryUpdate <= 0f && !waitingForLifeStoryUpdate)
-			{
-				nextTimeCategoryUpdate = 7f + 7f * Random.Range(0.2f, 1f);
-				waitingForLifeStoryUpdate = true;
-				((ObjectWorkQueue<BasePlayer>)lifeStoryQueue).Add(this);
-			}
-			if (LifeStoryInWilderness)
-			{
-				PlayerLifeStory obj2 = lifeStory;
-				obj2.secondsWilderness += deltaTime;
-			}
-			if (LifeStoryInMonument)
-			{
-				PlayerLifeStory obj3 = lifeStory;
-				obj3.secondsInMonument += deltaTime;
-			}
-			if (LifeStoryInBase)
-			{
-				PlayerLifeStory obj4 = lifeStory;
-				obj4.secondsInBase += deltaTime;
-			}
-			if (LifeStoryFlying)
-			{
-				PlayerLifeStory obj5 = lifeStory;
-				obj5.secondsFlying += deltaTime;
-			}
-			if (LifeStoryBoating)
-			{
-				PlayerLifeStory obj6 = lifeStory;
-				obj6.secondsBoating += deltaTime;
-			}
-			if (LifeStorySwimming)
-			{
-				PlayerLifeStory obj7 = lifeStory;
-				obj7.secondsSwimming += deltaTime;
-			}
-			if (LifeStoryDriving)
-			{
-				PlayerLifeStory obj8 = lifeStory;
-				obj8.secondsDriving += deltaTime;
-			}
-			if (IsSleeping())
-			{
-				PlayerLifeStory obj9 = lifeStory;
-				obj9.secondsSleeping += deltaTime;
-			}
-			else if (IsRunning())
-			{
-				PlayerLifeStory obj10 = lifeStory;
-				obj10.metersRun += moveSpeed * deltaTime;
-			}
-			else
-			{
-				PlayerLifeStory obj11 = lifeStory;
-				obj11.metersWalked += moveSpeed * deltaTime;
-			}
-		}
-	}
-
-	public void UpdateTimeCategory()
-	{
-		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
-		TimeWarning val = TimeWarning.New("UpdateTimeCategory", 0);
-		try
-		{
-			waitingForLifeStoryUpdate = false;
-			int num = currentTimeCategory;
-			currentTimeCategory = 1;
-			if (IsBuildingAuthed())
-			{
-				currentTimeCategory = 4;
-			}
-			Vector3 position = ((Component)this).transform.position;
-			if ((Object)(object)TerrainMeta.TopologyMap != (Object)null && ((uint)TerrainMeta.TopologyMap.GetTopology(position) & 0x400u) != 0)
-			{
-				foreach (MonumentInfo monument in TerrainMeta.Path.Monuments)
-				{
-					if (monument.shouldDisplayOnMap && monument.IsInBounds(position))
-					{
-						currentTimeCategory = 2;
-						break;
-					}
-				}
-			}
-			if (IsSwimming())
-			{
-				currentTimeCategory |= 32;
-			}
-			if (isMounted)
-			{
-				BaseMountable baseMountable = GetMounted();
-				if (baseMountable.mountTimeStatType == BaseMountable.MountStatType.Boating)
-				{
-					currentTimeCategory |= 16;
-				}
-				else if (baseMountable.mountTimeStatType == BaseMountable.MountStatType.Flying)
-				{
-					currentTimeCategory |= 8;
-				}
-				else if (baseMountable.mountTimeStatType == BaseMountable.MountStatType.Driving)
-				{
-					currentTimeCategory |= 64;
-				}
-			}
-			else if (HasParent() && GetParentEntity() is BaseMountable baseMountable2)
-			{
-				if (baseMountable2.mountTimeStatType == BaseMountable.MountStatType.Boating)
-				{
-					currentTimeCategory |= 16;
-				}
-				else if (baseMountable2.mountTimeStatType == BaseMountable.MountStatType.Flying)
-				{
-					currentTimeCategory |= 8;
-				}
-				else if (baseMountable2.mountTimeStatType == BaseMountable.MountStatType.Driving)
-				{
-					currentTimeCategory |= 64;
-				}
-			}
-			if (num != currentTimeCategory || !hasSentPresenceState)
-			{
-				LifeStoryInWilderness = (1 & currentTimeCategory) != 0;
-				LifeStoryInMonument = (2 & currentTimeCategory) != 0;
-				LifeStoryInBase = (4 & currentTimeCategory) != 0;
-				LifeStoryFlying = (8 & currentTimeCategory) != 0;
-				LifeStoryBoating = (0x10 & currentTimeCategory) != 0;
-				LifeStorySwimming = (0x20 & currentTimeCategory) != 0;
-				LifeStoryDriving = (0x40 & currentTimeCategory) != 0;
-				ClientRPCPlayer(null, this, "UpdateRichPresenceState", currentTimeCategory);
-				hasSentPresenceState = true;
-			}
-		}
-		finally
-		{
-			((IDisposable)val)?.Dispose();
-		}
-	}
-
-	public void LifeStoryShotFired(BaseEntity withWeapon)
-	{
-		if (lifeStory == null)
-		{
-			return;
-		}
-		if (lifeStory.weaponStats == null)
-		{
-			lifeStory.weaponStats = Pool.GetList<WeaponStats>();
-		}
-		foreach (WeaponStats weaponStat in lifeStory.weaponStats)
-		{
-			if (weaponStat.weaponName == withWeapon.ShortPrefabName)
-			{
-				weaponStat.shotsFired++;
-				return;
-			}
-		}
-		WeaponStats val = Pool.Get<WeaponStats>();
-		val.weaponName = withWeapon.ShortPrefabName;
-		val.shotsFired++;
-		lifeStory.weaponStats.Add(val);
-	}
-
-	public void LifeStoryShotHit(BaseEntity withWeapon)
-	{
-		if (lifeStory == null || (Object)(object)withWeapon == (Object)null)
-		{
-			return;
-		}
-		if (lifeStory.weaponStats == null)
-		{
-			lifeStory.weaponStats = Pool.GetList<WeaponStats>();
-		}
-		foreach (WeaponStats weaponStat in lifeStory.weaponStats)
-		{
-			if (weaponStat.weaponName == withWeapon.ShortPrefabName)
-			{
-				weaponStat.shotsHit++;
-				return;
-			}
-		}
-		WeaponStats val = Pool.Get<WeaponStats>();
-		val.weaponName = withWeapon.ShortPrefabName;
-		val.shotsHit++;
-		lifeStory.weaponStats.Add(val);
-	}
-
-	public void LifeStoryKill(BaseCombatEntity killed)
-	{
-		if (lifeStory != null)
-		{
-			if (killed is ScientistNPC)
-			{
-				PlayerLifeStory obj = lifeStory;
-				obj.killedScientists++;
-			}
-			else if (killed is BasePlayer)
-			{
-				PlayerLifeStory obj2 = lifeStory;
-				obj2.killedPlayers++;
-			}
-			else if (killed is BaseAnimalNPC)
-			{
-				PlayerLifeStory obj3 = lifeStory;
-				obj3.killedAnimals++;
-			}
-		}
-	}
-
-	public void LifeStoryGenericStat(string key, int value)
-	{
-		if (lifeStory == null)
-		{
-			return;
-		}
-		if (lifeStory.genericStats == null)
-		{
-			lifeStory.genericStats = Pool.GetList<GenericStat>();
-		}
-		foreach (GenericStat genericStat in lifeStory.genericStats)
-		{
-			if (genericStat.key == key)
-			{
-				genericStat.value += value;
-				return;
-			}
-		}
-		GenericStat val = Pool.Get<GenericStat>();
-		val.key = key;
-		val.value = value;
-		lifeStory.genericStats.Add(val);
-	}
-
-	public void LifeStoryHurt(float amount)
-	{
-		if (lifeStory != null)
-		{
-			PlayerLifeStory obj = lifeStory;
-			obj.totalDamageTaken += amount;
-		}
-	}
-
-	public void LifeStoryHeal(float amount)
-	{
-		if (lifeStory != null)
-		{
-			PlayerLifeStory obj = lifeStory;
-			obj.totalHealing += amount;
-		}
-	}
-
-	internal void LifeStoryLogDeath(HitInfo deathBlow, DamageType lastDamage)
-	{
-		if (lifeStory == null)
-		{
-			return;
-		}
-		lifeStory.timeDied = (uint)Epoch.Current;
-		DeathInfo val = Pool.Get<DeathInfo>();
-		val.lastDamageType = (int)lastDamage;
-		if (deathBlow != null)
-		{
-			if ((Object)(object)deathBlow.Initiator != (Object)null)
-			{
-				deathBlow.Initiator.AttackerInfo(val);
-				val.attackerDistance = Distance(deathBlow.Initiator);
-			}
-			if ((Object)(object)deathBlow.WeaponPrefab != (Object)null)
-			{
-				val.inflictorName = deathBlow.WeaponPrefab.ShortPrefabName;
-			}
-			if (deathBlow.HitBone != 0)
-			{
-				val.hitBone = StringPool.Get(deathBlow.HitBone);
-			}
-			else
-			{
-				val.hitBone = "";
-			}
-		}
-		else if (base.SecondsSinceAttacked <= 60f && (Object)(object)lastAttacker != (Object)null)
-		{
-			lastAttacker.AttackerInfo(val);
-		}
-		lifeStory.deathInfo = val;
+		CurrentTutorialAllowance = (TutorialItemAllowance)info.msg.basePlayer.tutorialAllowance;
 	}
 
 	internal override void OnParentRemoved()
@@ -6860,8 +8277,9 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 
 	public override void ServerInit()
 	{
+		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
 		stats = new PlayerStatistics(this);
-		if (userID == 0L)
+		if ((ulong)userID == 0L)
 		{
 			userID = (ulong)Random.Range(0, 10000000);
 			UserIDString = userID.ToString();
@@ -6871,6 +8289,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		EnablePlayerCollider();
 		SetPlayerRigidbodyState(!IsSleeping());
 		base.ServerInit();
+		eyes.bodyRotation = ((Component)this).transform.rotation;
 		Query.Server.AddPlayer(this);
 		inventory.ServerInit(this);
 		metabolism.ServerInit(this);
@@ -6902,7 +8321,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 
 	protected void ServerUpdate(float deltaTime)
 	{
-		//IL_0136: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cd: Unknown result type (might be due to invalid IL or missing references)
 		if (!((BaseNetwork)Net.sv).IsConnected())
 		{
 			return;
@@ -6912,17 +8331,6 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		ThinkMissions(deltaTime);
 		desyncTimeRaw = Mathf.Max(timeSinceLastTick - deltaTime, 0f);
 		desyncTimeClamped = Mathf.Min(desyncTimeRaw, ConVar.AntiHack.maxdesync);
-		if (clientTickRate != Player.tickrate_cl)
-		{
-			clientTickRate = Player.tickrate_cl;
-			clientTickInterval = 1f / (float)clientTickRate;
-			ClientRPCPlayer(null, this, "UpdateClientTickRate", clientTickRate);
-		}
-		if (serverTickRate != Player.tickrate_sv)
-		{
-			serverTickRate = Player.tickrate_sv;
-			serverTickInterval = 1f / (float)serverTickRate;
-		}
 		if (ConVar.AntiHack.terrain_protection > 0 && Time.frameCount % ConVar.AntiHack.terrain_timeslice == (uint)net.ID.Value % ConVar.AntiHack.terrain_timeslice && !AntiHack.ShouldIgnore(this))
 		{
 			bool flag = false;
@@ -6944,6 +8352,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				return;
 			}
 		}
+		float serverTickInterval = Player.serverTickInterval;
 		if (!(Time.realtimeSinceStartup < lastPlayerTick + serverTickInterval))
 		{
 			if (lastPlayerTick < Time.realtimeSinceStartup - serverTickInterval * 100f)
@@ -7025,6 +8434,11 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			{
 				MarkWeaponDrawnDuration(0f);
 			}
+			if (PlayHeavyLandingAnimation && !modelState.mounted && modelState.onground && Parachute.LandingAnimations)
+			{
+				Server_StartGesture(GestureCollection.HeavyLandingId);
+				PlayHeavyLandingAnimation = false;
+			}
 			if (timeSinceLastTick > (float)ConVar.Server.playertimeout)
 			{
 				lastTickTime = 0f;
@@ -7050,8 +8464,15 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 
 	private void EnterGame()
 	{
+		//IL_0183: Unknown result type (might be due to invalid IL or missing references)
 		SetPlayerFlag(PlayerFlags.ReceivingSnapshot, b: false);
 		bool flag = false;
+		if (IsLoadingAfterTransfer())
+		{
+			SetPlayerFlag(PlayerFlags.LoadingAfterTransfer, b: false);
+			EndSleeping();
+			flag = true;
+		}
 		if (IsTransferProtected())
 		{
 			BaseVehicle vehicleParent = GetVehicleParent();
@@ -7061,28 +8482,22 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				flag = true;
 			}
 		}
-		if (IsLoadingAfterTransfer())
-		{
-			SetPlayerFlag(PlayerFlags.LoadingAfterTransfer, b: false);
-			EndSleeping();
-			flag = true;
-		}
 		if (flag)
 		{
 			SendNetworkUpdateImmediate();
 		}
-		ClientRPCPlayer(null, this, "FinishLoading");
+		ClientRPC(RpcTarget.Player("FinishLoading", this));
 		((FacepunchBehaviour)this).Invoke((Action)DelayedTeamUpdate, 1f);
 		LoadMissions(State.missions);
 		MissionDirty();
 		double num = State.unHostileTimestamp - TimeEx.currentTimestamp;
 		if (num > 0.0)
 		{
-			ClientRPCPlayer(null, this, "SetHostileLength", (float)num);
+			ClientRPC(RpcTarget.Player("SetHostileLength", this), (float)num);
 		}
 		if (IsTransferProtected() && base.TransferProtectionRemaining > 0f)
 		{
-			ClientRPCPlayer(null, this, "SetTransferProtectionDuration", base.TransferProtectionRemaining);
+			ClientRPC(RpcTarget.Player("SetTransferProtectionDuration", this), base.TransferProtectionRemaining);
 		}
 		if ((Object)(object)modifiers != (Object)null)
 		{
@@ -7098,6 +8513,18 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			StartDemoRecording();
 		}
 		SendClientPetLink();
+		ClientRPC<Vector3>(RpcTarget.Player("ForceViewAnglesTo", this), ((Component)this).transform.forward);
+		HandleTutorialOnGameEnter();
+	}
+
+	private void HandleTutorialOnGameEnter()
+	{
+		if (TutorialIsland.ShouldPlayerResumeTutorial(this) && (Object)(object)TutorialIsland.RestoreOrCreateIslandForPlayer(this, triggerAnalytics: false) == (Object)null)
+		{
+			ClearTutorial();
+			Hurt(999999f);
+			ClearTutorial_PostDeath();
+		}
 	}
 
 	[RPC_Server]
@@ -7115,8 +8542,8 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 
 	public void PlayerInit(Connection c)
 	{
-		//IL_00c3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ee: Unknown result type (might be due to invalid IL or missing references)
 		TimeWarning val = TimeWarning.New("PlayerInit", 10);
 		try
 		{
@@ -7149,7 +8576,8 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			net.OnConnected(c);
 			net.StartSubscriber();
 			SendAsSnapshot(net.connection);
-			ClientRPCPlayer(null, this, "StartLoading");
+			GlobalNetworkHandler.server.StartSendingSnapshot(this);
+			ClientRPC(RpcTarget.Player("StartLoading", this));
 			if (Object.op_Implicit((Object)(object)BaseGameMode.GetActiveGameMode(serverside: true)))
 			{
 				BaseGameMode.GetActiveGameMode(serverside: true).OnPlayerConnected(this);
@@ -7185,7 +8613,11 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 					ChatMessage("antihack.eye_protection is disabled!");
 				}
 			}
-			LoadClanInfo();
+			inventory.crafting.SendToOwner();
+			if ((Object)(object)TerrainMeta.Path != (Object)null && TerrainMeta.Path.OceanPatrolFar != null)
+			{
+				SendCargoPatrolPath();
+			}
 		}
 		finally
 		{
@@ -7203,7 +8635,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 
 	public void SendDeathInformation()
 	{
-		ClientRPCPlayer(null, this, "OnDied");
+		ClientRPC(RpcTarget.Player("OnDied", this));
 	}
 
 	public void SendRespawnOptions()
@@ -7257,17 +8689,33 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		}
 		void SendToPlayer(List<SpawnOptions> spawnOptions, bool loading)
 		{
+			//IL_0093: Unknown result type (might be due to invalid IL or missing references)
 			RespawnInformation val = Pool.Get<RespawnInformation>();
 			try
 			{
 				val.spawnOptions = spawnOptions;
 				val.loading = loading;
+				if (ConVar.Server.max_shelters == LegacyShelter.FpShelterDefault && LegacyShelter.SheltersPerPlayer.ContainsKey(userID) && LegacyShelter.SheltersPerPlayer[userID].Count > 0)
+				{
+					val.shelterPositions = Pool.GetList<Vector3>();
+					foreach (LegacyShelter item2 in LegacyShelter.SheltersPerPlayer[userID])
+					{
+						val.shelterPositions.Add(((Component)item2).transform.position);
+					}
+				}
 				if (IsDead())
 				{
 					val.previousLife = previousLifeStory;
-					val.fadeIn = previousLifeStory != null && previousLifeStory.timeDied > Epoch.Current - 5;
+					if (!ConVar.Server.skipDeathScreenFade)
+					{
+						val.fadeIn = previousLifeStory != null && previousLifeStory.timeDied > Epoch.Current - 5;
+					}
+					else
+					{
+						val.fadeIn = false;
+					}
 				}
-				ClientRPCPlayer<RespawnInformation>(null, this, "OnRespawnInformation", val);
+				ClientRPC<RespawnInformation>(RpcTarget.Player("OnRespawnInformation", this), val);
 			}
 			finally
 			{
@@ -7278,24 +8726,30 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 
 	public static void GetRespawnOptionsForPlayer(List<SpawnOptions> spawnOptions, ulong userID)
 	{
-		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
+		BasePlayer basePlayer = FindByID(userID);
 		SleepingBag[] array = SleepingBag.FindForPlayer(userID, ignoreTimers: true);
 		foreach (SleepingBag sleepingBag in array)
 		{
-			SpawnOptions val = Pool.Get<SpawnOptions>();
-			val.id = sleepingBag.net.ID;
-			val.name = sleepingBag.niceName;
-			val.worldPosition = ((Component)sleepingBag).transform.position;
-			val.type = (RespawnType)(sleepingBag.isStatic ? 5 : ((int)sleepingBag.RespawnType));
-			val.unlockSeconds = sleepingBag.GetUnlockSeconds(userID);
-			val.occupied = sleepingBag.IsOccupied(userID);
-			val.mobile = sleepingBag.IsMobile();
-			spawnOptions.Add(val);
+			if (!((Object)(object)basePlayer != (Object)null) || basePlayer.IsInTutorial == sleepingBag.IsTutorialBag)
+			{
+				SpawnOptions val = Pool.Get<SpawnOptions>();
+				val.id = sleepingBag.net.ID;
+				val.name = sleepingBag.niceName;
+				val.worldPosition = ((Component)sleepingBag).transform.position;
+				val.type = (RespawnType)(sleepingBag.isStatic ? 5 : ((int)sleepingBag.RespawnType));
+				val.unlockSeconds = sleepingBag.GetUnlockSeconds(userID);
+				val.respawnState = sleepingBag.GetRespawnState(userID);
+				val.mobile = sleepingBag.IsMobile();
+				spawnOptions.Add(val);
+			}
 		}
 	}
 
@@ -7309,13 +8763,22 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 
 	public void ScheduledDeath()
 	{
+		DeathInfo val = Pool.Get<DeathInfo>();
+		val.attackerName = "safezone";
 		Kill();
+		lifeStory.deathInfo = val;
+		lifeStory.timeDied = (uint)Epoch.Current;
+		LifeStoryEnd();
 	}
 
 	public virtual void StartSleeping()
 	{
 		if (!IsSleeping())
 		{
+			if (IsRestrained)
+			{
+				inventory.SetLockedByRestraint(flag: false);
+			}
 			if (InSafeZone() && !((FacepunchBehaviour)this).IsInvoking((Action)ScheduledDeath))
 			{
 				((FacepunchBehaviour)this).Invoke((Action)ScheduledDeath, NPCAutoTurret.sleeperhostiledelay);
@@ -7333,7 +8796,6 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			((FacepunchBehaviour)this).CancelInvoke((Action)TeamUpdate);
 			((FacepunchBehaviour)this).CancelInvoke((Action)UpdateClanLastSeen);
 			inventory.loot.Clear();
-			inventory.crafting.CancelAll(returnItems: true);
 			inventory.containerMain.OnChanged();
 			inventory.containerBelt.OnChanged();
 			inventory.containerWear.OnChanged();
@@ -7494,10 +8956,14 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 	{
 		if (IsSleeping())
 		{
+			if (IsRestrained)
+			{
+				inventory.SetLockedByRestraint(flag: true);
+			}
 			SetPlayerFlag(PlayerFlags.Sleeping, b: false);
 			sleepStartTime = -1f;
 			sleepingPlayerList.Remove(this);
-			if (userID < 10000000 && !bots.Contains(this))
+			if ((ulong)userID < 10000000 && !bots.Contains(this))
 			{
 				bots.Add(this);
 			}
@@ -7520,6 +8986,14 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			inventory.containerBelt.OnChanged();
 			inventory.containerWear.OnChanged();
 			EACServer.LogPlayerSpawn(this);
+			if (TotalPingCount > 0)
+			{
+				SendPingsToClient();
+			}
+			if (TutorialIsland.ShouldPlayerBeAskedToStartTutorial(this))
+			{
+				ClientRPC(RpcTarget.Player("PromptToStartTutorial", this));
+			}
 		}
 	}
 
@@ -7533,6 +9007,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 
 	public virtual void OnDisconnected()
 	{
+		startTutorialCooldown = 0f;
 		stats.Save(forceSteamSave: true);
 		EndLooting();
 		ClearDesigningAIEntity();
@@ -7553,8 +9028,6 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		}
 		ResetAntiHack();
 		RefreshColliderSize(forced: true);
-		clientTickRate = 20;
-		clientTickInterval = 0.05f;
 		if (Object.op_Implicit((Object)(object)BaseGameMode.GetActiveGameMode(serverside: true)))
 		{
 			BaseGameMode.GetActiveGameMode(serverside: true).OnPlayerDisconnected(this);
@@ -7599,7 +9072,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 	private void OnPlayerLanded(RPCMessage msg)
 	{
 		float num = msg.read.Float();
-		if (!float.IsNaN(num) && !float.IsInfinity(num))
+		if (!float.IsNaN(num) && !float.IsInfinity(num) && !ConVar.AntiHack.serverside_fall_damage)
 		{
 			ApplyFallDamageFromVelocity(num);
 			fallVelocity = 0f;
@@ -7682,12 +9155,14 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		}
 	}
 
-	public virtual BaseCorpse CreateCorpse()
+	public virtual BaseCorpse CreateCorpse(PlayerFlags flagsOnDeath, Vector3 posOnDeath, Quaternion rotOnDeath, List<TriggerBase> triggersOnDeath)
 	{
+		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c1: Unknown result type (might be due to invalid IL or missing references)
 		TimeWarning val = TimeWarning.New("Create corpse", 0);
 		try
 		{
-			string strCorpsePrefab = "assets/prefabs/player/player_corpse.prefab";
+			string strCorpsePrefab = ((!Physics.serversideragdolls) ? "assets/prefabs/player/player_corpse.prefab" : "assets/prefabs/player/player_corpse_new.prefab");
 			bool flag = false;
 			if (Global.cinematicGingerbreadCorpses)
 			{
@@ -7702,18 +9177,28 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 					}
 				}
 			}
-			PlayerCorpse playerCorpse = DropCorpse(strCorpsePrefab) as PlayerCorpse;
+			PlayerCorpse playerCorpse = DropCorpse(strCorpsePrefab, posOnDeath, rotOnDeath, flagsOnDeath, modelState) as PlayerCorpse;
 			if (Object.op_Implicit((Object)(object)playerCorpse))
 			{
 				playerCorpse.SetFlag(Flags.Reserved5, HasPlayerFlag(PlayerFlags.DisplaySash));
 				if (!flag)
 				{
-					playerCorpse.TakeFrom(inventory.containerMain, inventory.containerWear, inventory.containerBelt);
+					playerCorpse.TakeFrom(this, inventory.containerMain, inventory.containerWear, inventory.containerBelt);
 				}
 				playerCorpse.playerName = displayName;
-				playerCorpse.streamerName = RandomUsernames.Get(userID);
+				playerCorpse.streamerName = RandomUsernames.Get((ulong)userID);
 				playerCorpse.playerSteamID = userID;
 				playerCorpse.underwearSkin = GetUnderwearSkin();
+				if (!triggersOnDeath.IsNullOrEmpty())
+				{
+					foreach (TriggerBase item2 in triggersOnDeath)
+					{
+						if (item2 is TriggerParent triggerParent)
+						{
+							triggerParent.ForceParentEarly(playerCorpse);
+						}
+					}
+				}
 				playerCorpse.Spawn();
 				playerCorpse.TakeChildren(this);
 				ResourceDispenser component = ((Component)playerCorpse).GetComponent<ResourceDispenser>();
@@ -7746,25 +9231,78 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 
 	public override void OnKilled(HitInfo info)
 	{
-		//IL_00df: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01bb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ca: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01cf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01d4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01d8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01e2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_06c6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0655: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0672: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0368: Unknown result type (might be due to invalid IL or missing references)
-		//IL_05c9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0437: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03c7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_039f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_07cf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_062b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ad: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0089: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01be: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0273: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0274: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0849: Unknown result type (might be due to invalid IL or missing references)
+		//IL_084e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_07cd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_07d2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_07f5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04bd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04c2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02fb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0300: Unknown result type (might be due to invalid IL or missing references)
+		//IL_030a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_030f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0314: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0318: Unknown result type (might be due to invalid IL or missing references)
+		//IL_031f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0324: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0328: Unknown result type (might be due to invalid IL or missing references)
+		//IL_032a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_032c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0736: Unknown result type (might be due to invalid IL or missing references)
+		//IL_073b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_059d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_05a2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_052d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0505: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0953: Unknown result type (might be due to invalid IL or missing references)
+		//IL_07a3: Unknown result type (might be due to invalid IL or missing references)
+		PlayerFlags flagsOnDeath = playerFlags;
+		Vector3 position = ((Component)this).transform.position;
+		List<TriggerBase> list = Pool.GetList<TriggerBase>();
+		if (triggers != null)
+		{
+			foreach (TriggerBase trigger in triggers)
+			{
+				if ((Object)(object)trigger != (Object)null)
+				{
+					list.Add(trigger);
+				}
+			}
+		}
+		BaseMountable baseMountable = GetMounted();
+		Vector3 val = Vector3.zero;
+		Quaternion rotOnDeath;
+		if (baseMountable.IsValid())
+		{
+			rotOnDeath = baseMountable.mountAnchor.rotation;
+			val = baseMountable.GetMountRagdollVelocity(this);
+		}
+		else
+		{
+			float x = ((Component)this).transform.eulerAngles.x;
+			Quaternion bodyRotation = eyes.bodyRotation;
+			rotOnDeath = Quaternion.Euler(x, ((Quaternion)(ref bodyRotation)).eulerAngles.y, ((Component)this).transform.eulerAngles.z);
+		}
 		SetPlayerFlag(PlayerFlags.Unused2, b: false);
 		SetPlayerFlag(PlayerFlags.Unused1, b: false);
 		EnsureDismounted();
@@ -7776,6 +9314,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			RelationshipManager.ServerInstance.SetSeen(info.InitiatorPlayer, this);
 			RelationshipManager.ServerInstance.SetSeen(this, info.InitiatorPlayer);
 			RelationshipManager.ServerInstance.SetRelationship(this, info.InitiatorPlayer, RelationshipManager.RelationshipType.Enemy);
+			HandleClanPlayerKilled(info.InitiatorPlayer);
 		}
 		if (Object.op_Implicit((Object)(object)BaseGameMode.GetActiveGameMode(serverside: true)))
 		{
@@ -7785,24 +9324,24 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		BaseMission.PlayerKilled(this);
 		DisablePlayerCollider();
 		RemovePlayerRigidbody();
-		List<BasePlayer> list = Pool.GetList<BasePlayer>();
+		List<BasePlayer> list2 = Pool.GetList<BasePlayer>();
 		if (IsIncapacitated())
 		{
-			Enumerator<BasePlayer> enumerator = activePlayerList.GetEnumerator();
+			Enumerator<BasePlayer> enumerator2 = activePlayerList.GetEnumerator();
 			try
 			{
-				while (enumerator.MoveNext())
+				while (enumerator2.MoveNext())
 				{
-					BasePlayer current = enumerator.Current;
-					if ((Object)(object)current != (Object)null && (Object)(object)current.inventory != (Object)null && (Object)(object)current.inventory.loot != (Object)null && (Object)(object)current.inventory.loot.entitySource == (Object)(object)this)
+					BasePlayer current2 = enumerator2.Current;
+					if ((Object)(object)current2 != (Object)null && (Object)(object)current2.inventory != (Object)null && (Object)(object)current2.inventory.loot != (Object)null && (Object)(object)current2.inventory.loot.entitySource == (Object)(object)this)
 					{
-						list.Add(current);
+						list2.Add(current2);
 					}
 				}
 			}
 			finally
 			{
-				((IDisposable)enumerator).Dispose();
+				((IDisposable)enumerator2).Dispose();
 			}
 		}
 		bool flag = IsWounded();
@@ -7812,21 +9351,32 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			inventory.crafting.CancelAll(returnItems: true);
 		}
 		EACServer.LogPlayerDespawn(this);
-		BaseCorpse baseCorpse = CreateCorpse();
+		BaseCorpse baseCorpse = CreateCorpse(flagsOnDeath, position, rotOnDeath, list);
+		Vector3 val2;
 		if ((Object)(object)baseCorpse != (Object)null)
 		{
+			if (baseCorpse.CorpseIsRagdoll && (Object)(object)baseMountable != (Object)null)
+			{
+				BaseVehicle baseVehicle = baseMountable.VehicleParent();
+				if ((Object)(object)baseVehicle != (Object)null && baseVehicle.mountedPlayerRagdolls == BaseVehicle.RagdollMode.FallThrough)
+				{
+					GameObjectExtensions.SetIgnoreCollisions(((Component)baseCorpse).gameObject, ((Component)baseVehicle).gameObject, true);
+				}
+			}
 			if (info != null)
 			{
 				Rigidbody component = ((Component)baseCorpse).GetComponent<Rigidbody>();
 				if ((Object)(object)component != (Object)null)
 				{
-					Vector3 val = info.attackNormal + Vector3.up * 0.5f;
-					component.AddForce(((Vector3)(ref val)).normalized * 1f, (ForceMode)2);
+					float num = (baseCorpse.CorpseIsRagdoll ? 5f : 1f);
+					val2 = info.attackNormal + Vector3.up * 0.5f;
+					Vector3 val3 = ((Vector3)(ref val2)).normalized * num;
+					component.AddForce(val3 + val, (ForceMode)2);
 				}
 			}
 			if (baseCorpse is PlayerCorpse playerCorpse && playerCorpse.containers != null)
 			{
-				foreach (BasePlayer item in list)
+				foreach (BasePlayer item in list2)
 				{
 					if ((Object)(object)item == (Object)null)
 					{
@@ -7845,7 +9395,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				}
 			}
 		}
-		Pool.FreeList<BasePlayer>(ref list);
+		Pool.FreeList<BasePlayer>(ref list2);
 		inventory.Strip();
 		if (flag && lastDamage == DamageType.Suicide && cachedNonSuicideHitInfo != null)
 		{
@@ -7865,7 +9415,17 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			{
 				if ((Object)(object)info.Initiator == (Object)(object)this)
 				{
-					text = string.Concat(((object)this).ToString(), " was killed by ", lastDamage, " at ", ((Component)this).transform.position);
+					string[] obj = new string[5]
+					{
+						((object)this).ToString(),
+						" was killed by ",
+						lastDamage.ToString(),
+						" at ",
+						null
+					};
+					val2 = ((Component)this).transform.position;
+					obj[4] = ((object)(Vector3)(ref val2)).ToString();
+					text = string.Concat(obj);
 					text2 = "You died: killed by " + lastDamage;
 					if (lastDamage == DamageType.Suicide)
 					{
@@ -7883,8 +9443,22 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 					if (info.Initiator is BasePlayer)
 					{
 						BasePlayer basePlayer = info.Initiator.ToPlayer();
-						text = ((object)this).ToString() + " was killed by " + ((object)basePlayer).ToString() + " at " + ((Component)this).transform.position;
-						text2 = "You died: killed by " + basePlayer.displayName + " (" + basePlayer.userID + ")";
+						string[] obj2 = new string[5]
+						{
+							((object)this).ToString(),
+							" was killed by ",
+							((object)basePlayer).ToString(),
+							" at ",
+							null
+						};
+						val2 = ((Component)this).transform.position;
+						obj2[4] = ((object)(Vector3)(ref val2)).ToString();
+						text = string.Concat(obj2);
+						string[] obj3 = new string[5] { "You died: killed by ", basePlayer.displayName, " (", null, null };
+						EncryptedValue<ulong> encryptedValue = basePlayer.userID;
+						obj3[3] = encryptedValue.ToString();
+						obj3[4] = ")";
+						text2 = string.Concat(obj3);
 						basePlayer.stats.Add("kill_player", 1, Stats.All);
 						basePlayer.LifeStoryKill(this);
 						OnKilledByPlayer(basePlayer);
@@ -7902,10 +9476,23 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 							basePlayer.stats.Add("mlrs_kills", 1, Stats.All);
 							basePlayer.stats.Save(forceSteamSave: true);
 						}
+						Analytics.Azure.OnPlayerDeath(this, basePlayer);
 					}
 					else
 					{
-						text = ((object)this).ToString() + " was killed by " + info.Initiator.ShortPrefabName + " (" + info.Initiator.Categorize() + ") at " + ((Component)this).transform.position;
+						string[] obj4 = new string[7]
+						{
+							((object)this).ToString(),
+							" was killed by ",
+							info.Initiator.ShortPrefabName,
+							" (",
+							info.Initiator.Categorize(),
+							") at ",
+							null
+						};
+						val2 = ((Component)this).transform.position;
+						obj4[6] = ((object)(Vector3)(ref val2)).ToString();
+						text = string.Concat(obj4);
 						text2 = "You died: killed by " + info.Initiator.Categorize();
 						stats.Add("death_" + info.Initiator.Categorize(), 1);
 					}
@@ -7917,22 +9504,34 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			}
 			else if (lastDamage == DamageType.Fall)
 			{
-				text = ((object)this).ToString() + " was killed by fall at " + ((Component)this).transform.position;
+				string text3 = ((object)this).ToString();
+				val2 = ((Component)this).transform.position;
+				text = text3 + " was killed by fall at " + ((object)(Vector3)(ref val2)).ToString();
 				text2 = "You died: killed by fall";
 				Analytics.Server.Death("fall", ServerPosition);
 			}
 			else
 			{
-				text = ((object)this).ToString() + " was killed by " + info.damageTypes.GetMajorityDamageType().ToString() + " at " + ((Component)this).transform.position;
+				string[] obj5 = new string[5]
+				{
+					((object)this).ToString(),
+					" was killed by ",
+					info.damageTypes.GetMajorityDamageType().ToString(),
+					" at ",
+					null
+				};
+				val2 = ((Component)this).transform.position;
+				obj5[4] = ((object)(Vector3)(ref val2)).ToString();
+				text = string.Concat(obj5);
 				text2 = "You died: " + info.damageTypes.GetMajorityDamageType();
 			}
 		}
 		else
 		{
-			text = string.Concat(((object)this).ToString(), " died (", lastDamage, ")");
+			text = ((object)this).ToString() + " died (" + lastDamage.ToString() + ")";
 			text2 = "You died: " + lastDamage;
 		}
-		TimeWarning val2 = TimeWarning.New("LogMessage", 0);
+		TimeWarning val4 = TimeWarning.New("LogMessage", 0);
 		try
 		{
 			DebugEx.Log((object)text, (StackTraceLogType)0);
@@ -7940,7 +9539,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		}
 		finally
 		{
-			((IDisposable)val2)?.Dispose();
+			((IDisposable)val4)?.Dispose();
 		}
 		if (net.connection == null && (Object)(object)info?.Initiator != (Object)null && (Object)(object)info.Initiator != (Object)(object)this)
 		{
@@ -7954,11 +9553,14 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		if (net.connection == null)
 		{
 			((FacepunchBehaviour)this).Invoke((Action)base.KillMessage, 0f);
-			return;
 		}
-		SendRespawnOptions();
-		SendDeathInformation();
-		stats.Save();
+		else
+		{
+			SendRespawnOptions();
+			SendDeathInformation();
+			stats.Save();
+		}
+		Pool.FreeList<TriggerBase>(ref list);
 	}
 
 	public void RespawnAt(Vector3 position, Quaternion rotation, BaseEntity spawnPointEntity = null)
@@ -8018,7 +9620,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			inventory.GiveDefaultItems();
 		}
 		SendNetworkUpdateImmediate();
-		ClientRPCPlayer(null, this, "StartLoading");
+		ClientRPC(RpcTarget.Player("StartLoading", this));
 		Analytics.Azure.OnPlayerRespawned(this, spawnPointEntity);
 		if (Object.op_Implicit((Object)(object)activeGameMode))
 		{
@@ -8028,6 +9630,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		{
 			EACServer.OnStartLoading(net.connection);
 		}
+		ProcessMissionEvent(BaseMission.MissionEventType.RESPAWN, 0, 0f);
 	}
 
 	public void Respawn()
@@ -8063,6 +9666,11 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				return true;
 			}
 		}
+		if (IsInTutorial)
+		{
+			_ = (Object)(object)info.InitiatorPlayer != (Object)(object)this;
+			return false;
+		}
 		return false;
 	}
 
@@ -8073,16 +9681,16 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 
 	public override void Hurt(HitInfo info)
 	{
-		//IL_01be: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_033b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0340: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03c0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01cd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_037e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0383: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0407: Unknown result type (might be due to invalid IL or missing references)
 		if (IsDead() || IsTransferProtected() || (IsImmortalTo(info) && info.damageTypes.Total() >= 0f))
 		{
 			return;
 		}
-		if (ConVar.Server.pve && Object.op_Implicit((Object)(object)info.Initiator) && info.Initiator is BasePlayer && (Object)(object)info.Initiator != (Object)(object)this)
+		if (ConVar.Server.pve && !IsNpc && Object.op_Implicit((Object)(object)info.Initiator) && info.Initiator is BasePlayer && (Object)(object)info.Initiator != (Object)(object)this)
 		{
 			(info.Initiator as BasePlayer).Hurt(info.damageTypes.Total(), DamageType.Generic);
 			return;
@@ -8153,6 +9761,14 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			BasePlayer instigator = info?.InitiatorPlayer;
 			BaseGameMode.GetActiveGameMode(serverside: true).OnPlayerHurt(instigator, this, info);
 		}
+		if (IsRestrained && info.damageTypes.GetMajorityDamageType().InterruptsRestraintMinigame())
+		{
+			Handcuffs handcuffs = GetHeldEntity() as Handcuffs;
+			if ((Object)(object)handcuffs != (Object)null)
+			{
+				handcuffs.InterruptUnlockMiniGame(wasPushedOrDamaged: true);
+			}
+		}
 		EACServer.LogPlayerTakeDamage(this, info);
 		metabolism.SendChangesToClient();
 		if (info.PointStart != Vector3.zero && (info.damageTypes.Total() >= 0f || IsGod()))
@@ -8166,7 +9782,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 					arg = 12;
 				}
 			}
-			ClientRPCPlayerAndSpectators<Vector3, int, int>(null, this, "DirectionalDamage", info.PointStart, arg, Mathf.CeilToInt(info.damageTypes.Total()));
+			ClientRPC<Vector3, int, int>(RpcTarget.PlayerAndSpectators("DirectionalDamage", this), info.PointStart, arg, Mathf.CeilToInt(info.damageTypes.Total()));
 		}
 		cachedNonSuicideHitInfo = info;
 	}
@@ -8183,6 +9799,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		{
 			base.Heal(amount);
 		}
+		ProcessMissionEvent(BaseMission.MissionEventType.HEAL, 0, amount);
 	}
 
 	public static BasePlayer FindBot(ulong userId)
@@ -8195,7 +9812,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			while (enumerator.MoveNext())
 			{
 				BasePlayer current = enumerator.Current;
-				if (current.userID == userId)
+				if ((ulong)current.userID == userId)
 				{
 					return current;
 				}
@@ -8248,7 +9865,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				while (enumerator.MoveNext())
 				{
 					BasePlayer current = enumerator.Current;
-					if (current.userID == userID)
+					if ((ulong)current.userID == userID)
 					{
 						return current;
 					}
@@ -8285,7 +9902,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				while (enumerator.MoveNext())
 				{
 					BasePlayer current = enumerator.Current;
-					if (current.userID == userID)
+					if ((ulong)current.userID == userID)
 					{
 						return current;
 					}
@@ -8301,6 +9918,20 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		{
 			((IDisposable)val)?.Dispose();
 		}
+	}
+
+	public static BasePlayer FindAwakeOrSleepingByID(ulong userID)
+	{
+		if (userID == 0L)
+		{
+			return null;
+		}
+		BasePlayer basePlayer = FindByID(userID);
+		if (!((Object)(object)basePlayer != (Object)null))
+		{
+			return FindSleeping(userID);
+		}
+		return basePlayer;
 	}
 
 	public void Command(string strCommand, params object[] arguments)
@@ -8432,17 +10063,17 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 
 	public override void GiveItem(Item item, GiveItemReason reason = GiveItemReason.Generic)
 	{
-		//IL_010e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0125: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0124: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012a: Unknown result type (might be due to invalid IL or missing references)
 		if (reason == GiveItemReason.ResourceHarvested)
 		{
 			stats.Add($"harvest.{item.info.shortname}", item.amount, (Stats)6);
 		}
 		if (reason == GiveItemReason.ResourceHarvested || reason == GiveItemReason.Crafted)
 		{
-			ProcessMissionEvent(BaseMission.MissionEventType.HARVEST, item.info.shortname, item.amount);
+			ProcessMissionEvent(BaseMission.MissionEventType.HARVEST, item.info.itemid, item.amount);
 		}
 		int amount = item.amount;
 		if (inventory.GiveItem(item))
@@ -8470,6 +10101,11 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		info.attackerSteamID = userID;
 	}
 
+	public void InvalidateWorkbenchCache()
+	{
+		nextCheckTime = 0f;
+	}
+
 	public Workbench GetCachedCraftLevelWorkbench()
 	{
 		return _cachedWorkbench;
@@ -8482,21 +10118,27 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 
 	public override void Die(HitInfo info = null)
 	{
-		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0092: Unknown result type (might be due to invalid IL or missing references)
 		TimeWarning val = TimeWarning.New("Player.Die", 0);
 		try
 		{
 			if (!IsDead())
 			{
+				Handcuffs restraintItem = Belt.GetRestraintItem();
+				if ((Object)(object)restraintItem != (Object)null)
+				{
+					restraintItem.HeldWhenOwnerDied(this);
+				}
 				if (Belt != null && ShouldDropActiveItem())
 				{
 					Vector3 val2 = default(Vector3);
 					((Vector3)(ref val2))._002Ector(Random.Range(-2f, 2f), 0.2f, Random.Range(-2f, 2f));
 					Belt.DropActive(GetDropPosition(), GetInheritedDropVelocity() + ((Vector3)(ref val2)).normalized * 3f);
+					inventory.DropBackpackOnDeath();
 				}
 				if (!WoundInsteadOfDying(info))
 				{
@@ -8538,18 +10180,18 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 
 	public override void ApplyInheritedVelocity(Vector3 velocity)
 	{
-		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
 		BaseEntity baseEntity = GetParentEntity();
 		if ((Object)(object)baseEntity != (Object)null)
 		{
-			ClientRPCPlayer<Vector3, NetworkableId>(null, this, "SetInheritedVelocity", ((Component)baseEntity).transform.InverseTransformDirection(velocity), baseEntity.net.ID);
+			ClientRPC<Vector3, NetworkableId>(RpcTarget.Player("SetInheritedVelocity", this), ((Component)baseEntity).transform.InverseTransformDirection(velocity), baseEntity.net.ID);
 		}
 		else
 		{
-			ClientRPCPlayer<Vector3>(null, this, "SetInheritedVelocity", velocity);
+			ClientRPC<Vector3>(RpcTarget.Player("SetInheritedVelocity", this), velocity);
 		}
 		PauseSpeedHackDetection();
 	}
@@ -8593,8 +10235,8 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 	[RPC_Server.CallsPerSecond(1uL)]
 	public void PerformanceReport(RPCMessage msg)
 	{
-		string text = msg.read.String(256);
-		string text2 = msg.read.StringRaw(8388608u);
+		string text = msg.read.String(256, false);
+		string text2 = msg.read.StringRaw(8388608, false);
 		ClientPerformanceReport clientPerformanceReport = JsonConvert.DeserializeObject<ClientPerformanceReport>(text2);
 		if (clientPerformanceReport.user_id != UserIDString)
 		{
@@ -8652,18 +10294,18 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 
 	public override bool ShouldNetworkTo(BasePlayer player)
 	{
-		if (IsSpectating() && (Object)(object)player != (Object)(object)this && !player.net.connection.info.GetBool("global.specnet", false))
+		if (IsSpectating() && (Object)(object)player != (Object)(object)this)
 		{
 			return false;
 		}
 		return base.ShouldNetworkTo(player);
 	}
 
-	internal void GiveAchievement(string name)
+	internal void GiveAchievement(string name, bool allowTutorial = false)
 	{
-		if (GameInfo.HasAchievements)
+		if (GameInfo.HasAchievements && (!IsInTutorial || allowTutorial))
 		{
-			ClientRPCPlayer(null, this, "RecieveAchievement", name);
+			ClientRPC(RpcTarget.Player("RecieveAchievement", this), name);
 		}
 	}
 
@@ -8671,11 +10313,11 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 	[RPC_Server.CallsPerSecond(1uL)]
 	public void OnPlayerReported(RPCMessage msg)
 	{
-		string text = msg.read.String(256);
-		string message = msg.read.StringMultiLine(2048);
-		string type = msg.read.String(256);
-		string text2 = msg.read.String(256);
-		string text3 = msg.read.String(256);
+		string text = msg.read.String(256, false);
+		string message = msg.read.StringMultiLine(2048, false);
+		string type = msg.read.String(256, false);
+		string text2 = msg.read.String(256, false);
+		string text3 = msg.read.String(256, false);
 		DebugEx.Log((object)$"[PlayerReport] {this} reported {text3}[{text2}] - \"{text}\"", (StackTraceLogType)0);
 		RCon.Broadcast(RCon.LogType.Report, new
 		{
@@ -8693,19 +10335,19 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 	[RPC_Server.CallsPerSecond(1uL)]
 	public void OnFeedbackReport(RPCMessage msg)
 	{
-		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fb: Unknown result type (might be due to invalid IL or missing references)
 		if (ConVar.Server.printReportsToConsole || !string.IsNullOrEmpty(ConVar.Server.reportsServerEndpoint))
 		{
-			string text = msg.read.String(256);
-			string text2 = msg.read.StringMultiLine(2048);
+			string text = msg.read.String(256, false);
+			string text2 = msg.read.StringMultiLine(2048, false);
 			ReportType val = (ReportType)Mathf.Clamp(msg.read.Int32(), 0, 5);
 			if (ConVar.Server.printReportsToConsole)
 			{
@@ -8721,24 +10363,24 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			}
 			if (!string.IsNullOrEmpty(ConVar.Server.reportsServerEndpoint))
 			{
-				string image = msg.read.StringMultiLine(60000);
+				string image = msg.read.StringMultiLine(60000, false);
 				Feedback val2 = default(Feedback);
 				val2.Type = val;
 				val2.Message = text2;
 				val2.Subject = text;
 				Feedback val3 = val2;
 				((AppInfo)(ref val3.AppInfo)).Image = image;
-				Feedback.ServerReport(ConVar.Server.reportsServerEndpoint, userID, ConVar.Server.reportsServerEndpointKey, val3);
+				Feedback.ServerReport(ConVar.Server.reportsServerEndpoint, (ulong)userID, ConVar.Server.reportsServerEndpointKey, val3);
 			}
 		}
 	}
 
 	public void StartDemoRecording()
 	{
-		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00ba: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00cb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d0: Unknown result type (might be due to invalid IL or missing references)
 		if (net != null && net.connection != null && !net.connection.IsRecording)
 		{
 			string text = $"demos/{UserIDString}/{DateTime.Now:yyyy-MM-dd-hhmmss}.dem";
@@ -8790,33 +10432,38 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		cachedPersistantPlayer = null;
 	}
 
-	public bool IsPlayerVisibleToUs(BasePlayer otherPlayer, int layerMask)
+	public bool IsPlayerVisibleToUs(BasePlayer otherPlayer, Vector3 fromOffset, int layerMask)
 	{
 		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
 		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
 		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
 		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0089: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00da: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00df: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e7: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)otherPlayer == (Object)null)
 		{
 			return false;
 		}
 		Vector3 val = (isMounted ? eyes.worldMountedPosition : (IsDucked() ? eyes.worldCrouchedPosition : ((!IsCrawling()) ? eyes.worldStandingPosition : eyes.worldCrawlingPosition)));
+		val += fromOffset;
 		if (!otherPlayer.IsVisibleSpecificLayers(val, otherPlayer.CenterPoint(), layerMask) && !otherPlayer.IsVisibleSpecificLayers(val, ((Component)otherPlayer).transform.position, layerMask) && !otherPlayer.IsVisibleSpecificLayers(val, otherPlayer.eyes.position, layerMask))
 		{
 			return false;
@@ -8832,32 +10479,87 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 	{
 	}
 
-	public int GetIdealSlot(BasePlayer player, Item item)
+	public int GetIdealSlot(BasePlayer player, ItemContainer container, Item item)
 	{
+		if (container.HasFlag(ItemContainer.Flag.Clothing))
+		{
+			if (item.IsBackpack())
+			{
+				return ItemContainer.BackpackSlotIndex;
+			}
+			if (!item.info.isWearable)
+			{
+				return -1;
+			}
+			foreach (Item item2 in container.itemList)
+			{
+				if (!item2.info.ItemModWearable.CanExistWith(item.info.ItemModWearable) && item2.position == ItemContainer.BackpackSlotIndex == item.IsBackpack())
+				{
+					return item2.position;
+				}
+			}
+		}
 		return -1;
 	}
 
-	public ItemContainerId GetIdealContainer(BasePlayer looter, Item item, bool altMove)
+	public ItemContainerId GetIdealContainer(BasePlayer looter, Item item, ItemMoveModifier modifier)
 	{
-		//IL_0110: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00de: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0137: Unknown result type (might be due to invalid IL or missing references)
-		//IL_013d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
-		bool flag = !altMove && looter.inventory.loot.containers.Count > 0;
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01fe: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01df: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01cb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00dc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0225: Unknown result type (might be due to invalid IL or missing references)
+		//IL_022b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_021d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ca: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0101: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0190: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b2: Unknown result type (might be due to invalid IL or missing references)
+		bool flag = !((Enum)modifier).HasFlag((Enum)(object)(ItemMoveModifier)2) && looter.inventory.loot.containers.Count > 0;
 		ItemContainer parent = item.parent;
 		Item activeItem = looter.GetActiveItem();
-		if (activeItem != null && !flag && activeItem.contents != null && activeItem.contents != item.parent && activeItem.contents.capacity > 0 && activeItem.contents.CanAcceptItem(item, -1) == ItemContainer.CanAcceptResult.CanAccept)
+		Item backpackWithInventory = inventory.GetBackpackWithInventory();
+		bool flag2 = backpackWithInventory != null && backpackWithInventory == item.parentItem;
+		bool flag3 = false;
+		if (((Enum)modifier).HasFlag((Enum)(object)(ItemMoveModifier)16) && (Object)(object)looter == (Object)(object)this && backpackWithInventory != null)
+		{
+			if (backpackWithInventory.contents.HasSpaceFor(item))
+			{
+				if (!flag)
+				{
+					if (item.parentItem == null || !item.parentItem.IsBackpack() || item.parentItem.parent != inventory.containerWear)
+					{
+						return backpackWithInventory.contents.uid;
+					}
+				}
+				else if (inventory.loot.FindItem(item.uid) != null && !inventory.containerMain.HasSpaceFor(item))
+				{
+					return backpackWithInventory.contents.uid;
+				}
+			}
+			else
+			{
+				flag3 = true;
+			}
+		}
+		if (activeItem != null && !flag3 && !flag && activeItem.contents != null && activeItem.contents != item.parent && activeItem.contents.capacity > 0 && activeItem.contents.CanAcceptItem(item, -1) == ItemContainer.CanAcceptResult.CanAccept)
 		{
 			return activeItem.contents.uid;
 		}
-		if (item.info.isWearable && item.info.ItemModWearable.equipOnRightClick && (item.parent == inventory.containerBelt || item.parent == inventory.containerMain) && !flag)
+		if (item.info.isWearable && item.info.ItemModWearable.equipOnRightClick && item.parent != inventory.containerWear && !flag && !flag2)
 		{
-			return inventory.containerWear.uid;
+			if (flag3)
+			{
+				return ItemContainerId.Invalid;
+			}
+			if (backpackWithInventory == null || item.parent != backpackWithInventory.contents)
+			{
+				return inventory.containerWear.uid;
+			}
 		}
 		if (parent == inventory.containerMain)
 		{
@@ -8906,8 +10608,667 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		}
 	}
 
+	public bool InNoRespawnZone()
+	{
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		bool flag = false;
+		Vector3 position = ((Component)this).transform.position;
+		if (triggers != null)
+		{
+			for (int i = 0; i < triggers.Count; i++)
+			{
+				TriggerNoRespawnZone triggerNoRespawnZone = triggers[i] as TriggerNoRespawnZone;
+				if (!((Object)(object)triggerNoRespawnZone == (Object)null))
+				{
+					flag = triggerNoRespawnZone.InNoRespawnZone(position, checkRadius: false);
+					if (flag)
+					{
+						break;
+					}
+				}
+			}
+		}
+		return flag;
+	}
+
+	private void SendCargoPatrolPath()
+	{
+		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0046: Expected O, but got Unknown
+		if (!BaseBoat.generate_paths)
+		{
+			return;
+		}
+		if (cachedOceanPaths == null)
+		{
+			cachedOceanPaths = Pool.Get<OceanPaths>();
+			cachedOceanPaths.cargoPatrolPath = TerrainMeta.Path.OceanPatrolFar;
+			cachedOceanPaths.harborApproaches = new List<VectorList>();
+			for (int i = 0; i < CargoShip.TotalAvailableHarborDockingPaths; i++)
+			{
+				VectorList val = new VectorList();
+				val.vectorPoints = CargoShip.GetCargoApproachPath(i);
+				cachedOceanPaths.harborApproaches.Add(val);
+			}
+		}
+		ClientRPCPlayer<OceanPaths>(null, this, "ReceiveCargoPatrolPath", cachedOceanPaths);
+	}
+
+	[RPC_Server]
+	[RPC_Server.CallsPerSecond(5uL)]
+	[RPC_Server.MaxDistance(3f)]
+	[RPC_Server.IsVisible(3f)]
+	private void RPC_ReqDoPush(RPCMessage rpc)
+	{
+		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bb: Unknown result type (might be due to invalid IL or missing references)
+		if (IsSleeping() || IsDead() || !IsRestrained)
+		{
+			return;
+		}
+		BasePlayer player = rpc.player;
+		if ((Object)(object)player == (Object)null || (Object)(object)player == (Object)(object)this)
+		{
+			return;
+		}
+		Handcuffs handcuffs = GetHeldEntity() as Handcuffs;
+		if ((Object)(object)handcuffs != (Object)null)
+		{
+			handcuffs.InterruptUnlockMiniGame(wasPushedOrDamaged: true);
+			handcuffs.RepairOnPush();
+		}
+		if (isMounted)
+		{
+			BaseMountable baseMountable = GetMounted();
+			if ((Object)(object)baseMountable != (Object)null)
+			{
+				baseMountable.DismountPlayer(this);
+				return;
+			}
+		}
+		Vector3 val = player.eyes.BodyForward() * 10f;
+		val.y = 0f;
+		val += Vector3.up * 3f;
+		ClientRPC<Vector3>(RpcTarget.Player("RPC_DoPush", this), val);
+		Hurt(Handcuffs.restrainedPushDamage, DamageType.Generic, player, useProtection: false);
+	}
+
+	[RPC_Server]
+	[RPC_Server.CallsPerSecond(5uL)]
+	[RPC_Server.MaxDistance(3f)]
+	[RPC_Server.IsVisible(3f)]
+	private void RPC_ReqRemoveCuffs(RPCMessage rpc)
+	{
+		if (IsDead() || !IsRestrained)
+		{
+			return;
+		}
+		BasePlayer player = rpc.player;
+		if (!((Object)(object)player == (Object)null))
+		{
+			Handcuffs handcuffs = GetHeldEntity() as Handcuffs;
+			if ((Object)(object)handcuffs != (Object)null)
+			{
+				handcuffs.UnlockAndReturnToPlayer(player);
+			}
+		}
+	}
+
+	[RPC_Server]
+	[RPC_Server.CallsPerSecond(5uL)]
+	[RPC_Server.MaxDistance(3f)]
+	[RPC_Server.IsVisible(3f)]
+	private void RPC_ReqRemoveHood(RPCMessage rpc)
+	{
+		BasePlayer player = rpc.player;
+		if (!((Object)(object)player == (Object)null))
+		{
+			RemoveAndReturnPrisonerHood(player);
+		}
+	}
+
+	private void RemoveAndReturnPrisonerHood(BasePlayer returnToPlayer)
+	{
+		if (!((Object)(object)returnToPlayer == (Object)null) && !IsDead() && IsRestrained)
+		{
+			Item equippedPrisonerHoodItem = inventory.GetEquippedPrisonerHoodItem();
+			if (equippedPrisonerHoodItem != null)
+			{
+				bool locked = inventory.containerWear.IsLocked();
+				inventory.containerWear.SetLocked(isLocked: false);
+				returnToPlayer.GiveItem(equippedPrisonerHoodItem);
+				inventory.containerWear.SetLocked(locked);
+			}
+		}
+	}
+
+	[RPC_Server]
+	[RPC_Server.CallsPerSecond(5uL)]
+	[RPC_Server.MaxDistance(3f)]
+	[RPC_Server.IsVisible(3f)]
+	private void RPC_ReqEquipHood(RPCMessage rpc)
+	{
+		BasePlayer player = rpc.player;
+		if (!((Object)(object)player == (Object)null))
+		{
+			EquipPrisonerHood(player);
+		}
+	}
+
+	private void EquipPrisonerHood(BasePlayer placingPlayer)
+	{
+		//IL_00d2: Unknown result type (might be due to invalid IL or missing references)
+		if ((Object)(object)placingPlayer == (Object)null || IsDead() || !IsRestrained || (Object)(object)inventory == (Object)null || inventory.GetEquippedPrisonerHoodItem() != null)
+		{
+			return;
+		}
+		Item usableHoodItem = placingPlayer.inventory.GetUsableHoodItem();
+		if (usableHoodItem == null)
+		{
+			return;
+		}
+		inventory.SetLockedByRestraint(flag: false);
+		if (!usableHoodItem.MoveToContainer(inventory.containerBelt))
+		{
+			Item slot = inventory.containerBelt.GetSlot(0);
+			if (slot != null && slot == Belt.GetRestraintItem()?.GetItem())
+			{
+				slot = inventory.containerBelt.GetSlot(1);
+			}
+			if (slot != null)
+			{
+				if (!slot.MoveToContainer(inventory.containerMain))
+				{
+					slot.DropAndTossUpwards(((Component)this).transform.position);
+				}
+				usableHoodItem.MoveToContainer(inventory.containerBelt);
+			}
+		}
+		inventory.SetLockedByRestraint(flag: true);
+	}
+
+	[RPC_Server]
+	[RPC_Server.CallsPerSecond(5uL)]
+	[RPC_Server.MaxDistance(3f)]
+	[RPC_Server.IsVisible(3f)]
+	private void RPC_ReqForceMountNearest(RPCMessage rpc)
+	{
+		BasePlayer player = rpc.player;
+		if (!((Object)(object)player == (Object)null))
+		{
+			ForceRestrainedMountNearest(player);
+		}
+	}
+
+	private void ForceRestrainedMountNearest(BasePlayer forcingPlayer)
+	{
+		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010f: Unknown result type (might be due to invalid IL or missing references)
+		if ((Object)(object)forcingPlayer == (Object)null || isMounted || !IsRestrained || IsDead() || IsSleeping() || IsWounded())
+		{
+			return;
+		}
+		List<BaseMountable> list = Pool.GetList<BaseMountable>();
+		Vis.Entities(((Component)this).transform.position, 2f, list, -1, (QueryTriggerInteraction)2);
+		list.Sort(delegate(BaseMountable a, BaseMountable b)
+		{
+			//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+			//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+			//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+			Vector3 val = ((Component)this).transform.position - ((Component)a).transform.position;
+			float sqrMagnitude = ((Vector3)(ref val)).sqrMagnitude;
+			val = ((Component)this).transform.position - ((Component)b).transform.position;
+			return sqrMagnitude.CompareTo(((Vector3)(ref val)).sqrMagnitude);
+		});
+		foreach (BaseMountable item in list)
+		{
+			if (item.isClient || !item.AllowForceMountWhenRestrained || (Object)(object)item.VehicleParent() != (Object)null || !item.DirectlyMountable() || item.Distance(eyes.position) > 3f || !GamePhysics.LineOfSight(eyes.center, eyes.position, 1218519041) || (!item.IsVisible(eyes.HeadRay(), 1218519041, 3f) && !item.IsVisible(eyes.position, 3f)))
+			{
+				continue;
+			}
+			bool flag = false;
+			ModularCar modularCar = item as ModularCar;
+			if ((Object)(object)modularCar != (Object)null && modularCar.CarLock.HasALock)
+			{
+				flag = !modularCar.CarLock.HasLockPermission(this);
+				if (modularCar.CarLock.HasLockPermission(forcingPlayer))
+				{
+					modularCar.CarLock.TryAddPlayer(userID);
+				}
+			}
+			item.AttemptMount(this);
+			if ((Object)(object)modularCar != (Object)null && modularCar.CarLock.HasALock && flag)
+			{
+				modularCar.CarLock.TryRemovePlayer(userID);
+			}
+			if (isMounted)
+			{
+				break;
+			}
+		}
+		Pool.FreeList<BaseMountable>(ref list);
+	}
+
+	[RPC_Server]
+	[RPC_Server.CallsPerSecond(5uL)]
+	[RPC_Server.MaxDistance(3f)]
+	[RPC_Server.IsVisible(3f)]
+	private void RPC_ReqForceSwapSeat(RPCMessage rpc)
+	{
+		if (!isMounted || !IsRestrained || IsDead() || IsSleeping() || IsWounded() || (Object)(object)rpc.player == (Object)null)
+		{
+			return;
+		}
+		BasePlayer player = rpc.player;
+		BaseMountable baseMountable = GetMounted();
+		if ((Object)(object)baseMountable == (Object)null)
+		{
+			return;
+		}
+		BaseVehicle baseVehicle = ((Component)baseMountable).GetComponent<BaseVehicle>();
+		if ((Object)(object)baseVehicle == (Object)null)
+		{
+			baseVehicle = baseMountable.VehicleParent();
+		}
+		if ((Object)(object)baseVehicle == (Object)null)
+		{
+			return;
+		}
+		bool flag = false;
+		ModularCar modularCar = baseVehicle as ModularCar;
+		if ((Object)(object)modularCar != (Object)null && modularCar.CarLock.HasALock)
+		{
+			flag = !modularCar.CarLock.HasLockPermission(this);
+			if (modularCar.CarLock.HasLockPermission(player))
+			{
+				modularCar.CarLock.TryAddPlayer(userID);
+			}
+		}
+		baseVehicle.SwapSeats(this, 0, forcingRestrainedPlayer: true);
+		if ((Object)(object)modularCar != (Object)null && modularCar.CarLock.HasALock && flag)
+		{
+			modularCar.CarLock.TryRemovePlayer(userID);
+		}
+	}
+
+	public bool CanMoveFrom(BasePlayer player, Item item)
+	{
+		if (IsRestrainedOrSurrendering)
+		{
+			ItemContainer itemContainer = item?.parent;
+			if (itemContainer == null)
+			{
+				return true;
+			}
+			if (itemContainer.IsLocked())
+			{
+				return false;
+			}
+			if (itemContainer == inventory.containerBelt && item.IsOn() && (Object)(object)((Component)item.info).GetComponent<ItemModRestraint>() != (Object)null)
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+
+	internal void LifeStoryStart()
+	{
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Expected O, but got Unknown
+		if (lifeStory != null)
+		{
+			lifeStory = null;
+		}
+		lifeStory = new PlayerLifeStory
+		{
+			ShouldPool = false
+		};
+		lifeStory.timeBorn = (uint)Epoch.Current;
+		hasSentPresenceState = false;
+	}
+
+	internal void LifeStoryEnd()
+	{
+		SingletonComponent<ServerMgr>.Instance.persistance.AddLifeStory(userID, lifeStory);
+		previousLifeStory = lifeStory;
+		lifeStory = null;
+	}
+
+	internal void LifeStoryUpdate(float deltaTime, float moveSpeed)
+	{
+		if (lifeStory != null)
+		{
+			PlayerLifeStory obj = lifeStory;
+			obj.secondsAlive += deltaTime;
+			nextTimeCategoryUpdate -= deltaTime * ((moveSpeed > 0.1f) ? 1f : 0.25f);
+			if (nextTimeCategoryUpdate <= 0f && !waitingForLifeStoryUpdate)
+			{
+				nextTimeCategoryUpdate = 7f + 7f * Random.Range(0.2f, 1f);
+				waitingForLifeStoryUpdate = true;
+				((ObjectWorkQueue<BasePlayer>)lifeStoryQueue).Add(this);
+			}
+			if (LifeStoryInWilderness)
+			{
+				PlayerLifeStory obj2 = lifeStory;
+				obj2.secondsWilderness += deltaTime;
+			}
+			if (LifeStoryInMonument)
+			{
+				PlayerLifeStory obj3 = lifeStory;
+				obj3.secondsInMonument += deltaTime;
+			}
+			if (LifeStoryInBase)
+			{
+				PlayerLifeStory obj4 = lifeStory;
+				obj4.secondsInBase += deltaTime;
+			}
+			if (LifeStoryFlying)
+			{
+				PlayerLifeStory obj5 = lifeStory;
+				obj5.secondsFlying += deltaTime;
+			}
+			if (LifeStoryBoating)
+			{
+				PlayerLifeStory obj6 = lifeStory;
+				obj6.secondsBoating += deltaTime;
+			}
+			if (LifeStorySwimming)
+			{
+				PlayerLifeStory obj7 = lifeStory;
+				obj7.secondsSwimming += deltaTime;
+			}
+			if (LifeStoryDriving)
+			{
+				PlayerLifeStory obj8 = lifeStory;
+				obj8.secondsDriving += deltaTime;
+			}
+			if (IsSleeping())
+			{
+				PlayerLifeStory obj9 = lifeStory;
+				obj9.secondsSleeping += deltaTime;
+			}
+			else if (IsRunning())
+			{
+				PlayerLifeStory obj10 = lifeStory;
+				obj10.metersRun += moveSpeed * deltaTime;
+			}
+			else
+			{
+				PlayerLifeStory obj11 = lifeStory;
+				obj11.metersWalked += moveSpeed * deltaTime;
+			}
+		}
+	}
+
+	public void UpdateTimeCategory()
+	{
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
+		TimeWarning val = TimeWarning.New("UpdateTimeCategory", 0);
+		try
+		{
+			waitingForLifeStoryUpdate = false;
+			int num = currentTimeCategory;
+			currentTimeCategory = 1;
+			if (IsBuildingAuthed())
+			{
+				currentTimeCategory = 4;
+			}
+			Vector3 position = ((Component)this).transform.position;
+			if ((Object)(object)TerrainMeta.TopologyMap != (Object)null && ((uint)TerrainMeta.TopologyMap.GetTopology(position) & 0x400u) != 0)
+			{
+				foreach (MonumentInfo monument in TerrainMeta.Path.Monuments)
+				{
+					if (monument.shouldDisplayOnMap && monument.IsInBounds(position))
+					{
+						currentTimeCategory = 2;
+						break;
+					}
+				}
+			}
+			if (IsSwimming())
+			{
+				currentTimeCategory |= 32;
+			}
+			if (isMounted)
+			{
+				BaseMountable baseMountable = GetMounted();
+				if (baseMountable.mountTimeStatType == BaseMountable.MountStatType.Boating)
+				{
+					currentTimeCategory |= 16;
+				}
+				else if (baseMountable.mountTimeStatType == BaseMountable.MountStatType.Flying)
+				{
+					currentTimeCategory |= 8;
+				}
+				else if (baseMountable.mountTimeStatType == BaseMountable.MountStatType.Driving)
+				{
+					currentTimeCategory |= 64;
+				}
+			}
+			else if (HasParent() && GetParentEntity() is BaseMountable baseMountable2)
+			{
+				if (baseMountable2.mountTimeStatType == BaseMountable.MountStatType.Boating)
+				{
+					currentTimeCategory |= 16;
+				}
+				else if (baseMountable2.mountTimeStatType == BaseMountable.MountStatType.Flying)
+				{
+					currentTimeCategory |= 8;
+				}
+				else if (baseMountable2.mountTimeStatType == BaseMountable.MountStatType.Driving)
+				{
+					currentTimeCategory |= 64;
+				}
+			}
+			if (num != currentTimeCategory || !hasSentPresenceState)
+			{
+				LifeStoryInWilderness = (1 & currentTimeCategory) != 0;
+				LifeStoryInMonument = (2 & currentTimeCategory) != 0;
+				LifeStoryInBase = (4 & currentTimeCategory) != 0;
+				LifeStoryFlying = (8 & currentTimeCategory) != 0;
+				LifeStoryBoating = (0x10 & currentTimeCategory) != 0;
+				LifeStorySwimming = (0x20 & currentTimeCategory) != 0;
+				LifeStoryDriving = (0x40 & currentTimeCategory) != 0;
+				ClientRPC(RpcTarget.Player("UpdateRichPresenceState", this), currentTimeCategory);
+				hasSentPresenceState = true;
+			}
+		}
+		finally
+		{
+			((IDisposable)val)?.Dispose();
+		}
+	}
+
+	public void LifeStoryShotFired(BaseEntity withWeapon)
+	{
+		if (lifeStory == null)
+		{
+			return;
+		}
+		if (lifeStory.weaponStats == null)
+		{
+			lifeStory.weaponStats = Pool.GetList<WeaponStats>();
+		}
+		foreach (WeaponStats weaponStat in lifeStory.weaponStats)
+		{
+			if (weaponStat.weaponName == withWeapon.ShortPrefabName)
+			{
+				weaponStat.shotsFired++;
+				return;
+			}
+		}
+		WeaponStats val = Pool.Get<WeaponStats>();
+		val.weaponName = withWeapon.ShortPrefabName;
+		val.shotsFired++;
+		lifeStory.weaponStats.Add(val);
+	}
+
+	public void LifeStoryShotHit(BaseEntity withWeapon)
+	{
+		if (lifeStory == null || (Object)(object)withWeapon == (Object)null)
+		{
+			return;
+		}
+		if (lifeStory.weaponStats == null)
+		{
+			lifeStory.weaponStats = Pool.GetList<WeaponStats>();
+		}
+		foreach (WeaponStats weaponStat in lifeStory.weaponStats)
+		{
+			if (weaponStat.weaponName == withWeapon.ShortPrefabName)
+			{
+				weaponStat.shotsHit++;
+				return;
+			}
+		}
+		WeaponStats val = Pool.Get<WeaponStats>();
+		val.weaponName = withWeapon.ShortPrefabName;
+		val.shotsHit++;
+		lifeStory.weaponStats.Add(val);
+	}
+
+	public void LifeStoryKill(BaseCombatEntity killed)
+	{
+		if (lifeStory != null)
+		{
+			if (killed is ScientistNPC)
+			{
+				PlayerLifeStory obj = lifeStory;
+				obj.killedScientists++;
+			}
+			else if (killed is BasePlayer)
+			{
+				PlayerLifeStory obj2 = lifeStory;
+				obj2.killedPlayers++;
+			}
+			else if (killed is BaseAnimalNPC)
+			{
+				PlayerLifeStory obj3 = lifeStory;
+				obj3.killedAnimals++;
+			}
+		}
+	}
+
+	public void LifeStoryGenericStat(string key, int value)
+	{
+		if (lifeStory == null)
+		{
+			return;
+		}
+		if (lifeStory.genericStats == null)
+		{
+			lifeStory.genericStats = Pool.GetList<GenericStat>();
+		}
+		foreach (GenericStat genericStat in lifeStory.genericStats)
+		{
+			if (genericStat.key == key)
+			{
+				genericStat.value += value;
+				return;
+			}
+		}
+		GenericStat val = Pool.Get<GenericStat>();
+		val.key = key;
+		val.value = value;
+		lifeStory.genericStats.Add(val);
+	}
+
+	public void LifeStoryHurt(float amount)
+	{
+		if (lifeStory != null)
+		{
+			PlayerLifeStory obj = lifeStory;
+			obj.totalDamageTaken += amount;
+		}
+	}
+
+	public void LifeStoryHeal(float amount)
+	{
+		if (lifeStory != null)
+		{
+			PlayerLifeStory obj = lifeStory;
+			obj.totalHealing += amount;
+		}
+	}
+
+	public void SetOverrideDeathBlow(DeathInfo info)
+	{
+		cachedOverrideDeathInfo = info;
+	}
+
+	internal void LifeStoryLogDeath(HitInfo deathBlow, DamageType lastDamage)
+	{
+		if (lifeStory == null)
+		{
+			return;
+		}
+		lifeStory.timeDied = (uint)Epoch.Current;
+		DeathInfo val = cachedOverrideDeathInfo ?? Pool.Get<DeathInfo>();
+		val.lastDamageType = (int)lastDamage;
+		cachedOverrideDeathInfo = null;
+		if (deathBlow != null)
+		{
+			if ((Object)(object)deathBlow.Initiator != (Object)null)
+			{
+				deathBlow.Initiator.AttackerInfo(val);
+				val.attackerDistance = Distance(deathBlow.Initiator);
+			}
+			if ((Object)(object)deathBlow.WeaponPrefab != (Object)null)
+			{
+				val.inflictorName = deathBlow.WeaponPrefab.ShortPrefabName;
+			}
+			if (deathBlow.HitBone != 0)
+			{
+				val.hitBone = StringPool.Get(deathBlow.HitBone);
+			}
+			else
+			{
+				val.hitBone = "";
+			}
+		}
+		else if (base.SecondsSinceAttacked <= 60f && (Object)(object)lastAttacker != (Object)null)
+		{
+			lastAttacker.AttackerInfo(val);
+		}
+		lifeStory.deathInfo = val;
+	}
+
+	public void SetSpectateTeamInfo(bool state)
+	{
+		IsSpectatingTeamInfo = state;
+	}
+
 	private void Tick_Spectator()
 	{
+		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0196: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a9: Unknown result type (might be due to invalid IL or missing references)
 		int num = 0;
 		if (serverInput.WasJustPressed(BUTTON.JUMP))
 		{
@@ -8930,6 +11291,35 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				((IDisposable)val)?.Dispose();
 			}
 		}
+		if (!(TimeSince.op_Implicit(lastSpectateTeamInfoUpdate) > 0.5f) || !IsSpectatingTeamInfo)
+		{
+			return;
+		}
+		lastSpectateTeamInfoUpdate = TimeSince.op_Implicit(0f);
+		SpectateTeamInfo val2 = Pool.Get<SpectateTeamInfo>();
+		val2.teams = Pool.GetList<SpectateTeam>();
+		val2.teams.Clear();
+		foreach (KeyValuePair<ulong, RelationshipManager.PlayerTeam> team in RelationshipManager.ServerInstance.teams)
+		{
+			SpectateTeam val3 = Pool.Get<SpectateTeam>();
+			val3.teamId = team.Key;
+			val3.teamMembers = Pool.GetList<TeamMember>();
+			val3.teamMembers.Clear();
+			foreach (ulong member in team.Value.members)
+			{
+				TeamMember val4 = Pool.Get<TeamMember>();
+				val4.userID = member;
+				BasePlayer basePlayer = RelationshipManager.FindByID(member);
+				val4.displayName = (((Object)(object)basePlayer != (Object)null) ? basePlayer.displayName : (SingletonComponent<ServerMgr>.Instance.persistance.GetPlayerName(member) ?? "DEAD"));
+				val4.healthFraction = (((Object)(object)basePlayer != (Object)null && basePlayer.IsAlive()) ? basePlayer.healthFraction : 0f);
+				val4.position = (((Object)(object)basePlayer != (Object)null) ? ((Component)basePlayer).transform.position : Vector3.zero);
+				val4.online = (Object)(object)basePlayer != (Object)null && !basePlayer.IsSleeping();
+				val4.wounded = (Object)(object)basePlayer != (Object)null && basePlayer.IsWounded();
+				val3.teamMembers.Add(val4);
+			}
+			val2.teams.Add(val3);
+		}
+		ClientRPC<SpectateTeamInfo>(RpcTarget.Player("ReceiveSpectateTeamInfo", this), val2);
 	}
 
 	public void UpdateSpectateTarget(string strName)
@@ -8980,7 +11370,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			while (enumerator.MoveNext())
 			{
 				BasePlayer current = enumerator.Current;
-				if ((Object)(object)current != (Object)null && current.userID == id)
+				if ((Object)(object)current != (Object)null && (ulong)current.userID == id)
 				{
 					spectateFilter = string.Empty;
 					SpectatePlayer(current);
@@ -9067,9 +11457,9 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 	public void Teleport(Vector3 position)
 	{
 		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
 		MovePosition(position);
-		ClientRPCPlayer<Vector3>(null, this, "ForcePositionTo", position);
+		ClientRPC<Vector3>(RpcTarget.Player("ForcePositionTo", this), position);
 	}
 
 	public void CopyRotation(BasePlayer player)
@@ -9102,6 +11492,92 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			if (child2 is BasePlayer)
 			{
 				IsBeingSpectated = true;
+			}
+		}
+	}
+
+	[RPC_Server]
+	[RPC_Server.FromOwner]
+	[RPC_Server.CallsPerSecond(10uL)]
+	private void UpdateSpectatePositionFromDebugCamera(RPCMessage msg)
+	{
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
+		if (IsSpectating() && Global.updateNetworkPositionWithDebugCameraWhileSpectating)
+		{
+			Vector3 position = msg.read.Vector3();
+			((Component)this).transform.position = position;
+			SetParent(null);
+		}
+	}
+
+	[RPC_Server]
+	private void NotifyDebugCameraEnded(RPCMessage msg)
+	{
+		if (IsSpectating() && Global.updateNetworkPositionWithDebugCameraWhileSpectating)
+		{
+			UpdateSpectateTarget(spectateFilter);
+		}
+	}
+
+	public void AddNeabyStash(StashContainer newStash)
+	{
+		if ((Object)(object)newStash == (Object)null)
+		{
+			return;
+		}
+		foreach (NearbyStash nearbyStash in nearbyStashes)
+		{
+			if ((Object)(object)nearbyStash.Entity == (Object)(object)newStash)
+			{
+				return;
+			}
+		}
+		if (nearbyStashes.Count == 0)
+		{
+			((FacepunchBehaviour)this).InvokeRepeating((Action)CheckStashRevealInvoke, 0f, StashContainer.PlayerDetectionTickRate);
+		}
+		nearbyStashes.Add(new NearbyStash(newStash));
+	}
+
+	public void RemoveNearbyStash(StashContainer stash)
+	{
+		for (int i = 0; i < nearbyStashes.Count; i++)
+		{
+			if (!((Object)(object)nearbyStashes[i].Entity != (Object)(object)stash))
+			{
+				nearbyStashes.RemoveAt(i);
+				break;
+			}
+		}
+		if (nearbyStashes.Count == 0)
+		{
+			((FacepunchBehaviour)this).CancelInvoke((Action)CheckStashRevealInvoke);
+		}
+	}
+
+	private void CheckStashRevealInvoke()
+	{
+		for (int i = 0; i < nearbyStashes.Count; i++)
+		{
+			NearbyStash nearbyStash = nearbyStashes[i];
+			if ((Object)(object)nearbyStash.Entity == (Object)null || nearbyStash.Entity.IsDestroyed)
+			{
+				nearbyStashes.RemoveAt(i);
+			}
+			else if (nearbyStash.Entity.IsHidden() && nearbyStash.Entity.PlayerInRange(this))
+			{
+				nearbyStash.LookingAtTime += StashContainer.PlayerDetectionTickRate;
+				if (nearbyStash.LookingAtTime >= nearbyStash.Entity.uncoverTime)
+				{
+					nearbyStash.Entity.SetHidden(isHidden: false);
+					Analytics.Azure.OnStashRevealed(this, nearbyStash.Entity);
+				}
+			}
+			else
+			{
+				nearbyStash.LookingAtTime = 0f;
 			}
 		}
 	}
@@ -9156,7 +11632,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		State.unHostileTimestamp = Math.Max(State.unHostileTimestamp, val);
 		DirtyPlayerState();
 		double num = Math.Max(State.unHostileTimestamp - currentTimestamp, 0.0);
-		ClientRPCPlayer(null, this, "SetHostileLength", (float)num);
+		ClientRPC(RpcTarget.Player("SetHostileLength", this), (float)num);
 	}
 
 	public void MarkWeaponDrawnDuration(float newDuration)
@@ -9165,7 +11641,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		weaponDrawnDuration = newDuration;
 		if ((float)Mathf.FloorToInt(newDuration) != num)
 		{
-			ClientRPCPlayer(null, this, "SetWeaponDrawnDuration", weaponDrawnDuration);
+			ClientRPC(RpcTarget.Player("SetWeaponDrawnDuration", this), weaponDrawnDuration);
 		}
 	}
 
@@ -9228,13 +11704,13 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 	public void OnReceivedVoice(byte[] data)
 	{
 		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
 		NetWrite obj = ((BaseNetwork)Net.sv).StartWrite();
 		obj.PacketID((Type)21);
 		obj.EntityID(net.ID);
-		obj.BytesWithSize(data);
+		obj.BytesWithSize(data, false);
 		float num = 0f;
 		if (HasPlayerFlag(PlayerFlags.VoiceRangeBoost))
 		{
@@ -9265,9 +11741,11 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 
 	private void OnReceiveTick(PlayerTick msg, bool wasPlayerStalled)
 	{
-		//IL_00e3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0118: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00d4: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00da: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019a: Unknown result type (might be due to invalid IL or missing references)
 		if (msg.inputState != null)
 		{
 			serverInput.Flip(msg.inputState);
@@ -9307,16 +11785,94 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			UpdateActiveItem(default(ItemId));
 			return;
 		}
-		UpdateActiveItem(msg.activeItem);
-		UpdateModelStateFromTick(msg);
-		if (!IsIncapacitated())
+		if (IsRestrained && restraintItemId.HasValue && restraintItemId.HasValue)
 		{
-			if (isMounted)
+			UpdateActiveItem(restraintItemId.Value);
+		}
+		else
+		{
+			UpdateActiveItem(msg.activeItem);
+		}
+		UpdateModelStateFromTick(msg);
+		if (IsIncapacitated())
+		{
+			return;
+		}
+		if (isMounted)
+		{
+			GetMounted().PlayerServerInput(serverInput, this);
+		}
+		UpdatePositionFromTick(msg, wasPlayerStalled);
+		UpdateRotationFromTick(msg);
+		int activeMission = GetActiveMission();
+		if (activeMission >= 0 && activeMission < missions.Count)
+		{
+			BaseMission.MissionInstance missionInstance = missions[activeMission];
+			if (missionInstance.status == BaseMission.MissionStatus.Active && missionInstance.NeedsPlayerInput())
 			{
-				GetMounted().PlayerServerInput(serverInput, this);
+				ProcessMissionEvent(BaseMission.MissionEventType.PLAYER_TICK, net.ID, 0f);
 			}
-			UpdatePositionFromTick(msg, wasPlayerStalled);
-			UpdateRotationFromTick(msg);
+		}
+		if (!TutorialIsland.EnforceTrespassChecks || IsAdmin || IsNpc || net == null || net.group == null)
+		{
+			return;
+		}
+		if (net.group.restricted)
+		{
+			bool flag = false;
+			if (!IsInTutorial)
+			{
+				flag = true;
+			}
+			else
+			{
+				TutorialIsland currentTutorialIsland = GetCurrentTutorialIsland();
+				if ((Object)(object)currentTutorialIsland == (Object)null || currentTutorialIsland.net.group != net.group)
+				{
+					flag = true;
+				}
+			}
+			if (flag)
+			{
+				tutorialKickTime += Time.deltaTime;
+				if (tutorialKickTime > 3f)
+				{
+					Debug.LogWarning((object)$"Killing player {displayName}/{userID} as they are on a tutorial island that doesn't belong them");
+					Hurt(999f);
+					tutorialKickTime = 0f;
+				}
+			}
+			else
+			{
+				tutorialKickTime = 0f;
+			}
+		}
+		else
+		{
+			if (!IsInTutorial || net.group.restricted)
+			{
+				return;
+			}
+			bool flag2 = false;
+			TutorialIsland currentTutorialIsland2 = GetCurrentTutorialIsland();
+			if ((Object)(object)currentTutorialIsland2 == (Object)null || currentTutorialIsland2.net.group != net.group)
+			{
+				flag2 = true;
+			}
+			if (flag2)
+			{
+				tutorialKickTime += Time.deltaTime;
+				if (tutorialKickTime > 3f)
+				{
+					Debug.LogWarning((object)$"Killing player {displayName}/{userID} as they are no longer on a tutorial island and are marked as being in a tutorial");
+					Hurt(999f);
+					tutorialKickTime = 0f;
+				}
+			}
+			else
+			{
+				tutorialKickTime = 0f;
+			}
 		}
 	}
 
@@ -9389,22 +11945,22 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ea: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0137: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0125: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0092: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ff: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0150: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0133: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ce: Unknown result type (might be due to invalid IL or missing references)
 		if (Vector3Ex.IsNaNOrInfinity(tick.position) || Vector3Ex.IsNaNOrInfinity(tick.eyePos))
 		{
 			Kick("Kicked: Invalid Position");
 		}
 		else
 		{
-			if (tick.parentID != parentEntity.uid || isMounted || (modelState != null && modelState.mounted) || (modelStateTick != null && modelStateTick.mounted))
+			if (tick.parentID != parentEntity.uid || isMounted || (modelState != null && modelState.mounted) || (modelStateTick != null && modelStateTick.mounted) || (IsWounded() && IsRestrained))
 			{
 				return;
 			}
@@ -9417,13 +11973,13 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				}
 				if (num > 0.5f)
 				{
-					ClientRPCPlayer<Vector3, NetworkableId>(null, this, "ForcePositionToParentOffset", tickInterpolator.EndPoint, parentEntity.uid);
+					ClientRPC<Vector3, NetworkableId>(RpcTarget.Player("ForcePositionToParentOffset", this), tickInterpolator.EndPoint, parentEntity.uid);
 				}
 			}
 			else if ((modelState == null || !modelState.flying || (!IsAdmin && !IsDeveloper)) && Vector3.Distance(tick.position, tickInterpolator.EndPoint) > 5f)
 			{
 				AntiHack.ResetTimer(this);
-				ClientRPCPlayer<Vector3, NetworkableId>(null, this, "ForcePositionToParentOffset", tickInterpolator.EndPoint, parentEntity.uid);
+				ClientRPC<Vector3, NetworkableId>(RpcTarget.Player("ForcePositionToParentOffset", this), tickInterpolator.EndPoint, parentEntity.uid);
 			}
 			else
 			{
@@ -9482,18 +12038,18 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		//IL_0143: Unknown result type (might be due to invalid IL or missing references)
 		//IL_014f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0155: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01fd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0201: Unknown result type (might be due to invalid IL or missing references)
 		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
-		//IL_020c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0211: Unknown result type (might be due to invalid IL or missing references)
-		//IL_021c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0210: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0215: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0220: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0186: Unknown result type (might be due to invalid IL or missing references)
 		//IL_01a7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_023e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0243: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01dc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01e7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0242: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0247: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01e0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01eb: Unknown result type (might be due to invalid IL or missing references)
 		tickDeltaTime += deltaTime;
 		if (IsReceivingSnapshot || !tickNeedsFinalizing)
 		{
@@ -9551,7 +12107,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 					flag = false;
 					if (ConVar.AntiHack.forceposition)
 					{
-						ClientRPCPlayer<Vector3, NetworkableId>(null, this, "ForcePositionToParentOffset", ((Component)this).transform.localPosition, parentEntity.uid);
+						ClientRPC<Vector3, NetworkableId>(RpcTarget.Player("ForcePositionToParentOffset", this), ((Component)this).transform.localPosition, parentEntity.uid);
 					}
 				}
 			}
@@ -9604,6 +12160,140 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			((IDisposable)val)?.Dispose();
 		}
 		tickDeltaTime = 0f;
+	}
+
+	public bool IsCraftingTutorialBlocked(ItemDefinition def, out bool forceUnlock)
+	{
+		forceUnlock = false;
+		if (!IsInTutorial)
+		{
+			return false;
+		}
+		if (def.tutorialAllowance == TutorialItemAllowance.None)
+		{
+			return true;
+		}
+		bool num = CurrentTutorialAllowance >= def.tutorialAllowance;
+		if (num && (Object)(object)def.Blueprint != (Object)null && !def.Blueprint.defaultBlueprint)
+		{
+			forceUnlock = true;
+		}
+		return !num;
+	}
+
+	public bool CanModifyCraftAmountDuringTutorial()
+	{
+		if (IsInTutorial)
+		{
+			return CurrentTutorialAllowance >= TutorialItemAllowance.Level4_Spear_Fire;
+		}
+		return false;
+	}
+
+	public TutorialIsland GetCurrentTutorialIsland()
+	{
+		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		if (!IsInTutorial)
+		{
+			return null;
+		}
+		Enumerator<TutorialIsland> enumerator = TutorialIsland.GetTutorialList(base.isServer).GetEnumerator();
+		try
+		{
+			while (enumerator.MoveNext())
+			{
+				TutorialIsland current = enumerator.Current;
+				if ((Object)(object)current.ForPlayer.Get(base.isServer) == (Object)(object)this)
+				{
+					return current;
+				}
+			}
+		}
+		finally
+		{
+			((IDisposable)enumerator).Dispose();
+		}
+		return null;
+	}
+
+	public void ClearTutorial()
+	{
+		SetPlayerFlag(PlayerFlags.IsInTutorial, b: false);
+		SleepingBag.ClearTutorialBagsForPlayer(userID);
+	}
+
+	public void ClearTutorial_PostDeath()
+	{
+		ClearAllPings();
+		ClearDeathMarker();
+		WipeMissions();
+		SendPingsToClient();
+		SendMarkersToClient();
+	}
+
+	public void OnStartedTutorial()
+	{
+		ClearAllPings();
+		WipeMissions();
+	}
+
+	public void SetTutorialAllowance(TutorialItemAllowance newAllowance)
+	{
+		if (newAllowance >= CurrentTutorialAllowance)
+		{
+			CurrentTutorialAllowance = newAllowance;
+			SendNetworkUpdate();
+		}
+	}
+
+	[RPC_Server]
+	private void StartTutorial(RPCMessage msg)
+	{
+		if (!((Object)(object)msg.player != (Object)(object)this))
+		{
+			StartTutorial(triggerAnalytics: true);
+		}
+	}
+
+	public void StartTutorial(bool triggerAnalytics)
+	{
+		if (ConVar.Server.tutorialEnabled)
+		{
+			if (!TutorialIsland.HasAvailableTutorialIsland)
+			{
+				ShowToast(GameTip.Styles.Red_Normal, TutorialIsland.NoTutorialIslandsAvailablePhrase);
+			}
+			else if (startTutorialCooldown > Time.realtimeSinceStartup)
+			{
+				int num = Mathf.CeilToInt(startTutorialCooldown - Time.realtimeSinceStartup);
+				ShowToast(GameTip.Styles.Red_Normal, TutorialIsland.TutorialIslandStartCooldown, num.ToString());
+			}
+			else
+			{
+				startTutorialCooldown = Time.realtimeSinceStartup + (float)Debugging.tutorial_start_cooldown;
+				Hurt(99999f);
+				Respawn();
+				TutorialIsland.RestoreOrCreateIslandForPlayer(this, triggerAnalytics);
+			}
+		}
+	}
+
+	[RPC_Server]
+	[RPC_Server.CallsPerSecond(1uL)]
+	private void PlayerRequestedTutorialStart(RPCMessage msg)
+	{
+		if (ConVar.Server.tutorialEnabled)
+		{
+			if (!TutorialIsland.HasAvailableTutorialIsland)
+			{
+				ShowToast(GameTip.Styles.Red_Normal, TutorialIsland.NoTutorialIslandsAvailablePhrase);
+			}
+			else
+			{
+				ClientRPC(RpcTarget.Player("PromptToStartTutorial", this));
+			}
+		}
 	}
 
 	public uint GetUnderwearSkin()
@@ -9776,7 +12466,31 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 
 	public void ProlongWounding(float delay)
 	{
-		woundedDuration = Mathf.Max(woundedDuration, Mathf.Min(TimeSinceWoundedStarted + delay, woundedDuration + delay));
+		if (!IsRestrained)
+		{
+			woundedDuration = Mathf.Max(woundedDuration, Mathf.Min(TimeSinceWoundedStarted + delay, woundedDuration + delay));
+			SendWoundedInformation(woundedDuration);
+		}
+	}
+
+	public void SendWoundedInformation(float timeLeft)
+	{
+		float recoveryChance = GetRecoveryChance();
+		ClientRPC(RpcTarget.Player("CLIENT_GetWoundedInformation", this), recoveryChance, timeLeft, woundedDuration);
+	}
+
+	public float GetRecoveryChance()
+	{
+		float num = (IsIncapacitated() ? ConVar.Server.incapacitatedrecoverchance : ConVar.Server.woundedrecoverchance);
+		float num2 = (metabolism.hydration.Fraction() + metabolism.calories.Fraction()) / 2f;
+		float num3 = Mathf.Lerp(0f, ConVar.Server.woundedmaxfoodandwaterbonus, num2);
+		float result = Mathf.Clamp01(num + num3);
+		ItemDefinition itemDefinition = ItemManager.FindItemDefinition("largemedkit");
+		if (inventory.containerBelt.FindItemByItemID(itemDefinition.itemid) != null && !woundedByFallDamage)
+		{
+			return 1f;
+		}
+		return result;
 	}
 
 	private void WoundingTick()
@@ -9838,6 +12552,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		healingWhileCrawling = 0f;
 		WoundedStartSharedCode(info);
 		StartWoundedTick(40, 50);
+		SendWoundedInformation(woundedDuration);
 		SendNetworkUpdateImmediate();
 	}
 
@@ -9852,7 +12567,9 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		healingWhileCrawling = 0f;
 		SetPlayerFlag(PlayerFlags.Incapacitated, b: true);
 		SetServerFall(wantsOn: true);
+		inventory.DropBackpackOnDeath();
 		StartWoundedTick(10, 25);
+		SendWoundedInformation(woundedDuration);
 		SendNetworkUpdateImmediate();
 	}
 
@@ -9869,8 +12586,13 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 	private void StartWoundedTick(int minTime, int maxTime)
 	{
 		woundedDuration = Random.Range(minTime, maxTime + 1);
-		lastWoundedStartTime = Time.realtimeSinceStartup;
+		ApplyWoundedStartTime();
 		((FacepunchBehaviour)this).Invoke((Action)WoundingTick, 1f);
+	}
+
+	public void ApplyWoundedStartTime()
+	{
+		lastWoundedStartTime = Time.realtimeSinceStartup;
 	}
 
 	private void RecoverFromWounded()
@@ -9948,9 +12670,15 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 
 	public bool CanInteract(bool usableWhileCrawling)
 	{
-		if (!IsDead() && !IsSleeping() && !IsSpectating() && (usableWhileCrawling ? (!IsIncapacitated()) : (!IsWounded())))
+		bool flag = CurrentGestureIsSurrendering;
+		if (!flag && IsRestrained)
 		{
-			return !HasActiveTelephone;
+			Handcuffs restraintItem = Belt.GetRestraintItem();
+			flag = (Object)(object)restraintItem != (Object)null && restraintItem.BlockUse;
+		}
+		if (!IsDead() && !IsSleeping() && !IsSpectating() && (usableWhileCrawling ? (!IsIncapacitated()) : (!IsWounded())) && !HasActiveTelephone)
+		{
+			return !flag;
 		}
 		return false;
 	}
@@ -10062,22 +12790,22 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 
 	public override void PreInitShared()
 	{
-		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0101: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0093: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0113: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011d: Unknown result type (might be due to invalid IL or missing references)
 		base.PreInitShared();
 		cachedProtection = ScriptableObject.CreateInstance<ProtectionProperties>();
 		baseProtection = ScriptableObject.CreateInstance<ProtectionProperties>();
-		inventory = ((Component)this).GetComponent<PlayerInventory>();
+		inventoryValue.Set(((Component)this).GetComponent<PlayerInventory>());
 		blueprints = ((Component)this).GetComponent<PlayerBlueprints>();
 		metabolism = ((Component)this).GetComponent<PlayerMetabolism>();
 		modifiers = ((Component)this).GetComponent<PlayerModifiers>();
-		playerCollider = ((Component)this).GetComponent<CapsuleCollider>();
-		eyes = ((Component)this).GetComponent<PlayerEyes>();
+		colliderValue.Set(((Component)this).GetComponent<CapsuleCollider>());
+		eyesValue.Set(((Component)this).GetComponent<PlayerEyes>());
 		playerColliderStanding = new CapsuleColliderInfo(playerCollider.height, playerCollider.radius, playerCollider.center);
 		playerColliderDucked = new CapsuleColliderInfo(1.5f, playerCollider.radius, Vector3.up * 0.75f);
 		playerColliderCrawling = new CapsuleColliderInfo(playerCollider.radius, playerCollider.radius, Vector3.up * playerCollider.radius);
@@ -10090,6 +12818,37 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		Object.Destroy((Object)(object)cachedProtection);
 		Object.Destroy((Object)(object)baseProtection);
 		base.DestroyShared();
+	}
+
+	public override bool InSafeZone()
+	{
+		if (base.isServer)
+		{
+			return base.InSafeZone();
+		}
+		return false;
+	}
+
+	public bool IsInNoRespawnZone()
+	{
+		if (base.isServer)
+		{
+			return InNoRespawnZone();
+		}
+		return false;
+	}
+
+	public bool IsOnATugboat()
+	{
+		if (GetMountedVehicle() is Tugboat)
+		{
+			return true;
+		}
+		if (GetParentEntity() is Tugboat)
+		{
+			return true;
+		}
+		return false;
 	}
 
 	public static void ServerCycle(float deltaTime)
@@ -10120,7 +12879,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 				bots[l].ServerUpdateBots(deltaTime);
 			}
 		}
-		if (ConVar.Server.idlekick > 0 && ((ServerMgr.AvailableSlots <= 0 && ConVar.Server.idlekickmode == 1) || ConVar.Server.idlekickmode == 2))
+		if (ConVar.Server.idlekick > 0 && ((SingletonComponent<ServerMgr>.Instance.AvailableSlots <= 0 && ConVar.Server.idlekickmode == 1) || ConVar.Server.idlekickmode == 2))
 		{
 			for (int m = 0; m < list.Count; m++)
 			{
@@ -10133,23 +12892,30 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		Pool.FreeList<BasePlayer>(ref list);
 	}
 
-	public bool InSafeZone()
+	private bool ManuallyCheckSafezone()
 	{
-		BaseGameMode activeGameMode = BaseGameMode.GetActiveGameMode(base.isServer);
-		if ((Object)(object)activeGameMode != (Object)null && !activeGameMode.safeZone)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		if (!base.isServer)
 		{
 			return false;
 		}
-		if (base.isServer)
+		List<Collider> list = Pool.GetList<Collider>();
+		Vis.Colliders<Collider>(((Component)this).transform.position, 0f, list, -1, (QueryTriggerInteraction)2);
+		foreach (Collider item in list)
 		{
-			return currentSafeLevel > 0f;
+			if ((Object)(object)((Component)item).GetComponent<TriggerSafeZone>() != (Object)null)
+			{
+				Pool.FreeList<Collider>(ref list);
+				return true;
+			}
 		}
+		Pool.FreeList<Collider>(ref list);
 		return false;
 	}
 
 	public override bool OnStartBeingLooted(BasePlayer baseEntity)
 	{
-		if (baseEntity.InSafeZone() && baseEntity.userID != userID)
+		if ((baseEntity.InSafeZone() || InSafeZone() || ManuallyCheckSafezone()) && (ulong)baseEntity.userID != (ulong)userID)
 		{
 			return false;
 		}
@@ -10164,6 +12930,10 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		if (IsCrawling())
 		{
 			GoToIncapacitated(null);
+		}
+		if ((Object)(object)inventory.crafting != (Object)null)
+		{
+			inventory.crafting.CancelAll(returnItems: true);
 		}
 		return base.OnStartBeingLooted(baseEntity);
 	}
@@ -10302,19 +13072,19 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		{
 			return Mathf.Lerp(2.8f, 0.72f, crawling) * num;
 		}
-		return Mathf.Lerp(Mathf.Lerp(2.8f, 5.5f, running), 1.7f, ducking) * num;
+		return Mathf.Lerp(Mathf.Lerp(2.8f, 5.5f, running), 1.7f, ducking) * num * weaponMoveSpeedScale;
 	}
 
 	public override void OnAttacked(HitInfo info)
 	{
-		//IL_0195: Unknown result type (might be due to invalid IL or missing references)
-		//IL_019b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0199: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a4: Unknown result type (might be due to invalid IL or missing references)
 		//IL_01a9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0237: Unknown result type (might be due to invalid IL or missing references)
-		//IL_023c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ad: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_023b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0240: Unknown result type (might be due to invalid IL or missing references)
 		float oldHealth = base.health;
 		if (InSafeZone() && !IsHostile() && (Object)(object)info.Initiator != (Object)null && (Object)(object)info.Initiator != (Object)(object)this)
 		{
@@ -10357,7 +13127,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 			CheckDeathCondition(info);
 			if (net != null && net.connection != null)
 			{
-				ClientRPCPlayer(null, this, "TakeDamageHit");
+				ClientRPC(RpcTarget.Player("TakeDamageHit", this));
 			}
 			string text = StringPool.Get(info.HitBone);
 			Vector3 val = info.PointEnd - info.PointStart;
@@ -10387,7 +13157,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 						{
 							if (child is BasePlayer basePlayer)
 							{
-								basePlayer.ClientRPCPlayer(null, basePlayer, "SpectatedPlayerHeadshot");
+								basePlayer.ClientRPC(RpcTarget.Player("SpectatedPlayerHeadshot", basePlayer));
 							}
 						}
 					}
@@ -10669,6 +13439,11 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		}
 	}
 
+	public void ResetWeaponMoveSpeedScale()
+	{
+		weaponMoveSpeedScale = 1f;
+	}
+
 	private void UpdateMoveSpeedFromClothing()
 	{
 		//IL_0154: Unknown result type (might be due to invalid IL or missing references)
@@ -10778,7 +13553,7 @@ public class BasePlayer : BaseCombatEntity, LootPanel.IHasLootPanel, IIdealSlotE
 		{
 			return null;
 		}
-		return inventory.FindItemUID(itemId);
+		return inventory.FindItemByUID(itemId);
 	}
 
 	public override float WaterFactor()

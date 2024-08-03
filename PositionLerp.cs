@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class PositionLerp : IDisposable
 {
-	private static ListHashSet<PositionLerp> InstanceList = new ListHashSet<PositionLerp>(8);
+	private static readonly ListHashSet<PositionLerp> InstanceList = new ListHashSet<PositionLerp>(8);
 
 	public static bool DebugLog = false;
 
@@ -22,7 +22,7 @@ public class PositionLerp : IDisposable
 
 	private Action idleDisable;
 
-	private Interpolator<TransformSnapshot> interpolator = new Interpolator<TransformSnapshot>(32);
+	private readonly Interpolator<TransformSnapshot> interpolator = new Interpolator<TransformSnapshot>(32);
 
 	private IPosLerpTarget target;
 
@@ -87,8 +87,8 @@ public class PositionLerp : IDisposable
 
 	public void Snapshot(Vector3 position, Quaternion rotation, float serverTime)
 	{
-		//IL_01a3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a6: Unknown result type (might be due to invalid IL or missing references)
 		float interpolationDelay = target.GetInterpolationDelay();
 		float interpolationSmoothing = target.GetInterpolationSmoothing();
 		float num = interpolationDelay + interpolationSmoothing + 1f;

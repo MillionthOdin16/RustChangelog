@@ -48,128 +48,128 @@ public static class NexusServer
 	{
 		public static readonly _003C_003Ec _003C_003E9 = new _003C_003Ec();
 
-		public static Comparison<(string Zone, FerryStatus Status)> _003C_003E9__12_1;
+		public static NexusErrorHandler _003C_003E9__27_0;
 
-		public static Func<NexusZoneDetails, string> _003C_003E9__17_0;
+		public static Func<NexusZoneDetails, string> _003C_003E9__30_0;
 
-		public static Func<NexusZoneDetails, int> _003C_003E9__30_0;
+		public static Comparison<(string Zone, FerryStatus Status)> _003C_003E9__46_1;
 
-		public static Func<NexusZoneDetails, string> _003C_003E9__52_0;
+		public static Func<NexusZoneDetails, string> _003C_003E9__51_0;
 
-		public static Func<Request, TransferRequest> _003C_003E9__56_0;
+		public static Func<NexusZoneDetails, int> _003C_003E9__64_0;
 
-		public static Func<Request, PingRequest> _003C_003E9__56_1;
+		public static Func<NexusZoneDetails, string> _003C_003E9__86_0;
 
-		public static Func<Request, SpawnOptionsRequest> _003C_003E9__56_2;
+		public static Func<Request, TransferRequest> _003C_003E9__90_0;
 
-		public static Func<Request, SleepingBagRespawnRequest> _003C_003E9__56_3;
+		public static Func<Request, PingRequest> _003C_003E9__90_1;
 
-		public static Func<Request, SleepingBagDestroyRequest> _003C_003E9__56_4;
+		public static Func<Request, SpawnOptionsRequest> _003C_003E9__90_2;
 
-		public static Func<Request, FerryStatusRequest> _003C_003E9__56_5;
+		public static Func<Request, SleepingBagRespawnRequest> _003C_003E9__90_3;
 
-		public static Func<Request, FerryRetireRequest> _003C_003E9__56_6;
+		public static Func<Request, SleepingBagDestroyRequest> _003C_003E9__90_4;
 
-		public static Func<Request, FerryUpdateScheduleRequest> _003C_003E9__56_7;
+		public static Func<Request, FerryStatusRequest> _003C_003E9__90_5;
 
-		public static Func<Request, ClanChatBatchRequest> _003C_003E9__56_8;
+		public static Func<Request, FerryRetireRequest> _003C_003E9__90_6;
 
-		public static Func<Request, PlayerManifestRequest> _003C_003E9__56_9;
+		public static Func<Request, FerryUpdateScheduleRequest> _003C_003E9__90_7;
 
-		public static Func<NexusZoneDetails, string> _003C_003E9__62_1;
+		public static Func<Request, ClanChatBatchRequest> _003C_003E9__90_8;
 
-		public static Func<NexusZoneDetails, string> _003C_003E9__69_0;
+		public static Func<Request, PlayerManifestRequest> _003C_003E9__90_9;
 
-		public static NexusErrorHandler _003C_003E9__103_0;
+		public static Func<NexusZoneDetails, string> _003C_003E9__96_1;
 
-		public static Func<NexusZoneDetails, string> _003C_003E9__106_0;
+		public static Func<NexusZoneDetails, string> _003C_003E9__103_0;
 
-		internal int _003CUpdateFerryStatuses_003Eb__12_1((string Zone, FerryStatus Status) a, (string Zone, FerryStatus Status) b)
-		{
-			return a.Status.timestamp.CompareTo(b.Status.timestamp);
-		}
-
-		internal string _003CTryGetIslandPosition_003Eb__17_0(NexusZoneDetails z)
-		{
-			return z.Key;
-		}
-
-		internal int _003CHandleMessage_003Eb__30_0(NexusZoneDetails z)
-		{
-			return z.Id;
-		}
-
-		internal string _003CZoneRpc_003Eb__52_0(NexusZoneDetails z)
-		{
-			return z.Key;
-		}
-
-		internal TransferRequest _003CHandleRpcInvocationImpl_003Eb__56_0(Request r)
-		{
-			return r.transfer;
-		}
-
-		internal PingRequest _003CHandleRpcInvocationImpl_003Eb__56_1(Request r)
-		{
-			return r.ping;
-		}
-
-		internal SpawnOptionsRequest _003CHandleRpcInvocationImpl_003Eb__56_2(Request r)
-		{
-			return r.spawnOptions;
-		}
-
-		internal SleepingBagRespawnRequest _003CHandleRpcInvocationImpl_003Eb__56_3(Request r)
-		{
-			return r.respawnAtBag;
-		}
-
-		internal SleepingBagDestroyRequest _003CHandleRpcInvocationImpl_003Eb__56_4(Request r)
-		{
-			return r.destroyBag;
-		}
-
-		internal FerryStatusRequest _003CHandleRpcInvocationImpl_003Eb__56_5(Request r)
-		{
-			return r.ferryStatus;
-		}
-
-		internal FerryRetireRequest _003CHandleRpcInvocationImpl_003Eb__56_6(Request r)
-		{
-			return r.ferryRetire;
-		}
-
-		internal FerryUpdateScheduleRequest _003CHandleRpcInvocationImpl_003Eb__56_7(Request r)
-		{
-			return r.ferryUpdateSchedule;
-		}
-
-		internal ClanChatBatchRequest _003CHandleRpcInvocationImpl_003Eb__56_8(Request r)
-		{
-			return r.clanChatBatch;
-		}
-
-		internal PlayerManifestRequest _003CHandleRpcInvocationImpl_003Eb__56_9(Request r)
-		{
-			return r.playerManifest;
-		}
-
-		internal string _003CRefreshZoneStatus_003Eb__62_1(NexusZoneDetails z)
-		{
-			return z.Key;
-		}
-
-		internal string _003CTransferEntityImpl_003Eb__69_0(NexusZoneDetails z)
-		{
-			return z.Key;
-		}
-
-		internal void _003CInitialize_003Eb__103_0(BaseNexusClient _, Exception ex)
+		internal void _003CInitialize_003Eb__27_0(BaseNexusClient _, Exception ex)
 		{
 			Debug.LogException(ex);
 		}
 
-		internal string _003CFindZone_003Eb__106_0(NexusZoneDetails z)
+		internal string _003CFindZone_003Eb__30_0(NexusZoneDetails z)
+		{
+			return z.Key;
+		}
+
+		internal int _003CUpdateFerryStatuses_003Eb__46_1((string Zone, FerryStatus Status) a, (string Zone, FerryStatus Status) b)
+		{
+			return a.Status.timestamp.CompareTo(b.Status.timestamp);
+		}
+
+		internal string _003CTryGetIslandPosition_003Eb__51_0(NexusZoneDetails z)
+		{
+			return z.Key;
+		}
+
+		internal int _003CHandleMessage_003Eb__64_0(NexusZoneDetails z)
+		{
+			return z.Id;
+		}
+
+		internal string _003CZoneRpc_003Eb__86_0(NexusZoneDetails z)
+		{
+			return z.Key;
+		}
+
+		internal TransferRequest _003CHandleRpcInvocationImpl_003Eb__90_0(Request r)
+		{
+			return r.transfer;
+		}
+
+		internal PingRequest _003CHandleRpcInvocationImpl_003Eb__90_1(Request r)
+		{
+			return r.ping;
+		}
+
+		internal SpawnOptionsRequest _003CHandleRpcInvocationImpl_003Eb__90_2(Request r)
+		{
+			return r.spawnOptions;
+		}
+
+		internal SleepingBagRespawnRequest _003CHandleRpcInvocationImpl_003Eb__90_3(Request r)
+		{
+			return r.respawnAtBag;
+		}
+
+		internal SleepingBagDestroyRequest _003CHandleRpcInvocationImpl_003Eb__90_4(Request r)
+		{
+			return r.destroyBag;
+		}
+
+		internal FerryStatusRequest _003CHandleRpcInvocationImpl_003Eb__90_5(Request r)
+		{
+			return r.ferryStatus;
+		}
+
+		internal FerryRetireRequest _003CHandleRpcInvocationImpl_003Eb__90_6(Request r)
+		{
+			return r.ferryRetire;
+		}
+
+		internal FerryUpdateScheduleRequest _003CHandleRpcInvocationImpl_003Eb__90_7(Request r)
+		{
+			return r.ferryUpdateSchedule;
+		}
+
+		internal ClanChatBatchRequest _003CHandleRpcInvocationImpl_003Eb__90_8(Request r)
+		{
+			return r.clanChatBatch;
+		}
+
+		internal PlayerManifestRequest _003CHandleRpcInvocationImpl_003Eb__90_9(Request r)
+		{
+			return r.playerManifest;
+		}
+
+		internal string _003CRefreshZoneStatus_003Eb__96_1(NexusZoneDetails z)
+		{
+			return z.Key;
+		}
+
+		internal string _003CTransferEntityImpl_003Eb__103_0(NexusZoneDetails z)
 		{
 			return z.Key;
 		}
@@ -183,6 +183,14 @@ public static class NexusServer
 	private static bool _isRefreshingCompanion;
 
 	private static RealTimeSince _lastCompanionRefresh;
+
+	private static readonly Memoized<string, ulong> SteamIdToString = new Memoized<string, ulong>((Func<ulong, string>)((ulong i) => i.ToString("G")));
+
+	private static readonly MemoryStream WriterStream = new MemoryStream();
+
+	private static readonly ByteArrayStream ReaderStream = new ByteArrayStream();
+
+	private static NexusDB _database;
 
 	private static readonly Dictionary<string, List<(string Zone, FerryStatus Status)>> FerryEntries = new Dictionary<string, List<(string, FerryStatus)>>(StringComparer.InvariantCultureIgnoreCase);
 
@@ -219,40 +227,6 @@ public static class NexusServer
 	private static DateTimeOffset? _lastUnsavedTransfer;
 
 	private const string CopyFromKey = "$copyFrom";
-
-	private static readonly Memoized<string, ulong> SteamIdToString = new Memoized<string, ulong>((Func<ulong, string>)((ulong i) => i.ToString("G")));
-
-	private static readonly MemoryStream WriterStream = new MemoryStream();
-
-	private static readonly ByteArrayStream ReaderStream = new ByteArrayStream();
-
-	private static NexusDB _database;
-
-	public static bool NeedsJournalFlush
-	{
-		get
-		{
-			if (Started && _database.OldestJournal.HasValue)
-			{
-				return (DateTimeOffset.UtcNow - _database.OldestJournal.Value).TotalSeconds >= (double)Nexus.transferFlushTime;
-			}
-			return false;
-		}
-	}
-
-	private static int RpcResponseTtl => Nexus.messageLockDuration * 4;
-
-	public static bool NeedTransferFlush
-	{
-		get
-		{
-			if (Started && _lastUnsavedTransfer.HasValue)
-			{
-				return (DateTimeOffset.UtcNow - _lastUnsavedTransfer.Value).TotalSeconds >= (double)Nexus.transferFlushTime;
-			}
-			return false;
-		}
-	}
 
 	public static NexusZoneClient ZoneClient { get; private set; }
 
@@ -332,6 +306,32 @@ public static class NexusServer
 		}
 	}
 
+	public static bool NeedsJournalFlush
+	{
+		get
+		{
+			if (Started && _database.OldestJournal.HasValue)
+			{
+				return (DateTimeOffset.UtcNow - _database.OldestJournal.Value).TotalSeconds >= (double)Nexus.transferFlushTime;
+			}
+			return false;
+		}
+	}
+
+	private static int RpcResponseTtl => Nexus.messageLockDuration * 4;
+
+	public static bool NeedTransferFlush
+	{
+		get
+		{
+			if (Started && _lastUnsavedTransfer.HasValue)
+			{
+				return (DateTimeOffset.UtcNow - _lastUnsavedTransfer.Value).TotalSeconds >= (double)Nexus.transferFlushTime;
+			}
+			return false;
+		}
+	}
+
 	private static void RefreshCompanionVariables()
 	{
 		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
@@ -365,6 +365,226 @@ public static class NexusServer
 				_isRefreshingCompanion = false;
 			}
 		}
+	}
+
+	public static IEnumerator Initialize()
+	{
+		if (Started)
+		{
+			Debug.LogError((object)"NexusServer was already started");
+			yield break;
+		}
+		NexusZoneClient zoneClient = ZoneClient;
+		if (zoneClient != null)
+		{
+			((BaseNexusClient)zoneClient).Dispose();
+		}
+		ZoneClient = null;
+		NexusDB database = _database;
+		if (database != null)
+		{
+			((Database)database).Close();
+		}
+		_database = null;
+		ZoneController.Instance = null;
+		Started = false;
+		FailedToStart = true;
+		if (string.IsNullOrWhiteSpace(Nexus.endpoint) || !Nexus.endpoint.StartsWith("http") || string.IsNullOrWhiteSpace(Nexus.secretKey))
+		{
+			Debug.Log((object)"Nexus endpoint and/or secret key is not set, not starting nexus connection");
+			FailedToStart = false;
+			yield break;
+		}
+		GameObject val = new GameObject("NexusCleanupOnShutdown");
+		val.AddComponent<NexusCleanupOnShutdown>();
+		Object.DontDestroyOnLoad((Object)val);
+		try
+		{
+			_database = new NexusDB();
+			((Database)_database).Open($"{ConVar.Server.rootFolder}/nexus.{252}.db", true);
+			_database.Initialize();
+		}
+		catch (Exception ex2)
+		{
+			Debug.LogException(ex2);
+			yield break;
+		}
+		ZoneClient = new NexusZoneClient((INexusLogger)(object)NexusServerLogger.Instance, Nexus.endpoint, Nexus.secretKey, Nexus.messageLockDuration);
+		NexusZoneClient zoneClient2 = ZoneClient;
+		object obj = _003C_003Ec._003C_003E9__27_0;
+		if (obj == null)
+		{
+			NexusErrorHandler val2 = delegate(BaseNexusClient _, Exception ex)
+			{
+				Debug.LogException(ex);
+			};
+			_003C_003Ec._003C_003E9__27_0 = val2;
+			obj = (object)val2;
+		}
+		((BaseNexusClient)zoneClient2).OnError += (NexusErrorHandler)obj;
+		Task startTask = ((BaseNexusClient)ZoneClient).Start();
+		yield return (object)new WaitUntil((Func<bool>)(() => startTask.IsCompleted));
+		if (startTask.Exception != null)
+		{
+			Debug.LogException((Exception)startTask.Exception);
+			yield break;
+		}
+		if (string.IsNullOrWhiteSpace(ZoneKey))
+		{
+			Debug.LogError((object)"Zone name is not available after nexus initialization");
+			yield break;
+		}
+		Debug.Log((object)$"Connected as zone '{ZoneKey}' in Nexus {ZoneClient.Zone.NexusName} (id={ZoneClient.Zone.NexusId})");
+		ZoneController.Instance = BuildZoneController(Nexus.zoneController);
+		if (ZoneController.Instance == null)
+		{
+			Debug.LogError((object)(string.IsNullOrWhiteSpace(Nexus.zoneController) ? "Zone controller was not specified (nexus.zoneController convar)" : ("Zone controller is not supported: " + Nexus.zoneController)));
+			yield break;
+		}
+		Variable cfgVariable2 = default(Variable);
+		if (ZoneClient.TryGetNexusVariable("server.cfg", ref cfgVariable2))
+		{
+			Debug.Log((object)"Running server.cfg from nexus variable");
+			RunConsoleConfig(cfgVariable2);
+		}
+		Variable cfgVariable3 = default(Variable);
+		if (ZoneClient.TryGetZoneVariable("server.cfg", ref cfgVariable3))
+		{
+			Debug.Log((object)"Running server.cfg from zone variable");
+			RunConsoleConfig(cfgVariable3);
+		}
+		if (string.IsNullOrWhiteSpace(ConVar.World.configString) && string.IsNullOrWhiteSpace(ConVar.World.configFile))
+		{
+			Debug.Log((object)"Attempting to pull world config from the nexus");
+			string worldConfigString;
+			try
+			{
+				worldConfigString = GetWorldConfigString();
+			}
+			catch (Exception ex3)
+			{
+				Debug.LogException(ex3);
+				yield break;
+			}
+			Debug.Log((object)("Will use world config from nexus: " + worldConfigString));
+			ConVar.World.configString = worldConfigString;
+		}
+		else
+		{
+			Debug.LogWarning((object)"World config convar(s) are already set, will not pull world config from nexus");
+		}
+		Started = true;
+		FailedToStart = false;
+		static void RunConsoleConfig(Variable cfgVariable)
+		{
+			//IL_0004: Unknown result type (might be due to invalid IL or missing references)
+			//IL_000a: Invalid comparison between Unknown and I4
+			//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+			if (cfgVariable != null && (int)cfgVariable.Type == 1)
+			{
+				string asString = cfgVariable.GetAsString();
+				if (!string.IsNullOrWhiteSpace(asString))
+				{
+					ConsoleSystem.RunFile(Option.Server, asString);
+				}
+			}
+		}
+	}
+
+	public static void Shutdown()
+	{
+		Started = false;
+		FailedToStart = false;
+		_existingIslands?.Clear();
+		NexusZoneClient zoneClient = ZoneClient;
+		if (zoneClient != null)
+		{
+			((BaseNexusClient)zoneClient).Dispose();
+		}
+		ZoneClient = null;
+		NexusDB database = _database;
+		if (database != null)
+		{
+			((Database)database).Close();
+		}
+		_database = null;
+	}
+
+	public static void Update()
+	{
+		if (Started)
+		{
+			ReadIncomingMessages();
+			CheckForRpcTimeouts();
+			RefreshZoneStatus();
+			UpdatePlayerManifest();
+			RefreshCompanionVariables();
+		}
+	}
+
+	public static NexusZoneDetails FindZone(string zoneKey)
+	{
+		NexusZoneClient zoneClient = ZoneClient;
+		if (zoneClient == null)
+		{
+			return null;
+		}
+		NexusDetails nexus = zoneClient.Nexus;
+		if (nexus == null)
+		{
+			return null;
+		}
+		List<NexusZoneDetails> zones = nexus.Zones;
+		if (zones == null)
+		{
+			return null;
+		}
+		return List.FindWith<NexusZoneDetails, string>((IReadOnlyCollection<NexusZoneDetails>)zones, (Func<NexusZoneDetails, string>)((NexusZoneDetails z) => z.Key), zoneKey, (IEqualityComparer<string>)StringComparer.InvariantCultureIgnoreCase);
+	}
+
+	public static Task<NexusLoginResult> Login(ulong steamId)
+	{
+		return ZoneClient.PlayerLogin(SteamIdToString.Get(steamId));
+	}
+
+	public static void Logout(ulong steamId)
+	{
+		NexusZoneClient zoneClient = ZoneClient;
+		if (zoneClient != null)
+		{
+			zoneClient.PlayerLogout(SteamIdToString.Get(steamId));
+		}
+	}
+
+	public static bool TryGetPlayer(ulong steamId, out NexusPlayer player)
+	{
+		if (!Started)
+		{
+			player = null;
+			return false;
+		}
+		return ZoneClient.TryGetPlayer(SteamIdToString.Get(steamId), ref player);
+	}
+
+	public static Task AssignInitialZone(ulong steamId, string zoneKey)
+	{
+		return ZoneClient.Assign(steamId.ToString("G"), zoneKey);
+	}
+
+	private static ZoneController BuildZoneController(string name)
+	{
+		if (name.ToLowerInvariant() == "basic")
+		{
+			return new BasicZoneController(ZoneClient);
+		}
+		return null;
+	}
+
+	public static void PostGameSaved()
+	{
+		_database?.ClearJournal();
+		_database?.ClearTransferred();
+		_lastUnsavedTransfer = null;
 	}
 
 	public static async void UpdateFerries()
@@ -584,14 +804,14 @@ public static class NexusServer
 		//IL_0022: Invalid comparison between Unknown and I4
 		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01cc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0209: Unknown result type (might be due to invalid IL or missing references)
-		//IL_020b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01f4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01f6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01cd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_020a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_020c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f7: Unknown result type (might be due to invalid IL or missing references)
 		if (ZoneClient == null)
 		{
 			return;
@@ -925,8 +1145,8 @@ public static class NexusServer
 		_ = 1;
 		try
 		{
-			int num = World.Config?.JsonString?.GetHashCode() ?? 0;
-			string key = $"{2403}##{239}##{World.Name}##{World.Size}##{World.Seed}##{World.Salt}##{Nexus.mapImageScale}##{num}##{5}";
+			int valueOrDefault = (World.Config?.JsonString?.GetHashCode()).GetValueOrDefault();
+			string key = $"{2553}##{252}##{World.Name}##{World.Size}##{World.Seed}##{World.Salt}##{Nexus.mapImageScale}##{valueOrDefault}##{5}";
 			if (!force && (await ZoneClient.CheckUploadedMap()).Key == key)
 			{
 				Debug.Log((object)"Nexus already has this map's image uploaded, will not render and upload again");
@@ -954,7 +1174,7 @@ public static class NexusServer
 		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
 		try
 		{
-			if (packet.protocol != 239)
+			if (packet.protocol != 252)
 			{
 				Debug.LogWarning((object)"Received a nexus message with wrong protocol, ignoring");
 				return;
@@ -1000,7 +1220,7 @@ public static class NexusServer
 	{
 		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
 		Packet val = Pool.Get<Packet>();
-		val.protocol = 239u;
+		val.protocol = 252u;
 		val.sourceZone = ZoneClient.Zone.ZoneId;
 		val.request = request;
 		return SendPacket(id, val, toZoneKey, ttl);
@@ -1011,7 +1231,7 @@ public static class NexusServer
 		try
 		{
 			Packet val = Pool.Get<Packet>();
-			val.protocol = 239u;
+			val.protocol = 252u;
 			val.sourceZone = ZoneClient.Zone.ZoneId;
 			val.response = response;
 			await SendPacket(Uuid.Generate(), val, toZoneKey, ttl);
@@ -1025,12 +1245,14 @@ public static class NexusServer
 	private static Task SendPacket(Uuid id, Packet packet, string toZoneKey, int? ttl = null)
 	{
 		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
 		WriterStream.SetLength(0L);
 		WriterStream.Position = 0L;
 		packet.WriteToStream((Stream)WriterStream);
-		System.Memory<byte> memory = new System.Memory<byte>(WriterStream.GetBuffer(), 0, (int)WriterStream.Length);
+		Memory<byte> val = default(Memory<byte>);
+		val._002Ector(WriterStream.GetBuffer(), 0, (int)WriterStream.Length);
 		packet.Dispose();
-		return ZoneClient.SendMessage(toZoneKey, id, memory, ttl);
+		return ZoneClient.SendMessage(toZoneKey, id, val, ttl);
 	}
 
 	public static bool IsOnline(ulong userId)
@@ -1239,7 +1461,7 @@ public static class NexusServer
 	private static void HandleRpcResponse(NexusZoneDetails from, Uuid id, Response response)
 	{
 		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c7: Unknown result type (might be due to invalid IL or missing references)
 		if (!PendingCalls.TryGetValue(response.id, out var value))
 		{
 			Debug.LogWarning((object)"Received an unexpected nexus RPC response (likely timed out), ignoring");
@@ -1267,10 +1489,11 @@ public static class NexusServer
 				NexusDetails nexus = zoneClient.Nexus;
 				obj = ((nexus == null) ? null : nexus.Zones?.Count);
 			}
-			num = (obj ?? 0) - 1;
+			int? num2 = obj;
+			num = num2.GetValueOrDefault() - 1;
 		}
-		int num2 = num;
-		if (value.Result.Responses.Count >= num2)
+		int num3 = num;
+		if (value.Result.Responses.Count >= num3)
 		{
 			PendingCalls.Remove(id);
 			value.Completion.TrySetResult(result: true);
@@ -1431,11 +1654,11 @@ public static class NexusServer
 		UpdateFerries();
 	}
 
-	public static async Task TransferEntity(BaseEntity entity, string toZoneKey, string method)
+	public static async Task TransferEntity(BaseEntity entity, string toZoneKey, string method, bool includeFerry = true)
 	{
 		try
 		{
-			await TransferEntityImpl(FindRootEntity(entity), toZoneKey, method, ZoneKey, toZoneKey);
+			await TransferEntityImpl(FindRootEntity(entity, includeFerry), toZoneKey, method, ZoneKey, toZoneKey);
 		}
 		catch (Exception ex)
 		{
@@ -1507,7 +1730,9 @@ public static class NexusServer
 			if ((Object)(object)item4 != (Object)null && item4.IsConnected)
 			{
 				ConsoleNetwork.SendClientCommandImmediate(item4.net.connection, "nexus.redirect", toZone.IpAddress, toZone.GamePort, toZone.ConnectionProtocol());
-				item4.Kick("Redirecting to another zone...");
+				item4.limitNetworking = true;
+				item4.EnableSaving(wants: false);
+				((FacepunchBehaviour)item4).Invoke((Action)item4.KickAfterServerTransfer, 1f);
 			}
 		}
 		for (int num = networkables.Count - 1; num >= 0; num--)
@@ -1521,7 +1746,14 @@ public static class NexusServer
 					{
 						UnparentUnknown(entity, transferEntityIds);
 					}
-					baseNetworkable.Kill();
+					if (baseNetworkable is BasePlayer basePlayer && players.Contains(basePlayer))
+					{
+						basePlayer.SetParent(null, worldPositionStays: true);
+					}
+					else
+					{
+						baseNetworkable.Kill();
+					}
 				}
 			}
 			catch (Exception ex)
@@ -1563,9 +1795,9 @@ public static class NexusServer
 
 	private static void BuildTransferRequest(BaseEntity rootEntity, string method, string from, string to, out Request request, out List<BaseNetworkable> networkables, out List<BasePlayer> players, out List<string> playerIds)
 	{
-		//IL_00ff: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0162: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0110: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0173: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d2: Unknown result type (might be due to invalid IL or missing references)
 		List<BaseNetworkable> entitiesList = (networkables = Pool.GetList<BaseNetworkable>());
 		List<BasePlayer> playerList = (players = Pool.GetList<BasePlayer>());
 		List<string> playerIdsList = (playerIds = Pool.GetList<string>());
@@ -1617,15 +1849,32 @@ public static class NexusServer
 		Pool.Free<Queue<BaseNetworkable>>(ref pendingEntities);
 		Entity AddEntity(BaseNetworkable entity)
 		{
+			//IL_008b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_008c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_009e: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
 			BaseNetworkable.SaveInfo saveInfo = default(BaseNetworkable.SaveInfo);
 			saveInfo.forDisk = true;
 			saveInfo.forTransfer = true;
 			saveInfo.msg = Pool.Get<Entity>();
 			BaseNetworkable.SaveInfo info = saveInfo;
 			entity.Save(info);
+			if (entity == rootEntity && info.msg.parent != null)
+			{
+				info.msg.parent.Dispose();
+				info.msg.parent = null;
+				if (info.msg.baseEntity != null)
+				{
+					Vector3 pos = default(Vector3);
+					Quaternion val3 = default(Quaternion);
+					((Component)rootEntity).transform.GetPositionAndRotation(ref pos, ref val3);
+					info.msg.baseEntity.pos = pos;
+					info.msg.baseEntity.rot = ((Quaternion)(ref val3)).eulerAngles;
+				}
+			}
 			serializedEntities.Add(info.msg);
 			entitiesList.Add(entity);
-			if (entity is BasePlayer basePlayer && ((object)basePlayer).GetType() == typeof(BasePlayer) && basePlayer.userID > uint.MaxValue)
+			if (entity is BasePlayer basePlayer && ((object)basePlayer).GetType() == typeof(BasePlayer) && (ulong)basePlayer.userID > uint.MaxValue)
 			{
 				playerList.Add(basePlayer);
 				playerIdsList.Add(basePlayer.UserIDString);
@@ -1661,14 +1910,18 @@ public static class NexusServer
 		{
 			return false;
 		}
+		if (networkable is BasePlayer basePlayer && !basePlayer.IsAlive())
+		{
+			return false;
+		}
 		return true;
 	}
 
-	public static BaseEntity FindRootEntity(BaseEntity startEntity)
+	public static BaseEntity FindRootEntity(BaseEntity startEntity, bool includeFerry)
 	{
 		BaseEntity baseEntity = startEntity;
 		BaseEntity parent2;
-		while (TryGetParent(baseEntity, out parent2))
+		while (TryGetParent(baseEntity, out parent2) && (includeFerry || !(parent2 is NexusFerry)))
 		{
 			baseEntity = parent2;
 		}
@@ -1676,7 +1929,7 @@ public static class NexusServer
 		static bool TryGetParent(BaseEntity entity, out BaseEntity parent)
 		{
 			BaseEntity parentEntity = entity.GetParentEntity();
-			if ((Object)(object)parentEntity != (Object)null && !(parentEntity is NexusFerry))
+			if ((Object)(object)parentEntity != (Object)null && parentEntity.enableSaving)
 			{
 				parent = parentEntity;
 				return true;
@@ -1684,7 +1937,7 @@ public static class NexusServer
 			if (entity is BasePlayer basePlayer)
 			{
 				BaseMountable mounted = basePlayer.GetMounted();
-				if ((Object)(object)mounted != (Object)null)
+				if ((Object)(object)mounted != (Object)null && mounted.enableSaving)
 				{
 					parent = mounted;
 					return true;
@@ -1803,226 +2056,5 @@ public static class NexusServer
 			val[item.Key] = item.Value;
 		}
 		return val;
-	}
-
-	public static IEnumerator Initialize()
-	{
-		if (Started)
-		{
-			Debug.LogError((object)"NexusServer was already started");
-			yield break;
-		}
-		NexusZoneClient zoneClient = ZoneClient;
-		if (zoneClient != null)
-		{
-			((BaseNexusClient)zoneClient).Dispose();
-		}
-		ZoneClient = null;
-		NexusDB database = _database;
-		if (database != null)
-		{
-			((Database)database).Close();
-		}
-		_database = null;
-		ZoneController.Instance = null;
-		Started = false;
-		FailedToStart = true;
-		if (string.IsNullOrWhiteSpace(Nexus.endpoint) || !Nexus.endpoint.StartsWith("http") || string.IsNullOrWhiteSpace(Nexus.secretKey))
-		{
-			Debug.Log((object)"Nexus endpoint and/or secret key is not set, not starting nexus connection");
-			FailedToStart = false;
-			yield break;
-		}
-		GameObject val = new GameObject("NexusCleanupOnShutdown");
-		val.AddComponent<NexusCleanupOnShutdown>();
-		Object.DontDestroyOnLoad((Object)val);
-		try
-		{
-			_database = new NexusDB();
-			((Database)_database).Open($"{ConVar.Server.rootFolder}/nexus.{239}.db", true);
-			_database.Initialize();
-		}
-		catch (Exception ex2)
-		{
-			Debug.LogException(ex2);
-			yield break;
-		}
-		ZoneClient = new NexusZoneClient((INexusLogger)(object)NexusServerLogger.Instance, Nexus.endpoint, Nexus.secretKey, Nexus.messageLockDuration);
-		NexusZoneClient zoneClient2 = ZoneClient;
-		object obj = _003C_003Ec._003C_003E9__103_0;
-		if (obj == null)
-		{
-			NexusErrorHandler val2 = delegate(BaseNexusClient _, Exception ex)
-			{
-				Debug.LogException(ex);
-			};
-			_003C_003Ec._003C_003E9__103_0 = val2;
-			obj = (object)val2;
-		}
-		((BaseNexusClient)zoneClient2).OnError += (NexusErrorHandler)obj;
-		Task startTask = ((BaseNexusClient)ZoneClient).Start();
-		yield return (object)new WaitUntil((Func<bool>)(() => startTask.IsCompleted));
-		if (startTask.Exception != null)
-		{
-			Debug.LogException((Exception)startTask.Exception);
-			yield break;
-		}
-		if (string.IsNullOrWhiteSpace(ZoneKey))
-		{
-			Debug.LogError((object)"Zone name is not available after nexus initialization");
-			yield break;
-		}
-		Debug.Log((object)$"Connected as zone '{ZoneKey}' in Nexus {ZoneClient.Zone.NexusName} (id={ZoneClient.Zone.NexusId})");
-		ZoneController.Instance = BuildZoneController(Nexus.zoneController);
-		if (ZoneController.Instance == null)
-		{
-			Debug.LogError((object)(string.IsNullOrWhiteSpace(Nexus.zoneController) ? "Zone controller was not specified (nexus.zoneController convar)" : ("Zone controller is not supported: " + Nexus.zoneController)));
-			yield break;
-		}
-		Variable cfgVariable2 = default(Variable);
-		if (ZoneClient.TryGetNexusVariable("server.cfg", ref cfgVariable2))
-		{
-			Debug.Log((object)"Running server.cfg from nexus variable");
-			RunConsoleConfig(cfgVariable2);
-		}
-		Variable cfgVariable3 = default(Variable);
-		if (ZoneClient.TryGetZoneVariable("server.cfg", ref cfgVariable3))
-		{
-			Debug.Log((object)"Running server.cfg from zone variable");
-			RunConsoleConfig(cfgVariable3);
-		}
-		if (string.IsNullOrWhiteSpace(ConVar.World.configString) && string.IsNullOrWhiteSpace(ConVar.World.configFile))
-		{
-			Debug.Log((object)"Attempting to pull world config from the nexus");
-			string worldConfigString;
-			try
-			{
-				worldConfigString = GetWorldConfigString();
-			}
-			catch (Exception ex3)
-			{
-				Debug.LogException(ex3);
-				yield break;
-			}
-			Debug.Log((object)("Will use world config from nexus: " + worldConfigString));
-			ConVar.World.configString = worldConfigString;
-		}
-		else
-		{
-			Debug.LogWarning((object)"World config convar(s) are already set, will not pull world config from nexus");
-		}
-		Started = true;
-		FailedToStart = false;
-		static void RunConsoleConfig(Variable cfgVariable)
-		{
-			//IL_0004: Unknown result type (might be due to invalid IL or missing references)
-			//IL_000a: Invalid comparison between Unknown and I4
-			//IL_001b: Unknown result type (might be due to invalid IL or missing references)
-			if (cfgVariable != null && (int)cfgVariable.Type == 1)
-			{
-				string asString = cfgVariable.GetAsString();
-				if (!string.IsNullOrWhiteSpace(asString))
-				{
-					ConsoleSystem.RunFile(Option.Server, asString);
-				}
-			}
-		}
-	}
-
-	public static void Shutdown()
-	{
-		Started = false;
-		FailedToStart = false;
-		_existingIslands?.Clear();
-		NexusZoneClient zoneClient = ZoneClient;
-		if (zoneClient != null)
-		{
-			((BaseNexusClient)zoneClient).Dispose();
-		}
-		ZoneClient = null;
-		NexusDB database = _database;
-		if (database != null)
-		{
-			((Database)database).Close();
-		}
-		_database = null;
-	}
-
-	public static void Update()
-	{
-		if (Started)
-		{
-			ReadIncomingMessages();
-			CheckForRpcTimeouts();
-			RefreshZoneStatus();
-			UpdatePlayerManifest();
-			RefreshCompanionVariables();
-		}
-	}
-
-	public static NexusZoneDetails FindZone(string zoneKey)
-	{
-		NexusZoneClient zoneClient = ZoneClient;
-		if (zoneClient == null)
-		{
-			return null;
-		}
-		NexusDetails nexus = zoneClient.Nexus;
-		if (nexus == null)
-		{
-			return null;
-		}
-		List<NexusZoneDetails> zones = nexus.Zones;
-		if (zones == null)
-		{
-			return null;
-		}
-		return List.FindWith<NexusZoneDetails, string>((IReadOnlyCollection<NexusZoneDetails>)zones, (Func<NexusZoneDetails, string>)((NexusZoneDetails z) => z.Key), zoneKey, (IEqualityComparer<string>)StringComparer.InvariantCultureIgnoreCase);
-	}
-
-	public static Task<NexusLoginResult> Login(ulong steamId)
-	{
-		return ZoneClient.PlayerLogin(SteamIdToString.Get(steamId));
-	}
-
-	public static void Logout(ulong steamId)
-	{
-		NexusZoneClient zoneClient = ZoneClient;
-		if (zoneClient != null)
-		{
-			zoneClient.PlayerLogout(SteamIdToString.Get(steamId));
-		}
-	}
-
-	public static bool TryGetPlayer(ulong steamId, out NexusPlayer player)
-	{
-		if (!Started)
-		{
-			player = null;
-			return false;
-		}
-		return ZoneClient.TryGetPlayer(SteamIdToString.Get(steamId), ref player);
-	}
-
-	public static Task AssignInitialZone(ulong steamId, string zoneKey)
-	{
-		return ZoneClient.Assign(steamId.ToString("G"), zoneKey);
-	}
-
-	private static ZoneController BuildZoneController(string name)
-	{
-		string text = name.ToLowerInvariant();
-		if (text == "basic")
-		{
-			return new BasicZoneController(ZoneClient);
-		}
-		return null;
-	}
-
-	public static void PostGameSaved()
-	{
-		_database?.ClearJournal();
-		_database?.ClearTransferred();
-		_lastUnsavedTransfer = null;
 	}
 }

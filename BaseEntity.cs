@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using ConVar;
 using Facepunch;
 using Facepunch.Extend;
 using Network;
 using ProtoBuf;
 using Rust;
-using Rust.Ai;
 using Rust.Workshop;
 using Spatial;
 using UnityEngine;
@@ -119,6 +119,14 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		public float drag;
 	}
 
+	public enum GiveItemReason
+	{
+		Generic,
+		ResourceHarvested,
+		PickedUp,
+		Crafted
+	}
+
 	[Flags]
 	public enum Flags
 	{
@@ -143,6 +151,9 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		Reserved10 = 0x40000,
 		Reserved11 = 0x80000,
 		InUse = 0x100000,
+		Reserved12 = 0x200000,
+		Reserved13 = 0x400000,
+		Unused23 = 0x800000,
 		Protected = 0x1000000,
 		Transferring = 0x2000000
 	}
@@ -404,6 +415,8 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		{
 			private float maximumDistance;
 
+			public bool CheckParent { get; set; }
+
 			public MaxDistance(float maxDist)
 			{
 				maximumDistance = maxDist;
@@ -411,17 +424,24 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 
 			public override string GetArgs()
 			{
-				return maximumDistance.ToString("0.00f");
+				return maximumDistance.ToString("0.00f") + (CheckParent ? ", true" : "");
 			}
 
-			public static bool Test(uint id, string debugName, BaseEntity ent, BasePlayer player, float maximumDistance)
+			public static bool Test(uint id, string debugName, BaseEntity ent, BasePlayer player, float maximumDistance, bool checkParent = false)
 			{
 				//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+				//IL_004b: Unknown result type (might be due to invalid IL or missing references)
 				if ((Object)(object)ent == (Object)null || (Object)(object)player == (Object)null)
 				{
 					return false;
 				}
-				return ent.Distance(player.eyes.position) <= maximumDistance;
+				bool flag = ent.Distance(player.eyes.position) <= maximumDistance;
+				if (checkParent && !flag)
+				{
+					BaseEntity parentEntity = ent.GetParentEntity();
+					flag = (Object)(object)parentEntity != (Object)null && parentEntity.Distance(player.eyes.position) <= maximumDistance;
+				}
+				return flag;
 			}
 		}
 
@@ -449,7 +469,7 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 				{
 					return false;
 				}
-				if (GamePhysics.LineOfSight(player.eyes.center, player.eyes.position, 2162688))
+				if (GamePhysics.LineOfSight(player.eyes.center, player.eyes.position, 1218519041))
 				{
 					if (!ent.IsVisible(player.eyes.HeadRay(), 1218519041, maximumDistance))
 					{
@@ -708,49 +728,6 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		}
 	}
 
-	public enum GiveItemReason
-	{
-		Generic,
-		ResourceHarvested,
-		PickedUp,
-		Crafted
-	}
-
-	private static Queue<BaseEntity> globalBroadcastQueue = new Queue<BaseEntity>();
-
-	private static uint globalBroadcastProtocol = 0u;
-
-	private uint broadcastProtocol;
-
-	private List<EntityLink> links = new List<EntityLink>();
-
-	private bool linkedToNeighbours;
-
-	private TimeUntil _transferProtectionRemaining;
-
-	private Action _disableTransferProtectionAction;
-
-	[NonSerialized]
-	public BaseEntity creatorEntity;
-
-	private int ticksSinceStopped;
-
-	private int doneMovingWithoutARigidBodyCheck = 1;
-
-	private bool isCallingUpdateNetworkGroup;
-
-	private EntityRef[] entitySlots = new EntityRef[8];
-
-	protected List<TriggerBase> triggers;
-
-	protected bool isVisible = true;
-
-	protected bool isAnimatorVisible = true;
-
-	protected bool isShadowVisible = true;
-
-	protected OccludeeSphere localOccludee = new OccludeeSphere(-1);
-
 	[Header("BaseEntity")]
 	public Bounds bounds;
 
@@ -762,7 +739,6 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 
 	public Model model;
 
-	[InspectorFlags]
 	public Flags flags;
 
 	[NonSerialized]
@@ -779,95 +755,58 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 	[NonSerialized]
 	protected string _name;
 
+	private static Queue<BaseEntity> globalBroadcastQueue = new Queue<BaseEntity>();
+
+	private static uint globalBroadcastProtocol = 0u;
+
+	private uint broadcastProtocol;
+
+	private List<EntityLink> links = new List<EntityLink>();
+
+	private bool linkedToNeighbours;
+
+	private TimeUntil _transferProtectionRemaining;
+
+	private Action _disableTransferProtectionAction;
+
+	public const string RpcClientDeprecationNotice = "Use ClientRPC( RpcTarget ) overloads";
+
 	private Spawnable _spawnable;
 
 	public static HashSet<BaseEntity> saveList = new HashSet<BaseEntity>();
 
+	[NonSerialized]
+	public BaseEntity creatorEntity;
+
+	private int ticksSinceStopped;
+
+	private bool isCallingUpdateNetworkGroup;
+
+	private EntityRef[] entitySlots = new EntityRef[8];
+
+	protected List<TriggerBase> triggers;
+
+	protected bool isVisible = true;
+
+	protected bool isAnimatorVisible = true;
+
+	protected bool isShadowVisible = true;
+
+	protected OccludeeSphere localOccludee = new OccludeeSphere(-1);
+
 	public virtual float RealisticMass => 100f;
+
+	public EntityComponentBase[] Components => _components ?? (_components = ((Component)this).GetComponentsInChildren<EntityComponentBase>(true));
+
+	public virtual bool IsNpc => false;
+
+	public ulong OwnerID { get; set; }
 
 	protected float TransferProtectionRemaining => TimeUntil.op_Implicit(_transferProtectionRemaining);
 
 	protected Action DisableTransferProtectionAction => _disableTransferProtectionAction ?? (_disableTransferProtectionAction = DisableTransferProtection);
 
-	public float radiationLevel
-	{
-		get
-		{
-			//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-			//IL_005c: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0053: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0054: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0059: Unknown result type (might be due to invalid IL or missing references)
-			if (triggers == null)
-			{
-				return 0f;
-			}
-			float num = 0f;
-			for (int i = 0; i < triggers.Count; i++)
-			{
-				TriggerRadiation triggerRadiation = triggers[i] as TriggerRadiation;
-				if (!((Object)(object)triggerRadiation == (Object)null))
-				{
-					Vector3 val = GetNetworkPosition();
-					BaseEntity baseEntity = GetParentEntity();
-					if ((Object)(object)baseEntity != (Object)null)
-					{
-						val = ((Component)baseEntity).transform.TransformPoint(val);
-					}
-					num = Mathf.Max(num, triggerRadiation.GetRadiation(val, RadiationProtection()));
-				}
-			}
-			return num;
-		}
-	}
-
-	public float currentTemperature
-	{
-		get
-		{
-			//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-			//IL_003c: Unknown result type (might be due to invalid IL or missing references)
-			float num = Climate.GetTemperature(((Component)this).transform.position);
-			if (triggers == null)
-			{
-				return num;
-			}
-			for (int i = 0; i < triggers.Count; i++)
-			{
-				TriggerTemperature triggerTemperature = triggers[i] as TriggerTemperature;
-				if (!((Object)(object)triggerTemperature == (Object)null))
-				{
-					num = triggerTemperature.WorkoutTemperature(GetNetworkPosition(), num);
-				}
-			}
-			return num;
-		}
-	}
-
-	public float currentEnvironmentalWetness
-	{
-		get
-		{
-			//IL_0015: Unknown result type (might be due to invalid IL or missing references)
-			//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-			//IL_003b: Unknown result type (might be due to invalid IL or missing references)
-			if (triggers == null)
-			{
-				return 0f;
-			}
-			float num = 0f;
-			Vector3 networkPosition = GetNetworkPosition();
-			foreach (TriggerBase trigger in triggers)
-			{
-				if (trigger is TriggerWetness triggerWetness)
-				{
-					num += triggerWetness.WorkoutWetness(networkPosition);
-				}
-			}
-			return Mathf.Clamp01(num);
-		}
-	}
+	public virtual bool ShouldTransferAssociatedFiles => false;
 
 	protected virtual float PositionTickRate => 0.1f;
 
@@ -913,17 +852,89 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		}
 	}
 
+	public float radiationLevel
+	{
+		get
+		{
+			//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+			//IL_005c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0053: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0054: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0059: Unknown result type (might be due to invalid IL or missing references)
+			if (triggers == null)
+			{
+				return 0f;
+			}
+			float num = 0f;
+			for (int i = 0; i < triggers.Count; i++)
+			{
+				TriggerRadiation triggerRadiation = triggers[i] as TriggerRadiation;
+				if (!((Object)(object)triggerRadiation == (Object)null))
+				{
+					Vector3 val = GetNetworkPosition();
+					BaseEntity baseEntity = GetParentEntity();
+					if ((Object)(object)baseEntity != (Object)null)
+					{
+						val = ((Component)baseEntity).transform.TransformPoint(val);
+					}
+					num = Mathf.Max(num, triggerRadiation.GetRadiation(val, RadiationProtection()));
+				}
+			}
+			return num;
+		}
+	}
+
+	public float currentTemperature
+	{
+		get
+		{
+			//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+			float num = Climate.GetTemperature(((Component)this).transform.position);
+			if (triggers == null)
+			{
+				return num;
+			}
+			for (int i = 0; i < triggers.Count; i++)
+			{
+				TriggerTemperature triggerTemperature = triggers[i] as TriggerTemperature;
+				if (!((Object)(object)triggerTemperature == (Object)null))
+				{
+					num = triggerTemperature.WorkoutTemperature(((Component)this).transform.position, num);
+				}
+			}
+			return num;
+		}
+	}
+
+	public float currentEnvironmentalWetness
+	{
+		get
+		{
+			//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+			//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+			//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+			if (triggers == null)
+			{
+				return 0f;
+			}
+			float num = 0f;
+			Vector3 networkPosition = GetNetworkPosition();
+			foreach (TriggerBase trigger in triggers)
+			{
+				if (trigger is TriggerWetness triggerWetness)
+				{
+					num += triggerWetness.WorkoutWetness(networkPosition);
+				}
+			}
+			return Mathf.Clamp01(num);
+		}
+	}
+
 	public virtual TraitFlag Traits => TraitFlag.None;
 
 	public float Weight { get; protected set; }
-
-	public EntityComponentBase[] Components => _components ?? (_components = ((Component)this).GetComponentsInChildren<EntityComponentBase>(true));
-
-	public virtual bool IsNpc => false;
-
-	public ulong OwnerID { get; set; }
-
-	public virtual bool ShouldTransferAssociatedFiles => false;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -935,7 +946,7 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - BroadcastSignalFromClient "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - BroadcastSignalFromClient "));
 				}
 				TimeWarning val2 = TimeWarning.New("BroadcastSignalFromClient", 0);
 				try
@@ -986,7 +997,7 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SV_RequestFile "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SV_RequestFile "));
 				}
 				TimeWarning val2 = TimeWarning.New("SV_RequestFile", 0);
 				try
@@ -1040,6 +1051,792 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		{
 			((Component)this).gameObject.transform.RemoveComponent<EntityCollisionMessage>();
 		}
+	}
+
+	public virtual BasePlayer ToPlayer()
+	{
+		return null;
+	}
+
+	public override void InitShared()
+	{
+		base.InitShared();
+		InitEntityLinks();
+	}
+
+	public override void DestroyShared()
+	{
+		base.DestroyShared();
+		FreeEntityLinks();
+	}
+
+	public override void ResetState()
+	{
+		base.ResetState();
+		parentBone = 0u;
+		OwnerID = 0uL;
+		flags = (Flags)0;
+		parentEntity = default(EntityRef);
+		if (base.isServer)
+		{
+			_spawnable = null;
+		}
+	}
+
+	public virtual float InheritedVelocityScale()
+	{
+		return 0f;
+	}
+
+	public virtual bool InheritedVelocityDirection()
+	{
+		return true;
+	}
+
+	public virtual Vector3 GetInheritedProjectileVelocity(Vector3 direction)
+	{
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		BaseEntity baseEntity = parentEntity.Get(base.isServer);
+		if ((Object)(object)baseEntity == (Object)null)
+		{
+			return Vector3.zero;
+		}
+		if (baseEntity.InheritedVelocityDirection())
+		{
+			return GetParentVelocity() * baseEntity.InheritedVelocityScale();
+		}
+		return Mathf.Max(Vector3.Dot(GetParentVelocity() * baseEntity.InheritedVelocityScale(), direction), 0f) * direction;
+	}
+
+	public virtual Vector3 GetInheritedThrowVelocity(Vector3 direction)
+	{
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		return GetParentVelocity();
+	}
+
+	public virtual Vector3 GetInheritedDropVelocity()
+	{
+		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		BaseEntity baseEntity = parentEntity.Get(base.isServer);
+		if (!((Object)(object)baseEntity != (Object)null))
+		{
+			return Vector3.zero;
+		}
+		return baseEntity.GetWorldVelocity();
+	}
+
+	public Vector3 GetParentVelocity()
+	{
+		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		BaseEntity baseEntity = parentEntity.Get(base.isServer);
+		if (!((Object)(object)baseEntity != (Object)null))
+		{
+			return Vector3.zero;
+		}
+		return baseEntity.GetWorldVelocity() + (baseEntity.GetAngularVelocity() * ((Component)this).transform.localPosition - ((Component)this).transform.localPosition);
+	}
+
+	public Vector3 GetWorldVelocity()
+	{
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		BaseEntity baseEntity = parentEntity.Get(base.isServer);
+		if (!((Object)(object)baseEntity != (Object)null))
+		{
+			return GetLocalVelocity();
+		}
+		return baseEntity.GetWorldVelocity() + (baseEntity.GetAngularVelocity() * ((Component)this).transform.localPosition - ((Component)this).transform.localPosition) + ((Component)baseEntity).transform.TransformDirection(GetLocalVelocity());
+	}
+
+	public Vector3 GetLocalVelocity()
+	{
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		if (base.isServer)
+		{
+			return GetLocalVelocityServer();
+		}
+		return Vector3.zero;
+	}
+
+	public Quaternion GetAngularVelocity()
+	{
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		if (base.isServer)
+		{
+			return GetAngularVelocityServer();
+		}
+		return Quaternion.identity;
+	}
+
+	public virtual OBB WorldSpaceBounds()
+	{
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		return new OBB(((Component)this).transform.position, ((Component)this).transform.lossyScale, ((Component)this).transform.rotation, bounds);
+	}
+
+	public Vector3 PivotPoint()
+	{
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		return ((Component)this).transform.position;
+	}
+
+	public Vector3 CenterPoint()
+	{
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		return WorldSpaceBounds().position;
+	}
+
+	public Vector3 ClosestPoint(Vector3 position)
+	{
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
+		OBB val = WorldSpaceBounds();
+		return ((OBB)(ref val)).ClosestPoint(position);
+	}
+
+	public virtual Vector3 TriggerPoint()
+	{
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		return CenterPoint();
+	}
+
+	public float Distance(Vector3 position)
+	{
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		Vector3 val = ClosestPoint(position) - position;
+		return ((Vector3)(ref val)).magnitude;
+	}
+
+	public float SqrDistance(Vector3 position)
+	{
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		Vector3 val = ClosestPoint(position) - position;
+		return ((Vector3)(ref val)).sqrMagnitude;
+	}
+
+	public float Distance(BaseEntity other)
+	{
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		return Distance(((Component)other).transform.position);
+	}
+
+	public float SqrDistance(BaseEntity other)
+	{
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		return SqrDistance(((Component)other).transform.position);
+	}
+
+	public float Distance2D(Vector3 position)
+	{
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		return Vector3Ex.Magnitude2D(ClosestPoint(position) - position);
+	}
+
+	public float SqrDistance2D(Vector3 position)
+	{
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		return Vector3Ex.SqrMagnitude2D(ClosestPoint(position) - position);
+	}
+
+	public float Distance2D(BaseEntity other)
+	{
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		return Distance(((Component)other).transform.position);
+	}
+
+	public float SqrDistance2D(BaseEntity other)
+	{
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		return SqrDistance(((Component)other).transform.position);
+	}
+
+	public bool IsVisible(Ray ray, int layerMask, float maxDistance)
+	{
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
+		if (Vector3Ex.IsNaNOrInfinity(((Ray)(ref ray)).origin))
+		{
+			return false;
+		}
+		if (Vector3Ex.IsNaNOrInfinity(((Ray)(ref ray)).direction))
+		{
+			return false;
+		}
+		if (((Ray)(ref ray)).direction == Vector3.zero)
+		{
+			return false;
+		}
+		OBB val = WorldSpaceBounds();
+		RaycastHit val2 = default(RaycastHit);
+		if (!((OBB)(ref val)).Trace(ray, ref val2, maxDistance))
+		{
+			return false;
+		}
+		if (GamePhysics.Trace(ray, 0f, out var hitInfo, maxDistance, layerMask, (QueryTriggerInteraction)0))
+		{
+			BaseEntity entity = hitInfo.GetEntity();
+			if ((Object)(object)entity == (Object)(object)this)
+			{
+				return true;
+			}
+			if ((Object)(object)entity != (Object)null && Object.op_Implicit((Object)(object)GetParentEntity()) && GetParentEntity().EqualNetID((BaseNetworkable)entity) && hitInfo.IsOnLayer((Layer)13))
+			{
+				return true;
+			}
+			if (((RaycastHit)(ref hitInfo)).distance <= ((RaycastHit)(ref val2)).distance)
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+
+	public bool IsVisibleSpecificLayers(Vector3 position, Vector3 target, int layerMask, float maxDistance = float.PositiveInfinity)
+	{
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		Vector3 val = target - position;
+		float magnitude = ((Vector3)(ref val)).magnitude;
+		if (magnitude < Mathf.Epsilon)
+		{
+			return true;
+		}
+		Vector3 val2 = val / magnitude;
+		Vector3 val3 = val2 * Mathf.Min(magnitude, 0.01f);
+		return IsVisible(new Ray(position + val3, val2), layerMask, maxDistance);
+	}
+
+	public bool IsVisible(Vector3 position, Vector3 target, float maxDistance = float.PositiveInfinity)
+	{
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		Vector3 val = target - position;
+		float magnitude = ((Vector3)(ref val)).magnitude;
+		if (magnitude < Mathf.Epsilon)
+		{
+			return true;
+		}
+		Vector3 val2 = val / magnitude;
+		Vector3 val3 = val2 * Mathf.Min(magnitude, 0.01f);
+		maxDistance = Mathf.Min(maxDistance, magnitude + 0.2f);
+		return IsVisible(new Ray(position + val3, val2), 1218519041, maxDistance);
+	}
+
+	public bool IsVisible(Vector3 position, float maxDistance = float.PositiveInfinity)
+	{
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		Vector3 target = CenterPoint();
+		if (IsVisible(position, target, maxDistance))
+		{
+			return true;
+		}
+		Vector3 target2 = ClosestPoint(position);
+		if (IsVisible(position, target2, maxDistance))
+		{
+			return true;
+		}
+		return false;
+	}
+
+	public bool IsVisibleAndCanSee(Vector3 position)
+	{
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		Vector3 val = CenterPoint();
+		if (IsVisible(position, val) && CanSee(val, position))
+		{
+			return true;
+		}
+		Vector3 val2 = ClosestPoint(position);
+		if (IsVisible(position, val2) && CanSee(val2, position))
+		{
+			return true;
+		}
+		return false;
+	}
+
+	public bool IsVisibleAndCanSeeLegacy(Vector3 position, float maxDistance = float.PositiveInfinity)
+	{
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		Vector3 val = CenterPoint();
+		if (IsVisible(position, val, maxDistance) && IsVisible(val, position, maxDistance))
+		{
+			return true;
+		}
+		Vector3 val2 = ClosestPoint(position);
+		if (IsVisible(position, val2, maxDistance) && IsVisible(val2, position, maxDistance))
+		{
+			return true;
+		}
+		return false;
+	}
+
+	public bool CanSee(Vector3 fromPos, Vector3 targetPos)
+	{
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		return GamePhysics.LineOfSight(fromPos, targetPos, 1218519041, this);
+	}
+
+	public bool IsOlderThan(BaseEntity other)
+	{
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
+		if ((Object)(object)other == (Object)null)
+		{
+			return true;
+		}
+		_003F val = ((_003F?)net?.ID) ?? default(NetworkableId);
+		NetworkableId val2 = (NetworkableId)(((_003F?)other.net?.ID) ?? default(NetworkableId));
+		return ((NetworkableId)val).Value < val2.Value;
+	}
+
+	public virtual bool IsOutside()
+	{
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		OBB val = WorldSpaceBounds();
+		return IsOutside(val.position);
+	}
+
+	public bool IsOutside(Vector3 position)
+	{
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		bool result = true;
+		RaycastHit val = default(RaycastHit);
+		if (Physics.Raycast(position + Vector3.up * 100f, Vector3.down, ref val, 100f, 161546513))
+		{
+			BaseEntity baseEntity = ((RaycastHit)(ref val)).collider.ToBaseEntity();
+			if ((Object)(object)baseEntity == (Object)null || !baseEntity.HasEntityInParents(this))
+			{
+				result = false;
+			}
+		}
+		return result;
+	}
+
+	public virtual float WaterFactor()
+	{
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		OBB val = WorldSpaceBounds();
+		return WaterLevel.Factor(((OBB)(ref val)).ToBounds(), waves: true, volumes: true, this);
+	}
+
+	public virtual float AirFactor()
+	{
+		if (!(WaterFactor() > 0.85f))
+		{
+			return 1f;
+		}
+		return 0f;
+	}
+
+	public bool WaterTestFromVolumes(Vector3 pos, out WaterLevel.WaterInfo info)
+	{
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		if (triggers == null)
+		{
+			info = default(WaterLevel.WaterInfo);
+			return false;
+		}
+		for (int i = 0; i < triggers.Count; i++)
+		{
+			if (triggers[i] is WaterVolume waterVolume && waterVolume.Test(pos, out info))
+			{
+				return true;
+			}
+		}
+		info = default(WaterLevel.WaterInfo);
+		return false;
+	}
+
+	public bool IsInWaterVolume(Vector3 pos)
+	{
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		if (triggers == null)
+		{
+			return false;
+		}
+		for (int i = 0; i < triggers.Count; i++)
+		{
+			if (triggers[i] is WaterVolume waterVolume && waterVolume.Test(pos, out var _))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public bool WaterTestFromVolumes(Bounds bounds, out WaterLevel.WaterInfo info)
+	{
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		if (triggers == null)
+		{
+			info = default(WaterLevel.WaterInfo);
+			return false;
+		}
+		for (int i = 0; i < triggers.Count; i++)
+		{
+			if (triggers[i] is WaterVolume waterVolume && waterVolume.Test(bounds, out info))
+			{
+				return true;
+			}
+		}
+		info = default(WaterLevel.WaterInfo);
+		return false;
+	}
+
+	public bool WaterTestFromVolumes(Vector3 start, Vector3 end, float radius, out WaterLevel.WaterInfo info)
+	{
+		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		if (triggers == null)
+		{
+			info = default(WaterLevel.WaterInfo);
+			return false;
+		}
+		for (int i = 0; i < triggers.Count; i++)
+		{
+			if (triggers[i] is WaterVolume waterVolume && waterVolume.Test(start, end, radius, out info))
+			{
+				return true;
+			}
+		}
+		info = default(WaterLevel.WaterInfo);
+		return false;
+	}
+
+	public virtual bool BlocksWaterFor(BasePlayer player)
+	{
+		return false;
+	}
+
+	public virtual float Health()
+	{
+		return 0f;
+	}
+
+	public virtual float MaxHealth()
+	{
+		return 0f;
+	}
+
+	public virtual float MaxVelocity()
+	{
+		return 0f;
+	}
+
+	public virtual float BoundsPadding()
+	{
+		return 0.1f;
+	}
+
+	public virtual float PenetrationResistance(HitInfo info)
+	{
+		return 100f;
+	}
+
+	public virtual GameObjectRef GetImpactEffect(HitInfo info)
+	{
+		return impactEffect;
+	}
+
+	public virtual void OnAttacked(HitInfo info)
+	{
+	}
+
+	public virtual Item GetItem()
+	{
+		return null;
+	}
+
+	public virtual Item GetItem(ItemId itemId)
+	{
+		return null;
+	}
+
+	public virtual void GiveItem(Item item, GiveItemReason reason = GiveItemReason.Generic)
+	{
+		item.Remove();
+	}
+
+	public virtual bool CanBeLooted(BasePlayer player)
+	{
+		return !IsTransferring();
+	}
+
+	public virtual BaseEntity GetEntity()
+	{
+		return this;
+	}
+
+	public override string ToString()
+	{
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		if (_name == null)
+		{
+			if (base.isServer)
+			{
+				_name = string.Format("{1}[{0}]", (object)(NetworkableId)(((_003F?)net?.ID) ?? default(NetworkableId)), base.ShortPrefabName);
+			}
+			else
+			{
+				_name = base.ShortPrefabName;
+			}
+		}
+		return _name;
+	}
+
+	public virtual string Categorize()
+	{
+		return "entity";
+	}
+
+	public void Log(string str)
+	{
+		if (base.isClient)
+		{
+			Debug.Log((object)("<color=#ffa>[" + ((object)this).ToString() + "] " + str + "</color>"), (Object)(object)((Component)this).gameObject);
+		}
+		else
+		{
+			Debug.Log((object)("<color=#aff>[" + ((object)this).ToString() + "] " + str + "</color>"), (Object)(object)((Component)this).gameObject);
+		}
+	}
+
+	public void SetModel(Model mdl)
+	{
+		if (!((Object)(object)model == (Object)(object)mdl))
+		{
+			model = mdl;
+		}
+	}
+
+	public Model GetModel()
+	{
+		return model;
+	}
+
+	public virtual Transform[] GetBones()
+	{
+		if (Object.op_Implicit((Object)(object)model))
+		{
+			return model.GetBones();
+		}
+		return null;
+	}
+
+	public virtual Transform FindBone(string strName)
+	{
+		if (Object.op_Implicit((Object)(object)model))
+		{
+			return model.FindBone(strName);
+		}
+		return ((Component)this).transform;
+	}
+
+	public virtual uint FindBoneID(Transform boneTransform)
+	{
+		if (Object.op_Implicit((Object)(object)model))
+		{
+			return model.FindBoneID(boneTransform);
+		}
+		return StringPool.closest;
+	}
+
+	public virtual Transform FindClosestBone(Vector3 worldPos)
+	{
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		if (Object.op_Implicit((Object)(object)model))
+		{
+			return model.FindClosestBone(worldPos);
+		}
+		return ((Component)this).transform;
+	}
+
+	public virtual bool ShouldBlockProjectiles()
+	{
+		return true;
+	}
+
+	public virtual bool ShouldInheritNetworkGroup()
+	{
+		return true;
+	}
+
+	public virtual bool SupportsChildDeployables()
+	{
+		return false;
+	}
+
+	public virtual bool ForceDeployableSetParent()
+	{
+		return false;
+	}
+
+	public bool IsOnMovingObject()
+	{
+		if (syncPosition)
+		{
+			return true;
+		}
+		BaseEntity baseEntity = GetParentEntity();
+		if (!((Object)(object)baseEntity != (Object)null))
+		{
+			return false;
+		}
+		return baseEntity.IsOnMovingObject();
+	}
+
+	public void BroadcastEntityMessage(string msg, float radius = 20f, int layerMask = 1218652417)
+	{
+		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		if (base.isClient)
+		{
+			return;
+		}
+		List<BaseEntity> list = Pool.GetList<BaseEntity>();
+		Vis.Entities(((Component)this).transform.position, radius, list, layerMask, (QueryTriggerInteraction)2);
+		foreach (BaseEntity item in list)
+		{
+			if (item.isServer)
+			{
+				item.OnEntityMessage(this, msg);
+			}
+		}
+		Pool.FreeList<BaseEntity>(ref list);
+	}
+
+	public virtual void OnEntityMessage(BaseEntity from, string msg)
+	{
 	}
 
 	public virtual void DebugServer(int rep, float time)
@@ -1099,14 +1896,14 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 
 	public void SetFlag(Flags f, bool b, bool recursive = false, bool networkupdate = true)
 	{
-		Flags old = flags;
+		Flags flags = this.flags;
 		if (b)
 		{
 			if (HasFlag(f))
 			{
 				return;
 			}
-			flags |= f;
+			this.flags |= f;
 		}
 		else
 		{
@@ -1114,12 +1911,16 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 			{
 				return;
 			}
-			flags &= ~f;
+			this.flags &= ~f;
 		}
-		OnFlagsChanged(old, flags);
+		OnFlagsChanged(flags, this.flags);
 		if (networkupdate)
 		{
 			SendNetworkUpdate();
+			if (flags != this.flags)
+			{
+				GlobalNetworkHandler.server?.TrySendNetworkUpdate(this);
+			}
 		}
 		else
 		{
@@ -1555,7 +2356,7 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00ad: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
 		uint num = msg.read.UInt32();
 		FileStorage.Type type = (FileStorage.Type)msg.read.UInt8();
 		string funcName = StringPool.Get(msg.read.UInt32());
@@ -1575,7 +2376,7 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		val.channel = 2;
 		val.method = (SendMethod)0;
 		SendInfo sendInfo = val;
-		ClientRPCEx(sendInfo, null, funcName, num, (uint)array.Length, array, num2, (byte)type);
+		ClientRPC(RpcTarget.SendInfo(funcName, sendInfo), num, (uint)array.Length, array, num2, (byte)type);
 	}
 
 	public virtual void EnableTransferProtection()
@@ -1611,8 +2412,13 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 
 	public virtual void DisableTransferProtection()
 	{
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		BaseEntity baseEntity = GetParentEntity();
+		if ((Object)(object)baseEntity != (Object)null && baseEntity.IsTransferProtected())
+		{
+			baseEntity.DisableTransferProtection();
+		}
 		if (IsTransferProtected())
 		{
 			SetFlag(Flags.Protected, b: false);
@@ -1660,12 +2466,12 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		{
 			if ((Object)(object)entity == (Object)(object)this)
 			{
-				Debug.LogError((object)("Trying to parent to self " + this), (Object)(object)((Component)this).gameObject);
+				Debug.LogError((object)("Trying to parent to self " + (object)this), (Object)(object)((Component)this).gameObject);
 				return;
 			}
 			if (HasChild(entity))
 			{
-				Debug.LogError((object)("Trying to parent to child " + this), (Object)(object)((Component)this).gameObject);
+				Debug.LogError((object)("Trying to parent to child " + (object)this), (Object)(object)((Component)this).gameObject);
 				return;
 			}
 		}
@@ -1780,32 +2586,51 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 
 	public virtual void SwitchParent(BaseEntity ent)
 	{
-		Log("SwitchParent Missed " + ent);
+		Log("SwitchParent Missed " + (object)ent);
 	}
 
 	public virtual void OnParentChanging(BaseEntity oldParent, BaseEntity newParent)
 	{
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
 		Rigidbody component = ((Component)this).GetComponent<Rigidbody>();
-		if (Object.op_Implicit((Object)(object)component))
+		if (!Object.op_Implicit((Object)(object)component) || component.isKinematic)
 		{
-			if ((Object)(object)oldParent != (Object)null && (Object)(object)((Component)oldParent).GetComponent<Rigidbody>() == (Object)null)
+			return;
+		}
+		if ((Object)(object)oldParent != (Object)null)
+		{
+			Rigidbody component2 = ((Component)oldParent).GetComponent<Rigidbody>();
+			if ((Object)(object)component2 == (Object)null || component2.isKinematic)
 			{
 				component.velocity += oldParent.GetWorldVelocity();
 			}
-			if ((Object)(object)newParent != (Object)null && (Object)(object)((Component)newParent).GetComponent<Rigidbody>() == (Object)null)
+		}
+		if ((Object)(object)newParent != (Object)null)
+		{
+			Rigidbody component3 = ((Component)newParent).GetComponent<Rigidbody>();
+			if ((Object)(object)component3 == (Object)null || component3.isKinematic)
 			{
 				component.velocity -= newParent.GetWorldVelocity();
 			}
 		}
 	}
 
+	public virtual EntityPrivilege GetEntityBuildingPrivilege()
+	{
+		return null;
+	}
+
 	public virtual BuildingPrivlidge GetBuildingPrivilege()
+	{
+		return GetNearestBuildingPrivledge();
+	}
+
+	public BuildingPrivlidge GetNearestBuildingPrivledge()
 	{
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
 		return GetBuildingPrivilege(WorldSpaceBounds());
@@ -1850,14 +2675,21 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		{
 			if (Global.developer > 0)
 			{
-				Debug.Log((object)("SV_RPCMessage: From invalid player " + basePlayer));
+				Debug.Log((object)("SV_RPCMessage: From invalid player " + (object)basePlayer));
 			}
 		}
-		else if (basePlayer.isStalled)
+		else if (ConVar.AntiHack.rpcstallmode > 0 && basePlayer.isStalled)
 		{
 			if (Global.developer > 0)
 			{
-				Debug.Log((object)("SV_RPCMessage: player is stalled " + basePlayer));
+				Debug.Log((object)("SV_RPCMessage: player is stalled " + (object)basePlayer));
+			}
+		}
+		else if (ConVar.AntiHack.rpcstallmode > 1 && basePlayer.wasStalled)
+		{
+			if (Global.developer > 0)
+			{
+				Debug.Log((object)("SV_RPCMessage: player was stalled " + (object)basePlayer));
 			}
 		}
 		else if (!OnRpcMessage(basePlayer, nameID, message))
@@ -1868,6 +2700,7 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		}
 	}
 
+	[Obsolete("Use ClientRPC( RpcTarget ) overloads")]
 	public void ClientRPCPlayer<T1, T2, T3, T4, T5>(Connection sourceConnection, BasePlayer player, string funcName, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5)
 	{
 		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
@@ -1877,6 +2710,7 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		}
 	}
 
+	[Obsolete("Use ClientRPC( RpcTarget ) overloads")]
 	public void ClientRPCPlayer<T1, T2, T3, T4>(Connection sourceConnection, BasePlayer player, string funcName, T1 arg1, T2 arg2, T3 arg3, T4 arg4)
 	{
 		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
@@ -1886,6 +2720,7 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		}
 	}
 
+	[Obsolete("Use ClientRPC( RpcTarget ) overloads")]
 	public void ClientRPCPlayer<T1, T2, T3>(Connection sourceConnection, BasePlayer player, string funcName, T1 arg1, T2 arg2, T3 arg3)
 	{
 		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
@@ -1895,6 +2730,7 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		}
 	}
 
+	[Obsolete("Use ClientRPC( RpcTarget ) overloads")]
 	public void ClientRPCPlayer<T1, T2>(Connection sourceConnection, BasePlayer player, string funcName, T1 arg1, T2 arg2)
 	{
 		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
@@ -1904,6 +2740,7 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		}
 	}
 
+	[Obsolete("Use ClientRPC( RpcTarget ) overloads")]
 	public void ClientRPCPlayer<T1>(Connection sourceConnection, BasePlayer player, string funcName, T1 arg1)
 	{
 		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
@@ -1913,6 +2750,7 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		}
 	}
 
+	[Obsolete("Use ClientRPC( RpcTarget ) overloads")]
 	public void ClientRPCPlayer(Connection sourceConnection, BasePlayer player, string funcName)
 	{
 		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
@@ -1922,6 +2760,7 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		}
 	}
 
+	[Obsolete("Use ClientRPC( RpcTarget ) overloads")]
 	public void ClientRPC<T1, T2, T3, T4, T5>(Connection sourceConnection, string funcName, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5)
 	{
 		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
@@ -1931,6 +2770,7 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		}
 	}
 
+	[Obsolete("Use ClientRPC( RpcTarget ) overloads")]
 	public void ClientRPC<T1, T2, T3, T4>(Connection sourceConnection, string funcName, T1 arg1, T2 arg2, T3 arg3, T4 arg4)
 	{
 		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
@@ -1940,6 +2780,7 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		}
 	}
 
+	[Obsolete("Use ClientRPC( RpcTarget ) overloads")]
 	public void ClientRPC<T1, T2, T3>(Connection sourceConnection, string funcName, T1 arg1, T2 arg2, T3 arg3)
 	{
 		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
@@ -1949,6 +2790,7 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		}
 	}
 
+	[Obsolete("Use ClientRPC( RpcTarget ) overloads")]
 	public void ClientRPC<T1, T2>(Connection sourceConnection, string funcName, T1 arg1, T2 arg2)
 	{
 		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
@@ -1958,6 +2800,7 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		}
 	}
 
+	[Obsolete("Use ClientRPC( RpcTarget ) overloads")]
 	public void ClientRPC<T1>(Connection sourceConnection, string funcName, T1 arg1)
 	{
 		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
@@ -1967,6 +2810,7 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		}
 	}
 
+	[Obsolete("Use ClientRPC( RpcTarget ) overloads")]
 	public void ClientRPC(Connection sourceConnection, string funcName)
 	{
 		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
@@ -1976,171 +2820,199 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		}
 	}
 
-	public void ClientRPCEx<T1, T2, T3, T4, T5>(SendInfo sendInfo, Connection sourceConnection, string funcName, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5)
+	public void ClientRPC(RpcTarget target)
 	{
-		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
 		if (((BaseNetwork)Net.sv).IsConnected() && net != null)
 		{
-			NetWrite write = ClientRPCStart(sourceConnection, funcName);
+			GetRpcTargetNetworkGroup(ref target);
+			NetWrite write = ClientRPCStart(target.Function);
+			ClientRPCSend(write, target.Connections);
+			FreeRPCTarget(target);
+		}
+	}
+
+	public void ClientRPC<T1>(RpcTarget target, T1 arg1)
+	{
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		if (((BaseNetwork)Net.sv).IsConnected() && net != null)
+		{
+			GetRpcTargetNetworkGroup(ref target);
+			NetWrite write = ClientRPCStart(target.Function);
+			ClientRPCWrite(write, arg1);
+			ClientRPCSend(write, target.Connections);
+			FreeRPCTarget(target);
+		}
+	}
+
+	public void ClientRPC<T1, T2>(RpcTarget target, T1 arg1, T2 arg2)
+	{
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		if (((BaseNetwork)Net.sv).IsConnected() && net != null)
+		{
+			GetRpcTargetNetworkGroup(ref target);
+			NetWrite write = ClientRPCStart(target.Function);
+			ClientRPCWrite(write, arg1);
+			ClientRPCWrite(write, arg2);
+			ClientRPCSend(write, target.Connections);
+			FreeRPCTarget(target);
+		}
+	}
+
+	public void ClientRPC<T1, T2, T3>(RpcTarget target, T1 arg1, T2 arg2, T3 arg3)
+	{
+		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
+		if (((BaseNetwork)Net.sv).IsConnected() && net != null)
+		{
+			GetRpcTargetNetworkGroup(ref target);
+			NetWrite write = ClientRPCStart(target.Function);
+			ClientRPCWrite(write, arg1);
+			ClientRPCWrite(write, arg2);
+			ClientRPCWrite(write, arg3);
+			ClientRPCSend(write, target.Connections);
+			FreeRPCTarget(target);
+		}
+	}
+
+	public void ClientRPC<T1, T2, T3, T4>(RpcTarget target, T1 arg1, T2 arg2, T3 arg3, T4 arg4)
+	{
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		if (((BaseNetwork)Net.sv).IsConnected() && net != null)
+		{
+			GetRpcTargetNetworkGroup(ref target);
+			NetWrite write = ClientRPCStart(target.Function);
+			ClientRPCWrite(write, arg1);
+			ClientRPCWrite(write, arg2);
+			ClientRPCWrite(write, arg3);
+			ClientRPCWrite(write, arg4);
+			ClientRPCSend(write, target.Connections);
+			FreeRPCTarget(target);
+		}
+	}
+
+	public void ClientRPC<T1, T2, T3, T4, T5>(RpcTarget target, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5)
+	{
+		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
+		if (((BaseNetwork)Net.sv).IsConnected() && net != null)
+		{
+			GetRpcTargetNetworkGroup(ref target);
+			NetWrite write = ClientRPCStart(target.Function);
 			ClientRPCWrite(write, arg1);
 			ClientRPCWrite(write, arg2);
 			ClientRPCWrite(write, arg3);
 			ClientRPCWrite(write, arg4);
 			ClientRPCWrite(write, arg5);
-			ClientRPCSend(write, sendInfo);
+			ClientRPCSend(write, target.Connections);
+			FreeRPCTarget(target);
 		}
 	}
 
-	public void ClientRPCEx<T1, T2, T3, T4>(SendInfo sendInfo, Connection sourceConnection, string funcName, T1 arg1, T2 arg2, T3 arg3, T4 arg4)
+	public void ClientRPC<T1, T2, T3, T4, T5, T6>(RpcTarget target, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6)
 	{
-		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
 		if (((BaseNetwork)Net.sv).IsConnected() && net != null)
 		{
-			NetWrite write = ClientRPCStart(sourceConnection, funcName);
+			GetRpcTargetNetworkGroup(ref target);
+			NetWrite write = ClientRPCStart(target.Function);
 			ClientRPCWrite(write, arg1);
 			ClientRPCWrite(write, arg2);
 			ClientRPCWrite(write, arg3);
 			ClientRPCWrite(write, arg4);
-			ClientRPCSend(write, sendInfo);
+			ClientRPCWrite(write, arg5);
+			ClientRPCWrite(write, arg6);
+			ClientRPCSend(write, target.Connections);
+			FreeRPCTarget(target);
 		}
 	}
 
-	public void ClientRPCEx<T1, T2, T3>(SendInfo sendInfo, Connection sourceConnection, string funcName, T1 arg1, T2 arg2, T3 arg3)
+	public void ClientRPC<T1, T2, T3, T4, T5, T6, T7>(RpcTarget target, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7)
 	{
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
 		if (((BaseNetwork)Net.sv).IsConnected() && net != null)
 		{
-			NetWrite write = ClientRPCStart(sourceConnection, funcName);
+			GetRpcTargetNetworkGroup(ref target);
+			NetWrite write = ClientRPCStart(target.Function);
 			ClientRPCWrite(write, arg1);
 			ClientRPCWrite(write, arg2);
 			ClientRPCWrite(write, arg3);
-			ClientRPCSend(write, sendInfo);
+			ClientRPCWrite(write, arg4);
+			ClientRPCWrite(write, arg5);
+			ClientRPCWrite(write, arg6);
+			ClientRPCWrite(write, arg7);
+			ClientRPCSend(write, target.Connections);
+			FreeRPCTarget(target);
 		}
 	}
 
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private void GetRpcTargetNetworkGroup(ref RpcTarget target)
+	{
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		if (target.ToNetworkGroup)
+		{
+			target.Connections = new SendInfo(net.group.subscribers);
+		}
+	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private void FreeRPCTarget(RpcTarget target)
+	{
+		if (target.UsingPooledConnections)
+		{
+			Pool.FreeList<Connection>(ref target.Connections.connections);
+		}
+	}
+
+	[Obsolete("Use ClientRPC( RpcTarget ) overloads")]
+	public void ClientRPCEx<T1, T2, T3, T4, T5>(SendInfo sendInfo, Connection sourceConnection, string funcName, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5)
+	{
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		ClientRPC(RpcTarget.SendInfo(funcName, sendInfo), arg1, arg2, arg3, arg4, arg5);
+	}
+
+	[Obsolete("Use ClientRPC( RpcTarget ) overloads")]
+	public void ClientRPCEx<T1, T2, T3, T4>(SendInfo sendInfo, Connection sourceConnection, string funcName, T1 arg1, T2 arg2, T3 arg3, T4 arg4)
+	{
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		ClientRPC(RpcTarget.SendInfo(funcName, sendInfo), arg1, arg2, arg3, arg4);
+	}
+
+	[Obsolete("Use ClientRPC( RpcTarget ) overloads")]
+	public void ClientRPCEx<T1, T2, T3>(SendInfo sendInfo, Connection sourceConnection, string funcName, T1 arg1, T2 arg2, T3 arg3)
+	{
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		ClientRPC(RpcTarget.SendInfo(funcName, sendInfo), arg1, arg2, arg3);
+	}
+
+	[Obsolete("Use ClientRPC( RpcTarget ) overloads")]
 	public void ClientRPCEx<T1, T2>(SendInfo sendInfo, Connection sourceConnection, string funcName, T1 arg1, T2 arg2)
 	{
-		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
-		if (((BaseNetwork)Net.sv).IsConnected() && net != null)
-		{
-			NetWrite write = ClientRPCStart(sourceConnection, funcName);
-			ClientRPCWrite(write, arg1);
-			ClientRPCWrite(write, arg2);
-			ClientRPCSend(write, sendInfo);
-		}
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		ClientRPC(RpcTarget.SendInfo(funcName, sendInfo), arg1, arg2);
 	}
 
+	[Obsolete("Use ClientRPC( RpcTarget ) overloads")]
 	public void ClientRPCEx<T1>(SendInfo sendInfo, Connection sourceConnection, string funcName, T1 arg1)
 	{
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-		if (((BaseNetwork)Net.sv).IsConnected() && net != null)
-		{
-			NetWrite write = ClientRPCStart(sourceConnection, funcName);
-			ClientRPCWrite(write, arg1);
-			ClientRPCSend(write, sendInfo);
-		}
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		ClientRPC(RpcTarget.SendInfo(funcName, sendInfo), arg1);
 	}
 
+	[Obsolete("Use ClientRPC( RpcTarget ) overloads")]
 	public void ClientRPCEx(SendInfo sendInfo, Connection sourceConnection, string funcName)
 	{
-		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
-		if (((BaseNetwork)Net.sv).IsConnected() && net != null)
-		{
-			NetWrite write = ClientRPCStart(sourceConnection, funcName);
-			ClientRPCSend(write, sendInfo);
-		}
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		ClientRPC(RpcTarget.SendInfo(funcName, sendInfo));
 	}
 
-	public void ClientRPCPlayerAndSpectators(Connection sourceConnection, BasePlayer player, string funcName)
-	{
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
-		if (!((BaseNetwork)Net.sv).IsConnected() || player.net == null || player.net.connection == null)
-		{
-			return;
-		}
-		ClientRPCEx(new SendInfo(player.net.connection), sourceConnection, funcName);
-		if (!player.IsBeingSpectated || player.children == null)
-		{
-			return;
-		}
-		foreach (BaseEntity child in player.children)
-		{
-			if (child is BasePlayer player2)
-			{
-				ClientRPCPlayer(sourceConnection, player2, funcName);
-			}
-		}
-	}
-
-	public void ClientRPCPlayerAndSpectators<T1>(Connection sourceConnection, BasePlayer player, string funcName, T1 arg1)
-	{
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
-		if (!((BaseNetwork)Net.sv).IsConnected() || player.net == null || player.net.connection == null)
-		{
-			return;
-		}
-		ClientRPCEx(new SendInfo(player.net.connection), sourceConnection, funcName, arg1);
-		if (!player.IsBeingSpectated || player.children == null)
-		{
-			return;
-		}
-		foreach (BaseEntity child in player.children)
-		{
-			if (child is BasePlayer player2)
-			{
-				ClientRPCPlayer(sourceConnection, player2, funcName, arg1);
-			}
-		}
-	}
-
-	public void ClientRPCPlayerAndSpectators<T1, T2>(Connection sourceConnection, BasePlayer player, string funcName, T1 arg1, T2 arg2)
-	{
-		if (!((BaseNetwork)Net.sv).IsConnected() || player.net == null || player.net.connection == null)
-		{
-			return;
-		}
-		ClientRPCPlayer(sourceConnection, player, funcName, arg1, arg2);
-		if (!player.IsBeingSpectated || player.children == null)
-		{
-			return;
-		}
-		foreach (BaseEntity child in children)
-		{
-			if (child is BasePlayer player2)
-			{
-				ClientRPCPlayer(sourceConnection, player2, funcName, arg1, arg2);
-			}
-		}
-	}
-
-	public void ClientRPCPlayerAndSpectators<T1, T2, T3>(Connection sourceConnection, BasePlayer player, string funcName, T1 arg1, T2 arg2, T3 arg3)
-	{
-		if (!((BaseNetwork)Net.sv).IsConnected() || player.net == null || player.net.connection == null)
-		{
-			return;
-		}
-		ClientRPCPlayer(sourceConnection, player, funcName, arg1, arg2, arg3);
-		if (!player.IsBeingSpectated || player.children == null)
-		{
-			return;
-		}
-		foreach (BaseEntity child in player.children)
-		{
-			if (child is BasePlayer player2)
-			{
-				ClientRPCPlayer(sourceConnection, player2, funcName, arg1, arg2, arg3);
-			}
-		}
-	}
-
-	private NetWrite ClientRPCStart(Connection sourceConnection, string funcName)
+	protected NetWrite ClientRPCStart(string funcName)
 	{
 		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
 		NetWrite obj = ((BaseNetwork)Net.sv).StartWrite();
 		obj.PacketID((Type)9);
 		obj.EntityID(net.ID);
 		obj.UInt32(StringPool.Get(funcName));
-		obj.UInt64(sourceConnection?.userid ?? 0);
 		return obj;
 	}
 
@@ -2149,7 +3021,7 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		write.WriteObject(arg);
 	}
 
-	private void ClientRPCSend(NetWrite write, SendInfo sendInfo)
+	protected void ClientRPCSend(NetWrite write, SendInfo sendInfo)
 	{
 		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
 		write.Send(sendInfo);
@@ -2157,13 +3029,13 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 
 	public void ClientRPCPlayerList<T1>(Connection sourceConnection, BasePlayer player, string funcName, List<T1> list)
 	{
-		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0089: Unknown result type (might be due to invalid IL or missing references)
 		if (!((BaseNetwork)Net.sv).IsConnected() || net == null || player.net.connection == null)
 		{
 			return;
 		}
-		NetWrite write = ClientRPCStart(sourceConnection, funcName);
+		NetWrite write = ClientRPCStart(funcName);
 		ClientRPCWrite(write, list.Count);
 		foreach (T1 item in list)
 		{
@@ -2175,14 +3047,261 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		ClientRPCSend(write, sendInfo);
 	}
 
-	public virtual float RadiationProtection()
+	public override void Save(SaveInfo info)
 	{
-		return 0f;
+		//IL_0122: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0127: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0138: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0140: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0145: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ec: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0102: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0107: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0089: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0220: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0225: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0272: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0277: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0293: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0298: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02b4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02b9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02d5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02da: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02f6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02fb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0317: Unknown result type (might be due to invalid IL or missing references)
+		//IL_031c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0445: Unknown result type (might be due to invalid IL or missing references)
+		base.Save(info);
+		BaseEntity baseEntity = parentEntity.Get(base.isServer);
+		info.msg.baseEntity = Pool.Get<BaseEntity>();
+		Quaternion val;
+		if (info.forDisk)
+		{
+			if (this is BasePlayer)
+			{
+				if ((Object)(object)baseEntity == (Object)null || baseEntity.enableSaving)
+				{
+					info.msg.baseEntity.pos = ((Component)this).transform.localPosition;
+					BaseEntity baseEntity2 = info.msg.baseEntity;
+					val = ((Component)this).transform.localRotation;
+					baseEntity2.rot = ((Quaternion)(ref val)).eulerAngles;
+				}
+				else
+				{
+					info.msg.baseEntity.pos = ((Component)this).transform.position;
+					BaseEntity baseEntity3 = info.msg.baseEntity;
+					val = ((Component)this).transform.rotation;
+					baseEntity3.rot = ((Quaternion)(ref val)).eulerAngles;
+				}
+			}
+			else
+			{
+				info.msg.baseEntity.pos = ((Component)this).transform.localPosition;
+				BaseEntity baseEntity4 = info.msg.baseEntity;
+				val = ((Component)this).transform.localRotation;
+				baseEntity4.rot = ((Quaternion)(ref val)).eulerAngles;
+			}
+		}
+		else
+		{
+			info.msg.baseEntity.pos = GetNetworkPosition();
+			BaseEntity baseEntity5 = info.msg.baseEntity;
+			val = GetNetworkRotation();
+			baseEntity5.rot = ((Quaternion)(ref val)).eulerAngles;
+			info.msg.baseEntity.time = GetNetworkTime();
+		}
+		info.msg.baseEntity.flags = (int)flags;
+		info.msg.baseEntity.skinid = skinID;
+		if (info.forDisk && this is BasePlayer)
+		{
+			if ((Object)(object)baseEntity != (Object)null && baseEntity.enableSaving)
+			{
+				info.msg.parent = Pool.Get<ParentInfo>();
+				info.msg.parent.uid = parentEntity.uid;
+				info.msg.parent.bone = parentBone;
+			}
+		}
+		else if ((Object)(object)baseEntity != (Object)null)
+		{
+			info.msg.parent = Pool.Get<ParentInfo>();
+			info.msg.parent.uid = parentEntity.uid;
+			info.msg.parent.bone = parentBone;
+		}
+		if (HasAnySlot())
+		{
+			info.msg.entitySlots = Pool.Get<EntitySlots>();
+			info.msg.entitySlots.slotLock = entitySlots[0].uid;
+			info.msg.entitySlots.slotFireMod = entitySlots[1].uid;
+			info.msg.entitySlots.slotUpperModification = entitySlots[2].uid;
+			info.msg.entitySlots.centerDecoration = entitySlots[5].uid;
+			info.msg.entitySlots.lowerCenterDecoration = entitySlots[6].uid;
+			info.msg.entitySlots.storageMonitor = entitySlots[7].uid;
+		}
+		if (info.forDisk && Object.op_Implicit((Object)(object)_spawnable))
+		{
+			_spawnable.Save(info);
+		}
+		if (OwnerID != 0L && (info.forDisk || ShouldNetworkOwnerInfo()))
+		{
+			info.msg.ownerInfo = Pool.Get<OwnerInfo>();
+			if (info.forDisk)
+			{
+				info.msg.ownerInfo.steamid = OwnerID;
+			}
+			else
+			{
+				info.msg.ownerInfo.steamid = ((OwnerID == info.forConnection.userid) ? info.forConnection.userid : 0);
+			}
+		}
+		if (Components != null)
+		{
+			for (int i = 0; i < Components.Length; i++)
+			{
+				if (!((Object)(object)Components[i] == (Object)null))
+				{
+					Components[i].SaveComponent(info);
+				}
+			}
+		}
+		if (info.forTransfer && ShouldTransferAssociatedFiles)
+		{
+			info.msg.associatedFiles = Pool.Get<AssociatedFiles>();
+			info.msg.associatedFiles.files = Pool.GetList<AssociatedFile>();
+			info.msg.associatedFiles.files.AddRange(FileStorage.server.QueryAllByEntity(net.ID));
+		}
 	}
 
-	public virtual float RadiationExposureFraction()
+	public virtual bool ShouldNetworkOwnerInfo()
 	{
-		return 1f;
+		return false;
+	}
+
+	public override void Load(LoadInfo info)
+	{
+		//IL_0110: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0131: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0152: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0173: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0194: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0248: Unknown result type (might be due to invalid IL or missing references)
+		//IL_024e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
+		//IL_021e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01e4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00da: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00df: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0398: Unknown result type (might be due to invalid IL or missing references)
+		//IL_039d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_030b: Unknown result type (might be due to invalid IL or missing references)
+		base.Load(info);
+		if (info.msg.baseEntity != null)
+		{
+			BaseEntity baseEntity = info.msg.baseEntity;
+			Flags old = flags;
+			if (base.isServer)
+			{
+				baseEntity.flags &= -33554433;
+			}
+			flags = (Flags)baseEntity.flags;
+			OnFlagsChanged(old, flags);
+			OnSkinChanged(skinID, info.msg.baseEntity.skinid);
+			if (info.fromDisk)
+			{
+				if (Vector3Ex.IsNaNOrInfinity(baseEntity.pos))
+				{
+					string text = ((object)this).ToString();
+					Vector3 pos = baseEntity.pos;
+					Debug.LogWarning((object)(text + " has broken position - " + ((object)(Vector3)(ref pos)).ToString()));
+					baseEntity.pos = Vector3.zero;
+				}
+				((Component)this).transform.localPosition = baseEntity.pos;
+				((Component)this).transform.localRotation = Quaternion.Euler(baseEntity.rot);
+			}
+		}
+		if (info.msg.entitySlots != null)
+		{
+			entitySlots[0].uid = info.msg.entitySlots.slotLock;
+			entitySlots[1].uid = info.msg.entitySlots.slotFireMod;
+			entitySlots[2].uid = info.msg.entitySlots.slotUpperModification;
+			entitySlots[5].uid = info.msg.entitySlots.centerDecoration;
+			entitySlots[6].uid = info.msg.entitySlots.lowerCenterDecoration;
+			entitySlots[7].uid = info.msg.entitySlots.storageMonitor;
+		}
+		if (info.msg.parent != null)
+		{
+			if (base.isServer)
+			{
+				BaseEntity entity = BaseNetworkable.serverEntities.Find(info.msg.parent.uid) as BaseEntity;
+				SetParent(entity, info.msg.parent.bone);
+			}
+			parentEntity.uid = info.msg.parent.uid;
+			parentBone = info.msg.parent.bone;
+		}
+		else
+		{
+			parentEntity.uid = default(NetworkableId);
+			parentBone = 0u;
+		}
+		if (info.msg.ownerInfo != null)
+		{
+			OwnerID = info.msg.ownerInfo.steamid;
+		}
+		if (Object.op_Implicit((Object)(object)_spawnable))
+		{
+			_spawnable.Load(info);
+		}
+		if (info.fromTransfer && ShouldTransferAssociatedFiles && info.msg.associatedFiles != null && info.msg.associatedFiles.files != null)
+		{
+			foreach (AssociatedFile file in info.msg.associatedFiles.files)
+			{
+				if (FileStorage.server.Store(file.data, (FileStorage.Type)file.type, net.ID, file.numID) != file.crc)
+				{
+					Debug.LogWarning((object)"Associated file has a different CRC after transfer!");
+				}
+			}
+		}
+		if (info.fromDisk && info.msg.baseEntity != null && IsTransferProtected())
+		{
+			float num = ((info.msg.baseEntity.protection > 0f) ? info.msg.baseEntity.protection : Nexus.protectionDuration);
+			_transferProtectionRemaining = TimeUntil.op_Implicit(num);
+			((FacepunchBehaviour)this).Invoke(DisableTransferProtectionAction, num);
+		}
+		if (Components == null)
+		{
+			return;
+		}
+		for (int i = 0; i < Components.Length; i++)
+		{
+			if (!((Object)(object)Components[i] == (Object)null))
+			{
+				Components[i].LoadComponent(info);
+			}
+		}
 	}
 
 	public virtual void SetCreatorEntity(BaseEntity newCreatorEntity)
@@ -2259,20 +3378,29 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 			}
 		}
 		Query.Server.Add(this);
+		if (this is SamSite.ISamSiteTarget item)
+		{
+			SamSite.ISamSiteTarget.serverList.Add(item);
+		}
 	}
 
-	public virtual void OnSensation(Sensation sensation)
+	public virtual void OnPlaced(BasePlayer player)
 	{
 	}
 
-	protected virtual bool TransformHasMoved()
+	protected virtual bool ShouldUpdateNetworkGroup()
 	{
-		return ((Component)this).transform.hasChanged;
+		return syncPosition;
+	}
+
+	protected virtual bool ShouldUpdateNetworkPosition()
+	{
+		return syncPosition;
 	}
 
 	protected void NetworkPositionTick()
 	{
-		if (!TransformHasMoved())
+		if (!((Component)this).transform.hasChanged)
 		{
 			if (ticksSinceStopped >= 6)
 			{
@@ -2290,7 +3418,7 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 
 	private void TransformChanged()
 	{
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
 		if (Query.Server != null)
 		{
 			Query.Server.Move(this);
@@ -2300,17 +3428,18 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 			return;
 		}
 		InvalidateNetworkCache();
-		if (!globalBroadcast && !ValidBounds.Test(((Component)this).transform.position))
+		if (!globalBroadcast && !ValidBounds.Test(this, ((Component)this).transform.position))
 		{
 			OnInvalidPosition();
+			return;
 		}
-		else if (syncPosition)
+		if (ShouldUpdateNetworkGroup() && !isCallingUpdateNetworkGroup)
 		{
-			if (!isCallingUpdateNetworkGroup)
-			{
-				((FacepunchBehaviour)this).Invoke((Action)UpdateNetworkGroup, 5f);
-				isCallingUpdateNetworkGroup = true;
-			}
+			((FacepunchBehaviour)this).Invoke((Action)UpdateNetworkGroup, 5f);
+			isCallingUpdateNetworkGroup = true;
+		}
+		if (ShouldUpdateNetworkPosition())
+		{
 			SendNetworkUpdate_Position();
 			OnPositionalNetworkUpdate();
 		}
@@ -2318,18 +3447,6 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 
 	public virtual void OnPositionalNetworkUpdate()
 	{
-	}
-
-	public void DoMovingWithoutARigidBodyCheck()
-	{
-		if (doneMovingWithoutARigidBodyCheck <= 10)
-		{
-			doneMovingWithoutARigidBodyCheck++;
-			if (doneMovingWithoutARigidBodyCheck >= 10 && !((Object)(object)((Component)this).GetComponent<Collider>() == (Object)null) && (Object)(object)((Component)this).GetComponent<Rigidbody>() == (Object)null)
-			{
-				Debug.LogWarning((object)string.Concat("Entity moving without a rigid body! (", ((Component)this).gameObject, ")"), (Object)(object)this);
-			}
-		}
 	}
 
 	public override void Spawn()
@@ -2354,7 +3471,7 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		}
 		if (GameManager.server.preProcessed.NeedsProcessing(((Component)this).gameObject))
 		{
-			GameManager.server.preProcessed.ProcessObject(null, ((Component)this).gameObject, resetLocalTransform: false);
+			GameManager.server.preProcessed.ProcessObject(null, ((Component)this).gameObject, PreProcessPrefabOptions.Default_NoResetPosition);
 		}
 		BaseEntity baseEntity = (((Object)(object)((Component)this).transform.parent != (Object)null) ? ((Component)((Component)this).transform.parent).GetComponentInParent<BaseEntity>() : null);
 		Spawn();
@@ -2366,12 +3483,12 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 
 	public void SpawnAsMapEntity()
 	{
-		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
 		if (net == null && !base.IsDestroyed && (Object)(object)(((Object)(object)((Component)this).transform.parent != (Object)null) ? ((Component)((Component)this).transform.parent).GetComponentInParent<BaseEntity>() : null) == (Object)null)
 		{
 			if (GameManager.server.preProcessed.NeedsProcessing(((Component)this).gameObject))
 			{
-				GameManager.server.preProcessed.ProcessObject(null, ((Component)this).gameObject, resetLocalTransform: false);
+				GameManager.server.preProcessed.ProcessObject(null, ((Component)this).gameObject, PreProcessPrefabOptions.Default_NoResetPosition);
 			}
 			((Component)this).transform.parent = null;
 			SceneManager.MoveGameObjectToScene(((Component)this).gameObject, Rust.Server.EntityScene);
@@ -2399,6 +3516,10 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		}
 		SetParent(null, worldPositionStays: true);
 		Query.Server.Remove(this);
+		if (this is SamSite.ISamSiteTarget item)
+		{
+			SamSite.ISamSiteTarget.serverList.Remove(item);
+		}
 		base.DoServerDestroy();
 	}
 
@@ -2409,17 +3530,38 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 
 	public virtual void OnInvalidPosition()
 	{
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		Debug.Log((object)string.Concat("Invalid Position: ", this, " ", ((Component)this).transform.position, " (destroying)"));
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
+		string[] obj = new string[5]
+		{
+			"Invalid Position: ",
+			((object)this)?.ToString(),
+			" ",
+			null,
+			null
+		};
+		Vector3 position = ((Component)this).transform.position;
+		obj[3] = ((object)(Vector3)(ref position)).ToString();
+		obj[4] = " (destroying)";
+		Debug.Log((object)string.Concat(obj));
 		Kill();
 	}
 
-	public BaseCorpse DropCorpse(string strCorpsePrefab)
+	public BaseCorpse DropCorpse(string strCorpsePrefab, BasePlayer.PlayerFlags playerFlagsOnDeath = (BasePlayer.PlayerFlags)0, ModelState modelState = null)
+	{
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		return DropCorpse(strCorpsePrefab, ((Component)this).transform.position, ((Component)this).transform.rotation, playerFlagsOnDeath, modelState);
+	}
+
+	public BaseCorpse DropCorpse(string strCorpsePrefab, Vector3 posOnDeath, Quaternion rotOnDeath, BasePlayer.PlayerFlags playerFlagsOnDeath = (BasePlayer.PlayerFlags)0, ModelState modelState = null)
 	{
 		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
 		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
 		Assert.IsTrue(base.isServer, "DropCorpse called on client!");
 		if (!ConVar.Server.corpses)
 		{
@@ -2432,16 +3574,17 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		BaseCorpse baseCorpse = GameManager.server.CreateEntity(strCorpsePrefab) as BaseCorpse;
 		if ((Object)(object)baseCorpse == (Object)null)
 		{
-			Debug.LogWarning((object)string.Concat("Error creating corpse: ", ((Component)this).gameObject, " - ", strCorpsePrefab));
+			Debug.LogWarning((object)("Error creating corpse: " + ((object)((Component)this).gameObject)?.ToString() + " - " + strCorpsePrefab));
 			return null;
 		}
-		baseCorpse.InitCorpse(this);
+		baseCorpse.ServerInitCorpse(this, posOnDeath, rotOnDeath, playerFlagsOnDeath, modelState);
 		return baseCorpse;
 	}
 
 	public override void UpdateNetworkGroup()
 	{
 		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
 		Assert.IsTrue(base.isServer, "UpdateNetworkGroup called on clientside entity!");
 		isCallingUpdateNetworkGroup = false;
 		if (net == null || Net.sv == null || Net.sv.visibility == null)
@@ -2465,7 +3608,8 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 				{
 					if (!Application.isLoadingSave)
 					{
-						Debug.LogWarning((object)("UpdateNetworkGroup: Missing parent entity " + parentEntity.uid));
+						NetworkableId uid = parentEntity.uid;
+						Debug.LogWarning((object)("UpdateNetworkGroup: Missing parent entity " + ((object)(NetworkableId)(ref uid)).ToString()));
 						((FacepunchBehaviour)this).Invoke((Action)UpdateNetworkGroup, 2f);
 						isCallingUpdateNetworkGroup = true;
 					}
@@ -2479,7 +3623,7 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 				}
 				else
 				{
-					Debug.LogWarning((object)string.Concat(((Component)this).gameObject, ": has parent id - but couldn't find parent! ", parentEntity));
+					Debug.LogWarning((object)(((object)((Component)this).gameObject)?.ToString() + ": has parent id - but couldn't find parent! " + parentEntity));
 				}
 			}
 			else if (base.limitNetworking)
@@ -2517,7 +3661,7 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		}
 		if (IsTransferProtected())
 		{
-			return player.userID == OwnerID;
+			return false;
 		}
 		BaseEntity baseEntity = GetParentEntity();
 		if (base.limitNetworking)
@@ -2614,6 +3758,26 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		return $"Owner ID: {OwnerID}";
 	}
 
+	public virtual bool BuoyancyWake()
+	{
+		return false;
+	}
+
+	public virtual bool BuoyancySleep(bool inWater)
+	{
+		return false;
+	}
+
+	public virtual float RadiationProtection()
+	{
+		return 0f;
+	}
+
+	public virtual float RadiationExposureFraction()
+	{
+		return 1f;
+	}
+
 	[RPC_Server]
 	[RPC_Server.FromOwner]
 	private void BroadcastSignalFromClient(RPCMessage msg)
@@ -2625,39 +3789,30 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 			if (!((Object)(object)player == (Object)null) && player.rpcHistory.TryIncrement(num, (ulong)ConVar.Server.maxpacketspersecond_rpc_signal))
 			{
 				Signal signal = (Signal)msg.read.Int32();
-				string arg = msg.read.String(256);
+				string arg = msg.read.String(256, false);
 				SignalBroadcast(signal, arg, msg.connection);
+				OnReceivedSignalServer(signal, arg);
 			}
 		}
 	}
 
+	protected virtual void OnReceivedSignalServer(Signal signal, string arg)
+	{
+	}
+
 	public void SignalBroadcast(Signal signal, string arg, Connection sourceConnection = null)
 	{
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
 		if (net != null && net.group != null)
 		{
-			SendInfo sendInfo = default(SendInfo);
-			((SendInfo)(ref sendInfo))._002Ector(net.group.subscribers);
-			sendInfo.method = (SendMethod)2;
-			sendInfo.priority = (Priority)0;
-			ClientRPCEx(sendInfo, sourceConnection, "SignalFromServerEx", (int)signal, arg);
+			ClientRPC(RpcTarget.NetworkGroup("SignalFromServerEx", this, (SendMethod)2, (Priority)0), (int)signal, arg, sourceConnection?.userid ?? 0);
 		}
 	}
 
 	public void SignalBroadcast(Signal signal, Connection sourceConnection = null)
 	{
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
 		if (net != null && net.group != null)
 		{
-			SendInfo sendInfo = default(SendInfo);
-			((SendInfo)(ref sendInfo))._002Ector(net.group.subscribers);
-			sendInfo.method = (SendMethod)2;
-			sendInfo.priority = (Priority)0;
-			ClientRPCEx(sendInfo, sourceConnection, "SignalFromServer", (int)signal);
+			ClientRPC(RpcTarget.NetworkGroup("SignalFromServer", this, (SendMethod)2, (Priority)0), (int)signal, sourceConnection?.userid ?? 0);
 		}
 	}
 
@@ -2891,6 +4046,36 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		}
 	}
 
+	public virtual bool InSafeZone()
+	{
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		BaseGameMode activeGameMode = BaseGameMode.GetActiveGameMode(serverside: true);
+		if ((Object)(object)activeGameMode != (Object)null && !activeGameMode.safeZone)
+		{
+			return false;
+		}
+		float num = 0f;
+		Vector3 position = ((Component)this).transform.position;
+		if (triggers != null)
+		{
+			for (int i = 0; i < triggers.Count; i++)
+			{
+				TriggerSafeZone triggerSafeZone = triggers[i] as TriggerSafeZone;
+				if (!((Object)(object)triggerSafeZone == (Object)null))
+				{
+					float safeLevel = triggerSafeZone.GetSafeLevel(position);
+					if (safeLevel > num)
+					{
+						num = safeLevel;
+					}
+				}
+			}
+		}
+		return num > 0f;
+	}
+
 	public TriggerParent FindSuitableParent()
 	{
 		if (triggers == null)
@@ -2905,1013 +4090,5 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 			}
 		}
 		return null;
-	}
-
-	public virtual BasePlayer ToPlayer()
-	{
-		return null;
-	}
-
-	public override void InitShared()
-	{
-		base.InitShared();
-		InitEntityLinks();
-	}
-
-	public override void DestroyShared()
-	{
-		base.DestroyShared();
-		FreeEntityLinks();
-	}
-
-	public override void ResetState()
-	{
-		base.ResetState();
-		parentBone = 0u;
-		OwnerID = 0uL;
-		flags = (Flags)0;
-		parentEntity = default(EntityRef);
-		if (base.isServer)
-		{
-			_spawnable = null;
-		}
-	}
-
-	public virtual float InheritedVelocityScale()
-	{
-		return 0f;
-	}
-
-	public virtual bool InheritedVelocityDirection()
-	{
-		return true;
-	}
-
-	public virtual Vector3 GetInheritedProjectileVelocity(Vector3 direction)
-	{
-		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
-		BaseEntity baseEntity = parentEntity.Get(base.isServer);
-		if ((Object)(object)baseEntity == (Object)null)
-		{
-			return Vector3.zero;
-		}
-		if (baseEntity.InheritedVelocityDirection())
-		{
-			return GetParentVelocity() * baseEntity.InheritedVelocityScale();
-		}
-		return Mathf.Max(Vector3.Dot(GetParentVelocity() * baseEntity.InheritedVelocityScale(), direction), 0f) * direction;
-	}
-
-	public virtual Vector3 GetInheritedThrowVelocity(Vector3 direction)
-	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		return GetParentVelocity();
-	}
-
-	public virtual Vector3 GetInheritedDropVelocity()
-	{
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
-		BaseEntity baseEntity = parentEntity.Get(base.isServer);
-		if (!((Object)(object)baseEntity != (Object)null))
-		{
-			return Vector3.zero;
-		}
-		return baseEntity.GetWorldVelocity();
-	}
-
-	public Vector3 GetParentVelocity()
-	{
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
-		BaseEntity baseEntity = parentEntity.Get(base.isServer);
-		if (!((Object)(object)baseEntity != (Object)null))
-		{
-			return Vector3.zero;
-		}
-		return baseEntity.GetWorldVelocity() + (baseEntity.GetAngularVelocity() * ((Component)this).transform.localPosition - ((Component)this).transform.localPosition);
-	}
-
-	public Vector3 GetWorldVelocity()
-	{
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
-		BaseEntity baseEntity = parentEntity.Get(base.isServer);
-		if (!((Object)(object)baseEntity != (Object)null))
-		{
-			return GetLocalVelocity();
-		}
-		return baseEntity.GetWorldVelocity() + (baseEntity.GetAngularVelocity() * ((Component)this).transform.localPosition - ((Component)this).transform.localPosition) + ((Component)baseEntity).transform.TransformDirection(GetLocalVelocity());
-	}
-
-	public Vector3 GetLocalVelocity()
-	{
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
-		if (base.isServer)
-		{
-			return GetLocalVelocityServer();
-		}
-		return Vector3.zero;
-	}
-
-	public Quaternion GetAngularVelocity()
-	{
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
-		if (base.isServer)
-		{
-			return GetAngularVelocityServer();
-		}
-		return Quaternion.identity;
-	}
-
-	public virtual OBB WorldSpaceBounds()
-	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		return new OBB(((Component)this).transform.position, ((Component)this).transform.lossyScale, ((Component)this).transform.rotation, bounds);
-	}
-
-	public Vector3 PivotPoint()
-	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		return ((Component)this).transform.position;
-	}
-
-	public Vector3 CenterPoint()
-	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		return WorldSpaceBounds().position;
-	}
-
-	public Vector3 ClosestPoint(Vector3 position)
-	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
-		OBB val = WorldSpaceBounds();
-		return ((OBB)(ref val)).ClosestPoint(position);
-	}
-
-	public virtual Vector3 TriggerPoint()
-	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		return CenterPoint();
-	}
-
-	public float Distance(Vector3 position)
-	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		Vector3 val = ClosestPoint(position) - position;
-		return ((Vector3)(ref val)).magnitude;
-	}
-
-	public float SqrDistance(Vector3 position)
-	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		Vector3 val = ClosestPoint(position) - position;
-		return ((Vector3)(ref val)).sqrMagnitude;
-	}
-
-	public float Distance(BaseEntity other)
-	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		return Distance(((Component)other).transform.position);
-	}
-
-	public float SqrDistance(BaseEntity other)
-	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		return SqrDistance(((Component)other).transform.position);
-	}
-
-	public float Distance2D(Vector3 position)
-	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		return Vector3Ex.Magnitude2D(ClosestPoint(position) - position);
-	}
-
-	public float SqrDistance2D(Vector3 position)
-	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		return Vector3Ex.SqrMagnitude2D(ClosestPoint(position) - position);
-	}
-
-	public float Distance2D(BaseEntity other)
-	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		return Distance(((Component)other).transform.position);
-	}
-
-	public float SqrDistance2D(BaseEntity other)
-	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		return SqrDistance(((Component)other).transform.position);
-	}
-
-	public bool IsVisible(Ray ray, int layerMask, float maxDistance)
-	{
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
-		if (Vector3Ex.IsNaNOrInfinity(((Ray)(ref ray)).origin))
-		{
-			return false;
-		}
-		if (Vector3Ex.IsNaNOrInfinity(((Ray)(ref ray)).direction))
-		{
-			return false;
-		}
-		if (((Ray)(ref ray)).direction == Vector3.zero)
-		{
-			return false;
-		}
-		OBB val = WorldSpaceBounds();
-		RaycastHit val2 = default(RaycastHit);
-		if (!((OBB)(ref val)).Trace(ray, ref val2, maxDistance))
-		{
-			return false;
-		}
-		if (GamePhysics.Trace(ray, 0f, out var hitInfo, maxDistance, layerMask, (QueryTriggerInteraction)0))
-		{
-			BaseEntity entity = hitInfo.GetEntity();
-			if ((Object)(object)entity == (Object)(object)this)
-			{
-				return true;
-			}
-			if ((Object)(object)entity != (Object)null && Object.op_Implicit((Object)(object)GetParentEntity()) && GetParentEntity().EqualNetID((BaseNetworkable)entity) && hitInfo.IsOnLayer((Layer)13))
-			{
-				return true;
-			}
-			if (((RaycastHit)(ref hitInfo)).distance <= ((RaycastHit)(ref val2)).distance)
-			{
-				return false;
-			}
-		}
-		return true;
-	}
-
-	public bool IsVisibleSpecificLayers(Vector3 position, Vector3 target, int layerMask, float maxDistance = float.PositiveInfinity)
-	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
-		Vector3 val = target - position;
-		float magnitude = ((Vector3)(ref val)).magnitude;
-		if (magnitude < Mathf.Epsilon)
-		{
-			return true;
-		}
-		Vector3 val2 = val / magnitude;
-		Vector3 val3 = val2 * Mathf.Min(magnitude, 0.01f);
-		return IsVisible(new Ray(position + val3, val2), layerMask, maxDistance);
-	}
-
-	public bool IsVisible(Vector3 position, Vector3 target, float maxDistance = float.PositiveInfinity)
-	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
-		Vector3 val = target - position;
-		float magnitude = ((Vector3)(ref val)).magnitude;
-		if (magnitude < Mathf.Epsilon)
-		{
-			return true;
-		}
-		Vector3 val2 = val / magnitude;
-		Vector3 val3 = val2 * Mathf.Min(magnitude, 0.01f);
-		return IsVisible(new Ray(position + val3, val2), 1218519041, maxDistance);
-	}
-
-	public bool IsVisible(Vector3 position, float maxDistance = float.PositiveInfinity)
-	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		Vector3 target = CenterPoint();
-		if (IsVisible(position, target, maxDistance))
-		{
-			return true;
-		}
-		Vector3 target2 = ClosestPoint(position);
-		if (IsVisible(position, target2, maxDistance))
-		{
-			return true;
-		}
-		return false;
-	}
-
-	public bool IsVisibleAndCanSee(Vector3 position, float maxDistance = float.PositiveInfinity)
-	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-		Vector3 val = CenterPoint();
-		if (IsVisible(position, val, maxDistance) && IsVisible(val, position, maxDistance))
-		{
-			return true;
-		}
-		Vector3 val2 = ClosestPoint(position);
-		if (IsVisible(position, val2, maxDistance) && IsVisible(val2, position, maxDistance))
-		{
-			return true;
-		}
-		return false;
-	}
-
-	public bool IsOlderThan(BaseEntity other)
-	{
-		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
-		if ((Object)(object)other == (Object)null)
-		{
-			return true;
-		}
-		_003F val = ((_003F?)net?.ID) ?? default(NetworkableId);
-		NetworkableId val2 = (NetworkableId)(((_003F?)other.net?.ID) ?? default(NetworkableId));
-		return ((NetworkableId)val).Value < val2.Value;
-	}
-
-	public virtual bool IsOutside()
-	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
-		OBB val = WorldSpaceBounds();
-		return IsOutside(val.position);
-	}
-
-	public bool IsOutside(Vector3 position)
-	{
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
-		bool result = true;
-		RaycastHit val = default(RaycastHit);
-		if (Physics.Raycast(position + Vector3.up * 100f, Vector3.down, ref val, 100f, 161546513))
-		{
-			BaseEntity baseEntity = ((RaycastHit)(ref val)).collider.ToBaseEntity();
-			if ((Object)(object)baseEntity == (Object)null || !baseEntity.HasEntityInParents(this))
-			{
-				result = false;
-			}
-		}
-		return result;
-	}
-
-	public virtual float WaterFactor()
-	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
-		OBB val = WorldSpaceBounds();
-		return WaterLevel.Factor(((OBB)(ref val)).ToBounds(), waves: true, volumes: true, this);
-	}
-
-	public virtual float AirFactor()
-	{
-		if (!(WaterFactor() > 0.85f))
-		{
-			return 1f;
-		}
-		return 0f;
-	}
-
-	public bool WaterTestFromVolumes(Vector3 pos, out WaterLevel.WaterInfo info)
-	{
-		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
-		if (triggers == null)
-		{
-			info = default(WaterLevel.WaterInfo);
-			return false;
-		}
-		for (int i = 0; i < triggers.Count; i++)
-		{
-			if (triggers[i] is WaterVolume waterVolume && waterVolume.Test(pos, out info))
-			{
-				return true;
-			}
-		}
-		info = default(WaterLevel.WaterInfo);
-		return false;
-	}
-
-	public bool IsInWaterVolume(Vector3 pos)
-	{
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		if (triggers == null)
-		{
-			return false;
-		}
-		WaterLevel.WaterInfo info = default(WaterLevel.WaterInfo);
-		for (int i = 0; i < triggers.Count; i++)
-		{
-			if (triggers[i] is WaterVolume waterVolume && waterVolume.Test(pos, out info))
-			{
-				return true;
-			}
-		}
-		return false;
-	}
-
-	public bool WaterTestFromVolumes(Bounds bounds, out WaterLevel.WaterInfo info)
-	{
-		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
-		if (triggers == null)
-		{
-			info = default(WaterLevel.WaterInfo);
-			return false;
-		}
-		for (int i = 0; i < triggers.Count; i++)
-		{
-			if (triggers[i] is WaterVolume waterVolume && waterVolume.Test(bounds, out info))
-			{
-				return true;
-			}
-		}
-		info = default(WaterLevel.WaterInfo);
-		return false;
-	}
-
-	public bool WaterTestFromVolumes(Vector3 start, Vector3 end, float radius, out WaterLevel.WaterInfo info)
-	{
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
-		if (triggers == null)
-		{
-			info = default(WaterLevel.WaterInfo);
-			return false;
-		}
-		for (int i = 0; i < triggers.Count; i++)
-		{
-			if (triggers[i] is WaterVolume waterVolume && waterVolume.Test(start, end, radius, out info))
-			{
-				return true;
-			}
-		}
-		info = default(WaterLevel.WaterInfo);
-		return false;
-	}
-
-	public virtual bool BlocksWaterFor(BasePlayer player)
-	{
-		return false;
-	}
-
-	public virtual float Health()
-	{
-		return 0f;
-	}
-
-	public virtual float MaxHealth()
-	{
-		return 0f;
-	}
-
-	public virtual float MaxVelocity()
-	{
-		return 0f;
-	}
-
-	public virtual float BoundsPadding()
-	{
-		return 0.1f;
-	}
-
-	public virtual float PenetrationResistance(HitInfo info)
-	{
-		return 100f;
-	}
-
-	public virtual GameObjectRef GetImpactEffect(HitInfo info)
-	{
-		return impactEffect;
-	}
-
-	public virtual void OnAttacked(HitInfo info)
-	{
-	}
-
-	public virtual Item GetItem()
-	{
-		return null;
-	}
-
-	public virtual Item GetItem(ItemId itemId)
-	{
-		return null;
-	}
-
-	public virtual void GiveItem(Item item, GiveItemReason reason = GiveItemReason.Generic)
-	{
-		item.Remove();
-	}
-
-	public virtual bool CanBeLooted(BasePlayer player)
-	{
-		return !IsTransferring();
-	}
-
-	public virtual BaseEntity GetEntity()
-	{
-		return this;
-	}
-
-	public override string ToString()
-	{
-		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
-		if (_name == null)
-		{
-			if (base.isServer)
-			{
-				_name = string.Format("{1}[{0}]", (object)(NetworkableId)(((_003F?)net?.ID) ?? default(NetworkableId)), base.ShortPrefabName);
-			}
-			else
-			{
-				_name = base.ShortPrefabName;
-			}
-		}
-		return _name;
-	}
-
-	public virtual string Categorize()
-	{
-		return "entity";
-	}
-
-	public void Log(string str)
-	{
-		if (base.isClient)
-		{
-			Debug.Log((object)("<color=#ffa>[" + ((object)this).ToString() + "] " + str + "</color>"), (Object)(object)((Component)this).gameObject);
-		}
-		else
-		{
-			Debug.Log((object)("<color=#aff>[" + ((object)this).ToString() + "] " + str + "</color>"), (Object)(object)((Component)this).gameObject);
-		}
-	}
-
-	public void SetModel(Model mdl)
-	{
-		if (!((Object)(object)model == (Object)(object)mdl))
-		{
-			model = mdl;
-		}
-	}
-
-	public Model GetModel()
-	{
-		return model;
-	}
-
-	public virtual Transform[] GetBones()
-	{
-		if (Object.op_Implicit((Object)(object)model))
-		{
-			return model.GetBones();
-		}
-		return null;
-	}
-
-	public virtual Transform FindBone(string strName)
-	{
-		if (Object.op_Implicit((Object)(object)model))
-		{
-			return model.FindBone(strName);
-		}
-		return ((Component)this).transform;
-	}
-
-	public virtual uint FindBoneID(Transform boneTransform)
-	{
-		if (Object.op_Implicit((Object)(object)model))
-		{
-			return model.FindBoneID(boneTransform);
-		}
-		return StringPool.closest;
-	}
-
-	public virtual Transform FindClosestBone(Vector3 worldPos)
-	{
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-		if (Object.op_Implicit((Object)(object)model))
-		{
-			return model.FindClosestBone(worldPos);
-		}
-		return ((Component)this).transform;
-	}
-
-	public virtual bool ShouldBlockProjectiles()
-	{
-		return true;
-	}
-
-	public virtual bool ShouldInheritNetworkGroup()
-	{
-		return true;
-	}
-
-	public virtual bool SupportsChildDeployables()
-	{
-		BaseEntity baseEntity = GetParentEntity();
-		if (!((Object)(object)baseEntity != (Object)null))
-		{
-			return false;
-		}
-		return baseEntity.ForceDeployableSetParent();
-	}
-
-	public virtual bool ForceDeployableSetParent()
-	{
-		BaseEntity baseEntity = GetParentEntity();
-		if (!((Object)(object)baseEntity != (Object)null))
-		{
-			return false;
-		}
-		return baseEntity.ForceDeployableSetParent();
-	}
-
-	public bool IsOnMovingObject()
-	{
-		if (syncPosition)
-		{
-			return true;
-		}
-		BaseEntity baseEntity = GetParentEntity();
-		if (!((Object)(object)baseEntity != (Object)null))
-		{
-			return false;
-		}
-		return baseEntity.IsOnMovingObject();
-	}
-
-	public void BroadcastEntityMessage(string msg, float radius = 20f, int layerMask = 1218652417)
-	{
-		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
-		if (base.isClient)
-		{
-			return;
-		}
-		List<BaseEntity> list = Pool.GetList<BaseEntity>();
-		Vis.Entities(((Component)this).transform.position, radius, list, layerMask, (QueryTriggerInteraction)2);
-		foreach (BaseEntity item in list)
-		{
-			if (item.isServer)
-			{
-				item.OnEntityMessage(this, msg);
-			}
-		}
-		Pool.FreeList<BaseEntity>(ref list);
-	}
-
-	public virtual void OnEntityMessage(BaseEntity from, string msg)
-	{
-	}
-
-	public override void Save(SaveInfo info)
-	{
-		//IL_0122: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0127: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0138: Unknown result type (might be due to invalid IL or missing references)
-		//IL_013d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0140: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0145: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ec: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0102: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0107: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0089: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0220: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0225: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0272: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0277: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0293: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0298: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02b4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02b9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02d5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02da: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02f6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02fb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0317: Unknown result type (might be due to invalid IL or missing references)
-		//IL_031c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01d4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01d9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0409: Unknown result type (might be due to invalid IL or missing references)
-		base.Save(info);
-		BaseEntity baseEntity = parentEntity.Get(base.isServer);
-		info.msg.baseEntity = Pool.Get<BaseEntity>();
-		Quaternion val;
-		if (info.forDisk)
-		{
-			if (this is BasePlayer)
-			{
-				if ((Object)(object)baseEntity == (Object)null || baseEntity.enableSaving)
-				{
-					info.msg.baseEntity.pos = ((Component)this).transform.localPosition;
-					BaseEntity baseEntity2 = info.msg.baseEntity;
-					val = ((Component)this).transform.localRotation;
-					baseEntity2.rot = ((Quaternion)(ref val)).eulerAngles;
-				}
-				else
-				{
-					info.msg.baseEntity.pos = ((Component)this).transform.position;
-					BaseEntity baseEntity3 = info.msg.baseEntity;
-					val = ((Component)this).transform.rotation;
-					baseEntity3.rot = ((Quaternion)(ref val)).eulerAngles;
-				}
-			}
-			else
-			{
-				info.msg.baseEntity.pos = ((Component)this).transform.localPosition;
-				BaseEntity baseEntity4 = info.msg.baseEntity;
-				val = ((Component)this).transform.localRotation;
-				baseEntity4.rot = ((Quaternion)(ref val)).eulerAngles;
-			}
-		}
-		else
-		{
-			info.msg.baseEntity.pos = GetNetworkPosition();
-			BaseEntity baseEntity5 = info.msg.baseEntity;
-			val = GetNetworkRotation();
-			baseEntity5.rot = ((Quaternion)(ref val)).eulerAngles;
-			info.msg.baseEntity.time = GetNetworkTime();
-		}
-		info.msg.baseEntity.flags = (int)flags;
-		info.msg.baseEntity.skinid = skinID;
-		if (info.forDisk && this is BasePlayer)
-		{
-			if ((Object)(object)baseEntity != (Object)null && baseEntity.enableSaving)
-			{
-				info.msg.parent = Pool.Get<ParentInfo>();
-				info.msg.parent.uid = parentEntity.uid;
-				info.msg.parent.bone = parentBone;
-			}
-		}
-		else if ((Object)(object)baseEntity != (Object)null)
-		{
-			info.msg.parent = Pool.Get<ParentInfo>();
-			info.msg.parent.uid = parentEntity.uid;
-			info.msg.parent.bone = parentBone;
-		}
-		if (HasAnySlot())
-		{
-			info.msg.entitySlots = Pool.Get<EntitySlots>();
-			info.msg.entitySlots.slotLock = entitySlots[0].uid;
-			info.msg.entitySlots.slotFireMod = entitySlots[1].uid;
-			info.msg.entitySlots.slotUpperModification = entitySlots[2].uid;
-			info.msg.entitySlots.centerDecoration = entitySlots[5].uid;
-			info.msg.entitySlots.lowerCenterDecoration = entitySlots[6].uid;
-			info.msg.entitySlots.storageMonitor = entitySlots[7].uid;
-		}
-		if (info.forDisk && Object.op_Implicit((Object)(object)_spawnable))
-		{
-			_spawnable.Save(info);
-		}
-		if (OwnerID != 0L && (info.forDisk || ShouldNetworkOwnerInfo()))
-		{
-			info.msg.ownerInfo = Pool.Get<OwnerInfo>();
-			info.msg.ownerInfo.steamid = OwnerID;
-		}
-		if (Components != null)
-		{
-			for (int i = 0; i < Components.Length; i++)
-			{
-				if (!((Object)(object)Components[i] == (Object)null))
-				{
-					Components[i].SaveComponent(info);
-				}
-			}
-		}
-		if (info.forTransfer && ShouldTransferAssociatedFiles)
-		{
-			info.msg.associatedFiles = Pool.Get<AssociatedFiles>();
-			info.msg.associatedFiles.files = Pool.GetList<AssociatedFile>();
-			info.msg.associatedFiles.files.AddRange(FileStorage.server.QueryAllByEntity(net.ID));
-		}
-	}
-
-	public virtual bool ShouldNetworkOwnerInfo()
-	{
-		return false;
-	}
-
-	public override void Load(LoadInfo info)
-	{
-		//IL_0107: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0128: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0149: Unknown result type (might be due to invalid IL or missing references)
-		//IL_016a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_018b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ac: Unknown result type (might be due to invalid IL or missing references)
-		//IL_023f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0245: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0215: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01db: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00af: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_038e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0393: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0301: Unknown result type (might be due to invalid IL or missing references)
-		base.Load(info);
-		if (info.msg.baseEntity != null)
-		{
-			BaseEntity baseEntity = info.msg.baseEntity;
-			Flags old = flags;
-			if (base.isServer)
-			{
-				flags &= ~Flags.Transferring;
-			}
-			flags = (Flags)baseEntity.flags;
-			OnFlagsChanged(old, flags);
-			OnSkinChanged(skinID, info.msg.baseEntity.skinid);
-			if (info.fromDisk)
-			{
-				if (Vector3Ex.IsNaNOrInfinity(baseEntity.pos))
-				{
-					Debug.LogWarning((object)(((object)this).ToString() + " has broken position - " + baseEntity.pos));
-					baseEntity.pos = Vector3.zero;
-				}
-				((Component)this).transform.localPosition = baseEntity.pos;
-				((Component)this).transform.localRotation = Quaternion.Euler(baseEntity.rot);
-			}
-		}
-		if (info.msg.entitySlots != null)
-		{
-			entitySlots[0].uid = info.msg.entitySlots.slotLock;
-			entitySlots[1].uid = info.msg.entitySlots.slotFireMod;
-			entitySlots[2].uid = info.msg.entitySlots.slotUpperModification;
-			entitySlots[5].uid = info.msg.entitySlots.centerDecoration;
-			entitySlots[6].uid = info.msg.entitySlots.lowerCenterDecoration;
-			entitySlots[7].uid = info.msg.entitySlots.storageMonitor;
-		}
-		if (info.msg.parent != null)
-		{
-			if (base.isServer)
-			{
-				BaseEntity entity = BaseNetworkable.serverEntities.Find(info.msg.parent.uid) as BaseEntity;
-				SetParent(entity, info.msg.parent.bone);
-			}
-			parentEntity.uid = info.msg.parent.uid;
-			parentBone = info.msg.parent.bone;
-		}
-		else
-		{
-			parentEntity.uid = default(NetworkableId);
-			parentBone = 0u;
-		}
-		if (info.msg.ownerInfo != null)
-		{
-			OwnerID = info.msg.ownerInfo.steamid;
-		}
-		if (Object.op_Implicit((Object)(object)_spawnable))
-		{
-			_spawnable.Load(info);
-		}
-		if (info.fromTransfer && ShouldTransferAssociatedFiles && info.msg.associatedFiles != null && info.msg.associatedFiles.files != null)
-		{
-			foreach (AssociatedFile file in info.msg.associatedFiles.files)
-			{
-				if (FileStorage.server.Store(file.data, (FileStorage.Type)file.type, net.ID, file.numID) != file.crc)
-				{
-					Debug.LogWarning((object)"Associated file has a different CRC after transfer!");
-				}
-			}
-		}
-		if (info.fromDisk && info.msg.baseEntity != null && IsTransferProtected())
-		{
-			float num = ((info.msg.baseEntity.protection > 0f) ? info.msg.baseEntity.protection : Nexus.protectionDuration);
-			_transferProtectionRemaining = TimeUntil.op_Implicit(num);
-			((FacepunchBehaviour)this).Invoke(DisableTransferProtectionAction, num);
-		}
-		if (Components == null)
-		{
-			return;
-		}
-		for (int i = 0; i < Components.Length; i++)
-		{
-			if (!((Object)(object)Components[i] == (Object)null))
-			{
-				Components[i].LoadComponent(info);
-			}
-		}
 	}
 }

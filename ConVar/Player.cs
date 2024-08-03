@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text;
 using Facepunch;
 using ProtoBuf;
@@ -10,17 +11,99 @@ namespace ConVar;
 [Factory("player")]
 public class Player : ConsoleSystem
 {
-	[ServerVar]
-	public static int tickrate_cl = 20;
+	public struct EncryptedValue<TInner> where TInner : unmanaged
+	{
+		private TInner _value;
 
-	[ServerVar]
-	public static int tickrate_sv = 16;
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public TInner Get()
+		{
+			return _value;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Set(TInner value)
+		{
+			_value = value;
+		}
+
+		public override string ToString()
+		{
+			return Get().ToString();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static implicit operator EncryptedValue<TInner>(TInner value)
+		{
+			EncryptedValue<TInner> result = default(EncryptedValue<TInner>);
+			result.Set(value);
+			return result;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static implicit operator TInner(EncryptedValue<TInner> encrypted)
+		{
+			return encrypted.Get();
+		}
+	}
+
+	public const string serverTickRateDefaultString = "16";
+
+	public static int serverTickRate = 16;
+
+	public const int serverTickRateDefault = 16;
+
+	public const int serverTickRateMin = 16;
+
+	public const int serverTickRateMax = 128;
+
+	public static float serverTickInterval = 0.0625f;
+
+	public const string clientTickRateDefaultString = "32";
+
+	public const int clientTickRateDefault = 32;
+
+	public const int clientTickRateMin = 16;
+
+	public const int clientTickRateMax = 128;
+
+	public static EncryptedValue<int> clientTickRate = 32;
+
+	public static EncryptedValue<float> clientTickInterval = 1f / 32f;
 
 	[ClientVar(ClientInfo = true)]
 	public static bool InfiniteAmmo = false;
 
 	[ServerVar(Saved = true, ShowInAdminUI = true, Help = "Whether the crawling state expires")]
 	public static bool woundforever = false;
+
+	[ReplicatedVar(Default = "16")]
+	public static int tickrate_sv
+	{
+		get
+		{
+			return serverTickRate;
+		}
+		set
+		{
+			serverTickRate = Mathf.Clamp(value, 16, 128);
+			serverTickInterval = 1f / (float)serverTickRate;
+		}
+	}
+
+	[ReplicatedVar(Default = "32")]
+	public static int tickrate_cl
+	{
+		get
+		{
+			return clientTickRate;
+		}
+		set
+		{
+			clientTickRate = Mathf.Clamp(value, 16, 128);
+			clientTickInterval = 1f / (float)(int)clientTickRate;
+		}
+	}
 
 	[ServerUserVar]
 	[ClientVar(AllowRunFromServer = true)]
@@ -409,7 +492,7 @@ public class Player : ConsoleSystem
 			{
 				if (baseProjectile.primaryMagazine != null)
 				{
-					baseProjectile.primaryMagazine.contents = baseProjectile.primaryMagazine.capacity;
+					baseProjectile.SetAmmoCount(baseProjectile.primaryMagazine.capacity);
 					baseProjectile.SendNetworkUpdateImmediate();
 				}
 			}
@@ -441,7 +524,82 @@ public class Player : ConsoleSystem
 	}
 
 	[ServerVar]
+	public static string createTrophy(Arg arg)
+	{
+		//IL_00b8: Unknown result type (might be due to invalid IL or missing references)
+		BasePlayer basePlayer = arg.Player();
+		Entity.EntitySpawnRequest spawnEntityFromName = Entity.GetSpawnEntityFromName(arg.GetString(0, ""));
+		if (!spawnEntityFromName.Valid)
+		{
+			return spawnEntityFromName.Error;
+		}
+		BaseCombatEntity baseCombatEntity = default(BaseCombatEntity);
+		if (GameManager.server.FindPrefab(spawnEntityFromName.PrefabName).TryGetComponent<BaseCombatEntity>(ref baseCombatEntity))
+		{
+			Item item = ItemManager.CreateByName("head.bag", 1, 0uL);
+			HeadEntity associatedEntity = ItemModAssociatedEntity<HeadEntity>.GetAssociatedEntity(item);
+			if ((Object)(object)associatedEntity != (Object)null)
+			{
+				associatedEntity.SetupSourceId(baseCombatEntity.prefabID);
+			}
+			if (basePlayer.inventory.GiveItem(item))
+			{
+				basePlayer.Command("note.inv", item.info.itemid, 1);
+			}
+			else
+			{
+				item.DropAndTossUpwards(basePlayer.eyes.position);
+			}
+		}
+		return "Created head";
+	}
+
+	[ServerVar]
+	public static void trigger_wildlife_trap(Arg arg)
+	{
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
+		BasePlayer basePlayer = arg.Player();
+		if ((Object)(object)basePlayer == (Object)null || !basePlayer.IsAdmin)
+		{
+			return;
+		}
+		if (GamePhysics.Trace(basePlayer.eyes.HeadRay(), 0.5f, out var hitInfo, 5f, 1218652417, (QueryTriggerInteraction)0, basePlayer))
+		{
+			WildlifeTrap wildlifeTrap = hitInfo.GetEntity() as WildlifeTrap;
+			if (wildlifeTrap != null)
+			{
+				if (wildlifeTrap.isClient)
+				{
+					wildlifeTrap = BaseNetworkable.serverEntities.Find(wildlifeTrap.net.ID) as WildlifeTrap;
+				}
+				if (!wildlifeTrap.IsTrapActive())
+				{
+					arg.ReplyWith("Trap is not loaded or active");
+					return;
+				}
+				wildlifeTrap.TrapThink();
+				arg.ReplyWith("Trap think triggered");
+				return;
+			}
+		}
+		arg.ReplyWith("Not looking at a trap");
+	}
+
+	[ServerVar]
 	public static void gesture_radius(Arg arg)
+	{
+		gesture_radius(arg, includeMe: true);
+	}
+
+	[ServerVar]
+	public static void gesture_radius_notme(Arg arg)
+	{
+		gesture_radius(arg, includeMe: false);
+	}
+
+	public static void gesture_radius(Arg arg, bool includeMe)
 	{
 		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer basePlayer = arg.Player();
@@ -467,8 +625,11 @@ public class Player : ConsoleSystem
 		global::Vis.Entities(((Component)basePlayer).transform.position, @float, list2, 131072, (QueryTriggerInteraction)2);
 		foreach (BasePlayer item in list2)
 		{
-			GestureConfig toPlay = basePlayer.gestureList.StringToGesture(list[Random.Range(0, list.Count)]);
-			item.Server_StartGesture(toPlay);
+			if (includeMe || (!((Object)(object)item == (Object)(object)basePlayer) && !item.isClient))
+			{
+				GestureConfig toPlay = basePlayer.gestureList.StringToGesture(list[Random.Range(0, list.Count)]);
+				item.Server_StartGesture(toPlay);
+			}
 		}
 		Pool.FreeList<BasePlayer>(ref list2);
 	}

@@ -31,7 +31,7 @@ public class SpawnHandler : SingletonComponent<SpawnHandler>
 
 	public float CharacterSpawnCutoff;
 
-	public SpawnPopulation[] SpawnPopulations;
+	public SpawnPopulationBase[] SpawnPopulations;
 
 	internal SpawnDistribution[] SpawnDistributions;
 
@@ -42,13 +42,13 @@ public class SpawnHandler : SingletonComponent<SpawnHandler>
 	internal List<SpawnIndividual> SpawnIndividuals = new List<SpawnIndividual>();
 
 	[ReadOnly]
-	public SpawnPopulation[] ConvarSpawnPopulations;
+	public SpawnPopulationBase[] ConvarSpawnPopulations;
 
-	private Dictionary<SpawnPopulation, SpawnDistribution> population2distribution;
+	private Dictionary<SpawnPopulationBase, SpawnDistribution> population2distribution;
 
 	private bool spawnTick;
 
-	private SpawnPopulation[] AllSpawnPopulations;
+	private SpawnPopulationBase[] AllSpawnPopulations;
 
 	protected void OnEnable()
 	{
@@ -107,42 +107,30 @@ public class SpawnHandler : SingletonComponent<SpawnHandler>
 		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0120: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0121: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
 		if (World.Size == 0)
 		{
 			return;
 		}
 		SpawnDistributions = new SpawnDistribution[AllSpawnPopulations.Length];
-		population2distribution = new Dictionary<SpawnPopulation, SpawnDistribution>();
+		population2distribution = new Dictionary<SpawnPopulationBase, SpawnDistribution>();
 		Vector3 size = TerrainMeta.Size;
 		Vector3 position = TerrainMeta.Position;
-		int pop_res = Mathf.NextPowerOfTwo((int)((float)World.Size * 0.25f));
+		int populationRes = Mathf.NextPowerOfTwo((int)((float)World.Size * 0.25f));
 		for (int i = 0; i < AllSpawnPopulations.Length; i++)
 		{
-			SpawnPopulation spawnPopulation = AllSpawnPopulations[i];
-			if (spawnPopulation == null)
+			SpawnPopulationBase spawnPopulationBase = AllSpawnPopulations[i];
+			if (spawnPopulationBase == null)
 			{
 				Debug.LogError((object)"Spawn handler contains null spawn population.");
 				continue;
 			}
-			byte[] map2 = new byte[pop_res * pop_res];
-			SpawnFilter filter2 = spawnPopulation.Filter;
-			float cutoff2 = spawnPopulation.FilterCutoff;
-			Parallel.For(0, pop_res, (Action<int>)delegate(int z)
-			{
-				for (int k = 0; k < pop_res; k++)
-				{
-					float normX2 = ((float)k + 0.5f) / (float)pop_res;
-					float normZ2 = ((float)z + 0.5f) / (float)pop_res;
-					float factor2 = filter2.GetFactor(normX2, normZ2);
-					map2[z * pop_res + k] = (byte)((factor2 >= cutoff2) ? (255f * factor2) : 0f);
-				}
-			});
-			SpawnDistribution value = (SpawnDistributions[i] = new SpawnDistribution(this, map2, position, size));
-			population2distribution.Add(spawnPopulation, value);
+			byte[] baseMapValues = spawnPopulationBase.GetBaseMapValues(populationRes);
+			SpawnDistribution value = (SpawnDistributions[i] = new SpawnDistribution(this, baseMapValues, position, size));
+			population2distribution.Add(spawnPopulationBase, value);
 		}
 		int char_res = Mathf.NextPowerOfTwo((int)((float)World.Size * 0.5f));
 		byte[] map = new byte[char_res * char_res];
@@ -233,8 +221,8 @@ public class SpawnHandler : SingletonComponent<SpawnHandler>
 			yield return CoroutineEx.waitForSeconds(ConVar.Spawn.tick_populations);
 			for (int i = 0; i < AllSpawnPopulations.Length; i++)
 			{
-				SpawnPopulation spawnPopulation = AllSpawnPopulations[i];
-				if (spawnPopulation == null)
+				SpawnPopulationBase spawnPopulationBase = AllSpawnPopulations[i];
+				if (spawnPopulationBase == null)
 				{
 					continue;
 				}
@@ -247,7 +235,7 @@ public class SpawnHandler : SingletonComponent<SpawnHandler>
 				{
 					if (SpawnDistributions != null)
 					{
-						SpawnRepeating(spawnPopulation, spawnDistribution);
+						SpawnRepeating(spawnPopulationBase, spawnDistribution);
 					}
 				}
 				catch (Exception ex)
@@ -314,94 +302,25 @@ public class SpawnHandler : SingletonComponent<SpawnHandler>
 		}
 	}
 
-	public void SpawnInitial(SpawnPopulation population, SpawnDistribution distribution)
+	public void SpawnInitial(SpawnPopulationBase population, SpawnDistribution distribution)
 	{
-		int targetCount = GetTargetCount(population, distribution);
-		int currentCount = GetCurrentCount(population, distribution);
-		int num = targetCount - currentCount;
-		Fill(population, distribution, targetCount, num, num * population.SpawnAttemptsInitial);
+		int targetCount = population.GetTargetCount(distribution);
+		int count = distribution.Count;
+		int numToFill = targetCount - count;
+		population.Fill(this, distribution, numToFill, initialSpawn: true);
 	}
 
-	public void SpawnRepeating(SpawnPopulation population, SpawnDistribution distribution)
+	public void SpawnRepeating(SpawnPopulationBase population, SpawnDistribution distribution)
 	{
-		int targetCount = GetTargetCount(population, distribution);
-		int currentCount = GetCurrentCount(population, distribution);
-		int num = targetCount - currentCount;
+		int targetCount = population.GetTargetCount(distribution);
+		int count = distribution.Count;
+		int num = targetCount - count;
 		num = Mathf.RoundToInt((float)num * population.GetCurrentSpawnRate());
 		num = Random.Range(Mathf.Min(num, MinSpawnsPerTick), Mathf.Min(num, MaxSpawnsPerTick));
-		Fill(population, distribution, targetCount, num, num * population.SpawnAttemptsRepeating);
+		population.Fill(this, distribution, num, initialSpawn: false);
 	}
 
-	private void Fill(SpawnPopulation population, SpawnDistribution distribution, int targetCount, int numToFill, int numToTry)
-	{
-		//IL_00d3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0103: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0104: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0114: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0138: Unknown result type (might be due to invalid IL or missing references)
-		//IL_013d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0155: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0156: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0161: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0166: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01d1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01d2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_018a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_018f: Unknown result type (might be due to invalid IL or missing references)
-		if (targetCount == 0)
-		{
-			return;
-		}
-		if (!population.Initialize())
-		{
-			Debug.LogError((object)("[Spawn] No prefabs to spawn in " + population.ResourceFolder), (Object)(object)population);
-			return;
-		}
-		if (Global.developer > 1)
-		{
-			Debug.Log((object)("[Spawn] Population " + population.ResourceFolder + " needs to spawn " + numToFill));
-		}
-		float num = Mathf.Max((float)population.ClusterSizeMax, distribution.GetGridCellArea() * population.GetMaximumSpawnDensity());
-		population.UpdateWeights(distribution, targetCount);
-		while (numToFill >= population.ClusterSizeMin && numToTry > 0)
-		{
-			ByteQuadtree.Element node = distribution.SampleNode();
-			int num2 = Random.Range(population.ClusterSizeMin, population.ClusterSizeMax + 1);
-			num2 = Mathx.Min(numToTry, numToFill, num2);
-			for (int i = 0; i < num2; i++)
-			{
-				Vector3 spawnPos;
-				Quaternion spawnRot;
-				bool flag = distribution.Sample(out spawnPos, out spawnRot, node, population.AlignToNormal, population.ClusterDithering) && population.Filter.GetFactor(spawnPos) > 0f;
-				if (flag && population.FilterRadius > 0f)
-				{
-					flag = population.Filter.GetFactor(spawnPos + Vector3.forward * population.FilterRadius) > 0f && population.Filter.GetFactor(spawnPos - Vector3.forward * population.FilterRadius) > 0f && population.Filter.GetFactor(spawnPos + Vector3.right * population.FilterRadius) > 0f && population.Filter.GetFactor(spawnPos - Vector3.right * population.FilterRadius) > 0f;
-				}
-				if (flag && population.TryTakeRandomPrefab(out var result))
-				{
-					if (population.GetSpawnPosOverride(result, ref spawnPos, ref spawnRot) && (float)distribution.GetCount(spawnPos) < num)
-					{
-						Spawn(population, result, spawnPos, spawnRot);
-						numToFill--;
-					}
-					else
-					{
-						population.ReturnPrefab(result);
-					}
-				}
-				numToTry--;
-			}
-		}
-		population.OnPostFill(this);
-	}
-
-	public GameObject Spawn(SpawnPopulation population, Prefab<Spawnable> prefab, Vector3 pos, Quaternion rot)
+	public GameObject Spawn(SpawnPopulationBase population, Prefab<Spawnable> prefab, Vector3 pos, Quaternion rot)
 	{
 		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
@@ -434,11 +353,11 @@ public class SpawnHandler : SingletonComponent<SpawnHandler>
 		Vector3 scale = Vector3.one;
 		DecorComponent[] components = PrefabAttribute.server.FindAll<DecorComponent>(prefab.ID);
 		prefab.Object.transform.ApplyDecorComponents(components, ref pos, ref rot, ref scale);
-		if (!prefab.ApplyTerrainAnchors(ref pos, rot, scale, TerrainAnchorMode.MinimizeMovement, population.Filter))
+		if (!prefab.ApplyTerrainAnchors(ref pos, rot, scale, TerrainAnchorMode.MinimizeMovement, population.GetSpawnFilter()))
 		{
 			return null;
 		}
-		if (!prefab.ApplyTerrainChecks(pos, rot, scale, population.Filter))
+		if (!prefab.ApplyTerrainChecks(pos, rot, scale, population.GetSpawnFilter()))
 		{
 			return null;
 		}
@@ -544,28 +463,28 @@ public class SpawnHandler : SingletonComponent<SpawnHandler>
 		{
 			if (!(AllSpawnPopulations[i] == null))
 			{
-				SpawnPopulation spawnPopulation = AllSpawnPopulations[i];
+				SpawnPopulationBase spawnPopulationBase = AllSpawnPopulations[i];
 				SpawnDistribution distribution = SpawnDistributions[i];
-				if (forceAll || spawnPopulation.EnforcePopulationLimits)
+				if (forceAll || spawnPopulationBase.EnforcePopulationLimits)
 				{
-					EnforceLimits(spawnPopulation, distribution);
+					EnforceLimits(spawnPopulationBase, distribution);
 				}
 			}
 		}
 	}
 
-	private void EnforceLimits(SpawnPopulation population, SpawnDistribution distribution)
+	private void EnforceLimits(SpawnPopulationBase population, SpawnDistribution distribution)
 	{
-		int targetCount = GetTargetCount(population, distribution);
+		int targetCount = population.GetTargetCount(distribution);
 		Spawnable[] array = FindAll(population);
 		if (array.Length <= targetCount)
 		{
 			return;
 		}
-		Debug.Log((object)string.Concat(population, " has ", array.Length, " objects, but max allowed is ", targetCount));
-		int num = array.Length - targetCount;
-		Debug.Log((object)(" - deleting " + num + " objects"));
-		foreach (Spawnable item in array.Take(num))
+		Debug.Log((object)(((object)population)?.ToString() + " has " + array.Length + " objects, but max allowed is " + targetCount));
+		int count = array.Length - targetCount;
+		Debug.Log((object)(" - deleting " + count + " objects"));
+		foreach (Spawnable item in array.Take(count))
 		{
 			BaseEntity baseEntity = ((Component)item).gameObject.ToBaseEntity();
 			if (baseEntity.IsValid())
@@ -579,33 +498,11 @@ public class SpawnHandler : SingletonComponent<SpawnHandler>
 		}
 	}
 
-	public Spawnable[] FindAll(SpawnPopulation population)
+	public Spawnable[] FindAll(SpawnPopulationBase population)
 	{
 		return (from x in Object.FindObjectsOfType<Spawnable>()
 			where ((Component)x).gameObject.activeInHierarchy && x.Population == population
 			select x).ToArray();
-	}
-
-	public int GetTargetCount(SpawnPopulation population, SpawnDistribution distribution)
-	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
-		float num = TerrainMeta.Size.x * TerrainMeta.Size.z;
-		float num2 = population.GetCurrentSpawnDensity();
-		if (!population.ScaleWithLargeMaps)
-		{
-			num = Mathf.Min(num, 16000000f);
-		}
-		if (population.ScaleWithSpawnFilter)
-		{
-			num2 *= distribution.Density;
-		}
-		return Mathf.RoundToInt(num * num2);
-	}
-
-	public int GetCurrentCount(SpawnPopulation population, SpawnDistribution distribution)
-	{
-		return distribution.Count;
 	}
 
 	public void AddRespawn(SpawnIndividual individual)
@@ -619,7 +516,7 @@ public class SpawnHandler : SingletonComponent<SpawnHandler>
 		{
 			if (!population2distribution.TryGetValue(spawnable.Population, out var value))
 			{
-				Debug.LogWarning((object)("[SpawnHandler] trying to add instance to invalid population: " + spawnable.Population));
+				Debug.LogWarning((object)("[SpawnHandler] trying to add instance to invalid population: " + (object)spawnable.Population));
 			}
 			else
 			{
@@ -634,7 +531,7 @@ public class SpawnHandler : SingletonComponent<SpawnHandler>
 		{
 			if (!population2distribution.TryGetValue(spawnable.Population, out var value))
 			{
-				Debug.LogWarning((object)("[SpawnHandler] trying to remove instance from invalid population: " + spawnable.Population));
+				Debug.LogWarning((object)("[SpawnHandler] trying to remove instance from invalid population: " + (object)spawnable.Population));
 			}
 			else
 			{
@@ -694,39 +591,16 @@ public class SpawnHandler : SingletonComponent<SpawnHandler>
 				{
 					continue;
 				}
-				SpawnPopulation spawnPopulation = AllSpawnPopulations[i];
+				SpawnPopulationBase spawnPopulationBase = AllSpawnPopulations[i];
 				SpawnDistribution spawnDistribution = SpawnDistributions[i];
-				if (spawnPopulation != null)
+				if (spawnPopulationBase != null)
 				{
-					if (!string.IsNullOrEmpty(spawnPopulation.ResourceFolder))
-					{
-						stringBuilder.AppendLine(((Object)spawnPopulation).name + " (autospawn/" + spawnPopulation.ResourceFolder + ")");
-					}
-					else
-					{
-						stringBuilder.AppendLine(((Object)spawnPopulation).name);
-					}
-					if (detailed)
-					{
-						stringBuilder.AppendLine("\tPrefabs:");
-						if (spawnPopulation.Prefabs != null)
-						{
-							Prefab<Spawnable>[] prefabs = spawnPopulation.Prefabs;
-							foreach (Prefab<Spawnable> prefab in prefabs)
-							{
-								stringBuilder.AppendLine("\t\t" + prefab.Name + " - " + prefab.Object);
-							}
-						}
-						else
-						{
-							stringBuilder.AppendLine("\t\tN/A");
-						}
-					}
+					spawnPopulationBase.GetReportString(stringBuilder, detailed);
 					if (spawnDistribution != null)
 					{
-						int currentCount = GetCurrentCount(spawnPopulation, spawnDistribution);
-						int targetCount = GetTargetCount(spawnPopulation, spawnDistribution);
-						stringBuilder.AppendLine("\tPopulation: " + currentCount + "/" + targetCount);
+						int count = spawnDistribution.Count;
+						int targetCount = spawnPopulationBase.GetTargetCount(spawnDistribution);
+						stringBuilder.AppendLine("\tPopulation: " + count + "/" + targetCount);
 					}
 					else
 					{

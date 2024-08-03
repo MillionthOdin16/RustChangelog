@@ -17,7 +17,7 @@ public class DoorAnimEvents : MonoBehaviour, IClientComponent
 
 	public Animator animator => ((Component)this).GetComponent<Animator>();
 
-	private void DoorOpenStart()
+	public void DoorOpenStart()
 	{
 		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
@@ -43,7 +43,7 @@ public class DoorAnimEvents : MonoBehaviour, IClientComponent
 		Effect.client.Run(openStart.resourcePath, ((Object)(object)soundTarget == (Object)null) ? ((Component)this).gameObject : soundTarget);
 	}
 
-	private void DoorOpenEnd()
+	public void DoorOpenEnd()
 	{
 		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
@@ -69,7 +69,7 @@ public class DoorAnimEvents : MonoBehaviour, IClientComponent
 		Effect.client.Run(openEnd.resourcePath, ((Object)(object)soundTarget == (Object)null) ? ((Component)this).gameObject : soundTarget);
 	}
 
-	private void DoorCloseStart()
+	public void DoorCloseStart()
 	{
 		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
@@ -95,7 +95,7 @@ public class DoorAnimEvents : MonoBehaviour, IClientComponent
 		Effect.client.Run(closeStart.resourcePath, ((Object)(object)soundTarget == (Object)null) ? ((Component)this).gameObject : soundTarget);
 	}
 
-	private void DoorCloseEnd()
+	public void DoorCloseEnd()
 	{
 		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0031: Unknown result type (might be due to invalid IL or missing references)

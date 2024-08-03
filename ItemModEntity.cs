@@ -6,6 +6,8 @@ public class ItemModEntity : ItemMod
 
 	public string defaultBone;
 
+	public bool playerOnlyEntity;
+
 	public override void OnChanged(Item item)
 	{
 		HeldEntity heldEntity = item.GetHeldEntity() as HeldEntity;
@@ -18,23 +20,29 @@ public class ItemModEntity : ItemMod
 
 	public override void OnItemCreated(Item item)
 	{
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		if ((Object)(object)item.GetHeldEntity() == (Object)null)
+		if ((Object)(object)item.GetHeldEntity() == (Object)null && !playerOnlyEntity)
 		{
-			BaseEntity baseEntity = GameManager.server.CreateEntity(entityPrefab.resourcePath);
-			if ((Object)(object)baseEntity == (Object)null)
-			{
-				Debug.LogWarning((object)("Couldn't create item entity " + item.info.displayName.english + " (" + entityPrefab.resourcePath + ")"));
-			}
-			else
-			{
-				baseEntity.skinID = item.skin;
-				baseEntity.Spawn();
-				item.SetHeldEntity(baseEntity);
-			}
+			CreateEntity(item);
+		}
+	}
+
+	private void CreateEntity(Item item)
+	{
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		BaseEntity baseEntity = GameManager.server.CreateEntity(entityPrefab.resourcePath);
+		if ((Object)(object)baseEntity == (Object)null)
+		{
+			Debug.LogWarning((object)("Couldn't create item entity " + item.info.displayName.english + " (" + entityPrefab.resourcePath + ")"));
+		}
+		else
+		{
+			baseEntity.skinID = item.skin;
+			baseEntity.limitNetworking = true;
+			baseEntity.Spawn();
+			item.SetHeldEntity(baseEntity);
 		}
 	}
 
@@ -50,11 +58,16 @@ public class ItemModEntity : ItemMod
 
 	private bool ParentToParent(Item item, BaseEntity ourEntity)
 	{
-		if (item.parentItem == null)
+		Item parentItem = item.parentItem;
+		if (parentItem == null)
 		{
 			return false;
 		}
-		BaseEntity baseEntity = item.parentItem.GetWorldEntity();
+		if (parentItem.IsBackpack())
+		{
+			return false;
+		}
+		BaseEntity baseEntity = parentItem.GetWorldEntity();
 		if ((Object)(object)baseEntity == (Object)null)
 		{
 			baseEntity = item.parentItem.GetHeldEntity();
@@ -72,10 +85,10 @@ public class ItemModEntity : ItemMod
 		{
 			return false;
 		}
-		BasePlayer ownerPlayer = item.GetOwnerPlayer();
-		if (Object.op_Implicit((Object)(object)ownerPlayer))
+		BasePlayer basePlayer = item.GetRootContainer()?.GetOwnerPlayer();
+		if (Object.op_Implicit((Object)(object)basePlayer))
 		{
-			heldEntity.SetOwnerPlayer(ownerPlayer);
+			heldEntity.SetOwnerPlayer(basePlayer);
 			return true;
 		}
 		heldEntity.ClearOwnerPlayer();
@@ -84,12 +97,27 @@ public class ItemModEntity : ItemMod
 
 	public override void OnParentChanged(Item item)
 	{
-		BaseEntity heldEntity = item.GetHeldEntity();
-		if (!((Object)(object)heldEntity == (Object)null) && !ParentToParent(item, heldEntity) && !ParentToPlayer(item, heldEntity))
+		BaseEntity baseEntity = item.GetHeldEntity();
+		if (playerOnlyEntity)
 		{
-			heldEntity.SetParent(null);
-			heldEntity.limitNetworking = true;
-			heldEntity.SetFlag(BaseEntity.Flags.Disabled, b: true);
+			BasePlayer ownerPlayer = item.GetOwnerPlayer();
+			if ((Object)(object)ownerPlayer == (Object)null && (Object)(object)baseEntity != (Object)null)
+			{
+				baseEntity.Kill();
+				baseEntity = null;
+				item.SetHeldEntity(null);
+			}
+			else if ((Object)(object)ownerPlayer != (Object)null && (Object)(object)baseEntity == (Object)null)
+			{
+				CreateEntity(item);
+				baseEntity = item.GetHeldEntity();
+			}
+		}
+		if (!((Object)(object)baseEntity == (Object)null) && !ParentToParent(item, baseEntity) && !ParentToPlayer(item, baseEntity))
+		{
+			baseEntity.SetParent(null);
+			baseEntity.limitNetworking = true;
+			baseEntity.SetFlag(BaseEntity.Flags.Disabled, b: true);
 		}
 	}
 

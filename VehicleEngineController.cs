@@ -44,11 +44,11 @@ public class VehicleEngineController<TOwner> where TOwner : BaseVehicle, IEngine
 
 	public bool IsStartingOrOn => CurEngineState != EngineState.Off;
 
-	public EntityFuelSystem FuelSystem { get; private set; }
+	public IFuelSystem FuelSystem { get; private set; }
 
-	public VehicleEngineController(TOwner owner, bool isServer, float engineStartupTime, GameObjectRef fuelStoragePrefab, Transform waterloggedPoint = null, BaseEntity.Flags engineStartingFlag = BaseEntity.Flags.Reserved1)
+	public VehicleEngineController(TOwner owner, IFuelSystem fuelSystem, bool isServer, float engineStartupTime, Transform waterloggedPoint = null, BaseEntity.Flags engineStartingFlag = BaseEntity.Flags.Reserved1)
 	{
-		FuelSystem = new EntityFuelSystem(isServer, fuelStoragePrefab, owner.children);
+		FuelSystem = fuelSystem;
 		this.owner = owner;
 		this.isServer = isServer;
 		this.engineStartupTime = engineStartupTime;

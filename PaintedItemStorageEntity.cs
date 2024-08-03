@@ -43,6 +43,8 @@ public class PaintedItemStorageEntity : BaseEntity, IServerFileReceiver, IUGCBro
 
 	public BaseNetworkable UgcEntity => this;
 
+	public override bool ShouldTransferAssociatedFiles => true;
+
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
 		TimeWarning val = TimeWarning.New("PaintedItemStorageEntity.OnRpcMessage", 0);
@@ -53,7 +55,7 @@ public class PaintedItemStorageEntity : BaseEntity, IServerFileReceiver, IUGCBro
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_UpdateImage "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_UpdateImage "));
 				}
 				TimeWarning val2 = TimeWarning.New("Server_UpdateImage", 0);
 				try
@@ -132,13 +134,13 @@ public class PaintedItemStorageEntity : BaseEntity, IServerFileReceiver, IUGCBro
 	[RPC_Server.CallsPerSecond(3uL)]
 	private void Server_UpdateImage(RPCMessage msg)
 	{
-		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0145: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012c: Unknown result type (might be due to invalid IL or missing references)
-		if ((Object)(object)msg.player == (Object)null || msg.player.userID != base.OwnerID)
+		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0132: Unknown result type (might be due to invalid IL or missing references)
+		if ((Object)(object)msg.player == (Object)null || (ulong)msg.player.userID != base.OwnerID)
 		{
 			return;
 		}
@@ -154,7 +156,7 @@ public class PaintedItemStorageEntity : BaseEntity, IServerFileReceiver, IUGCBro
 		{
 			return;
 		}
-		byte[] array = msg.read.BytesWithSize(10485760u);
+		byte[] array = msg.read.BytesWithSize(10485760u, false);
 		if (array == null)
 		{
 			if (_currentImageCrc != 0)

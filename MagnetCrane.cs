@@ -9,56 +9,6 @@ using UnityEngine.Assertions;
 
 public class MagnetCrane : GroundVehicle, CarPhysics<MagnetCrane>.ICar
 {
-	private float steerInput;
-
-	private float throttleInput;
-
-	private float brakeInput;
-
-	private float yawInput;
-
-	private float extensionInput;
-
-	private float raiseArmInput;
-
-	private float extensionMove;
-
-	private float yawMove;
-
-	private float raiseArmMove;
-
-	private float nextToggleTime;
-
-	private Vector3 spawnOrigin = Vector3.zero;
-
-	private float lastExtensionArmState;
-
-	private float lastRaiseArmState;
-
-	private float lastYawState;
-
-	private bool handbrakeOn = true;
-
-	private float nextSelfHealTime;
-
-	private Vector3 lastDamagePos = Vector3.zero;
-
-	private float lastDrivenTime;
-
-	private float lastFixedUpdateTime;
-
-	private CarPhysics<MagnetCrane> carPhysics;
-
-	private VehicleTerrainHandler serverTerrainHandler;
-
-	private Vector3 customInertiaTensor = new Vector3(25000f, 11000f, 19000f);
-
-	private float extensionArmState;
-
-	private float raiseArmState;
-
-	private float yawState = 1f;
-
 	[Header("Magnet Crane")]
 	public Animator animator;
 
@@ -159,6 +109,58 @@ public class MagnetCrane : GroundVehicle, CarPhysics<MagnetCrane>.ICar
 
 	private static int arm2Param = Animator.StringToHash("Arm_02");
 
+	private float steerInput;
+
+	private float throttleInput;
+
+	private float brakeInput;
+
+	private float yawInput;
+
+	private float extensionInput;
+
+	private float raiseArmInput;
+
+	private float extensionMove;
+
+	private float yawMove;
+
+	private float raiseArmMove;
+
+	private float nextToggleTime;
+
+	private Vector3 spawnOrigin = Vector3.zero;
+
+	private float lastExtensionArmState;
+
+	private float lastRaiseArmState;
+
+	private float lastYawState;
+
+	private bool handbrakeOn = true;
+
+	private float nextSelfHealTime;
+
+	private Vector3 lastDamagePos = Vector3.zero;
+
+	private float lastDrivenTime;
+
+	private float lastFixedUpdateTime;
+
+	private CarPhysics<MagnetCrane> carPhysics;
+
+	private VehicleTerrainHandler serverTerrainHandler;
+
+	private Vector3 customInertiaTensor = new Vector3(25000f, 11000f, 19000f);
+
+	private float extensionArmState;
+
+	private float raiseArmState;
+
+	private float yawState = 1f;
+
+	public override float DriveWheelVelocity => GetSpeed();
+
 	public VehicleTerrainHandler.Surface OnSurface
 	{
 		get
@@ -171,8 +173,6 @@ public class MagnetCrane : GroundVehicle, CarPhysics<MagnetCrane>.ICar
 		}
 	}
 
-	public override float DriveWheelVelocity => GetSpeed();
-
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
 		TimeWarning val = TimeWarning.New("MagnetCrane.OnRpcMessage", 0);
@@ -183,7 +183,7 @@ public class MagnetCrane : GroundVehicle, CarPhysics<MagnetCrane>.ICar
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_OpenFuel "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_OpenFuel "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_OpenFuel", 0);
 				try
@@ -220,6 +220,57 @@ public class MagnetCrane : GroundVehicle, CarPhysics<MagnetCrane>.ICar
 			((IDisposable)val)?.Dispose();
 		}
 		return base.OnRpcMessage(player, rpc, msg);
+	}
+
+	public override float GetThrottleInput()
+	{
+		if (base.isServer)
+		{
+			return throttleInput;
+		}
+		throw new NotImplementedException("We don't know magnet crane throttle input on the client.");
+	}
+
+	public override float GetBrakeInput()
+	{
+		if (base.isServer)
+		{
+			if (handbrakeOn)
+			{
+				return 1f;
+			}
+			return brakeInput;
+		}
+		throw new NotImplementedException("We don't know magnet crane brake input on the client.");
+	}
+
+	public override void Load(LoadInfo info)
+	{
+		base.Load(info);
+		if (info.msg.crane != null && base.isServer)
+		{
+			yawState = info.msg.crane.yaw;
+			extensionArmState = info.msg.crane.arm1;
+			raiseArmState = info.msg.crane.arm2;
+		}
+	}
+
+	public override float GetMaxForwardSpeed()
+	{
+		return 13f;
+	}
+
+	public override bool CanBeLooted(BasePlayer player)
+	{
+		if (!base.CanBeLooted(player))
+		{
+			return false;
+		}
+		if (!PlayerIsMounted(player))
+		{
+			return !IsOn();
+		}
+		return true;
 	}
 
 	public override void ServerInit()
@@ -356,9 +407,14 @@ public class MagnetCrane : GroundVehicle, CarPhysics<MagnetCrane>.ICar
 		return steerInput;
 	}
 
-	public bool GetSteerModInput()
+	public bool GetSteerSpeedMod()
 	{
 		return false;
+	}
+
+	public float GetSteerMaxMult()
+	{
+		return 1f;
 	}
 
 	public override void OnEngineStartFailed()
@@ -654,56 +710,5 @@ public class MagnetCrane : GroundVehicle, CarPhysics<MagnetCrane>.ICar
 		{
 			GetFuelSystem().LootFuel(player);
 		}
-	}
-
-	public override float GetThrottleInput()
-	{
-		if (base.isServer)
-		{
-			return throttleInput;
-		}
-		throw new NotImplementedException("We don't know magnet crane throttle input on the client.");
-	}
-
-	public override float GetBrakeInput()
-	{
-		if (base.isServer)
-		{
-			if (handbrakeOn)
-			{
-				return 1f;
-			}
-			return brakeInput;
-		}
-		throw new NotImplementedException("We don't know magnet crane brake input on the client.");
-	}
-
-	public override void Load(LoadInfo info)
-	{
-		base.Load(info);
-		if (info.msg.crane != null && base.isServer)
-		{
-			yawState = info.msg.crane.yaw;
-			extensionArmState = info.msg.crane.arm1;
-			raiseArmState = info.msg.crane.arm2;
-		}
-	}
-
-	public override float GetMaxForwardSpeed()
-	{
-		return 13f;
-	}
-
-	public override bool CanBeLooted(BasePlayer player)
-	{
-		if (!base.CanBeLooted(player))
-		{
-			return false;
-		}
-		if (!PlayerIsMounted(player))
-		{
-			return !IsOn();
-		}
-		return true;
 	}
 }

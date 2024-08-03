@@ -27,7 +27,7 @@ public class GameManager
 		Clientside = clientside;
 		Serverside = serverside;
 		preProcessed = new PrefabPreProcess(clientside, serverside);
-		pool = new PrefabPoolCollection();
+		pool = new PrefabPoolCollection(clientside);
 	}
 
 	public GameObject FindPrefab(uint prefabID)
@@ -61,7 +61,15 @@ public class GameManager
 		{
 			return null;
 		}
-		preProcessed.Process(strPrefab, val);
+		try
+		{
+			preProcessed.Process(strPrefab, val);
+		}
+		catch
+		{
+			Debug.LogError((object)("Failed to preprocess prefab: " + strPrefab));
+			throw;
+		}
 		GameObject val2 = preProcessed.Find(strPrefab);
 		if (!((Object)(object)val2 != (Object)null))
 		{
@@ -164,7 +172,7 @@ public class GameManager
 		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b7: Unknown result type (might be due to invalid IL or missing references)
 		if (!StringEx.IsLower(strPrefab))
 		{
 			Debug.LogWarning((object)("Converting prefab name to lowercase: " + strPrefab));
@@ -186,7 +194,7 @@ public class GameManager
 		{
 			val2.transform.localScale = val.transform.localScale;
 		}
-		if (!Clientside && Serverside && (Object)(object)val2.transform.parent == (Object)null)
+		if (!Clientside && Serverside && (Object)(object)val2.transform.parent == (Object)null && Application.isPlaying)
 		{
 			SceneManager.MoveGameObjectToScene(val2, Rust.Server.EntityScene);
 		}

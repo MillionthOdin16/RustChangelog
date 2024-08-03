@@ -31,6 +31,16 @@ public class GrowableEntity : BaseCombatEntity, IInstanceDataReceiver
 		}
 	}
 
+	public PlantProperties Properties;
+
+	public ItemDefinition SourceItemDef;
+
+	private float stageAge;
+
+	public GrowableGenes Genes = new GrowableGenes();
+
+	private const float startingHealth = 10f;
+
 	private const float artificalLightQuality = 1f;
 
 	private const float planterGroundModifierBase = 0.6f;
@@ -77,29 +87,6 @@ public class GrowableEntity : BaseCombatEntity, IInstanceDataReceiver
 
 	private PlanterBox planter;
 
-	public PlantProperties Properties;
-
-	public ItemDefinition SourceItemDef;
-
-	private float stageAge;
-
-	public GrowableGenes Genes = new GrowableGenes();
-
-	private const float startingHealth = 10f;
-
-	public float CurrentTemperature
-	{
-		get
-		{
-			//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-			if ((Object)(object)GetPlanter() != (Object)null)
-			{
-				return GetPlanter().GetPlantTemperature();
-			}
-			return Climate.GetTemperature(((Component)this).transform.position) + (artificialTemperatureExposure?.Get(force: false) ?? 0f);
-		}
-	}
-
 	public PlantProperties.State State { get; private set; }
 
 	public float Age { get; private set; }
@@ -133,6 +120,19 @@ public class GrowableEntity : BaseCombatEntity, IInstanceDataReceiver
 
 	public float CurrentPickAmountFloat => (currentStage.resources + Yield) * (float)Properties.pickupMultiplier;
 
+	public float CurrentTemperature
+	{
+		get
+		{
+			//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+			if ((Object)(object)GetPlanter() != (Object)null)
+			{
+				return GetPlanter().GetPlantTemperature();
+			}
+			return Climate.GetTemperature(((Component)this).transform.position) + (artificialTemperatureExposure?.Get(force: false) ?? 0f);
+		}
+	}
+
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
 		TimeWarning val = TimeWarning.New("GrowableEntity.OnRpcMessage", 0);
@@ -143,7 +143,7 @@ public class GrowableEntity : BaseCombatEntity, IInstanceDataReceiver
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_EatFruit "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_EatFruit "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_EatFruit", 0);
 				try
@@ -198,7 +198,7 @@ public class GrowableEntity : BaseCombatEntity, IInstanceDataReceiver
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_PickFruit "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_PickFruit "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_PickFruit", 0);
 				try
@@ -253,7 +253,7 @@ public class GrowableEntity : BaseCombatEntity, IInstanceDataReceiver
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_PickFruitAll "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_PickFruitAll "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_PickFruitAll", 0);
 				try
@@ -308,7 +308,7 @@ public class GrowableEntity : BaseCombatEntity, IInstanceDataReceiver
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_RemoveDying "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_RemoveDying "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_RemoveDying", 0);
 				try
@@ -359,7 +359,7 @@ public class GrowableEntity : BaseCombatEntity, IInstanceDataReceiver
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_RemoveDyingAll "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_RemoveDyingAll "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_RemoveDyingAll", 0);
 				try
@@ -410,7 +410,7 @@ public class GrowableEntity : BaseCombatEntity, IInstanceDataReceiver
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_RequestQualityUpdate "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_RequestQualityUpdate "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_RequestQualityUpdate", 0);
 				try
@@ -461,7 +461,7 @@ public class GrowableEntity : BaseCombatEntity, IInstanceDataReceiver
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_TakeClone "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_TakeClone "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_TakeClone", 0);
 				try
@@ -516,7 +516,7 @@ public class GrowableEntity : BaseCombatEntity, IInstanceDataReceiver
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_TakeCloneAll "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_TakeCloneAll "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_TakeCloneAll", 0);
 				try
@@ -572,6 +572,129 @@ public class GrowableEntity : BaseCombatEntity, IInstanceDataReceiver
 			((IDisposable)val)?.Dispose();
 		}
 		return base.OnRpcMessage(player, rpc, msg);
+	}
+
+	public void ReceiveInstanceData(InstanceData data)
+	{
+		GrowableGeneEncoding.DecodeIntToGenes(data.dataInt, Genes);
+		GrowableGeneEncoding.DecodeIntToPreviousGenes(data.dataInt, Genes);
+	}
+
+	public override void ResetState()
+	{
+		base.ResetState();
+		State = PlantProperties.State.Seed;
+	}
+
+	public bool CanPick()
+	{
+		return currentStage.resources > 0f;
+	}
+
+	public bool CanTakeSeeds()
+	{
+		if (currentStage.resources > 0f)
+		{
+			return (Object)(object)Properties.SeedItem != (Object)null;
+		}
+		return false;
+	}
+
+	public bool CanClone()
+	{
+		if (currentStage.resources > 0f)
+		{
+			return (Object)(object)Properties.CloneItem != (Object)null;
+		}
+		return false;
+	}
+
+	public override void Save(SaveInfo info)
+	{
+		base.Save(info);
+		info.msg.growableEntity = Pool.Get<GrowableEntity>();
+		info.msg.growableEntity.state = (int)State;
+		info.msg.growableEntity.totalAge = Age;
+		info.msg.growableEntity.stageAge = stageAge;
+		info.msg.growableEntity.yieldFraction = Yield;
+		info.msg.growableEntity.yieldPool = yieldPool;
+		info.msg.growableEntity.fertilized = Fertilized;
+		if (Genes != null)
+		{
+			Genes.Save(info);
+		}
+		if (!info.forDisk)
+		{
+			info.msg.growableEntity.lightModifier = LightQuality;
+			info.msg.growableEntity.groundModifier = GroundQuality;
+			info.msg.growableEntity.waterModifier = WaterQuality;
+			info.msg.growableEntity.happiness = OverallQuality;
+			info.msg.growableEntity.temperatureModifier = TemperatureQuality;
+			info.msg.growableEntity.waterConsumption = WaterConsumption;
+		}
+	}
+
+	public override void Load(LoadInfo info)
+	{
+		base.Load(info);
+		if (info.msg.growableEntity != null)
+		{
+			Age = info.msg.growableEntity.totalAge;
+			stageAge = info.msg.growableEntity.stageAge;
+			Yield = info.msg.growableEntity.yieldFraction;
+			Fertilized = info.msg.growableEntity.fertilized;
+			yieldPool = info.msg.growableEntity.yieldPool;
+			Genes.Load(info);
+			ChangeState((PlantProperties.State)info.msg.growableEntity.state, resetAge: false, loading: true);
+		}
+		else
+		{
+			Genes.GenerateRandom(this);
+		}
+	}
+
+	private void ChangeState(PlantProperties.State state, bool resetAge, bool loading = false)
+	{
+		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
+		if (base.isServer && State == state)
+		{
+			return;
+		}
+		State = state;
+		if (!base.isServer)
+		{
+			return;
+		}
+		if (!loading)
+		{
+			if (currentStage.resources > 0f)
+			{
+				yieldPool = currentStage.yield;
+			}
+			if (state == PlantProperties.State.Crossbreed)
+			{
+				if (Properties.CrossBreedEffect.isValid)
+				{
+					Effect.server.Run(Properties.CrossBreedEffect.resourcePath, ((Component)this).transform.position, Vector3.up);
+				}
+				GrowableGenetics.CrossBreed(this);
+			}
+			SendNetworkUpdate();
+		}
+		if (resetAge)
+		{
+			stageAge = 0f;
+		}
+	}
+
+	public override void OnDeployed(BaseEntity parent, BasePlayer deployedBy, Item fromItem)
+	{
+		base.OnDeployed(parent, deployedBy, fromItem);
+		if ((Object)(object)parent != (Object)null && parent is PlanterBox planterBox)
+		{
+			planterBox.OnPlantInserted(this, deployedBy);
+		}
 	}
 
 	public void QueueForQualityUpdate()
@@ -1414,130 +1537,7 @@ public class GrowableEntity : BaseCombatEntity, IInstanceDataReceiver
 			val.happiness = OverallQuality;
 			val.temperatureModifier = TemperatureQuality;
 			val.waterConsumption = WaterConsumption;
-			ClientRPCPlayer<GrowableEntity>(null, msg.player, "RPC_ReceiveQualityUpdate", val);
-		}
-	}
-
-	public void ReceiveInstanceData(InstanceData data)
-	{
-		GrowableGeneEncoding.DecodeIntToGenes(data.dataInt, Genes);
-		GrowableGeneEncoding.DecodeIntToPreviousGenes(data.dataInt, Genes);
-	}
-
-	public override void ResetState()
-	{
-		base.ResetState();
-		State = PlantProperties.State.Seed;
-	}
-
-	public bool CanPick()
-	{
-		return currentStage.resources > 0f;
-	}
-
-	public bool CanTakeSeeds()
-	{
-		if (currentStage.resources > 0f)
-		{
-			return (Object)(object)Properties.SeedItem != (Object)null;
-		}
-		return false;
-	}
-
-	public bool CanClone()
-	{
-		if (currentStage.resources > 0f)
-		{
-			return (Object)(object)Properties.CloneItem != (Object)null;
-		}
-		return false;
-	}
-
-	public override void Save(SaveInfo info)
-	{
-		base.Save(info);
-		info.msg.growableEntity = Pool.Get<GrowableEntity>();
-		info.msg.growableEntity.state = (int)State;
-		info.msg.growableEntity.totalAge = Age;
-		info.msg.growableEntity.stageAge = stageAge;
-		info.msg.growableEntity.yieldFraction = Yield;
-		info.msg.growableEntity.yieldPool = yieldPool;
-		info.msg.growableEntity.fertilized = Fertilized;
-		if (Genes != null)
-		{
-			Genes.Save(info);
-		}
-		if (!info.forDisk)
-		{
-			info.msg.growableEntity.lightModifier = LightQuality;
-			info.msg.growableEntity.groundModifier = GroundQuality;
-			info.msg.growableEntity.waterModifier = WaterQuality;
-			info.msg.growableEntity.happiness = OverallQuality;
-			info.msg.growableEntity.temperatureModifier = TemperatureQuality;
-			info.msg.growableEntity.waterConsumption = WaterConsumption;
-		}
-	}
-
-	public override void Load(LoadInfo info)
-	{
-		base.Load(info);
-		if (info.msg.growableEntity != null)
-		{
-			Age = info.msg.growableEntity.totalAge;
-			stageAge = info.msg.growableEntity.stageAge;
-			Yield = info.msg.growableEntity.yieldFraction;
-			Fertilized = info.msg.growableEntity.fertilized;
-			yieldPool = info.msg.growableEntity.yieldPool;
-			Genes.Load(info);
-			ChangeState((PlantProperties.State)info.msg.growableEntity.state, resetAge: false, loading: true);
-		}
-		else
-		{
-			Genes.GenerateRandom(this);
-		}
-	}
-
-	private void ChangeState(PlantProperties.State state, bool resetAge, bool loading = false)
-	{
-		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
-		if (base.isServer && State == state)
-		{
-			return;
-		}
-		State = state;
-		if (!base.isServer)
-		{
-			return;
-		}
-		if (!loading)
-		{
-			if (currentStage.resources > 0f)
-			{
-				yieldPool = currentStage.yield;
-			}
-			if (state == PlantProperties.State.Crossbreed)
-			{
-				if (Properties.CrossBreedEffect.isValid)
-				{
-					Effect.server.Run(Properties.CrossBreedEffect.resourcePath, ((Component)this).transform.position, Vector3.up);
-				}
-				GrowableGenetics.CrossBreed(this);
-			}
-			SendNetworkUpdate();
-		}
-		if (resetAge)
-		{
-			stageAge = 0f;
-		}
-	}
-
-	public override void OnDeployed(BaseEntity parent, BasePlayer deployedBy, Item fromItem)
-	{
-		base.OnDeployed(parent, deployedBy, fromItem);
-		if ((Object)(object)parent != (Object)null && parent is PlanterBox planterBox)
-		{
-			planterBox.OnPlantInserted(this, deployedBy);
+			ClientRPC<GrowableEntity>(RpcTarget.Player("RPC_ReceiveQualityUpdate", msg.player), val);
 		}
 	}
 }

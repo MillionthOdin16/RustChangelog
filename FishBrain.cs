@@ -125,16 +125,17 @@ public class FishBrain : BaseAIBrain
 		{
 			//IL_0029: Unknown result type (might be due to invalid IL or missing references)
 			//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-			//IL_003b: Unknown result type (might be due to invalid IL or missing references)
-			//IL_004c: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0051: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0058: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+			//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_005c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0061: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0068: Unknown result type (might be due to invalid IL or missing references)
 			base.StateEnter(brain, entity);
 			status = StateStatus.Error;
 			if (brain.PathFinder != null)
 			{
 				Vector3 fallbackPos = brain.Events.Memory.Position.Get(4);
-				Vector3 bestRoamPosition = brain.PathFinder.GetBestRoamPosition(brain.Navigator, fallbackPos, 5f, brain.Navigator.MaxRoamDistanceFromHome);
+				Vector3 bestRoamPosition = brain.PathFinder.GetBestRoamPosition(brain.Navigator, ((Component)brain.Navigator).transform.position, fallbackPos, 5f, brain.Navigator.MaxRoamDistanceFromHome);
 				if (brain.Navigator.SetDestination(bestRoamPosition, BaseNavigator.NavigationSpeed.Normal))
 				{
 					status = StateStatus.Running;

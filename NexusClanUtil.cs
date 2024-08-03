@@ -36,9 +36,27 @@ public static class NexusClanUtil
 		return SteamIdToPlayerId.Get(steamId);
 	}
 
+	public static string GetPlayerId(ulong? steamId)
+	{
+		if (!steamId.HasValue)
+		{
+			return null;
+		}
+		return SteamIdToPlayerId.Get(steamId.Value);
+	}
+
 	public static ulong GetSteamId(string playerId)
 	{
 		return ulong.Parse(playerId);
+	}
+
+	public static ulong? TryGetSteamId(string playerId)
+	{
+		if (!ulong.TryParse(playerId, out var result))
+		{
+			return null;
+		}
+		return result;
 	}
 
 	public static void GetMotd(this NexusClan clan, out string motd, out long motdTimestamp, out ulong motdAuthor)
@@ -81,7 +99,7 @@ public static class NexusClanUtil
 	public static ClanRole ToClanRole(this NexusClanRole role)
 	{
 		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011d: Unknown result type (might be due to invalid IL or missing references)
 		bool flag = role.Rank == 1;
 		ClanRole result = default(ClanRole);
 		result.RoleId = role.RoleId;
@@ -98,6 +116,7 @@ public static class NexusClanUtil
 		Variable variable3 = default(Variable);
 		result.CanSetPlayerNotes = flag || (role.TryGetVariable("can_set_player_notes", ref variable3) && ParseFlag(variable3));
 		result.CanAccessLogs = flag || role.CanAccessLogs;
+		result.CanAccessScoreEvents = flag || role.CanAccessScoreEvents;
 		return result;
 	}
 
@@ -160,13 +179,14 @@ public static class NexusClanUtil
 		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
 		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
 		ClanRoleParameters result = default(ClanRoleParameters);
 		((ClanRoleParameters)(ref result)).Name = role.Name;
 		((ClanRoleParameters)(ref result)).CanInvite = role.CanInvite;
@@ -174,6 +194,7 @@ public static class NexusClanUtil
 		((ClanRoleParameters)(ref result)).CanPromote = role.CanPromote;
 		((ClanRoleParameters)(ref result)).CanDemote = role.CanDemote;
 		((ClanRoleParameters)(ref result)).CanAccessLogs = role.CanAccessLogs;
+		((ClanRoleParameters)(ref result)).CanAccessScoreEvents = role.CanAccessScoreEvents;
 		((ClanRoleParameters)(ref result)).Variables = new List<VariableUpdate>(3)
 		{
 			FlagVariable("can_set_logo", role.CanSetLogo),

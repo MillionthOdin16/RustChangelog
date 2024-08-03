@@ -9,10 +9,6 @@ using UnityEngine.Assertions;
 
 public class PhotoFrame : StorageContainer, ILOD, IImageReceiver, ISignage, IUGCBrowserEntity
 {
-	public GameObjectRef SignEditorDialog;
-
-	public OverlayMeshPaintableSource PaintableSource;
-
 	private const float TextureRequestDistance = 100f;
 
 	private EntityRef _photoEntity;
@@ -21,9 +17,9 @@ public class PhotoFrame : StorageContainer, ILOD, IImageReceiver, ISignage, IUGC
 
 	private List<ulong> editHistory = new List<ulong>();
 
-	public Vector2i TextureSize => new Vector2i(PaintableSource.texWidth, PaintableSource.texHeight);
+	public GameObjectRef SignEditorDialog;
 
-	public int TextureCount => 1;
+	public OverlayMeshPaintableSource PaintableSource;
 
 	public NetworkableId NetworkID => net.ID;
 
@@ -35,7 +31,13 @@ public class PhotoFrame : StorageContainer, ILOD, IImageReceiver, ISignage, IUGC
 
 	public uint[] GetContentCRCs => new uint[1] { _overlayTextureCrc };
 
+	public override bool ShouldTransferAssociatedFiles => true;
+
 	public BaseNetworkable UgcEntity => this;
+
+	public Vector2i TextureSize => new Vector2i(PaintableSource.texWidth, PaintableSource.texHeight);
+
+	public int TextureCount => 1;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -47,7 +49,7 @@ public class PhotoFrame : StorageContainer, ILOD, IImageReceiver, ISignage, IUGC
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - LockSign "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - LockSign "));
 				}
 				TimeWarning val2 = TimeWarning.New("LockSign", 0);
 				try
@@ -98,7 +100,7 @@ public class PhotoFrame : StorageContainer, ILOD, IImageReceiver, ISignage, IUGC
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - UnLockSign "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - UnLockSign "));
 				}
 				TimeWarning val2 = TimeWarning.New("UnLockSign", 0);
 				try
@@ -149,7 +151,7 @@ public class PhotoFrame : StorageContainer, ILOD, IImageReceiver, ISignage, IUGC
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - UpdateSign "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - UpdateSign "));
 				}
 				TimeWarning val2 = TimeWarning.New("UpdateSign", 0);
 				try
@@ -205,105 +207,6 @@ public class PhotoFrame : StorageContainer, ILOD, IImageReceiver, ISignage, IUGC
 			((IDisposable)val)?.Dispose();
 		}
 		return base.OnRpcMessage(player, rpc, msg);
-	}
-
-	public bool CanUpdateSign(BasePlayer player)
-	{
-		if (player.IsAdmin || player.IsDeveloper)
-		{
-			return true;
-		}
-		if (!player.CanBuild())
-		{
-			return false;
-		}
-		if (IsLocked())
-		{
-			return player.userID == base.OwnerID;
-		}
-		return true;
-	}
-
-	public bool CanUnlockSign(BasePlayer player)
-	{
-		if (!IsLocked())
-		{
-			return false;
-		}
-		return CanUpdateSign(player);
-	}
-
-	public bool CanLockSign(BasePlayer player)
-	{
-		if (IsLocked())
-		{
-			return false;
-		}
-		return CanUpdateSign(player);
-	}
-
-	[RPC_Server]
-	[RPC_Server.MaxDistance(5f)]
-	[RPC_Server.CallsPerSecond(3uL)]
-	public void UpdateSign(RPCMessage msg)
-	{
-		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
-		if (!((Object)(object)msg.player == (Object)null) && CanUpdateSign(msg.player))
-		{
-			byte[] array = msg.read.BytesWithSize(10485760u);
-			if (array != null && ImageProcessing.IsValidPNG(array, 1024, 1024))
-			{
-				FileStorage.server.RemoveAllByEntity(net.ID);
-				_overlayTextureCrc = FileStorage.server.Store(array, FileStorage.Type.png, net.ID);
-				LogEdit(msg.player);
-				SendNetworkUpdate();
-			}
-		}
-	}
-
-	[RPC_Server]
-	[RPC_Server.MaxDistance(3f)]
-	public void LockSign(RPCMessage msg)
-	{
-		if (msg.player.CanInteract() && CanUpdateSign(msg.player))
-		{
-			SetFlag(Flags.Locked, b: true);
-			SendNetworkUpdate();
-			base.OwnerID = msg.player.userID;
-		}
-	}
-
-	[RPC_Server]
-	[RPC_Server.MaxDistance(3f)]
-	public void UnLockSign(RPCMessage msg)
-	{
-		if (msg.player.CanInteract() && CanUnlockSign(msg.player))
-		{
-			SetFlag(Flags.Locked, b: false);
-			SendNetworkUpdate();
-		}
-	}
-
-	public override void OnKilled(HitInfo info)
-	{
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-		if (net != null)
-		{
-			FileStorage.server.RemoveAllByEntity(net.ID);
-		}
-		_overlayTextureCrc = 0u;
-		base.OnKilled(info);
-	}
-
-	public override bool ShouldNetworkOwnerInfo()
-	{
-		return true;
-	}
-
-	public override string Categorize()
-	{
-		return "sign";
 	}
 
 	public override void Load(LoadInfo info)
@@ -446,5 +349,104 @@ public class PhotoFrame : StorageContainer, ILOD, IImageReceiver, ISignage, IUGC
 			return !((NetworkableId)(ref uid)).IsValid;
 		}
 		return false;
+	}
+
+	public bool CanUpdateSign(BasePlayer player)
+	{
+		if (player.IsAdmin || player.IsDeveloper)
+		{
+			return true;
+		}
+		if (!player.CanBuild())
+		{
+			return false;
+		}
+		if (IsLocked())
+		{
+			return (ulong)player.userID == base.OwnerID;
+		}
+		return true;
+	}
+
+	public bool CanUnlockSign(BasePlayer player)
+	{
+		if (!IsLocked())
+		{
+			return false;
+		}
+		return CanUpdateSign(player);
+	}
+
+	public bool CanLockSign(BasePlayer player)
+	{
+		if (IsLocked())
+		{
+			return false;
+		}
+		return CanUpdateSign(player);
+	}
+
+	[RPC_Server]
+	[RPC_Server.MaxDistance(5f)]
+	[RPC_Server.CallsPerSecond(3uL)]
+	public void UpdateSign(RPCMessage msg)
+	{
+		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
+		if (!((Object)(object)msg.player == (Object)null) && CanUpdateSign(msg.player))
+		{
+			byte[] array = msg.read.BytesWithSize(10485760u, false);
+			if (array != null && ImageProcessing.IsValidPNG(array, 1024, 1024))
+			{
+				FileStorage.server.RemoveAllByEntity(net.ID);
+				_overlayTextureCrc = FileStorage.server.Store(array, FileStorage.Type.png, net.ID);
+				LogEdit(msg.player);
+				SendNetworkUpdate();
+			}
+		}
+	}
+
+	[RPC_Server]
+	[RPC_Server.MaxDistance(3f)]
+	public void LockSign(RPCMessage msg)
+	{
+		if (msg.player.CanInteract() && CanUpdateSign(msg.player))
+		{
+			SetFlag(Flags.Locked, b: true);
+			SendNetworkUpdate();
+			base.OwnerID = msg.player.userID;
+		}
+	}
+
+	[RPC_Server]
+	[RPC_Server.MaxDistance(3f)]
+	public void UnLockSign(RPCMessage msg)
+	{
+		if (msg.player.CanInteract() && CanUnlockSign(msg.player))
+		{
+			SetFlag(Flags.Locked, b: false);
+			SendNetworkUpdate();
+		}
+	}
+
+	public override void OnKilled(HitInfo info)
+	{
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		if (net != null)
+		{
+			FileStorage.server.RemoveAllByEntity(net.ID);
+		}
+		_overlayTextureCrc = 0u;
+		base.OnKilled(info);
+	}
+
+	public override bool ShouldNetworkOwnerInfo()
+	{
+		return true;
+	}
+
+	public override string Categorize()
+	{
+		return "sign";
 	}
 }

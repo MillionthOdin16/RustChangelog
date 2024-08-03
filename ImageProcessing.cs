@@ -290,6 +290,11 @@ public static class ImageProcessing
 		}
 	}
 
+	public static bool IsValidPNG(byte[] data, int maxSizeSquare)
+	{
+		return IsValidPNG(data, maxSizeSquare, maxSizeSquare);
+	}
+
 	public static bool IsValidPNG(byte[] data, int maxWidth, int maxHeight)
 	{
 		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
@@ -361,6 +366,11 @@ public static class ImageProcessing
 			return false;
 		}
 		return true;
+	}
+
+	public static bool IsValidJPG(byte[] data, int maxSizeSquare)
+	{
+		return IsValidJPG(data, maxSizeSquare, maxSizeSquare);
 	}
 
 	public static bool IsValidJPG(byte[] data, int maxWidth, int maxHeight)

@@ -19,7 +19,8 @@ public class NPCNavigator : BaseNavigator
 
 	public override void OnFailedToPlaceOnNavmesh()
 	{
-		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
 		base.OnFailedToPlaceOnNavmesh();
 		if ((Object)(object)SingletonComponent<DynamicNavMesh>.Instance == (Object)null || SingletonComponent<DynamicNavMesh>.Instance.IsBuilding)
 		{
@@ -28,7 +29,20 @@ public class NPCNavigator : BaseNavigator
 		sampleFailCount++;
 		if (DestroyOnFailedSampleCount > 0 && sampleFailCount >= DestroyOnFailedSampleCount)
 		{
-			Debug.LogWarning((object)string.Concat("Failed to sample navmesh ", sampleFailCount, " times in a row at: ", ((Component)this).transform.position, ". Destroying: ", ((Object)((Component)this).gameObject).name));
+			string[] obj = new string[6]
+			{
+				"Failed to sample navmesh ",
+				sampleFailCount.ToString(),
+				" times in a row at: ",
+				null,
+				null,
+				null
+			};
+			Vector3 position = ((Component)this).transform.position;
+			obj[3] = ((object)(Vector3)(ref position)).ToString();
+			obj[4] = ". Destroying: ";
+			obj[5] = ((Object)((Component)this).gameObject).name;
+			Debug.LogWarning((object)string.Concat(obj));
 			if ((Object)(object)NPC != (Object)null && !NPC.IsDestroyed)
 			{
 				NPC.Kill();

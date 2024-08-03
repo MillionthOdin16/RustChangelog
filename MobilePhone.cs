@@ -20,7 +20,7 @@ public class MobilePhone : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - AnswerPhone "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - AnswerPhone "));
 				}
 				TimeWarning val2 = TimeWarning.New("AnswerPhone", 0);
 				try
@@ -71,7 +71,7 @@ public class MobilePhone : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ClearCurrentUser "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ClearCurrentUser "));
 				}
 				TimeWarning val2 = TimeWarning.New("ClearCurrentUser", 0);
 				try
@@ -122,7 +122,7 @@ public class MobilePhone : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - InitiateCall "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - InitiateCall "));
 				}
 				TimeWarning val2 = TimeWarning.New("InitiateCall", 0);
 				try
@@ -173,7 +173,7 @@ public class MobilePhone : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_AddSavedNumber "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_AddSavedNumber "));
 				}
 				TimeWarning val2 = TimeWarning.New("Server_AddSavedNumber", 0);
 				try
@@ -228,7 +228,7 @@ public class MobilePhone : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_RemoveSavedNumber "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_RemoveSavedNumber "));
 				}
 				TimeWarning val2 = TimeWarning.New("Server_RemoveSavedNumber", 0);
 				try
@@ -283,7 +283,7 @@ public class MobilePhone : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_RequestCurrentState "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_RequestCurrentState "));
 				}
 				TimeWarning val2 = TimeWarning.New("Server_RequestCurrentState", 0);
 				try
@@ -334,7 +334,7 @@ public class MobilePhone : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_RequestPhoneDirectory "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_RequestPhoneDirectory "));
 				}
 				TimeWarning val2 = TimeWarning.New("Server_RequestPhoneDirectory", 0);
 				try
@@ -389,7 +389,7 @@ public class MobilePhone : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ServerDeleteVoicemail "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ServerDeleteVoicemail "));
 				}
 				TimeWarning val2 = TimeWarning.New("ServerDeleteVoicemail", 0);
 				try
@@ -444,7 +444,7 @@ public class MobilePhone : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ServerHangUp "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ServerHangUp "));
 				}
 				TimeWarning val2 = TimeWarning.New("ServerHangUp", 0);
 				try
@@ -495,7 +495,7 @@ public class MobilePhone : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ServerPlayVoicemail "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ServerPlayVoicemail "));
 				}
 				TimeWarning val2 = TimeWarning.New("ServerPlayVoicemail", 0);
 				try
@@ -550,7 +550,7 @@ public class MobilePhone : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ServerSendVoicemail "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ServerSendVoicemail "));
 				}
 				TimeWarning val2 = TimeWarning.New("ServerSendVoicemail", 0);
 				try
@@ -601,7 +601,7 @@ public class MobilePhone : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ServerStopVoicemail "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ServerStopVoicemail "));
 				}
 				TimeWarning val2 = TimeWarning.New("ServerStopVoicemail", 0);
 				try
@@ -656,7 +656,7 @@ public class MobilePhone : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SetCurrentUser "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SetCurrentUser "));
 				}
 				TimeWarning val2 = TimeWarning.New("SetCurrentUser", 0);
 				try
@@ -707,7 +707,7 @@ public class MobilePhone : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - UpdatePhoneName "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - UpdatePhoneName "));
 				}
 				TimeWarning val2 = TimeWarning.New("UpdatePhoneName", 0);
 				try

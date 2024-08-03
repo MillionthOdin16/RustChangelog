@@ -6,6 +6,10 @@ public class Monument : TerrainPlacement
 
 	public float Fade = 10f;
 
+	public bool AutoCliffSplat = true;
+
+	public bool AutoCliffTopology = true;
+
 	protected void OnDrawGizmosSelected()
 	{
 		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
@@ -76,8 +80,8 @@ public class Monument : TerrainPlacement
 			//IL_0062: Unknown result type (might be due to invalid IL or missing references)
 			//IL_008a: Unknown result type (might be due to invalid IL or missing references)
 			//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
-			//IL_011b: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0143: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0176: Unknown result type (might be due to invalid IL or missing references)
+			//IL_019e: Unknown result type (might be due to invalid IL or missing references)
 			float normZ = TerrainMeta.HeightMap.Coordinate(z);
 			float normX = TerrainMeta.HeightMap.Coordinate(x);
 			Vector3 val = default(Vector3);
@@ -87,17 +91,25 @@ public class Monument : TerrainPlacement
 			num3 = ((!useBlendMap) ? Mathf.InverseLerp(Radius, Radius - Fade, Vector3Ex.Magnitude2D(val2)) : blenddata.GetInterpolatedVector((val2.x + extents.x) / size.x, (val2.z + extents.z) / size.z).w);
 			if (num3 != 0f)
 			{
-				float num4 = TerrainMeta.NormalizeY(position.y + offset.y + heightdata.GetInterpolatedHalf((val2.x + extents.x) / size.x, (val2.z + extents.z) / size.z) * size.y);
-				num4 = Mathf.SmoothStep(TerrainMeta.HeightMap.GetHeight01(x, z), num4, num3);
-				TerrainMeta.HeightMap.SetHeight(x, z, num4);
+				int num4 = Mathx.Min(x, z, TerrainMeta.HeightMap.res - 1 - x, TerrainMeta.HeightMap.res - 1 - z);
+				if (num4 < 10)
+				{
+					num3 *= Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0f, 10f, (float)num4));
+				}
+				if (num3 != 0f)
+				{
+					float num5 = TerrainMeta.NormalizeY(position.y + offset.y + heightdata.GetInterpolatedHalf((val2.x + extents.x) / size.x, (val2.z + extents.z) / size.z) * size.y);
+					num5 = Mathf.SmoothStep(TerrainMeta.HeightMap.GetHeight01(x, z), num5, num3);
+					TerrainMeta.HeightMap.SetHeight(x, z, num5);
+				}
 			}
 		});
 	}
 
 	protected override void ApplySplat(Matrix4x4 localToWorld, Matrix4x4 worldToLocal)
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0111: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0129: Unknown result type (might be due to invalid IL or missing references)
 		//IL_012e: Unknown result type (might be due to invalid IL or missing references)
@@ -146,23 +158,26 @@ public class Monument : TerrainPlacement
 		Vector3 v4 = ((Matrix4x4)(ref localToWorld)).MultiplyPoint3x4(offset + new Vector3(Radius, 0f, Radius));
 		TerrainMeta.SplatMap.ForEachParallel(v, v2, v3, v4, delegate(int x, int z)
 		{
-			//IL_003d: Unknown result type (might be due to invalid IL or missing references)
-			//IL_003e: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0049: Unknown result type (might be due to invalid IL or missing references)
-			//IL_004e: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0053: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0076: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0093: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00bb: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00e3: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00e8: Unknown result type (might be due to invalid IL or missing references)
+			//IL_004a: Unknown result type (might be due to invalid IL or missing references)
+			//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0056: Unknown result type (might be due to invalid IL or missing references)
+			//IL_005b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0060: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0083: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00a0: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00c8: Unknown result type (might be due to invalid IL or missing references)
 			//IL_00f0: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0118: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0140: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0145: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01ee: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01f0: Unknown result type (might be due to invalid IL or missing references)
-			GenerateCliffSplat.Process(x, z);
+			//IL_00f5: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00fd: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0125: Unknown result type (might be due to invalid IL or missing references)
+			//IL_014d: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0152: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01fb: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01fd: Unknown result type (might be due to invalid IL or missing references)
+			if (AutoCliffSplat)
+			{
+				GenerateCliffSplat.Process(x, z);
+			}
 			float normZ = TerrainMeta.SplatMap.Coordinate(z);
 			float normX = TerrainMeta.SplatMap.Coordinate(x);
 			Vector3 val = default(Vector3);
@@ -362,8 +377,8 @@ public class Monument : TerrainPlacement
 
 	protected override void ApplyTopology(Matrix4x4 localToWorld, Matrix4x4 worldToLocal)
 	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
@@ -399,17 +414,20 @@ public class Monument : TerrainPlacement
 		Vector3 v4 = ((Matrix4x4)(ref localToWorld)).MultiplyPoint3x4(offset + new Vector3(Radius, 0f, Radius));
 		TerrainMeta.TopologyMap.ForEachParallel(v, v2, v3, v4, delegate(int x, int z)
 		{
-			//IL_003d: Unknown result type (might be due to invalid IL or missing references)
-			//IL_003e: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0049: Unknown result type (might be due to invalid IL or missing references)
-			//IL_004e: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0053: Unknown result type (might be due to invalid IL or missing references)
-			//IL_005a: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0082: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00cf: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00d4: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00da: Expected I4, but got Unknown
-			GenerateCliffTopology.Process(x, z);
+			//IL_004a: Unknown result type (might be due to invalid IL or missing references)
+			//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0056: Unknown result type (might be due to invalid IL or missing references)
+			//IL_005b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0060: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0067: Unknown result type (might be due to invalid IL or missing references)
+			//IL_008f: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00dc: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00e1: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00e7: Expected I4, but got Unknown
+			if (AutoCliffTopology)
+			{
+				GenerateCliffTopology.Process(x, z);
+			}
 			float normZ = TerrainMeta.TopologyMap.Coordinate(z);
 			float normX = TerrainMeta.TopologyMap.Coordinate(x);
 			Vector3 val = default(Vector3);

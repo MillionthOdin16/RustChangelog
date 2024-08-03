@@ -175,42 +175,37 @@ public class FireBall : BaseEntity, ISplashable
 		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0130: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0176: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0188: Unknown result type (might be due to invalid IL or missing references)
-		//IL_018d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0162: Unknown result type (might be due to invalid IL or missing references)
-		List<Collider> list = Pool.GetList<Collider>();
+		//IL_00ee: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0134: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0139: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0146: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0120: Unknown result type (might be due to invalid IL or missing references)
+		List<BaseCombatEntity> list = Pool.GetList<BaseCombatEntity>();
 		Vector3 position = ((Component)this).transform.position + new Vector3(0f, radius * 0.75f, 0f);
-		Vis.Colliders<Collider>(position, radius, list, LayerMask.op_Implicit(AttackLayers), (QueryTriggerInteraction)2);
+		Vis.Entities(position, radius, list, LayerMask.op_Implicit(AttackLayers), (QueryTriggerInteraction)1);
 		HitInfo hitInfo = new HitInfo();
 		hitInfo.DoHitEffects = true;
 		hitInfo.DidHit = true;
 		hitInfo.HitBone = 0u;
 		hitInfo.Initiator = (((Object)(object)creatorEntity == (Object)null) ? ((Component)this).gameObject.ToBaseEntity() : creatorEntity);
 		hitInfo.PointStart = ((Component)this).transform.position;
-		foreach (Collider item in list)
+		foreach (BaseCombatEntity item in list)
 		{
-			if (item.isTrigger && (((Component)item).gameObject.layer == 29 || ((Component)item).gameObject.layer == 18))
+			if (!((Object)(object)item == (Object)null) && item.isServer && item.IsAlive() && (!ignoreNPC || !item.IsNpc) && item.IsVisible(position))
 			{
-				continue;
-			}
-			BaseCombatEntity baseCombatEntity = ((Component)item).gameObject.ToBaseEntity() as BaseCombatEntity;
-			if (!((Object)(object)baseCombatEntity == (Object)null) && baseCombatEntity.isServer && baseCombatEntity.IsAlive() && (!ignoreNPC || !baseCombatEntity.IsNpc) && baseCombatEntity.IsVisible(position))
-			{
-				if (baseCombatEntity is BasePlayer)
+				if (item is BasePlayer)
 				{
-					Effect.server.Run("assets/bundled/prefabs/fx/impacts/additive/fire.prefab", baseCombatEntity, 0u, new Vector3(0f, 1f, 0f), Vector3.up);
+					Effect.server.Run("assets/bundled/prefabs/fx/impacts/additive/fire.prefab", item, 0u, new Vector3(0f, 1f, 0f), Vector3.up);
 				}
-				hitInfo.PointEnd = ((Component)baseCombatEntity).transform.position;
-				hitInfo.HitPositionWorld = ((Component)baseCombatEntity).transform.position;
+				hitInfo.PointEnd = ((Component)item).transform.position;
+				hitInfo.HitPositionWorld = ((Component)item).transform.position;
 				hitInfo.damageTypes.Set(DamageType.Heat, damagePerSecond * tickRate);
-				baseCombatEntity.OnAttacked(hitInfo);
+				item.OnAttacked(hitInfo);
 			}
 		}
-		Pool.FreeList<Collider>(ref list);
+		Pool.FreeList<BaseCombatEntity>(ref list);
 	}
 
 	public bool CanMerge()

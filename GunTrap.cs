@@ -12,6 +12,26 @@ public class GunTrap : StorageContainer
 		public const Flags Triggered = Flags.Reserved1;
 	}
 
+	public class GunTrapScanWorkQueue : PersistentObjectWorkQueue<GunTrap>
+	{
+		protected override void RunJob(GunTrap entity)
+		{
+			if (((PersistentObjectWorkQueue<GunTrap>)this).ShouldAdd(entity))
+			{
+				entity.TriggerCheck();
+			}
+		}
+
+		protected override bool ShouldAdd(GunTrap entity)
+		{
+			if (base.ShouldAdd(entity))
+			{
+				return entity.IsValid();
+			}
+			return false;
+		}
+	}
+
 	public GameObjectRef gun_fire_effect;
 
 	public GameObjectRef bulletEffect;
@@ -31,6 +51,17 @@ public class GunTrap : StorageContainer
 	public ItemDefinition ammoType;
 
 	public TargetTrigger trigger;
+
+	private float triggerCooldown;
+
+	private BuildingPrivlidge _cachedTc;
+
+	private float _cacheTimeout;
+
+	[ServerVar(Help = "How many milliseconds to spend on target scanning per frame")]
+	public static float gun_trap_budget_ms = 0.5f;
+
+	public static GunTrapScanWorkQueue updateGunTrapWorkQueue = new GunTrapScanWorkQueue();
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -93,25 +124,24 @@ public class GunTrap : StorageContainer
 		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
 		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ef: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0164: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0169: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0123: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0130: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0135: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ad: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00af: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0168: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0122: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0127: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0134: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0139: Unknown result type (might be due to invalid IL or missing references)
 		float damageAmount = 10f;
 		Vector3 val = ((Component)muzzlePos).transform.position - muzzlePos.forward * 0.25f;
 		Vector3 val2 = AimConeUtil.GetModifiedAimConeDirection(inputVec: ((Component)muzzlePos).transform.forward, aimCone: aimCone);
-		Vector3 arg = val + val2 * 300f;
-		ClientRPC<Vector3>(null, "CLIENT_FireGun", arg);
+		ClientRPC<Vector3>(arg1: val + val2 * 300f, target: RpcTarget.NetworkGroup("CLIENT_FireGun"));
 		List<RaycastHit> list = Pool.GetList<RaycastHit>();
 		int layerMask = 1220225793;
 		GamePhysics.TraceAll(new Ray(val, val2), 0.1f, list, 300f, layerMask, (QueryTriggerInteraction)0);
@@ -139,7 +169,7 @@ public class GunTrap : StorageContainer
 			}
 			if (!((Object)(object)entity != (Object)null) || entity.ShouldBlockProjectiles())
 			{
-				arg = ((RaycastHit)(ref hit)).point;
+				Vector3 point = ((RaycastHit)(ref hit)).point;
 				break;
 			}
 		}
@@ -148,60 +178,92 @@ public class GunTrap : StorageContainer
 	public override void ServerInit()
 	{
 		base.ServerInit();
-		((FacepunchBehaviour)this).InvokeRandomized((Action)TriggerCheck, Random.Range(0f, 1f), 0.5f, 0.1f);
+		((PersistentObjectWorkQueue<GunTrap>)updateGunTrapWorkQueue).Add(this);
+	}
+
+	internal override void DoServerDestroy()
+	{
+		base.DoServerDestroy();
+		((PersistentObjectWorkQueue<GunTrap>)updateGunTrapWorkQueue).Remove(this);
 	}
 
 	public void TriggerCheck()
 	{
-		if (CheckTrigger())
+		if (!(triggerCooldown > Time.realtimeSinceStartup) && CheckTrigger())
 		{
 			FireWeapon();
+			triggerCooldown = Time.realtimeSinceStartup + 0.5f;
 		}
+	}
+
+	private BuildingPrivlidge GetCachedTc()
+	{
+		if ((Object)(object)_cachedTc != (Object)null && _cachedTc.IsDestroyed)
+		{
+			_cachedTc = null;
+		}
+		if ((Object)(object)_cachedTc == (Object)null || Time.realtimeSinceStartup > _cacheTimeout)
+		{
+			_cachedTc = null;
+			BuildingManager.Building building = GetBuilding();
+			if (building != null)
+			{
+				_cachedTc = building.GetDominatingBuildingPrivilege();
+			}
+			if ((Object)(object)_cachedTc == (Object)null)
+			{
+				return GetNearestBuildingPrivledge();
+			}
+			_cacheTimeout = Time.realtimeSinceStartup + 3f;
+		}
+		return _cachedTc;
 	}
 
 	public bool CheckTrigger()
 	{
-		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
-		List<RaycastHit> list = Pool.GetList<RaycastHit>();
+		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0095: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c7: Unknown result type (might be due to invalid IL or missing references)
 		HashSet<BaseEntity> entityContents = trigger.entityContents;
-		bool flag = false;
-		if (entityContents != null)
+		if (entityContents == null || entityContents.Count == 0)
 		{
-			foreach (BaseEntity item in entityContents)
+			return false;
+		}
+		List<RaycastHit> list = Pool.GetList<RaycastHit>();
+		BuildingPrivlidge cachedTc = GetCachedTc();
+		bool flag = false;
+		foreach (BaseEntity item in entityContents)
+		{
+			BasePlayer component = ((Component)item).GetComponent<BasePlayer>();
+			if (component.IsSleeping() || !component.IsAlive() || (!((Object)(object)cachedTc == (Object)null) && cachedTc.IsAuthed(component)))
 			{
-				BasePlayer component = ((Component)item).GetComponent<BasePlayer>();
-				if (component.IsSleeping() || !component.IsAlive() || component.IsBuildingAuthed())
+				continue;
+			}
+			list.Clear();
+			Vector3 position = component.eyes.position;
+			Vector3 val = GetEyePosition() - component.eyes.position;
+			GamePhysics.TraceAll(new Ray(position, ((Vector3)(ref val)).normalized), 0f, list, 9f, 1218519297, (QueryTriggerInteraction)0);
+			for (int i = 0; i < list.Count; i++)
+			{
+				BaseEntity entity = list[i].GetEntity();
+				if ((Object)(object)entity != (Object)null && ((Object)(object)entity == (Object)(object)this || entity.EqualNetID((BaseNetworkable)this)))
 				{
-					continue;
+					flag = true;
+					break;
 				}
-				list.Clear();
-				Vector3 position = component.eyes.position;
-				Vector3 val = GetEyePosition() - component.eyes.position;
-				GamePhysics.TraceAll(new Ray(position, ((Vector3)(ref val)).normalized), 0f, list, 9f, 1218519297, (QueryTriggerInteraction)0);
-				for (int i = 0; i < list.Count; i++)
-				{
-					BaseEntity entity = list[i].GetEntity();
-					if ((Object)(object)entity != (Object)null && ((Object)(object)entity == (Object)(object)this || entity.EqualNetID((BaseNetworkable)this)))
-					{
-						flag = true;
-						break;
-					}
-					if (!((Object)(object)entity != (Object)null) || entity.ShouldBlockProjectiles())
-					{
-						break;
-					}
-				}
-				if (flag)
+				if (!((Object)(object)entity != (Object)null) || entity.ShouldBlockProjectiles())
 				{
 					break;
 				}
+			}
+			if (flag)
+			{
+				break;
 			}
 		}
 		Pool.FreeList<RaycastHit>(ref list);

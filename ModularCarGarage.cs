@@ -30,12 +30,6 @@ public class ModularCarGarage : ContainerIOEntity
 		Up
 	}
 
-	private ModularCar lockedOccupant;
-
-	private readonly HashSet<BasePlayer> lootingPlayers = new HashSet<BasePlayer>();
-
-	private MagnetSnap magnetSnap;
-
 	[SerializeField]
 	private Transform vehicleLift;
 
@@ -112,6 +106,32 @@ public class ModularCarGarage : ContainerIOEntity
 
 	public const Flags Flag_PlayerObstructing = Flags.Reserved8;
 
+	private ModularCar lockedOccupant;
+
+	private readonly HashSet<BasePlayer> lootingPlayers = new HashSet<BasePlayer>();
+
+	private MagnetSnap magnetSnap;
+
+	public bool PlatformIsOccupied { get; private set; }
+
+	public bool HasEditableOccupant { get; private set; }
+
+	public bool HasDriveableOccupant { get; private set; }
+
+	public OccupantLock OccupantLockState { get; private set; }
+
+	private bool LiftIsUp => vehicleLiftState == VehicleLiftState.Up;
+
+	private bool LiftIsMoving => vehicleLiftAnim.isPlaying;
+
+	private bool LiftIsDown => vehicleLiftState == VehicleLiftState.Down;
+
+	public bool IsDestroyingChassis => HasFlag(Flags.Reserved6);
+
+	private bool IsEnteringKeycode => HasFlag(Flags.Reserved7);
+
+	public bool PlayerObstructingLift => HasFlag(Flags.Reserved8);
+
 	private ModularCar carOccupant
 	{
 		get
@@ -136,26 +156,6 @@ public class ModularCarGarage : ContainerIOEntity
 		}
 	}
 
-	public bool PlatformIsOccupied { get; private set; }
-
-	public bool HasEditableOccupant { get; private set; }
-
-	public bool HasDriveableOccupant { get; private set; }
-
-	public OccupantLock OccupantLockState { get; private set; }
-
-	private bool LiftIsUp => vehicleLiftState == VehicleLiftState.Up;
-
-	private bool LiftIsMoving => vehicleLiftAnim.isPlaying;
-
-	private bool LiftIsDown => vehicleLiftState == VehicleLiftState.Down;
-
-	public bool IsDestroyingChassis => HasFlag(Flags.Reserved6);
-
-	private bool IsEnteringKeycode => HasFlag(Flags.Reserved7);
-
-	public bool PlayerObstructingLift => HasFlag(Flags.Reserved8);
-
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
 		TimeWarning val = TimeWarning.New("ModularCarGarage.OnRpcMessage", 0);
@@ -166,7 +166,7 @@ public class ModularCarGarage : ContainerIOEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_DeselectedLootItem "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_DeselectedLootItem "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_DeselectedLootItem", 0);
 				try
@@ -217,7 +217,7 @@ public class ModularCarGarage : ContainerIOEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_DiedWithKeypadOpen "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_DiedWithKeypadOpen "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_DiedWithKeypadOpen", 0);
 				try
@@ -272,7 +272,7 @@ public class ModularCarGarage : ContainerIOEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_OpenEditing "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_OpenEditing "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_OpenEditing", 0);
 				try
@@ -327,7 +327,7 @@ public class ModularCarGarage : ContainerIOEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_RepairItem "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_RepairItem "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_RepairItem", 0);
 				try
@@ -382,7 +382,7 @@ public class ModularCarGarage : ContainerIOEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_RequestAddLock "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_RequestAddLock "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_RequestAddLock", 0);
 				try
@@ -437,7 +437,7 @@ public class ModularCarGarage : ContainerIOEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_RequestNewCode "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_RequestNewCode "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_RequestNewCode", 0);
 				try
@@ -492,7 +492,7 @@ public class ModularCarGarage : ContainerIOEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_RequestRemoveLock "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_RequestRemoveLock "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_RequestRemoveLock", 0);
 				try
@@ -547,7 +547,7 @@ public class ModularCarGarage : ContainerIOEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_SelectedLootItem "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_SelectedLootItem "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_SelectedLootItem", 0);
 				try
@@ -598,7 +598,7 @@ public class ModularCarGarage : ContainerIOEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_StartDestroyingChassis "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_StartDestroyingChassis "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_StartDestroyingChassis", 0);
 				try
@@ -657,7 +657,7 @@ public class ModularCarGarage : ContainerIOEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_StartKeycodeEntry "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_StartKeycodeEntry "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_StartKeycodeEntry", 0);
 				try
@@ -708,7 +708,7 @@ public class ModularCarGarage : ContainerIOEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_StopDestroyingChassis "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_StopDestroyingChassis "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_StopDestroyingChassis", 0);
 				try
@@ -768,6 +768,117 @@ public class ModularCarGarage : ContainerIOEntity
 			((IDisposable)val)?.Dispose();
 		}
 		return base.OnRpcMessage(player, rpc, msg);
+	}
+
+	public override void PreProcess(IPrefabProcessor process, GameObject rootObj, string name, bool serverside, bool clientside, bool bundling)
+	{
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		downPos = ((Component)vehicleLift).transform.position;
+	}
+
+	public override void OnFlagsChanged(Flags old, Flags next)
+	{
+		base.OnFlagsChanged(old, next);
+		if (base.isServer)
+		{
+			UpdateOccupantMode();
+		}
+	}
+
+	public override bool CanBeLooted(BasePlayer player)
+	{
+		if (IsOn())
+		{
+			return base.CanBeLooted(player);
+		}
+		return false;
+	}
+
+	public override int ConsumptionAmount()
+	{
+		return 5;
+	}
+
+	private void SetOccupantState(bool hasOccupant, bool editableOccupant, bool driveableOccupant, OccupantLock occupantLockState, bool forced = false)
+	{
+		if (PlatformIsOccupied == hasOccupant && HasEditableOccupant == editableOccupant && HasDriveableOccupant == driveableOccupant && OccupantLockState == occupantLockState && !forced)
+		{
+			return;
+		}
+		bool hasEditableOccupant = HasEditableOccupant;
+		PlatformIsOccupied = hasOccupant;
+		HasEditableOccupant = editableOccupant;
+		HasDriveableOccupant = driveableOccupant;
+		OccupantLockState = occupantLockState;
+		if (base.isServer)
+		{
+			UpdateOccupantMode();
+			SendNetworkUpdate();
+			if (hasEditableOccupant && !editableOccupant)
+			{
+				EditableOccupantLeft();
+			}
+			else if (editableOccupant && !hasEditableOccupant)
+			{
+				EditableOccupantEntered();
+			}
+		}
+		RefreshLiftState();
+	}
+
+	private void RefreshLiftState(bool forced = false)
+	{
+		VehicleLiftState desiredLiftState = ((IsOpen() || IsEnteringKeycode || (HasEditableOccupant && !HasDriveableOccupant)) ? VehicleLiftState.Up : VehicleLiftState.Down);
+		MoveLift(desiredLiftState, 0f, forced);
+	}
+
+	private void MoveLift(VehicleLiftState desiredLiftState, float startDelay = 0f, bool forced = false)
+	{
+		if (vehicleLiftState != desiredLiftState || forced)
+		{
+			_ = vehicleLiftState;
+			vehicleLiftState = desiredLiftState;
+			if (base.isServer)
+			{
+				UpdateOccupantMode();
+				WakeNearbyRigidbodies();
+			}
+			if (!((Component)this).gameObject.activeSelf)
+			{
+				vehicleLiftAnim[animName].time = ((desiredLiftState == VehicleLiftState.Up) ? 1f : 0f);
+				vehicleLiftAnim.Play();
+			}
+			else if (desiredLiftState == VehicleLiftState.Up)
+			{
+				((FacepunchBehaviour)this).Invoke((Action)MoveLiftUp, startDelay);
+			}
+			else
+			{
+				((FacepunchBehaviour)this).Invoke((Action)MoveLiftDown, startDelay);
+			}
+		}
+	}
+
+	private void MoveLiftUp()
+	{
+		AnimationState obj = vehicleLiftAnim[animName];
+		obj.speed = obj.length / liftMoveTime;
+		vehicleLiftAnim.Play();
+	}
+
+	private void MoveLiftDown()
+	{
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		AnimationState val = vehicleLiftAnim[animName];
+		val.speed = val.length / liftMoveTime;
+		if (!vehicleLiftAnim.isPlaying && Vector3.Distance(((Component)vehicleLift).transform.position, downPos) > 0.01f)
+		{
+			val.time = 1f;
+		}
+		val.speed *= -1f;
+		vehicleLiftAnim.Play();
 	}
 
 	protected void FixedUpdate()
@@ -842,7 +953,16 @@ public class ModularCarGarage : ContainerIOEntity
 		info.msg.vehicleLift.occupantLockState = (int)OccupantLockState;
 	}
 
-	public override ItemContainerId GetIdealContainer(BasePlayer player, Item item, bool altMove)
+	public override bool CanPickup(BasePlayer player)
+	{
+		if (base.CanPickup(player))
+		{
+			return !PlatformIsOccupied;
+		}
+		return false;
+	}
+
+	public override ItemContainerId GetIdealContainer(BasePlayer player, Item item, ItemMoveModifier modifier)
 	{
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
@@ -1021,6 +1141,7 @@ public class ModularCarGarage : ContainerIOEntity
 		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
 		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer player = msg.player;
@@ -1035,7 +1156,9 @@ public class ModularCarGarage : ContainerIOEntity
 			}
 			else
 			{
-				Debug.LogError((object)(((object)this).GetType().Name + ": Couldn't get item to repair, with ID: " + val));
+				string name = ((object)this).GetType().Name;
+				ItemId val2 = val;
+				Debug.LogError((object)(name + ": Couldn't get item to repair, with ID: " + ((object)(ItemId)(ref val2)).ToString()));
 			}
 		}
 	}
@@ -1131,8 +1254,8 @@ public class ModularCarGarage : ContainerIOEntity
 	[RPC_Server.IsVisible(3f)]
 	public void RPC_RequestAddLock(RPCMessage msg)
 	{
-		//IL_00ad: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b8: Unknown result type (might be due to invalid IL or missing references)
 		if (!HasOccupant || carOccupant.CarLock.HasALock)
 		{
 			return;
@@ -1140,7 +1263,7 @@ public class ModularCarGarage : ContainerIOEntity
 		BasePlayer player = msg.player;
 		if (!((Object)(object)player == (Object)null))
 		{
-			string code = msg.read.String(256);
+			string code = msg.read.String(256, false);
 			ItemAmount itemAmount = lockResourceCost;
 			if ((float)player.inventory.GetAmount(itemAmount.itemDef.itemid) >= itemAmount.amount && carOccupant.CarLock.TryAddALock(code, player.userID))
 			{
@@ -1169,8 +1292,8 @@ public class ModularCarGarage : ContainerIOEntity
 	[RPC_Server.IsVisible(3f)]
 	public void RPC_RequestNewCode(RPCMessage msg)
 	{
-		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
 		if (!HasOccupant || !carOccupant.CarLock.HasALock)
 		{
 			return;
@@ -1178,7 +1301,7 @@ public class ModularCarGarage : ContainerIOEntity
 		BasePlayer player = msg.player;
 		if (!((Object)(object)player == (Object)null))
 		{
-			string newCode = msg.read.String(256);
+			string newCode = msg.read.String(256, false);
 			if (carOccupant.CarLock.TrySetNewCode(newCode, player.userID))
 			{
 				Effect.server.Run(changeLockCodeEffect.resourcePath, this, 0u, Vector3.zero, Vector3.zero);
@@ -1215,116 +1338,5 @@ public class ModularCarGarage : ContainerIOEntity
 			carOccupant.Kill(DestroyMode.Gib);
 			SetFlag(Flags.Reserved6, b: false);
 		}
-	}
-
-	public override void PreProcess(IPrefabProcessor process, GameObject rootObj, string name, bool serverside, bool clientside, bool bundling)
-	{
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-		downPos = ((Component)vehicleLift).transform.position;
-	}
-
-	public override void OnFlagsChanged(Flags old, Flags next)
-	{
-		base.OnFlagsChanged(old, next);
-		if (base.isServer)
-		{
-			UpdateOccupantMode();
-		}
-	}
-
-	public override bool CanBeLooted(BasePlayer player)
-	{
-		if (IsOn())
-		{
-			return base.CanBeLooted(player);
-		}
-		return false;
-	}
-
-	public override int ConsumptionAmount()
-	{
-		return 5;
-	}
-
-	private void SetOccupantState(bool hasOccupant, bool editableOccupant, bool driveableOccupant, OccupantLock occupantLockState, bool forced = false)
-	{
-		if (PlatformIsOccupied == hasOccupant && HasEditableOccupant == editableOccupant && HasDriveableOccupant == driveableOccupant && OccupantLockState == occupantLockState && !forced)
-		{
-			return;
-		}
-		bool hasEditableOccupant = HasEditableOccupant;
-		PlatformIsOccupied = hasOccupant;
-		HasEditableOccupant = editableOccupant;
-		HasDriveableOccupant = driveableOccupant;
-		OccupantLockState = occupantLockState;
-		if (base.isServer)
-		{
-			UpdateOccupantMode();
-			SendNetworkUpdate();
-			if (hasEditableOccupant && !editableOccupant)
-			{
-				EditableOccupantLeft();
-			}
-			else if (editableOccupant && !hasEditableOccupant)
-			{
-				EditableOccupantEntered();
-			}
-		}
-		RefreshLiftState();
-	}
-
-	private void RefreshLiftState(bool forced = false)
-	{
-		VehicleLiftState desiredLiftState = ((IsOpen() || IsEnteringKeycode || (HasEditableOccupant && !HasDriveableOccupant)) ? VehicleLiftState.Up : VehicleLiftState.Down);
-		MoveLift(desiredLiftState, 0f, forced);
-	}
-
-	private void MoveLift(VehicleLiftState desiredLiftState, float startDelay = 0f, bool forced = false)
-	{
-		if (vehicleLiftState != desiredLiftState || forced)
-		{
-			_ = vehicleLiftState;
-			vehicleLiftState = desiredLiftState;
-			if (base.isServer)
-			{
-				UpdateOccupantMode();
-				WakeNearbyRigidbodies();
-			}
-			if (!((Component)this).gameObject.activeSelf)
-			{
-				vehicleLiftAnim[animName].time = ((desiredLiftState == VehicleLiftState.Up) ? 1f : 0f);
-				vehicleLiftAnim.Play();
-			}
-			else if (desiredLiftState == VehicleLiftState.Up)
-			{
-				((FacepunchBehaviour)this).Invoke((Action)MoveLiftUp, startDelay);
-			}
-			else
-			{
-				((FacepunchBehaviour)this).Invoke((Action)MoveLiftDown, startDelay);
-			}
-		}
-	}
-
-	private void MoveLiftUp()
-	{
-		AnimationState obj = vehicleLiftAnim[animName];
-		obj.speed = obj.length / liftMoveTime;
-		vehicleLiftAnim.Play();
-	}
-
-	private void MoveLiftDown()
-	{
-		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-		AnimationState val = vehicleLiftAnim[animName];
-		val.speed = val.length / liftMoveTime;
-		if (!vehicleLiftAnim.isPlaying && Vector3.Distance(((Component)vehicleLift).transform.position, downPos) > 0.01f)
-		{
-			val.time = 1f;
-		}
-		val.speed *= -1f;
-		vehicleLiftAnim.Play();
 	}
 }

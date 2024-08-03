@@ -25,7 +25,7 @@ public class RHIB : MotorRowboat
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_Release "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_Release "));
 				}
 				TimeWarning val2 = TimeWarning.New("Server_Release", 0);
 				try
@@ -132,10 +132,6 @@ public class RHIB : MotorRowboat
 
 	public void AddFuel(int amount)
 	{
-		StorageContainer storageContainer = fuelSystem.fuelStorageInstance.Get(serverside: true);
-		if (Object.op_Implicit((Object)(object)storageContainer))
-		{
-			((Component)storageContainer).GetComponent<StorageContainer>().inventory.AddItem(ItemManager.FindItemDefinition("lowgradefuel"), amount, 0uL);
-		}
+		fuelSystem.AddFuel(amount);
 	}
 }

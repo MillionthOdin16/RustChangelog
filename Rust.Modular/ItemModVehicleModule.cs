@@ -9,8 +9,6 @@ public class ItemModVehicleModule : ItemMod, VehicleModuleInformationPanel.IVehi
 	[Range(1f, 2f)]
 	public int socketsTaken = 1;
 
-	public bool doNonUserSpawn;
-
 	public int SocketsTaken => socketsTaken;
 
 	public BaseVehicleModule CreateModuleEntity(BaseEntity parent, Vector3 position, Quaternion rotation)
@@ -23,7 +21,7 @@ public class ItemModVehicleModule : ItemMod, VehicleModuleInformationPanel.IVehi
 			return null;
 		}
 		BaseEntity baseEntity = GameManager.server.CreateEntity(entityPrefab.resourcePath, position, rotation);
-		BaseVehicleModule baseVehicleModule = null;
+		BaseVehicleModule result = null;
 		if ((Object)(object)baseEntity != (Object)null)
 		{
 			if ((Object)(object)parent != (Object)null)
@@ -32,13 +30,8 @@ public class ItemModVehicleModule : ItemMod, VehicleModuleInformationPanel.IVehi
 				baseEntity.canTriggerParent = false;
 			}
 			baseEntity.Spawn();
-			baseVehicleModule = ((Component)baseEntity).GetComponent<BaseVehicleModule>();
-			if (doNonUserSpawn)
-			{
-				doNonUserSpawn = false;
-				baseVehicleModule.NonUserSpawn();
-			}
+			result = ((Component)baseEntity).GetComponent<BaseVehicleModule>();
 		}
-		return baseVehicleModule;
+		return result;
 	}
 }

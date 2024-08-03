@@ -56,10 +56,11 @@ public class ConvarControlledSpawnPopulationRail : ConvarControlledSpawnPopulati
 		return false;
 	}
 
-	public override void OnPostFill(SpawnHandler spawnHandler)
+	public override void SubFill(SpawnHandler spawnHandler, SpawnDistribution distribution, int numToFill, bool initialSpawn)
 	{
-		//IL_00b8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ba: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
+		base.SubFill(spawnHandler, distribution, numToFill, initialSpawn);
 		List<Prefab<Spawnable>> list = Pool.GetList<Prefab<Spawnable>>();
 		Prefab<Spawnable>[] prefabs = Prefabs;
 		foreach (Prefab<Spawnable> prefab in prefabs)

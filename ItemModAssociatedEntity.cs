@@ -111,17 +111,23 @@ public abstract class ItemModAssociatedEntity<T> : ItemMod where T : BaseEntity
 	{
 		if (item != null)
 		{
-			BasePlayer ownerPlayer = item.GetOwnerPlayer();
+			Item item2 = item;
+			Item parentItem = item.parentItem;
+			if (parentItem != null && parentItem.IsBackpack())
+			{
+				item2 = item.parentItem;
+			}
+			BasePlayer ownerPlayer = item2.GetOwnerPlayer();
 			if (Object.op_Implicit((Object)(object)ownerPlayer))
 			{
 				return ownerPlayer;
 			}
-			BaseEntity baseEntity = ((item.parent == null) ? null : item.parent.entityOwner);
+			BaseEntity baseEntity = ((item2.parent == null) ? null : item2.parent.entityOwner);
 			if ((Object)(object)baseEntity != (Object)null)
 			{
 				return baseEntity;
 			}
-			BaseEntity worldEntity = item.GetWorldEntity();
+			BaseEntity worldEntity = item2.GetWorldEntity();
 			if (Object.op_Implicit((Object)(object)worldEntity))
 			{
 				return worldEntity;
@@ -133,6 +139,12 @@ public abstract class ItemModAssociatedEntity<T> : ItemMod where T : BaseEntity
 			return null;
 		}
 		return null;
+	}
+
+	public static bool GetAssociatedEntity(Item item, out T result, bool isServer = true)
+	{
+		result = GetAssociatedEntity(item, isServer);
+		return (Object)(object)result != (Object)null;
 	}
 
 	public static T GetAssociatedEntity(Item item, bool isServer = true)

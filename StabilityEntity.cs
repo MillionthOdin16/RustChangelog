@@ -2,9 +2,12 @@ using System;
 using System.Collections.Generic;
 using ConVar;
 using Facepunch;
+using Facepunch.Rust;
+using Network;
 using ProtoBuf;
 using Rust;
 using UnityEngine;
+using UnityEngine.Assertions;
 
 public class StabilityEntity : DecayEntity
 {
@@ -40,6 +43,12 @@ public class StabilityEntity : DecayEntity
 	{
 		protected override void RunJob(Bounds bounds)
 		{
+			//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+			NotifyNeighbours(bounds);
+		}
+
+		public static void NotifyNeighbours(Bounds bounds)
+		{
 			//IL_0010: Unknown result type (might be due to invalid IL or missing references)
 			//IL_0017: Unknown result type (might be due to invalid IL or missing references)
 			//IL_001c: Unknown result type (might be due to invalid IL or missing references)
@@ -50,14 +59,14 @@ public class StabilityEntity : DecayEntity
 			List<BaseEntity> list = Pool.GetList<BaseEntity>();
 			Vector3 center = ((Bounds)(ref bounds)).center;
 			Vector3 extents = ((Bounds)(ref bounds)).extents;
-			Vis.Entities(center, ((Vector3)(ref extents)).magnitude + 1f, list, 69372162, (QueryTriggerInteraction)2);
+			Vis.Entities(center, ((Vector3)(ref extents)).magnitude + 1f, list, -2144696062, (QueryTriggerInteraction)2);
 			foreach (BaseEntity item in list)
 			{
 				if (!item.IsDestroyed && !item.isClient)
 				{
-					if (item is StabilityEntity)
+					if (item is StabilityEntity stabilityEntity)
 					{
-						(item as StabilityEntity).OnPhysicsNeighbourChanged();
+						stabilityEntity.OnPhysicsNeighbourChanged();
 					}
 					else
 					{
@@ -100,9 +109,9 @@ public class StabilityEntity : DecayEntity
 		}
 	}
 
-	public static StabilityCheckWorkQueue stabilityCheckQueue = new StabilityCheckWorkQueue();
+	public static readonly Phrase CancelTitle = new Phrase("cancel", "Cancel");
 
-	public static UpdateSurroundingsQueue updateSurroundingsQueue = new UpdateSurroundingsQueue();
+	public static readonly Phrase CancelDesc = new Phrase("cancel_desc", "");
 
 	public bool grounded;
 
@@ -118,30 +127,136 @@ public class StabilityEntity : DecayEntity
 
 	private bool dirty;
 
-	public override void Save(SaveInfo info)
-	{
-		base.Save(info);
-		info.msg.stabilityEntity = Pool.Get<StabilityEntity>();
-		info.msg.stabilityEntity.stability = cachedStability;
-		info.msg.stabilityEntity.distanceFromGround = cachedDistanceFromGround;
-	}
+	public static readonly Phrase DemolishTitle = new Phrase("demolish", "Demolish");
 
-	public override void Load(LoadInfo info)
+	public static readonly Phrase DemolishDesc = new Phrase("demolish_desc", "Slowly and automatically dismantle this block");
+
+	[ServerVar]
+	public static int demolish_seconds = 600;
+
+	public const Flags DemolishFlag = Flags.Reserved2;
+
+	public bool canBeDemolished;
+
+	public static StabilityCheckWorkQueue stabilityCheckQueue = new StabilityCheckWorkQueue();
+
+	public static UpdateSurroundingsQueue updateSurroundingsQueue = new UpdateSurroundingsQueue();
+
+	public virtual bool CanBeDemolished => canBeDemolished;
+
+	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
-		base.Load(info);
-		if (info.msg.stabilityEntity != null)
+		TimeWarning val = TimeWarning.New("StabilityEntity.OnRpcMessage", 0);
+		try
 		{
-			cachedStability = info.msg.stabilityEntity.stability;
-			cachedDistanceFromGround = info.msg.stabilityEntity.distanceFromGround;
-			if (cachedStability <= 0f)
+			if (rpc == 2858062413u && (Object)(object)player != (Object)null)
 			{
-				cachedStability = 0f;
+				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
+				if (Global.developer > 2)
+				{
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - DoDemolish "));
+				}
+				TimeWarning val2 = TimeWarning.New("DoDemolish", 0);
+				try
+				{
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					try
+					{
+						if (!RPC_Server.MaxDistance.Test(2858062413u, "DoDemolish", this, player, 3f))
+						{
+							return true;
+						}
+					}
+					finally
+					{
+						((IDisposable)val3)?.Dispose();
+					}
+					try
+					{
+						val3 = TimeWarning.New("Call", 0);
+						try
+						{
+							RPCMessage rPCMessage = default(RPCMessage);
+							rPCMessage.connection = msg.connection;
+							rPCMessage.player = player;
+							rPCMessage.read = msg.read;
+							RPCMessage msg2 = rPCMessage;
+							DoDemolish(msg2);
+						}
+						finally
+						{
+							((IDisposable)val3)?.Dispose();
+						}
+					}
+					catch (Exception ex)
+					{
+						Debug.LogException(ex);
+						player.Kick("RPC Error in DoDemolish");
+					}
+				}
+				finally
+				{
+					((IDisposable)val2)?.Dispose();
+				}
+				return true;
 			}
-			if (cachedDistanceFromGround <= 0)
+			if (rpc == 216608990 && (Object)(object)player != (Object)null)
 			{
-				cachedDistanceFromGround = int.MaxValue;
+				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
+				if (Global.developer > 2)
+				{
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - DoImmediateDemolish "));
+				}
+				TimeWarning val2 = TimeWarning.New("DoImmediateDemolish", 0);
+				try
+				{
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
+					try
+					{
+						if (!RPC_Server.MaxDistance.Test(216608990u, "DoImmediateDemolish", this, player, 3f))
+						{
+							return true;
+						}
+					}
+					finally
+					{
+						((IDisposable)val3)?.Dispose();
+					}
+					try
+					{
+						val3 = TimeWarning.New("Call", 0);
+						try
+						{
+							RPCMessage rPCMessage = default(RPCMessage);
+							rPCMessage.connection = msg.connection;
+							rPCMessage.player = player;
+							rPCMessage.read = msg.read;
+							RPCMessage msg3 = rPCMessage;
+							DoImmediateDemolish(msg3);
+						}
+						finally
+						{
+							((IDisposable)val3)?.Dispose();
+						}
+					}
+					catch (Exception ex2)
+					{
+						Debug.LogException(ex2);
+						player.Kick("RPC Error in DoImmediateDemolish");
+					}
+				}
+				finally
+				{
+					((IDisposable)val2)?.Dispose();
+				}
+				return true;
 			}
 		}
+		finally
+		{
+			((IDisposable)val)?.Dispose();
+		}
+		return base.OnRpcMessage(player, rpc, msg);
 	}
 
 	public override void ResetState()
@@ -408,6 +523,10 @@ public class StabilityEntity : DecayEntity
 	public override void ServerInit()
 	{
 		base.ServerInit();
+		if (HasFlag(Flags.Reserved2) || !Application.isLoadingSave)
+		{
+			StartBeingDemolishable();
+		}
 		if (!Application.isLoadingSave)
 		{
 			UpdateStability();
@@ -418,5 +537,95 @@ public class StabilityEntity : DecayEntity
 	{
 		base.DoServerDestroy();
 		UpdateSurroundingEntities();
+	}
+
+	private bool CanDemolish(BasePlayer player)
+	{
+		if (CanBeDemolished && IsDemolishable())
+		{
+			return HasDemolishPrivilege(player);
+		}
+		return false;
+	}
+
+	private bool IsDemolishable()
+	{
+		if (!ConVar.Server.pve && !HasFlag(Flags.Reserved2))
+		{
+			return false;
+		}
+		return true;
+	}
+
+	private bool HasDemolishPrivilege(BasePlayer player)
+	{
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		return player.IsBuildingAuthed(((Component)this).transform.position, ((Component)this).transform.rotation, bounds);
+	}
+
+	[RPC_Server]
+	[RPC_Server.MaxDistance(3f)]
+	private void DoDemolish(RPCMessage msg)
+	{
+		if (msg.player.CanInteract() && CanDemolish(msg.player))
+		{
+			Analytics.Azure.OnBuildingBlockDemolished(msg.player, this);
+			Kill(DestroyMode.Gib);
+		}
+	}
+
+	[RPC_Server]
+	[RPC_Server.MaxDistance(3f)]
+	private void DoImmediateDemolish(RPCMessage msg)
+	{
+		if (msg.player.CanInteract() && msg.player.IsAdmin)
+		{
+			Analytics.Azure.OnBuildingBlockDemolished(msg.player, this);
+			Kill(DestroyMode.Gib);
+		}
+	}
+
+	private void StopBeingDemolishable()
+	{
+		SetFlag(Flags.Reserved2, b: false);
+		SendNetworkUpdate();
+	}
+
+	private void StartBeingDemolishable()
+	{
+		SetFlag(Flags.Reserved2, b: true);
+		((FacepunchBehaviour)this).Invoke((Action)StopBeingDemolishable, (float)demolish_seconds);
+	}
+
+	public override void Save(SaveInfo info)
+	{
+		base.Save(info);
+		info.msg.stabilityEntity = Pool.Get<StabilityEntity>();
+		info.msg.stabilityEntity.stability = cachedStability;
+		info.msg.stabilityEntity.distanceFromGround = cachedDistanceFromGround;
+	}
+
+	public override void Load(LoadInfo info)
+	{
+		base.Load(info);
+		if (info.msg.stabilityEntity != null)
+		{
+			cachedStability = info.msg.stabilityEntity.stability;
+			cachedDistanceFromGround = info.msg.stabilityEntity.distanceFromGround;
+			if (cachedStability <= 0f)
+			{
+				cachedStability = 0f;
+			}
+			if (cachedDistanceFromGround <= 0)
+			{
+				cachedDistanceFromGround = int.MaxValue;
+			}
+		}
+		if (info.fromDisk)
+		{
+			SetFlag(Flags.Reserved2, b: false);
+		}
 	}
 }

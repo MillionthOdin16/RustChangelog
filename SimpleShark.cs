@@ -245,7 +245,7 @@ public class SimpleShark : BaseCombatEntity
 
 	private bool sleeping;
 
-	public List<Vector3> patrolPath = new List<Vector3>();
+	private List<Vector3> patrolPath = new List<Vector3>();
 
 	private BasePlayer target;
 

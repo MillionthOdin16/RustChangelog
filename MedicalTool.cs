@@ -29,7 +29,7 @@ public class MedicalTool : AttackEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - UseOther "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - UseOther "));
 				}
 				TimeWarning val2 = TimeWarning.New("UseOther", 0);
 				try
@@ -80,7 +80,7 @@ public class MedicalTool : AttackEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - UseSelf "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - UseSelf "));
 				}
 				TimeWarning val2 = TimeWarning.New("UseSelf", 0);
 				try
@@ -151,7 +151,7 @@ public class MedicalTool : AttackEntity
 			BasePlayer basePlayer = BaseNetworkable.serverEntities.Find(msg.read.EntityID()) as BasePlayer;
 			if ((Object)(object)basePlayer != (Object)null && Vector3.Distance(((Component)basePlayer).transform.position, ((Component)player).transform.position) < 4f)
 			{
-				ClientRPCPlayer(null, player, "Reset");
+				ClientRPC(RpcTarget.Player("Reset", player));
 				GiveEffectsTo(basePlayer);
 				UseItemAmount(1);
 				StartAttackCooldown(repeatDelay);
@@ -170,7 +170,7 @@ public class MedicalTool : AttackEntity
 		}
 		else if (player.CanInteract() && HasItemAmount())
 		{
-			ClientRPCPlayer(null, player, "Reset");
+			ClientRPC(RpcTarget.Player("Reset", player));
 			GiveEffectsTo(player);
 			UseItemAmount(1);
 			StartAttackCooldown(repeatDelay);
@@ -221,6 +221,7 @@ public class MedicalTool : AttackEntity
 			if (effect.type == MetabolismAttribute.Type.Health)
 			{
 				player.health += effect.amount;
+				player.ProcessMissionEvent(BaseMission.MissionEventType.HEAL, prefabID, effect.amount);
 			}
 			else
 			{

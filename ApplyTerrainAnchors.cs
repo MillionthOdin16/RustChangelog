@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[MapGeneration]
 public class ApplyTerrainAnchors : MonoBehaviour
 {
 	protected void Awake()

@@ -58,7 +58,7 @@ public class BaseArcadeMachine : BaseVehicle
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - BroadcastEntityMessage "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - BroadcastEntityMessage "));
 				}
 				TimeWarning val2 = TimeWarning.New("BroadcastEntityMessage", 0);
 				try
@@ -113,7 +113,7 @@ public class BaseArcadeMachine : BaseVehicle
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - DestroyMessageFromHost "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - DestroyMessageFromHost "));
 				}
 				TimeWarning val2 = TimeWarning.New("DestroyMessageFromHost", 0);
 				try
@@ -164,7 +164,7 @@ public class BaseArcadeMachine : BaseVehicle
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - GetSnapshotFromClient "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - GetSnapshotFromClient "));
 				}
 				TimeWarning val2 = TimeWarning.New("GetSnapshotFromClient", 0);
 				try
@@ -219,7 +219,7 @@ public class BaseArcadeMachine : BaseVehicle
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RequestAddScore "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RequestAddScore "));
 				}
 				TimeWarning val2 = TimeWarning.New("RequestAddScore", 0);
 				try
@@ -300,14 +300,14 @@ public class BaseArcadeMachine : BaseVehicle
 	public override void PlayerMounted(BasePlayer player, BaseMountable seat)
 	{
 		base.PlayerMounted(player, seat);
-		ClientRPCPlayer(null, player, "BeginHosting");
+		ClientRPC(RpcTarget.Player("BeginHosting", player));
 		SetFlag(Flags.Reserved7, b: true, recursive: true);
 	}
 
 	public override void PlayerDismounted(BasePlayer player, BaseMountable seat)
 	{
 		base.PlayerDismounted(player, seat);
-		ClientRPCPlayer(null, player, "EndHosting");
+		ClientRPC(RpcTarget.Player("EndHosting", player));
 		SetFlag(Flags.Reserved7, b: false, recursive: true);
 		if (!AnyMounted())
 		{
@@ -365,7 +365,7 @@ public class BaseArcadeMachine : BaseVehicle
 		foreach (BaseEntity entityContent in networkTrigger.entityContents)
 		{
 			BasePlayer component = ((Component)entityContent).GetComponent<BasePlayer>();
-			ClientRPCPlayer(null, component, msg);
+			ClientRPC(RpcTarget.Player(msg, component));
 		}
 	}
 
@@ -382,7 +382,7 @@ public class BaseArcadeMachine : BaseVehicle
 		foreach (BaseEntity entityContent in networkTrigger.entityContents)
 		{
 			BasePlayer component = ((Component)entityContent).GetComponent<BasePlayer>();
-			ClientRPCPlayer(null, component, "DestroyEntity", arg);
+			ClientRPC(RpcTarget.Player("DestroyEntity", component), arg);
 		}
 	}
 
@@ -397,11 +397,11 @@ public class BaseArcadeMachine : BaseVehicle
 			return;
 		}
 		uint arg = msg.read.UInt32();
-		string arg2 = msg.read.String(256);
+		string arg2 = msg.read.String(256, false);
 		foreach (BaseEntity entityContent in networkTrigger.entityContents)
 		{
 			BasePlayer component = ((Component)entityContent).GetComponent<BasePlayer>();
-			ClientRPCPlayer(null, component, "GetEntityMessage", arg, arg2);
+			ClientRPC(RpcTarget.Player("GetEntityMessage", component), arg, arg2);
 		}
 	}
 

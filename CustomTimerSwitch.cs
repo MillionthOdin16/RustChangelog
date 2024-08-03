@@ -18,7 +18,7 @@ public class CustomTimerSwitch : TimerSwitch
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SERVER_SetTime "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SERVER_SetTime "));
 				}
 				TimeWarning val2 = TimeWarning.New("SERVER_SetTime", 0);
 				try
@@ -70,15 +70,6 @@ public class CustomTimerSwitch : TimerSwitch
 			((IDisposable)val)?.Dispose();
 		}
 		return base.OnRpcMessage(player, rpc, msg);
-	}
-
-	public override void UpdateFromInput(int inputAmount, int inputSlot)
-	{
-		base.UpdateFromInput(inputAmount, inputSlot);
-		if (inputAmount > 0 && inputSlot == 1)
-		{
-			SwitchPressed();
-		}
 	}
 
 	[RPC_Server]

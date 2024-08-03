@@ -28,26 +28,6 @@ public class TrainEngine : TrainCar, IEngineControllerUser, IEntity
 		Fwd_Hi
 	}
 
-	public const float HAZARD_CHECK_EVERY = 1f;
-
-	public const float HAZARD_DIST_MAX = 325f;
-
-	public const float HAZARD_DIST_MIN = 20f;
-
-	public const float HAZARD_SPEED_MIN = 4.5f;
-
-	private float buttonHoldTime;
-
-	private static readonly EngineSpeeds MaxThrottle = EngineSpeeds.Fwd_Hi;
-
-	private static readonly EngineSpeeds MinThrottle = EngineSpeeds.Rev_Hi;
-
-	private EngineDamageOverTime engineDamage;
-
-	private Vector3 engineLocalOffset;
-
-	private int lastSentLinedUpToUnload = -1;
-
 	[Header("Train Engine")]
 	[SerializeField]
 	private Transform leftHandLever;
@@ -166,7 +146,25 @@ public class TrainEngine : TrainCar, IEngineControllerUser, IEntity
 
 	private VehicleEngineController<TrainEngine> engineController;
 
-	protected override bool networkUpdateOnCompleteTrainChange => true;
+	public const float HAZARD_CHECK_EVERY = 1f;
+
+	public const float HAZARD_DIST_MAX = 325f;
+
+	public const float HAZARD_DIST_MIN = 20f;
+
+	public const float HAZARD_SPEED_MIN = 4.5f;
+
+	private float buttonHoldTime;
+
+	private static readonly EngineSpeeds MaxThrottle = EngineSpeeds.Fwd_Hi;
+
+	private static readonly EngineSpeeds MinThrottle = EngineSpeeds.Rev_Hi;
+
+	private EngineDamageOverTime engineDamage;
+
+	private Vector3 engineLocalOffset;
+
+	private int lastSentLinedUpToUnload = -1;
 
 	public bool LightsAreOn => HasFlag(Flags.Reserved5);
 
@@ -179,6 +177,8 @@ public class TrainEngine : TrainCar, IEngineControllerUser, IEntity
 
 	public override TrainCarType CarType => TrainCarType.Engine;
 
+	protected override bool networkUpdateOnCompleteTrainChange => true;
+
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
 		TimeWarning val = TimeWarning.New("TrainEngine.OnRpcMessage", 0);
@@ -189,7 +189,7 @@ public class TrainEngine : TrainCar, IEngineControllerUser, IEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_OpenFuel "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_OpenFuel "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_OpenFuel", 0);
 				try
@@ -228,6 +228,125 @@ public class TrainEngine : TrainCar, IEngineControllerUser, IEntity
 		return base.OnRpcMessage(player, rpc, msg);
 	}
 
+	public override void InitShared()
+	{
+		base.InitShared();
+		EntityFuelSystem fuelSystem = new EntityFuelSystem(base.isServer, fuelStoragePrefab, children);
+		engineController = new VehicleEngineController<TrainEngine>(this, fuelSystem, base.isServer, engineStartupTime);
+		if (base.isServer)
+		{
+			bool b = SeedRandom.Range((uint)net.ID.Value, 0, 2) == 0;
+			SetFlag(Flags.Reserved9, b);
+		}
+	}
+
+	public override void Load(LoadInfo info)
+	{
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		base.Load(info);
+		if (info.msg.trainEngine != null)
+		{
+			engineController.FuelSystem.SetInstanceID(info.msg.trainEngine.fuelStorageID);
+			SetThrottle((EngineSpeeds)info.msg.trainEngine.throttleSetting);
+		}
+	}
+
+	public override bool CanBeLooted(BasePlayer player)
+	{
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		if (!base.CanBeLooted(player))
+		{
+			return false;
+		}
+		if (player.isMounted)
+		{
+			return false;
+		}
+		if (lootablesAreOnPlatform)
+		{
+			return PlayerIsOnPlatform(player);
+		}
+		Vector3 localVelocity = GetLocalVelocity();
+		if (((Vector3)(ref localVelocity)).magnitude < 2f)
+		{
+			return true;
+		}
+		return PlayerIsOnPlatform(player);
+	}
+
+	private float GetEnginePowerMultiplier(float minPercent)
+	{
+		if (base.healthFraction > 0.4f)
+		{
+			return 1f;
+		}
+		return Mathf.Lerp(minPercent, 1f, base.healthFraction / 0.4f);
+	}
+
+	public float GetThrottleFraction()
+	{
+		return CurThrottleSetting switch
+		{
+			EngineSpeeds.Rev_Hi => -1f, 
+			EngineSpeeds.Rev_Med => -0.5f, 
+			EngineSpeeds.Rev_Lo => -0.2f, 
+			EngineSpeeds.Zero => 0f, 
+			EngineSpeeds.Fwd_Lo => 0.2f, 
+			EngineSpeeds.Fwd_Med => 0.5f, 
+			EngineSpeeds.Fwd_Hi => 1f, 
+			_ => 0f, 
+		};
+	}
+
+	public bool IsNearDesiredSpeed(float leeway)
+	{
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		float num = Vector3.Dot(((Component)this).transform.forward, GetLocalVelocity());
+		float num2 = maxSpeed * GetThrottleFraction();
+		if (num2 < 0f)
+		{
+			return num - leeway <= num2;
+		}
+		return num + leeway >= num2;
+	}
+
+	protected override void SetTrackSelection(TrainTrackSpline.TrackSelection trackSelection)
+	{
+		base.SetTrackSelection(trackSelection);
+	}
+
+	private void SetThrottle(EngineSpeeds throttle)
+	{
+		if (CurThrottleSetting != throttle)
+		{
+			CurThrottleSetting = throttle;
+			if (base.isServer)
+			{
+				ClientRPC(RpcTarget.NetworkGroup("SetThrottle"), (sbyte)throttle);
+			}
+		}
+	}
+
+	private int GetFuelAmount()
+	{
+		if (base.isServer)
+		{
+			return engineController.FuelSystem.GetFuelAmount();
+		}
+		return 0;
+	}
+
+	private bool CanMount(BasePlayer player)
+	{
+		if (mustMountFromPlatform)
+		{
+			return PlayerIsOnPlatform(player);
+		}
+		return true;
+	}
+
 	public override void ServerInit()
 	{
 		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
@@ -260,7 +379,7 @@ public class TrainEngine : TrainCar, IEngineControllerUser, IEntity
 			float fuelPerSecond = Mathf.Lerp(idleFuelPerSec, maxFuelPerSec, Mathf.Abs(GetThrottleFraction()));
 			if (engineController.TickFuel(fuelPerSecond) > 0)
 			{
-				ClientRPC(null, "SetFuelAmount", GetFuelAmount());
+				ClientRPC(RpcTarget.NetworkGroup("SetFuelAmount"), GetFuelAmount());
 			}
 			if (completeTrain != null && completeTrain.LinedUpToUnload != lastSentLinedUpToUnload)
 			{
@@ -275,19 +394,19 @@ public class TrainEngine : TrainCar, IEngineControllerUser, IEntity
 
 	public override void Save(SaveInfo info)
 	{
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
 		base.Save(info);
 		info.msg.trainEngine = Pool.Get<TrainEngine>();
 		info.msg.trainEngine.throttleSetting = (int)CurThrottleSetting;
-		info.msg.trainEngine.fuelStorageID = GetFuelSystem().fuelStorageInstance.uid;
+		info.msg.trainEngine.fuelStorageID = GetFuelSystem().GetInstanceID();
 		info.msg.trainEngine.fuelAmount = GetFuelAmount();
 		info.msg.trainEngine.numConnectedCars = completeTrain.NumTrainCars;
 		info.msg.trainEngine.linedUpToUnload = completeTrain.LinedUpToUnload;
 		lastSentLinedUpToUnload = completeTrain.LinedUpToUnload;
 	}
 
-	public override EntityFuelSystem GetFuelSystem()
+	public override IFuelSystem GetFuelSystem()
 	{
 		return engineController.FuelSystem;
 	}
@@ -345,7 +464,7 @@ public class TrainEngine : TrainCar, IEngineControllerUser, IEntity
 				}
 				else
 				{
-					buttonHoldTime += player.clientTickInterval;
+					buttonHoldTime += Player.clientTickInterval;
 					if (buttonHoldTime > 0.55f)
 					{
 						action();
@@ -536,124 +655,6 @@ public class TrainEngine : TrainCar, IEngineControllerUser, IEntity
 		{
 			GetFuelSystem().LootFuel(player);
 		}
-	}
-
-	public override void InitShared()
-	{
-		base.InitShared();
-		engineController = new VehicleEngineController<TrainEngine>(this, base.isServer, engineStartupTime, fuelStoragePrefab);
-		if (base.isServer)
-		{
-			bool b = SeedRandom.Range((uint)net.ID.Value, 0, 2) == 0;
-			SetFlag(Flags.Reserved9, b);
-		}
-	}
-
-	public override void Load(LoadInfo info)
-	{
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-		base.Load(info);
-		if (info.msg.trainEngine != null)
-		{
-			engineController.FuelSystem.fuelStorageInstance.uid = info.msg.trainEngine.fuelStorageID;
-			SetThrottle((EngineSpeeds)info.msg.trainEngine.throttleSetting);
-		}
-	}
-
-	public override bool CanBeLooted(BasePlayer player)
-	{
-		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
-		if (!base.CanBeLooted(player))
-		{
-			return false;
-		}
-		if (player.isMounted)
-		{
-			return false;
-		}
-		if (lootablesAreOnPlatform)
-		{
-			return PlayerIsOnPlatform(player);
-		}
-		Vector3 localVelocity = GetLocalVelocity();
-		if (((Vector3)(ref localVelocity)).magnitude < 2f)
-		{
-			return true;
-		}
-		return PlayerIsOnPlatform(player);
-	}
-
-	private float GetEnginePowerMultiplier(float minPercent)
-	{
-		if (base.healthFraction > 0.4f)
-		{
-			return 1f;
-		}
-		return Mathf.Lerp(minPercent, 1f, base.healthFraction / 0.4f);
-	}
-
-	public float GetThrottleFraction()
-	{
-		return CurThrottleSetting switch
-		{
-			EngineSpeeds.Rev_Hi => -1f, 
-			EngineSpeeds.Rev_Med => -0.5f, 
-			EngineSpeeds.Rev_Lo => -0.2f, 
-			EngineSpeeds.Zero => 0f, 
-			EngineSpeeds.Fwd_Lo => 0.2f, 
-			EngineSpeeds.Fwd_Med => 0.5f, 
-			EngineSpeeds.Fwd_Hi => 1f, 
-			_ => 0f, 
-		};
-	}
-
-	public bool IsNearDesiredSpeed(float leeway)
-	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		float num = Vector3.Dot(((Component)this).transform.forward, GetLocalVelocity());
-		float num2 = maxSpeed * GetThrottleFraction();
-		if (num2 < 0f)
-		{
-			return num - leeway <= num2;
-		}
-		return num + leeway >= num2;
-	}
-
-	protected override void SetTrackSelection(TrainTrackSpline.TrackSelection trackSelection)
-	{
-		base.SetTrackSelection(trackSelection);
-	}
-
-	private void SetThrottle(EngineSpeeds throttle)
-	{
-		if (CurThrottleSetting != throttle)
-		{
-			CurThrottleSetting = throttle;
-			if (base.isServer)
-			{
-				ClientRPC(null, "SetThrottle", (sbyte)throttle);
-			}
-		}
-	}
-
-	private int GetFuelAmount()
-	{
-		if (base.isServer)
-		{
-			return engineController.FuelSystem.GetFuelAmount();
-		}
-		return 0;
-	}
-
-	private bool CanMount(BasePlayer player)
-	{
-		if (mustMountFromPlatform)
-		{
-			return PlayerIsOnPlatform(player);
-		}
-		return true;
 	}
 
 	void IEngineControllerUser.Invoke(Action action, float time)

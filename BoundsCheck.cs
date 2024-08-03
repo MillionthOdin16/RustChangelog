@@ -1,5 +1,6 @@
 using System;
 
+[MapGeneration]
 public class BoundsCheck : PrefabAttribute
 {
 	public enum BlockType

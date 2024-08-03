@@ -23,13 +23,12 @@ public static class TerrainAnchorEx
 		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
 		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
 		if (anchors.Length == 0)
 		{
 			return true;
@@ -42,10 +41,6 @@ public static class TerrainAnchorEx
 			Vector3 val = Vector3.Scale(terrainAnchor.worldPosition, scale);
 			val = rot * val;
 			Vector3 val2 = pos + val;
-			if (TerrainMeta.OutOfBounds(val2))
-			{
-				return false;
-			}
 			if (filter != null && filter.GetFactor(val2) == 0f)
 			{
 				return false;

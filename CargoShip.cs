@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using Facepunch;
 using Network;
 using ProtoBuf;
@@ -8,6 +9,15 @@ using UnityEngine;
 
 public class CargoShip : BaseEntity
 {
+	private struct HarborInfo
+	{
+		public BasePath harborPath;
+
+		public Transform harborTransform;
+
+		public int approachNode;
+	}
+
 	public int targetNodeIndex = -1;
 
 	public GameObject wakeParent;
@@ -58,7 +68,28 @@ public class CargoShip : BaseEntity
 
 	public GameObjectRef playerTest;
 
+	public Transform bowPoint;
+
 	private uint layoutChoice;
+
+	public const Flags IsDocked = Flags.Reserved1;
+
+	public const Flags HasDocked = Flags.Reserved2;
+
+	public const Flags DockedHarborIndex0 = Flags.Reserved3;
+
+	public const Flags DockedHarborIndex1 = Flags.Reserved4;
+
+	public const Flags Egressing = Flags.Reserved8;
+
+	[ServerVar]
+	public static bool docking_debug = false;
+
+	[ServerVar]
+	public static bool should_dock = true;
+
+	[ServerVar]
+	public static float dock_time = 480f;
 
 	[ServerVar]
 	public static bool event_enabled = true;
@@ -74,6 +105,29 @@ public class CargoShip : BaseEntity
 
 	[ServerVar]
 	public static float loot_round_spacing_minutes = 10f;
+
+	[ServerVar]
+	public static bool refresh_loot_on_dock = true;
+
+	private static List<HarborInfo> harbors = new List<HarborInfo>();
+
+	private int currentHarborApproachNode;
+
+	private int harborIndex;
+
+	private bool isDoingHarborApproach;
+
+	private int dockCount;
+
+	private bool shouldLookAhead;
+
+	private float lifetime;
+
+	private CargoShipContainerDestination[] containerDestinations;
+
+	private HashSet<ulong> boardedPlayerIds = new HashSet<ulong>();
+
+	private static bool hasCalculatedApproaches = false;
 
 	private BaseEntity mapMarkerInstance;
 
@@ -93,17 +147,145 @@ public class CargoShip : BaseEntity
 
 	private bool egressing;
 
+	private BasePath harborApproachPath;
+
+	private HarborProximityManager proxManager;
+
+	private float lastSpeed = 0.3f;
+
+	public bool IsShipDocked => HasFlag(Flags.Reserved1);
+
+	public static int TotalAvailableHarborDockingPaths => harbors.Count;
+
+	private bool HasFinishedDocking
+	{
+		get
+		{
+			if (!should_dock)
+			{
+				return true;
+			}
+			return dockCount == harbors.Count;
+		}
+	}
+
+	private float EventTimeRemaining => event_duration_minutes * 60f - lifetime;
+
+	public static List<Vector3> GetCargoApproachPath(int index)
+	{
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
+		if (index >= TotalAvailableHarborDockingPaths)
+		{
+			return null;
+		}
+		CalculateHarborApproachNodes();
+		List<Vector3> list = new List<Vector3>();
+		list.Add(TerrainMeta.Path.OceanPatrolFar[harbors[index].approachNode]);
+		foreach (BasePathNode node in harbors[index].harborPath.nodes)
+		{
+			list.Add(node.Position);
+		}
+		return list;
+	}
+
 	public override float GetNetworkTime()
 	{
 		return Time.fixedTime;
 	}
 
+	[ServerVar]
+	public static void debug_info(Arg arg)
+	{
+		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
+		StringBuilder stringBuilder = new StringBuilder();
+		stringBuilder.AppendLine("Harbor Positions:");
+		for (int i = 0; i < harbors.Count; i++)
+		{
+			stringBuilder.AppendLine($"harbor {i} is at {harbors[i].harborTransform.position.x}, {harbors[i].harborTransform.position.y}, {harbors[i].harborTransform.position.z}, approach index: {harbors[i].approachNode}");
+		}
+		arg.ReplyWith(stringBuilder.ToString());
+	}
+
+	[ServerVar]
+	public static void debug_cargo_status(Arg arg)
+	{
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
+		StringBuilder stringBuilder = new StringBuilder();
+		int num = 0;
+		Enumerator<BaseNetworkable> enumerator = BaseNetworkable.serverEntities.GetEnumerator();
+		try
+		{
+			while (enumerator.MoveNext())
+			{
+				if (enumerator.Current is CargoShip cargoShip)
+				{
+					stringBuilder.AppendLine("Cargoship States:");
+					stringBuilder.AppendLine("");
+					stringBuilder.AppendLine($"Cargoship [{num}] dump");
+					stringBuilder.AppendLine($"is at [{((Component)cargoShip).transform.position}]");
+					stringBuilder.AppendLine($"dock count [{cargoShip.dockCount}]");
+					stringBuilder.AppendLine($"is docked [{cargoShip.IsShipDocked}]");
+					stringBuilder.AppendLine($"current approach node [{cargoShip.currentHarborApproachNode}]");
+					stringBuilder.AppendLine($"is doing approach [{cargoShip.isDoingHarborApproach}]");
+					stringBuilder.AppendLine($"chosen harbor is [{cargoShip.harborIndex}]");
+					stringBuilder.AppendLine($"is egressing: {cargoShip.egressing}");
+					arg.ReplyWith(stringBuilder.ToString());
+					stringBuilder.Clear();
+					num++;
+				}
+			}
+		}
+		finally
+		{
+			((IDisposable)enumerator).Dispose();
+		}
+	}
+
 	public override void Load(LoadInfo info)
 	{
 		base.Load(info);
-		if (info.msg.simpleUint != null)
+		if (info.msg.cargoShip == null)
 		{
-			layoutChoice = info.msg.simpleUint.value;
+			return;
+		}
+		layoutChoice = info.msg.cargoShip.layout;
+		if (!base.isServer)
+		{
+			return;
+		}
+		isDoingHarborApproach = info.msg.cargoShip.isDoingHarborApproach;
+		harborIndex = info.msg.cargoShip.harborIndex;
+		CalculateHarborApproachNodes();
+		if (isDoingHarborApproach && HasFlag(Flags.Reserved1))
+		{
+			((FacepunchBehaviour)this).Invoke((Action)LeaveHarbor, dock_time);
+			((FacepunchBehaviour)this).Invoke((Action)PreHarborLeaveHorn, dock_time - 60f);
+		}
+		currentHarborApproachNode = info.msg.cargoShip.currentHarborApproachNode;
+		dockCount = info.msg.cargoShip.dockCount;
+		shouldLookAhead = info.msg.cargoShip.shouldLookAhead;
+		lifetime = info.msg.cargoShip.lifetime;
+		if (info.msg.cargoShip.isEgressing)
+		{
+			StartEgress();
+		}
+		if (HasFinishedDocking)
+		{
+			((FacepunchBehaviour)this).Invoke((Action)StartEgress, Mathf.Max(EventTimeRemaining, GetTimeRemainingFromCrates()));
+		}
+		if (HasFlag(Flags.Reserved1) && !((FacepunchBehaviour)this).IsInvoking((Action)LeaveHarbor))
+		{
+			((FacepunchBehaviour)this).Invoke((Action)LeaveHarbor, dock_time);
+		}
+		boardedPlayerIds.Clear();
+		foreach (ulong playerId in info.msg.cargoShip.playerIds)
+		{
+			boardedPlayerIds.Add(playerId);
 		}
 	}
 
@@ -112,6 +294,23 @@ public class CargoShip : BaseEntity
 		for (int i = 0; i < layouts.Length; i++)
 		{
 			layouts[i].SetActive(layoutChoice == i);
+		}
+		if (base.isServer)
+		{
+			containerDestinations = ((Component)this).GetComponentsInChildren<CargoShipContainerDestination>();
+		}
+	}
+
+	public static void RegisterHarbor(BasePath path, Transform tf)
+	{
+		harbors.Add(new HarborInfo
+		{
+			harborPath = path,
+			harborTransform = tf
+		});
+		if (docking_debug)
+		{
+			Debug.Log((object)("Added " + ((Object)tf).name + " to harbor list"));
 		}
 	}
 
@@ -124,10 +323,174 @@ public class CargoShip : BaseEntity
 		Vector3 val = TerrainMeta.RandomPointOffshore();
 		val.y = TerrainMeta.WaterMap.GetHeight(val);
 		((Component)this).transform.position = val;
+		if (should_dock)
+		{
+			CalculateHarborApproachNodes();
+		}
 		if (!event_enabled || event_duration_minutes == 0f)
 		{
 			((FacepunchBehaviour)this).Invoke((Action)DelayedDestroy, 1f);
 		}
+	}
+
+	public void TriggeredEventSpawnDockingTest(int index)
+	{
+		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0089: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c9: Unknown result type (might be due to invalid IL or missing references)
+		if (harbors.Count <= 0 || !should_dock)
+		{
+			TriggeredEventSpawn();
+			Debug.Log((object)"No harbors registered.");
+			return;
+		}
+		if (harbors.Count <= 0 || index > harbors.Count - 1)
+		{
+			Debug.Log((object)"Wrong harbor index or no harbors on map.");
+			return;
+		}
+		CalculateHarborApproachNodes();
+		if (harbors.Count > 0)
+		{
+			if (harbors != null)
+			{
+				int approachNode = harbors[index].approachNode;
+				Vector3 val = TerrainMeta.Path.OceanPatrolFar[approachNode + 5];
+				val.y = TerrainMeta.WaterMap.GetHeight(val);
+				((Component)this).transform.position = val;
+				((Component)this).transform.LookAt(harbors[index].harborPath.nodes[0].Position);
+			}
+			if (!event_enabled || event_duration_minutes == 0f)
+			{
+				((FacepunchBehaviour)this).Invoke((Action)DelayedDestroy, 1f);
+			}
+		}
+	}
+
+	private static void CalculateHarborApproachNodes()
+	{
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
+		if (hasCalculatedApproaches)
+		{
+			return;
+		}
+		hasCalculatedApproaches = true;
+		for (int i = 0; i < harbors.Count; i++)
+		{
+			HarborInfo value = harbors[i];
+			float num = float.MaxValue;
+			int num2 = -1;
+			for (int j = 0; j < TerrainMeta.Path.OceanPatrolFar.Count; j++)
+			{
+				Vector3 val = TerrainMeta.Path.OceanPatrolFar[j];
+				Vector3 position = value.harborPath.nodes[0].Position;
+				float num3 = Vector3.Distance(val, position);
+				_ = docking_debug;
+				float num4 = num3;
+				Vector3 val2 = Vector3.up * 3f;
+				if (!GamePhysics.LineOfSightRadius(val + val2, position + val2, 1084293377, 3f))
+				{
+					num4 *= 20f;
+				}
+				if (num4 < num)
+				{
+					num = num4;
+					num2 = j;
+				}
+			}
+			if (num2 == -1)
+			{
+				Debug.LogWarning((object)"Cargo couldn't find harbor approach node. Are you sure ocean paths have been generated?");
+				break;
+			}
+			value.approachNode = num2;
+			harbors[i] = value;
+		}
+	}
+
+	public void OnArrivedAtHarbor()
+	{
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		SetFlag(Flags.Reserved1, b: true);
+		List<Transform> list = Pool.GetList<Transform>();
+		float num = Random.Range(dock_time * 0.05f, dock_time * 0.1f);
+		Enumerator<HarborCraneContainerPickup> enumerator = HarborCraneContainerPickup.AllCranes.GetEnumerator();
+		try
+		{
+			while (enumerator.MoveNext())
+			{
+				HarborCraneContainerPickup current = enumerator.Current;
+				if ((Object)(object)current == (Object)null || current.isClient || current.Distance2D((BaseEntity)this) > 150f)
+				{
+					continue;
+				}
+				list.Clear();
+				CargoShipContainerDestination[] array = containerDestinations;
+				foreach (CargoShipContainerDestination cargoShipContainerDestination in array)
+				{
+					if (current.IsDestinationValidForCrane(cargoShipContainerDestination))
+					{
+						list.Add(((Component)cargoShipContainerDestination).transform);
+					}
+				}
+				if (list.Count > 0)
+				{
+					current.AssignDestination(list, this, num);
+					num += dock_time * Random.Range(0.1f, 0.15f);
+				}
+			}
+		}
+		finally
+		{
+			((IDisposable)enumerator).Dispose();
+		}
+		Pool.FreeList<Transform>(ref list);
+		((FacepunchBehaviour)this).Invoke((Action)PreHarborLeaveHorn, dock_time - 60f);
+		if (refresh_loot_on_dock)
+		{
+			RespawnLoot();
+		}
+		if (harborIndex == 0)
+		{
+			SetFlag(Flags.Reserved3, b: true);
+		}
+		else if (harborIndex == 1)
+		{
+			SetFlag(Flags.Reserved4, b: true);
+		}
+		((FacepunchBehaviour)this).Invoke((Action)LeaveHarbor, dock_time);
+	}
+
+	private void ClearAllHarborEntitiesOnShip()
+	{
+		List<BaseEntity> list = Pool.GetList<BaseEntity>();
+		foreach (BaseEntity child in children)
+		{
+			if (child is CargoShipContainer)
+			{
+				list.Add(child);
+			}
+		}
+		foreach (BaseEntity item in list)
+		{
+			item.Kill();
+		}
+		Pool.FreeList<BaseEntity>(ref list);
 	}
 
 	public void CreateMapMarker()
@@ -150,12 +513,16 @@ public class CargoShip : BaseEntity
 
 	public void SpawnCrate(string resourcePath)
 	{
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
+		if (crateSpawns.Count == 0)
+		{
+			return;
+		}
 		int index = Random.Range(0, crateSpawns.Count);
 		Vector3 position = crateSpawns[index].position;
 		Quaternion rotation = crateSpawns[index].rotation;
@@ -243,13 +610,17 @@ public class CargoShip : BaseEntity
 
 	protected override void OnChildAdded(BaseEntity child)
 	{
-		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
 		base.OnChildAdded(child);
-		if (base.isServer && Application.isLoadingSave && child is RHIB rHIB)
+		if (!base.isServer)
+		{
+			return;
+		}
+		if (Application.isLoadingSave && child is RHIB rHIB)
 		{
 			Vector3 localPosition = ((Component)rHIB).transform.localPosition;
 			Vector3 val = ((Component)this).transform.InverseTransformPoint(((Component)escapeBoatPoint).transform.position);
@@ -258,13 +629,43 @@ public class CargoShip : BaseEntity
 				rHIB.SetToKinematic();
 			}
 		}
+		if (Application.isLoadingSave)
+		{
+			return;
+		}
+		List<BasePlayer> list = Pool.GetList<BasePlayer>();
+		((Component)child).GetComponentsInChildren<BasePlayer>(list);
+		foreach (BasePlayer item in list)
+		{
+			if (!item.IsBot && !item.IsNpc && item.IsConnected && boardedPlayerIds.Add(item.userID) && item.serverClan != null)
+			{
+				item.AddClanScore((ClanScoreEventType)9);
+			}
+		}
+		Pool.FreeList<BasePlayer>(ref list);
 	}
 
 	public override void Save(SaveInfo info)
 	{
 		base.Save(info);
-		info.msg.simpleUint = Pool.Get<SimpleUInt>();
-		info.msg.simpleUint.value = layoutChoice;
+		info.msg.cargoShip = Pool.Get<CargoShip>();
+		info.msg.cargoShip.layout = layoutChoice;
+		info.msg.cargoShip.currentHarborApproachNode = currentHarborApproachNode;
+		info.msg.cargoShip.isDoingHarborApproach = isDoingHarborApproach;
+		info.msg.cargoShip.dockCount = dockCount;
+		info.msg.cargoShip.shouldLookAhead = shouldLookAhead;
+		info.msg.cargoShip.isEgressing = egressing;
+		info.msg.cargoShip.harborIndex = harborIndex;
+		if (!info.forDisk)
+		{
+			return;
+		}
+		info.msg.cargoShip.playerIds = Pool.GetList<ulong>();
+		foreach (ulong boardedPlayerId in boardedPlayerIds)
+		{
+			info.msg.cargoShip.playerIds.Add(boardedPlayerId);
+		}
+		info.msg.cargoShip.lifetime = lifetime;
 	}
 
 	public override void PostServerLoad()
@@ -275,7 +676,7 @@ public class CargoShip : BaseEntity
 
 	public void PlayHorn()
 	{
-		ClientRPC(null, "DoHornSound");
+		ClientRPC(RpcTarget.NetworkGroup("DoHornSound"));
 		hornCount++;
 		if (hornCount >= 3)
 		{
@@ -297,15 +698,16 @@ public class CargoShip : BaseEntity
 
 	public override void ServerInit()
 	{
-		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
 		//IL_009e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d7: Unknown result type (might be due to invalid IL or missing references)
 		base.ServerInit();
+		CalculateHarborApproachNodes();
 		((FacepunchBehaviour)this).Invoke((Action)FindInitialNode, 2f);
 		((FacepunchBehaviour)this).InvokeRepeating((Action)BuildingCheck, 1f, 5f);
 		((FacepunchBehaviour)this).InvokeRepeating((Action)RespawnLoot, 10f, 60f * loot_round_spacing_minutes);
@@ -314,7 +716,10 @@ public class CargoShip : BaseEntity
 		Vector3 val = ((Component)this).transform.InverseTransformPoint(((Component)waterLine).transform.position);
 		((Component)this).transform.position = new Vector3(((Component)this).transform.position.x, height - val.y, ((Component)this).transform.position.z);
 		SpawnSubEntities();
-		((FacepunchBehaviour)this).Invoke((Action)StartEgress, 60f * event_duration_minutes);
+		if (HasFinishedDocking)
+		{
+			((FacepunchBehaviour)this).Invoke((Action)StartEgress, Mathf.Max(EventTimeRemaining, 120f));
+		}
 		CreateMapMarker();
 	}
 
@@ -330,7 +735,7 @@ public class CargoShip : BaseEntity
 
 	public void StartEgress()
 	{
-		if (!egressing)
+		if (!isDoingHarborApproach && !egressing)
 		{
 			egressing = true;
 			((FacepunchBehaviour)this).CancelInvoke((Action)PlayHorn);
@@ -351,19 +756,39 @@ public class CargoShip : BaseEntity
 		targetNodeIndex = GetClosestNodeToUs();
 	}
 
+	private int GetHackableCrateCount()
+	{
+		int num = 0;
+		foreach (BaseEntity child in children)
+		{
+			if (child is HackableLockedCrate)
+			{
+				num++;
+			}
+		}
+		return num;
+	}
+
 	public void BuildingCheck()
 	{
 		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		List<DecayEntity> list = Pool.GetList<DecayEntity>();
-		Vis.Entities(WorldSpaceBounds(), list, 2097152, (QueryTriggerInteraction)2);
-		foreach (DecayEntity item in list)
+		List<BaseEntity> list = Pool.GetList<BaseEntity>();
+		Vis.Entities(WorldSpaceBounds(), list, 2162689, (QueryTriggerInteraction)2);
+		foreach (BaseEntity item in list)
 		{
-			if (item.isServer && item.IsAlive())
+			if (!(item is JunkPileWater junkPileWater))
 			{
-				item.Kill(DestroyMode.Gib);
+				if (item is DecayEntity decayEntity && (Object)(object)decayEntity.parentEntity.Get(serverside: true) != (Object)(object)this && decayEntity.isServer && decayEntity.IsAlive() && !decayEntity.AllowOnCargoShip)
+				{
+					decayEntity.Kill(DestroyMode.Gib);
+				}
+			}
+			else
+			{
+				junkPileWater.SinkAndDestroy();
 			}
 		}
-		Pool.FreeList<DecayEntity>(ref list);
+		Pool.FreeList<BaseEntity>(ref list);
 	}
 
 	public void FixedUpdate()
@@ -371,78 +796,372 @@ public class CargoShip : BaseEntity
 		if (!base.isClient)
 		{
 			UpdateMovement();
+			lifetime += Time.fixedDeltaTime;
 		}
 	}
 
 	public void UpdateMovement()
 	{
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ce: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_013b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0176: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0187: Unknown result type (might be due to invalid IL or missing references)
-		//IL_018c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0198: Unknown result type (might be due to invalid IL or missing references)
-		//IL_019e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ad: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01bd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c2: Unknown result type (might be due to invalid IL or missing references)
-		if (TerrainMeta.Path.OceanPatrolFar == null || TerrainMeta.Path.OceanPatrolFar.Count == 0 || targetNodeIndex == -1)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
+		if (IsOceanPatrolPathAvailable() && IsValidTargetNode())
 		{
+			InitializeHarborApproach();
+			Vector3 approachRotationNode = Vector3.zero;
+			CalculateDesiredNodes(out var desiredMoveNode, out approachRotationNode);
+			float num = 0f;
+			num = CalculateDesiredThrottle(desiredMoveNode);
+			UpdateShip(num, desiredMoveNode, approachRotationNode);
+			float num2 = (isDoingHarborApproach ? 8f : 80f);
+			if (Vector3.Distance(((Component)this).transform.position, desiredMoveNode) < num2)
+			{
+				HandleNodeArrival(desiredMoveNode);
+			}
+			UpdateHarborApproachProgress();
+		}
+	}
+
+	[ContextMenu("Break")]
+	public void Break()
+	{
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		CalculateDesiredNodes(out var desiredMoveNode, out var _);
+		Vector3 val = ((Component)this).transform.position - desiredMoveNode;
+		Vector3 normalized = ((Vector3)(ref val)).normalized;
+		((Component)this).transform.forward = normalized;
+		currentTurnSpeed = 0f;
+	}
+
+	private void UpdateShip(float desiredThrottle, Vector3 desiredWaypoint, Vector3 approachRotationNode)
+	{
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0115: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0126: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00da: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0139: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0140: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0154: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0160: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0165: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0169: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_017c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_017e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01dc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01e6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01eb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ca: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0196: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ad: Unknown result type (might be due to invalid IL or missing references)
+		Vector3 val = desiredWaypoint - ((Component)this).transform.position;
+		Vector3 normalized = ((Vector3)(ref val)).normalized;
+		normalized.y = 0f;
+		float num = Vector3.Dot(((Component)this).transform.right, normalized);
+		float num2 = (isDoingHarborApproach ? 6.5f : 2.5f);
+		float num3 = Mathf.InverseLerp(0.05f, 0.5f, Mathf.Abs(num));
+		if (num3 == 0f && Vector3.Dot(normalized, -((Component)this).transform.forward) >= 0.95f)
+		{
+			num3 = 1f;
+		}
+		turnScale = Mathf.Lerp(turnScale, num3, Time.deltaTime * 0.2f);
+		float num4 = ((!(num < 0f)) ? 1 : (-1));
+		currentTurnSpeed = num2 * turnScale * num4;
+		if (!isDoingHarborApproach)
+		{
+			((Component)this).transform.Rotate(Vector3.up, Time.deltaTime * currentTurnSpeed, (Space)0);
+		}
+		currentThrottle = Mathf.Lerp(currentThrottle, desiredThrottle, Time.deltaTime * 0.2f);
+		currentVelocity = ((Component)this).transform.forward * (8f * currentThrottle);
+		if (isDoingHarborApproach)
+		{
+			currentVelocity = normalized * currentThrottle * 5f;
+			val = approachRotationNode - ((Component)this).transform.position;
+			Vector3 normalized2 = ((Vector3)(ref val)).normalized;
+			normalized2.y = 0f;
+			if (normalized2 != Vector3.zero)
+			{
+				((Component)this).transform.rotation = Quaternion.Slerp(((Component)this).transform.rotation, Quaternion.LookRotation(normalized2), Time.deltaTime * 0.1f);
+			}
+		}
+		if (HasFlag(Flags.Reserved1))
+		{
+			currentVelocity = Vector3.zero;
+		}
+		Transform transform = ((Component)this).transform;
+		transform.position += currentVelocity * Time.deltaTime;
+	}
+
+	private void UpdateHarborApproachProgress()
+	{
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		HarborProximityManager harborProximityManager = default(HarborProximityManager);
+		if (isDoingHarborApproach && (Object)(object)harborApproachPath != (Object)null && ((Component)harborApproachPath).TryGetComponent<HarborProximityManager>(ref harborProximityManager))
+		{
+			float pathLength = harborApproachPath.GetPathLength();
+			float pathProgress = harborApproachPath.GetPathProgress(((Component)this).transform.position);
+			harborProximityManager.UpdateNormalisedState(Mathf.Clamp01(pathProgress / pathLength));
+		}
+	}
+
+	private void InitializeHarborApproach(bool forceInit = false)
+	{
+		if (forceInit || harbors.Count > 0)
+		{
+			harborApproachPath = harbors[harborIndex].harborPath;
+			proxManager = ((Component)harborApproachPath).GetComponent<HarborProximityManager>();
+		}
+	}
+
+	private float CalculateDesiredThrottle(Vector3 desiredMoveNode)
+	{
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		Vector3 val = desiredMoveNode - ((Component)this).transform.position;
+		Vector3 normalized = ((Vector3)(ref val)).normalized;
+		float num = Vector3.Dot(((Component)this).transform.forward, normalized);
+		float num2 = Mathf.InverseLerp(0f, 1f, num);
+		if (isDoingHarborApproach)
+		{
+			if (harborApproachPath.nodes[currentHarborApproachNode].maxVelocityOnApproach > 0f)
+			{
+				lastSpeed = harborApproachPath.nodes[currentHarborApproachNode].maxVelocityOnApproach;
+			}
+			num2 = Mathf.Clamp(num2, 0.1f, lastSpeed);
+		}
+		return num2;
+	}
+
+	private void CalculateDesiredNodes(out Vector3 desiredMoveNode, out Vector3 approachRotationNode)
+	{
+		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0102: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0107: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ba: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00dc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
+		if (isDoingHarborApproach)
+		{
+			int index = (shouldLookAhead ? Mathf.Min(currentHarborApproachNode + 1, harborApproachPath.nodes.Count - 1) : currentHarborApproachNode);
+			approachRotationNode = harborApproachPath.nodes[index].Position;
+			desiredMoveNode = harborApproachPath.nodes[currentHarborApproachNode].Position;
 			return;
 		}
-		Vector3 val = TerrainMeta.Path.OceanPatrolFar[targetNodeIndex];
-		Vector3 val2;
+		desiredMoveNode = TerrainMeta.Path.OceanPatrolFar[targetNodeIndex];
 		if (egressing)
 		{
 			Vector3 position = ((Component)this).transform.position;
-			val2 = ((Component)this).transform.position - Vector3.zero;
-			val = position + ((Vector3)(ref val2)).normalized * 10000f;
-		}
-		float num = 0f;
-		val2 = val - ((Component)this).transform.position;
-		Vector3 normalized = ((Vector3)(ref val2)).normalized;
-		float num2 = Vector3.Dot(((Component)this).transform.forward, normalized);
-		num = Mathf.InverseLerp(0f, 1f, num2);
-		float num3 = Vector3.Dot(((Component)this).transform.right, normalized);
-		float num4 = 2.5f;
-		float num5 = Mathf.InverseLerp(0.05f, 0.5f, Mathf.Abs(num3));
-		turnScale = Mathf.Lerp(turnScale, num5, Time.deltaTime * 0.2f);
-		float num6 = ((!(num3 < 0f)) ? 1 : (-1));
-		currentTurnSpeed = num4 * turnScale * num6;
-		((Component)this).transform.Rotate(Vector3.up, Time.deltaTime * currentTurnSpeed, (Space)0);
-		currentThrottle = Mathf.Lerp(currentThrottle, num, Time.deltaTime * 0.2f);
-		currentVelocity = ((Component)this).transform.forward * (8f * currentThrottle);
-		Transform transform = ((Component)this).transform;
-		transform.position += currentVelocity * Time.deltaTime;
-		if (Vector3.Distance(((Component)this).transform.position, val) < 80f)
-		{
-			targetNodeIndex++;
-			if (targetNodeIndex >= TerrainMeta.Path.OceanPatrolFar.Count)
+			Vector3 val = ((Component)this).transform.position - Vector3.zero;
+			desiredMoveNode = position + ((Vector3)(ref val)).normalized * 10000f;
+			val = ((Component)this).transform.position;
+			if (((Vector3)(ref val)).sqrMagnitude > 100000000f)
 			{
-				targetNodeIndex = 0;
+				Debug.LogWarning((object)"Immediately deleting cargo as it is a long way out of bounds");
+				Kill();
 			}
 		}
+		approachRotationNode = Vector3.zero;
+	}
+
+	private void HandleNodeArrival(Vector3 waypointPosition)
+	{
+		if (isDoingHarborApproach)
+		{
+			if (currentHarborApproachNode == harborApproachPath.nodes.Count - 1)
+			{
+				EndHarborApproach();
+			}
+			else
+			{
+				AdvanceHarborApproach();
+			}
+			return;
+		}
+		targetNodeIndex = (targetNodeIndex - 1 + TerrainMeta.Path.OceanPatrolFar.Count) % TerrainMeta.Path.OceanPatrolFar.Count;
+		if (HasFinishedDocking)
+		{
+			return;
+		}
+		for (int i = 0; i < harbors.Count; i++)
+		{
+			HarborInfo harborInfo = harbors[i];
+			if ((Object)(object)harborInfo.harborPath != (Object)null && harborInfo.approachNode == targetNodeIndex)
+			{
+				CargoNotifier component = ((Component)harborInfo.harborPath).GetComponent<CargoNotifier>();
+				harborApproachPath = harborInfo.harborPath;
+				harborIndex = i;
+				if ((Object)(object)component != (Object)null)
+				{
+					StartHarborApproach(component);
+					break;
+				}
+			}
+		}
+	}
+
+	private void StartHarborApproach(CargoNotifier cn)
+	{
+		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ba: Unknown result type (might be due to invalid IL or missing references)
+		PlayHorn();
+		isDoingHarborApproach = true;
+		dockCount++;
+		shouldLookAhead = false;
+		if ((Object)(object)proxManager != (Object)null)
+		{
+			proxManager.StartMovement();
+		}
+		ClearAllHarborEntitiesOnShip();
+		Enumerator<HarborCraneContainerPickup> enumerator = HarborCraneContainerPickup.AllCranes.GetEnumerator();
+		try
+		{
+			while (enumerator.MoveNext())
+			{
+				HarborCraneContainerPickup current = enumerator.Current;
+				if ((Object)(object)current == (Object)null || current.isClient || current.Distance2D(harborApproachPath.nodes[harborApproachPath.nodes.Count / 2].Position) > 150f)
+				{
+					if ((Object)(object)current != (Object)null && current.isServer)
+					{
+						Debug.Log((object)$"Crane at {((Component)current).transform.position} is too far away");
+					}
+				}
+				else
+				{
+					current.ReplenishContainers();
+				}
+			}
+		}
+		finally
+		{
+			((IDisposable)enumerator).Dispose();
+		}
+	}
+
+	private float GetTimeRemainingFromCrates()
+	{
+		float requiredHackSeconds = HackableLockedCrate.requiredHackSeconds;
+		if (GetHackableCrateCount() != 0)
+		{
+			return requiredHackSeconds + requiredHackSeconds * 0.3f;
+		}
+		return 120f;
+	}
+
+	private void EndHarborApproach()
+	{
+		PlayHorn();
+		isDoingHarborApproach = false;
+		currentHarborApproachNode = 0;
+		FindInitialNode();
+		if ((Object)(object)proxManager != (Object)null)
+		{
+			proxManager.EndMovement();
+		}
+		if (HasFinishedDocking)
+		{
+			if (docking_debug)
+			{
+				Debug.Log((object)$"Finished all docking: {EventTimeRemaining}s left in event");
+			}
+			((FacepunchBehaviour)this).Invoke((Action)StartEgress, Mathf.Max(EventTimeRemaining, GetTimeRemainingFromCrates()));
+		}
+	}
+
+	private void AdvanceHarborApproach()
+	{
+		if (currentHarborApproachNode + 1 < harborApproachPath.nodes.Count)
+		{
+			currentHarborApproachNode++;
+		}
+		if (!shouldLookAhead)
+		{
+			shouldLookAhead = true;
+		}
+		if (harborApproachPath.nodes[currentHarborApproachNode].maxVelocityOnApproach == 0f)
+		{
+			OnArrivedAtHarbor();
+		}
+	}
+
+	private bool IsOceanPatrolPathAvailable()
+	{
+		if (TerrainMeta.Path.OceanPatrolFar != null)
+		{
+			return TerrainMeta.Path.OceanPatrolFar.Count > 0;
+		}
+		return false;
+	}
+
+	private bool IsValidTargetNode()
+	{
+		return targetNodeIndex != -1;
+	}
+
+	private void PreHarborLeaveHorn()
+	{
+		PlayHorn();
+	}
+
+	private void LeaveHarbor()
+	{
+		if (docking_debug)
+		{
+			Debug.Log((object)"Cargo is leaving harbor.");
+		}
+		PlayHorn();
+		SetFlag(Flags.Reserved1, b: false);
+		SetFlag(Flags.Reserved2, b: true);
+		currentHarborApproachNode++;
 	}
 
 	public int GetClosestNodeToUs()

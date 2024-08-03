@@ -136,8 +136,7 @@ public class GeneratePowerlineLayout : ProceduralComponent
 				{
 					if (list8.Count >= 8)
 					{
-						int num5 = TerrainMeta.Path.Powerlines.Count + list.Count;
-						PathList pathList = new PathList("Powerline " + num5, list8.ToArray());
+						PathList pathList = new PathList("Powerline " + (TerrainMeta.Path.Powerlines.Count + list.Count), list8.ToArray());
 						pathList.Start = true;
 						pathList.End = true;
 						pathList.ProcgenStartNode = item2.start;

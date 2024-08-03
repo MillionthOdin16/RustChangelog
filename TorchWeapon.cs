@@ -8,7 +8,7 @@ using UnityEngine.Assertions;
 public class TorchWeapon : BaseMelee
 {
 	[NonSerialized]
-	public float fuelTickAmount = 1f / 12f;
+	public const float FuelTickAmount = 1f / 12f;
 
 	[Header("TorchWeapon")]
 	public AnimatorOverrideController LitHoldAnimationOverride;
@@ -18,6 +18,8 @@ public class TorchWeapon : BaseMelee
 	public bool UseTurnOnOffAnimations;
 
 	public GameObjectRef litStrikeFX;
+
+	public const Flags IsInHolder = Flags.Reserved1;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -29,7 +31,7 @@ public class TorchWeapon : BaseMelee
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Extinguish "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Extinguish "));
 				}
 				TimeWarning val2 = TimeWarning.New("Extinguish", 0);
 				try
@@ -80,7 +82,7 @@ public class TorchWeapon : BaseMelee
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Ignite "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Ignite "));
 				}
 				TimeWarning val2 = TimeWarning.New("Ignite", 0);
 				try
@@ -184,7 +186,7 @@ public class TorchWeapon : BaseMelee
 
 	public void UseFuel()
 	{
-		GetOwnerItem()?.LoseCondition(fuelTickAmount);
+		GetOwnerItem()?.LoseCondition(1f / 12f);
 	}
 
 	public override void OnHeldChanged()

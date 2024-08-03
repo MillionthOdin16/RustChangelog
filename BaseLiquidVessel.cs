@@ -53,7 +53,7 @@ public class BaseLiquidVessel : AttackEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - DoDrink "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - DoDrink "));
 				}
 				TimeWarning val2 = TimeWarning.New("DoDrink", 0);
 				try
@@ -104,7 +104,7 @@ public class BaseLiquidVessel : AttackEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SendFilling "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SendFilling "));
 				}
 				TimeWarning val2 = TimeWarning.New("SendFilling", 0);
 				try
@@ -140,7 +140,7 @@ public class BaseLiquidVessel : AttackEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ThrowContents "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ThrowContents "));
 				}
 				TimeWarning val2 = TimeWarning.New("ThrowContents", 0);
 				try
@@ -226,8 +226,8 @@ public class BaseLiquidVessel : AttackEntity
 
 	public void StartFilling()
 	{
-		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bd: Unknown result type (might be due to invalid IL or missing references)
 		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
 		float num = Time.realtimeSinceStartup - lastFillTime;
@@ -242,7 +242,7 @@ public class BaseLiquidVessel : AttackEntity
 				{
 					Effect.server.Run(fillFromContainer.resourcePath, ((Component)facingLiquidContainer).transform.position, Vector3.up);
 				}
-				ClientRPC(null, "CLIENT_StartFillingSoundsContainer");
+				ClientRPC(RpcTarget.NetworkGroup("CLIENT_StartFillingSoundsContainer"));
 			}
 			else if (CanFillFromWorld())
 			{
@@ -250,7 +250,7 @@ public class BaseLiquidVessel : AttackEntity
 				{
 					Effect.server.Run(fillFromWorld.resourcePath, GetOwnerPlayer(), 0u, Vector3.zero, Vector3.up);
 				}
-				ClientRPC(null, "CLIENT_StartFillingSoundsWorld");
+				ClientRPC(RpcTarget.NetworkGroup("CLIENT_StartFillingSoundsWorld"));
 			}
 		}
 		lastFillTime = Time.realtimeSinceStartup;
@@ -258,7 +258,7 @@ public class BaseLiquidVessel : AttackEntity
 
 	public void StopFilling()
 	{
-		ClientRPC(null, "CLIENT_StopFillingSounds");
+		ClientRPC(RpcTarget.NetworkGroup("CLIENT_StopFillingSounds"));
 		((FacepunchBehaviour)this).CancelInvoke((Action)FillCheck);
 	}
 
@@ -538,10 +538,10 @@ public class BaseLiquidVessel : AttackEntity
 
 	public LiquidContainer GetFacingLiquidContainer()
 	{
-		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer ownerPlayer = GetOwnerPlayer();
-		if (!Object.op_Implicit((Object)(object)ownerPlayer))
+		if (!Object.op_Implicit((Object)(object)ownerPlayer) || (Object)(object)ownerPlayer.eyes == (Object)null)
 		{
 			return null;
 		}

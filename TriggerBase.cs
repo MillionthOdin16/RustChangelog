@@ -16,6 +16,10 @@ public class TriggerBase : BaseMonoBehaviour
 	[NonSerialized]
 	public HashSet<BaseEntity> entityContents;
 
+	public Action<BaseNetworkable> OnEntityEnterTrigger;
+
+	public Action<BaseNetworkable> OnEntityLeaveTrigger;
+
 	public bool HasAnyContents => !contents.IsNullOrEmpty();
 
 	public bool HasAnyEntityContents => !entityContents.IsNullOrEmpty();
@@ -37,7 +41,7 @@ public class TriggerBase : BaseMonoBehaviour
 			GameObject[] array = contents.ToArray();
 			foreach (GameObject targetObj in array)
 			{
-				OnTriggerExit(targetObj);
+				OnTriggerExitImpl(targetObj);
 			}
 			contents = null;
 		}
@@ -52,6 +56,7 @@ public class TriggerBase : BaseMonoBehaviour
 				entityContents = new HashSet<BaseEntity>();
 			}
 			entityContents.Add(ent);
+			OnEntityEnterTrigger?.Invoke(ent);
 		}
 	}
 
@@ -60,6 +65,7 @@ public class TriggerBase : BaseMonoBehaviour
 		if (entityContents != null)
 		{
 			entityContents.Remove(ent);
+			OnEntityLeaveTrigger?.Invoke(ent);
 		}
 	}
 
@@ -221,7 +227,7 @@ public class TriggerBase : BaseMonoBehaviour
 		}
 		foreach (GameObject item in list)
 		{
-			OnTriggerExit(item);
+			OnTriggerExitImpl(item);
 		}
 		Pool.FreeList<GameObject>(ref list);
 	}
@@ -280,7 +286,7 @@ public class TriggerBase : BaseMonoBehaviour
 		GameObject val = InterestedInObject(((Component)collider).gameObject);
 		if (!((Object)(object)val == (Object)null))
 		{
-			OnTriggerExit(val);
+			OnTriggerExitImpl(val);
 			if (Debugging.checktriggers)
 			{
 				RemoveInvalidEntities();
@@ -288,7 +294,7 @@ public class TriggerBase : BaseMonoBehaviour
 		}
 	}
 
-	private void OnTriggerExit(GameObject targetObj)
+	private void OnTriggerExitImpl(GameObject targetObj)
 	{
 		if (contents != null && contents.Contains(targetObj))
 		{

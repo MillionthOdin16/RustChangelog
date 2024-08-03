@@ -38,7 +38,7 @@ public abstract class AppIOEntity : IOEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - PairWithApp "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - PairWithApp "));
 				}
 				TimeWarning val2 = TimeWarning.New("PairWithApp", 0);
 				try
@@ -150,7 +150,7 @@ public abstract class AppIOEntity : IOEntity
 		}
 		else
 		{
-			player.ClientRPCPlayer(null, player, "HandleCompanionPairingResult", (int)notificationSendResult);
+			player.ClientRPC(RpcTarget.Player("HandleCompanionPairingResult", player), (int)notificationSendResult);
 		}
 	}
 

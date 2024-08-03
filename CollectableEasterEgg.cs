@@ -4,7 +4,7 @@ using Network;
 using UnityEngine;
 using UnityEngine.Assertions;
 
-public class CollectableEasterEgg : BaseEntity
+public class CollectableEasterEgg : BaseEntity, INotifyLOD
 {
 	public Transform artwork;
 
@@ -15,6 +15,13 @@ public class CollectableEasterEgg : BaseEntity
 	public GameObjectRef pickupEffect;
 
 	public ItemDefinition itemToGive;
+
+	public RotateObject rotateObject;
+
+	public Renderer vfx;
+
+	[NonSerialized]
+	public ulong ownerUserID;
 
 	private float lastPickupStartTime;
 
@@ -28,7 +35,7 @@ public class CollectableEasterEgg : BaseEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_PickUp "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_PickUp "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_PickUp", 0);
 				try
@@ -79,7 +86,7 @@ public class CollectableEasterEgg : BaseEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_StartPickUp "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_StartPickUp "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_StartPickUp", 0);
 				try
@@ -156,11 +163,11 @@ public class CollectableEasterEgg : BaseEntity
 	[RPC_Server.IsVisible(3f)]
 	public void RPC_PickUp(RPCMessage msg)
 	{
-		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00af: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)msg.player == (Object)null)
 		{
 			return;
@@ -176,7 +183,7 @@ public class CollectableEasterEgg : BaseEntity
 			{
 				return;
 			}
-			EggHuntEvent.serverEvent.EggCollected(msg.player);
+			EggHuntEvent.serverEvent.OnEggCollected(msg.player, this);
 			int iAmount = 1;
 			msg.player.GiveItem(ItemManager.Create(itemToGive, iAmount, 0uL));
 		}

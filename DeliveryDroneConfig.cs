@@ -89,6 +89,6 @@ public class DeliveryDroneConfig : BaseScriptableObject
 		{
 			return false;
 		}
-		return vendingMachine.IsVisibleAndCanSee(val, 2f);
+		return vendingMachine.IsVisible(val, 2f);
 	}
 }

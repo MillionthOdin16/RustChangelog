@@ -69,6 +69,14 @@ public class Poolable : MonoBehaviour, IClientComponent, IPrefabPostProcess
 			{
 				return 100;
 			}
+			if (Object.op_Implicit((Object)(object)((Component)this).GetComponent<UIMapVendingMachineMarker>()))
+			{
+				return 25;
+			}
+			if (Object.op_Implicit((Object)(object)((Component)this).GetComponent<UIMapVendingMachineMarkerCluster>()))
+			{
+				return 25;
+			}
 			return 1;
 		}
 	}

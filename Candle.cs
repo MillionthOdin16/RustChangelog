@@ -21,7 +21,7 @@ public class Candle : BaseCombatEntity, ISplashable, IIgniteable
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SetWantsOn "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SetWantsOn "));
 				}
 				TimeWarning val2 = TimeWarning.New("SetWantsOn", 0);
 				try

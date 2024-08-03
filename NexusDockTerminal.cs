@@ -103,7 +103,7 @@ public class NexusDockTerminal : BaseEntity
 		string zoneKey = NexusServer.ZoneKey;
 		foreach (NexusZoneDetails zone in NexusServer.Zones)
 		{
-			if (SeenFerries.Contains(zone.Key) || !((Dictionary<string, VariableData>)(object)zone.Variables).TryGetValue("ferry", out VariableData value) || (int)((VariableData)(ref value)).Type != 1 || string.IsNullOrWhiteSpace(((VariableData)(ref value)).Value) || !StringExtensions.Contains(((VariableData)(ref value)).Value, zoneKey, StringComparison.InvariantCultureIgnoreCase) || !NexusUtil.TryParseFerrySchedule(zone.Key, ((VariableData)(ref value)).Value, out var schedule))
+			if (SeenFerries.Contains(zone.Key) || !((Dictionary<string, VariableData>)(object)zone.Variables).TryGetValue("ferry", out VariableData value) || (int)((VariableData)(ref value)).Type != 1 || string.IsNullOrWhiteSpace(((VariableData)(ref value)).Value) || !((VariableData)(ref value)).Value.Contains(zoneKey, StringComparison.InvariantCultureIgnoreCase) || !NexusUtil.TryParseFerrySchedule(zone.Key, ((VariableData)(ref value)).Value, out var schedule))
 			{
 				continue;
 			}

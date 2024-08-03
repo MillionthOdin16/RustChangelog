@@ -23,7 +23,7 @@ public class ReclaimTerminal : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_ReloadLoot "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_ReloadLoot "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_ReloadLoot", 0);
 				try

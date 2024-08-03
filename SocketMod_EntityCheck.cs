@@ -15,6 +15,8 @@ public class SocketMod_EntityCheck : SocketMod
 
 	public bool wantsCollide;
 
+	public static Phrase ErrorPhrase = new Phrase("error_entitycheck", "Invalid entity");
+
 	private void OnDrawGizmosSelected()
 	{
 		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
@@ -28,30 +30,35 @@ public class SocketMod_EntityCheck : SocketMod
 
 	public override bool DoCheck(Construction.Placement place)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
+		bool flag = !wantsCollide;
 		Vector3 position = place.position + place.rotation * worldPosition;
 		List<BaseEntity> list = Pool.GetList<BaseEntity>();
 		Vis.Entities(position, sphereRadius, list, ((LayerMask)(ref layerMask)).value, queryTriggers);
 		foreach (BaseEntity ent in list)
 		{
-			bool flag = entityTypes.Any((BaseEntity x) => x.prefabID == ent.prefabID);
-			if (flag && wantsCollide)
+			bool flag2 = entityTypes.Any((BaseEntity x) => x.prefabID == ent.prefabID);
+			if (flag2 && wantsCollide)
 			{
-				Pool.FreeList<BaseEntity>(ref list);
-				return true;
+				flag = true;
+				break;
 			}
-			if (flag && !wantsCollide)
+			if (flag2 && !wantsCollide)
 			{
-				Pool.FreeList<BaseEntity>(ref list);
-				return false;
+				flag = false;
+				break;
 			}
 		}
+		if (!flag)
+		{
+			Construction.lastPlacementError = ErrorPhrase.translated;
+		}
 		Pool.FreeList<BaseEntity>(ref list);
-		return !wantsCollide;
+		return flag;
 	}
 }

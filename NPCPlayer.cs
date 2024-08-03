@@ -6,6 +6,8 @@ using UnityEngine.AI;
 
 public class NPCPlayer : BasePlayer
 {
+	public float MovementTickStartDelay = 1f;
+
 	public AIInformationZone VirtualInfoZone;
 
 	public Vector3 finalDestination;
@@ -18,7 +20,7 @@ public class NPCPlayer : BasePlayer
 
 	public PlayerInventoryProperties[] loadouts;
 
-	public LayerMask movementMask = LayerMask.op_Implicit(429990145);
+	public LayerMask movementMask = LayerMask.op_Implicit(1503731969);
 
 	public bool LegacyNavigation = true;
 
@@ -31,6 +33,8 @@ public class NPCPlayer : BasePlayer
 	public float attackLengthMaxShortRangeScale = 1f;
 
 	private bool _isDormant;
+
+	private string loadoutname;
 
 	protected float lastGunShotTime;
 
@@ -129,14 +133,21 @@ public class NPCPlayer : BasePlayer
 				((Component)((Component)this).transform).gameObject.GetComponent<BaseNavigator>().Init(this, NavAgent);
 			}
 		}
-		((FacepunchBehaviour)this).InvokeRandomized((Action)TickMovement, 1f, PositionTickRate, PositionTickRate * 0.1f);
+		((FacepunchBehaviour)this).InvokeRandomized((Action)TickMovement, MovementTickStartDelay, PositionTickRate, PositionTickRate * 0.1f);
+	}
+
+	public string GetLoadoutName()
+	{
+		return loadoutname;
 	}
 
 	public void EquipLoadout(PlayerInventoryProperties[] loads)
 	{
 		if (loads != null && loads.Length != 0)
 		{
-			loads[Random.Range(0, loads.Length)].GiveToPlayer(this);
+			int num = Random.Range(0, loads.Length);
+			loadoutname = loads[num].niceName;
+			loads[num].GiveToPlayer(this);
 		}
 	}
 
@@ -238,6 +249,15 @@ public class NPCPlayer : BasePlayer
 				return false;
 			}
 		}
+		else
+		{
+			FlameThrower flameThrower = attackEntity as FlameThrower;
+			if ((Object)(object)flameThrower != (Object)null && flameThrower.ammo <= 0)
+			{
+				flameThrower.ServerReload();
+				return false;
+			}
+		}
 		if (!Mathf.Approximately(attackEntity.attackLengthMin, -1f))
 		{
 			if (((FacepunchBehaviour)this).IsInvoking((Action)TriggerDown))
@@ -312,16 +332,16 @@ public class NPCPlayer : BasePlayer
 	public virtual void EquipWeapon(bool skipDeployDelay = false)
 	{
 		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-		if ((Object)(object)inventory == (Object)null || inventory.containerBelt == null)
+		if ((Object)(object)base.inventory == (Object)null || base.inventory.containerBelt == null)
 		{
 			return;
 		}
-		Item slot = inventory.containerBelt.GetSlot(0);
+		Item slot = base.inventory.containerBelt.GetSlot(0);
 		if (slot == null)
 		{
 			return;
 		}
-		UpdateActiveItem(inventory.containerBelt.GetSlot(0).uid);
+		UpdateActiveItem(base.inventory.containerBelt.GetSlot(0).uid);
 		BaseEntity heldEntity = slot.GetHeldEntity();
 		if (!((Object)(object)heldEntity != (Object)null))
 		{
@@ -418,10 +438,10 @@ public class NPCPlayer : BasePlayer
 
 	private bool ValidateNextPosition(ref Vector3 moveToPosition)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		if (!ValidBounds.Test(moveToPosition) && (Object)(object)((Component)this).transform != (Object)null && !base.IsDestroyed)
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		if (!ValidBounds.Test(this, moveToPosition) && (Object)(object)((Component)this).transform != (Object)null && !base.IsDestroyed)
 		{
-			Debug.Log((object)string.Concat("Invalid NavAgent Position: ", this, " ", ((object)(Vector3)(ref moveToPosition)).ToString(), " (destroying)"));
+			Debug.Log((object)("Invalid NavAgent Position: " + ((object)this)?.ToString() + " " + ((object)(Vector3)(ref moveToPosition)).ToString() + " (destroying)"));
 			Kill();
 			return false;
 		}
@@ -480,7 +500,7 @@ public class NPCPlayer : BasePlayer
 			Vector3 normalized = ((Vector3)(ref val)).normalized;
 			return new Vector3(normalized.x, 0f, normalized.z);
 		}
-		return eyes.BodyForward();
+		return base.eyes.BodyForward();
 	}
 
 	public virtual void SetAimDirection(Vector3 newAim)
@@ -505,10 +525,10 @@ public class NPCPlayer : BasePlayer
 			{
 				newAim = attackEntity.ModifyAIAim(newAim);
 			}
-			eyes.rotation = Quaternion.LookRotation(newAim, Vector3.up);
-			Quaternion rotation = eyes.rotation;
+			base.eyes.rotation = Quaternion.LookRotation(newAim, Vector3.up);
+			Quaternion rotation = base.eyes.rotation;
 			viewAngles = ((Quaternion)(ref rotation)).eulerAngles;
-			ServerRotation = eyes.rotation;
+			ServerRotation = base.eyes.rotation;
 			lastPositionUpdateTime = Time.time;
 		}
 	}
@@ -593,13 +613,13 @@ public class NPCPlayer : BasePlayer
 
 	public Item FindThrownWeapon()
 	{
-		if ((Object)(object)inventory == (Object)null || inventory.containerBelt == null)
+		if ((Object)(object)base.inventory == (Object)null || base.inventory.containerBelt == null)
 		{
 			return null;
 		}
-		for (int i = 0; i < inventory.containerBelt.capacity; i++)
+		for (int i = 0; i < base.inventory.containerBelt.capacity; i++)
 		{
-			Item slot = inventory.containerBelt.GetSlot(i);
+			Item slot = base.inventory.containerBelt.GetSlot(i);
 			if (slot != null && (Object)(object)(slot.GetHeldEntity() as ThrownWeapon) != (Object)null)
 			{
 				return slot;

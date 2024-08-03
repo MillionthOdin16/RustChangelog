@@ -35,7 +35,7 @@ public class CardReader : IOEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ServerCardSwiped "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ServerCardSwiped "));
 				}
 				TimeWarning val2 = TimeWarning.New("ServerCardSwiped", 0);
 				try
@@ -159,10 +159,14 @@ public class CardReader : IOEntity
 		NetworkableId uid = msg.read.EntityID();
 		Keycard keycard = BaseNetworkable.serverEntities.Find(uid) as Keycard;
 		Effect.server.Run(swipeEffect.resourcePath, audioPosition.position, Vector3.up, msg.player.net.connection);
-		if ((Object)(object)keycard != (Object)null)
+		if ((Object)(object)keycard == (Object)null)
 		{
-			Item item = keycard.GetItem();
-			if (item != null && keycard.accessLevel == accessLevel && item.conditionNormalized > 0f)
+			return;
+		}
+		Item item = keycard.GetItem();
+		if (item != null && !((Object)(object)item.parent.playerOwner != (Object)(object)msg.player))
+		{
+			if (keycard.accessLevel == accessLevel && item.conditionNormalized > 0f)
 			{
 				Analytics.Azure.OnKeycardSwiped(msg.player, this);
 				((FacepunchBehaviour)this).Invoke((Action)GrantCard, 0.5f);

@@ -9,21 +9,6 @@ using UnityEngine;
 
 public class BoomBox : EntityComponent<BaseEntity>, INotifyLOD
 {
-	public static Dictionary<string, string> ValidStations;
-
-	public static Dictionary<string, string> ServerValidStations;
-
-	[ReplicatedVar(Saved = true, Help = "A list of radio stations that are valid on this server. Format: NAME,URL,NAME,URL,etc", ShowInAdminUI = true)]
-	public static string ServerUrlList = string.Empty;
-
-	private static string lastParsedServerList;
-
-	public ShoutcastStreamer ShoutcastStreamer;
-
-	public GameObjectRef RadioIpDialog;
-
-	public ulong AssignedRadioBy;
-
 	public AudioSource SoundSource;
 
 	public float ConditionLossRate = 0.25f;
@@ -41,8 +26,20 @@ public class BoomBox : EntityComponent<BaseEntity>, INotifyLOD
 
 	public Action<float> HurtCallback;
 
-	public string CurrentRadioIp { get; private set; } = "rustradio.facepunch.com";
+	public static Dictionary<string, string> ValidStations;
 
+	public static Dictionary<string, string> ServerValidStations;
+
+	[ReplicatedVar(Saved = true, Help = "A list of radio stations that are valid on this server. Format: NAME,URL,NAME,URL,etc", ShowInAdminUI = true)]
+	public static string ServerUrlList = string.Empty;
+
+	private static string lastParsedServerList;
+
+	public ShoutcastStreamer ShoutcastStreamer;
+
+	public GameObjectRef RadioIpDialog;
+
+	public ulong AssignedRadioBy;
 
 	public BaseEntity BaseEntity => base.baseEntity;
 
@@ -57,6 +54,9 @@ public class BoomBox : EntityComponent<BaseEntity>, INotifyLOD
 			return false;
 		}
 	}
+
+	public string CurrentRadioIp { get; private set; } = "rustradio.facepunch.com";
+
 
 	[ServerVar]
 	public static void ClearRadioByUser(Arg arg)
@@ -91,140 +91,6 @@ public class BoomBox : EntityComponent<BaseEntity>, INotifyLOD
 		arg.ReplyWith($"Stopped and cleared saved URL of {num} boom boxes");
 	}
 
-	public static void LoadStations()
-	{
-		if (ValidStations == null)
-		{
-			ValidStations = GetStationData() ?? new Dictionary<string, string>();
-			ParseServerUrlList();
-		}
-	}
-
-	private static Dictionary<string, string> GetStationData()
-	{
-		JObject obj = Application.Manifest?.Metadata;
-		JToken obj2 = ((obj != null) ? obj["RadioStations"] : null);
-		JArray val;
-		if ((val = (JArray)(object)((obj2 is JArray) ? obj2 : null)) != null && ((JContainer)val).Count > 0)
-		{
-			string[] array = new string[2];
-			Dictionary<string, string> dictionary = new Dictionary<string, string>();
-			{
-				foreach (string item in ((JToken)val).Values<string>())
-				{
-					array = item.Split(',');
-					if (!dictionary.ContainsKey(array[0]))
-					{
-						dictionary.Add(array[0], array[1]);
-					}
-				}
-				return dictionary;
-			}
-		}
-		return null;
-	}
-
-	private static bool IsStationValid(string url)
-	{
-		ParseServerUrlList();
-		if (ValidStations == null || !ValidStations.ContainsValue(url))
-		{
-			if (ServerValidStations != null)
-			{
-				return ServerValidStations.ContainsValue(url);
-			}
-			return false;
-		}
-		return true;
-	}
-
-	public static void ParseServerUrlList()
-	{
-		if (ServerValidStations == null)
-		{
-			ServerValidStations = new Dictionary<string, string>();
-		}
-		if (lastParsedServerList == ServerUrlList)
-		{
-			return;
-		}
-		ServerValidStations.Clear();
-		if (!string.IsNullOrEmpty(ServerUrlList))
-		{
-			string[] array = ServerUrlList.Split(',');
-			if (array.Length % 2 != 0)
-			{
-				Debug.Log((object)"Invalid number of stations in BoomBox.ServerUrlList, ensure you always have a name and a url");
-				return;
-			}
-			for (int i = 0; i < array.Length; i += 2)
-			{
-				if (ServerValidStations.ContainsKey(array[i]))
-				{
-					Debug.Log((object)("Duplicate station name detected in BoomBox.ServerUrlList, all station names must be unique: " + array[i]));
-				}
-				else
-				{
-					ServerValidStations.Add(array[i], array[i + 1]);
-				}
-			}
-		}
-		lastParsedServerList = ServerUrlList;
-	}
-
-	public void Server_UpdateRadioIP(BaseEntity.RPCMessage msg)
-	{
-		string text = msg.read.String(256);
-		if (IsStationValid(text))
-		{
-			if ((Object)(object)msg.player != (Object)null)
-			{
-				ulong userID = msg.player.userID;
-				AssignedRadioBy = userID;
-			}
-			CurrentRadioIp = text;
-			base.baseEntity.ClientRPC(null, "OnRadioIPChanged", CurrentRadioIp);
-			if (IsOn())
-			{
-				ServerTogglePlay(play: false);
-			}
-		}
-	}
-
-	public void Save(BaseNetworkable.SaveInfo info)
-	{
-		if (info.msg.boomBox == null)
-		{
-			info.msg.boomBox = Pool.Get<BoomBox>();
-		}
-		info.msg.boomBox.radioIp = CurrentRadioIp;
-		info.msg.boomBox.assignedRadioBy = AssignedRadioBy;
-	}
-
-	public bool ClearRadioByUserId(ulong id)
-	{
-		if (AssignedRadioBy == id)
-		{
-			CurrentRadioIp = string.Empty;
-			AssignedRadioBy = 0uL;
-			if (HasFlag(BaseEntity.Flags.On))
-			{
-				ServerTogglePlay(play: false);
-			}
-			return true;
-		}
-		return false;
-	}
-
-	public void Load(BaseNetworkable.LoadInfo info)
-	{
-		if (info.msg.boomBox != null)
-		{
-			CurrentRadioIp = info.msg.boomBox.radioIp;
-			AssignedRadioBy = info.msg.boomBox.assignedRadioBy;
-		}
-	}
-
 	public void ServerTogglePlay(BaseEntity.RPCMessage msg)
 	{
 		if (IsPowered())
@@ -241,12 +107,11 @@ public class BoomBox : EntityComponent<BaseEntity>, INotifyLOD
 
 	public void ServerTogglePlay(bool play)
 	{
-		if (!((Object)(object)base.baseEntity == (Object)null))
+		if (!((Object)(object)base.baseEntity == (Object)null) && HasFlag(BaseEntity.Flags.On) != play)
 		{
 			SetFlag(BaseEntity.Flags.On, play);
 			if (base.baseEntity is IOEntity iOEntity)
 			{
-				iOEntity.SendChangedToRoot(forceUpdate: true);
 				iOEntity.MarkDirtyForceUpdateOutputs();
 			}
 			if (play && !((FacepunchBehaviour)this).IsInvoking((Action)DeductCondition) && ConditionLossRate > 0f)
@@ -262,10 +127,10 @@ public class BoomBox : EntityComponent<BaseEntity>, INotifyLOD
 
 	public void OnCassetteInserted(Cassette c)
 	{
-		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
 		if (!((Object)(object)base.baseEntity == (Object)null))
 		{
-			base.baseEntity.ClientRPC<NetworkableId>(null, "Client_OnCassetteInserted", c.net.ID);
+			base.baseEntity.ClientRPC<NetworkableId>(RpcTarget.NetworkGroup("Client_OnCassetteInserted"), c.net.ID);
 			ServerTogglePlay(play: false);
 			SetFlag(BaseEntity.Flags.Reserved1, state: true);
 			base.baseEntity.SendNetworkUpdate();
@@ -276,7 +141,7 @@ public class BoomBox : EntityComponent<BaseEntity>, INotifyLOD
 	{
 		if (!((Object)(object)base.baseEntity == (Object)null))
 		{
-			base.baseEntity.ClientRPC(null, "Client_OnCassetteRemoved");
+			base.baseEntity.ClientRPC(RpcTarget.NetworkGroup("Client_OnCassetteRemoved"));
 			ServerTogglePlay(play: false);
 			SetFlag(BaseEntity.Flags.Reserved1, state: false);
 		}
@@ -318,6 +183,140 @@ public class BoomBox : EntityComponent<BaseEntity>, INotifyLOD
 		if ((Object)(object)base.baseEntity != (Object)null)
 		{
 			base.baseEntity.SetFlag(f, state);
+		}
+	}
+
+	public static void LoadStations()
+	{
+		if (ValidStations == null)
+		{
+			ValidStations = GetStationData() ?? new Dictionary<string, string>();
+			ParseServerUrlList();
+		}
+	}
+
+	private static Dictionary<string, string> GetStationData()
+	{
+		JObject obj = Application.Manifest?.Metadata;
+		JToken obj2 = ((obj != null) ? obj["RadioStations"] : null);
+		JArray val = (JArray)(object)((obj2 is JArray) ? obj2 : null);
+		if (val != null && ((JContainer)val).Count > 0)
+		{
+			string[] array = new string[2];
+			Dictionary<string, string> dictionary = new Dictionary<string, string>();
+			{
+				foreach (string item in ((JContainer)val).Values<string>())
+				{
+					array = item.Split(',', StringSplitOptions.None);
+					if (!dictionary.ContainsKey(array[0]))
+					{
+						dictionary.Add(array[0], array[1]);
+					}
+				}
+				return dictionary;
+			}
+		}
+		return null;
+	}
+
+	private static bool IsStationValid(string url)
+	{
+		ParseServerUrlList();
+		if (ValidStations == null || !ValidStations.ContainsValue(url))
+		{
+			if (ServerValidStations != null)
+			{
+				return ServerValidStations.ContainsValue(url);
+			}
+			return false;
+		}
+		return true;
+	}
+
+	public static void ParseServerUrlList()
+	{
+		if (ServerValidStations == null)
+		{
+			ServerValidStations = new Dictionary<string, string>();
+		}
+		if (lastParsedServerList == ServerUrlList)
+		{
+			return;
+		}
+		ServerValidStations.Clear();
+		if (!string.IsNullOrEmpty(ServerUrlList))
+		{
+			string[] array = ServerUrlList.Split(',', StringSplitOptions.None);
+			if (array.Length % 2 != 0)
+			{
+				Debug.Log((object)"Invalid number of stations in BoomBox.ServerUrlList, ensure you always have a name and a url");
+				return;
+			}
+			for (int i = 0; i < array.Length; i += 2)
+			{
+				if (ServerValidStations.ContainsKey(array[i]))
+				{
+					Debug.Log((object)("Duplicate station name detected in BoomBox.ServerUrlList, all station names must be unique: " + array[i]));
+				}
+				else
+				{
+					ServerValidStations.Add(array[i], array[i + 1]);
+				}
+			}
+		}
+		lastParsedServerList = ServerUrlList;
+	}
+
+	public void Server_UpdateRadioIP(BaseEntity.RPCMessage msg)
+	{
+		string text = msg.read.String(256, false);
+		if (IsStationValid(text))
+		{
+			if ((Object)(object)msg.player != (Object)null)
+			{
+				ulong assignedRadioBy = msg.player.userID.Get();
+				AssignedRadioBy = assignedRadioBy;
+			}
+			CurrentRadioIp = text;
+			base.baseEntity.ClientRPC(RpcTarget.NetworkGroup("OnRadioIPChanged"), CurrentRadioIp);
+			if (IsOn())
+			{
+				ServerTogglePlay(play: false);
+			}
+		}
+	}
+
+	public void Save(BaseNetworkable.SaveInfo info)
+	{
+		if (info.msg.boomBox == null)
+		{
+			info.msg.boomBox = Pool.Get<BoomBox>();
+		}
+		info.msg.boomBox.radioIp = CurrentRadioIp;
+		info.msg.boomBox.assignedRadioBy = AssignedRadioBy;
+	}
+
+	public bool ClearRadioByUserId(ulong id)
+	{
+		if (AssignedRadioBy == id)
+		{
+			CurrentRadioIp = string.Empty;
+			AssignedRadioBy = 0uL;
+			if (HasFlag(BaseEntity.Flags.On))
+			{
+				ServerTogglePlay(play: false);
+			}
+			return true;
+		}
+		return false;
+	}
+
+	public void Load(BaseNetworkable.LoadInfo info)
+	{
+		if (info.msg.boomBox != null)
+		{
+			CurrentRadioIp = info.msg.boomBox.radioIp;
+			AssignedRadioBy = info.msg.boomBox.assignedRadioBy;
 		}
 	}
 }

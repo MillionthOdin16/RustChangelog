@@ -60,7 +60,8 @@ public class Wearable : MonoBehaviour, IItemSetup, IPrefabPreProcess
 		LeftFoot = 0x20000,
 		RightFoot = 0x40000,
 		Mouth = 0x80000,
-		Eyes = 0x100000
+		Eyes = 0x100000,
+		Back = 0x200000
 	}
 
 	[Serializable]
@@ -93,6 +94,10 @@ public class Wearable : MonoBehaviour, IItemSetup, IPrefabPreProcess
 	[InspectorFlags]
 	public OccupationSlots occupationOver;
 
+	public bool IsBackpack;
+
+	public bool HideInPlayerPreview;
+
 	public bool showCensorshipCube;
 
 	public bool showCensorshipCubeBreasts;
@@ -106,6 +111,9 @@ public class Wearable : MonoBehaviour, IItemSetup, IPrefabPreProcess
 	public bool overrideDownLimit;
 
 	public float downLimit = 70f;
+
+	[Range(0f, 1f)]
+	public float handcuffsSize;
 
 	[HideInInspector]
 	public PlayerModelHair playerModelHair;
@@ -137,6 +145,9 @@ public class Wearable : MonoBehaviour, IItemSetup, IPrefabPreProcess
 	[HideInInspector]
 	public List<ComponentInfo> componentInfos = new List<ComponentInfo>();
 
+	[HideInInspector]
+	public List<WearableNotify> notifies = new List<WearableNotify>();
+
 	public bool HideInEyesView;
 
 	[Header("First Person Legs")]
@@ -150,6 +161,8 @@ public class Wearable : MonoBehaviour, IItemSetup, IPrefabPreProcess
 	[Tooltip("Enable this to check for BoneRetargets which need to be preserved in first person view")]
 	public bool PreserveBones;
 
+	public bool LegFade;
+
 	public Renderer[] RenderersLod0;
 
 	public Renderer[] RenderersLod1;
@@ -161,8 +174,6 @@ public class Wearable : MonoBehaviour, IItemSetup, IPrefabPreProcess
 	public Renderer[] RenderersLod4;
 
 	public Renderer[] SkipInFirstPersonLegs;
-
-	public WearableNotify[] Notifies;
 
 	private static LOD[] emptyLOD = (LOD[])(object)new LOD[1];
 
@@ -194,6 +205,7 @@ public class Wearable : MonoBehaviour, IItemSetup, IPrefabPreProcess
 		((Component)this).GetComponentsInChildren<SkinnedMeshRenderer>(true, skinnedRenderers);
 		((Component)this).GetComponentsInChildren<SkeletonSkin>(true, skeletonSkins);
 		((Component)this).GetComponentsInChildren<ComponentInfo>(true, componentInfos);
+		((Component)this).GetComponentsInChildren<WearableNotify>(true, notifies);
 		RenderersLod0 = renderers.Where((Renderer x) => ((Object)((Component)x).gameObject).name.EndsWith("0")).ToArray();
 		RenderersLod1 = renderers.Where((Renderer x) => ((Object)((Component)x).gameObject).name.EndsWith("1")).ToArray();
 		RenderersLod2 = renderers.Where((Renderer x) => ((Object)((Component)x).gameObject).name.EndsWith("2")).ToArray();

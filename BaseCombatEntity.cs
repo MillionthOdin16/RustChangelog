@@ -12,6 +12,22 @@ using UnityEngine.Assertions;
 
 public class BaseCombatEntity : BaseEntity
 {
+	public enum LifeState
+	{
+		Alive,
+		Dead
+	}
+
+	[Serializable]
+	public enum Faction
+	{
+		Default,
+		Player,
+		Bandit,
+		Scientist,
+		Horror
+	}
+
 	[Serializable]
 	public struct Pickup
 	{
@@ -36,6 +52,9 @@ public class BaseCombatEntity : BaseEntity
 
 		[Tooltip("Inventory Must be empty (if applicable) to be picked up")]
 		public bool requireEmptyInv;
+
+		[Tooltip("If set, pickup will take this long in seconds")]
+		public float overridePickupTime;
 	}
 
 	[Serializable]
@@ -45,6 +64,9 @@ public class BaseCombatEntity : BaseEntity
 
 		[ItemSelector(ItemCategory.All)]
 		public ItemDefinition itemTarget;
+
+		[ItemSelector(ItemCategory.All)]
+		public ItemDefinition ignoreForRepair;
 
 		public GameObjectRef repairEffect;
 
@@ -60,41 +82,6 @@ public class BaseCombatEntity : BaseEntity
 		Loud
 	}
 
-	public enum LifeState
-	{
-		Alive,
-		Dead
-	}
-
-	[Serializable]
-	public enum Faction
-	{
-		Default,
-		Player,
-		Bandit,
-		Scientist,
-		Horror
-	}
-
-	private const float MAX_HEALTH_REPAIR = 50f;
-
-	[NonSerialized]
-	public DamageType lastDamage;
-
-	[NonSerialized]
-	public BaseEntity lastAttacker;
-
-	public BaseEntity lastDealtDamageTo;
-
-	[NonSerialized]
-	public bool ResetLifeStateOnSpawn = true;
-
-	protected DirectionProperties[] propDirection;
-
-	protected float unHostileTime;
-
-	private float lastNoiseTime;
-
 	[Header("BaseCombatEntity")]
 	public SkeletonProperties skeletonProperties;
 
@@ -108,6 +95,7 @@ public class BaseCombatEntity : BaseEntity
 
 	public bool ShowHealthInfo = true;
 
+	[ReadOnly]
 	public LifeState lifestate;
 
 	public bool sendsHitNotification;
@@ -130,11 +118,25 @@ public class BaseCombatEntity : BaseEntity
 
 	private int lastNotifyFrame;
 
-	public float TimeSinceLastNoise => Time.time - lastNoiseTime;
+	private const float MAX_HEALTH_REPAIR = 50f;
 
-	public ActionVolume LastNoiseVolume { get; private set; }
+	[NonSerialized]
+	public DamageType lastDamage;
 
-	public Vector3 LastNoisePosition { get; private set; }
+	[NonSerialized]
+	public BaseEntity lastAttacker;
+
+	[NonSerialized]
+	public BaseEntity lastDealtDamageTo;
+
+	[NonSerialized]
+	public bool ResetLifeStateOnSpawn = true;
+
+	protected DirectionProperties[] propDirection;
+
+	protected float unHostileTime;
+
+	private float lastNoiseTime;
 
 	public Vector3 LastAttackedDir { get; set; }
 
@@ -161,6 +163,12 @@ public class BaseCombatEntity : BaseEntity
 		}
 	}
 
+	public float TimeSinceLastNoise => Time.time - lastNoiseTime;
+
+	public ActionVolume LastNoiseVolume { get; private set; }
+
+	public Vector3 LastNoisePosition { get; private set; }
+
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
 		TimeWarning val = TimeWarning.New("BaseCombatEntity.OnRpcMessage", 0);
@@ -171,7 +179,7 @@ public class BaseCombatEntity : BaseEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_PickupStart "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_PickupStart "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_PickupStart", 0);
 				try
@@ -223,491 +231,6 @@ public class BaseCombatEntity : BaseEntity
 			((IDisposable)val)?.Dispose();
 		}
 		return base.OnRpcMessage(player, rpc, msg);
-	}
-
-	protected virtual int GetPickupCount()
-	{
-		return pickup.itemCount;
-	}
-
-	public virtual bool CanPickup(BasePlayer player)
-	{
-		if (pickup.enabled)
-		{
-			if (!pickup.requireBuildingPrivilege || player.CanBuild())
-			{
-				if (pickup.requireHammer)
-				{
-					return player.IsHoldingEntity<Hammer>();
-				}
-				return true;
-			}
-			return false;
-		}
-		return false;
-	}
-
-	public virtual void OnPickedUp(Item createdItem, BasePlayer player)
-	{
-	}
-
-	public virtual void OnPickedUpPreItemMove(Item createdItem, BasePlayer player)
-	{
-	}
-
-	[RPC_Server]
-	[RPC_Server.MaxDistance(3f)]
-	private void RPC_PickupStart(RPCMessage rpc)
-	{
-		if (rpc.player.CanInteract() && CanPickup(rpc.player))
-		{
-			Item item = ItemManager.Create(pickup.itemTarget, GetPickupCount(), skinID);
-			if (pickup.setConditionFromHealth && item.hasCondition)
-			{
-				item.conditionNormalized = Mathf.Clamp01(healthFraction - pickup.subtractCondition);
-			}
-			OnPickedUpPreItemMove(item, rpc.player);
-			rpc.player.GiveItem(item, GiveItemReason.PickedUp);
-			OnPickedUp(item, rpc.player);
-			Analytics.Azure.OnEntityPickedUp(rpc.player, this);
-			Kill();
-		}
-	}
-
-	public virtual List<ItemAmount> BuildCost()
-	{
-		if ((Object)(object)repair.itemTarget == (Object)null)
-		{
-			return null;
-		}
-		ItemBlueprint itemBlueprint = ItemManager.FindBlueprint(repair.itemTarget);
-		if ((Object)(object)itemBlueprint == (Object)null)
-		{
-			return null;
-		}
-		return itemBlueprint.ingredients;
-	}
-
-	public virtual float RepairCostFraction()
-	{
-		return 0.5f;
-	}
-
-	public List<ItemAmount> RepairCost(float healthMissingFraction)
-	{
-		List<ItemAmount> list = BuildCost();
-		if (list == null)
-		{
-			return null;
-		}
-		List<ItemAmount> list2 = new List<ItemAmount>();
-		foreach (ItemAmount item in list)
-		{
-			list2.Add(new ItemAmount(item.itemDef, Mathf.RoundToInt(item.amount * RepairCostFraction() * healthMissingFraction)));
-		}
-		RepairBench.StripComponentRepairCost(list2);
-		return list2;
-	}
-
-	public virtual void OnRepair()
-	{
-		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
-		Effect.server.Run(repair.repairEffect.isValid ? repair.repairEffect.resourcePath : "assets/bundled/prefabs/fx/build/repair.prefab", this, 0u, Vector3.zero, Vector3.zero);
-	}
-
-	public virtual void OnRepairFinished()
-	{
-		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
-		Effect.server.Run(repair.repairFullEffect.isValid ? repair.repairFullEffect.resourcePath : "assets/bundled/prefabs/fx/build/repair_full.prefab", this, 0u, Vector3.zero, Vector3.zero);
-	}
-
-	public virtual void OnRepairFailed(BasePlayer player, string reason)
-	{
-		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
-		Effect.server.Run(repair.repairFailedEffect.isValid ? repair.repairFailedEffect.resourcePath : "assets/bundled/prefabs/fx/build/repair_failed.prefab", this, 0u, Vector3.zero, Vector3.zero);
-		if ((Object)(object)player != (Object)null && !string.IsNullOrEmpty(reason))
-		{
-			player.ChatMessage(reason);
-		}
-	}
-
-	public virtual void OnRepairFailedResources(BasePlayer player, List<ItemAmount> requirements)
-	{
-		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
-		Effect.server.Run(repair.repairFailedEffect.isValid ? repair.repairFailedEffect.resourcePath : "assets/bundled/prefabs/fx/build/repair_failed.prefab", this, 0u, Vector3.zero, Vector3.zero);
-		if ((Object)(object)player != (Object)null)
-		{
-			ItemAmountList val = ItemAmount.SerialiseList(requirements);
-			try
-			{
-				player.ClientRPCPlayer<ItemAmountList>(null, player, "Client_OnRepairFailedResources", val);
-			}
-			finally
-			{
-				((IDisposable)val)?.Dispose();
-			}
-		}
-	}
-
-	public virtual void DoRepair(BasePlayer player)
-	{
-		if (!repair.enabled)
-		{
-			return;
-		}
-		float num = 30f;
-		if (SecondsSinceAttacked <= num)
-		{
-			OnRepairFailed(player, $"Unable to repair: Recently damaged. Repairable in: {num - SecondsSinceAttacked:N0}s.");
-			return;
-		}
-		float num2 = MaxHealth() - Health();
-		float num3 = num2 / MaxHealth();
-		if (num2 <= 0f || num3 <= 0f)
-		{
-			OnRepairFailed(player, "Unable to repair: Not damaged.");
-			return;
-		}
-		List<ItemAmount> list = RepairCost(num3);
-		if (list == null)
-		{
-			return;
-		}
-		float num4 = list.Sum((ItemAmount x) => x.amount);
-		float healthBefore = health;
-		if (num4 > 0f)
-		{
-			float num5 = list.Min((ItemAmount x) => Mathf.Clamp01((float)player.inventory.GetAmount(x.itemid) / x.amount));
-			if (float.IsNaN(num5))
-			{
-				num5 = 0f;
-			}
-			num5 = Mathf.Min(num5, 50f / num2);
-			if (num5 <= 0f)
-			{
-				OnRepairFailedResources(player, list);
-				return;
-			}
-			int num6 = 0;
-			foreach (ItemAmount item in list)
-			{
-				int amount = Mathf.CeilToInt(num5 * item.amount);
-				int num7 = player.inventory.Take(null, item.itemid, amount);
-				Analytics.Azure.LogResource(Analytics.Azure.ResourceMode.Consumed, "repair_entity", item.itemDef.shortname, num7, this, null, safezone: false, null, player.userID);
-				if (num7 > 0)
-				{
-					num6 += num7;
-					player.Command("note.inv", item.itemid, num7 * -1);
-				}
-			}
-			float num8 = (float)num6 / num4;
-			health += num2 * num8;
-			SendNetworkUpdate();
-		}
-		else
-		{
-			health += num2;
-			SendNetworkUpdate();
-		}
-		Analytics.Azure.OnEntityRepaired(player, this, healthBefore, health);
-		if (Health() >= MaxHealth())
-		{
-			OnRepairFinished();
-		}
-		else
-		{
-			OnRepair();
-		}
-	}
-
-	public virtual void InitializeHealth(float newhealth, float newmax)
-	{
-		_maxHealth = newmax;
-		_health = newhealth;
-		lifestate = LifeState.Alive;
-	}
-
-	public override void ServerInit()
-	{
-		propDirection = PrefabAttribute.server.FindAll<DirectionProperties>(prefabID);
-		if (ResetLifeStateOnSpawn)
-		{
-			InitializeHealth(StartHealth(), StartMaxHealth());
-			lifestate = LifeState.Alive;
-		}
-		base.ServerInit();
-	}
-
-	public virtual void OnHealthChanged(float oldvalue, float newvalue)
-	{
-	}
-
-	public void Hurt(float amount)
-	{
-		Hurt(Mathf.Abs(amount), DamageType.Generic);
-	}
-
-	public void Hurt(float amount, DamageType type, BaseEntity attacker = null, bool useProtection = true)
-	{
-		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
-		TimeWarning val = TimeWarning.New("Hurt", 0);
-		try
-		{
-			HitInfo hitInfo = new HitInfo(attacker, this, type, amount, ((Component)this).transform.position);
-			hitInfo.UseProtection = useProtection;
-			Hurt(hitInfo);
-		}
-		finally
-		{
-			((IDisposable)val)?.Dispose();
-		}
-	}
-
-	public virtual void Hurt(HitInfo info)
-	{
-		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02a6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02b1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02b6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02bb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02bf: Unknown result type (might be due to invalid IL or missing references)
-		Assert.IsTrue(base.isServer, "This should be called serverside only");
-		if (IsDead() || IsTransferProtected())
-		{
-			return;
-		}
-		TimeWarning val = TimeWarning.New("Hurt( HitInfo )", 50);
-		try
-		{
-			float num = health;
-			ScaleDamage(info);
-			if (info.PointStart != Vector3.zero)
-			{
-				for (int i = 0; i < propDirection.Length; i++)
-				{
-					if (!((Object)(object)propDirection[i].extraProtection == (Object)null) && !propDirection[i].IsWeakspot(((Component)this).transform, info))
-					{
-						propDirection[i].extraProtection.Scale(info.damageTypes);
-					}
-				}
-			}
-			info.damageTypes.Scale(DamageType.Arrow, ConVar.Server.arrowdamage);
-			info.damageTypes.Scale(DamageType.Bullet, ConVar.Server.bulletdamage);
-			info.damageTypes.Scale(DamageType.Slash, ConVar.Server.meleedamage);
-			info.damageTypes.Scale(DamageType.Blunt, ConVar.Server.meleedamage);
-			info.damageTypes.Scale(DamageType.Stab, ConVar.Server.meleedamage);
-			info.damageTypes.Scale(DamageType.Bleeding, ConVar.Server.bleedingdamage);
-			if (!(this is BasePlayer))
-			{
-				info.damageTypes.Scale(DamageType.Fun_Water, 0f);
-			}
-			DebugHurt(info);
-			health = num - info.damageTypes.Total();
-			SendNetworkUpdate();
-			if (Global.developer > 1)
-			{
-				Debug.Log((object)string.Concat("[Combat]".PadRight(10), ((Object)((Component)this).gameObject).name, " hurt ", info.damageTypes.GetMajorityDamageType(), "/", info.damageTypes.Total(), " - ", health.ToString("0"), " health left"));
-			}
-			lastDamage = info.damageTypes.GetMajorityDamageType();
-			lastAttacker = info.Initiator;
-			if ((Object)(object)lastAttacker != (Object)null)
-			{
-				BaseCombatEntity baseCombatEntity = lastAttacker as BaseCombatEntity;
-				if ((Object)(object)baseCombatEntity != (Object)null)
-				{
-					baseCombatEntity.lastDealtDamageTime = Time.time;
-					baseCombatEntity.lastDealtDamageTo = this;
-				}
-			}
-			BaseCombatEntity baseCombatEntity2 = lastAttacker as BaseCombatEntity;
-			if (markAttackerHostile && (Object)(object)baseCombatEntity2 != (Object)null && (Object)(object)baseCombatEntity2 != (Object)(object)this)
-			{
-				baseCombatEntity2.MarkHostileFor();
-			}
-			if (lastDamage.IsConsideredAnAttack())
-			{
-				lastAttackedTime = Time.time;
-				if ((Object)(object)lastAttacker != (Object)null)
-				{
-					Vector3 val2 = ((Component)lastAttacker).transform.position - ((Component)this).transform.position;
-					LastAttackedDir = ((Vector3)(ref val2)).normalized;
-				}
-			}
-			bool flag = Health() <= 0f;
-			Analytics.Azure.OnEntityTakeDamage(info, flag);
-			if (flag)
-			{
-				Die(info);
-			}
-			BasePlayer initiatorPlayer = info.InitiatorPlayer;
-			if (Object.op_Implicit((Object)(object)initiatorPlayer))
-			{
-				if (IsDead())
-				{
-					initiatorPlayer.stats.combat.LogAttack(info, "killed", num);
-				}
-				else
-				{
-					initiatorPlayer.stats.combat.LogAttack(info, "", num);
-				}
-			}
-		}
-		finally
-		{
-			((IDisposable)val)?.Dispose();
-		}
-	}
-
-	public virtual bool IsHostile()
-	{
-		return unHostileTime > Time.realtimeSinceStartup;
-	}
-
-	public virtual void MarkHostileFor(float duration = 60f)
-	{
-		float num = Time.realtimeSinceStartup + duration;
-		unHostileTime = Mathf.Max(unHostileTime, num);
-	}
-
-	private void DebugHurt(HitInfo info)
-	{
-		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0093: Unknown result type (might be due to invalid IL or missing references)
-		//IL_026d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_027b: Unknown result type (might be due to invalid IL or missing references)
-		if (!ConVar.Vis.damage)
-		{
-			return;
-		}
-		if (info.PointStart != info.PointEnd)
-		{
-			ConsoleNetwork.BroadcastToAllClients("ddraw.arrow", 60, Color.cyan, info.PointStart, info.PointEnd, 0.1f);
-			ConsoleNetwork.BroadcastToAllClients("ddraw.sphere", 60, Color.cyan, info.HitPositionWorld, 0.01f);
-		}
-		string text = "";
-		for (int i = 0; i < info.damageTypes.types.Length; i++)
-		{
-			float num = info.damageTypes.types[i];
-			if (num != 0f)
-			{
-				string[] obj = new string[5] { text, " ", null, null, null };
-				DamageType damageType = (DamageType)i;
-				obj[2] = damageType.ToString().PadRight(10);
-				obj[3] = num.ToString("0.00");
-				obj[4] = "\n";
-				text = string.Concat(obj);
-			}
-		}
-		string text2 = string.Concat("<color=lightblue>Damage:</color>".PadRight(10), info.damageTypes.Total().ToString("0.00"), "\n<color=lightblue>Health:</color>".PadRight(10), health.ToString("0.00"), " / ", (health - info.damageTypes.Total() <= 0f) ? "<color=red>" : "<color=green>", (health - info.damageTypes.Total()).ToString("0.00"), "</color>", "\n<color=lightblue>HitEnt:</color>".PadRight(10), this, "\n<color=lightblue>HitBone:</color>".PadRight(10), info.boneName, "\n<color=lightblue>Attacker:</color>".PadRight(10), info.Initiator, "\n<color=lightblue>WeaponPrefab:</color>".PadRight(10), info.WeaponPrefab, "\n<color=lightblue>Damages:</color>\n", text);
-		ConsoleNetwork.BroadcastToAllClients("ddraw.text", 60, Color.white, info.HitPositionWorld, text2);
-	}
-
-	public void SetHealth(float hp)
-	{
-		if (health != hp)
-		{
-			health = hp;
-			SendNetworkUpdate();
-		}
-	}
-
-	public virtual void Heal(float amount)
-	{
-		if (Global.developer > 1)
-		{
-			Debug.Log((object)("[Combat]".PadRight(10) + ((Object)((Component)this).gameObject).name + " healed"));
-		}
-		health = _health + amount;
-		SendNetworkUpdate();
-	}
-
-	public virtual void OnKilled(HitInfo info)
-	{
-		Kill(DestroyMode.Gib);
-	}
-
-	public virtual void Die(HitInfo info = null)
-	{
-		if (IsDead())
-		{
-			return;
-		}
-		if (Global.developer > 1)
-		{
-			Debug.Log((object)("[Combat]".PadRight(10) + ((Object)((Component)this).gameObject).name + " died"));
-		}
-		health = 0f;
-		lifestate = LifeState.Dead;
-		if (info != null && Object.op_Implicit((Object)(object)info.InitiatorPlayer))
-		{
-			BasePlayer initiatorPlayer = info.InitiatorPlayer;
-			if ((Object)(object)initiatorPlayer != (Object)null && initiatorPlayer.GetActiveMission() != -1 && !initiatorPlayer.IsNpc)
-			{
-				initiatorPlayer.ProcessMissionEvent(BaseMission.MissionEventType.KILL_ENTITY, prefabID.ToString(), 1f);
-			}
-		}
-		TimeWarning val = TimeWarning.New("OnKilled", 0);
-		try
-		{
-			OnKilled(info);
-		}
-		finally
-		{
-			((IDisposable)val)?.Dispose();
-		}
-	}
-
-	public void DieInstantly()
-	{
-		if (!IsDead())
-		{
-			if (Global.developer > 1)
-			{
-				Debug.Log((object)("[Combat]".PadRight(10) + ((Object)((Component)this).gameObject).name + " died"));
-			}
-			health = 0f;
-			lifestate = LifeState.Dead;
-			OnKilled(null);
-		}
-	}
-
-	public void UpdateSurroundings()
-	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
-		StabilityEntity.UpdateSurroundingsQueue updateSurroundingsQueue = StabilityEntity.updateSurroundingsQueue;
-		OBB val = WorldSpaceBounds();
-		((ObjectWorkQueue<Bounds>)updateSurroundingsQueue).Add(((OBB)(ref val)).ToBounds());
-	}
-
-	public void MakeNoise(Vector3 position, ActionVolume loudness)
-	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		LastNoisePosition = position;
-		LastNoiseVolume = loudness;
-		lastNoiseTime = Time.time;
-	}
-
-	public bool CanLastNoiseBeHeard(Vector3 listenPosition, float listenRange)
-	{
-		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		if (listenRange <= 0f)
-		{
-			return false;
-		}
-		return Vector3.Distance(listenPosition, LastNoisePosition) <= listenRange;
 	}
 
 	public virtual bool IsDead()
@@ -802,6 +325,11 @@ public class BaseCombatEntity : BaseEntity
 		}
 	}
 
+	public void SetJustAttacked()
+	{
+		lastAttackedTime = Time.time;
+	}
+
 	public override void Load(LoadInfo info)
 	{
 		if (base.isServer)
@@ -854,7 +382,7 @@ public class BaseCombatEntity : BaseEntity
 				if (base.isServer && (!flag || sendsMeleeHitNotification))
 				{
 					bool arg = info.Initiator.net.connection == info.Predicted;
-					ClientRPCPlayerAndSpectators(null, info.Initiator as BasePlayer, "HitNotify", arg);
+					ClientRPC(RpcTarget.PlayerAndSpectators("HitNotify", info.Initiator as BasePlayer), arg);
 				}
 			}
 		}
@@ -883,5 +411,520 @@ public class BaseCombatEntity : BaseEntity
 			((IDisposable)val)?.Dispose();
 		}
 		base.OnAttacked(info);
+	}
+
+	protected virtual int GetPickupCount()
+	{
+		return pickup.itemCount;
+	}
+
+	public virtual bool CanPickup(BasePlayer player)
+	{
+		if (pickup.enabled && (!pickup.requireBuildingPrivilege || player.CanBuild()) && (!pickup.requireHammer || player.IsHoldingEntity<Hammer>()))
+		{
+			if ((Object)(object)player != (Object)null)
+			{
+				return !player.IsInTutorial;
+			}
+			return false;
+		}
+		return false;
+	}
+
+	public virtual void OnPickedUp(Item createdItem, BasePlayer player)
+	{
+	}
+
+	public virtual void OnPickedUpPreItemMove(Item createdItem, BasePlayer player)
+	{
+	}
+
+	[RPC_Server]
+	[RPC_Server.MaxDistance(3f)]
+	private void RPC_PickupStart(RPCMessage rpc)
+	{
+		if (rpc.player.CanInteract() && CanPickup(rpc.player))
+		{
+			Item item = ItemManager.Create(pickup.itemTarget, GetPickupCount(), skinID);
+			if (pickup.setConditionFromHealth && item.hasCondition)
+			{
+				item.conditionNormalized = Mathf.Clamp01(healthFraction - pickup.subtractCondition);
+			}
+			OnPickedUpPreItemMove(item, rpc.player);
+			rpc.player.GiveItem(item, GiveItemReason.PickedUp);
+			OnPickedUp(item, rpc.player);
+			Analytics.Azure.OnEntityPickedUp(rpc.player, this);
+			Kill();
+		}
+	}
+
+	public virtual List<ItemAmount> BuildCost()
+	{
+		if ((Object)(object)repair.itemTarget == (Object)null)
+		{
+			return null;
+		}
+		ItemBlueprint itemBlueprint = ItemManager.FindBlueprint(repair.itemTarget);
+		if ((Object)(object)itemBlueprint == (Object)null)
+		{
+			return null;
+		}
+		return itemBlueprint.ingredients;
+	}
+
+	public virtual float RepairCostFraction()
+	{
+		return 0.5f;
+	}
+
+	public List<ItemAmount> RepairCost(float healthMissingFraction)
+	{
+		List<ItemAmount> list = BuildCost();
+		if (list == null)
+		{
+			return null;
+		}
+		List<ItemAmount> list2 = new List<ItemAmount>();
+		foreach (ItemAmount item in list)
+		{
+			if (!((Object)(object)repair.ignoreForRepair != (Object)null) || item.itemDef.itemid != repair.ignoreForRepair.itemid)
+			{
+				list2.Add(new ItemAmount(item.itemDef, Mathf.Max(Mathf.RoundToInt(item.amount * RepairCostFraction() * healthMissingFraction), 1)));
+			}
+		}
+		RepairBench.StripComponentRepairCost(list2, RepairCostFraction() * healthMissingFraction);
+		return list2;
+	}
+
+	public virtual void OnRepair()
+	{
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
+		Effect.server.Run(repair.repairEffect.isValid ? repair.repairEffect.resourcePath : "assets/bundled/prefabs/fx/build/repair.prefab", this, 0u, Vector3.zero, Vector3.zero);
+	}
+
+	public virtual void OnRepairFinished()
+	{
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
+		Effect.server.Run(repair.repairFullEffect.isValid ? repair.repairFullEffect.resourcePath : "assets/bundled/prefabs/fx/build/repair_full.prefab", this, 0u, Vector3.zero, Vector3.zero);
+	}
+
+	public virtual void OnRepairFailed(BasePlayer player, string reason)
+	{
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
+		Effect.server.Run(repair.repairFailedEffect.isValid ? repair.repairFailedEffect.resourcePath : "assets/bundled/prefabs/fx/build/repair_failed.prefab", this, 0u, Vector3.zero, Vector3.zero);
+		if ((Object)(object)player != (Object)null && !string.IsNullOrEmpty(reason))
+		{
+			player.ChatMessage(reason);
+		}
+	}
+
+	public virtual void OnRepairFailedResources(BasePlayer player, List<ItemAmount> requirements)
+	{
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
+		Effect.server.Run(repair.repairFailedEffect.isValid ? repair.repairFailedEffect.resourcePath : "assets/bundled/prefabs/fx/build/repair_failed.prefab", this, 0u, Vector3.zero, Vector3.zero);
+		if ((Object)(object)player != (Object)null)
+		{
+			ItemAmountList val = ItemAmount.SerialiseList(requirements);
+			try
+			{
+				player.ClientRPC<ItemAmountList>(RpcTarget.Player("Client_OnRepairFailedResources", player), val);
+			}
+			finally
+			{
+				((IDisposable)val)?.Dispose();
+			}
+		}
+	}
+
+	public virtual void DoRepair(BasePlayer player)
+	{
+		if (!repair.enabled)
+		{
+			return;
+		}
+		float num = 30f;
+		if (player.IsInCreativeMode && Creative.freeRepair)
+		{
+			num = 0f;
+		}
+		if (SecondsSinceAttacked <= num)
+		{
+			OnRepairFailed(player, $"Unable to repair: Recently damaged. Repairable in: {num - SecondsSinceAttacked:N0}s.");
+			return;
+		}
+		float num2 = MaxHealth() - Health();
+		float num3 = num2 / MaxHealth();
+		if (num2 <= 0f || num3 <= 0f)
+		{
+			OnRepairFailed(player, "Unable to repair: Not damaged.");
+			return;
+		}
+		List<ItemAmount> list = RepairCost(num3);
+		if (list == null)
+		{
+			return;
+		}
+		float num4 = list.Sum((ItemAmount x) => x.amount);
+		float healthBefore = health;
+		if (player.IsInCreativeMode && Creative.freeRepair)
+		{
+			num4 = 0f;
+		}
+		if (num4 > 0f)
+		{
+			float num5 = list.Min((ItemAmount x) => Mathf.Clamp01((float)player.inventory.GetAmount(x.itemid) / x.amount));
+			if (float.IsNaN(num5))
+			{
+				num5 = 0f;
+			}
+			num5 = Mathf.Min(num5, 50f / num2);
+			if (num5 <= 0f)
+			{
+				OnRepairFailedResources(player, list);
+				return;
+			}
+			int num6 = 0;
+			foreach (ItemAmount item in list)
+			{
+				int amount = Mathf.CeilToInt(num5 * item.amount);
+				int num7 = player.inventory.Take(null, item.itemid, amount);
+				Analytics.Azure.LogResource(Analytics.Azure.ResourceMode.Consumed, "repair_entity", item.itemDef.shortname, num7, this, null, safezone: false, null, player.userID);
+				if (num7 > 0)
+				{
+					num6 += num7;
+					player.Command("note.inv", item.itemid, num7 * -1);
+				}
+			}
+			float num8 = (float)num6 / num4;
+			health += num2 * num8;
+			SendNetworkUpdate();
+		}
+		else
+		{
+			health += num2;
+			SendNetworkUpdate();
+		}
+		Analytics.Azure.OnEntityRepaired(player, this, healthBefore, health);
+		if (Health() >= MaxHealth())
+		{
+			OnRepairFinished();
+		}
+		else
+		{
+			OnRepair();
+		}
+	}
+
+	public virtual void InitializeHealth(float newhealth, float newmax)
+	{
+		_maxHealth = newmax;
+		_health = newhealth;
+		lifestate = LifeState.Alive;
+	}
+
+	public override void ServerInit()
+	{
+		propDirection = PrefabAttribute.server.FindAll<DirectionProperties>(prefabID);
+		if (ResetLifeStateOnSpawn)
+		{
+			InitializeHealth(StartHealth(), StartMaxHealth());
+			lifestate = LifeState.Alive;
+		}
+		base.ServerInit();
+	}
+
+	public virtual void OnHealthChanged(float oldvalue, float newvalue)
+	{
+	}
+
+	public void Hurt(float amount)
+	{
+		Hurt(Mathf.Abs(amount), DamageType.Generic);
+	}
+
+	public void Hurt(float amount, DamageType type, BaseEntity attacker = null, bool useProtection = true)
+	{
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		TimeWarning val = TimeWarning.New("Hurt", 0);
+		try
+		{
+			HitInfo hitInfo = new HitInfo(attacker, this, type, amount, ((Component)this).transform.position);
+			hitInfo.UseProtection = useProtection;
+			Hurt(hitInfo);
+		}
+		finally
+		{
+			((IDisposable)val)?.Dispose();
+		}
+	}
+
+	public virtual void Hurt(HitInfo info)
+	{
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02d1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02dc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02e1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02e6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02ea: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0268: Unknown result type (might be due to invalid IL or missing references)
+		Assert.IsTrue(base.isServer, "This should be called serverside only");
+		if (IsDead() || IsTransferProtected())
+		{
+			return;
+		}
+		TimeWarning val = TimeWarning.New("Hurt( HitInfo )", 50);
+		try
+		{
+			float num = health;
+			ScaleDamage(info);
+			if (info.PointStart != Vector3.zero)
+			{
+				for (int i = 0; i < propDirection.Length; i++)
+				{
+					if (!((Object)(object)propDirection[i].extraProtection == (Object)null) && !propDirection[i].IsWeakspot(((Component)this).transform, info))
+					{
+						propDirection[i].extraProtection.Scale(info.damageTypes);
+					}
+				}
+			}
+			info.damageTypes.Scale(DamageType.Arrow, ConVar.Server.arrowdamage);
+			info.damageTypes.Scale(DamageType.Bullet, ConVar.Server.bulletdamage);
+			info.damageTypes.Scale(DamageType.Slash, ConVar.Server.meleedamage);
+			info.damageTypes.Scale(DamageType.Blunt, ConVar.Server.meleedamage);
+			info.damageTypes.Scale(DamageType.Stab, ConVar.Server.meleedamage);
+			info.damageTypes.Scale(DamageType.Bleeding, ConVar.Server.bleedingdamage);
+			if (!(this is BasePlayer))
+			{
+				info.damageTypes.Scale(DamageType.Fun_Water, 0f);
+			}
+			DebugHurt(info);
+			float num2 = info.damageTypes.Total();
+			health = num - num2;
+			SendNetworkUpdate();
+			if (Global.developer > 1)
+			{
+				Debug.Log((object)("[Combat]".PadRight(10) + ((Object)((Component)this).gameObject).name + " hurt " + info.damageTypes.GetMajorityDamageType().ToString() + "/" + num2 + " - " + health.ToString("0") + " health left"));
+			}
+			lastDamage = info.damageTypes.GetMajorityDamageType();
+			lastAttacker = info.Initiator;
+			if ((Object)(object)lastAttacker != (Object)null)
+			{
+				BaseCombatEntity baseCombatEntity = lastAttacker as BaseCombatEntity;
+				if ((Object)(object)baseCombatEntity != (Object)null)
+				{
+					baseCombatEntity.lastDealtDamageTime = Time.time;
+					baseCombatEntity.lastDealtDamageTo = this;
+				}
+				if (this.IsValid() && lastAttacker is BasePlayer basePlayer)
+				{
+					basePlayer.ProcessMissionEvent(BaseMission.MissionEventType.HURT_ENTITY, net.ID, num2);
+				}
+			}
+			BaseCombatEntity baseCombatEntity2 = lastAttacker as BaseCombatEntity;
+			if (markAttackerHostile && (Object)(object)baseCombatEntity2 != (Object)null && (Object)(object)baseCombatEntity2 != (Object)(object)this)
+			{
+				baseCombatEntity2.MarkHostileFor();
+			}
+			if (lastDamage.IsConsideredAnAttack())
+			{
+				SetJustAttacked();
+				if ((Object)(object)lastAttacker != (Object)null)
+				{
+					Vector3 val2 = ((Component)lastAttacker).transform.position - ((Component)this).transform.position;
+					LastAttackedDir = ((Vector3)(ref val2)).normalized;
+				}
+			}
+			bool flag = Health() <= 0f;
+			Analytics.Azure.OnEntityTakeDamage(info, flag);
+			if (flag)
+			{
+				Die(info);
+			}
+			BasePlayer initiatorPlayer = info.InitiatorPlayer;
+			if (Object.op_Implicit((Object)(object)initiatorPlayer))
+			{
+				if (IsDead())
+				{
+					initiatorPlayer.stats.combat.LogAttack(info, "killed", num);
+				}
+				else
+				{
+					initiatorPlayer.stats.combat.LogAttack(info, "", num);
+				}
+			}
+		}
+		finally
+		{
+			((IDisposable)val)?.Dispose();
+		}
+	}
+
+	public virtual bool IsHostile()
+	{
+		return unHostileTime > Time.realtimeSinceStartup;
+	}
+
+	public virtual void MarkHostileFor(float duration = 60f)
+	{
+		float num = Time.realtimeSinceStartup + duration;
+		unHostileTime = Mathf.Max(unHostileTime, num);
+	}
+
+	private void DebugHurt(HitInfo info)
+	{
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0093: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0291: Unknown result type (might be due to invalid IL or missing references)
+		//IL_029f: Unknown result type (might be due to invalid IL or missing references)
+		if (!ConVar.Vis.damage)
+		{
+			return;
+		}
+		if (info.PointStart != info.PointEnd)
+		{
+			ConsoleNetwork.BroadcastToAllClients("ddraw.arrow", 60, Color.cyan, info.PointStart, info.PointEnd, 0.1f);
+			ConsoleNetwork.BroadcastToAllClients("ddraw.sphere", 60, Color.cyan, info.HitPositionWorld, 0.01f);
+		}
+		string text = "";
+		for (int i = 0; i < info.damageTypes.types.Length; i++)
+		{
+			float num = info.damageTypes.types[i];
+			if (num != 0f)
+			{
+				string[] obj = new string[5] { text, " ", null, null, null };
+				DamageType damageType = (DamageType)i;
+				obj[2] = damageType.ToString().PadRight(10);
+				obj[3] = num.ToString("0.00");
+				obj[4] = "\n";
+				text = string.Concat(obj);
+			}
+		}
+		string text2 = "<color=lightblue>Damage:</color>".PadRight(10) + info.damageTypes.Total().ToString("0.00") + "\n<color=lightblue>Health:</color>".PadRight(10) + health.ToString("0.00") + " / " + ((health - info.damageTypes.Total() <= 0f) ? "<color=red>" : "<color=green>") + (health - info.damageTypes.Total()).ToString("0.00") + "</color>" + "\n<color=lightblue>HitEnt:</color>".PadRight(10) + ((object)this)?.ToString() + "\n<color=lightblue>HitBone:</color>".PadRight(10) + info.boneName + "\n<color=lightblue>Attacker:</color>".PadRight(10) + ((object)info.Initiator)?.ToString() + "\n<color=lightblue>WeaponPrefab:</color>".PadRight(10) + ((object)info.WeaponPrefab)?.ToString() + "\n<color=lightblue>Damages:</color>\n" + text;
+		ConsoleNetwork.BroadcastToAllClients("ddraw.text", 60, Color.white, info.HitPositionWorld, text2);
+	}
+
+	public void SetHealth(float hp)
+	{
+		if (health != hp)
+		{
+			health = hp;
+			SendNetworkUpdate();
+		}
+	}
+
+	public virtual void Heal(float amount)
+	{
+		if (Global.developer > 1)
+		{
+			Debug.Log((object)("[Combat]".PadRight(10) + ((Object)((Component)this).gameObject).name + " healed"));
+		}
+		health = _health + amount;
+		SendNetworkUpdate();
+	}
+
+	public virtual void OnKilled(HitInfo info)
+	{
+		Kill(DestroyMode.Gib);
+	}
+
+	public virtual void Die(HitInfo info = null)
+	{
+		if (IsDead())
+		{
+			return;
+		}
+		if (Global.developer > 1)
+		{
+			Debug.Log((object)("[Combat]".PadRight(10) + ((Object)((Component)this).gameObject).name + " died"));
+		}
+		health = 0f;
+		lifestate = LifeState.Dead;
+		if (info != null && Object.op_Implicit((Object)(object)info.InitiatorPlayer))
+		{
+			BasePlayer initiatorPlayer = info.InitiatorPlayer;
+			if ((Object)(object)initiatorPlayer != (Object)null && initiatorPlayer.GetActiveMission() != -1 && !initiatorPlayer.IsNpc)
+			{
+				initiatorPlayer.ProcessMissionEvent(BaseMission.MissionEventType.KILL_ENTITY, prefabID, 1f);
+			}
+		}
+		TimeWarning val = TimeWarning.New("OnKilled", 0);
+		try
+		{
+			OnKilled(info);
+		}
+		finally
+		{
+			((IDisposable)val)?.Dispose();
+		}
+	}
+
+	public void DieInstantly()
+	{
+		if (!IsDead())
+		{
+			if (Global.developer > 1)
+			{
+				Debug.Log((object)("[Combat]".PadRight(10) + ((Object)((Component)this).gameObject).name + " died"));
+			}
+			health = 0f;
+			lifestate = LifeState.Dead;
+			OnKilled(null);
+		}
+	}
+
+	public void UpdateSurroundings()
+	{
+		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		BaseEntity baseEntity = GetParentEntity();
+		OBB val;
+		if ((Object)(object)baseEntity != (Object)null)
+		{
+			Vector3 worldVelocity = baseEntity.GetWorldVelocity();
+			if (((Vector3)(ref worldVelocity)).sqrMagnitude > 5f)
+			{
+				val = WorldSpaceBounds();
+				StabilityEntity.UpdateSurroundingsQueue.NotifyNeighbours(((OBB)(ref val)).ToBounds());
+				return;
+			}
+		}
+		StabilityEntity.UpdateSurroundingsQueue updateSurroundingsQueue = StabilityEntity.updateSurroundingsQueue;
+		val = WorldSpaceBounds();
+		((ObjectWorkQueue<Bounds>)updateSurroundingsQueue).Add(((OBB)(ref val)).ToBounds());
+	}
+
+	public void MakeNoise(Vector3 position, ActionVolume loudness)
+	{
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		LastNoisePosition = position;
+		LastNoiseVolume = loudness;
+		lastNoiseTime = Time.time;
+	}
+
+	public bool CanLastNoiseBeHeard(Vector3 listenPosition, float listenRange)
+	{
+		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		if (listenRange <= 0f)
+		{
+			return false;
+		}
+		return Vector3.Distance(listenPosition, LastNoisePosition) <= listenRange;
 	}
 }

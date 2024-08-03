@@ -16,7 +16,7 @@ public class CH47HelicopterAIController : CH47Helicopter
 
 	public GameObjectRef lockedCratePrefab;
 
-	public const Flags Flag_Damaged = Flags.Reserved7;
+	public const Flags Flag_Damaged = Flags.Reserved9;
 
 	public const Flags Flag_NearDeath = Flags.OnFire;
 
@@ -141,7 +141,7 @@ public class CH47HelicopterAIController : CH47Helicopter
 	{
 		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
 		base.ServerInit();
-		((FacepunchBehaviour)this).Invoke((Action)SpawnScientists, 0.25f);
+		((FacepunchBehaviour)this).Invoke((Action)CheckSpawnScientists, 0.25f);
 		SetMoveTarget(((Component)this).transform.position);
 	}
 
@@ -155,6 +155,7 @@ public class CH47HelicopterAIController : CH47Helicopter
 		HumanNPC component = ((Component)GameManager.server.CreateEntity(prefabPath, spawnPos, identity)).GetComponent<HumanNPC>();
 		component.Spawn();
 		AttemptMount(component);
+		OnSpawnedHuman(component);
 	}
 
 	public void SpawnPassenger(Vector3 spawnPos)
@@ -167,6 +168,7 @@ public class CH47HelicopterAIController : CH47Helicopter
 		HumanNPC component = ((Component)GameManager.server.CreateEntity(dismountablePrefab.resourcePath, spawnPos, identity)).GetComponent<HumanNPC>();
 		component.Spawn();
 		AttemptMount(component);
+		OnSpawnedHuman(component);
 	}
 
 	public void SpawnScientist(Vector3 spawnPos)
@@ -180,6 +182,28 @@ public class CH47HelicopterAIController : CH47Helicopter
 		component.Spawn();
 		AttemptMount(component);
 		component.Brain.SetEnabled(flag: false);
+		OnSpawnedHuman(component);
+	}
+
+	private void OnSpawnedHuman(HumanNPC human)
+	{
+		if (!((Object)(object)human == (Object)null) && (Object)(object)human.Brain != (Object)null && human.Brain.Senses != null)
+		{
+			human.Brain.Senses.ignoreTutorialPlayers = true;
+		}
+	}
+
+	private void CheckSpawnScientists()
+	{
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		if (ValidBounds.Test(this, ((Component)this).transform.position))
+		{
+			((FacepunchBehaviour)this).Invoke((Action)SpawnScientists, 2f);
+		}
+		else
+		{
+			((FacepunchBehaviour)this).Invoke((Action)CheckSpawnScientists, 2f);
+		}
 	}
 
 	public void SpawnScientists()
@@ -345,7 +369,7 @@ public class CH47HelicopterAIController : CH47Helicopter
 	{
 		base.OnAttacked(info);
 		InitiateAnger();
-		SetFlag(Flags.Reserved7, base.healthFraction <= 0.8f);
+		SetFlag(Flags.Reserved9, base.healthFraction <= 0.8f);
 		SetFlag(Flags.OnFire, base.healthFraction <= 0.33f);
 	}
 

@@ -1,14 +1,48 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public abstract class BaseSpawnPoint : MonoBehaviour, IServerComponent
 {
+	public enum SpawnPointType
+	{
+		Normal,
+		Tugboat,
+		Motorbike,
+		Bicycle
+	}
+
+	public SpawnPointType spawnPointType;
+
+	public static Dictionary<SpawnPointType, List<BaseSpawnPoint>> spawnPoints = new Dictionary<SpawnPointType, List<BaseSpawnPoint>>();
+
 	public abstract void GetLocation(out Vector3 pos, out Quaternion rot);
 
 	public abstract void ObjectSpawned(SpawnPointInstance instance);
 
 	public abstract void ObjectRetired(SpawnPointInstance instance);
 
-	public virtual bool IsAvailableTo(GameObjectRef prefabRef)
+	protected void OnEnable()
+	{
+		if (spawnPointType != 0)
+		{
+			if (spawnPoints.TryGetValue(spawnPointType, out var value))
+			{
+				value.Add(this);
+				return;
+			}
+			spawnPoints[spawnPointType] = new List<BaseSpawnPoint> { this };
+		}
+	}
+
+	protected void OnDisable()
+	{
+		if (spawnPointType != 0 && spawnPoints.TryGetValue(spawnPointType, out var value))
+		{
+			value.Remove(this);
+		}
+	}
+
+	public virtual bool IsAvailableTo(GameObject prefab)
 	{
 		return ((Component)this).gameObject.activeSelf;
 	}

@@ -25,7 +25,7 @@ public class KeyLock : BaseLock
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_CreateKey "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_CreateKey "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_CreateKey", 0);
 				try
@@ -33,7 +33,7 @@ public class KeyLock : BaseLock
 					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
-						if (!RPC_Server.MaxDistance.Test(4135414453u, "RPC_CreateKey", this, player, 3f))
+						if (!RPC_Server.MaxDistance.Test(4135414453u, "RPC_CreateKey", this, player, 3f, checkParent: true))
 						{
 							return true;
 						}
@@ -76,7 +76,7 @@ public class KeyLock : BaseLock
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_Lock "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_Lock "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_Lock", 0);
 				try
@@ -84,7 +84,7 @@ public class KeyLock : BaseLock
 					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
-						if (!RPC_Server.MaxDistance.Test(954115386u, "RPC_Lock", this, player, 3f))
+						if (!RPC_Server.MaxDistance.Test(954115386u, "RPC_Lock", this, player, 3f, checkParent: true))
 						{
 							return true;
 						}
@@ -127,7 +127,7 @@ public class KeyLock : BaseLock
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_Unlock "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_Unlock "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_Unlock", 0);
 				try
@@ -135,7 +135,7 @@ public class KeyLock : BaseLock
 					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
-						if (!RPC_Server.MaxDistance.Test(1663222372u, "RPC_Unlock", this, player, 3f))
+						if (!RPC_Server.MaxDistance.Test(1663222372u, "RPC_Unlock", this, player, 3f, checkParent: true))
 						{
 							return true;
 						}
@@ -187,11 +187,11 @@ public class KeyLock : BaseLock
 		{
 			return false;
 		}
-		if (player.userID == base.OwnerID)
+		if ((ulong)player.userID == base.OwnerID)
 		{
 			return true;
 		}
-		foreach (Item item in player.inventory.FindItemIDs(keyItemType.itemid))
+		foreach (Item item in player.inventory.FindItemsByItemID(keyItemType.itemid))
 		{
 			if (CanKeyUnlockUs(item))
 			{
@@ -273,7 +273,7 @@ public class KeyLock : BaseLock
 	}
 
 	[RPC_Server]
-	[RPC_Server.MaxDistance(3f)]
+	[RPC_Server.MaxDistance(3f, CheckParent = true)]
 	private void RPC_Unlock(RPCMessage rpc)
 	{
 		if (rpc.player.CanInteract() && IsLocked() && HasLockPermission(rpc.player))
@@ -284,7 +284,7 @@ public class KeyLock : BaseLock
 	}
 
 	[RPC_Server]
-	[RPC_Server.MaxDistance(3f)]
+	[RPC_Server.MaxDistance(3f, CheckParent = true)]
 	private void RPC_Lock(RPCMessage rpc)
 	{
 		Lock(rpc.player);
@@ -300,7 +300,7 @@ public class KeyLock : BaseLock
 	}
 
 	[RPC_Server]
-	[RPC_Server.MaxDistance(3f)]
+	[RPC_Server.MaxDistance(3f, CheckParent = true)]
 	private void RPC_CreateKey(RPCMessage rpc)
 	{
 		if (!rpc.player.CanInteract() || (IsLocked() && !HasLockPermission(rpc.player)))
@@ -310,7 +310,7 @@ public class KeyLock : BaseLock
 		ItemDefinition itemDefinition = ItemManager.FindItemDefinition(keyItemType.itemid);
 		if ((Object)(object)itemDefinition == (Object)null)
 		{
-			Debug.LogWarning((object)("RPC_CreateKey: Itemdef is missing! " + keyItemType));
+			Debug.LogWarning((object)("RPC_CreateKey: Itemdef is missing! " + (object)keyItemType));
 			return;
 		}
 		ItemBlueprint bp = ItemManager.FindBlueprint(itemDefinition);

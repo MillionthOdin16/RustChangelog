@@ -59,7 +59,7 @@ public class MicrophoneStand : BaseMountable
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SetMode "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SetMode "));
 				}
 				TimeWarning val2 = TimeWarning.New("SetMode", 0);
 				try

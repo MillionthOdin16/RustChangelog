@@ -10,6 +10,10 @@ public class WorldSetup : SingletonComponent<WorldSetup>
 {
 	public bool AutomaticallySetup;
 
+	public bool BypassProceduralSpawn;
+
+	public bool ForceGenerateOceanPatrols;
+
 	public GameObject terrain;
 
 	public GameObject decorPrefab;
@@ -147,6 +151,7 @@ public class WorldSetup : SingletonComponent<WorldSetup>
 			Debug.Log((object)("Loading custom world config from world.configfile convar: " + text));
 			World.Config.LoadFromJsonFile(text);
 		}
+		World.ResetTiming();
 		ProceduralComponent[] components = ((Component)this).GetComponentsInChildren<ProceduralComponent>(true);
 		Timing downloadTimer = Timing.Start("Downloading World");
 		if (World.Procedural && !World.CanLoadFromDisk() && World.CanLoadFromUrl())
@@ -251,9 +256,20 @@ public class WorldSetup : SingletonComponent<WorldSetup>
 			}
 			TerrainMeta.Path.Clear();
 			TerrainMeta.Path.Roads.AddRange(World.GetPaths("Road"));
+			TerrainMeta.Path.AddRoad(TerrainMeta.Path.Roads, addToMaster: false);
 			TerrainMeta.Path.Rivers.AddRange(World.GetPaths("River"));
 			TerrainMeta.Path.Powerlines.AddRange(World.GetPaths("Powerline"));
 			TerrainMeta.Path.Rails.AddRange(World.GetPaths("Rail"));
+		}
+		if ((Object)(object)TerrainMeta.Path != (Object)null)
+		{
+			foreach (DungeonBaseLink dungeonBaseLink in TerrainMeta.Path.DungeonBaseLinks)
+			{
+				if ((Object)(object)dungeonBaseLink != (Object)null)
+				{
+					dungeonBaseLink.Initialize();
+				}
+			}
 		}
 		spawnTimer.End();
 		Timing procgenTimer = Timing.Start("Processing World");
@@ -313,7 +329,7 @@ public class WorldSetup : SingletonComponent<WorldSetup>
 		yield return CoroutineEx.waitForEndOfFrame;
 		yield return CoroutineEx.waitForEndOfFrame;
 		yield return CoroutineEx.waitForEndOfFrame;
-		if (BaseBoat.generate_paths && (Object)(object)TerrainMeta.Path != (Object)null)
+		if ((BaseBoat.generate_paths && (Object)(object)TerrainMeta.Path != (Object)null) || ForceGenerateOceanPatrols)
 		{
 			TerrainMeta.Path.OceanPatrolFar = BaseBoat.GenerateOceanPatrolPath(200f);
 		}

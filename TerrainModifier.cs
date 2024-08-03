@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 
+[MapGeneration]
 public abstract class TerrainModifier : PrefabAttribute
 {
 	public float Opacity = 1f;

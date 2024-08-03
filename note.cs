@@ -14,7 +14,7 @@ public class note : ConsoleSystem
 		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
 		ItemId itemID = arg.GetItemID(0);
 		string @string = arg.GetString(1, "");
-		Item item = arg.Player().inventory.FindItemUID(itemID);
+		Item item = arg.Player().inventory.FindItemByUID(itemID);
 		if (item != null)
 		{
 			item.text = StringExtensions.Truncate(@string, 1024, (string)null);

@@ -1,3 +1,3 @@
-public class ClanTable : BaseEntity
+public class ClanTable : BaseCombatEntity
 {
 }

@@ -296,6 +296,10 @@ public class Prefab : IComparable<Prefab>
 		{
 			string text = names[i];
 			GameObject val = manager.FindPrefab(text);
+			if ((Object)(object)val == (Object)null)
+			{
+				Debug.LogError((object)("Can't find prefab '" + text + "'"));
+			}
 			T component = val.GetComponent<T>();
 			array[i] = new Prefab<T>(text, val, component, manager, attribute);
 		}

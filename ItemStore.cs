@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Facepunch;
 using Rust.UI;
@@ -12,7 +13,11 @@ public class ItemStore : SingletonComponent<ItemStore>, VirtualScroll.IDataSourc
 
 	public static readonly Phrase CartPluralPhrase = new Phrase("store.cart.plural", "{amount} items");
 
-	public GameObject ItemPrefab;
+	public GameObject LimitedItemPrefab;
+
+	public GameObject GeneralItemPrefab;
+
+	public float TransitionDelayPerItem = 0.1f;
 
 	[FormerlySerializedAs("ItemParent")]
 	public RectTransform LimitedItemParent;
@@ -36,6 +41,10 @@ public class ItemStore : SingletonComponent<ItemStore>, VirtualScroll.IDataSourc
 	public RustText QuantityValue;
 
 	public RustText TotalValue;
+
+	public RectTransform TakeoverParent;
+
+	public ItemStoreTakeover[] Takeovers = Array.Empty<ItemStoreTakeover>();
 
 	public int GetItemCount()
 	{

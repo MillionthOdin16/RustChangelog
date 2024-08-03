@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using ConVar;
 using ProtoBuf;
+using Rust;
 using UnityEngine;
 
 public class ScarecrowNPC : NPCPlayer, IAISenses, IAIAttack, IThinker
@@ -10,11 +12,17 @@ public class ScarecrowNPC : NPCPlayer, IAISenses, IAIAttack, IThinker
 	[Header("Loot")]
 	public LootContainer.LootSpawnSlot[] LootSpawnSlots;
 
+	public LootContainer.LootSpawnSlot[] bonusLootSlots;
+
 	public static float NextBeanCanAllowedTime;
 
 	public bool BlockClothingOnCorpse;
 
 	public bool RoamAroundHomePoint;
+
+	public GameObjectRef soulReleaseEffect;
+
+	public bool wasSoulReleased;
 
 	public ScarecrowBrain Brain { get; protected set; }
 
@@ -42,6 +50,7 @@ public class ScarecrowNPC : NPCPlayer, IAISenses, IAIAttack, IThinker
 		if (!base.isClient)
 		{
 			AIThinkManager.Add(this);
+			wasSoulReleased = false;
 		}
 	}
 
@@ -239,24 +248,24 @@ public class ScarecrowNPC : NPCPlayer, IAISenses, IAIAttack, IThinker
 		return false;
 	}
 
-	public override BaseCorpse CreateCorpse()
+	public override BaseCorpse CreateCorpse(PlayerFlags flagsOnDeath, Vector3 posOnDeath, Quaternion rotOnDeath, List<TriggerBase> triggersOnDeath)
 	{
-		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
 		TimeWarning val = TimeWarning.New("Create corpse", 0);
 		try
 		{
 			string strCorpsePrefab = "assets/prefabs/npc/murderer/murderer_corpse.prefab";
-			NPCPlayerCorpse nPCPlayerCorpse = DropCorpse(strCorpsePrefab) as NPCPlayerCorpse;
+			NPCPlayerCorpse nPCPlayerCorpse = DropCorpse(strCorpsePrefab, flagsOnDeath, modelState) as NPCPlayerCorpse;
 			if (Object.op_Implicit((Object)(object)nPCPlayerCorpse))
 			{
 				((Component)nPCPlayerCorpse).transform.position = ((Component)nPCPlayerCorpse).transform.position + Vector3.down * NavAgent.baseOffset;
 				nPCPlayerCorpse.SetLootableIn(2f);
 				nPCPlayerCorpse.SetFlag(Flags.Reserved5, HasPlayerFlag(PlayerFlags.DisplaySash));
 				nPCPlayerCorpse.SetFlag(Flags.Reserved2, b: true);
-				nPCPlayerCorpse.TakeFrom(inventory.containerMain, inventory.containerWear, inventory.containerBelt);
+				nPCPlayerCorpse.TakeFrom(this, base.inventory.containerMain, base.inventory.containerWear, base.inventory.containerBelt);
 				nPCPlayerCorpse.playerName = "Scarecrow";
 				nPCPlayerCorpse.playerSteamID = userID;
 				nPCPlayerCorpse.Spawn();
@@ -280,6 +289,21 @@ public class ScarecrowNPC : NPCPlayer, IAISenses, IAIAttack, IThinker
 						}
 					}
 				}
+				if (wasSoulReleased)
+				{
+					LootContainer.LootSpawnSlot[] lootSpawnSlots = bonusLootSlots;
+					for (int i = 0; i < lootSpawnSlots.Length; i++)
+					{
+						LootContainer.LootSpawnSlot lootSpawnSlot2 = lootSpawnSlots[i];
+						for (int k = 0; k < lootSpawnSlot2.numberToSpawn; k++)
+						{
+							if (Random.Range(0f, 1f) <= lootSpawnSlot2.probability)
+							{
+								lootSpawnSlot2.definition.SpawnIntoContainer(nPCPlayerCorpse.containers[0]);
+							}
+						}
+					}
+				}
 			}
 			return nPCPlayerCorpse;
 		}
@@ -291,7 +315,27 @@ public class ScarecrowNPC : NPCPlayer, IAISenses, IAIAttack, IThinker
 
 	public override void Hurt(HitInfo info)
 	{
-		if (!info.isHeadshot)
+		//IL_00c7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
+		bool flag = info.damageTypes.Has(DamageType.Slash) && info.damageTypes.Has(DamageType.Stab) && info.damageTypes.Has(DamageType.Generic) && info.damageTypes.Get(DamageType.Generic) <= 0.1f;
+		if (flag)
+		{
+			if ((Object)(object)info.ProjectilePrefab != (Object)null && !((Object)info.ProjectilePrefab).name.Contains("vamp"))
+			{
+				flag = false;
+			}
+			if ((Object)(object)info.WeaponPrefab != (Object)null && !((Object)info.WeaponPrefab).name.Contains("vamp"))
+			{
+				flag = false;
+			}
+		}
+		if (flag)
+		{
+			wasSoulReleased = true;
+			info.damageTypes.ScaleAll(1000f);
+			Effect.server.Run(soulReleaseEffect.resourcePath, this, StringPool.Get("spine3"), Vector3.zero, Vector3.forward);
+		}
+		else if (!info.isHeadshot)
 		{
 			if (((Object)(object)info.InitiatorPlayer != (Object)null && !info.InitiatorPlayer.IsNpc) || ((Object)(object)info.InitiatorPlayer == (Object)null && (Object)(object)info.Initiator != (Object)null && info.Initiator.IsNpc))
 			{
@@ -308,7 +352,7 @@ public class ScarecrowNPC : NPCPlayer, IAISenses, IAIAttack, IThinker
 	public override void AttackerInfo(DeathInfo info)
 	{
 		base.AttackerInfo(info);
-		info.inflictorName = inventory.containerBelt.GetSlot(0).info.shortname;
+		info.inflictorName = base.inventory.containerBelt.GetSlot(0).info.shortname;
 		info.attackerName = base.ShortPrefabName;
 	}
 }

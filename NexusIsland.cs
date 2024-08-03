@@ -19,7 +19,7 @@ public class NexusIsland : BaseEntity, INexusTransferTriggerController
 
 	public float TraceHeight = 100f;
 
-	public LayerMask TraceLayerMask = LayerMask.op_Implicit(429990145);
+	public LayerMask TraceLayerMask = LayerMask.op_Implicit(1503731969);
 
 	public Transform FerryWaypoint;
 
@@ -52,7 +52,7 @@ public class NexusIsland : BaseEntity, INexusTransferTriggerController
 
 	public bool CanTransfer(BaseEntity entity)
 	{
-		if (!(entity is BaseBoat) && !(entity is BaseSubmarine) && !(entity is WaterInflatable) && !(entity is MiniCopter))
+		if (!(entity is BaseBoat) && !(entity is BaseSubmarine) && !(entity is WaterInflatable) && !(entity is PlayerHelicopter) && !(entity is HotAirBalloon))
 		{
 			return entity is BasePlayer;
 		}
@@ -128,9 +128,9 @@ public class NexusIsland : BaseEntity, INexusTransferTriggerController
 			//IL_0057: Unknown result type (might be due to invalid IL or missing references)
 			//IL_005f: Unknown result type (might be due to invalid IL or missing references)
 			//IL_0064: Unknown result type (might be due to invalid IL or missing references)
-			if (ValidBounds.Test(center) && ValidBounds.Test(center + new Vector3(0f - extent, 0f, 0f - extent)) && ValidBounds.Test(center + new Vector3(0f - extent, 0f, extent)) && ValidBounds.Test(center + new Vector3(extent, 0f, 0f - extent)))
+			if (ValidBounds.TestInnerBounds(center) && ValidBounds.TestInnerBounds(center + new Vector3(0f - extent, 0f, 0f - extent)) && ValidBounds.TestInnerBounds(center + new Vector3(0f - extent, 0f, extent)) && ValidBounds.TestInnerBounds(center + new Vector3(extent, 0f, 0f - extent)))
 			{
-				return ValidBounds.Test(center + new Vector3(extent, 0f, extent));
+				return ValidBounds.TestInnerBounds(center + new Vector3(extent, 0f, extent));
 			}
 			return false;
 		}

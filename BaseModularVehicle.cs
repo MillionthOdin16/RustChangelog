@@ -5,20 +5,8 @@ using ProtoBuf;
 using Rust.Modular;
 using UnityEngine;
 
-public abstract class BaseModularVehicle : GroundVehicle, PlayerInventory.ICanMoveFrom, IPrefabPreProcess
+public abstract class BaseModularVehicle : GroundVehicle, IPrefabPreProcess, PlayerInventory.ICanMoveFrom
 {
-	internal bool inEditableLocation;
-
-	private bool prevEditable;
-
-	internal bool immuneToDecay;
-
-	protected Vector3 realLocalCOM;
-
-	public Item AssociatedItemInstance;
-
-	private bool disablePhysics;
-
 	[Header("Modular Vehicle")]
 	[SerializeField]
 	private List<ModularVehicleSocket> moduleSockets;
@@ -40,7 +28,17 @@ public abstract class BaseModularVehicle : GroundVehicle, PlayerInventory.ICanMo
 
 	private Dictionary<BaseVehicleModule, Action> moduleAddActions = new Dictionary<BaseVehicleModule, Action>();
 
-	public ModularVehicleInventory Inventory { get; private set; }
+	internal bool inEditableLocation;
+
+	private bool prevEditable;
+
+	internal bool immuneToDecay;
+
+	protected Vector3 realLocalCOM;
+
+	public Item AssociatedItemInstance;
+
+	private bool disablePhysics;
 
 	public Vector3 CentreOfMass => centreOfMassTransform.localPosition;
 
@@ -104,276 +102,7 @@ public abstract class BaseModularVehicle : GroundVehicle, PlayerInventory.ICanMo
 		}
 	}
 
-	public override void ServerInit()
-	{
-		base.ServerInit();
-		if (!disablePhysics)
-		{
-			rigidBody.isKinematic = false;
-		}
-		prevEditable = IsEditableNow;
-		if (Inventory == null)
-		{
-			Inventory = new ModularVehicleInventory(this, AssociatedItemDef, giveUID: true);
-		}
-	}
-
-	public override void PreServerLoad()
-	{
-		base.PreServerLoad();
-		if (Inventory == null)
-		{
-			Inventory = new ModularVehicleInventory(this, AssociatedItemDef, giveUID: false);
-		}
-	}
-
-	public override void PostServerLoad()
-	{
-		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		base.PostServerLoad();
-		if (Inventory != null)
-		{
-			ItemContainerId uID = Inventory.UID;
-			if (!((ItemContainerId)(ref uID)).IsValid)
-			{
-				Inventory.GiveUIDs();
-			}
-		}
-		SetFlag(Flags.Open, b: false);
-	}
-
-	internal override void DoServerDestroy()
-	{
-		base.DoServerDestroy();
-		if (Inventory != null)
-		{
-			Inventory.Dispose();
-		}
-	}
-
-	public override float MaxVelocity()
-	{
-		return Mathf.Max(GetMaxForwardSpeed() * 1.3f, 30f);
-	}
-
-	public abstract bool IsComplete();
-
-	public bool CouldBeEdited()
-	{
-		if (!AnyMounted())
-		{
-			return !IsDead();
-		}
-		return false;
-	}
-
-	public void DisablePhysics()
-	{
-		disablePhysics = true;
-		rigidBody.isKinematic = true;
-	}
-
-	public void EnablePhysics()
-	{
-		disablePhysics = false;
-		rigidBody.isKinematic = false;
-	}
-
-	public override void VehicleFixedUpdate()
-	{
-		base.VehicleFixedUpdate();
-		if (IsEditableNow != prevEditable)
-		{
-			SendNetworkUpdate();
-			prevEditable = IsEditableNow;
-		}
-		SetFlag(Flags.Reserved6, rigidBody.isKinematic);
-	}
-
-	public override bool MountEligable(BasePlayer player)
-	{
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		if (!base.MountEligable(player))
-		{
-			return false;
-		}
-		if (IsDead())
-		{
-			return false;
-		}
-		if (HasDriver())
-		{
-			Vector3 velocity = base.Velocity;
-			if (((Vector3)(ref velocity)).magnitude >= 2f)
-			{
-				return false;
-			}
-		}
-		return true;
-	}
-
-	public override void Save(SaveInfo info)
-	{
-		base.Save(info);
-		info.msg.modularVehicle = Pool.Get<ModularVehicle>();
-		info.msg.modularVehicle.editable = IsEditableNow;
-	}
-
-	public bool CanMoveFrom(BasePlayer player, Item item)
-	{
-		BaseVehicleModule moduleForItem = GetModuleForItem(item);
-		if ((Object)(object)moduleForItem != (Object)null)
-		{
-			return moduleForItem.CanBeMovedNow();
-		}
-		return true;
-	}
-
-	protected abstract Vector3 GetCOMMultiplier();
-
-	public abstract void ModuleHurt(BaseVehicleModule hurtModule, HitInfo info);
-
-	public abstract void ModuleReachedZeroHealth();
-
-	public bool TryAddModule(Item moduleItem, int socketIndex)
-	{
-		if (!ModuleCanBeAdded(moduleItem, socketIndex, out var failureReason))
-		{
-			Debug.LogError((object)(((object)this).GetType().Name + ": Can't add module: " + failureReason));
-			return false;
-		}
-		bool num = Inventory.TryAddModuleItem(moduleItem, socketIndex);
-		if (!num)
-		{
-			Debug.LogError((object)(((object)this).GetType().Name + ": Couldn't add new item!"));
-		}
-		return num;
-	}
-
-	public bool TryAddModule(Item moduleItem)
-	{
-		ItemModVehicleModule component = ((Component)moduleItem.info).GetComponent<ItemModVehicleModule>();
-		if ((Object)(object)component == (Object)null)
-		{
-			return false;
-		}
-		int socketsTaken = component.socketsTaken;
-		int num = Inventory.TryGetFreeSocket(socketsTaken);
-		if (num < 0)
-		{
-			return false;
-		}
-		return TryAddModule(moduleItem, num);
-	}
-
-	public bool ModuleCanBeAdded(Item moduleItem, int socketIndex, out string failureReason)
-	{
-		if (!base.isServer)
-		{
-			failureReason = "Can only add modules on server";
-			return false;
-		}
-		if (moduleItem == null)
-		{
-			failureReason = "Module item is null";
-			return false;
-		}
-		if (moduleItem.info.category != ItemCategory.Component)
-		{
-			failureReason = "Not a component type item";
-			return false;
-		}
-		ItemModVehicleModule component = ((Component)moduleItem.info).GetComponent<ItemModVehicleModule>();
-		if ((Object)(object)component == (Object)null)
-		{
-			failureReason = "Not the right item module type";
-			return false;
-		}
-		int socketsTaken = component.socketsTaken;
-		if (socketIndex < 0)
-		{
-			socketIndex = Inventory.TryGetFreeSocket(socketsTaken);
-		}
-		if (!Inventory.SocketsAreFree(socketIndex, socketsTaken, moduleItem))
-		{
-			failureReason = "One or more desired sockets already in use";
-			return false;
-		}
-		failureReason = string.Empty;
-		return true;
-	}
-
-	public BaseVehicleModule CreatePhysicalModuleEntity(Item moduleItem, ItemModVehicleModule itemModModule, int socketIndex)
-	{
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		Vector3 worldPosition = moduleSockets[socketIndex].WorldPosition;
-		Quaternion worldRotation = moduleSockets[socketIndex].WorldRotation;
-		BaseVehicleModule baseVehicleModule = itemModModule.CreateModuleEntity(this, worldPosition, worldRotation);
-		baseVehicleModule.AssociatedItemInstance = moduleItem;
-		SetUpModule(baseVehicleModule, moduleItem);
-		return baseVehicleModule;
-	}
-
-	public void SetUpModule(BaseVehicleModule moduleEntity, Item moduleItem)
-	{
-		moduleEntity.InitializeHealth(moduleItem.condition, moduleItem.maxCondition);
-		if (moduleItem.condition < moduleItem.maxCondition)
-		{
-			moduleEntity.SendNetworkUpdate();
-		}
-	}
-
-	public Item GetVehicleItem(ItemId itemUID)
-	{
-		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-		Item item = Inventory.ChassisContainer.FindItemByUID(itemUID);
-		if (item == null)
-		{
-			item = Inventory.ModuleContainer.FindItemByUID(itemUID);
-		}
-		return item;
-	}
-
-	public BaseVehicleModule GetModuleForItem(Item item)
-	{
-		if (item == null)
-		{
-			return null;
-		}
-		foreach (BaseVehicleModule attachedModuleEntity in AttachedModuleEntities)
-		{
-			if (attachedModuleEntity.AssociatedItemInstance == item)
-			{
-				return attachedModuleEntity;
-			}
-		}
-		return null;
-	}
-
-	private void SetMass(float mass)
-	{
-		TotalMass = mass;
-		rigidBody.mass = TotalMass;
-	}
-
-	private void SetCOM(Vector3 com)
-	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		realLocalCOM = com;
-		rigidBody.centerOfMass = Vector3.Scale(realLocalCOM, GetCOMMultiplier());
-	}
+	public ModularVehicleInventory Inventory { get; private set; }
 
 	public override void InitShared()
 	{
@@ -522,8 +251,8 @@ public abstract class BaseModularVehicle : GroundVehicle, PlayerInventory.ICanMo
 	protected override void OnChildAdded(BaseEntity childEntity)
 	{
 		base.OnChildAdded(childEntity);
-		BaseVehicleModule module;
-		if ((module = childEntity as BaseVehicleModule) != null)
+		BaseVehicleModule module = childEntity as BaseVehicleModule;
+		if (module != null)
 		{
 			Action action = delegate
 			{
@@ -635,5 +364,279 @@ public abstract class BaseModularVehicle : GroundVehicle, PlayerInventory.ICanMo
 				attachedModuleEntity.OtherVehicleModulesChanged();
 			}
 		}
+	}
+
+	public override void ServerInit()
+	{
+		base.ServerInit();
+		if (!disablePhysics)
+		{
+			rigidBody.isKinematic = false;
+		}
+		prevEditable = IsEditableNow;
+		if (Inventory == null)
+		{
+			Inventory = new ModularVehicleInventory(this, AssociatedItemDef, giveUID: true);
+		}
+	}
+
+	public override void PreServerLoad()
+	{
+		base.PreServerLoad();
+		if (Inventory == null)
+		{
+			Inventory = new ModularVehicleInventory(this, AssociatedItemDef, giveUID: false);
+		}
+	}
+
+	public override void PostServerLoad()
+	{
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		base.PostServerLoad();
+		if (Inventory != null)
+		{
+			ItemContainerId uID = Inventory.UID;
+			if (!((ItemContainerId)(ref uID)).IsValid)
+			{
+				Inventory.GiveUIDs();
+			}
+		}
+		SetFlag(Flags.Open, b: false);
+	}
+
+	internal override void DoServerDestroy()
+	{
+		base.DoServerDestroy();
+		if (Inventory != null)
+		{
+			Inventory.Dispose();
+		}
+	}
+
+	public override float MaxVelocity()
+	{
+		return Mathf.Max(GetMaxForwardSpeed() * 1.3f, 30f);
+	}
+
+	public abstract bool IsComplete();
+
+	public bool CouldBeEdited()
+	{
+		if (!AnyMounted())
+		{
+			return !IsDead();
+		}
+		return false;
+	}
+
+	public void DisablePhysics()
+	{
+		disablePhysics = true;
+		rigidBody.isKinematic = true;
+	}
+
+	public void EnablePhysics()
+	{
+		disablePhysics = false;
+		rigidBody.isKinematic = false;
+	}
+
+	public override void VehicleFixedUpdate()
+	{
+		base.VehicleFixedUpdate();
+		if (IsEditableNow != prevEditable)
+		{
+			SendNetworkUpdate();
+			prevEditable = IsEditableNow;
+		}
+		SetFlag(Flags.Reserved6, rigidBody.isKinematic);
+	}
+
+	public override bool MountEligable(BasePlayer player)
+	{
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		if (!base.MountEligable(player))
+		{
+			return false;
+		}
+		if (IsDead())
+		{
+			return false;
+		}
+		if (HasDriver())
+		{
+			Vector3 velocity = base.Velocity;
+			if (((Vector3)(ref velocity)).magnitude >= 2f)
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+
+	public override void Save(SaveInfo info)
+	{
+		base.Save(info);
+		info.msg.modularVehicle = Pool.Get<ModularVehicle>();
+		info.msg.modularVehicle.editable = IsEditableNow;
+	}
+
+	public bool CanMoveFrom(BasePlayer player, Item item)
+	{
+		BaseVehicleModule moduleForItem = GetModuleForItem(item);
+		if ((Object)(object)moduleForItem != (Object)null)
+		{
+			return moduleForItem.CanBeMovedNow();
+		}
+		return true;
+	}
+
+	protected abstract Vector3 GetCOMMultiplier();
+
+	public virtual void ModuleHurt(BaseVehicleModule hurtModule, HitInfo info)
+	{
+		DoExplosionForce(info);
+	}
+
+	public abstract void ModuleReachedZeroHealth();
+
+	public bool TryAddModule(Item moduleItem, int socketIndex)
+	{
+		if (!ModuleCanBeAdded(moduleItem, socketIndex, out var failureReason))
+		{
+			Debug.LogError((object)(((object)this).GetType().Name + ": Can't add module: " + failureReason));
+			return false;
+		}
+		bool num = Inventory.TryAddModuleItem(moduleItem, socketIndex);
+		if (!num)
+		{
+			Debug.LogError((object)(((object)this).GetType().Name + ": Couldn't add new item!"));
+		}
+		return num;
+	}
+
+	public bool TryAddModule(Item moduleItem)
+	{
+		ItemModVehicleModule component = ((Component)moduleItem.info).GetComponent<ItemModVehicleModule>();
+		if ((Object)(object)component == (Object)null)
+		{
+			return false;
+		}
+		int socketsTaken = component.socketsTaken;
+		int num = Inventory.TryGetFreeSocket(socketsTaken);
+		if (num < 0)
+		{
+			return false;
+		}
+		return TryAddModule(moduleItem, num);
+	}
+
+	public bool ModuleCanBeAdded(Item moduleItem, int socketIndex, out string failureReason)
+	{
+		if (!base.isServer)
+		{
+			failureReason = "Can only add modules on server";
+			return false;
+		}
+		if (moduleItem == null)
+		{
+			failureReason = "Module item is null";
+			return false;
+		}
+		if (moduleItem.info.category != ItemCategory.Component)
+		{
+			failureReason = "Not a component type item";
+			return false;
+		}
+		ItemModVehicleModule component = ((Component)moduleItem.info).GetComponent<ItemModVehicleModule>();
+		if ((Object)(object)component == (Object)null)
+		{
+			failureReason = "Not the right item module type";
+			return false;
+		}
+		int socketsTaken = component.socketsTaken;
+		if (socketIndex < 0)
+		{
+			socketIndex = Inventory.TryGetFreeSocket(socketsTaken);
+		}
+		if (!Inventory.SocketsAreFree(socketIndex, socketsTaken, moduleItem))
+		{
+			failureReason = "One or more desired sockets already in use";
+			return false;
+		}
+		failureReason = string.Empty;
+		return true;
+	}
+
+	public BaseVehicleModule CreatePhysicalModuleEntity(Item moduleItem, ItemModVehicleModule itemModModule, int socketIndex)
+	{
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		Vector3 worldPosition = moduleSockets[socketIndex].WorldPosition;
+		Quaternion worldRotation = moduleSockets[socketIndex].WorldRotation;
+		BaseVehicleModule baseVehicleModule = itemModModule.CreateModuleEntity(this, worldPosition, worldRotation);
+		baseVehicleModule.AssociatedItemInstance = moduleItem;
+		SetUpModule(baseVehicleModule, moduleItem);
+		return baseVehicleModule;
+	}
+
+	public void SetUpModule(BaseVehicleModule moduleEntity, Item moduleItem)
+	{
+		moduleEntity.InitializeHealth(moduleItem.condition, moduleItem.maxCondition);
+		if (moduleItem.condition < moduleItem.maxCondition)
+		{
+			moduleEntity.SendNetworkUpdate();
+		}
+	}
+
+	public Item GetVehicleItem(ItemId itemUID)
+	{
+		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		Item item = Inventory.ChassisContainer.FindItemByUID(itemUID);
+		if (item == null)
+		{
+			item = Inventory.ModuleContainer.FindItemByUID(itemUID);
+		}
+		return item;
+	}
+
+	public BaseVehicleModule GetModuleForItem(Item item)
+	{
+		if (item == null)
+		{
+			return null;
+		}
+		foreach (BaseVehicleModule attachedModuleEntity in AttachedModuleEntities)
+		{
+			if (attachedModuleEntity.AssociatedItemInstance == item)
+			{
+				return attachedModuleEntity;
+			}
+		}
+		return null;
+	}
+
+	private void SetMass(float mass)
+	{
+		TotalMass = mass;
+		rigidBody.mass = TotalMass;
+	}
+
+	private void SetCOM(Vector3 com)
+	{
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		realLocalCOM = com;
+		rigidBody.centerOfMass = Vector3.Scale(realLocalCOM, GetCOMMultiplier());
 	}
 }

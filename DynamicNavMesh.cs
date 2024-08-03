@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Rust;
 using Rust.Ai;
+using Unity.AI.Navigation;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -81,10 +82,10 @@ public class DynamicNavMesh : SingletonComponent<DynamicNavMesh>, IServerCompone
 	[ContextMenu("Update Nav Mesh")]
 	public void UpdateNavMeshAsync()
 	{
-		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
 		if (!HasBuildOperationStarted && !AiManager.nav_disable)
 		{
 			float realtimeSinceStartup = Time.realtimeSinceStartup;

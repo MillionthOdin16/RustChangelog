@@ -7,6 +7,12 @@ using UnityEngine;
 [ExecuteInEditMode]
 public class TerrainTexturing : TerrainExtension
 {
+	public bool debugFoliageDisplacement;
+
+	private bool initialized;
+
+	private static TerrainTexturing instance;
+
 	private const int ShoreVectorDownscale = 1;
 
 	private const int ShoreVectorBlurPasses = 1;
@@ -21,21 +27,11 @@ public class TerrainTexturing : TerrainExtension
 
 	private Vector3[] shoreVectors;
 
-	public bool debugFoliageDisplacement;
-
-	private bool initialized;
-
-	private static TerrainTexturing instance;
+	public static TerrainTexturing Instance => instance;
 
 	public int ShoreMapSize => shoreMapSize;
 
 	public Vector3[] ShoreMap => shoreVectors;
-
-	public static TerrainTexturing Instance => instance;
-
-	private void InitializeBasePyramid()
-	{
-	}
 
 	private void ReleaseBasePyramid()
 	{
@@ -55,6 +51,65 @@ public class TerrainTexturing : TerrainExtension
 
 	private void UpdateCoarseHeightSlope()
 	{
+	}
+
+	private void CheckInstance()
+	{
+		instance = (((Object)(object)instance != (Object)null) ? instance : this);
+	}
+
+	private void Awake()
+	{
+		CheckInstance();
+	}
+
+	public override void Setup()
+	{
+		InitializeShoreVector();
+	}
+
+	public override void PostSetup()
+	{
+		TerrainMeta component = ((Component)this).GetComponent<TerrainMeta>();
+		if ((Object)(object)component == (Object)null || (Object)(object)component.config == (Object)null)
+		{
+			Debug.LogError((object)"[TerrainTexturing] Missing TerrainMeta or TerrainConfig not assigned.");
+			return;
+		}
+		Shutdown();
+		InitializeCoarseHeightSlope();
+		GenerateShoreVector();
+		initialized = true;
+	}
+
+	private void Shutdown()
+	{
+		ReleaseBasePyramid();
+		ReleaseCoarseHeightSlope();
+		ReleaseShoreVector();
+		initialized = false;
+	}
+
+	private void OnEnable()
+	{
+		CheckInstance();
+	}
+
+	private void OnDisable()
+	{
+		if (!Application.isQuitting)
+		{
+			Shutdown();
+		}
+	}
+
+	private void Update()
+	{
+		if (initialized)
+		{
+			UpdateBasePyramid();
+			UpdateCoarseHeightSlope();
+		}
 	}
 
 	private void InitializeShoreVector()
@@ -306,64 +361,5 @@ public class TerrainTexturing : TerrainExtension
 		float num16 = (val6.y - val5.y) * num8 + val5.y;
 		float num17 = (val6.z - val5.z) * num8 + val5.z;
 		return new Vector3(num15, num16, num17 * shoreDistanceScale);
-	}
-
-	private void CheckInstance()
-	{
-		instance = (((Object)(object)instance != (Object)null) ? instance : this);
-	}
-
-	private void Awake()
-	{
-		CheckInstance();
-	}
-
-	public override void Setup()
-	{
-		InitializeShoreVector();
-	}
-
-	public override void PostSetup()
-	{
-		TerrainMeta component = ((Component)this).GetComponent<TerrainMeta>();
-		if ((Object)(object)component == (Object)null || (Object)(object)component.config == (Object)null)
-		{
-			Debug.LogError((object)"[TerrainTexturing] Missing TerrainMeta or TerrainConfig not assigned.");
-			return;
-		}
-		Shutdown();
-		InitializeCoarseHeightSlope();
-		GenerateShoreVector();
-		initialized = true;
-	}
-
-	private void Shutdown()
-	{
-		ReleaseBasePyramid();
-		ReleaseCoarseHeightSlope();
-		ReleaseShoreVector();
-		initialized = false;
-	}
-
-	private void OnEnable()
-	{
-		CheckInstance();
-	}
-
-	private void OnDisable()
-	{
-		if (!Application.isQuitting)
-		{
-			Shutdown();
-		}
-	}
-
-	private void Update()
-	{
-		if (initialized)
-		{
-			UpdateBasePyramid();
-			UpdateCoarseHeightSlope();
-		}
 	}
 }

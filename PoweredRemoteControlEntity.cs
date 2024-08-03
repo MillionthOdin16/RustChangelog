@@ -59,7 +59,7 @@ public class PoweredRemoteControlEntity : IOEntity, IRemoteControllable
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_SetID "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_SetID "));
 				}
 				TimeWarning val2 = TimeWarning.New("Server_SetID", 0);
 				try
@@ -223,10 +223,10 @@ public class PoweredRemoteControlEntity : IOEntity, IRemoteControllable
 		{
 			return;
 		}
-		string text = msg.read.String(256);
+		string text = msg.read.String(256, false);
 		if (string.IsNullOrEmpty(text) || ComputerStation.IsValidIdentifier(text))
 		{
-			string text2 = msg.read.String(256);
+			string text2 = msg.read.String(256, false);
 			if (ComputerStation.IsValidIdentifier(text2) && text == GetIdentifier())
 			{
 				UpdateIdentifier(text2);

@@ -95,4 +95,22 @@ public static class GameObjectEx
 		}
 		Pool.FreeList<T>(ref list);
 	}
+
+	public static GameObject FindInChildren(this GameObject parent, string name)
+	{
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		if (((Object)parent).name == name)
+		{
+			return parent;
+		}
+		foreach (Transform item in parent.transform)
+		{
+			GameObject val = ((Component)item).gameObject.FindInChildren(name);
+			if ((Object)(object)val != (Object)null)
+			{
+				return val;
+			}
+		}
+		return null;
+	}
 }

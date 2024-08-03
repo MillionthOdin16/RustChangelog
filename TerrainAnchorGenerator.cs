@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[MapGeneration]
 public class TerrainAnchorGenerator : MonoBehaviour, IEditorComponent
 {
 	public float PlacementRadius = 32f;

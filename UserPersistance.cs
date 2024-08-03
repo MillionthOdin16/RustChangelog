@@ -30,28 +30,28 @@ public class UserPersistance : IDisposable
 	{
 		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0010: Expected O, but got Unknown
-		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0090: Expected O, but got Unknown
-		//IL_0101: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010b: Expected O, but got Unknown
-		//IL_015e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0168: Expected O, but got Unknown
-		//IL_01c3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01cd: Expected O, but got Unknown
+		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0096: Expected O, but got Unknown
+		//IL_00f8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0102: Expected O, but got Unknown
+		//IL_0146: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0150: Expected O, but got Unknown
+		//IL_01ab: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b5: Expected O, but got Unknown
 		blueprints = new Database();
 		BaseGameMode activeGameMode = BaseGameMode.GetActiveGameMode(serverside: true);
 		string text = strFolder + "/player.blueprints.";
 		if ((Object)(object)activeGameMode != (Object)null && activeGameMode.wipeBpsOnProtocol)
 		{
-			text = text + 239 + ".";
+			text = text + 252 + ".";
 		}
-		blueprints.Open(text + 5 + ".db", false);
+		blueprints.Open(text + 5 + ".db", true);
 		if (!blueprints.TableExists("data"))
 		{
 			blueprints.Execute("CREATE TABLE data ( userid TEXT PRIMARY KEY, info BLOB, updated INTEGER )");
 		}
 		deaths = new Database();
-		deaths.Open(strFolder + "/player.deaths." + 5 + ".db", false);
+		deaths.Open(strFolder + "/player.deaths." + 5 + ".db", true);
 		if (!deaths.TableExists("data"))
 		{
 			deaths.Execute("CREATE TABLE data ( userid TEXT, born INTEGER, died INTEGER, info BLOB )");
@@ -59,13 +59,13 @@ public class UserPersistance : IDisposable
 			deaths.Execute("CREATE INDEX IF NOT EXISTS diedindex ON data ( died )");
 		}
 		identities = new Database();
-		identities.Open(strFolder + "/player.identities." + 5 + ".db", false);
+		identities.Open(strFolder + "/player.identities." + 5 + ".db", true);
 		if (!identities.TableExists("data"))
 		{
 			identities.Execute("CREATE TABLE data ( userid INT PRIMARY KEY, username TEXT )");
 		}
 		tokens = new Database();
-		tokens.Open(strFolder + "/player.tokens.db", false);
+		tokens.Open(strFolder + "/player.tokens.db", true);
 		if (!tokens.TableExists("data"))
 		{
 			tokens.Execute("CREATE TABLE data ( userid INT PRIMARY KEY, token INT, locked BOOLEAN DEFAULT 0 )");
@@ -75,7 +75,7 @@ public class UserPersistance : IDisposable
 			tokens.Execute("ALTER TABLE data ADD COLUMN locked BOOLEAN DEFAULT 0");
 		}
 		playerState = new Database();
-		playerState.Open(strFolder + "/player.states." + 239 + ".db", false);
+		playerState.Open(strFolder + "/player.states." + 252 + ".db", true);
 		if (!playerState.TableExists("data"))
 		{
 			playerState.Execute("CREATE TABLE data ( userid INT PRIMARY KEY, state BLOB )");
@@ -140,7 +140,7 @@ public class UserPersistance : IDisposable
 			{
 				array = blueprints.Query<byte[], ulong>("SELECT info FROM data WHERE userid = ?", playerID);
 			}
-			else if (NexusServer.TryGetPlayer(playerID, out player) && player.TryGetVariable("blueprints", ref val) && (int)val.Type == 0)
+			else if (NexusServer.TryGetPlayer(playerID, out player) && player.TryGetVariable(NexusVariables.Blueprints, ref val) && (int)val.Type == 0)
 			{
 				array = val.GetAsBinary();
 			}
@@ -182,7 +182,7 @@ public class UserPersistance : IDisposable
 			}
 			else
 			{
-				player.SetVariable("blueprints", array, false, true);
+				player.SetVariable(NexusVariables.Blueprints, array, false, true);
 			}
 		}
 		finally

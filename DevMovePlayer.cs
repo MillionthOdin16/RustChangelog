@@ -45,7 +45,7 @@ public class DevMovePlayer : BaseMonoBehaviour
 
 	public void LateSpawn()
 	{
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
 		Item item = ItemManager.CreateByName("rifle.semiauto", 1, 0uL);
 		player.inventory.GiveItem(item, player.inventory.containerBelt);
 		player.UpdateActiveItem(item.uid);

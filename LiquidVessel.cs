@@ -17,7 +17,7 @@ public class LiquidVessel : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - DoEmpty "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - DoEmpty "));
 				}
 				TimeWarning val2 = TimeWarning.New("DoEmpty", 0);
 				try

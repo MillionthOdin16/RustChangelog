@@ -2,8 +2,6 @@ using System;
 using ConVar;
 using Facepunch.Rust;
 using Network;
-using Rust;
-using Rust.Ai;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -32,7 +30,7 @@ public class ThrownWeapon : AttackEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - DoDrop "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - DoDrop "));
 				}
 				TimeWarning val2 = TimeWarning.New("DoDrop", 0);
 				try
@@ -83,7 +81,7 @@ public class ThrownWeapon : AttackEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - DoThrow "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - DoThrow "));
 				}
 				TimeWarning val2 = TimeWarning.New("DoThrow", 0);
 				try
@@ -182,10 +180,6 @@ public class ThrownWeapon : AttackEntity
 		//IL_0113: Unknown result type (might be due to invalid IL or missing references)
 		//IL_017e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0189: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0282: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0287: Unknown result type (might be due to invalid IL or missing references)
-		//IL_022a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_022f: Unknown result type (might be due to invalid IL or missing references)
 		if (base.isClient || !HasItemAmount() || HasAttackCooldown())
 		{
 			return;
@@ -224,36 +218,9 @@ public class ThrownWeapon : AttackEntity
 		baseEntity.Spawn();
 		StartAttackCooldown(repeatDelay);
 		UseItemAmount(1);
-		TimedExplosive timedExplosive = baseEntity as TimedExplosive;
-		if ((Object)(object)timedExplosive != (Object)null)
+		if ((Object)(object)(baseEntity as TimedExplosive) != (Object)null)
 		{
 			Analytics.Azure.OnExplosiveLaunched(ownerPlayer, baseEntity);
-			float num3 = 0f;
-			foreach (DamageTypeEntry damageType in timedExplosive.damageTypes)
-			{
-				num3 += damageType.amount;
-			}
-			Sensation sensation = default(Sensation);
-			sensation.Type = SensationType.ThrownWeapon;
-			sensation.Position = ((Component)ownerPlayer).transform.position;
-			sensation.Radius = 50f;
-			sensation.DamagePotential = num3;
-			sensation.InitiatorPlayer = ownerPlayer;
-			sensation.Initiator = ownerPlayer;
-			sensation.UsedEntity = timedExplosive;
-			Sense.Stimulate(sensation);
-		}
-		else
-		{
-			Sensation sensation = default(Sensation);
-			sensation.Type = SensationType.ThrownWeapon;
-			sensation.Position = ((Component)ownerPlayer).transform.position;
-			sensation.Radius = 50f;
-			sensation.DamagePotential = 0f;
-			sensation.InitiatorPlayer = ownerPlayer;
-			sensation.Initiator = ownerPlayer;
-			sensation.UsedEntity = this;
-			Sense.Stimulate(sensation);
 		}
 	}
 
@@ -298,28 +265,24 @@ public class ThrownWeapon : AttackEntity
 		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
 		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ad: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00c2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ba: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0142: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c8: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0143: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0148: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0155: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0165: Unknown result type (might be due to invalid IL or missing references)
-		//IL_016f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0174: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02d2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02d7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0277: Unknown result type (might be due to invalid IL or missing references)
-		//IL_027c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0144: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0149: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0150: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0156: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0166: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0170: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0175: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ba: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c5: Unknown result type (might be due to invalid IL or missing references)
 		if (!HasItemAmount() || HasAttackCooldown())
 		{
 			return;
@@ -341,60 +304,24 @@ public class ThrownWeapon : AttackEntity
 			return;
 		}
 		BaseEntity baseEntity = GameManager.server.CreateEntity(prefabToThrow.resourcePath, val, Quaternion.LookRotation((overrideAngle == Vector3.zero) ? (-normalized) : overrideAngle));
-		if ((Object)(object)baseEntity == (Object)null)
+		if (!((Object)(object)baseEntity == (Object)null))
 		{
-			return;
-		}
-		Item ownerItem = GetOwnerItem();
-		if (ownerItem != null && ownerItem.instanceData != null && ownerItem.HasFlag(Item.Flag.IsOn))
-		{
-			((Component)baseEntity).gameObject.SendMessage("SetFrequency", (object)GetOwnerItem().instanceData.dataInt, (SendMessageOptions)1);
-		}
-		baseEntity.SetCreatorEntity(msg.player);
-		baseEntity.skinID = skinID;
-		baseEntity.SetVelocity(GetInheritedVelocity(msg.player, normalized) + normalized * maxThrowVelocity * num + msg.player.estimatedVelocity * 0.5f);
-		if (tumbleVelocity > 0f)
-		{
-			baseEntity.SetAngularVelocity(new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f)) * tumbleVelocity);
-		}
-		baseEntity.Spawn();
-		SetUpThrownWeapon(baseEntity);
-		StartAttackCooldown(repeatDelay);
-		UseItemAmount(1);
-		BasePlayer player = msg.player;
-		if (!((Object)(object)player != (Object)null))
-		{
-			return;
-		}
-		TimedExplosive timedExplosive = baseEntity as TimedExplosive;
-		if ((Object)(object)timedExplosive != (Object)null)
-		{
-			float num2 = 0f;
-			foreach (DamageTypeEntry damageType in timedExplosive.damageTypes)
+			Item ownerItem = GetOwnerItem();
+			if (ownerItem != null && ownerItem.instanceData != null && ownerItem.HasFlag(Item.Flag.IsOn))
 			{
-				num2 += damageType.amount;
+				((Component)baseEntity).gameObject.SendMessage("SetFrequency", (object)GetOwnerItem().instanceData.dataInt, (SendMessageOptions)1);
 			}
-			Sensation sensation = default(Sensation);
-			sensation.Type = SensationType.ThrownWeapon;
-			sensation.Position = ((Component)player).transform.position;
-			sensation.Radius = 50f;
-			sensation.DamagePotential = num2;
-			sensation.InitiatorPlayer = player;
-			sensation.Initiator = player;
-			sensation.UsedEntity = timedExplosive;
-			Sense.Stimulate(sensation);
-		}
-		else
-		{
-			Sensation sensation = default(Sensation);
-			sensation.Type = SensationType.ThrownWeapon;
-			sensation.Position = ((Component)player).transform.position;
-			sensation.Radius = 50f;
-			sensation.DamagePotential = 0f;
-			sensation.InitiatorPlayer = player;
-			sensation.Initiator = player;
-			sensation.UsedEntity = this;
-			Sense.Stimulate(sensation);
+			baseEntity.SetCreatorEntity(msg.player);
+			baseEntity.skinID = skinID;
+			baseEntity.SetVelocity(GetInheritedVelocity(msg.player, normalized) + normalized * maxThrowVelocity * num + msg.player.estimatedVelocity * 0.5f);
+			if (tumbleVelocity > 0f)
+			{
+				baseEntity.SetAngularVelocity(new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f)) * tumbleVelocity);
+			}
+			baseEntity.Spawn();
+			SetUpThrownWeapon(baseEntity);
+			StartAttackCooldown(repeatDelay);
+			UseItemAmount(1);
 		}
 	}
 
@@ -410,22 +337,22 @@ public class ThrownWeapon : AttackEntity
 		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
 		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0095: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0097: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00bd: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00be: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00dd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00eb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ed: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0151: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0133: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0135: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00de: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ec: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ee: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0152: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0134: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0136: Unknown result type (might be due to invalid IL or missing references)
 		if (!HasItemAmount() || HasAttackCooldown() || (!canThrowUnderwater && msg.player.IsHeadUnderwater()))
 		{
 			return;

@@ -112,6 +112,8 @@ public class Performance : SingletonComponent<Performance>
 			current.loadBalancerTasks = LoadBalancer.Count();
 			current.invokeHandlerTasks = InvokeHandler.Count();
 			current.workshopSkinsQueued = WorkshopSkin.QueuedCount;
+			current.performanceSample = PerformanceMetrics.PerformancePerSecond;
+			PerformanceMetrics.PerformancePerSecond = default(PerformanceSamplePoint);
 			current.gcTriggered = memoryCollections != current.memoryCollections;
 			frames = 0;
 			time = 0f;

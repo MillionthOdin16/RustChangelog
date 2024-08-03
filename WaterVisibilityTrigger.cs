@@ -77,7 +77,23 @@ public class WaterVisibilityTrigger : EnvironmentVolumeTrigger
 			tracker.Remove(enteredTick);
 			if (tracker.Count > 0)
 			{
-				tracker.Values[tracker.Count - 1].ToggleVisibility();
+				bool flag2 = false;
+				foreach (WaterVisibilityTrigger value in tracker.Values)
+				{
+					if (value.toggleVisuals)
+					{
+						flag2 = true;
+						break;
+					}
+				}
+				if (flag2)
+				{
+					tracker.Values[tracker.Count - 1].ToggleVisibility();
+				}
+				else
+				{
+					ResetVisibility();
+				}
 			}
 			else
 			{

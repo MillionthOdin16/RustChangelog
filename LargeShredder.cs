@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using Facepunch;
+using Facepunch.Rust;
 using Rust;
 using UnityEngine;
 
@@ -78,16 +81,16 @@ public class LargeShredder : BaseEntity
 
 	public void CreateShredResources()
 	{
-		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01d6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01db: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01e2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01e8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0200: Unknown result type (might be due to invalid IL or missing references)
+		//IL_021e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0223: Unknown result type (might be due to invalid IL or missing references)
+		//IL_022a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0230: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)currentlyShredding == (Object)null)
 		{
 			return;
@@ -102,6 +105,7 @@ public class LargeShredder : BaseEntity
 			component.associatedPlayer.stats.Add("cars_shredded", 1);
 			component.associatedPlayer.stats.Save(forceSteamSave: true);
 		}
+		List<Item> list = Pool.GetList<Item>();
 		ItemAmount[] shredResources = component.shredResources;
 		foreach (ItemAmount itemAmount in shredResources)
 		{
@@ -110,8 +114,13 @@ public class LargeShredder : BaseEntity
 			if ((Object)(object)item.CreateWorldObject(((Component)resourceSpawnPoint).transform.position + new Vector3(Random.Range(0f - num, num), 1f, Random.Range(0f - num, num))) == (Object)null)
 			{
 				item.Remove();
+				continue;
 			}
+			list.Add(item);
+			Analytics.Azure.AddPendingItems(currentlyShredding, item.info.shortname, item.amount, "car_shred", consumed: false);
 		}
+		Analytics.Azure.OnCarShredded(component, list);
+		Pool.FreeList<Item>(ref list);
 		BaseModularVehicle component2 = ((Component)currentlyShredding).GetComponent<BaseModularVehicle>();
 		if (!Object.op_Implicit((Object)(object)component2))
 		{

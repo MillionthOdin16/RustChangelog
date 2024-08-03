@@ -31,7 +31,7 @@ public class DeployedRecorder : StorageContainer, ICassettePlayer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ServerTogglePlay "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ServerTogglePlay "));
 				}
 				TimeWarning val2 = TimeWarning.New("ServerTogglePlay", 0);
 				try
@@ -100,14 +100,14 @@ public class DeployedRecorder : StorageContainer, ICassettePlayer
 
 	public void OnCassetteInserted(Cassette c)
 	{
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		ClientRPC<NetworkableId>(null, "Client_OnCassetteInserted", c.net.ID);
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		ClientRPC<NetworkableId>(RpcTarget.NetworkGroup("Client_OnCassetteInserted"), c.net.ID);
 		SendNetworkUpdate();
 	}
 
 	public void OnCassetteRemoved(Cassette c)
 	{
-		ClientRPC(null, "Client_OnCassetteRemoved");
+		ClientRPC(RpcTarget.NetworkGroup("Client_OnCassetteRemoved"));
 		ServerTogglePlay(play: false);
 	}
 

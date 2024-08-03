@@ -6,6 +6,8 @@ public class UIClanRankCreator : BaseMonoBehaviour
 
 	public static readonly Phrase CreateRankDuplicate = (Phrase)(object)new TokenisedPhrase("clan.create_rank.duplicate", "There is already a rank in your clan with that name.");
 
+	public static readonly Phrase CreateRankNameInvalid = (Phrase)(object)new TokenisedPhrase("clan.create_rank.name_invalid", "The clan rank name you typed in is not valid.");
+
 	public UIClans UiClans;
 
 	public RustInput RankName;

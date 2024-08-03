@@ -10,6 +10,8 @@ using UnityEngine.Assertions;
 
 public class CarvablePumpkin : BaseOven, ILOD, ISignage, IUGCBrowserEntity
 {
+	private List<ulong> editHistory = new List<ulong>();
+
 	private const float TextureRequestTimeout = 15f;
 
 	public GameObjectRef changeTextDialog;
@@ -19,7 +21,19 @@ public class CarvablePumpkin : BaseOven, ILOD, ISignage, IUGCBrowserEntity
 	[NonSerialized]
 	public uint[] textureIDs;
 
-	private List<ulong> editHistory = new List<ulong>();
+	public FileStorage.Type FileType => FileStorage.Type.png;
+
+	public NetworkableId NetworkID => net.ID;
+
+	public UGCType ContentType => UGCType.ImagePng;
+
+	public List<ulong> EditingHistory => editHistory;
+
+	public uint[] GetContentCRCs => textureIDs;
+
+	public override bool ShouldTransferAssociatedFiles => true;
+
+	public BaseNetworkable UgcEntity => this;
 
 	public Vector2i TextureSize
 	{
@@ -49,18 +63,6 @@ public class CarvablePumpkin : BaseOven, ILOD, ISignage, IUGCBrowserEntity
 		}
 	}
 
-	public FileStorage.Type FileType => FileStorage.Type.png;
-
-	public NetworkableId NetworkID => net.ID;
-
-	public UGCType ContentType => UGCType.ImagePng;
-
-	public List<ulong> EditingHistory => editHistory;
-
-	public uint[] GetContentCRCs => textureIDs;
-
-	public BaseNetworkable UgcEntity => this;
-
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
 		TimeWarning val = TimeWarning.New("CarvablePumpkin.OnRpcMessage", 0);
@@ -71,7 +73,7 @@ public class CarvablePumpkin : BaseOven, ILOD, ISignage, IUGCBrowserEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - LockSign "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - LockSign "));
 				}
 				TimeWarning val2 = TimeWarning.New("LockSign", 0);
 				try
@@ -122,7 +124,7 @@ public class CarvablePumpkin : BaseOven, ILOD, ISignage, IUGCBrowserEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - UnLockSign "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - UnLockSign "));
 				}
 				TimeWarning val2 = TimeWarning.New("UnLockSign", 0);
 				try
@@ -173,7 +175,7 @@ public class CarvablePumpkin : BaseOven, ILOD, ISignage, IUGCBrowserEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - UpdateSign "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - UpdateSign "));
 				}
 				TimeWarning val2 = TimeWarning.New("UpdateSign", 0);
 				try
@@ -231,84 +233,6 @@ public class CarvablePumpkin : BaseOven, ILOD, ISignage, IUGCBrowserEntity
 		return base.OnRpcMessage(player, rpc, msg);
 	}
 
-	public override void PreProcess(IPrefabProcessor preProcess, GameObject rootObj, string name, bool serverside, bool clientside, bool bundling)
-	{
-		base.PreProcess(preProcess, rootObj, name, serverside, clientside, bundling);
-		if (paintableSources != null && paintableSources.Length > 1)
-		{
-			MeshPaintableSource meshPaintableSource = paintableSources[0];
-			for (int i = 1; i < paintableSources.Length; i++)
-			{
-				MeshPaintableSource obj = paintableSources[i];
-				obj.texWidth = meshPaintableSource.texWidth;
-				obj.texHeight = meshPaintableSource.texHeight;
-			}
-		}
-	}
-
-	[RPC_Server]
-	[RPC_Server.CallsPerSecond(5uL)]
-	[RPC_Server.MaxDistance(5f)]
-	public void UpdateSign(RPCMessage msg)
-	{
-		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0119: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fa: Unknown result type (might be due to invalid IL or missing references)
-		if ((Object)(object)msg.player == (Object)null || !CanUpdateSign(msg.player))
-		{
-			return;
-		}
-		int num = msg.read.Int32();
-		if (num < 0 || num >= paintableSources.Length)
-		{
-			return;
-		}
-		byte[] array = msg.read.BytesWithSize(10485760u);
-		if (msg.read.Unread > 0 && msg.read.Bit() && !msg.player.IsAdmin)
-		{
-			Debug.LogWarning((object)$"{msg.player} tried to upload a sign from a file but they aren't admin, ignoring");
-			return;
-		}
-		EnsureInitialized();
-		if (array == null)
-		{
-			if (textureIDs[num] != 0)
-			{
-				FileStorage.server.RemoveExact(textureIDs[num], FileStorage.Type.png, net.ID, (uint)num);
-			}
-			textureIDs[num] = 0u;
-		}
-		else
-		{
-			if (!ImageProcessing.IsValidPNG(array, 1024, 1024))
-			{
-				return;
-			}
-			if (textureIDs[num] != 0)
-			{
-				FileStorage.server.RemoveExact(textureIDs[num], FileStorage.Type.png, net.ID, (uint)num);
-			}
-			textureIDs[num] = FileStorage.server.Store(array, FileStorage.Type.png, net.ID, (uint)num);
-		}
-		LogEdit(msg.player);
-		SendNetworkUpdate();
-	}
-
-	private void EnsureInitialized()
-	{
-		int num = Mathf.Max(paintableSources.Length, 1);
-		if (textureIDs == null || textureIDs.Length != num)
-		{
-			Array.Resize(ref textureIDs, num);
-		}
-	}
-
-	[Conditional("SIGN_DEBUG")]
-	private static void SignDebugLog(string str)
-	{
-		Debug.Log((object)str);
-	}
-
 	public uint[] GetTextureCRCs()
 	{
 		return textureIDs;
@@ -326,7 +250,7 @@ public class CarvablePumpkin : BaseOven, ILOD, ISignage, IUGCBrowserEntity
 		}
 		if (IsLocked())
 		{
-			return player.userID == base.OwnerID;
+			return (ulong)player.userID == base.OwnerID;
 		}
 		return true;
 	}
@@ -552,5 +476,83 @@ public class CarvablePumpkin : BaseOven, ILOD, ISignage, IUGCBrowserEntity
 	public override string Categorize()
 	{
 		return "sign";
+	}
+
+	public override void PreProcess(IPrefabProcessor preProcess, GameObject rootObj, string name, bool serverside, bool clientside, bool bundling)
+	{
+		base.PreProcess(preProcess, rootObj, name, serverside, clientside, bundling);
+		if (paintableSources != null && paintableSources.Length > 1)
+		{
+			MeshPaintableSource meshPaintableSource = paintableSources[0];
+			for (int i = 1; i < paintableSources.Length; i++)
+			{
+				MeshPaintableSource obj = paintableSources[i];
+				obj.texWidth = meshPaintableSource.texWidth;
+				obj.texHeight = meshPaintableSource.texHeight;
+			}
+		}
+	}
+
+	[RPC_Server]
+	[RPC_Server.CallsPerSecond(5uL)]
+	[RPC_Server.MaxDistance(5f)]
+	public void UpdateSign(RPCMessage msg)
+	{
+		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fb: Unknown result type (might be due to invalid IL or missing references)
+		if ((Object)(object)msg.player == (Object)null || !CanUpdateSign(msg.player))
+		{
+			return;
+		}
+		int num = msg.read.Int32();
+		if (num < 0 || num >= paintableSources.Length)
+		{
+			return;
+		}
+		byte[] array = msg.read.BytesWithSize(10485760u, false);
+		if (msg.read.Unread > 0 && msg.read.Bit() && !msg.player.IsAdmin)
+		{
+			Debug.LogWarning((object)$"{msg.player} tried to upload a sign from a file but they aren't admin, ignoring");
+			return;
+		}
+		EnsureInitialized();
+		if (array == null)
+		{
+			if (textureIDs[num] != 0)
+			{
+				FileStorage.server.RemoveExact(textureIDs[num], FileStorage.Type.png, net.ID, (uint)num);
+			}
+			textureIDs[num] = 0u;
+		}
+		else
+		{
+			if (!ImageProcessing.IsValidPNG(array, 1024, 1024))
+			{
+				return;
+			}
+			if (textureIDs[num] != 0)
+			{
+				FileStorage.server.RemoveExact(textureIDs[num], FileStorage.Type.png, net.ID, (uint)num);
+			}
+			textureIDs[num] = FileStorage.server.Store(array, FileStorage.Type.png, net.ID, (uint)num);
+		}
+		LogEdit(msg.player);
+		SendNetworkUpdate();
+	}
+
+	private void EnsureInitialized()
+	{
+		int num = Mathf.Max(paintableSources.Length, 1);
+		if (textureIDs == null || textureIDs.Length != num)
+		{
+			Array.Resize(ref textureIDs, num);
+		}
+	}
+
+	[Conditional("SIGN_DEBUG")]
+	private static void SignDebugLog(string str)
+	{
+		Debug.Log((object)str);
 	}
 }

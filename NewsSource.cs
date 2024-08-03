@@ -139,7 +139,7 @@ public class NewsSource : MonoBehaviour
 			case "previewyoutube":
 				if (depth == 0)
 				{
-					string[] array2 = value3.Split(';');
+					string[] array2 = value3.Split(';', StringSplitOptions.None);
 					AppendYouTube(ref currentParagraph, array2[0]);
 				}
 				break;
@@ -184,7 +184,7 @@ public class NewsSource : MonoBehaviour
 				break;
 			case "url":
 			{
-				if (StringExtensions.Contains(value4, "[img]", StringComparison.InvariantCultureIgnoreCase))
+				if (value4.Contains("[img]", StringComparison.InvariantCultureIgnoreCase))
 				{
 					ParseBbcode(ref currentParagraph, value4, ref firstImage, depth);
 					break;
@@ -205,7 +205,7 @@ public class NewsSource : MonoBehaviour
 					if (!string.IsNullOrWhiteSpace(text3))
 					{
 						currentParagraph.Append("\t• ");
-						currentParagraph.Append(text3.Trim());
+						ParseBbcode(ref currentParagraph, text3.Trim(), ref firstImage, depth + 1);
 						currentParagraph.AppendLine();
 					}
 				}
@@ -222,7 +222,7 @@ public class NewsSource : MonoBehaviour
 					if (!string.IsNullOrWhiteSpace(text2))
 					{
 						currentParagraph.Append($"\t{num++} ");
-						currentParagraph.Append(text2.Trim());
+						ParseBbcode(ref currentParagraph, text2.Trim(), ref firstImage, depth + 1);
 						currentParagraph.AppendLine();
 					}
 				}

@@ -115,7 +115,7 @@ public class SlotMachine : BaseMountable
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_Deposit "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_Deposit "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_Deposit", 0);
 				try
@@ -166,7 +166,7 @@ public class SlotMachine : BaseMountable
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_Spin "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_Spin "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_Spin", 0);
 				try
@@ -217,7 +217,7 @@ public class SlotMachine : BaseMountable
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_RequestMultiplierChange "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_RequestMultiplierChange "));
 				}
 				TimeWarning val2 = TimeWarning.New("Server_RequestMultiplierChange", 0);
 				try
@@ -397,7 +397,7 @@ public class SlotMachine : BaseMountable
 		SpinResultPrevious3 = SpinResult3;
 		CalculateSpinResults();
 		SpinTime = Time.time;
-		ClientRPC(null, "RPC_OnSpin", (sbyte)SpinResult1, (sbyte)SpinResult2, (sbyte)SpinResult3);
+		ClientRPC(RpcTarget.NetworkGroup("RPC_OnSpin"), (sbyte)SpinResult1, (sbyte)SpinResult2, (sbyte)SpinResult3);
 		((FacepunchBehaviour)this).Invoke((Action)CheckPayout, SpinDuration);
 	}
 
@@ -414,10 +414,10 @@ public class SlotMachine : BaseMountable
 
 	private void CheckPayout()
 	{
-		//IL_0164: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0169: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ad: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0165: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ae: Unknown result type (might be due to invalid IL or missing references)
 		bool flag = false;
 		if ((Object)(object)PayoutSettings != (Object)null)
 		{

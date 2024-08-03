@@ -42,7 +42,7 @@ public class BasePortal : BaseCombatEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_UsePortal "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_UsePortal "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_UsePortal", 0);
 				try
@@ -206,11 +206,11 @@ public class BasePortal : BaseCombatEntity
 		//IL_00dd: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00de: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0119: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0130: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0134: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0102: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0103: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0163: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0162: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0167: Unknown result type (might be due to invalid IL or missing references)
 		LinkPortal();
 		if ((Object)(object)targetPortal != (Object)null)
 		{
@@ -241,7 +241,7 @@ public class BasePortal : BaseCombatEntity
 			player.SetParent(null, worldPositionStays: true);
 			player.Teleport(val);
 			player.ForceUpdateTriggers();
-			player.ClientRPCPlayer<Vector3>(null, player, "ForceViewAnglesTo", val3);
+			player.ClientRPC<Vector3>(RpcTarget.Player("ForceViewAnglesTo", player), val3);
 			if (transitionSoundEffect.isValid)
 			{
 				Effect.server.Run(transitionSoundEffect.resourcePath, ((Component)targetPortal.relativeAnchor).transform.position, Vector3.up);
@@ -249,7 +249,7 @@ public class BasePortal : BaseCombatEntity
 			player.UpdateNetworkGroup();
 			player.SetPlayerFlag(BasePlayer.PlayerFlags.ReceivingSnapshot, b: true);
 			SendNetworkUpdateImmediate();
-			player.ClientRPCPlayer(null, player, "StartLoading_Quick", arg1: true);
+			player.ClientRPC(RpcTarget.Player("StartLoading_Quick", player), arg1: true);
 		}
 		else
 		{

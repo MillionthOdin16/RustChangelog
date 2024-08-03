@@ -9,7 +9,7 @@ public class RFManager
 
 	public static int minFreq = 1;
 
-	public static int maxFreq = 9999;
+	public static int maxFreq = 999999;
 
 	private static int reserveRangeMin = 4760;
 

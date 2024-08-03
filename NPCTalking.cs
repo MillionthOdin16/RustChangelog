@@ -41,7 +41,7 @@ public class NPCTalking : NPCShopKeeper, IConversationProvider
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ConversationAction "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ConversationAction "));
 				}
 				TimeWarning val2 = TimeWarning.New("ConversationAction", 0);
 				try
@@ -96,7 +96,7 @@ public class NPCTalking : NPCShopKeeper, IConversationProvider
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_BeginTalking "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_BeginTalking "));
 				}
 				TimeWarning val2 = TimeWarning.New("Server_BeginTalking", 0);
 				try
@@ -151,7 +151,7 @@ public class NPCTalking : NPCShopKeeper, IConversationProvider
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_EndTalking "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_EndTalking "));
 				}
 				TimeWarning val2 = TimeWarning.New("Server_EndTalking", 0);
 				try
@@ -206,7 +206,7 @@ public class NPCTalking : NPCShopKeeper, IConversationProvider
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_ResponsePressed "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_ResponsePressed "));
 				}
 				TimeWarning val2 = TimeWarning.New("Server_ResponsePressed", 0);
 				try
@@ -303,14 +303,15 @@ public class NPCTalking : NPCShopKeeper, IConversationProvider
 
 	public void ForceEndConversation(BasePlayer player)
 	{
-		ClientRPCPlayer(null, player, "Client_EndConversation");
+		ClientRPC(RpcTarget.Player("Client_EndConversation", player));
+		OnConversationEnded(player);
 	}
 
 	public void ForceSpeechNode(BasePlayer player, int speechNodeIndex)
 	{
 		if (!((Object)(object)player == (Object)null))
 		{
-			ClientRPCPlayer(null, player, "Client_ForceSpeechNode", speechNodeIndex);
+			ClientRPC(RpcTarget.Player("Client_ForceSpeechNode", player), speechNodeIndex);
 		}
 	}
 
@@ -340,18 +341,32 @@ public class NPCTalking : NPCShopKeeper, IConversationProvider
 	public void Server_BeginTalking(RPCMessage msg)
 	{
 		BasePlayer player = msg.player;
+		Server_BeginTalking(player);
+	}
+
+	protected virtual bool CanTalkTo(BasePlayer bp)
+	{
+		return true;
+	}
+
+	public void Server_BeginTalking(BasePlayer ply)
+	{
+		if (!CanTalkTo(ply))
+		{
+			return;
+		}
 		CleanupConversingPlayers();
-		ConversationData conversationFor = GetConversationFor(player);
+		OnConversationStarted(ply);
+		ConversationData conversationFor = GetConversationFor(ply);
 		if ((Object)(object)conversationFor != (Object)null)
 		{
-			if (conversingPlayers.Contains(player))
+			if (conversingPlayers.Contains(ply))
 			{
-				OnConversationEnded(player);
+				OnConversationEnded(ply);
 			}
-			conversingPlayers.Add(player);
+			conversingPlayers.Add(ply);
 			UpdateFlags();
-			OnConversationStarted(player);
-			ClientRPCPlayer(null, player, "Client_StartConversation", GetConversationIndex(conversationFor.shortname), GetConversationStartSpeech(player));
+			ClientRPC(RpcTarget.Player("Client_StartConversation", ply), GetConversationIndex(conversationFor.shortname), GetConversationStartSpeech(ply));
 		}
 	}
 
@@ -377,7 +392,7 @@ public class NPCTalking : NPCShopKeeper, IConversationProvider
 	public void ConversationAction(RPCMessage msg)
 	{
 		BasePlayer player = msg.player;
-		string action = msg.read.String(256);
+		string action = msg.read.String(256, false);
 		OnConversationAction(player, action);
 	}
 
@@ -410,26 +425,31 @@ public class NPCTalking : NPCShopKeeper, IConversationProvider
 			return;
 		}
 		ConversationData.ResponseNode responseNode = conversationFor.speeches[num].responses[num2];
-		if (responseNode != null)
+		if (responseNode == null)
 		{
-			if (responseNode.conditions.Length != 0)
+			return;
+		}
+		if (responseNode.conditions.Length != 0)
+		{
+			UpdateFlags();
+		}
+		bool flag = responseNode.PassesConditions(player, this);
+		if (flag)
+		{
+			string actionString = responseNode.GetActionString();
+			if (!string.IsNullOrEmpty(actionString))
 			{
-				UpdateFlags();
+				OnConversationAction(player, actionString);
 			}
-			bool flag = responseNode.PassesConditions(player, this);
-			if (flag && !string.IsNullOrEmpty(responseNode.actionString))
-			{
-				OnConversationAction(player, responseNode.actionString);
-			}
-			int speechNodeIndex = conversationFor.GetSpeechNodeIndex(flag ? responseNode.resultingSpeechNode : responseNode.GetFailedSpeechNode(player, this));
-			if (speechNodeIndex == -1)
-			{
-				ForceEndConversation(player);
-			}
-			else
-			{
-				ForceSpeechNode(player, speechNodeIndex);
-			}
+		}
+		int speechNodeIndex = conversationFor.GetSpeechNodeIndex(flag ? responseNode.resultingSpeechNode : responseNode.GetFailedSpeechNode(player, this));
+		if (speechNodeIndex == -1)
+		{
+			ForceEndConversation(player);
+		}
+		else
+		{
+			ForceSpeechNode(player, speechNodeIndex);
 		}
 	}
 
@@ -470,7 +490,7 @@ public class NPCTalking : NPCShopKeeper, IConversationProvider
 				}
 			}
 			int num = nPCConversationResultAction.scrapCost;
-			List<Item> list = player.inventory.FindItemIDs(itemDefinition.itemid);
+			List<Item> list = player.inventory.FindItemsByItemID(itemDefinition.itemid);
 			foreach (Item item in list)
 			{
 				num -= item.amount;

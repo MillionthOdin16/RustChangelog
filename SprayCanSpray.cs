@@ -9,8 +9,9 @@ using UnityEngine.Assertions;
 
 public class SprayCanSpray : DecayEntity, ISplashable
 {
-	public DateTime sprayTimestamp;
+	private DateTime sprayTimestamp;
 
+	[NonSerialized]
 	public ulong sprayedByPlayer;
 
 	public static ListHashSet<SprayCanSpray> AllSprays = new ListHashSet<SprayCanSpray>(8);
@@ -27,7 +28,7 @@ public class SprayCanSpray : DecayEntity, ISplashable
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_RequestWaterClear "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_RequestWaterClear "));
 				}
 				TimeWarning val2 = TimeWarning.New("Server_RequestWaterClear", 0);
 				try

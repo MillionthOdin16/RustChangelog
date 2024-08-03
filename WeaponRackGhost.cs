@@ -1,3 +1,3 @@
-public class WeaponRackGhost
+public static class WeaponRackGhost
 {
 }

@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 
+[MapGeneration]
 public abstract class TerrainPlacement : PrefabAttribute
 {
 	[ReadOnly]

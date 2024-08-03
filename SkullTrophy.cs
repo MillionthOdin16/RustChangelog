@@ -22,7 +22,7 @@ public class SkullTrophy : StorageContainer
 
 	public float SunriseTime = 5f;
 
-	public MeshRenderer[] SkullRenderers;
+	public RendererLOD SkullRenderer;
 
 	public Material[] DaySkull;
 

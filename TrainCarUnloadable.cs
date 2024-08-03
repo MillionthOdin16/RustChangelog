@@ -73,7 +73,7 @@ public class TrainCarUnloadable : TrainCar
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_Open "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_Open "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_Open", 0);
 				try
@@ -333,7 +333,7 @@ public class TrainCarUnloadable : TrainCar
 	{
 		float orePercent = GetOrePercent();
 		AnimateUnload(orePercent);
-		ClientRPC(null, "RPC_AnimateUnload", orePercent);
+		ClientRPC(RpcTarget.NetworkGroup("RPC_AnimateUnload"), orePercent);
 	}
 
 	public void EndEmptyProcess()
@@ -352,7 +352,7 @@ public class TrainCarUnloadable : TrainCar
 			}
 		}
 		SetVisualOreLevel(orePercent);
-		ClientRPC(null, "RPC_StopAnimateUnload", orePercent);
+		ClientRPC(RpcTarget.NetworkGroup("RPC_StopAnimateUnload"), orePercent);
 		decayingFor = 0f;
 	}
 

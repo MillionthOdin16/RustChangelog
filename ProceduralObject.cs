@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[MapGeneration]
 public abstract class ProceduralObject : MonoBehaviour
 {
 	protected void Awake()

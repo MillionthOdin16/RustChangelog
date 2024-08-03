@@ -61,7 +61,7 @@ public class NeonSign : Signage
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SetAnimationSpeed "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SetAnimationSpeed "));
 				}
 				TimeWarning val2 = TimeWarning.New("SetAnimationSpeed", 0);
 				try
@@ -116,7 +116,7 @@ public class NeonSign : Signage
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - UpdateNeonColors "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - UpdateNeonColors "));
 				}
 				TimeWarning val2 = TimeWarning.New("UpdateNeonColors", 0);
 				try
@@ -226,7 +226,7 @@ public class NeonSign : Signage
 			if (currentFrame != 0)
 			{
 				currentFrame = 0;
-				ClientRPC(null, "SetFrame", currentFrame);
+				ClientRPC(RpcTarget.NetworkGroup("SetFrame"), currentFrame);
 			}
 			((FacepunchBehaviour)this).InvokeRepeating(animationLoopAction, animationSpeed, animationSpeed);
 			isAnimating = true;
@@ -255,7 +255,7 @@ public class NeonSign : Signage
 		}
 		if (currentFrame != num)
 		{
-			ClientRPC(null, "SetFrame", currentFrame);
+			ClientRPC(RpcTarget.NetworkGroup("SetFrame"), currentFrame);
 		}
 	}
 

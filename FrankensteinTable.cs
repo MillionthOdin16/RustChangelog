@@ -42,7 +42,7 @@ public class FrankensteinTable : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - CreateFrankenstein "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - CreateFrankenstein "));
 				}
 				TimeWarning val2 = TimeWarning.New("CreateFrankenstein", 0);
 				try
@@ -93,7 +93,7 @@ public class FrankensteinTable : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RequestSleepFrankenstein "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RequestSleepFrankenstein "));
 				}
 				TimeWarning val2 = TimeWarning.New("RequestSleepFrankenstein", 0);
 				try
@@ -144,7 +144,7 @@ public class FrankensteinTable : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RequestWakeFrankenstein "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RequestWakeFrankenstein "));
 				}
 				TimeWarning val2 = TimeWarning.New("RequestWakeFrankenstein", 0);
 				try
@@ -387,7 +387,7 @@ public class FrankensteinTable : StorageContainer
 			base.inventory.SetLocked(isLocked: true);
 			SendNetworkUpdateImmediate();
 			((MonoBehaviour)this).StartCoroutine(DelayWakeFrankenstein(owner));
-			ClientRPC(null, "CL_WakeFrankenstein");
+			ClientRPC(RpcTarget.NetworkGroup("CL_WakeFrankenstein"));
 		}
 	}
 

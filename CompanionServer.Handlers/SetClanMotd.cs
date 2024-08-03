@@ -18,11 +18,12 @@ public class SetClanMotd : BaseClanHandler<AppSendMessage>
 			((BaseHandler<AppSendMessage>)this).SendError("no_clan");
 			return;
 		}
+		long previousTimestamp = clan.MotdTimestamp;
 		ClanResult val = await clan.SetMotd(motd, base.UserId);
 		if ((int)val == 1)
 		{
 			SendSuccess();
-			ClanPushNotifications.SendClanAnnouncement(clan, base.UserId);
+			ClanPushNotifications.SendClanAnnouncement(clan, previousTimestamp, base.UserId);
 		}
 		else
 		{

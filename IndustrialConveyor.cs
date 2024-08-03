@@ -20,6 +20,7 @@ public class IndustrialConveyor : IndustrialEntity
 		Not
 	}
 
+	[JsonModel]
 	public struct ItemFilter
 	{
 		[JsonIgnore]
@@ -116,7 +117,7 @@ public class IndustrialConveyor : IndustrialEntity
 
 	private ConveyorMode mode;
 
-	public const int MAX_FILTER_SIZE = 12;
+	public const int MAX_FILTER_SIZE = 30;
 
 	public Image IconTransferImage;
 
@@ -134,6 +135,14 @@ public class IndustrialConveyor : IndustrialEntity
 
 	private Stopwatch transferStopWatch = new Stopwatch();
 
+	private bool multiFrameTransferInProcess;
+
+	private int multiFrameOutputIndex;
+
+	private int multiFrameInputIndex;
+
+	private bool isFirstTransfer = true;
+
 	private bool wasOnWhenPowerLost;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
@@ -146,7 +155,7 @@ public class IndustrialConveyor : IndustrialEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_ChangeFilters "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_ChangeFilters "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_ChangeFilters", 0);
 				try
@@ -201,7 +210,7 @@ public class IndustrialConveyor : IndustrialEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_RequestUpToDateFilters "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_RequestUpToDateFilters "));
 				}
 				TimeWarning val2 = TimeWarning.New("Server_RequestUpToDateFilters", 0);
 				try
@@ -256,7 +265,7 @@ public class IndustrialConveyor : IndustrialEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SvSwitch "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SvSwitch "));
 				}
 				TimeWarning val2 = TimeWarning.New("SvSwitch", 0);
 				try
@@ -416,27 +425,26 @@ public class IndustrialConveyor : IndustrialEntity
 
 	protected override void RunJob()
 	{
-		//IL_07ff: Unknown result type (might be due to invalid IL or missing references)
-		//IL_080e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0227: Unknown result type (might be due to invalid IL or missing references)
-		//IL_022c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_022e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0738: Unknown result type (might be due to invalid IL or missing references)
-		//IL_024a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_024f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0301: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0308: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03e1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03e8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_038a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0391: Unknown result type (might be due to invalid IL or missing references)
-		//IL_04f3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_04fa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_04a2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_04a9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0596: Unknown result type (might be due to invalid IL or missing references)
-		//IL_05c3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0626: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0973: Unknown result type (might be due to invalid IL or missing references)
+		//IL_028c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0291: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0293: Unknown result type (might be due to invalid IL or missing references)
+		//IL_085a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02af: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02b4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0366: Unknown result type (might be due to invalid IL or missing references)
+		//IL_036d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0446: Unknown result type (might be due to invalid IL or missing references)
+		//IL_044d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03ef: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03f6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_05bb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0558: Unknown result type (might be due to invalid IL or missing references)
+		//IL_055f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0507: Unknown result type (might be due to invalid IL or missing references)
+		//IL_050e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_06b4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0717: Unknown result type (might be due to invalid IL or missing references)
 		base.RunJob();
 		if (Server.conveyorMoveFrequency <= 0f)
 		{
@@ -456,6 +464,9 @@ public class IndustrialConveyor : IndustrialEntity
 			list.Clear();
 			FindContainerSource(splitOutputs, 32, input: false, list, -1, MaxStackSizePerMove);
 			Pool.FreeList<IOEntity>(ref list);
+			multiFrameTransferInProcess = false;
+			multiFrameInputIndex = 0;
+			multiFrameOutputIndex = 0;
 		}
 		bool hasItems = CheckIfAnyInputPassesFilters(splitInputs);
 		if ((!lastFilterState.HasValue || hasItems != lastFilterState) && !hasItems)
@@ -471,18 +482,35 @@ public class IndustrialConveyor : IndustrialEntity
 		try
 		{
 			bool flag = false;
+			bool flag2 = false;
 			transfer.ItemTransfers = Pool.GetList<ItemTransfer>();
 			transfer.inputEntities = Pool.GetList<NetworkableId>();
 			transfer.outputEntities = Pool.GetList<NetworkableId>();
 			List<int> list2 = Pool.GetList<int>();
 			int num = 0;
 			int count = splitOutputs.Count;
+			bool flag3 = false;
 			foreach (ContainerInputOutput splitOutput in splitOutputs)
 			{
 				workerOutput = splitOutput.Storage;
+				if (multiFrameTransferInProcess && multiFrameOutputIndex > num)
+				{
+					num++;
+					continue;
+				}
+				int num2 = 0;
 				foreach (ContainerInputOutput splitInput in splitInputs)
 				{
-					int num2 = 0;
+					int num3 = 0;
+					num2++;
+					if (multiFrameTransferInProcess && num2 < multiFrameInputIndex)
+					{
+						continue;
+					}
+					if (multiFrameTransferInProcess)
+					{
+						multiFrameTransferInProcess = false;
+					}
 					IIndustrialStorage storage = splitInput.Storage;
 					if (storage == null || splitOutput.Storage == null || (Object)(object)splitInput.Storage.IndustrialEntity == (Object)(object)splitOutput.Storage.IndustrialEntity)
 					{
@@ -504,100 +532,109 @@ public class IndustrialConveyor : IndustrialEntity
 						{
 							continue;
 						}
-						bool flag2 = true;
+						bool flag4 = true;
 						if (filterItems.Count > 0)
 						{
 							if (mode == ConveyorMode.Any || mode == ConveyorMode.And)
 							{
-								flag2 = FilterHasItem(slot, out filter2);
+								flag4 = FilterHasItem(slot, out filter2);
 							}
 							if (mode == ConveyorMode.Not)
 							{
-								flag2 = !FilterHasItem(slot, out filter2);
+								flag4 = !FilterHasItem(slot, out filter2);
 							}
 						}
-						if (!flag2)
+						if (!flag4)
 						{
 							continue;
 						}
-						bool flag3 = mode == ConveyorMode.And || mode == ConveyorMode.Any;
-						if (flag3 && (Object)(object)filter2.Item1.TargetItem != (Object)null && filter2.Item1.MaxAmountInOutput > 0 && splitOutput.Storage.Container.GetTotalItemAmount(slot, val2.x, val2.y) >= filter2.Item1.MaxAmountInOutput)
+						bool flag5 = mode == ConveyorMode.And || mode == ConveyorMode.Any;
+						if (flag5 && (Object)(object)filter2.Item1.TargetItem != (Object)null && filter2.Item1.MaxAmountInOutput > 0 && splitOutput.Storage.Container.GetTotalItemAmount(slot, val2.x, val2.y) >= filter2.Item1.MaxAmountInOutput)
 						{
 							flag = true;
 							continue;
 						}
-						int num3 = (int)((float)Mathf.Min(MaxStackSizePerMove, slot.info.stackable) / (float)count);
-						if (flag3 && filter2.Item1.MinAmountInInput > 0)
+						int num4 = (int)((float)Mathf.Min(MaxStackSizePerMove, slot.info.stackable) / (float)count);
+						if (flag5 && filter2.Item1.MinAmountInInput > 0)
 						{
 							if ((Object)(object)filter2.Item1.TargetItem != (Object)null && FilterMatchItem(filter2.Item1, slot))
 							{
 								int totalItemAmount = container.GetTotalItemAmount(slot, val.x, val.y);
-								num3 = Mathf.Min(num3, totalItemAmount - filter2.Item1.MinAmountInInput);
+								num4 = Mathf.Min(num4, totalItemAmount - filter2.Item1.MinAmountInInput);
 							}
 							else if (filter2.Item1.TargetCategory.HasValue)
 							{
-								num3 = Mathf.Min(num3, container.GetTotalCategoryAmount(filter2.Item1.TargetCategory.Value, val2.x, val2.y) - filter2.Item1.MinAmountInInput);
+								num4 = Mathf.Min(num4, container.GetTotalCategoryAmount(filter2.Item1.TargetCategory.Value, val2.x, val2.y) - filter2.Item1.MinAmountInInput);
 							}
-							if (num3 == 0)
+							if (num4 == 0)
 							{
 								continue;
 							}
 						}
-						if (slot.amount == 1 || (num3 <= 0 && slot.amount > 0))
+						if (slot.amount == 1 || (num4 <= 0 && slot.amount > 0))
 						{
-							num3 = 1;
+							num4 = 1;
 						}
-						if (flag3 && filter2.Item1.BufferAmount > 0)
+						if (flag5 && filter2.Item1.BufferAmount > 0)
 						{
-							num3 = Mathf.Min(num3, filter2.Item1.BufferTransferRemaining);
+							num4 = Mathf.Min(num4, filter2.Item1.BufferTransferRemaining);
 						}
-						if (flag3 && filter2.Item1.MaxAmountInOutput > 0)
+						if (flag5 && filter2.Item1.MaxAmountInOutput > 0)
 						{
 							if ((Object)(object)filter2.Item1.TargetItem != (Object)null && FilterMatchItem(filter2.Item1, slot))
 							{
-								num3 = Mathf.Min(num3, filter2.Item1.MaxAmountInOutput - container2.GetTotalItemAmount(slot, val2.x, val2.y));
+								num4 = Mathf.Min(num4, filter2.Item1.MaxAmountInOutput - container2.GetTotalItemAmount(slot, val2.x, val2.y));
 							}
 							else if (filter2.Item1.TargetCategory.HasValue)
 							{
-								num3 = Mathf.Min(num3, filter2.Item1.MaxAmountInOutput - container2.GetTotalCategoryAmount(filter2.Item1.TargetCategory.Value, val2.x, val2.y));
+								num4 = Mathf.Min(num4, filter2.Item1.MaxAmountInOutput - container2.GetTotalCategoryAmount(filter2.Item1.TargetCategory.Value, val2.x, val2.y));
 							}
-							if ((float)num3 <= 0f)
+							if ((float)num4 <= 0f)
 							{
 								flag = true;
 							}
 						}
-						float num4 = Mathf.Min(slot.amount, num3);
-						if (num4 > 0f && num4 < 1f)
+						float num5 = Mathf.Min(slot.amount, num4);
+						if (num5 > 0f && num5 < 1f)
 						{
-							num4 = 1f;
+							num5 = 1f;
 						}
-						num3 = (int)num4;
-						if (num3 <= 0)
+						num4 = (int)num5;
+						if (num4 <= 0 || !container2.QuickIndustrialPreCheck(slot, val2, out var foundSlot))
 						{
 							continue;
 						}
-						Item item2 = null;
-						int amount2 = slot.amount;
-						if (slot.amount > num3)
-						{
-							item2 = slot.SplitItem(num3);
-							amount2 = item2.amount;
-						}
 						splitOutput.Storage.OnStorageItemTransferBegin();
-						bool flag4 = false;
-						Item nonFullStackWithinRange = container2.GetNonFullStackWithinRange(item2 ?? slot, val2);
-						if (nonFullStackWithinRange != null)
+						bool flag6 = false;
+						int num6 = slot.amount;
+						Item slot2 = container2.GetSlot(foundSlot);
+						if (Server.industrialAllowQuickMove && foundSlot >= 0 && slot2 != null && !slot2.IsRemoved() && slot2.info.itemid == slot.info.itemid && slot2 != slot && slot.CanStack(slot2))
 						{
-							flag4 = (item2 ?? slot).MoveToContainer(container2, nonFullStackWithinRange.position, allowStack: true, ignoreStackLimit: false, null, allowSwap: false);
+							int num7 = Mathf.Min(num4, slot2.info.stackable - slot2.amount);
+							slot2.amount += num7;
+							slot.UseItem(num7);
+							num6 = num7;
+							slot2.MarkDirty();
+							flag6 = true;
+							if (slot.amount <= 0)
+							{
+								flag2 = true;
+							}
 						}
-						if (!flag4)
+						Item item2 = null;
+						if (!flag6 && slot.amount > num4)
+						{
+							item2 = slot.SplitItem(num4);
+							num6 = item2.amount;
+						}
+						if (!flag6)
 						{
 							for (int j = val2.x; j <= val2.y; j++)
 							{
-								Item slot2 = container2.GetSlot(j);
-								if ((slot2 == null || ((Object)(object)slot2.info == (Object)(object)slot.info && slot2.condition == slot.condition)) && (item2 ?? slot).MoveToContainer(container2, j, allowStack: true, ignoreStackLimit: false, null, allowSwap: false))
+								Item slot3 = container2.GetSlot(j);
+								if ((slot3 == null || ((Object)(object)slot3.info == (Object)(object)slot.info && slot3.condition == slot.condition)) && (item2 ?? slot).MoveToContainer(container2, j, allowStack: true, ignoreStackLimit: false, null, allowSwap: false))
 								{
-									flag4 = true;
+									flag6 = true;
 									break;
 								}
 							}
@@ -605,26 +642,26 @@ public class IndustrialConveyor : IndustrialEntity
 						if (filter2.Item1.BufferTransferRemaining > 0)
 						{
 							var (value, _) = filter2;
-							value.BufferTransferRemaining -= amount2;
+							value.BufferTransferRemaining -= num6;
 							filterItems[filter2.Item2] = value;
 						}
-						if (!flag4 && item2 != null)
+						if (!flag6 && item2 != null)
 						{
 							slot.amount += item2.amount;
 							slot.MarkDirty();
 							item2.Remove();
 							item2 = null;
 						}
-						if (flag4)
+						if (flag6)
 						{
-							num2++;
+							num3++;
 							if (item2 != null)
 							{
-								AddTransfer(item2.info.itemid, amount2, splitInput.Storage.IndustrialEntity, splitOutput.Storage.IndustrialEntity);
+								AddTransfer(item2.info.itemid, num6, splitInput.Storage.IndustrialEntity, splitOutput.Storage.IndustrialEntity);
 							}
 							else
 							{
-								AddTransfer(slot.info.itemid, amount2, splitInput.Storage.IndustrialEntity, splitOutput.Storage.IndustrialEntity);
+								AddTransfer(slot.info.itemid, num6, splitInput.Storage.IndustrialEntity, splitOutput.Storage.IndustrialEntity);
 							}
 						}
 						else if (!list2.Contains(num))
@@ -632,11 +669,19 @@ public class IndustrialConveyor : IndustrialEntity
 							list2.Add(num);
 						}
 						splitOutput.Storage.OnStorageItemTransferEnd();
-						if (num2 >= Server.maxItemStacksMovedPerTickIndustrial)
+						if ((Server.industrialTransferStrictTimeLimits && transferStopWatch.Elapsed.TotalMilliseconds >= (double)(Server.industrialFrameBudgetMs * 3f) && !isFirstTransfer) || num3 >= Server.maxItemStacksMovedPerTickIndustrial)
 						{
 							break;
 						}
 					}
+					if (flag3)
+					{
+						break;
+					}
+				}
+				if (flag3 || (Server.industrialTransferStrictTimeLimits && !flag3 && transferStopWatch.Elapsed.TotalMilliseconds >= (double)(Server.industrialFrameBudgetMs * 3f) && !isFirstTransfer))
+				{
+					break;
 				}
 				num++;
 			}
@@ -649,10 +694,18 @@ public class IndustrialConveyor : IndustrialEntity
 				UpdateFilterPassthroughs();
 			}
 			Pool.FreeList<int>(ref list2);
+			if (flag2)
+			{
+				ItemManager.DoRemoves();
+			}
 			if (transfer.ItemTransfers.Count > 0)
 			{
-				ClientRPCEx<IndustrialConveyorTransfer>(new SendInfo(BaseNetworkable.GetConnectionsWithin(((Component)this).transform.position, 30f)), null, "ReceiveItemTransferDetails", transfer);
+				List<Connection> list3 = Pool.GetList<Connection>();
+				BaseNetworkable.GetCloseConnections(((Component)this).transform.position, 30f, list3);
+				ClientRPC<IndustrialConveyorTransfer>(RpcTarget.Players("ReceiveItemTransferDetails", list3), transfer);
+				Pool.FreeList<Connection>(ref list3);
 			}
+			isFirstTransfer = false;
 		}
 		finally
 		{
@@ -660,6 +713,10 @@ public class IndustrialConveyor : IndustrialEntity
 			{
 				((IDisposable)transfer).Dispose();
 			}
+		}
+		if (multiFrameTransferInProcess && multiFrameOutputIndex == splitOutputs.Count)
+		{
+			multiFrameTransferInProcess = false;
 		}
 		void AddTransfer(int itemId, int amount, BaseEntity fromEntity, BaseEntity toEntity)
 		{
@@ -835,7 +892,7 @@ public class IndustrialConveyor : IndustrialEntity
 					filterItems[i] = itemFilter;
 				}
 			}
-			if (mode == ConveyorMode.And && (num == filterItems.Count || num == num2))
+			if (mode == ConveyorMode.And && num > 0 && (num == filterItems.Count || num == num2))
 			{
 				if (num2 == 0)
 				{
@@ -886,10 +943,10 @@ public class IndustrialConveyor : IndustrialEntity
 		{
 			return;
 		}
-		int num = Mathf.Min(val.filters.Count, 24);
+		int num = Mathf.Min(val.filters.Count, 60);
 		for (int i = 0; i < num; i++)
 		{
-			if (filterItems.Count >= 12)
+			if (filterItems.Count >= 30)
 			{
 				break;
 			}
@@ -989,6 +1046,7 @@ public class IndustrialConveyor : IndustrialEntity
 
 	public override int GetPassthroughAmount(int outputSlot = 0)
 	{
+		int result = Mathf.Min(1, GetCurrentEnergy());
 		switch (outputSlot)
 		{
 		case 2:
@@ -996,13 +1054,13 @@ public class IndustrialConveyor : IndustrialEntity
 			{
 				return 0;
 			}
-			return 1;
+			return result;
 		case 3:
 			if (!HasFlag(Flags.Reserved9))
 			{
 				return 0;
 			}
-			return 1;
+			return result;
 		case 1:
 			return GetCurrentEnergy();
 		default:
@@ -1034,7 +1092,7 @@ public class IndustrialConveyor : IndustrialEntity
 				filterItem.CopyTo(val2);
 				val.filters.Add(val2);
 			}
-			ClientRPCPlayer<ItemFilterList>(null, msg.player, "Client_ReceiveBufferInfo", val);
+			ClientRPC<ItemFilterList>(RpcTarget.Player("Client_ReceiveBufferInfo", msg.player), val);
 		}
 		finally
 		{

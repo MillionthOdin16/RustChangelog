@@ -26,30 +26,33 @@ public class GameSetup : MonoBehaviour
 
 	public string initializationCommands = "";
 
+	public bool normalRendering;
+
 	protected void Awake()
 	{
-		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
 		if (RunOnce)
 		{
 			GameManager.Destroy(((Component)this).gameObject);
 			return;
 		}
+		Render.use_normal_rendering = normalRendering;
 		GameManifest.Load();
 		GameManifest.LoadAssets();
 		RunOnce = true;
 		if (Bootstrap.needsSetup)
 		{
 			Bootstrap.Init_Tier0();
+			if (initializationCommands.Length > 0)
+			{
+				string[] array = initializationCommands.Split(';', StringSplitOptions.None);
+				foreach (string text in array)
+				{
+					ConsoleSystem.Run(Option.Server, text.Trim(), Array.Empty<object>());
+				}
+			}
 			Bootstrap.Init_Systems();
 			Bootstrap.Init_Config();
-		}
-		if (initializationCommands.Length > 0)
-		{
-			string[] array = initializationCommands.Split(';');
-			foreach (string text in array)
-			{
-				ConsoleSystem.Run(Option.Server, text.Trim(), Array.Empty<object>());
-			}
 		}
 		((MonoBehaviour)this).StartCoroutine(DoGameSetup());
 	}

@@ -2,8 +2,18 @@ using System;
 using Facepunch;
 using UnityEngine;
 
-public class ServerBrowserList : ServerBrowserListBase, VirtualScroll.IDataSource
+public class ServerBrowserList : ServerBrowserListBase, VirtualScroll.IDataSource, VirtualScroll.IVisualUpdate
 {
+	[Serializable]
+	public struct Rules
+	{
+		public string tag;
+
+		public ServerBrowserList serverList;
+
+		public string CompressedTag { get; set; }
+	}
+
 	public enum QueryType
 	{
 		RegularInternet,
@@ -21,20 +31,6 @@ public class ServerBrowserList : ServerBrowserListBase, VirtualScroll.IDataSourc
 
 		public string value;
 	}
-
-	[Serializable]
-	public struct Rules
-	{
-		public string tag;
-
-		public ServerBrowserList serverList;
-	}
-
-	public QueryType queryType;
-
-	public static string VersionTag = "v" + 2403;
-
-	public ServerKeyvalues[] keyValues = new ServerKeyvalues[0];
 
 	public bool startActive;
 
@@ -54,11 +50,23 @@ public class ServerBrowserList : ServerBrowserListBase, VirtualScroll.IDataSourc
 
 	public bool alwaysIncludeEmptyServers;
 
-	public bool clampPlayerCountsToTrustedValues;
+	public bool clampPlayerCountsToTrustedValues = true;
+
+	private static string[] pingStrings = new string[3] { ".", "..", "..." };
+
+	public QueryType queryType;
+
+	public static string VersionTag = "v" + 2553;
+
+	public ServerKeyvalues[] keyValues = new ServerKeyvalues[0];
 
 	public int GetItemCount()
 	{
 		return 0;
+	}
+
+	public void OnVisualUpdate(int i, GameObject obj)
+	{
 	}
 
 	public void SetItemData(int i, GameObject obj)

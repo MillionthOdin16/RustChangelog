@@ -65,6 +65,8 @@ internal sealed class ColorGradingRenderer : PostProcessEffectRenderer<ColorGrad
 			uberSheet.properties.SetTexture(ShaderIDs.Lut3D, value);
 			uberSheet.properties.SetVector(ShaderIDs.Lut3D_Params, Vector4.op_Implicit(new Vector2(1f / (float)value.width, (float)value.width - 1f)));
 			uberSheet.properties.SetFloat(ShaderIDs.PostExposure, RuntimeUtilities.Exp2(base.settings.postExposure.value));
+			uberSheet.properties.SetInt(ShaderIDs.MaskMode, (int)base.settings.maskMode.value);
+			uberSheet.properties.SetFloat(ShaderIDs.MaskIntensity, base.settings.maskIntensity.value);
 			context.logLut = value;
 		}
 	}
@@ -185,6 +187,8 @@ internal sealed class ColorGradingRenderer : PostProcessEffectRenderer<ColorGrad
 		uberSheet.properties.SetTexture(ShaderIDs.Lut3D, (Texture)(object)internalLogLut);
 		uberSheet.properties.SetVector(ShaderIDs.Lut3D_Params, Vector4.op_Implicit(new Vector2(1f / (float)((Texture)internalLogLut).width, (float)((Texture)internalLogLut).width - 1f)));
 		uberSheet.properties.SetFloat(ShaderIDs.PostExposure, RuntimeUtilities.Exp2(base.settings.postExposure.value));
+		uberSheet.properties.SetInt(ShaderIDs.MaskMode, (int)base.settings.maskMode.value);
+		uberSheet.properties.SetFloat(ShaderIDs.MaskIntensity, base.settings.maskIntensity.value);
 		context.logLut = (Texture)(object)internalLogLut;
 	}
 
@@ -293,6 +297,8 @@ internal sealed class ColorGradingRenderer : PostProcessEffectRenderer<ColorGrad
 		uberSheet.properties.SetVector(ShaderIDs.Lut2D_Params, Vector4.op_Implicit(new Vector3(1f / (float)((Texture)internalLdrLut).width, 1f / (float)((Texture)internalLdrLut).height, (float)((Texture)internalLdrLut).height - 1f)));
 		uberSheet.properties.SetTexture(ShaderIDs.Lut2D, (Texture)(object)internalLdrLut);
 		uberSheet.properties.SetFloat(ShaderIDs.PostExposure, RuntimeUtilities.Exp2(base.settings.postExposure.value));
+		uberSheet.properties.SetInt(ShaderIDs.MaskMode, (int)base.settings.maskMode.value);
+		uberSheet.properties.SetFloat(ShaderIDs.MaskIntensity, base.settings.maskIntensity.value);
 	}
 
 	private void RenderLDRPipeline2D(PostProcessRenderContext context)
@@ -382,6 +388,8 @@ internal sealed class ColorGradingRenderer : PostProcessEffectRenderer<ColorGrad
 		uberSheet.EnableKeyword("COLOR_GRADING_LDR_2D");
 		uberSheet.properties.SetVector(ShaderIDs.Lut2D_Params, Vector4.op_Implicit(new Vector3(1f / (float)((Texture)internalLdrLut).width, 1f / (float)((Texture)internalLdrLut).height, (float)((Texture)internalLdrLut).height - 1f)));
 		uberSheet.properties.SetTexture(ShaderIDs.Lut2D, (Texture)(object)internalLdrLut);
+		uberSheet.properties.SetInt(ShaderIDs.MaskMode, (int)base.settings.maskMode.value);
+		uberSheet.properties.SetFloat(ShaderIDs.MaskIntensity, base.settings.maskIntensity.value);
 	}
 
 	private void CheckInternalLogLut()

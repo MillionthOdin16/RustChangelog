@@ -12,8 +12,8 @@ public static class AppPlayerExtensions
 		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
 		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
 		AppTeamInfo obj = Pool.Get<AppTeamInfo>();
 		obj.members = Pool.GetList<Member>();
 		Member val = Pool.Get<Member>();
@@ -72,9 +72,9 @@ public static class AppPlayerExtensions
 			val3.x = val2.x;
 			val3.y = val2.y;
 			val3.isOnline = basePlayer?.IsConnected ?? false;
-			val3.spawnTime = basePlayer?.lifeStory?.timeBorn ?? 0;
+			val3.spawnTime = (basePlayer?.lifeStory?.timeBorn).GetValueOrDefault();
 			val3.isAlive = basePlayer?.IsAlive() ?? false;
-			val3.deathTime = basePlayer?.previousLifeStory?.timeDied ?? 0;
+			val3.deathTime = (basePlayer?.previousLifeStory?.timeDied).GetValueOrDefault();
 			val.members.Add(val3);
 		}
 		val.leaderSteamId = team.teamLeader;

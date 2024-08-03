@@ -16,7 +16,7 @@ public class EngineSwitch : BaseEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - StartEngine "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - StartEngine "));
 				}
 				TimeWarning val2 = TimeWarning.New("StartEngine", 0);
 				try
@@ -67,7 +67,7 @@ public class EngineSwitch : BaseEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - StopEngine "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - StopEngine "));
 				}
 				TimeWarning val2 = TimeWarning.New("StopEngine", 0);
 				try

@@ -4,7 +4,6 @@ using Facepunch;
 using Network;
 using ProtoBuf;
 using Rust;
-using Rust.Modular;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -33,7 +32,7 @@ public class VehicleModuleStorage : VehicleModuleSeating
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_Open "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_Open "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_Open", 0);
 				try
@@ -84,7 +83,7 @@ public class VehicleModuleStorage : VehicleModuleSeating
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_TryOpenWithKeycode "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_TryOpenWithKeycode "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_TryOpenWithKeycode", 0);
 				try
@@ -178,15 +177,6 @@ public class VehicleModuleStorage : VehicleModuleSeating
 	private void OnItemAddedRemoved(Item item, bool add)
 	{
 		AssociatedItemInstance?.LockUnlock(!CanBeMovedNowOnVehicle());
-	}
-
-	public override void NonUserSpawn()
-	{
-		EngineStorage engineStorage = GetContainer() as EngineStorage;
-		if ((Object)(object)engineStorage != (Object)null)
-		{
-			engineStorage.NonUserSpawn();
-		}
 	}
 
 	internal override void DoServerDestroy()
@@ -292,14 +282,14 @@ public class VehicleModuleStorage : VehicleModuleSeating
 		BasePlayer player = msg.player;
 		if (!((Object)(object)player == (Object)null))
 		{
-			string codeEntered = msg.read.String(256);
+			string codeEntered = msg.read.String(256, false);
 			if (base.Car.CarLock.TryOpenWithCode(player, codeEntered))
 			{
 				TryOpen(player);
 			}
 			else
 			{
-				base.Car.ClientRPC(null, "CodeEntryFailed");
+				base.Car.ClientRPC(RpcTarget.NetworkGroup("CodeEntryFailed"));
 			}
 		}
 	}

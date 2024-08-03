@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 
+[MapGeneration]
 public class WaterCheck : PrefabAttribute
 {
 	public bool Rotate = true;

@@ -94,6 +94,27 @@ public static class TransformEx
 			select x).ToArray();
 	}
 
+	public static Matrix4x4 LocalToPrefabRoot(this Transform transform)
+	{
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+		Matrix4x4 val = Matrix4x4.identity;
+		while ((Object)(object)transform.parent != (Object)null)
+		{
+			val *= Matrix4x4.TRS(transform.localPosition, transform.localRotation, transform.localScale);
+			transform = transform.parent;
+		}
+		return val;
+	}
+
 	public static void Identity(this GameObject go)
 	{
 		//IL_0006: Unknown result type (might be due to invalid IL or missing references)

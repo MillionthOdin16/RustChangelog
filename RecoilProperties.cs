@@ -61,6 +61,12 @@ public class RecoilProperties : ScriptableObject
 		new Keyframe(1f, 1f)
 	});
 
+	[Tooltip("Scale the actual final aimcone produced by the ammunition itself if the ammo contains multiple projectiles")]
+	public float ammoAimconeScaleMultiProjectile = 1f;
+
+	[Tooltip("Scale the actual final aimcone produced by the ammunition itself if the ammo contains only one projectile")]
+	public float ammoAimconeScaleSingleProjectile = 1f;
+
 	public RecoilProperties newRecoilOverride;
 
 	public RecoilProperties GetRecoil()

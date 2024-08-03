@@ -1,5 +1,7 @@
+using System;
 using UnityEngine;
 
+[MapGeneration(KeepComponents = new Type[] { typeof(Collider) })]
 public class AddToHeightMap : ProceduralObject
 {
 	public bool DestroyGameObject;

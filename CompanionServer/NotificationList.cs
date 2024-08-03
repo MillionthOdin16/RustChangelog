@@ -69,7 +69,7 @@ public class NotificationList
 		}
 	}
 
-	public void IntersectWith(List<PlayerNameID> players)
+	public void IntersectWith(HashSet<PlayerNameID> players)
 	{
 		List<ulong> list = Pool.GetList<ulong>();
 		foreach (PlayerNameID player in players)
@@ -200,18 +200,18 @@ public class NotificationList
 		{
 			pushRequest.SteamIds.Add(steamId);
 		}
-		string content = JsonConvert.SerializeObject((object)pushRequest);
+		string text = JsonConvert.SerializeObject((object)pushRequest);
 		Pool.Free<PushRequest>(ref pushRequest);
 		try
 		{
-			StringContent content2 = new StringContent(content, Encoding.UTF8, "application/json");
-			HttpResponseMessage httpResponseMessage = await Http.PostAsync("https://companion-rust.facepunch.com/api/push/send", content2);
-			if (!httpResponseMessage.IsSuccessStatusCode)
+			StringContent val = new StringContent(text, Encoding.UTF8, "application/json");
+			HttpResponseMessage val2 = await Http.PostAsync("https://companion-rust.facepunch.com/api/push/send", (HttpContent)(object)val);
+			if (!val2.IsSuccessStatusCode)
 			{
-				DebugEx.LogWarning((object)$"Failed to send notification: {httpResponseMessage.StatusCode}", (StackTraceLogType)0);
+				DebugEx.LogWarning((object)$"Failed to send notification: {val2.StatusCode}", (StackTraceLogType)0);
 				return NotificationSendResult.ServerError;
 			}
-			if (httpResponseMessage.StatusCode == HttpStatusCode.Accepted)
+			if (val2.StatusCode == HttpStatusCode.Accepted)
 			{
 				return NotificationSendResult.NoTargetsFound;
 			}

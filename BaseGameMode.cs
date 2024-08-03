@@ -138,6 +138,8 @@ public class BaseGameMode : BaseEntity
 
 	public float autoHealDuration = 1f;
 
+	public float corpseRemovalTimeOverride;
+
 	public bool hasKillFeed;
 
 	public bool allowPings = true;
@@ -162,8 +164,6 @@ public class BaseGameMode : BaseEntity
 	public bool sendKillNotifications;
 
 	public GameModeTeam[] teams;
-
-	public float corpseRemovalTimeOverride;
 
 	private static bool isResetting = false;
 
@@ -271,12 +271,12 @@ public class BaseGameMode : BaseEntity
 
 	public PlayerScore GetPlayerScoreForPlayer(BasePlayer player)
 	{
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0051: Expected O, but got Unknown
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0056: Expected O, but got Unknown
 		PlayerScore val = null;
 		foreach (PlayerScore playerScore in gameModeScores.playerScores)
 		{
-			if (playerScore.userid == player.userID)
+			if (playerScore.userid == (ulong)player.userID)
 			{
 				val = playerScore;
 				break;
@@ -420,7 +420,7 @@ public class BaseGameMode : BaseEntity
 		int num3 = 0;
 		foreach (PlayerScore playerScore in gameModeScores.playerScores)
 		{
-			if (playerScore.scores[num] > num2 && playerScore.userid != player.userID)
+			if (playerScore.scores[num] > num2 && playerScore.userid != (ulong)player.userID)
 			{
 				num3++;
 			}
@@ -1135,7 +1135,7 @@ public class BaseGameMode : BaseEntity
 		PlayerScore val = null;
 		foreach (PlayerScore playerScore in gameModeScores.playerScores)
 		{
-			if (playerScore.userid == player.userID)
+			if (playerScore.userid == (ulong)player.userID)
 			{
 				val = playerScore;
 				break;
@@ -1166,10 +1166,10 @@ public class BaseGameMode : BaseEntity
 
 	public virtual void OnPlayerDeath(BasePlayer instigator, BasePlayer victim, HitInfo deathInfo = null)
 	{
-		//IL_0107: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0112: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0116: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ac: Unknown result type (might be due to invalid IL or missing references)
 		if (!IsMatchActive())
 		{
 			return;
@@ -1185,7 +1185,7 @@ public class BaseGameMode : BaseEntity
 		}
 		if ((Object)(object)instigator != (Object)null && instigator.IsConnected && !instigator.IsNpc && (Object)(object)instigator != (Object)(object)victim)
 		{
-			ClientRPCPlayer(null, instigator, "RPC_ScoreSplash", victim.displayName, 100, arg3: true);
+			ClientRPC(RpcTarget.Player("RPC_ScoreSplash", instigator), victim.displayName, 100, arg3: true);
 		}
 		if (hasKillFeed && (Object)(object)instigator != (Object)null && (Object)(object)victim != (Object)null && (Object)(object)deathInfo.Weapon != (Object)null && deathInfo.Weapon.GetItem() != null)
 		{
@@ -1278,7 +1278,7 @@ public class BaseGameMode : BaseEntity
 		PlayerInventoryProperties playerInventoryProperties;
 		if (!IsTeamGame())
 		{
-			playerInventoryProperties = ((!useStaticLoadoutPerPlayer) ? loadouts[Random.Range(0, loadouts.Length)] : loadouts[SeedRandom.Range((uint)player.userID, 0, loadouts.Length)]);
+			playerInventoryProperties = ((!useStaticLoadoutPerPlayer) ? loadouts[Random.Range(0, loadouts.Length)] : loadouts[SeedRandom.Range((uint)(ulong)player.userID, 0, loadouts.Length)]);
 		}
 		else
 		{
@@ -1287,7 +1287,7 @@ public class BaseGameMode : BaseEntity
 				Debug.LogWarning((object)"Player loading out without team assigned, auto assigning!");
 				AutoAssignTeam(player);
 			}
-			playerInventoryProperties = teams[player.gamemodeteam].teamloadouts[SeedRandom.Range((uint)player.userID, 0, teams[player.gamemodeteam].teamloadouts.Length)];
+			playerInventoryProperties = teams[player.gamemodeteam].teamloadouts[SeedRandom.Range((uint)(ulong)player.userID, 0, teams[player.gamemodeteam].teamloadouts.Length)];
 		}
 		if (Object.op_Implicit((Object)(object)playerInventoryProperties))
 		{

@@ -106,14 +106,6 @@ public class WaterSystem : MonoBehaviour
 
 	public float[] OctaveScales => oceanSettings.octaveScales;
 
-	private void EditorInitialize()
-	{
-	}
-
-	private void EditorShutdown()
-	{
-	}
-
 	private void CheckInstance()
 	{
 		Instance = (((Object)(object)Instance != (Object)null) ? Instance : this);
@@ -336,5 +328,13 @@ public class WaterSystem : MonoBehaviour
 	{
 		oceanSimulation.Dispose();
 		oceanSimulation = new OceanSimulation(oceanSettings);
+	}
+
+	private void EditorInitialize()
+	{
+	}
+
+	private void EditorShutdown()
+	{
 	}
 }

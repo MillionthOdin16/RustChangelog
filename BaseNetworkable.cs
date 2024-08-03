@@ -7,6 +7,7 @@ using System.Text;
 using ConVar;
 using Facepunch;
 using Facepunch.Rust;
+using Facepunch.Rust.Profiling;
 using Network;
 using Network.Visibility;
 using ProtoBuf;
@@ -15,7 +16,7 @@ using Rust.Registry;
 using UnityEngine;
 using UnityEngine.Assertions;
 
-public abstract class BaseNetworkable : BaseMonoBehaviour, IPrefabPostProcess, IEntity, NetworkHandler
+public abstract class BaseNetworkable : BaseMonoBehaviour, IEntity, NetworkHandler, IPrefabPostProcess
 {
 	public struct SaveInfo
 	{
@@ -67,23 +68,23 @@ public abstract class BaseNetworkable : BaseMonoBehaviour, IPrefabPostProcess, I
 
 	public abstract class EntityRealm : IEnumerable<BaseNetworkable>, IEnumerable
 	{
-		private ListDictionary<NetworkableId, BaseNetworkable> entityList = new ListDictionary<NetworkableId, BaseNetworkable>();
+		private HiddenValue<ListDictionary<NetworkableId, BaseNetworkable>> entityList = new HiddenValue<ListDictionary<NetworkableId, BaseNetworkable>>(new ListDictionary<NetworkableId, BaseNetworkable>());
 
-		public int Count => entityList.Count;
+		public int Count => entityList.Get().Count;
 
 		protected abstract Manager visibilityManager { get; }
 
 		public bool Contains(NetworkableId uid)
 		{
-			//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-			return entityList.Contains(uid);
+			//IL_000b: Unknown result type (might be due to invalid IL or missing references)
+			return entityList.Get().Contains(uid);
 		}
 
 		public BaseNetworkable Find(NetworkableId uid)
 		{
-			//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+			//IL_000d: Unknown result type (might be due to invalid IL or missing references)
 			BaseNetworkable result = null;
-			if (!entityList.TryGetValue(uid, ref result))
+			if (!entityList.Get().TryGetValue(uid, ref result))
 			{
 				return null;
 			}
@@ -92,28 +93,29 @@ public abstract class BaseNetworkable : BaseMonoBehaviour, IPrefabPostProcess, I
 
 		public void RegisterID(BaseNetworkable ent)
 		{
-			//IL_0014: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0044: Unknown result type (might be due to invalid IL or missing references)
-			//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+			//IL_002e: Unknown result type (might be due to invalid IL or missing references)
 			if (ent.net != null)
 			{
-				if (entityList.Contains(ent.net.ID))
+				ListDictionary<NetworkableId, BaseNetworkable> val = entityList.Get();
+				if (val.Contains(ent.net.ID))
 				{
-					entityList[ent.net.ID] = ent;
+					val[ent.net.ID] = ent;
 				}
 				else
 				{
-					entityList.Add(ent.net.ID, ent);
+					val.Add(ent.net.ID, ent);
 				}
 			}
 		}
 
 		public void UnregisterID(BaseNetworkable ent)
 		{
-			//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0019: Unknown result type (might be due to invalid IL or missing references)
 			if (ent.net != null)
 			{
-				entityList.Remove(ent.net.ID);
+				entityList.Get().Remove(ent.net.ID);
 			}
 		}
 
@@ -167,8 +169,8 @@ public abstract class BaseNetworkable : BaseMonoBehaviour, IPrefabPostProcess, I
 
 		public Enumerator<BaseNetworkable> GetEnumerator()
 		{
-			//IL_000b: Unknown result type (might be due to invalid IL or missing references)
-			return entityList.Values.GetEnumerator();
+			//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+			return entityList.Get().Values.GetEnumerator();
 		}
 
 		IEnumerator<BaseNetworkable> IEnumerable<BaseNetworkable>.GetEnumerator()
@@ -185,7 +187,7 @@ public abstract class BaseNetworkable : BaseMonoBehaviour, IPrefabPostProcess, I
 
 		public void Clear()
 		{
-			entityList.Clear();
+			entityList.Get().Clear();
 		}
 	}
 
@@ -194,6 +196,29 @@ public abstract class BaseNetworkable : BaseMonoBehaviour, IPrefabPostProcess, I
 		None,
 		Gib
 	}
+
+	[Header("BaseNetworkable")]
+	[ReadOnly]
+	public uint prefabID;
+
+	[Tooltip("If enabled the entity will send to everyone on the server - regardless of position")]
+	public bool globalBroadcast;
+
+	[Tooltip("Global broadcast a cut down version of the entity to show buildings across the map")]
+	public bool globalBuildingBlock;
+
+	[NonSerialized]
+	public Networkable net;
+
+	private string _prefabName;
+
+	private string _prefabNameWithoutExtension;
+
+	public static EntityRealm serverEntities = new EntityRealmServer();
+
+	private const bool isServersideEntity = true;
+
+	private static List<Connection> connectionsInSphereList = new List<Connection>();
 
 	public List<Component> postNetworkUpdateComponents = new List<Component>();
 
@@ -218,25 +243,35 @@ public abstract class BaseNetworkable : BaseMonoBehaviour, IPrefabPostProcess, I
 
 	private MemoryStream _SaveCache;
 
-	[Header("BaseNetworkable")]
-	[ReadOnly]
-	public uint prefabID;
+	public bool IsDestroyed { get; private set; }
 
-	[Tooltip("If enabled the entity will send to everyone on the server - regardless of position")]
-	public bool globalBroadcast;
+	public string PrefabName
+	{
+		get
+		{
+			if (_prefabName == null)
+			{
+				_prefabName = StringPool.Get(prefabID);
+			}
+			return _prefabName;
+		}
+	}
 
-	[NonSerialized]
-	public Networkable net;
+	public string ShortPrefabName
+	{
+		get
+		{
+			if (_prefabNameWithoutExtension == null)
+			{
+				_prefabNameWithoutExtension = Path.GetFileNameWithoutExtension(PrefabName);
+			}
+			return _prefabNameWithoutExtension;
+		}
+	}
 
-	private string _prefabName;
+	public bool isServer => true;
 
-	private string _prefabNameWithoutExtension;
-
-	public static EntityRealm serverEntities = new EntityRealmServer();
-
-	private const bool isServersideEntity = true;
-
-	private static List<Connection> connectionsInSphereList = new List<Connection>();
+	public bool isClient => false;
 
 	public bool limitNetworking
 	{
@@ -289,518 +324,6 @@ public abstract class BaseNetworkable : BaseMonoBehaviour, IPrefabPostProcess, I
 	public static Group GlobalNetworkGroup => Net.sv.visibility.Get(0u);
 
 	public static Group LimboNetworkGroup => Net.sv.visibility.Get(1u);
-
-	public bool IsDestroyed { get; private set; }
-
-	public string PrefabName
-	{
-		get
-		{
-			if (_prefabName == null)
-			{
-				_prefabName = StringPool.Get(prefabID);
-			}
-			return _prefabName;
-		}
-	}
-
-	public string ShortPrefabName
-	{
-		get
-		{
-			if (_prefabNameWithoutExtension == null)
-			{
-				_prefabNameWithoutExtension = Path.GetFileNameWithoutExtension(PrefabName);
-			}
-			return _prefabNameWithoutExtension;
-		}
-	}
-
-	public bool isServer => true;
-
-	public bool isClient => false;
-
-	public void BroadcastOnPostNetworkUpdate(BaseEntity entity)
-	{
-		foreach (Component postNetworkUpdateComponent in postNetworkUpdateComponents)
-		{
-			(postNetworkUpdateComponent as IOnPostNetworkUpdate)?.OnPostNetworkUpdate(entity);
-		}
-		foreach (BaseEntity child in children)
-		{
-			child.BroadcastOnPostNetworkUpdate(entity);
-		}
-	}
-
-	public virtual void PostProcess(IPrefabProcessor preProcess, GameObject rootObj, string name, bool serverside, bool clientside, bool bundling)
-	{
-		if (!serverside)
-		{
-			postNetworkUpdateComponents = ((Component)this).GetComponentsInChildren<IOnPostNetworkUpdate>(true).Cast<Component>().ToList();
-		}
-	}
-
-	private void OnNetworkLimitStart()
-	{
-		LogEntry(LogEntryType.Network, 2, "OnNetworkLimitStart");
-		List<Connection> subscribers = GetSubscribers();
-		if (subscribers == null)
-		{
-			return;
-		}
-		subscribers = subscribers.ToList();
-		subscribers.RemoveAll((Connection x) => ShouldNetworkTo(x.player as BasePlayer));
-		OnNetworkSubscribersLeave(subscribers);
-		if (children == null)
-		{
-			return;
-		}
-		foreach (BaseEntity child in children)
-		{
-			child.OnNetworkLimitStart();
-		}
-	}
-
-	private void OnNetworkLimitEnd()
-	{
-		LogEntry(LogEntryType.Network, 2, "OnNetworkLimitEnd");
-		List<Connection> subscribers = GetSubscribers();
-		if (subscribers == null)
-		{
-			return;
-		}
-		OnNetworkSubscribersEnter(subscribers);
-		if (children == null)
-		{
-			return;
-		}
-		foreach (BaseEntity child in children)
-		{
-			child.OnNetworkLimitEnd();
-		}
-	}
-
-	public BaseEntity GetParentEntity()
-	{
-		return parentEntity.Get(isServer);
-	}
-
-	public bool HasParent()
-	{
-		return parentEntity.IsValid(isServer);
-	}
-
-	public void AddChild(BaseEntity child)
-	{
-		if (!children.Contains(child))
-		{
-			children.Add(child);
-			OnChildAdded(child);
-		}
-	}
-
-	protected virtual void OnChildAdded(BaseEntity child)
-	{
-	}
-
-	public void RemoveChild(BaseEntity child)
-	{
-		children.Remove(child);
-		OnChildRemoved(child);
-	}
-
-	protected virtual void OnChildRemoved(BaseEntity child)
-	{
-	}
-
-	public virtual float GetNetworkTime()
-	{
-		return Time.time;
-	}
-
-	public virtual void Spawn()
-	{
-		SpawnShared();
-		if (net == null)
-		{
-			net = Net.sv.CreateNetworkable();
-		}
-		creationFrame = Time.frameCount;
-		PreInitShared();
-		InitShared();
-		ServerInit();
-		PostInitShared();
-		UpdateNetworkGroup();
-		isSpawned = true;
-		SendNetworkUpdateImmediate(justCreated: true);
-		if (Application.isLoading && !Application.isLoadingSave)
-		{
-			((Component)this).gameObject.SendOnSendNetworkUpdate(this as BaseEntity);
-		}
-	}
-
-	public bool IsFullySpawned()
-	{
-		return isSpawned;
-	}
-
-	public virtual void ServerInit()
-	{
-		serverEntities.RegisterID(this);
-		if (net != null)
-		{
-			net.handler = (NetworkHandler)(object)this;
-		}
-	}
-
-	protected List<Connection> GetSubscribers()
-	{
-		if (net == null)
-		{
-			return null;
-		}
-		if (net.group == null)
-		{
-			return null;
-		}
-		return net.group.subscribers;
-	}
-
-	public void KillMessage()
-	{
-		Kill();
-	}
-
-	public virtual void AdminKill()
-	{
-		Kill(DestroyMode.Gib);
-	}
-
-	public void Kill(DestroyMode mode = DestroyMode.None)
-	{
-		if (IsDestroyed)
-		{
-			Debug.LogWarning((object)("Calling kill - but already IsDestroyed!? " + this));
-			return;
-		}
-		((Component)this).gameObject.BroadcastOnParentDestroying();
-		DoEntityDestroy();
-		TerminateOnClient(mode);
-		TerminateOnServer();
-		EntityDestroy();
-	}
-
-	private void TerminateOnClient(DestroyMode mode)
-	{
-		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
-		if (net != null && net.group != null && ((BaseNetwork)Net.sv).IsConnected())
-		{
-			LogEntry(LogEntryType.Network, 2, "Term {0}", mode);
-			NetWrite obj = ((BaseNetwork)Net.sv).StartWrite();
-			obj.PacketID((Type)6);
-			obj.EntityID(net.ID);
-			obj.UInt8((byte)mode);
-			obj.Send(new SendInfo(net.group.subscribers));
-		}
-	}
-
-	private void TerminateOnServer()
-	{
-		if (net != null)
-		{
-			InvalidateNetworkCache();
-			serverEntities.UnregisterID(this);
-			Net.sv.DestroyNetworkable(ref net);
-			((MonoBehaviour)this).StopAllCoroutines();
-			((Component)this).gameObject.SetActive(false);
-		}
-	}
-
-	internal virtual void DoServerDestroy()
-	{
-		isSpawned = false;
-		Analytics.Azure.OnEntityDestroyed(this);
-	}
-
-	public virtual bool ShouldNetworkTo(BasePlayer player)
-	{
-		if (net.group == null)
-		{
-			return true;
-		}
-		return player.net.subscriber.IsSubscribed(net.group);
-	}
-
-	protected void SendNetworkGroupChange()
-	{
-		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
-		if (isSpawned && ((BaseNetwork)Net.sv).IsConnected())
-		{
-			if (net.group == null)
-			{
-				Debug.LogWarning((object)(((object)this).ToString() + " changed its network group to null"));
-				return;
-			}
-			NetWrite obj = ((BaseNetwork)Net.sv).StartWrite();
-			obj.PacketID((Type)7);
-			obj.EntityID(net.ID);
-			obj.GroupID(net.group.ID);
-			obj.Send(new SendInfo(net.group.subscribers));
-		}
-	}
-
-	protected void SendAsSnapshot(Connection connection, bool justCreated = false)
-	{
-		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
-		NetWrite val = ((BaseNetwork)Net.sv).StartWrite();
-		connection.validate.entityUpdates++;
-		SaveInfo saveInfo = default(SaveInfo);
-		saveInfo.forConnection = connection;
-		saveInfo.forDisk = false;
-		SaveInfo saveInfo2 = saveInfo;
-		val.PacketID((Type)5);
-		val.UInt32(connection.validate.entityUpdates);
-		ToStreamForNetwork((Stream)(object)val, saveInfo2);
-		val.Send(new SendInfo(connection));
-	}
-
-	public void SendNetworkUpdate(BasePlayer.NetworkQueue queue = BasePlayer.NetworkQueue.Update)
-	{
-		if (Application.isLoading || Application.isLoadingSave || IsDestroyed || net == null || !isSpawned)
-		{
-			return;
-		}
-		TimeWarning val = TimeWarning.New("SendNetworkUpdate", 0);
-		try
-		{
-			LogEntry(LogEntryType.Network, 2, "SendNetworkUpdate");
-			InvalidateNetworkCache();
-			List<Connection> subscribers = GetSubscribers();
-			if (subscribers != null && subscribers.Count > 0)
-			{
-				for (int i = 0; i < subscribers.Count; i++)
-				{
-					BasePlayer basePlayer = subscribers[i].player as BasePlayer;
-					if (!((Object)(object)basePlayer == (Object)null) && ShouldNetworkTo(basePlayer))
-					{
-						basePlayer.QueueUpdate(queue, this);
-					}
-				}
-			}
-		}
-		finally
-		{
-			((IDisposable)val)?.Dispose();
-		}
-		((Component)this).gameObject.SendOnSendNetworkUpdate(this as BaseEntity);
-	}
-
-	public void SendNetworkUpdateImmediate(bool justCreated = false)
-	{
-		if (Application.isLoading || Application.isLoadingSave || IsDestroyed || net == null || !isSpawned)
-		{
-			return;
-		}
-		TimeWarning val = TimeWarning.New("SendNetworkUpdateImmediate", 0);
-		try
-		{
-			LogEntry(LogEntryType.Network, 2, "SendNetworkUpdateImmediate");
-			InvalidateNetworkCache();
-			List<Connection> subscribers = GetSubscribers();
-			if (subscribers != null && subscribers.Count > 0)
-			{
-				for (int i = 0; i < subscribers.Count; i++)
-				{
-					Connection val2 = subscribers[i];
-					BasePlayer basePlayer = val2.player as BasePlayer;
-					if (!((Object)(object)basePlayer == (Object)null) && ShouldNetworkTo(basePlayer))
-					{
-						SendAsSnapshot(val2, justCreated);
-					}
-				}
-			}
-		}
-		finally
-		{
-			((IDisposable)val)?.Dispose();
-		}
-		((Component)this).gameObject.SendOnSendNetworkUpdate(this as BaseEntity);
-	}
-
-	protected void SendNetworkUpdate_Position()
-	{
-		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0093: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00dd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ea: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ec: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ef: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
-		if (Application.isLoading || Application.isLoadingSave || IsDestroyed || net == null || !isSpawned)
-		{
-			return;
-		}
-		TimeWarning val = TimeWarning.New("SendNetworkUpdate_Position", 0);
-		try
-		{
-			LogEntry(LogEntryType.Network, 2, "SendNetworkUpdate_Position");
-			List<Connection> subscribers = GetSubscribers();
-			if (subscribers != null && subscribers.Count > 0)
-			{
-				NetWrite val2 = ((BaseNetwork)Net.sv).StartWrite();
-				val2.PacketID((Type)10);
-				val2.EntityID(net.ID);
-				Vector3 networkPosition = GetNetworkPosition();
-				val2.Vector3(ref networkPosition);
-				Quaternion networkRotation = GetNetworkRotation();
-				networkPosition = ((Quaternion)(ref networkRotation)).eulerAngles;
-				val2.Vector3(ref networkPosition);
-				val2.Float(GetNetworkTime());
-				NetworkableId uid = parentEntity.uid;
-				if (((NetworkableId)(ref uid)).IsValid)
-				{
-					val2.EntityID(uid);
-				}
-				SendInfo val3 = new SendInfo(subscribers);
-				val3.method = (SendMethod)1;
-				val3.priority = (Priority)0;
-				SendInfo val4 = val3;
-				val2.Send(val4);
-			}
-		}
-		finally
-		{
-			((IDisposable)val)?.Dispose();
-		}
-	}
-
-	private void ToStream(Stream stream, SaveInfo saveInfo)
-	{
-		Entity val = (saveInfo.msg = Pool.Get<Entity>());
-		try
-		{
-			Save(saveInfo);
-			if (saveInfo.msg.baseEntity == null)
-			{
-				Debug.LogError((object)string.Concat(this, ": ToStream - no BaseEntity!?"));
-			}
-			if (saveInfo.msg.baseNetworkable == null)
-			{
-				Debug.LogError((object)string.Concat(this, ": ToStream - no baseNetworkable!?"));
-			}
-			saveInfo.msg.ToProto(stream);
-			PostSave(saveInfo);
-		}
-		finally
-		{
-			((IDisposable)val)?.Dispose();
-		}
-	}
-
-	public virtual bool CanUseNetworkCache(Connection connection)
-	{
-		return ConVar.Server.netcache;
-	}
-
-	public void ToStreamForNetwork(Stream stream, SaveInfo saveInfo)
-	{
-		if (!CanUseNetworkCache(saveInfo.forConnection))
-		{
-			ToStream(stream, saveInfo);
-			return;
-		}
-		if (_NetworkCache == null)
-		{
-			_NetworkCache = ((EntityMemoryStreamPool.Count > 0) ? (_NetworkCache = EntityMemoryStreamPool.Dequeue()) : new MemoryStream(8));
-			ToStream(_NetworkCache, saveInfo);
-			ConVar.Server.netcachesize += (int)_NetworkCache.Length;
-		}
-		_NetworkCache.WriteTo(stream);
-	}
-
-	public void InvalidateNetworkCache()
-	{
-		TimeWarning val = TimeWarning.New("InvalidateNetworkCache", 0);
-		try
-		{
-			if (_SaveCache != null)
-			{
-				ConVar.Server.savecachesize -= (int)_SaveCache.Length;
-				_SaveCache.SetLength(0L);
-				_SaveCache.Position = 0L;
-				EntityMemoryStreamPool.Enqueue(_SaveCache);
-				_SaveCache = null;
-			}
-			if (_NetworkCache != null)
-			{
-				ConVar.Server.netcachesize -= (int)_NetworkCache.Length;
-				_NetworkCache.SetLength(0L);
-				_NetworkCache.Position = 0L;
-				EntityMemoryStreamPool.Enqueue(_NetworkCache);
-				_NetworkCache = null;
-			}
-			LogEntry(LogEntryType.Network, 3, "InvalidateNetworkCache");
-		}
-		finally
-		{
-			((IDisposable)val)?.Dispose();
-		}
-	}
-
-	public MemoryStream GetSaveCache()
-	{
-		if (_SaveCache == null)
-		{
-			if (EntityMemoryStreamPool.Count > 0)
-			{
-				_SaveCache = EntityMemoryStreamPool.Dequeue();
-			}
-			else
-			{
-				_SaveCache = new MemoryStream(8);
-			}
-			SaveInfo saveInfo = default(SaveInfo);
-			saveInfo.forDisk = true;
-			SaveInfo saveInfo2 = saveInfo;
-			ToStream(_SaveCache, saveInfo2);
-			ConVar.Server.savecachesize += (int)_SaveCache.Length;
-		}
-		return _SaveCache;
-	}
-
-	public virtual void UpdateNetworkGroup()
-	{
-		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
-		Assert.IsTrue(isServer, "UpdateNetworkGroup called on clientside entity!");
-		if (net == null)
-		{
-			return;
-		}
-		TimeWarning val = TimeWarning.New("UpdateGroups", 0);
-		try
-		{
-			if (net.UpdateGroups(((Component)this).transform.position))
-			{
-				SendNetworkGroupChange();
-			}
-		}
-		finally
-		{
-			((IDisposable)val)?.Dispose();
-		}
-	}
 
 	public virtual Vector3 GetNetworkPosition()
 	{
@@ -1027,7 +550,6 @@ public abstract class BaseNetworkable : BaseMonoBehaviour, IPrefabPostProcess, I
 		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
 		net = Net.sv.CreateNetworkable(entityID);
 		serverEntities.RegisterID(this);
-		PreServerLoad();
 	}
 
 	public virtual void PreServerLoad()
@@ -1041,7 +563,7 @@ public abstract class BaseNetworkable : BaseMonoBehaviour, IPrefabPostProcess, I
 			BaseNetworkable baseNetworkable = info.msg.baseNetworkable;
 			if (prefabID != baseNetworkable.prefabID)
 			{
-				Debug.LogError((object)("Prefab IDs don't match! " + prefabID + "/" + baseNetworkable.prefabID + " -> " + ((Component)this).gameObject), (Object)(object)((Component)this).gameObject);
+				Debug.LogError((object)("Prefab IDs don't match! " + prefabID + "/" + baseNetworkable.prefabID + " -> " + (object)((Component)this).gameObject), (Object)(object)((Component)this).gameObject);
 			}
 		}
 	}
@@ -1084,6 +606,35 @@ public abstract class BaseNetworkable : BaseMonoBehaviour, IPrefabPostProcess, I
 			}
 		}
 		return connectionsInSphereList;
+	}
+
+	public static void GetCloseConnections(Vector3 position, float distance, List<Connection> foundConnections)
+	{
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
+		if (Net.sv == null || Net.sv.visibility == null)
+		{
+			return;
+		}
+		float num = distance * distance;
+		Group group = Net.sv.visibility.GetGroup(position);
+		if (group == null)
+		{
+			return;
+		}
+		List<Connection> subscribers = group.subscribers;
+		for (int i = 0; i < subscribers.Count; i++)
+		{
+			Connection val = subscribers[i];
+			if (val.active)
+			{
+				BasePlayer basePlayer = val.player as BasePlayer;
+				if (!((Object)(object)basePlayer == (Object)null) && !(basePlayer.SqrDistance(position) > num))
+				{
+					foundConnections.Add(basePlayer.Connection);
+				}
+			}
+		}
 	}
 
 	public static void GetCloseConnections(Vector3 position, float distance, List<BasePlayer> players)
@@ -1147,5 +698,548 @@ public abstract class BaseNetworkable : BaseMonoBehaviour, IPrefabPostProcess, I
 			}
 		}
 		return false;
+	}
+
+	public static bool HasConnections(Vector3 position)
+	{
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		if (Net.sv == null)
+		{
+			return false;
+		}
+		if (Net.sv.visibility == null)
+		{
+			return false;
+		}
+		Group group = Net.sv.visibility.GetGroup(position);
+		if (group == null)
+		{
+			return false;
+		}
+		List<Connection> subscribers = group.subscribers;
+		for (int i = 0; i < subscribers.Count; i++)
+		{
+			Connection val = subscribers[i];
+			if (val.active && !((Object)(object)(val.player as BasePlayer) == (Object)null))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public void BroadcastOnPostNetworkUpdate(BaseEntity entity)
+	{
+		foreach (Component postNetworkUpdateComponent in postNetworkUpdateComponents)
+		{
+			(postNetworkUpdateComponent as IOnPostNetworkUpdate)?.OnPostNetworkUpdate(entity);
+		}
+		foreach (BaseEntity child in children)
+		{
+			child.BroadcastOnPostNetworkUpdate(entity);
+		}
+	}
+
+	public virtual void PostProcess(IPrefabProcessor preProcess, GameObject rootObj, string name, bool serverside, bool clientside, bool bundling)
+	{
+		if (!serverside)
+		{
+			postNetworkUpdateComponents = ((Component)this).GetComponentsInChildren<IOnPostNetworkUpdate>(true).Cast<Component>().ToList();
+		}
+	}
+
+	private void OnNetworkLimitStart()
+	{
+		LogEntry(LogEntryType.Network, 2, "OnNetworkLimitStart");
+		List<Connection> subscribers = GetSubscribers();
+		if (subscribers == null)
+		{
+			return;
+		}
+		subscribers = subscribers.ToList();
+		subscribers.RemoveAll((Connection x) => ShouldNetworkTo(x.player as BasePlayer));
+		OnNetworkSubscribersLeave(subscribers);
+		if (children == null)
+		{
+			return;
+		}
+		foreach (BaseEntity child in children)
+		{
+			child.OnNetworkLimitStart();
+		}
+	}
+
+	private void OnNetworkLimitEnd()
+	{
+		LogEntry(LogEntryType.Network, 2, "OnNetworkLimitEnd");
+		List<Connection> subscribers = GetSubscribers();
+		if (subscribers == null)
+		{
+			return;
+		}
+		OnNetworkSubscribersEnter(subscribers);
+		if (children == null)
+		{
+			return;
+		}
+		foreach (BaseEntity child in children)
+		{
+			child.OnNetworkLimitEnd();
+		}
+	}
+
+	public BaseEntity GetParentEntity()
+	{
+		return parentEntity.Get(isServer);
+	}
+
+	public bool HasParent()
+	{
+		return parentEntity.IsValid(isServer);
+	}
+
+	public void AddChild(BaseEntity child)
+	{
+		if (!children.Contains(child))
+		{
+			children.Add(child);
+			OnChildAdded(child);
+		}
+	}
+
+	protected virtual void OnChildAdded(BaseEntity child)
+	{
+	}
+
+	public void RemoveChild(BaseEntity child)
+	{
+		children.Remove(child);
+		OnChildRemoved(child);
+	}
+
+	protected virtual void OnChildRemoved(BaseEntity child)
+	{
+	}
+
+	public virtual float GetNetworkTime()
+	{
+		return Time.time;
+	}
+
+	public virtual void Spawn()
+	{
+		EntityProfiler.spawned++;
+		if (EntityProfiler.mode >= 2)
+		{
+			EntityProfiler.OnSpawned(this);
+		}
+		SpawnShared();
+		if (net == null)
+		{
+			net = Net.sv.CreateNetworkable();
+		}
+		creationFrame = Time.frameCount;
+		PreInitShared();
+		InitShared();
+		ServerInit();
+		PostInitShared();
+		UpdateNetworkGroup();
+		ServerInitPostNetworkGroupAssign();
+		isSpawned = true;
+		SendNetworkUpdateImmediate(justCreated: true);
+		((FacepunchBehaviour)this).Invoke((Action)SendGlobalNetworkUpdate, 0f);
+		if (Application.isLoading && !Application.isLoadingSave)
+		{
+			((Component)this).gameObject.SendOnSendNetworkUpdate(this as BaseEntity);
+		}
+	}
+
+	private void SendGlobalNetworkUpdate()
+	{
+		GlobalNetworkHandler.server?.TrySendNetworkUpdate(this);
+	}
+
+	public bool IsFullySpawned()
+	{
+		return isSpawned;
+	}
+
+	public virtual void ServerInit()
+	{
+		serverEntities.RegisterID(this);
+		if (net != null)
+		{
+			net.handler = (NetworkHandler)(object)this;
+		}
+	}
+
+	public virtual void ServerInitPostNetworkGroupAssign()
+	{
+	}
+
+	protected List<Connection> GetSubscribers()
+	{
+		if (net == null)
+		{
+			return null;
+		}
+		if (net.group == null)
+		{
+			return null;
+		}
+		return net.group.subscribers;
+	}
+
+	public void KillMessage()
+	{
+		Kill();
+	}
+
+	public virtual void AdminKill()
+	{
+		Kill(DestroyMode.Gib);
+	}
+
+	public void Kill(DestroyMode mode = DestroyMode.None)
+	{
+		if (IsDestroyed)
+		{
+			Debug.LogWarning((object)("Calling kill - but already IsDestroyed!? " + (object)this));
+			return;
+		}
+		EntityProfiler.killed++;
+		if (EntityProfiler.mode >= 2)
+		{
+			EntityProfiler.OnKilled(this);
+		}
+		((Component)this).gameObject.BroadcastOnParentDestroying();
+		DoEntityDestroy();
+		TerminateOnClient(mode);
+		TerminateOnServer();
+		EntityDestroy();
+	}
+
+	public void KillAsMapEntity()
+	{
+		if (IsFullySpawned())
+		{
+			Kill();
+			return;
+		}
+		IsDestroyed = true;
+		Object.Destroy((Object)(object)((Component)this).gameObject);
+	}
+
+	private void TerminateOnClient(DestroyMode mode)
+	{
+		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
+		if (net != null && net.group != null && ((BaseNetwork)Net.sv).IsConnected())
+		{
+			LogEntry(LogEntryType.Network, 2, "Term {0}", mode);
+			NetWrite obj = ((BaseNetwork)Net.sv).StartWrite();
+			obj.PacketID((Type)6);
+			obj.EntityID(net.ID);
+			obj.UInt8((byte)mode);
+			obj.Send(new SendInfo(net.group.subscribers));
+			GlobalNetworkHandler.server?.OnEntityKilled(this);
+		}
+	}
+
+	private void TerminateOnServer()
+	{
+		if (net != null)
+		{
+			InvalidateNetworkCache();
+			serverEntities.UnregisterID(this);
+			Net.sv.DestroyNetworkable(ref net);
+			((MonoBehaviour)this).StopAllCoroutines();
+			((Component)this).gameObject.SetActive(false);
+		}
+	}
+
+	internal virtual void DoServerDestroy()
+	{
+		isSpawned = false;
+		Analytics.Azure.OnEntityDestroyed(this);
+	}
+
+	public virtual bool ShouldNetworkTo(BasePlayer player)
+	{
+		if (net.group == null)
+		{
+			return true;
+		}
+		return player.net.subscriber.IsSubscribed(net.group);
+	}
+
+	protected void SendNetworkGroupChange()
+	{
+		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
+		if (isSpawned && ((BaseNetwork)Net.sv).IsConnected())
+		{
+			if (net.group == null)
+			{
+				Debug.LogWarning((object)(((object)this).ToString() + " changed its network group to null"));
+				return;
+			}
+			NetWrite obj = ((BaseNetwork)Net.sv).StartWrite();
+			obj.PacketID((Type)7);
+			obj.EntityID(net.ID);
+			obj.GroupID(net.group.ID);
+			obj.Send(new SendInfo(net.group.subscribers));
+		}
+	}
+
+	protected void SendAsSnapshot(Connection connection, bool justCreated = false)
+	{
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		NetWrite val = ((BaseNetwork)Net.sv).StartWrite();
+		connection.validate.entityUpdates++;
+		SaveInfo saveInfo = default(SaveInfo);
+		saveInfo.forConnection = connection;
+		saveInfo.forDisk = false;
+		SaveInfo saveInfo2 = saveInfo;
+		val.PacketID((Type)5);
+		val.UInt32(connection.validate.entityUpdates);
+		ToStreamForNetwork((Stream)(object)val, saveInfo2);
+		val.Send(new SendInfo(connection));
+	}
+
+	public void SendNetworkUpdate(BasePlayer.NetworkQueue queue = BasePlayer.NetworkQueue.Update)
+	{
+		if (Application.isLoading || Application.isLoadingSave || IsDestroyed || net == null || !isSpawned)
+		{
+			return;
+		}
+		TimeWarning val = TimeWarning.New("SendNetworkUpdate", 0);
+		try
+		{
+			LogEntry(LogEntryType.Network, 2, "SendNetworkUpdate");
+			InvalidateNetworkCache();
+			List<Connection> subscribers = GetSubscribers();
+			if (subscribers != null && subscribers.Count > 0)
+			{
+				for (int i = 0; i < subscribers.Count; i++)
+				{
+					BasePlayer basePlayer = subscribers[i].player as BasePlayer;
+					if (!((Object)(object)basePlayer == (Object)null) && ShouldNetworkTo(basePlayer))
+					{
+						basePlayer.QueueUpdate(queue, this);
+					}
+				}
+			}
+		}
+		finally
+		{
+			((IDisposable)val)?.Dispose();
+		}
+		((Component)this).gameObject.SendOnSendNetworkUpdate(this as BaseEntity);
+	}
+
+	public void SendNetworkUpdateImmediate(bool justCreated = false)
+	{
+		if (Application.isLoading || Application.isLoadingSave || IsDestroyed || net == null || !isSpawned)
+		{
+			return;
+		}
+		TimeWarning val = TimeWarning.New("SendNetworkUpdateImmediate", 0);
+		try
+		{
+			LogEntry(LogEntryType.Network, 2, "SendNetworkUpdateImmediate");
+			InvalidateNetworkCache();
+			List<Connection> subscribers = GetSubscribers();
+			if (subscribers != null && subscribers.Count > 0)
+			{
+				for (int i = 0; i < subscribers.Count; i++)
+				{
+					Connection val2 = subscribers[i];
+					BasePlayer basePlayer = val2.player as BasePlayer;
+					if (!((Object)(object)basePlayer == (Object)null) && ShouldNetworkTo(basePlayer))
+					{
+						SendAsSnapshot(val2, justCreated);
+					}
+				}
+			}
+		}
+		finally
+		{
+			((IDisposable)val)?.Dispose();
+		}
+		((Component)this).gameObject.SendOnSendNetworkUpdate(this as BaseEntity);
+	}
+
+	protected void SendNetworkUpdate_Position()
+	{
+		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0093: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00dd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ea: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ec: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ef: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
+		if (Application.isLoading || Application.isLoadingSave || IsDestroyed || net == null || !isSpawned)
+		{
+			return;
+		}
+		TimeWarning val = TimeWarning.New("SendNetworkUpdate_Position", 0);
+		try
+		{
+			LogEntry(LogEntryType.Network, 2, "SendNetworkUpdate_Position");
+			List<Connection> subscribers = GetSubscribers();
+			if (subscribers != null && subscribers.Count > 0)
+			{
+				NetWrite val2 = ((BaseNetwork)Net.sv).StartWrite();
+				val2.PacketID((Type)10);
+				val2.EntityID(net.ID);
+				Vector3 networkPosition = GetNetworkPosition();
+				val2.Vector3(ref networkPosition);
+				Quaternion networkRotation = GetNetworkRotation();
+				networkPosition = ((Quaternion)(ref networkRotation)).eulerAngles;
+				val2.Vector3(ref networkPosition);
+				val2.Float(GetNetworkTime());
+				NetworkableId uid = parentEntity.uid;
+				if (((NetworkableId)(ref uid)).IsValid)
+				{
+					val2.EntityID(uid);
+				}
+				SendInfo val3 = new SendInfo(subscribers);
+				val3.method = (SendMethod)1;
+				val3.priority = (Priority)0;
+				SendInfo val4 = val3;
+				val2.Send(val4);
+			}
+		}
+		finally
+		{
+			((IDisposable)val)?.Dispose();
+		}
+	}
+
+	private void ToStream(Stream stream, SaveInfo saveInfo)
+	{
+		Entity val = (saveInfo.msg = Pool.Get<Entity>());
+		try
+		{
+			Save(saveInfo);
+			if (saveInfo.msg.baseEntity == null)
+			{
+				Debug.LogError((object)(((object)this)?.ToString() + ": ToStream - no BaseEntity!?"));
+			}
+			if (saveInfo.msg.baseNetworkable == null)
+			{
+				Debug.LogError((object)(((object)this)?.ToString() + ": ToStream - no baseNetworkable!?"));
+			}
+			saveInfo.msg.ToProto(stream);
+			PostSave(saveInfo);
+		}
+		finally
+		{
+			((IDisposable)val)?.Dispose();
+		}
+	}
+
+	public virtual bool CanUseNetworkCache(Connection connection)
+	{
+		return ConVar.Server.netcache;
+	}
+
+	public void ToStreamForNetwork(Stream stream, SaveInfo saveInfo)
+	{
+		if (!CanUseNetworkCache(saveInfo.forConnection))
+		{
+			ToStream(stream, saveInfo);
+			return;
+		}
+		if (_NetworkCache == null)
+		{
+			_NetworkCache = ((EntityMemoryStreamPool.Count > 0) ? (_NetworkCache = EntityMemoryStreamPool.Dequeue()) : new MemoryStream(8));
+			ToStream(_NetworkCache, saveInfo);
+			ConVar.Server.netcachesize += (int)_NetworkCache.Length;
+		}
+		_NetworkCache.WriteTo(stream);
+	}
+
+	public void InvalidateNetworkCache()
+	{
+		TimeWarning val = TimeWarning.New("InvalidateNetworkCache", 0);
+		try
+		{
+			if (_SaveCache != null)
+			{
+				ConVar.Server.savecachesize -= (int)_SaveCache.Length;
+				_SaveCache.SetLength(0L);
+				_SaveCache.Position = 0L;
+				EntityMemoryStreamPool.Enqueue(_SaveCache);
+				_SaveCache = null;
+			}
+			if (_NetworkCache != null)
+			{
+				ConVar.Server.netcachesize -= (int)_NetworkCache.Length;
+				_NetworkCache.SetLength(0L);
+				_NetworkCache.Position = 0L;
+				EntityMemoryStreamPool.Enqueue(_NetworkCache);
+				_NetworkCache = null;
+			}
+			LogEntry(LogEntryType.Network, 3, "InvalidateNetworkCache");
+		}
+		finally
+		{
+			((IDisposable)val)?.Dispose();
+		}
+	}
+
+	public MemoryStream GetSaveCache()
+	{
+		if (_SaveCache == null)
+		{
+			if (EntityMemoryStreamPool.Count > 0)
+			{
+				_SaveCache = EntityMemoryStreamPool.Dequeue();
+			}
+			else
+			{
+				_SaveCache = new MemoryStream(8);
+			}
+			SaveInfo saveInfo = default(SaveInfo);
+			saveInfo.forDisk = true;
+			SaveInfo saveInfo2 = saveInfo;
+			ToStream(_SaveCache, saveInfo2);
+			ConVar.Server.savecachesize += (int)_SaveCache.Length;
+		}
+		return _SaveCache;
+	}
+
+	public virtual void UpdateNetworkGroup()
+	{
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		Assert.IsTrue(isServer, "UpdateNetworkGroup called on clientside entity!");
+		if (net == null)
+		{
+			return;
+		}
+		TimeWarning val = TimeWarning.New("UpdateGroups", 0);
+		try
+		{
+			if (net.UpdateGroups(((Component)this).transform.position))
+			{
+				SendNetworkGroupChange();
+			}
+		}
+		finally
+		{
+			((IDisposable)val)?.Dispose();
+		}
 	}
 }

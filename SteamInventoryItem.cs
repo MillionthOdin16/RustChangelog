@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[CreateAssetMenu(menuName = "Rust/Skins/Inventory Item")]
 public class SteamInventoryItem : ScriptableObject
 {
 	public enum Category
@@ -47,6 +48,8 @@ public class SteamInventoryItem : ScriptableObject
 
 	[Tooltip("Stop this item being broken down into cloth etc")]
 	public bool PreventBreakingDown;
+
+	public bool IsTwitchDrop;
 
 	[Header("Meta")]
 	public string itemname;

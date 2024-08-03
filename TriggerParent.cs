@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Generic;
+using Facepunch;
 using Rust;
 using UnityEngine;
 
+[RequireComponent(typeof(Collider))]
 public class TriggerParent : TriggerBase, IServerComponent
 {
 	[Tooltip("Deparent if the parented entity clips into an obstacle")]
@@ -22,7 +25,14 @@ public class TriggerParent : TriggerBase, IServerComponent
 	[Tooltip("If the player is already parented to something else, they'll switch over to another parent only if this is true")]
 	public bool overrideOtherTriggers;
 
+	[Tooltip("Requires associatedMountable to be set. Prevents players entering the trigger if there's something between their feet and the bottom of the parent trigger")]
+	public bool checkForObjUnderFeet;
+
 	public const int CLIP_CHECK_MASK = 1218511105;
+
+	protected Collider triggerCollider;
+
+	protected float triggerHeight;
 
 	private BasePlayer killPlayerTemp;
 
@@ -81,10 +91,10 @@ public class TriggerParent : TriggerBase, IServerComponent
 		{
 			return false;
 		}
-		if (!bypassOtherTriggerCheck)
+		if (!bypassOtherTriggerCheck && !overrideOtherTriggers)
 		{
 			BaseEntity parentEntity = ent.GetParentEntity();
-			if (!overrideOtherTriggers && parentEntity.IsValid() && (Object)(object)parentEntity != (Object)(object)((Component)this).gameObject.ToBaseEntity())
+			if (parentEntity.IsValid() && (Object)(object)parentEntity != (Object)(object)((Component)this).gameObject.ToBaseEntity())
 			{
 				return false;
 			}
@@ -94,6 +104,10 @@ public class TriggerParent : TriggerBase, IServerComponent
 			return false;
 		}
 		if (doClippingCheck && IsClipping(ent) && !(ent is BaseCorpse))
+		{
+			return false;
+		}
+		if (checkForObjUnderFeet && HasObjUnderFeet(ent))
 		{
 			return false;
 		}
@@ -116,6 +130,45 @@ public class TriggerParent : TriggerBase, IServerComponent
 		return true;
 	}
 
+	public void ForceParentEarly(BaseEntity ent)
+	{
+		OnEntityEnter(ent);
+		((FacepunchBehaviour)this).Invoke((Action)CheckAllParenting, 0.1f);
+	}
+
+	private void CheckAllParenting()
+	{
+		List<BaseEntity> list = Pool.GetList<BaseEntity>();
+		if (contents != null)
+		{
+			foreach (GameObject content in contents)
+			{
+				if (!((Object)(object)content == (Object)null))
+				{
+					BaseEntity baseEntity = content.ToBaseEntity();
+					if ((Object)(object)baseEntity != (Object)null && !list.Contains(baseEntity))
+					{
+						list.Add(baseEntity);
+					}
+				}
+			}
+		}
+		List<BaseEntity> list2 = Pool.GetList<BaseEntity>();
+		foreach (BaseEntity entityContent in entityContents)
+		{
+			if (!list.Contains(entityContent))
+			{
+				list2.Add(entityContent);
+			}
+		}
+		foreach (BaseEntity item in list2)
+		{
+			OnEntityLeave(item);
+		}
+		Pool.FreeList<BaseEntity>(ref list2);
+		Pool.FreeList<BaseEntity>(ref list);
+	}
+
 	protected void Parent(BaseEntity ent)
 	{
 		BaseEntity baseEntity = ((Component)this).gameObject.ToBaseEntity();
@@ -128,7 +181,7 @@ public class TriggerParent : TriggerBase, IServerComponent
 	protected void Unparent(BaseEntity ent)
 	{
 		//IL_00cb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e4: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)ent.GetParentEntity() != (Object)(object)((Component)this).gameObject.ToBaseEntity())
 		{
 			return;
@@ -157,7 +210,7 @@ public class TriggerParent : TriggerBase, IServerComponent
 			{
 				basePlayer.MovePosition(res);
 				basePlayer.SendNetworkUpdateImmediate();
-				basePlayer.ClientRPCPlayer<Vector3>(null, basePlayer, "ForcePositionTo", res);
+				basePlayer.ClientRPC<Vector3>(RpcTarget.Player("ForcePositionTo", basePlayer), res);
 			}
 			else
 			{
@@ -207,5 +260,30 @@ public class TriggerParent : TriggerBase, IServerComponent
 	{
 		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
 		return GamePhysics.CheckOBB(ent.WorldSpaceBounds(), 1218511105, (QueryTriggerInteraction)1);
+	}
+
+	private bool HasObjUnderFeet(BaseEntity ent)
+	{
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
+		Vector3 val = ent.PivotPoint() + ((Component)ent).transform.up * 0.1f;
+		float maxDistance = triggerHeight + 0.1f;
+		if (GamePhysics.Trace(new Ray(val, -((Component)this).transform.up), 0f, out var hitInfo, maxDistance, 1503731969, (QueryTriggerInteraction)1, ent) && (Object)(object)((RaycastHit)(ref hitInfo)).collider != (Object)null)
+		{
+			BaseEntity toFind = ((Component)this).gameObject.ToBaseEntity();
+			BaseEntity baseEntity = ((RaycastHit)(ref hitInfo)).collider.ToBaseEntity();
+			if ((Object)(object)baseEntity == (Object)null || !baseEntity.HasEntityInParents(toFind))
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 }

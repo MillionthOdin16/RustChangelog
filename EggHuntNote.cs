@@ -1,5 +1,5 @@
+using Rust.UI;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class EggHuntNote : MonoBehaviour, IClientComponent
 {
@@ -7,5 +7,7 @@ public class EggHuntNote : MonoBehaviour, IClientComponent
 
 	public CanvasGroup timerGroup;
 
-	public Text timerText;
+	public RustText timerText;
+
+	public static readonly Phrase startsInPhrase = new Phrase("egghunt.start", "Starts in: {0}");
 }

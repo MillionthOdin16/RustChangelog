@@ -292,7 +292,7 @@ public class SpawnGroup : BaseMonoBehaviour, IServerComponent, ISpawnPointUser, 
 		for (int i = 0; i < spawnPoints.Length; i++)
 		{
 			BaseSpawnPoint baseSpawnPoint2 = spawnPoints[(num + i) % spawnPoints.Length];
-			if (!((Object)(object)baseSpawnPoint2 == (Object)null) && baseSpawnPoint2.IsAvailableTo(prefabRef) && !baseSpawnPoint2.HasPlayersIntersecting())
+			if (!((Object)(object)baseSpawnPoint2 == (Object)null) && baseSpawnPoint2.IsAvailableTo(prefabRef.Get()) && !baseSpawnPoint2.HasPlayersIntersecting())
 			{
 				baseSpawnPoint = baseSpawnPoint2;
 				break;

@@ -19,7 +19,15 @@ public class HeldEntity : BaseEntity
 			LEFT_THIGH
 		}
 
+		public enum BackpackSlot
+		{
+			LEFT,
+			RIGHT
+		}
+
 		public HolsterSlot slot;
+
+		public BackpackSlot backpackSlot;
 
 		public bool displayWhenHolstered;
 
@@ -28,6 +36,44 @@ public class HeldEntity : BaseEntity
 		public Vector3 holsterOffset;
 
 		public Vector3 holsterRotationOffset;
+
+		public Vector3 backpackHolsterOffset;
+
+		public Vector3 backpackHolsterRotationOffset;
+
+		public Quaternion holsterRotationOffsetQ
+		{
+			get
+			{
+				//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+				//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+				//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+				//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+				//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+				if (!(holsterRotationOffset == Vector3.zero))
+				{
+					return Quaternion.Euler(holsterRotationOffset);
+				}
+				return Quaternion.identity;
+			}
+		}
+
+		public Quaternion backpackHolsterRotationOffsetQ
+		{
+			get
+			{
+				//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+				//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+				//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+				//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+				//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+				if (!(backpackHolsterRotationOffset == Vector3.zero))
+				{
+					return Quaternion.Euler(backpackHolsterRotationOffset);
+				}
+				return Quaternion.identity;
+			}
+		}
 	}
 
 	public static class HeldEntityFlags
@@ -92,9 +138,11 @@ public class HeldEntity : BaseEntity
 
 	public bool hostile => hostileScore > 0f;
 
-	public virtual bool IsUsableByTurret => false;
-
 	public virtual Transform MuzzleTransform => null;
+
+	public virtual ItemModWearable WearableWhileEquipped => null;
+
+	public virtual bool IsUsableByTurret => false;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -107,12 +155,6 @@ public class HeldEntity : BaseEntity
 			((IDisposable)val)?.Dispose();
 		}
 		return base.OnRpcMessage(player, rpc, msg);
-	}
-
-	public void SendPunch(Vector3 amount, float duration)
-	{
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		ClientRPCPlayer<Vector3, float>(null, GetOwnerPlayer(), "CL_Punch", amount, duration);
 	}
 
 	public bool LightsOn()
@@ -179,6 +221,7 @@ public class HeldEntity : BaseEntity
 		if (holsterInfo.displayWhenHolstered)
 		{
 			holsterVisible = visible;
+			genericVisible = false;
 			UpdateHeldItemVisibility();
 		}
 	}
@@ -203,7 +246,7 @@ public class HeldEntity : BaseEntity
 	public void UpdateHeldItemVisibility()
 	{
 		bool flag = false;
-		if (Object.op_Implicit((Object)(object)GetOwnerPlayer()))
+		if (!genericVisible && Object.op_Implicit((Object)(object)GetOwnerPlayer()))
 		{
 			bool flag2 = (Object)(object)GetOwnerPlayer().GetHeldEntity() == (Object)(object)this;
 			flag = ((!Server.showHolsteredItems && !flag2) ? UpdateVisiblity_Invis() : (flag2 ? UpdateVisibility_Hand() : ((!holsterVisible) ? UpdateVisiblity_Invis() : UpdateVisiblity_Holster())));
@@ -317,7 +360,7 @@ public class HeldEntity : BaseEntity
 		{
 			return null;
 		}
-		return ownerPlayer.inventory.FindItemUID(ownerItemUID);
+		return ownerPlayer.inventory.FindItemByUID(ownerItemUID);
 	}
 
 	public override Item GetItem()
@@ -434,7 +477,7 @@ public class HeldEntity : BaseEntity
 	{
 	}
 
-	public virtual void ServerUse(float damageModifier, Transform originOverride = null)
+	public virtual void ServerUse(float damageModifier, Transform originOverride = null, bool useBulletThickness = true)
 	{
 		ServerUse();
 	}
@@ -453,5 +496,11 @@ public class HeldEntity : BaseEntity
 		{
 			ownerItemUID = info.msg.heldEntity.itemUID;
 		}
+	}
+
+	public void SendPunch(Vector3 amount, float duration)
+	{
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		ClientRPC<Vector3, float>(RpcTarget.Player("CL_Punch", GetOwnerPlayer()), amount, duration);
 	}
 }

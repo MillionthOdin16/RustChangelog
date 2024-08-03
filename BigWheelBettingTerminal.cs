@@ -30,16 +30,6 @@ public class BigWheelBettingTerminal : StorageContainer
 		return base.OnRpcMessage(player, rpc, msg);
 	}
 
-	public new void OnDrawGizmos()
-	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
-		Gizmos.color = Color.yellow;
-		Gizmos.DrawSphere(((Component)this).transform.TransformPoint(seatedPlayerOffset), offsetCheckRadius);
-		base.OnDrawGizmos();
-	}
-
 	public bool IsPlayerValid(BasePlayer player)
 	{
 		//IL_001e: Unknown result type (might be due to invalid IL or missing references)

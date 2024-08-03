@@ -6,6 +6,30 @@ using UnityEngine.Rendering;
 [ExecuteInEditMode]
 public class ReflectionProbeEx : MonoBehaviour
 {
+	[Serializable]
+	public enum ConvolutionQuality
+	{
+		Lowest,
+		Low,
+		Medium,
+		High,
+		VeryHigh
+	}
+
+	[Serializable]
+	public struct RenderListEntry
+	{
+		public Renderer renderer;
+
+		public bool alwaysEnabled;
+
+		public RenderListEntry(Renderer renderer, bool alwaysEnabled)
+		{
+			this.renderer = renderer;
+			this.alwaysEnabled = alwaysEnabled;
+		}
+	}
+
 	private struct CubemapSkyboxVertex
 	{
 		public float x;
@@ -49,29 +73,42 @@ public class ReflectionProbeEx : MonoBehaviour
 		}
 	}
 
-	[Serializable]
-	public enum ConvolutionQuality
-	{
-		Lowest,
-		Low,
-		Medium,
-		High,
-		VeryHigh
-	}
+	public ReflectionProbeRefreshMode refreshMode = (ReflectionProbeRefreshMode)1;
 
-	[Serializable]
-	public struct RenderListEntry
-	{
-		public Renderer renderer;
+	public bool timeSlicing;
 
-		public bool alwaysEnabled;
+	public int resolution = 128;
 
-		public RenderListEntry(Renderer renderer, bool alwaysEnabled)
-		{
-			this.renderer = renderer;
-			this.alwaysEnabled = alwaysEnabled;
-		}
-	}
+	[InspectorName("HDR")]
+	public bool hdr = true;
+
+	public float shadowDistance;
+
+	public ReflectionProbeClearFlags clearFlags = (ReflectionProbeClearFlags)1;
+
+	public Color background = new Color(0.192f, 0.301f, 0.474f);
+
+	public float nearClip = 0.3f;
+
+	public float farClip = 1000f;
+
+	public Transform attachToTarget;
+
+	public Light directionalLight;
+
+	public float textureMipBias = 2f;
+
+	public bool highPrecision;
+
+	public bool enableShadows;
+
+	public ConvolutionQuality convolutionQuality;
+
+	public List<RenderListEntry> staticRenderList = new List<RenderListEntry>();
+
+	public Cubemap reflectionCubemap;
+
+	public float reflectionIntensity = 1f;
 
 	private Mesh blitMesh;
 
@@ -128,43 +165,6 @@ public class ReflectionProbeEx : MonoBehaviour
 		15, 17, 24, 7, 19, 27, 23, 6, 26, 5,
 		4, 31
 	};
-
-	public ReflectionProbeRefreshMode refreshMode = (ReflectionProbeRefreshMode)1;
-
-	public bool timeSlicing;
-
-	public int resolution = 128;
-
-	[InspectorName("HDR")]
-	public bool hdr = true;
-
-	public float shadowDistance;
-
-	public ReflectionProbeClearFlags clearFlags = (ReflectionProbeClearFlags)1;
-
-	public Color background = new Color(0.192f, 0.301f, 0.474f);
-
-	public float nearClip = 0.3f;
-
-	public float farClip = 1000f;
-
-	public Transform attachToTarget;
-
-	public Light directionalLight;
-
-	public float textureMipBias = 2f;
-
-	public bool highPrecision;
-
-	public bool enableShadows;
-
-	public ConvolutionQuality convolutionQuality;
-
-	public List<RenderListEntry> staticRenderList = new List<RenderListEntry>();
-
-	public Cubemap reflectionCubemap;
-
-	public float reflectionIntensity = 1f;
 
 	private void CreateMeshes()
 	{
@@ -429,6 +429,7 @@ public class ReflectionProbeEx : MonoBehaviour
 		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_002b: Expected I4, but got Unknown
 		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
 		GraphicsDeviceType graphicsDeviceType = SystemInfo.graphicsDeviceType;
 		if ((int)graphicsDeviceType != 2)
 		{
@@ -457,7 +458,8 @@ public class ReflectionProbeEx : MonoBehaviour
 		}
 		if (platformCubemapFaceMatrices == null)
 		{
-			Debug.LogError((object)("[ReflectionProbeEx] Initialization failed. No cubemap ortho basis defined for " + SystemInfo.graphicsDeviceType));
+			graphicsDeviceType = SystemInfo.graphicsDeviceType;
+			Debug.LogError((object)("[ReflectionProbeEx] Initialization failed. No cubemap ortho basis defined for " + ((object)(GraphicsDeviceType)(ref graphicsDeviceType)).ToString()));
 			return false;
 		}
 		return true;

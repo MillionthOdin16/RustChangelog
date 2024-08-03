@@ -77,6 +77,8 @@ public class BaseOven : StorageContainer, ISplashable, IIndustrialStorage
 
 	public IndustrialSlotMode IndustrialMode;
 
+	public const Flags Flag_CookingPaused = Flags.Reserved8;
+
 	private int _activeCookingSlot = -1;
 
 	private int _inputSlotIndex;
@@ -110,7 +112,7 @@ public class BaseOven : StorageContainer, ISplashable, IIndustrialStorage
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SVSwitch "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SVSwitch "));
 				}
 				TimeWarning val2 = TimeWarning.New("SVSwitch", 0);
 				try
@@ -215,10 +217,10 @@ public class BaseOven : StorageContainer, ISplashable, IIndustrialStorage
 		base.OnItemAddedOrRemoved(item, bAdded);
 		if (item != null)
 		{
-			ItemModCookable component = ((Component)item.info).GetComponent<ItemModCookable>();
-			if ((Object)(object)component != (Object)null)
+			ItemModCookable itemModCookable = item.info.ItemModCookable;
+			if ((Object)(object)itemModCookable != (Object)null)
 			{
-				item.cookTimeLeft = component.cookTime;
+				item.cookTimeLeft = itemModCookable.cookTime;
 			}
 			if (item.HasFlag(Item.Flag.OnFire))
 			{
@@ -293,7 +295,7 @@ public class BaseOven : StorageContainer, ISplashable, IIndustrialStorage
 		return new MinMax(_outputSlotIndex, _outputSlotIndex + outputSlots - 1);
 	}
 
-	public override int GetIdealSlot(BasePlayer player, Item item)
+	public override int GetIdealSlot(BasePlayer player, ItemContainer container, Item item)
 	{
 		MinMax? allowedSlots = GetAllowedSlots(item);
 		if (!allowedSlots.HasValue)
@@ -308,10 +310,10 @@ public class BaseOven : StorageContainer, ISplashable, IIndustrialStorage
 				return i;
 			}
 		}
-		return base.GetIdealSlot(player, item);
+		return base.GetIdealSlot(player, container, item);
 	}
 
-	public void OvenFull()
+	public virtual void OvenFull()
 	{
 		StopCooking();
 	}
@@ -328,6 +330,10 @@ public class BaseOven : StorageContainer, ISplashable, IIndustrialStorage
 
 	public void Cook()
 	{
+		if (HasFlag(Flags.Reserved8))
+		{
+			return;
+		}
 		Item item = FindBurnable();
 		if (item == null && !CanRunWithNoFuel)
 		{
@@ -350,7 +356,7 @@ public class BaseOven : StorageContainer, ISplashable, IIndustrialStorage
 		}
 		if (item != null)
 		{
-			ItemModBurnable component = ((Component)item.info).GetComponent<ItemModBurnable>();
+			ItemModBurnable itemModBurnable = item.info.ItemModBurnable;
 			item.fuel -= 0.5f * (cookingTemperature / 200f);
 			if (!item.HasFlag(Item.Flag.OnFire))
 			{
@@ -359,7 +365,7 @@ public class BaseOven : StorageContainer, ISplashable, IIndustrialStorage
 			}
 			if (item.fuel <= 0f)
 			{
-				ConsumeFuel(item, component);
+				ConsumeFuel(item, itemModBurnable);
 			}
 		}
 		OnCooked();
@@ -400,17 +406,28 @@ public class BaseOven : StorageContainer, ISplashable, IIndustrialStorage
 	[RPC_Server.MaxDistance(3f)]
 	protected virtual void SVSwitch(RPCMessage msg)
 	{
+		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
 		bool flag = msg.read.Bit();
-		if (flag != IsOn() && (!needsBuildingPrivilegeToUse || msg.player.CanBuild()))
+		if (flag == IsOn() || (needsBuildingPrivilegeToUse && !msg.player.CanBuild()))
 		{
-			if (flag)
+			return;
+		}
+		if (flag)
+		{
+			StartCooking();
+			if ((Object)(object)msg.player != (Object)null)
 			{
-				StartCooking();
+				msg.player.ProcessMissionEvent(BaseMission.MissionEventType.STARTOVEN, new BaseMission.MissionEventPayload
+				{
+					UintIdentifier = prefabID,
+					NetworkIdentifier = net.ID
+				}, 1f);
 			}
-			else
-			{
-				StopCooking();
-			}
+		}
+		else
+		{
+			StopCooking();
 		}
 	}
 
@@ -577,7 +594,7 @@ public class BaseOven : StorageContainer, ISplashable, IIndustrialStorage
 
 	private bool IsBurnableItem(Item item)
 	{
-		if (Object.op_Implicit((Object)(object)((Component)item.info).GetComponent<ItemModBurnable>()) && ((Object)(object)fuelType == (Object)null || (Object)(object)item.info == (Object)(object)fuelType))
+		if (Object.op_Implicit((Object)(object)item.info.ItemModBurnable) && ((Object)(object)fuelType == (Object)null || (Object)(object)item.info == (Object)(object)fuelType))
 		{
 			return true;
 		}
@@ -586,8 +603,7 @@ public class BaseOven : StorageContainer, ISplashable, IIndustrialStorage
 
 	private bool IsBurnableByproduct(Item item)
 	{
-		ItemDefinition itemDefinition = fuelType;
-		ItemModBurnable itemModBurnable = ((itemDefinition != null) ? ((Component)itemDefinition).GetComponent<ItemModBurnable>() : null);
+		ItemModBurnable itemModBurnable = fuelType?.ItemModBurnable;
 		if ((Object)(object)itemModBurnable == (Object)null)
 		{
 			return false;
@@ -597,8 +613,8 @@ public class BaseOven : StorageContainer, ISplashable, IIndustrialStorage
 
 	private bool IsMaterialInput(Item item)
 	{
-		ItemModCookable component = ((Component)item.info).GetComponent<ItemModCookable>();
-		if ((Object)(object)component == (Object)null || (float)component.lowTemp > cookingTemperature || (float)component.highTemp < cookingTemperature)
+		ItemModCookable itemModCookable = item.info.ItemModCookable;
+		if ((Object)(object)itemModCookable == (Object)null || (float)itemModCookable.lowTemp > cookingTemperature || (float)itemModCookable.highTemp < cookingTemperature)
 		{
 			return false;
 		}
@@ -641,10 +657,10 @@ public class BaseOven : StorageContainer, ISplashable, IIndustrialStorage
 			_materialOutputCache[key] = hashSet;
 			foreach (ItemDefinition item in ItemManager.itemList)
 			{
-				ItemModCookable component = ((Component)item).GetComponent<ItemModCookable>();
-				if (!((Object)(object)component == (Object)null) && component.CanBeCookedByAtTemperature(key))
+				ItemModCookable itemModCookable = item.ItemModCookable;
+				if (!((Object)(object)itemModCookable == (Object)null) && itemModCookable.CanBeCookedByAtTemperature(key))
 				{
-					hashSet.Add(component.becomeOnCooked);
+					hashSet.Add(itemModCookable.becomeOnCooked);
 				}
 			}
 		}

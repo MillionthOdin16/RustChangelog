@@ -5,7 +5,8 @@ namespace ConVar;
 [Factory("physics")]
 public class Physics : ConsoleSystem
 {
-	private const float baseGravity = -9.81f;
+	[ServerVar(Help = "The collision detection mode that dropped items and corpses should use")]
+	public static int droppedmode = 2;
 
 	[ServerVar(Help = "Send effects to clients when physics objects collide")]
 	public static bool sendeffects = true;
@@ -19,9 +20,18 @@ public class Physics : ConsoleSystem
 	[ServerVar]
 	public static float groundwatchdelay = 0.1f;
 
+	[ServerVar(Help = "The collision detection mode that server-side ragdolls should use")]
+	public static int serverragdollmode = 3;
+
+	private const float baseGravity = -9.81f;
+
+	private static bool _serversideragdolls = true;
+
 	[ClientVar]
 	[ServerVar]
 	public static bool batchsynctransforms = true;
+
+	private static bool _treecollision = true;
 
 	[ServerVar]
 	public static float bouncethreshold
@@ -62,7 +72,7 @@ public class Physics : ConsoleSystem
 		}
 	}
 
-	[ServerVar(Help = "Gravity multiplier")]
+	[ReplicatedVar(Help = "Gravity multiplier", Default = "1.0")]
 	public static float gravity
 	{
 		get
@@ -77,47 +87,19 @@ public class Physics : ConsoleSystem
 		}
 	}
 
-	[ClientVar(ClientAdmin = true)]
-	[ServerVar(Help = "The amount of physics steps per second")]
-	public static float steps
+	[ReplicatedVar(Help = "Do ragdoll physics calculations on the server, or use the old client-side system", Saved = true, ShowInAdminUI = true)]
+	public static bool serversideragdolls
 	{
 		get
 		{
-			return 1f / Time.fixedDeltaTime;
+			return _serversideragdolls;
 		}
 		set
 		{
-			if (value < 10f)
-			{
-				value = 10f;
-			}
-			if (value > 60f)
-			{
-				value = 60f;
-			}
-			Time.fixedDeltaTime = 1f / value;
-		}
-	}
-
-	[ClientVar(ClientAdmin = true)]
-	[ServerVar(Help = "The slowest physics steps will operate")]
-	public static float minsteps
-	{
-		get
-		{
-			return 1f / Time.maximumDeltaTime;
-		}
-		set
-		{
-			if (value < 1f)
-			{
-				value = 1f;
-			}
-			if (value > 60f)
-			{
-				value = 60f;
-			}
-			Time.maximumDeltaTime = 1f / value;
+			_serversideragdolls = value;
+			Physics.IgnoreLayerCollision(9, 13, !_serversideragdolls);
+			Physics.IgnoreLayerCollision(9, 11, !_serversideragdolls);
+			Physics.IgnoreLayerCollision(9, 28, !_serversideragdolls);
 		}
 	}
 
@@ -132,6 +114,41 @@ public class Physics : ConsoleSystem
 		set
 		{
 			Physics.autoSyncTransforms = value;
+		}
+	}
+
+	[ReplicatedVar(Help = "Do players and vehicles collide with trees?", Saved = true, ShowInAdminUI = true)]
+	public static bool treecollision
+	{
+		get
+		{
+			return _treecollision;
+		}
+		set
+		{
+			_treecollision = value;
+			Physics.IgnoreLayerCollision(15, 30, !_treecollision);
+			Physics.IgnoreLayerCollision(12, 30, !_treecollision);
+		}
+	}
+
+	internal static void ApplyDropped(Rigidbody rigidBody)
+	{
+		if (droppedmode <= 0)
+		{
+			rigidBody.collisionDetectionMode = (CollisionDetectionMode)0;
+		}
+		if (droppedmode == 1)
+		{
+			rigidBody.collisionDetectionMode = (CollisionDetectionMode)1;
+		}
+		if (droppedmode == 2)
+		{
+			rigidBody.collisionDetectionMode = (CollisionDetectionMode)2;
+		}
+		if (droppedmode >= 3)
+		{
+			rigidBody.collisionDetectionMode = (CollisionDetectionMode)3;
 		}
 	}
 }

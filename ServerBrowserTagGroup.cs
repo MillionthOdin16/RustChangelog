@@ -44,7 +44,7 @@ public class ServerBrowserTagGroup : MonoBehaviour
 		ServerBrowserTag[] array = tags;
 		foreach (ServerBrowserTag serverBrowserTag in array)
 		{
-			if ((!isExclusive || !flag) && tagsEnabled <= maxTags && serverTags.Contains(serverBrowserTag.serverTag))
+			if ((!isExclusive || !flag) && tagsEnabled <= maxTags && serverBrowserTag.ContainsTag(serverTags))
 			{
 				ComponentExtensions.SetActive<ServerBrowserTag>(serverBrowserTag, true);
 				tagsEnabled++;

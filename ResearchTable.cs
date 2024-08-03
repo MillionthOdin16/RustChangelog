@@ -45,7 +45,7 @@ public class ResearchTable : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - DoResearch "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - DoResearch "));
 				}
 				TimeWarning val2 = TimeWarning.New("DoResearch", 0);
 				try
@@ -105,7 +105,7 @@ public class ResearchTable : StorageContainer
 		researchFinishedTime = 0f;
 	}
 
-	public override int GetIdealSlot(BasePlayer player, Item item)
+	public override int GetIdealSlot(BasePlayer player, ItemContainer container, Item item)
 	{
 		if (item.info.shortname == "scrap")
 		{
@@ -119,7 +119,7 @@ public class ResearchTable : StorageContainer
 				return 1;
 			}
 		}
-		return base.GetIdealSlot(player, item);
+		return base.GetIdealSlot(player, container, item);
 	}
 
 	public bool IsResearching()
@@ -161,22 +161,22 @@ public class ResearchTable : StorageContainer
 		return result;
 	}
 
-	public int ScrapForResearch(Item item)
+	public static int ScrapForResearch(Item item)
 	{
 		return ScrapForResearch(item.info);
 	}
 
-	public int ScrapForResearch(ItemDefinition info)
+	public static int ScrapForResearch(ItemDefinition info)
 	{
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0024: Invalid comparison between Unknown and I4
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0030: Invalid comparison between Unknown and I4
-		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003c: Invalid comparison between Unknown and I4
-		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0048: Invalid comparison between Unknown and I4
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Invalid comparison between Unknown and I4
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Invalid comparison between Unknown and I4
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Invalid comparison between Unknown and I4
+		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0047: Invalid comparison between Unknown and I4
+		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)info.isRedirectOf != (Object)null)
 		{
 			return ScrapForResearch(info.isRedirectOf);
@@ -204,50 +204,6 @@ public class ResearchTable : StorageContainer
 			return ConVar.Server.defaultBlueprintResearchCost;
 		}
 		return result;
-	}
-
-	public static int ScrapForResearch(ItemDefinition info, ResearchType type)
-	{
-		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0009: Invalid comparison between Unknown and I4
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0015: Invalid comparison between Unknown and I4
-		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0021: Invalid comparison between Unknown and I4
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002d: Invalid comparison between Unknown and I4
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
-		int num = 0;
-		if ((int)info.rarity == 1)
-		{
-			num = 20;
-		}
-		if ((int)info.rarity == 2)
-		{
-			num = 75;
-		}
-		if ((int)info.rarity == 3)
-		{
-			num = 125;
-		}
-		if ((int)info.rarity == 4 || (int)info.rarity == 0)
-		{
-			num = 500;
-		}
-		BaseGameMode activeGameMode = BaseGameMode.GetActiveGameMode(serverside: true);
-		if ((Object)(object)activeGameMode != (Object)null)
-		{
-			BaseGameMode.ResearchCostResult scrapCostForResearch = activeGameMode.GetScrapCostForResearch(info, type);
-			if (scrapCostForResearch.Scale.HasValue)
-			{
-				num = Mathf.RoundToInt((float)num * scrapCostForResearch.Scale.Value);
-			}
-			else if (scrapCostForResearch.Amount.HasValue)
-			{
-				num = scrapCostForResearch.Amount.Value;
-			}
-		}
-		return num;
 	}
 
 	public bool IsItemResearchable(Item item)
@@ -320,8 +276,8 @@ public class ResearchTable : StorageContainer
 	[RPC_Server.IsVisible(3f)]
 	public void DoResearch(RPCMessage msg)
 	{
-		//IL_00b8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bc: Unknown result type (might be due to invalid IL or missing references)
 		if (IsResearching())
 		{
 			return;
@@ -349,12 +305,12 @@ public class ResearchTable : StorageContainer
 
 	public void ResearchAttemptFinished()
 	{
-		//IL_00cf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00dc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0104: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0109: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ce: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00db: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0103: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0108: Unknown result type (might be due to invalid IL or missing references)
 		Item targetItem = GetTargetItem();
 		Item scrapItem = GetScrapItem();
 		if (targetItem != null && scrapItem != null)

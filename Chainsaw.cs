@@ -28,6 +28,10 @@ public class Chainsaw : BaseMelee
 
 	private Vector2 saveST;
 
+	public static readonly Phrase UnloadAmmoTitle = new Phrase("unload_ammo", "Unload Ammo");
+
+	public static readonly Phrase UnloadAmmoDesc = new Phrase("unload_ammo_desc", "Unload the ammunition in this weapon and place it in your inventory.");
+
 	[Header("Chainsaw")]
 	public float fuelPerSec = 1f;
 
@@ -54,6 +58,8 @@ public class Chainsaw : BaseMelee
 
 	public float engineStartChance = 0.33f;
 
+	private TimeSince lastReloadSignalFromClient;
+
 	private float ammoRemainder;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
@@ -66,7 +72,7 @@ public class Chainsaw : BaseMelee
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - DoReload "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - DoReload "));
 				}
 				TimeWarning val2 = TimeWarning.New("DoReload", 0);
 				try
@@ -117,7 +123,7 @@ public class Chainsaw : BaseMelee
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_SetAttacking "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_SetAttacking "));
 				}
 				TimeWarning val2 = TimeWarning.New("Server_SetAttacking", 0);
 				try
@@ -168,7 +174,7 @@ public class Chainsaw : BaseMelee
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_StartEngine "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_StartEngine "));
 				}
 				TimeWarning val2 = TimeWarning.New("Server_StartEngine", 0);
 				try
@@ -219,7 +225,7 @@ public class Chainsaw : BaseMelee
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_StopEngine "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_StopEngine "));
 				}
 				TimeWarning val2 = TimeWarning.New("Server_StopEngine", 0);
 				try
@@ -281,6 +287,17 @@ public class Chainsaw : BaseMelee
 	public bool IsAttacking()
 	{
 		return HasFlag(Flags.Busy);
+	}
+
+	protected override void OnReceivedSignalServer(Signal signal, string arg)
+	{
+		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		base.OnReceivedSignalServer(signal, arg);
+		if (signal == Signal.Reload && base.isServer)
+		{
+			lastReloadSignalFromClient = TimeSince.op_Implicit(0f);
+		}
 	}
 
 	public void ServerNPCStart()
@@ -371,8 +388,10 @@ public class Chainsaw : BaseMelee
 	[RPC_Server.IsActiveItem]
 	public void DoReload(RPCMessage msg)
 	{
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer ownerPlayer = GetOwnerPlayer();
-		if (!((Object)(object)ownerPlayer == (Object)null) && !IsAttacking())
+		if (!((Object)(object)ownerPlayer == (Object)null) && !IsAttacking() && (ownerPlayer.IsNpc || (!(TimeSince.op_Implicit(lastReloadSignalFromClient) < reloadDuration * 0.25f) && !(TimeSince.op_Implicit(lastReloadSignalFromClient) > reloadDuration * 2f))))
 		{
 			Item item;
 			while (ammo < maxAmmo && (item = GetAmmo()) != null && item.amount > 0)
@@ -426,6 +445,12 @@ public class Chainsaw : BaseMelee
 	public void EngineTick()
 	{
 		ReduceAmmo(0.05f);
+		BasePlayer ownerPlayer = GetOwnerPlayer();
+		if ((Object)(object)ownerPlayer != (Object)null && ownerPlayer.IsSleeping())
+		{
+			SetEngineStatus(status: false);
+			SetAttackStatus(status: false);
+		}
 	}
 
 	public void AttackTick()
@@ -557,11 +582,6 @@ public class Chainsaw : BaseMelee
 		{
 			return null;
 		}
-		Item item = ownerPlayer.inventory.containerMain.FindItemsByItemName(fuelType.shortname);
-		if (item == null)
-		{
-			item = ownerPlayer.inventory.containerBelt.FindItemsByItemName(fuelType.shortname);
-		}
-		return item;
+		return ownerPlayer.inventory.FindItemByItemName(fuelType.shortname);
 	}
 }

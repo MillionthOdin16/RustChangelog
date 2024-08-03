@@ -13,5 +13,7 @@ public class ServerBrowserInfoNexusZone : MonoBehaviour
 
 	public RustText zoneName;
 
+	public RustText ping;
+
 	public RustText playerCount;
 }

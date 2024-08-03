@@ -40,7 +40,7 @@ public class ItemBasedFlowRestrictor : IOEntity, IContainerSounds
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_OpenLoot "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_OpenLoot "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_OpenLoot", 0);
 				try
@@ -252,7 +252,7 @@ public class ItemBasedFlowRestrictor : IOEntity, IContainerSounds
 				SetFlag(Flags.Open, b: true);
 				player.inventory.loot.AddContainer(inventory);
 				player.inventory.loot.SendImmediate();
-				player.ClientRPCPlayer(null, player, "RPC_OpenLootPanel", lootPanelName);
+				player.ClientRPC(RpcTarget.Player("RPC_OpenLootPanel", player), lootPanelName);
 				SendNetworkUpdate();
 			}
 		}

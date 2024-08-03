@@ -22,12 +22,17 @@ public static class Auth_CentralizedBans
 
 	public static IEnumerator Run(Connection connection)
 	{
-		if (!connection.active || connection.rejected || string.IsNullOrWhiteSpace(Server.bansServerEndpoint) || !Server.bansServerEndpoint.StartsWith("http"))
+		connection.authStatusCentralizedBans = string.Empty;
+		if (!connection.active || connection.rejected)
 		{
 			yield break;
 		}
-		connection.authStatus = "";
-		if (!Server.bansServerEndpoint.EndsWith("/"))
+		if (string.IsNullOrWhiteSpace(Server.bansServerEndpoint) || !Server.bansServerEndpoint.StartsWith("http"))
+		{
+			connection.authStatusCentralizedBans = "ok";
+			yield break;
+		}
+		if (!Server.bansServerEndpoint.EndsWith("/") && !Server.bansServerEndpoint.EndsWith("="))
 		{
 			Server.bansServerEndpoint += "/";
 		}
@@ -39,6 +44,7 @@ public static class Auth_CentralizedBans
 			yield return ownerRequest.SendWebRequest();
 			if (CheckIfPlayerBanned(connection.ownerid, connection, ownerRequest))
 			{
+				connection.authStatusCentralizedBans = "banned_account_owner";
 				yield break;
 			}
 		}
@@ -46,9 +52,13 @@ public static class Auth_CentralizedBans
 		UnityWebRequest userRequest = UnityWebRequest.Get(text2);
 		userRequest.timeout = Server.bansServerTimeout;
 		yield return userRequest.SendWebRequest();
-		if (!CheckIfPlayerBanned(connection.userid, connection, userRequest))
+		if (CheckIfPlayerBanned(connection.userid, connection, userRequest))
 		{
-			connection.authStatus = "ok";
+			connection.authStatusCentralizedBans = "banned_account_player";
+		}
+		else
+		{
+			connection.authStatusCentralizedBans = "ok";
 		}
 	}
 

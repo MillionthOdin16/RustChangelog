@@ -19,54 +19,6 @@ public class MLRS : BaseMountable
 		public Renderer rocket;
 	}
 
-	private struct TheoreticalProjectile
-	{
-		public Vector3 pos;
-
-		public Vector3 forward;
-
-		public float gravityMult;
-
-		public TheoreticalProjectile(Vector3 pos, Vector3 forward, float gravityMult)
-		{
-			//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0009: Unknown result type (might be due to invalid IL or missing references)
-			this.pos = pos;
-			this.forward = forward;
-			this.gravityMult = gravityMult;
-		}
-	}
-
-	public const string MLRS_PLAYER_KILL_STAT = "mlrs_kills";
-
-	private float leftRightInput;
-
-	private float upDownInput;
-
-	private Vector3 lastSentTargetHitPos;
-
-	private Vector3 lastSentTrueHitPos;
-
-	private int nextRocketIndex;
-
-	private EntityRef rocketOwnerRef;
-
-	private TimeSince timeSinceBroken;
-
-	private int radiusModIndex;
-
-	private float[] radiusMods = new float[4]
-	{
-		0.1f,
-		0.2f,
-		1f / 3f,
-		2f / 3f
-	};
-
-	private Vector3 trueTargetHitPos;
-
 	[Header("MLRS Components")]
 	[SerializeField]
 	private GameObjectRef rocketStoragePrefab;
@@ -150,7 +102,7 @@ public class MLRS : BaseMountable
 	private ParticleSystem bottomScreenShutdown;
 
 	[ServerVar(Help = "How many minutes before the MLRS recovers from use and can be used again")]
-	public static float brokenDownMinutes = 10f;
+	public static float brokenDownMinutes = 20f;
 
 	public const Flags FLAG_FIRING_ROCKETS = Flags.Reserved6;
 
@@ -165,6 +117,34 @@ public class MLRS : BaseMountable
 	private float rocketSpeed;
 
 	private bool isInitialLoad = true;
+
+	public const string MLRS_PLAYER_KILL_STAT = "mlrs_kills";
+
+	private float leftRightInput;
+
+	private float upDownInput;
+
+	private Vector3 lastSentTargetHitPos;
+
+	private Vector3 lastSentTrueHitPos;
+
+	private int nextRocketIndex;
+
+	private EntityRef rocketOwnerRef;
+
+	private TimeSince timeSinceBroken;
+
+	private int radiusModIndex;
+
+	private float[] radiusMods = new float[4]
+	{
+		0.1f,
+		0.2f,
+		1f / 3f,
+		2f / 3f
+	};
+
+	private Vector3 trueTargetHitPos;
 
 	public Vector3 UserTargetHitPos { get; private set; }
 
@@ -259,7 +239,7 @@ public class MLRS : BaseMountable
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_Fire_Rockets "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_Fire_Rockets "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_Fire_Rockets", 0);
 				try
@@ -310,7 +290,7 @@ public class MLRS : BaseMountable
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_Open_Dashboard "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_Open_Dashboard "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_Open_Dashboard", 0);
 				try
@@ -361,7 +341,7 @@ public class MLRS : BaseMountable
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_Open_Rockets "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_Open_Rockets "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_Open_Rockets", 0);
 				try
@@ -412,7 +392,7 @@ public class MLRS : BaseMountable
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_SetTargetHitPos "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_SetTargetHitPos "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_SetTargetHitPos", 0);
 				try
@@ -464,437 +444,6 @@ public class MLRS : BaseMountable
 			((IDisposable)val)?.Dispose();
 		}
 		return base.OnRpcMessage(player, rpc, msg);
-	}
-
-	protected override void OnChildAdded(BaseEntity child)
-	{
-		base.OnChildAdded(child);
-		if (base.isServer)
-		{
-			if (child.prefabID == rocketStoragePrefab.GetEntity().prefabID)
-			{
-				rocketStorageInstance.Set(child);
-			}
-			if (child.prefabID == dashboardStoragePrefab.GetEntity().prefabID)
-			{
-				dashboardStorageInstance.Set(child);
-			}
-		}
-	}
-
-	public override void VehicleFixedUpdate()
-	{
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01bc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0092: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0093: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01cf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ab: Unknown result type (might be due to invalid IL or missing references)
-		base.VehicleFixedUpdate();
-		if (IsBroken())
-		{
-			if (!(TimeSince.op_Implicit(timeSinceBroken) >= brokenDownMinutes * 60f))
-			{
-				SetFlag(Flags.Reserved8, TryGetAimingModule(out var _));
-				return;
-			}
-			SetRepaired();
-		}
-		int rocketAmmoCount = RocketAmmoCount;
-		UpdateStorageState();
-		if (CanBeUsed && AnyMounted())
-		{
-			Vector3 userTargetHitPos = UserTargetHitPos;
-			userTargetHitPos += Vector3.forward * upDownInput * 75f * Time.fixedDeltaTime;
-			userTargetHitPos += Vector3.right * leftRightInput * 75f * Time.fixedDeltaTime;
-			SetUserTargetHitPos(userTargetHitPos);
-		}
-		if (!IsFiringRockets)
-		{
-			HitPosToRotation(trueTargetHitPos, out var hRot, out var vRot, out var g);
-			float num = g / (0f - Physics.gravity.y);
-			IsRealigning = Mathf.Abs(Mathf.DeltaAngle(VRotation, vRot)) > 0.001f || Mathf.Abs(Mathf.DeltaAngle(HRotation, hRot)) > 0.001f || !Mathf.Approximately(CurGravityMultiplier, num);
-			if (IsRealigning)
-			{
-				if (isInitialLoad)
-				{
-					VRotation = vRot;
-					HRotation = hRot;
-					isInitialLoad = false;
-				}
-				else
-				{
-					VRotation = Mathf.MoveTowardsAngle(VRotation, vRot, Time.deltaTime * vRotSpeed);
-					HRotation = Mathf.MoveTowardsAngle(HRotation, hRot, Time.deltaTime * hRotSpeed);
-				}
-				CurGravityMultiplier = num;
-				TrueHitPos = GetTrueHitPos();
-			}
-		}
-		if (UserTargetHitPos != lastSentTargetHitPos || TrueHitPos != lastSentTrueHitPos || RocketAmmoCount != rocketAmmoCount)
-		{
-			SendNetworkUpdate();
-		}
-	}
-
-	private Vector3 GetTrueHitPos()
-	{
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
-		Vector3 position = firingPoint.position;
-		Vector3 forward = firingPoint.forward;
-		TheoreticalProjectile projectile = new TheoreticalProjectile(position, ((Vector3)(ref forward)).normalized * rocketSpeed, CurGravityMultiplier);
-		int num = 0;
-		float dt = ((projectile.forward.y > 0f) ? 2f : 0.66f);
-		while (!NextRayHitSomething(ref projectile, dt) && (float)num < 128f)
-		{
-			num++;
-		}
-		return projectile.pos;
-	}
-
-	private bool NextRayHitSomething(ref TheoreticalProjectile projectile, float dt)
-	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ef: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ff: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0104: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0109: Unknown result type (might be due to invalid IL or missing references)
-		float num = Physics.gravity.y * projectile.gravityMult;
-		Vector3 pos = projectile.pos;
-		float num2 = Vector3Ex.MagnitudeXZ(projectile.forward) * dt;
-		float num3 = projectile.forward.y * dt + num * dt * dt * 0.5f;
-		Vector2 val = Vector3Ex.XZ2D(projectile.forward);
-		Vector2 val2 = ((Vector2)(ref val)).normalized * num2;
-		Vector3 val3 = default(Vector3);
-		((Vector3)(ref val3))._002Ector(val2.x, num3, val2.y);
-		ref Vector3 pos2 = ref projectile.pos;
-		pos2 += val3;
-		float y = projectile.forward.y + num * dt;
-		projectile.forward.y = y;
-		RaycastHit hit = default(RaycastHit);
-		if (Physics.Linecast(pos, projectile.pos, ref hit, 1084293393, (QueryTriggerInteraction)1))
-		{
-			projectile.pos = ((RaycastHit)(ref hit)).point;
-			BaseEntity entity = hit.GetEntity();
-			int num4;
-			if ((Object)(object)entity != (Object)null)
-			{
-				num4 = (entity.EqualNetID((BaseNetworkable)this) ? 1 : 0);
-				if (num4 != 0)
-				{
-					ref Vector3 pos3 = ref projectile.pos;
-					pos3 += projectile.forward * 1f;
-				}
-			}
-			else
-			{
-				num4 = 0;
-			}
-			return num4 == 0;
-		}
-		return false;
-	}
-
-	private float GetSurfaceHeight(Vector3 pos)
-	{
-		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
-		float height = TerrainMeta.HeightMap.GetHeight(pos);
-		float height2 = TerrainMeta.WaterMap.GetHeight(pos);
-		return Mathf.Max(height, height2);
-	}
-
-	private void SetRepaired()
-	{
-		SetFlag(Flags.Broken, b: false);
-	}
-
-	public override void PlayerServerInput(InputState inputState, BasePlayer player)
-	{
-		if (inputState.IsDown(BUTTON.FORWARD))
-		{
-			upDownInput = 1f;
-		}
-		else if (inputState.IsDown(BUTTON.BACKWARD))
-		{
-			upDownInput = -1f;
-		}
-		else
-		{
-			upDownInput = 0f;
-		}
-		if (inputState.IsDown(BUTTON.LEFT))
-		{
-			leftRightInput = -1f;
-		}
-		else if (inputState.IsDown(BUTTON.RIGHT))
-		{
-			leftRightInput = 1f;
-		}
-		else
-		{
-			leftRightInput = 0f;
-		}
-	}
-
-	public override void Save(SaveInfo info)
-	{
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a2: Unknown result type (might be due to invalid IL or missing references)
-		base.Save(info);
-		info.msg.mlrs = Pool.Get<MLRS>();
-		info.msg.mlrs.targetPos = UserTargetHitPos;
-		info.msg.mlrs.curHitPos = TrueHitPos;
-		info.msg.mlrs.rocketStorageID = rocketStorageInstance.uid;
-		info.msg.mlrs.dashboardStorageID = dashboardStorageInstance.uid;
-		info.msg.mlrs.ammoCount = (uint)RocketAmmoCount;
-		lastSentTargetHitPos = UserTargetHitPos;
-		lastSentTrueHitPos = TrueHitPos;
-	}
-
-	public bool AdminFixUp()
-	{
-		if (IsDead() || IsFiringRockets)
-		{
-			return false;
-		}
-		StorageContainer dashboardContainer = GetDashboardContainer();
-		if (!HasAimingModule)
-		{
-			dashboardContainer.inventory.AddItem(ItemManager.FindItemDefinition("aiming.module.mlrs"), 1, 0uL);
-		}
-		StorageContainer rocketContainer = GetRocketContainer();
-		ItemDefinition itemDefinition = ItemManager.FindItemDefinition("ammo.rocket.mlrs");
-		if (RocketAmmoCount < rocketContainer.inventory.capacity * itemDefinition.stackable)
-		{
-			int num = itemDefinition.stackable * rocketContainer.inventory.capacity - RocketAmmoCount;
-			while (num > 0)
-			{
-				int num2 = Mathf.Min(num, itemDefinition.stackable);
-				rocketContainer.inventory.AddItem(itemDefinition, itemDefinition.stackable, 0uL);
-				num -= num2;
-			}
-		}
-		SetRepaired();
-		SendNetworkUpdate();
-		return true;
-	}
-
-	private void Fire(BasePlayer owner)
-	{
-		UpdateStorageState();
-		if (CanFire && !((Object)(object)_mounted == (Object)null))
-		{
-			SetFlag(Flags.Reserved6, b: true);
-			radiusModIndex = 0;
-			nextRocketIndex = Mathf.Min(RocketAmmoCount - 1, rocketTubes.Length - 1);
-			rocketOwnerRef.Set(owner);
-			((FacepunchBehaviour)this).InvokeRepeating((Action)FireNextRocket, 0f, 0.5f);
-		}
-	}
-
-	private void EndFiring()
-	{
-		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
-		((FacepunchBehaviour)this).CancelInvoke((Action)FireNextRocket);
-		rocketOwnerRef.Set(null);
-		if (TryGetAimingModule(out var item))
-		{
-			item.LoseCondition(1f);
-		}
-		SetFlag(Flags.Reserved6, b: false, recursive: false, networkupdate: false);
-		SetFlag(Flags.Broken, b: true, recursive: false, networkupdate: false);
-		SendNetworkUpdate_Flags();
-		timeSinceBroken = TimeSince.op_Implicit(0f);
-	}
-
-	private void FireNextRocket()
-	{
-		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ad: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ca: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00dc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ec: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ef: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0101: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0102: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012c: Unknown result type (might be due to invalid IL or missing references)
-		RocketAmmoCount = GetRocketContainer().inventory.GetAmmoAmount((AmmoTypes)2048);
-		if (nextRocketIndex < 0 || nextRocketIndex >= RocketAmmoCount || IsBroken())
-		{
-			EndFiring();
-			return;
-		}
-		StorageContainer rocketContainer = GetRocketContainer();
-		Vector3 firingPos = firingPoint.position + firingPoint.rotation * rocketTubes[nextRocketIndex].firingOffset;
-		float num = 1f;
-		if (radiusModIndex < radiusMods.Length)
-		{
-			num = radiusMods[radiusModIndex];
-		}
-		radiusModIndex++;
-		Vector2 val = Random.insideUnitCircle * (targetAreaRadius - RocketDamageRadius) * num;
-		Vector3 targetPos = TrueHitPos + new Vector3(val.x, 0f, val.y);
-		float g;
-		Vector3 aimToTarget = GetAimToTarget(targetPos, out g);
-		if (TryFireProjectile(rocketContainer, (AmmoTypes)2048, firingPos, aimToTarget, rocketOwnerRef.Get(serverside: true) as BasePlayer, 0f, 0f, out var projectile))
-		{
-			projectile.gravityModifier = g / (0f - Physics.gravity.y);
-			nextRocketIndex--;
-		}
-		else
-		{
-			EndFiring();
-		}
-	}
-
-	private void UpdateStorageState()
-	{
-		Item item;
-		bool b = TryGetAimingModule(out item);
-		SetFlag(Flags.Reserved8, b);
-		RocketAmmoCount = GetRocketContainer().inventory.GetAmmoAmount((AmmoTypes)2048);
-	}
-
-	private bool TryGetAimingModule(out Item item)
-	{
-		ItemContainer inventory = GetDashboardContainer().inventory;
-		if (!inventory.IsEmpty())
-		{
-			item = inventory.itemList[0];
-			return true;
-		}
-		item = null;
-		return false;
-	}
-
-	[RPC_Server]
-	[RPC_Server.MaxDistance(3f)]
-	public void RPC_SetTargetHitPos(RPCMessage msg)
-	{
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-		BasePlayer player = msg.player;
-		if (PlayerIsMounted(player))
-		{
-			SetUserTargetHitPos(msg.read.Vector3());
-		}
-	}
-
-	[RPC_Server]
-	[RPC_Server.MaxDistance(3f)]
-	public void RPC_Fire_Rockets(RPCMessage msg)
-	{
-		BasePlayer player = msg.player;
-		if (PlayerIsMounted(player))
-		{
-			Fire(player);
-		}
-	}
-
-	[RPC_Server]
-	[RPC_Server.MaxDistance(3f)]
-	public void RPC_Open_Rockets(RPCMessage msg)
-	{
-		BasePlayer player = msg.player;
-		if (!((Object)(object)player == (Object)null) && CanBeLooted(player))
-		{
-			IItemContainerEntity rocketContainer = GetRocketContainer();
-			if (!rocketContainer.IsUnityNull())
-			{
-				rocketContainer.PlayerOpenLoot(player, "", doPositionChecks: false);
-			}
-			else
-			{
-				Debug.LogError((object)(((object)this).GetType().Name + ": No container component found."));
-			}
-		}
-	}
-
-	[RPC_Server]
-	[RPC_Server.MaxDistance(3f)]
-	public void RPC_Open_Dashboard(RPCMessage msg)
-	{
-		BasePlayer player = msg.player;
-		if (!((Object)(object)player == (Object)null) && CanBeLooted(player))
-		{
-			IItemContainerEntity dashboardContainer = GetDashboardContainer();
-			if (!dashboardContainer.IsUnityNull())
-			{
-				dashboardContainer.PlayerOpenLoot(player);
-			}
-			else
-			{
-				Debug.LogError((object)(((object)this).GetType().Name + ": No container component found."));
-			}
-		}
 	}
 
 	public override void InitShared()
@@ -1038,66 +587,24 @@ public class MLRS : BaseMountable
 
 	private void HitPosToRotation(Vector3 hitPos, out float hRot, out float vRot, out float g)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0004: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
 		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-		Vector3 aimToTarget = GetAimToTarget(hitPos, out g);
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
+		Vector3 aimToTarget = Ballistics.GetAimToTarget(firingPoint.position, hitPos, rocketSpeed, vRotMax, rocketBaseGravity, minRange, out g);
 		Quaternion val = Quaternion.LookRotation(aimToTarget, Vector3.up);
 		Vector3 eulerAngles = ((Quaternion)(ref val)).eulerAngles;
 		vRot = eulerAngles.x - 360f;
 		aimToTarget.y = 0f;
 		hRot = eulerAngles.y;
-	}
-
-	private Vector3 GetAimToTarget(Vector3 targetPos, out float g)
-	{
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00de: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ee: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ef: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f5: Unknown result type (might be due to invalid IL or missing references)
-		g = rocketBaseGravity;
-		float num = rocketSpeed;
-		Vector3 val = targetPos - firingPoint.position;
-		float num2 = Vector3Ex.Magnitude2D(val);
-		float y = val.y;
-		float num3 = Mathf.Sqrt(num * num * num * num - g * (g * (num2 * num2) + 2f * y * num * num));
-		float num4 = Mathf.Atan((num * num + num3) / (g * num2)) * 57.29578f;
-		float num5 = Mathf.Clamp(num4, 0f, 90f);
-		if (float.IsNaN(num4))
-		{
-			num5 = 45f;
-			g = ProjectileDistToGravity(num2, y, num5, num);
-		}
-		else if (num4 > vRotMax)
-		{
-			num5 = vRotMax;
-			g = ProjectileDistToGravity(Mathf.Max(num2, minRange), y, num5, num);
-		}
-		((Vector3)(ref val)).Normalize();
-		val.y = 0f;
-		Vector3 val2 = Vector3.Cross(val, Vector3.up);
-		val = Quaternion.AngleAxis(num5, val2) * val;
-		return val;
 	}
 
 	private static float ProjectileDistToSpeed(float x, float y, float angle, float g, float fallbackV)
@@ -1111,15 +618,362 @@ public class MLRS : BaseMountable
 		return num2;
 	}
 
-	private static float ProjectileDistToGravity(float x, float y, float θ, float v)
+	protected override void OnChildAdded(BaseEntity child)
 	{
-		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
-		float num = θ * ((float)Math.PI / 180f);
-		float num2 = (v * v * x * Mathf.Sin(2f * num) - 2f * v * v * y * Mathf.Cos(num) * Mathf.Cos(num)) / (x * x);
-		if (float.IsNaN(num2) || num2 < 0.01f)
+		base.OnChildAdded(child);
+		if (base.isServer)
 		{
-			num2 = 0f - Physics.gravity.y;
+			if (child.prefabID == rocketStoragePrefab.GetEntity().prefabID)
+			{
+				rocketStorageInstance.Set(child);
+			}
+			if (child.prefabID == dashboardStoragePrefab.GetEntity().prefabID)
+			{
+				dashboardStorageInstance.Set(child);
+			}
 		}
-		return num2;
+	}
+
+	public override void VehicleFixedUpdate()
+	{
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01fa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0200: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0092: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0093: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_020d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0213: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01bd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f2: Unknown result type (might be due to invalid IL or missing references)
+		base.VehicleFixedUpdate();
+		if (IsBroken())
+		{
+			if (!(TimeSince.op_Implicit(timeSinceBroken) >= brokenDownMinutes * 60f))
+			{
+				SetFlag(Flags.Reserved8, TryGetAimingModule(out var _));
+				return;
+			}
+			SetRepaired();
+		}
+		int rocketAmmoCount = RocketAmmoCount;
+		UpdateStorageState();
+		if (CanBeUsed && AnyMounted())
+		{
+			Vector3 userTargetHitPos = UserTargetHitPos;
+			userTargetHitPos += Vector3.forward * upDownInput * 75f * Time.fixedDeltaTime;
+			userTargetHitPos += Vector3.right * leftRightInput * 75f * Time.fixedDeltaTime;
+			SetUserTargetHitPos(userTargetHitPos);
+		}
+		if (!IsFiringRockets)
+		{
+			HitPosToRotation(trueTargetHitPos, out var hRot, out var vRot, out var g);
+			float num = g / (0f - Physics.gravity.y);
+			IsRealigning = Mathf.Abs(Mathf.DeltaAngle(VRotation, vRot)) > 0.001f || Mathf.Abs(Mathf.DeltaAngle(HRotation, hRot)) > 0.001f || !Mathf.Approximately(CurGravityMultiplier, num);
+			if (IsRealigning)
+			{
+				if (isInitialLoad)
+				{
+					VRotation = vRot;
+					HRotation = hRot;
+					isInitialLoad = false;
+				}
+				else
+				{
+					VRotation = Mathf.MoveTowardsAngle(VRotation, vRot, Time.deltaTime * vRotSpeed);
+					HRotation = Mathf.MoveTowardsAngle(HRotation, hRot, Time.deltaTime * hRotSpeed);
+				}
+				CurGravityMultiplier = num;
+				Ballistics.TryGetPhysicsProjectileHitPos(firingPoint.position, firingPoint.forward, rocketSpeed, Physics.gravity.y * CurGravityMultiplier, out var result, 2f, 0.66f, 128f, this);
+				TrueHitPos = result;
+			}
+		}
+		if (UserTargetHitPos != lastSentTargetHitPos || TrueHitPos != lastSentTrueHitPos || RocketAmmoCount != rocketAmmoCount)
+		{
+			SendNetworkUpdate();
+		}
+	}
+
+	private float GetSurfaceHeight(Vector3 pos)
+	{
+		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		float height = TerrainMeta.HeightMap.GetHeight(pos);
+		float height2 = TerrainMeta.WaterMap.GetHeight(pos);
+		return Mathf.Max(height, height2);
+	}
+
+	private void SetRepaired()
+	{
+		SetFlag(Flags.Broken, b: false);
+	}
+
+	public override void PlayerServerInput(InputState inputState, BasePlayer player)
+	{
+		if (inputState.IsDown(BUTTON.FORWARD))
+		{
+			upDownInput = 1f;
+		}
+		else if (inputState.IsDown(BUTTON.BACKWARD))
+		{
+			upDownInput = -1f;
+		}
+		else
+		{
+			upDownInput = 0f;
+		}
+		if (inputState.IsDown(BUTTON.LEFT))
+		{
+			leftRightInput = -1f;
+		}
+		else if (inputState.IsDown(BUTTON.RIGHT))
+		{
+			leftRightInput = 1f;
+		}
+		else
+		{
+			leftRightInput = 0f;
+		}
+	}
+
+	public override void Save(SaveInfo info)
+	{
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a2: Unknown result type (might be due to invalid IL or missing references)
+		base.Save(info);
+		info.msg.mlrs = Pool.Get<MLRS>();
+		info.msg.mlrs.targetPos = UserTargetHitPos;
+		info.msg.mlrs.curHitPos = TrueHitPos;
+		info.msg.mlrs.rocketStorageID = rocketStorageInstance.uid;
+		info.msg.mlrs.dashboardStorageID = dashboardStorageInstance.uid;
+		info.msg.mlrs.ammoCount = (uint)RocketAmmoCount;
+		lastSentTargetHitPos = UserTargetHitPos;
+		lastSentTrueHitPos = TrueHitPos;
+	}
+
+	public bool AdminFixUp()
+	{
+		if (IsDead() || IsFiringRockets)
+		{
+			return false;
+		}
+		StorageContainer dashboardContainer = GetDashboardContainer();
+		if (!HasAimingModule)
+		{
+			dashboardContainer.inventory.AddItem(ItemManager.FindItemDefinition("aiming.module.mlrs"), 1, 0uL);
+		}
+		StorageContainer rocketContainer = GetRocketContainer();
+		ItemDefinition itemDefinition = ItemManager.FindItemDefinition("ammo.rocket.mlrs");
+		int num = rocketContainer.inventory.capacity * itemDefinition.stackable;
+		if (RocketAmmoCount < num)
+		{
+			int num2 = num - RocketAmmoCount;
+			while (num2 > 0)
+			{
+				int num3 = Mathf.Min(num2, itemDefinition.stackable);
+				rocketContainer.inventory.AddItem(itemDefinition, itemDefinition.stackable, 0uL);
+				num2 -= num3;
+			}
+		}
+		SetRepaired();
+		SendNetworkUpdate();
+		return true;
+	}
+
+	private void Fire(BasePlayer owner)
+	{
+		UpdateStorageState();
+		if (CanFire && !((Object)(object)_mounted == (Object)null))
+		{
+			SetFlag(Flags.Reserved6, b: true);
+			radiusModIndex = 0;
+			nextRocketIndex = Mathf.Min(RocketAmmoCount - 1, rocketTubes.Length - 1);
+			rocketOwnerRef.Set(owner);
+			((FacepunchBehaviour)this).InvokeRepeating((Action)FireNextRocket, 0f, 0.5f);
+		}
+	}
+
+	private void EndFiring()
+	{
+		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
+		((FacepunchBehaviour)this).CancelInvoke((Action)FireNextRocket);
+		rocketOwnerRef.Set(null);
+		if (TryGetAimingModule(out var item))
+		{
+			item.LoseCondition(1f);
+		}
+		SetFlag(Flags.Reserved6, b: false, recursive: false, networkupdate: false);
+		SetFlag(Flags.Broken, b: true, recursive: false, networkupdate: false);
+		SendNetworkUpdate_Flags();
+		timeSinceBroken = TimeSince.op_Implicit(0f);
+	}
+
+	private void FireNextRocket()
+	{
+		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ad: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ca: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00dc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ec: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0115: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0123: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0124: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014e: Unknown result type (might be due to invalid IL or missing references)
+		RocketAmmoCount = GetRocketContainer().inventory.GetAmmoAmount((AmmoTypes)2048);
+		if (nextRocketIndex < 0 || nextRocketIndex >= RocketAmmoCount || IsBroken())
+		{
+			EndFiring();
+			return;
+		}
+		StorageContainer rocketContainer = GetRocketContainer();
+		Vector3 firingPos = firingPoint.position + firingPoint.rotation * rocketTubes[nextRocketIndex].firingOffset;
+		float num = 1f;
+		if (radiusModIndex < radiusMods.Length)
+		{
+			num = radiusMods[radiusModIndex];
+		}
+		radiusModIndex++;
+		Vector2 val = Random.insideUnitCircle * (targetAreaRadius - RocketDamageRadius) * num;
+		Vector3 target = TrueHitPos + new Vector3(val.x, 0f, val.y);
+		float requiredGravity;
+		Vector3 aimToTarget = Ballistics.GetAimToTarget(firingPoint.position, target, rocketSpeed, vRotMax, rocketBaseGravity, minRange, out requiredGravity);
+		if (TryFireProjectile(rocketContainer, (AmmoTypes)2048, firingPos, aimToTarget, rocketOwnerRef.Get(serverside: true) as BasePlayer, 0f, 0f, out var projectile))
+		{
+			projectile.gravityModifier = requiredGravity / (0f - Physics.gravity.y);
+			nextRocketIndex--;
+		}
+		else
+		{
+			EndFiring();
+		}
+	}
+
+	private void UpdateStorageState()
+	{
+		Item item;
+		bool b = TryGetAimingModule(out item);
+		SetFlag(Flags.Reserved8, b);
+		RocketAmmoCount = GetRocketContainer().inventory.GetAmmoAmount((AmmoTypes)2048);
+	}
+
+	private bool TryGetAimingModule(out Item item)
+	{
+		if ((Object)(object)GetDashboardContainer() == (Object)null)
+		{
+			item = null;
+			return false;
+		}
+		ItemContainer inventory = GetDashboardContainer().inventory;
+		if (!inventory.IsEmpty())
+		{
+			item = inventory.itemList[0];
+			return true;
+		}
+		item = null;
+		return false;
+	}
+
+	[RPC_Server]
+	[RPC_Server.MaxDistance(3f)]
+	public void RPC_SetTargetHitPos(RPCMessage msg)
+	{
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		BasePlayer player = msg.player;
+		if (PlayerIsMounted(player))
+		{
+			SetUserTargetHitPos(msg.read.Vector3());
+		}
+	}
+
+	[RPC_Server]
+	[RPC_Server.MaxDistance(3f)]
+	public void RPC_Fire_Rockets(RPCMessage msg)
+	{
+		BasePlayer player = msg.player;
+		if (PlayerIsMounted(player))
+		{
+			Fire(player);
+		}
+	}
+
+	[RPC_Server]
+	[RPC_Server.MaxDistance(3f)]
+	public void RPC_Open_Rockets(RPCMessage msg)
+	{
+		BasePlayer player = msg.player;
+		if (!((Object)(object)player == (Object)null) && CanBeLooted(player))
+		{
+			IItemContainerEntity rocketContainer = GetRocketContainer();
+			if (!rocketContainer.IsUnityNull())
+			{
+				rocketContainer.PlayerOpenLoot(player, "", doPositionChecks: false);
+			}
+			else
+			{
+				Debug.LogError((object)(((object)this).GetType().Name + ": No container component found."));
+			}
+		}
+	}
+
+	[RPC_Server]
+	[RPC_Server.MaxDistance(3f)]
+	public void RPC_Open_Dashboard(RPCMessage msg)
+	{
+		BasePlayer player = msg.player;
+		if (!((Object)(object)player == (Object)null) && CanBeLooted(player))
+		{
+			IItemContainerEntity dashboardContainer = GetDashboardContainer();
+			if (!dashboardContainer.IsUnityNull())
+			{
+				dashboardContainer.PlayerOpenLoot(player);
+			}
+			else
+			{
+				Debug.LogError((object)(((object)this).GetType().Name + ": No container component found."));
+			}
+		}
 	}
 }

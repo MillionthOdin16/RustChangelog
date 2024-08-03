@@ -1,8 +1,25 @@
 using System;
 using Network;
+using UnityEngine;
 
 public class CommunityEntity : PointEntity
 {
+	private class Countdown : MonoBehaviour
+	{
+		public string command = "";
+
+		public int endTime;
+
+		public int startTime;
+
+		public int step = 1;
+	}
+
+	private class FadeOut : MonoBehaviour
+	{
+		public float duration;
+	}
+
 	public static CommunityEntity ServerInstance;
 
 	public static CommunityEntity ClientInstance;

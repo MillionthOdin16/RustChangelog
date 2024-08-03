@@ -18,7 +18,7 @@ public class DungeonBaseLink : MonoBehaviour
 
 	internal DungeonBaseInfo Dungeon;
 
-	public MeshRenderer[] MapRenderers;
+	public RendererLOD[] MapRendererLods = new RendererLOD[0];
 
 	private List<DungeonBaseSocket> sockets;
 
@@ -50,7 +50,15 @@ public class DungeonBaseLink : MonoBehaviour
 		}
 	}
 
-	protected void Start()
+	protected void Awake()
+	{
+		if (Object.op_Implicit((Object)(object)TerrainMeta.Path))
+		{
+			TerrainMeta.Path.DungeonBaseLinks.Add(this);
+		}
+	}
+
+	internal void Initialize()
 	{
 		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
 		if (!((Object)(object)TerrainMeta.Path == (Object)null))

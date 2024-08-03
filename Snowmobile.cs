@@ -7,22 +7,8 @@ using Rust;
 using UnityEngine;
 using UnityEngine.Assertions;
 
-public class Snowmobile : GroundVehicle, CarPhysics<Snowmobile>.ICar, TriggerHurtNotChild.IHurtTriggerUser, VehicleChassisVisuals<Snowmobile>.IClientWheelUser, IPrefabPreProcess
+public class Snowmobile : GroundVehicle, VehicleChassisVisuals<Snowmobile>.IClientWheelUser, IPrefabPreProcess, CarPhysics<Snowmobile>.ICar, TriggerHurtNotChild.IHurtTriggerUser
 {
-	private CarPhysics<Snowmobile> carPhysics;
-
-	private VehicleTerrainHandler serverTerrainHandler;
-
-	private CarWheel[] wheels;
-
-	private TimeSince timeSinceLastUsed;
-
-	private const float DECAY_TICK_TIME = 60f;
-
-	private float prevTerrainModDrag;
-
-	private TimeSince timeSinceTerrainModCheck;
-
 	[Header("Snowmobile")]
 	[SerializeField]
 	private Transform centreOfMassTransform;
@@ -124,8 +110,6 @@ public class Snowmobile : GroundVehicle, CarPhysics<Snowmobile>.ICar, TriggerHur
 
 	private float _brake;
 
-	private float _steer;
-
 	private float _mass = -1f;
 
 	public const Flags Flag_Slowmode = Flags.Reserved8;
@@ -136,17 +120,21 @@ public class Snowmobile : GroundVehicle, CarPhysics<Snowmobile>.ICar, TriggerHur
 
 	private const float FORCE_MULTIPLIER = 10f;
 
-	public VehicleTerrainHandler.Surface OnSurface
-	{
-		get
-		{
-			if (serverTerrainHandler == null)
-			{
-				return VehicleTerrainHandler.Surface.Default;
-			}
-			return serverTerrainHandler.OnSurface;
-		}
-	}
+	private float _steer;
+
+	private CarPhysics<Snowmobile> carPhysics;
+
+	private VehicleTerrainHandler serverTerrainHandler;
+
+	private CarWheel[] wheels;
+
+	private TimeSince timeSinceLastUsed;
+
+	private const float DECAY_TICK_TIME = 60f;
+
+	private float prevTerrainModDrag;
+
+	private TimeSince timeSinceTerrainModCheck;
 
 	public float ThrottleInput
 	{
@@ -177,18 +165,6 @@ public class Snowmobile : GroundVehicle, CarPhysics<Snowmobile>.ICar, TriggerHur
 	}
 
 	public bool IsBraking => BrakeInput > 0f;
-
-	public float SteerInput
-	{
-		get
-		{
-			return _steer;
-		}
-		protected set
-		{
-			_steer = Mathf.Clamp(value, -1f, 1f);
-		}
-	}
 
 	public float SteerAngle
 	{
@@ -255,6 +231,30 @@ public class Snowmobile : GroundVehicle, CarPhysics<Snowmobile>.ICar, TriggerHur
 		}
 	}
 
+	public float SteerInput
+	{
+		get
+		{
+			return _steer;
+		}
+		protected set
+		{
+			_steer = Mathf.Clamp(value, -1f, 1f);
+		}
+	}
+
+	public VehicleTerrainHandler.Surface OnSurface
+	{
+		get
+		{
+			if (serverTerrainHandler == null)
+			{
+				return VehicleTerrainHandler.Surface.Default;
+			}
+			return serverTerrainHandler.OnSurface;
+		}
+	}
+
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
 		TimeWarning val = TimeWarning.New("Snowmobile.OnRpcMessage", 0);
@@ -265,7 +265,7 @@ public class Snowmobile : GroundVehicle, CarPhysics<Snowmobile>.ICar, TriggerHur
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_OpenFuel "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_OpenFuel "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_OpenFuel", 0);
 				try
@@ -301,7 +301,7 @@ public class Snowmobile : GroundVehicle, CarPhysics<Snowmobile>.ICar, TriggerHur
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_OpenItemStorage "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_OpenItemStorage "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_OpenItemStorage", 0);
 				try
@@ -353,6 +353,95 @@ public class Snowmobile : GroundVehicle, CarPhysics<Snowmobile>.ICar, TriggerHur
 			((IDisposable)val)?.Dispose();
 		}
 		return base.OnRpcMessage(player, rpc, msg);
+	}
+
+	public override void Load(LoadInfo info)
+	{
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		base.Load(info);
+		if (info.msg.snowmobile != null)
+		{
+			itemStorageInstance.uid = info.msg.snowmobile.storageID;
+			engineController.FuelSystem.SetInstanceID(info.msg.snowmobile.fuelStorageID);
+			cachedFuelFraction = info.msg.snowmobile.fuelFraction;
+		}
+	}
+
+	public float GetMaxDriveForce()
+	{
+		return (float)engineKW * 10f * GetPerformanceFraction();
+	}
+
+	public override float GetMaxForwardSpeed()
+	{
+		return GetMaxDriveForce() / Mass * 15f;
+	}
+
+	public override float GetThrottleInput()
+	{
+		return ThrottleInput;
+	}
+
+	public override float GetBrakeInput()
+	{
+		return BrakeInput;
+	}
+
+	public bool GetSteerSpeedMod()
+	{
+		return false;
+	}
+
+	public virtual float GetSteerMaxMult()
+	{
+		return 1f;
+	}
+
+	public float GetPerformanceFraction()
+	{
+		float num = Mathf.InverseLerp(0.25f, 0.5f, base.healthFraction);
+		return Mathf.Lerp(0.5f, 1f, num);
+	}
+
+	public float GetFuelFraction()
+	{
+		if (base.isServer)
+		{
+			return engineController.FuelSystem.GetFuelFraction();
+		}
+		return cachedFuelFraction;
+	}
+
+	public override bool CanBeLooted(BasePlayer player)
+	{
+		if (!base.CanBeLooted(player))
+		{
+			return false;
+		}
+		if (!PlayerIsMounted(player))
+		{
+			return !IsOn();
+		}
+		return true;
+	}
+
+	public override void OnFlagsChanged(Flags old, Flags next)
+	{
+		base.OnFlagsChanged(old, next);
+		if (base.isServer && GameInfo.HasAchievements && !old.HasFlag(Flags.On) && next.HasFlag(Flags.On))
+		{
+			BasePlayer driver = GetDriver();
+			if ((Object)(object)driver != (Object)null && (Object)(object)driver.FindTrigger<TriggerSnowmobileAchievement>() != (Object)null)
+			{
+				driver.GiveAchievement("DRIVE_SNOWMOBILE");
+			}
+		}
+	}
+
+	public float GetSteerInput()
+	{
+		return SteerInput;
 	}
 
 	public override void ServerInit()
@@ -431,13 +520,13 @@ public class Snowmobile : GroundVehicle, CarPhysics<Snowmobile>.ICar, TriggerHur
 	{
 		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
 		if (!IsDriver(player))
 		{
 			return;
 		}
 		timeSinceLastUsed = TimeSince.op_Implicit(0f);
-		if (inputState.IsDown(BUTTON.DUCK))
+		if (inputState.IsDown(BUTTON.FIRE_THIRD))
 		{
 			SteerInput += inputState.MouseDelta().x * 0.1f;
 		}
@@ -537,8 +626,8 @@ public class Snowmobile : GroundVehicle, CarPhysics<Snowmobile>.ICar, TriggerHur
 	{
 		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00a0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
 		base.Save(info);
 		info.msg.snowmobile = Pool.Get<Snowmobile>();
 		info.msg.snowmobile.steerInput = SteerInput;
@@ -546,7 +635,8 @@ public class Snowmobile : GroundVehicle, CarPhysics<Snowmobile>.ICar, TriggerHur
 		info.msg.snowmobile.throttleInput = ThrottleInput;
 		info.msg.snowmobile.brakeInput = BrakeInput;
 		info.msg.snowmobile.storageID = itemStorageInstance.uid;
-		info.msg.snowmobile.fuelStorageID = GetFuelSystem().fuelStorageInstance.uid;
+		info.msg.snowmobile.fuelStorageID = GetFuelSystem().GetInstanceID();
+		info.msg.snowmobile.fuelFraction = GetFuelFraction();
 	}
 
 	public override int StartingFuelUnits()
@@ -589,7 +679,7 @@ public class Snowmobile : GroundVehicle, CarPhysics<Snowmobile>.ICar, TriggerHur
 		}
 		else if (MountEligable(player))
 		{
-			BaseMountable baseMountable = (HasDriver() ? GetIdealMountPointFor(player) : mountPoints[0].mountable);
+			BaseMountable baseMountable = ((HasDriver() || player.IsRestrained) ? GetIdealMountPointFor(player) : mountPoints[0].mountable);
 			if ((Object)(object)baseMountable != (Object)null)
 			{
 				baseMountable.AttemptMount(player, doMountChecks);
@@ -632,13 +722,13 @@ public class Snowmobile : GroundVehicle, CarPhysics<Snowmobile>.ICar, TriggerHur
 			byte num = (byte)((ThrottleInput + 1f) * 7f);
 			byte b = (byte)(BrakeInput * 15f);
 			byte arg = (byte)(num + (b << 4));
-			ClientRPC(null, "SnowmobileUpdate", SteerInput, arg, DriveWheelVelocity, GetFuelFraction());
+			ClientRPC(RpcTarget.NetworkGroup("SnowmobileUpdate"), SteerInput, arg, DriveWheelVelocity, GetFuelFraction());
 		}
 	}
 
 	public override void OnEngineStartFailed()
 	{
-		ClientRPC(null, "EngineStartFailed");
+		ClientRPC(RpcTarget.NetworkGroup("EngineStartFailed"));
 	}
 
 	public override void ScaleDamageForPlayer(BasePlayer player, HitInfo info)
@@ -668,90 +758,6 @@ public class Snowmobile : GroundVehicle, CarPhysics<Snowmobile>.ICar, TriggerHur
 			if ((Object)(object)itemContainer != (Object)null)
 			{
 				itemContainer.PlayerOpenLoot(player);
-			}
-		}
-	}
-
-	public override void Load(LoadInfo info)
-	{
-		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-		base.Load(info);
-		if (info.msg.snowmobile != null)
-		{
-			itemStorageInstance.uid = info.msg.snowmobile.storageID;
-			engineController.FuelSystem.fuelStorageInstance.uid = info.msg.snowmobile.fuelStorageID;
-			cachedFuelFraction = info.msg.snowmobile.fuelFraction;
-		}
-	}
-
-	public float GetMaxDriveForce()
-	{
-		return (float)engineKW * 10f * GetPerformanceFraction();
-	}
-
-	public override float GetMaxForwardSpeed()
-	{
-		return GetMaxDriveForce() / Mass * 15f;
-	}
-
-	public override float GetThrottleInput()
-	{
-		return ThrottleInput;
-	}
-
-	public override float GetBrakeInput()
-	{
-		return BrakeInput;
-	}
-
-	public float GetSteerInput()
-	{
-		return SteerInput;
-	}
-
-	public bool GetSteerModInput()
-	{
-		return false;
-	}
-
-	public float GetPerformanceFraction()
-	{
-		float num = Mathf.InverseLerp(0.25f, 0.5f, base.healthFraction);
-		return Mathf.Lerp(0.5f, 1f, num);
-	}
-
-	public float GetFuelFraction()
-	{
-		if (base.isServer)
-		{
-			return engineController.FuelSystem.GetFuelFraction();
-		}
-		return cachedFuelFraction;
-	}
-
-	public override bool CanBeLooted(BasePlayer player)
-	{
-		if (!base.CanBeLooted(player))
-		{
-			return false;
-		}
-		if (!PlayerIsMounted(player))
-		{
-			return !IsOn();
-		}
-		return true;
-	}
-
-	public override void OnFlagsChanged(Flags old, Flags next)
-	{
-		base.OnFlagsChanged(old, next);
-		if (base.isServer && GameInfo.HasAchievements && !old.HasFlag(Flags.On) && next.HasFlag(Flags.On))
-		{
-			BasePlayer driver = GetDriver();
-			if ((Object)(object)driver != (Object)null && (Object)(object)driver.FindTrigger<TriggerSnowmobileAchievement>() != (Object)null)
-			{
-				driver.GiveAchievement("DRIVE_SNOWMOBILE");
 			}
 		}
 	}

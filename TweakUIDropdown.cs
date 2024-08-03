@@ -42,6 +42,7 @@ public class TweakUIDropdown : TweakUIBase
 	{
 		base.Init();
 		DropdownItemPrefab.SetActive(false);
+		((Component)Dropdown).gameObject.SetActive(true);
 		UpdateDropdownOptions();
 		Opener.SetToggleFalse();
 		ResetToConvar();

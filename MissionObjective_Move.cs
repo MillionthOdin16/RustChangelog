@@ -9,31 +9,58 @@ public class MissionObjective_Move : MissionObjective
 
 	public bool use2D;
 
+	public BaseMountable requiredMountable;
+
+	public bool shouldPing;
+
+	public BasePlayer.PingType pingType = BasePlayer.PingType.GoTo;
+
 	public override void ObjectiveStarted(BasePlayer playerFor, int index, BaseMission.MissionInstance instance)
 	{
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
 		base.ObjectiveStarted(playerFor, index, instance);
 		instance.missionLocation = instance.GetMissionPoint(positionName, playerFor);
 		playerFor.MissionDirty();
+		if (shouldPing)
+		{
+			TutorialIsland currentTutorialIsland = playerFor.GetCurrentTutorialIsland();
+			if ((Object)(object)currentTutorialIsland != (Object)null)
+			{
+				playerFor.AddPingAtLocation(pingType, instance.missionLocation, 86400f, currentTutorialIsland.net.ID);
+			}
+		}
 	}
 
 	public override void Think(int index, BaseMission.MissionInstance instance, BasePlayer assignee, float delta)
 	{
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c2: Unknown result type (might be due to invalid IL or missing references)
 		base.Think(index, instance, assignee, delta);
-		if (ShouldThink(index, instance))
+		if (!ShouldThink(index, instance) || ((Object)(object)requiredMountable != (Object)null && (!assignee.isMounted || assignee.GetMounted().prefabID != requiredMountable.prefabID)))
 		{
-			Vector3 missionPoint = instance.GetMissionPoint(positionName, assignee);
-			if ((use2D ? Vector3Ex.Distance2D(missionPoint, ((Component)assignee).transform.position) : Vector3.Distance(missionPoint, ((Component)assignee).transform.position)) <= distForCompletion)
+			return;
+		}
+		Vector3 missionPoint = instance.GetMissionPoint(positionName, assignee);
+		if (!((use2D ? Vector3Ex.Distance2D(missionPoint, ((Component)assignee).transform.position) : Vector3.Distance(missionPoint, ((Component)assignee).transform.position)) <= distForCompletion))
+		{
+			return;
+		}
+		CompleteObjective(index, instance, assignee);
+		if (shouldPing)
+		{
+			TutorialIsland currentTutorialIsland = assignee.GetCurrentTutorialIsland();
+			if ((Object)(object)currentTutorialIsland != (Object)null)
 			{
-				CompleteObjective(index, instance, assignee);
-				assignee.MissionDirty();
+				assignee.RemovePingAtLocation(pingType, instance.missionLocation, float.MaxValue, currentTutorialIsland.net.ID);
 			}
 		}
 	}

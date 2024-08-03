@@ -38,7 +38,7 @@ public class WheelSwitch : IOEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - BeginRotate "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - BeginRotate "));
 				}
 				TimeWarning val2 = TimeWarning.New("BeginRotate", 0);
 				try
@@ -89,7 +89,7 @@ public class WheelSwitch : IOEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - CancelRotate "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - CancelRotate "));
 				}
 				TimeWarning val2 = TimeWarning.New("CancelRotate", 0);
 				try

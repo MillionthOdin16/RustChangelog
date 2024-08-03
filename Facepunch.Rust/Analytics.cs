@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -21,6 +22,216 @@ public static class Analytics
 {
 	public static class Azure
 	{
+		public enum ResourceMode
+		{
+			Produced,
+			Consumed
+		}
+
+		private static class EventIds
+		{
+			public const string EntityBuilt = "entity_built";
+
+			public const string EntityPickup = "entity_pickup";
+
+			public const string EntityDamage = "entity_damage";
+
+			public const string PlayerRespawn = "player_respawn";
+
+			public const string ExplosiveLaunched = "explosive_launch";
+
+			public const string Explosion = "explosion";
+
+			public const string ItemEvent = "item_event";
+
+			public const string EntitySum = "entity_sum";
+
+			public const string ItemSum = "item_sum";
+
+			public const string ItemDespawn = "item_despawn";
+
+			public const string ItemDropped = "item_drop";
+
+			public const string ItemPickup = "item_pickup";
+
+			public const string AntihackViolation = "antihack_violation";
+
+			public const string AntihackViolationDetailed = "antihack_violation_detailed";
+
+			public const string PlayerConnect = "player_connect";
+
+			public const string PlayerDisconnect = "player_disconnect";
+
+			public const string ConsumableUsed = "consumeable_used";
+
+			public const string MedUsed = "med_used";
+
+			public const string ResearchStarted = "research_start";
+
+			public const string BlueprintLearned = "blueprint_learned";
+
+			public const string TeamChanged = "team_change";
+
+			public const string EntityAuthChange = "auth_change";
+
+			public const string VendingOrderChanged = "vending_changed";
+
+			public const string VendingSale = "vending_sale";
+
+			public const string ChatMessage = "chat";
+
+			public const string BlockUpgrade = "block_upgrade";
+
+			public const string BlockDemolish = "block_demolish";
+
+			public const string ItemRepair = "item_repair";
+
+			public const string EntityRepair = "entity_repair";
+
+			public const string ItemSkinned = "item_skinned";
+
+			public const string ItemAggregate = "item_aggregate";
+
+			public const string CodelockChanged = "code_change";
+
+			public const string CodelockEntered = "code_enter";
+
+			public const string SleepingBagAssign = "sleeping_bag_assign";
+
+			public const string FallDamage = "fall_damage";
+
+			public const string PlayerWipeIdSet = "player_wipe_id_set";
+
+			public const string ServerInfo = "server_info";
+
+			public const string UnderwaterCrateUntied = "crate_untied";
+
+			public const string VehiclePurchased = "vehicle_purchase";
+
+			public const string NPCVendor = "npc_vendor";
+
+			public const string BlueprintsOnline = "blueprint_aggregate_online";
+
+			public const string PlayerPositions = "player_positions";
+
+			public const string ProjectileInvalid = "projectile_invalid";
+
+			public const string ItemDefinitions = "item_definitions";
+
+			public const string KeycardSwiped = "keycard_swiped";
+
+			public const string EntitySpawned = "entity_spawned";
+
+			public const string EntityKilled = "entity_killed";
+
+			public const string HackableCrateStarted = "hackable_crate_started";
+
+			public const string HackableCrateEnded = "hackable_crate_ended";
+
+			public const string StashHidden = "stash_hidden";
+
+			public const string StashRevealed = "stash_reveal";
+
+			public const string EntityManifest = "entity_manifest";
+
+			public const string LootEntity = "loot_entity";
+
+			public const string OnlineTeams = "online_teams";
+
+			public const string Gambling = "gambing";
+
+			public const string BuildingBlockColor = "building_block_color";
+
+			public const string MissionComplete = "mission_complete";
+
+			public const string PlayerPinged = "player_pinged";
+
+			public const string BagUnclaim = "bag_unclaim";
+
+			public const string SteamAuth = "steam_auth";
+
+			public const string ParachuteUsed = "parachute_used";
+
+			public const string MountEntity = "mount";
+
+			public const string DismountEntity = "dismount";
+
+			public const string BurstToggle = "burst_toggle";
+
+			public const string TutorialStarted = "tutorial_started";
+
+			public const string TutorialCompleted = "tutorial_completed";
+
+			public const string TutorialQuit = "tutorial_quit";
+
+			public const string BaseInteraction = "base_interaction";
+
+			public const string PlayerDeath = "player_death";
+
+			public const string CarShredded = "car_shredded";
+		}
+
+		private struct SimpleItemAmount
+		{
+			public string ItemName;
+
+			public int Amount;
+
+			public ulong Skin;
+
+			public float Condition;
+
+			public SimpleItemAmount(Item item)
+			{
+				ItemName = item.info.shortname;
+				Amount = item.amount;
+				Skin = item.skin;
+				Condition = item.conditionNormalized;
+			}
+		}
+
+		private struct FiredProjectileKey : IEquatable<FiredProjectileKey>
+		{
+			public ulong UserId;
+
+			public int ProjectileId;
+
+			public FiredProjectileKey(ulong userId, int projectileId)
+			{
+				UserId = userId;
+				ProjectileId = projectileId;
+			}
+
+			public bool Equals(FiredProjectileKey other)
+			{
+				if (other.UserId == UserId)
+				{
+					return other.ProjectileId == ProjectileId;
+				}
+				return false;
+			}
+		}
+
+		private class PendingFiredProjectile : IPooled
+		{
+			public EventRecord Record;
+
+			public BasePlayer.FiredProjectile FiredProjectile;
+
+			public bool Hit;
+
+			public void EnterPool()
+			{
+				Hit = false;
+				Record = null;
+				FiredProjectile = null;
+			}
+
+			public void LeavePool()
+			{
+			}
+		}
+
 		private struct EntitySumItem
 		{
 			public uint PrefabId;
@@ -151,203 +362,13 @@ public static class Analytics
 			}
 		}
 
-		public enum ResourceMode
-		{
-			Produced,
-			Consumed
-		}
-
-		private static class EventIds
-		{
-			public const string EntityBuilt = "entity_built";
-
-			public const string EntityPickup = "entity_pickup";
-
-			public const string EntityDamage = "entity_damage";
-
-			public const string PlayerRespawn = "player_respawn";
-
-			public const string ExplosiveLaunched = "explosive_launch";
-
-			public const string Explosion = "explosion";
-
-			public const string ItemEvent = "item_event";
-
-			public const string EntitySum = "entity_sum";
-
-			public const string ItemSum = "item_sum";
-
-			public const string ItemDespawn = "item_despawn";
-
-			public const string ItemDropped = "item_drop";
-
-			public const string ItemPickup = "item_pickup";
-
-			public const string AntihackViolation = "antihack_violation";
-
-			public const string AntihackViolationDetailed = "antihack_violation_detailed";
-
-			public const string PlayerConnect = "player_connect";
-
-			public const string PlayerDisconnect = "player_disconnect";
-
-			public const string ConsumableUsed = "consumeable_used";
-
-			public const string MedUsed = "med_used";
-
-			public const string ResearchStarted = "research_start";
-
-			public const string BlueprintLearned = "blueprint_learned";
-
-			public const string TeamChanged = "team_change";
-
-			public const string EntityAuthChange = "auth_change";
-
-			public const string VendingOrderChanged = "vending_changed";
-
-			public const string VendingSale = "vending_sale";
-
-			public const string ChatMessage = "chat";
-
-			public const string BlockUpgrade = "block_upgrade";
-
-			public const string BlockDemolish = "block_demolish";
-
-			public const string ItemRepair = "item_repair";
-
-			public const string EntityRepair = "entity_repair";
-
-			public const string ItemSkinned = "item_skinned";
-
-			public const string ItemAggregate = "item_aggregate";
-
-			public const string CodelockChanged = "code_change";
-
-			public const string CodelockEntered = "code_enter";
-
-			public const string SleepingBagAssign = "sleeping_bag_assign";
-
-			public const string FallDamage = "fall_damage";
-
-			public const string PlayerWipeIdSet = "player_wipe_id_set";
-
-			public const string ServerInfo = "server_info";
-
-			public const string UnderwaterCrateUntied = "crate_untied";
-
-			public const string VehiclePurchased = "vehicle_purchase";
-
-			public const string NPCVendor = "npc_vendor";
-
-			public const string BlueprintsOnline = "blueprint_aggregate_online";
-
-			public const string PlayerPositions = "player_positions";
-
-			public const string ProjectileInvalid = "projectile_invalid";
-
-			public const string ItemDefinitions = "item_definitions";
-
-			public const string KeycardSwiped = "keycard_swiped";
-
-			public const string EntitySpawned = "entity_spawned";
-
-			public const string EntityKilled = "entity_killed";
-
-			public const string HackableCrateStarted = "hackable_crate_started";
-
-			public const string HackableCrateEnded = "hackable_crate_ended";
-
-			public const string StashHidden = "stash_hidden";
-
-			public const string StashRevealed = "stash_reveal";
-
-			public const string EntityManifest = "entity_manifest";
-
-			public const string LootEntity = "loot_entity";
-
-			public const string OnlineTeams = "online_teams";
-
-			public const string Gambling = "gambing";
-
-			public const string BuildingBlockColor = "building_block_color";
-
-			public const string MissionComplete = "mission_complete";
-
-			public const string PlayerPinged = "player_pinged";
-
-			public const string BagUnclaim = "bag_unclaim";
-
-			public const string SteamAuth = "steam_auth";
-		}
-
-		private struct SimpleItemAmount
-		{
-			public string ItemName;
-
-			public int Amount;
-
-			public ulong Skin;
-
-			public float Condition;
-
-			public SimpleItemAmount(Item item)
-			{
-				ItemName = item.info.shortname;
-				Amount = item.amount;
-				Skin = item.skin;
-				Condition = item.conditionNormalized;
-			}
-		}
-
-		private struct FiredProjectileKey : IEquatable<FiredProjectileKey>
-		{
-			public ulong UserId;
-
-			public int ProjectileId;
-
-			public FiredProjectileKey(ulong userId, int projectileId)
-			{
-				UserId = userId;
-				ProjectileId = projectileId;
-			}
-
-			public bool Equals(FiredProjectileKey other)
-			{
-				if (other.UserId == UserId)
-				{
-					return other.ProjectileId == ProjectileId;
-				}
-				return false;
-			}
-		}
-
-		private class PendingFiredProjectile : IPooled
-		{
-			public EventRecord Record;
-
-			public BasePlayer.FiredProjectile FiredProjectile;
-
-			public bool Hit;
-
-			public void EnterPool()
-			{
-				Hit = false;
-				Record = null;
-				FiredProjectile = null;
-			}
-
-			public void LeavePool()
-			{
-			}
-		}
+		private static Dictionary<FiredProjectileKey, PendingFiredProjectile> trackedProjectiles = new Dictionary<FiredProjectileKey, PendingFiredProjectile>();
 
 		private static Dictionary<int, string> geneCache = new Dictionary<int, string>();
 
 		public static int MaxMSPerFrame = 5;
 
 		private static Dictionary<PendingItemsKey, PendingItemsData> pendingItems = new Dictionary<PendingItemsKey, PendingItemsData>();
-
-		private static Dictionary<FiredProjectileKey, PendingFiredProjectile> firedProjectiles = new Dictionary<FiredProjectileKey, PendingFiredProjectile>();
 
 		public static bool Stats
 		{
@@ -358,6 +379,1937 @@ public static class Analytics
 					return ConVar.Server.stats;
 				}
 				return false;
+			}
+		}
+
+		public static void Initialize()
+		{
+			PushItemDefinitions();
+			PushEntityManifest();
+			((MonoBehaviour)SingletonComponent<ServerMgr>.Instance).StartCoroutine(AggregateLoop());
+		}
+
+		private static void PushServerInfo()
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord eventRecord = EventRecord.New("server_info").AddField("seed", World.Seed).AddField("size", World.Size)
+					.AddField("url", World.Url)
+					.AddField("wipe_id", SaveRestore.WipeId)
+					.AddField("ip_convar", Net.sv.ip)
+					.AddField("port_convar", Net.sv.port)
+					.AddField("net_protocol", Net.sv.ProtocolId)
+					.AddField("protocol_network", 2553)
+					.AddField("protocol_save", 252);
+				BuildInfo current = BuildInfo.Current;
+				EventRecord eventRecord2 = eventRecord.AddField("changeset", ((current != null) ? current.Scm.ChangeId : null) ?? "0").AddField("unity_version", Application.unityVersion);
+				BuildInfo current2 = BuildInfo.Current;
+				eventRecord2.AddField("branch", ((current2 != null) ? current2.Scm.Branch : null) ?? "empty").AddField("server_tags", ConVar.Server.tags).AddField("device_id", SystemInfo.deviceUniqueIdentifier)
+					.AddField("network_id", Net.sv.GetLastUIDGiven())
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		private static void PushItemDefinitions()
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				if ((Object)(object)GameManifest.Current == (Object)null)
+				{
+					return;
+				}
+				BuildInfo current = BuildInfo.Current;
+				object obj;
+				if (current == null)
+				{
+					obj = null;
+				}
+				else
+				{
+					ScmInfo scm = current.Scm;
+					obj = ((scm != null) ? scm.ChangeId : null);
+				}
+				if (obj == null)
+				{
+					return;
+				}
+				EventRecord.New("item_definitions").AddObject("items", from x in ItemManager.itemDictionary
+					select x.Value into x
+					select new
+					{
+						item_id = x.itemid,
+						shortname = x.shortname,
+						craft_time = (x.Blueprint?.time ?? 0f),
+						workbench = (x.Blueprint?.workbenchLevelRequired ?? 0),
+						category = x.category.ToString(),
+						display_name = x.displayName.english,
+						despawn_rarity = x.despawnRarity,
+						ingredients = x.Blueprint?.ingredients.Select((ItemAmount y) => new
+						{
+							shortname = y.itemDef.shortname,
+							amount = (int)y.amount
+						})
+					}).AddField("changeset", BuildInfo.Current.Scm.ChangeId)
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		private static void PushEntityManifest()
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				if ((Object)(object)GameManifest.Current == (Object)null)
+				{
+					return;
+				}
+				BuildInfo current = BuildInfo.Current;
+				object obj;
+				if (current == null)
+				{
+					obj = null;
+				}
+				else
+				{
+					ScmInfo scm = current.Scm;
+					obj = ((scm != null) ? scm.ChangeId : null);
+				}
+				if (obj != null)
+				{
+					EventRecord eventRecord = EventRecord.New("entity_manifest").AddObject("entities", GameManifest.Current.entities.Select((string x) => new
+					{
+						shortname = Path.GetFileNameWithoutExtension(x),
+						prefab_id = StringPool.Get(x.ToLower())
+					}));
+					BuildInfo current2 = BuildInfo.Current;
+					eventRecord.AddField("changeset", ((current2 != null) ? current2.Scm.ChangeId : null) ?? "editor").Submit();
+				}
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnFiredProjectile(BasePlayer player, BasePlayer.FiredProjectile projectile, Guid projectileGroupId)
+		{
+			//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
+			if (!Stats || !HighFrequencyStats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord record = EventRecord.New("entity_damage").AddField("start_pos", projectile.position).AddField("start_vel", projectile.initialVelocity)
+					.AddField("velocity_inherit", projectile.inheritedVelocity)
+					.AddField("ammo_item", projectile.itemDef?.shortname)
+					.AddField("weapon", (BaseEntity)projectile.weaponSource)
+					.AddField("projectile_group", projectileGroupId)
+					.AddField("projectile_id", projectile.id)
+					.AddField("attacker", (BaseEntity)player)
+					.AddField("look_dir", player.tickViewAngles)
+					.AddField("model_state", (player.modelStateTick ?? player.modelState).flags)
+					.AddField("burst_mode", projectile.weaponSource?.HasFlag(BaseEntity.Flags.Reserved6) ?? false);
+				PendingFiredProjectile pendingFiredProjectile = Pool.Get<PendingFiredProjectile>();
+				pendingFiredProjectile.Record = record;
+				pendingFiredProjectile.FiredProjectile = projectile;
+				trackedProjectiles[new FiredProjectileKey(player.userID, projectile.id)] = pendingFiredProjectile;
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnFiredProjectileRemoved(BasePlayer player, BasePlayer.FiredProjectile projectile)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				FiredProjectileKey key = new FiredProjectileKey(player.userID, projectile.id);
+				if (!trackedProjectiles.TryGetValue(key, out var value))
+				{
+					return;
+				}
+				if (!value.Hit)
+				{
+					EventRecord record = value.Record;
+					if (projectile.updates.Count > 0)
+					{
+						record.AddObject("projectile_updates", projectile.updates);
+					}
+					record.Submit();
+				}
+				Pool.Free<PendingFiredProjectile>(ref value);
+				trackedProjectiles.Remove(key);
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnQuarryItem(ResourceMode mode, string item, int amount, MiningQuarry sourceEntity)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				AddPendingItems(sourceEntity, item, amount, "quarry", mode == ResourceMode.Consumed);
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnExcavatorProduceItem(Item item, BaseEntity sourceEntity)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				AddPendingItems(sourceEntity, item.info.shortname, item.amount, "excavator", consumed: false);
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnExcavatorConsumeFuel(Item item, int amount, BaseEntity dieselEngine)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				LogResource(ResourceMode.Consumed, "excavator", item.info.shortname, amount, dieselEngine, null, safezone: false, null, 0uL);
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnCraftItem(string item, int amount, BasePlayer player, BaseEntity workbench, bool inSafezone)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				LogResource(ResourceMode.Produced, "craft", item, amount, null, null, inSafezone, workbench, player?.userID ?? ((BasePlayer.EncryptedValue<ulong>)0uL));
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnCraftMaterialConsumed(string item, int amount, BasePlayer player, BaseEntity workbench, bool inSafezone, string targetItem)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				LogResource(safezone: inSafezone, workbench: workbench, targetItem: targetItem, mode: ResourceMode.Consumed, category: "craft", itemName: item, amount: amount, sourceEntity: null, tool: null, steamId: player?.userID ?? ((BasePlayer.EncryptedValue<ulong>)0uL));
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnConsumableUsed(BasePlayer player, Item item)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord.New("consumeable_used").AddField("player", (BaseEntity)player).AddField("item", item)
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnEntitySpawned(BaseEntity entity)
+		{
+			//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				trackedSpawnedIds.Add(entity.net.ID);
+				EventRecord.New("entity_spawned").AddField("entity", entity).Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		private static void TryLogEntityKilled(BaseNetworkable entity)
+		{
+			//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				if (entity.IsValid() && trackedSpawnedIds.Contains(entity.net.ID))
+				{
+					EventRecord.New("entity_killed").AddField("entity", Object.op_Implicit((Object)(object)entity)).Submit();
+				}
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnMedUsed(string itemName, BasePlayer player, BasePlayer target)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord.New("med_used").AddField("player", (BaseEntity)player).AddField("target", (BaseEntity)target)
+					.AddField("item_name", itemName)
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnCodelockChanged(BasePlayer player, CodeLock codeLock, string oldCode, string newCode, bool isGuest)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord.New("code_change").AddField("player", (BaseEntity)player).AddField("codelock", (BaseEntity)codeLock)
+					.AddField("old_code", oldCode)
+					.AddField("new_code", newCode)
+					.AddField("is_guest", isGuest)
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnCodeLockEntered(BasePlayer player, CodeLock codeLock, bool isGuest)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord.New("code_enter").AddField("player", (BaseEntity)player).AddField("codelock", (BaseEntity)codeLock)
+					.AddField("is_guest", isGuest)
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnTeamChanged(string change, ulong teamId, ulong teamLeader, ulong user, List<ulong> members)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			List<string> list = Pool.GetList<string>();
+			try
+			{
+				if (members != null)
+				{
+					foreach (ulong member in members)
+					{
+						list.Add(SingletonComponent<ServerMgr>.Instance.persistance.GetUserWipeId(member));
+					}
+				}
+				EventRecord.New("team_change").AddField("team_leader", SingletonComponent<ServerMgr>.Instance.persistance.GetUserWipeId(teamLeader)).AddField("team", teamId)
+					.AddField("target_user", SingletonComponent<ServerMgr>.Instance.persistance.GetUserWipeId(user))
+					.AddField("change", change)
+					.AddObject("users", list)
+					.AddField("member_count", members.Count)
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+			Pool.FreeList<string>(ref list);
+		}
+
+		public static void OnEntityAuthChanged(BaseEntity entity, BasePlayer player, IEnumerable<ulong> authedList, string change, ulong targetUser)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				string userWipeId = SingletonComponent<ServerMgr>.Instance.persistance.GetUserWipeId(targetUser);
+				EventRecord.New("auth_change").AddField("entity", entity).AddField("player", (BaseEntity)player)
+					.AddField("target", userWipeId)
+					.AddObject("auth_list", authedList.Select((ulong x) => SingletonComponent<ServerMgr>.Instance.persistance.GetUserWipeId(x)))
+					.AddField("change", change)
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnSleepingBagAssigned(BasePlayer player, SleepingBag bag, ulong targetUser)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				string value = ((targetUser != 0L) ? SingletonComponent<ServerMgr>.Instance.persistance.GetUserWipeId(targetUser) : "");
+				EventRecord.New("sleeping_bag_assign").AddField("entity", (BaseEntity)bag).AddField("player", (BaseEntity)player)
+					.AddField("target", value)
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnFallDamage(BasePlayer player, float velocity, float damage)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord.New("fall_damage").AddField("player", (BaseEntity)player).AddField("velocity", velocity)
+					.AddField("damage", damage)
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnResearchStarted(BasePlayer player, BaseEntity entity, Item item, int scrapCost)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord.New("research_start").AddField("player", (BaseEntity)player).AddField("item", item.info.shortname)
+					.AddField("scrap", scrapCost)
+					.AddField("entity", entity)
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnBlueprintLearned(BasePlayer player, ItemDefinition item, string reason, int scrapCost, BaseEntity entity)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord.New("blueprint_learned").AddField("player", (BaseEntity)player).AddField("item", item.shortname)
+					.AddField("reason", reason)
+					.AddField("entity", entity)
+					.AddField("scrap_cost", scrapCost)
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnItemRecycled(string item, int amount, Recycler recycler)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				LogResource(ResourceMode.Consumed, "recycler", item, amount, recycler, null, safezone: false, null, recycler.LastLootedBy);
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnRecyclerItemProduced(string item, int amount, Recycler recycler, Item sourceItem)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				LogResource(ResourceMode.Produced, "recycler", item, amount, recycler, null, safezone: false, null, recycler.LastLootedBy, null, sourceItem);
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnGatherItem(string item, int amount, BaseEntity sourceEntity, BasePlayer player, AttackEntity weapon = null)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				LogResource(ResourceMode.Produced, "gather", item, amount, sourceEntity, weapon, safezone: false, null, player.userID);
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnFirstLooted(BaseEntity entity, BasePlayer player)
+		{
+			//IL_005d: Unknown result type (might be due to invalid IL or missing references)
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				if (entity is LootContainer lootContainer)
+				{
+					LogItemsLooted(player, entity, lootContainer.inventory);
+					EventRecord.New("loot_entity").AddField("entity", entity).AddField("player", (BaseEntity)player)
+						.AddField("monument", GetMonument(entity))
+						.AddField("biome", GetBiome(((Component)entity).transform.position))
+						.Submit();
+				}
+				else if (entity is LootableCorpse lootableCorpse)
+				{
+					ItemContainer[] containers = lootableCorpse.containers;
+					foreach (ItemContainer container in containers)
+					{
+						LogItemsLooted(player, entity, container);
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnLootContainerDestroyed(LootContainer entity, BasePlayer player, AttackEntity weapon)
+		{
+			//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+			//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				if (entity.DropsLoot && (Object)(object)player != (Object)null && Vector3.Distance(((Component)entity).transform.position, ((Component)player).transform.position) < 50f && entity.inventory?.itemList != null && entity.inventory.itemList.Count > 0)
+				{
+					LogItemsLooted(player, entity, entity.inventory, weapon);
+				}
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnEntityDestroyed(BaseNetworkable entity)
+		{
+			TryLogEntityKilled(entity);
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				if (!(entity is LootContainer lootContainer) || lootContainer.FirstLooterId != 0L)
+				{
+					return;
+				}
+				foreach (Item item in lootContainer.inventory.itemList)
+				{
+					OnItemDespawn(lootContainer, item, 3, lootContainer.LastLootedBy);
+				}
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnEntityBuilt(BaseEntity entity, BasePlayer player)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord eventRecord = EventRecord.New("entity_built").AddField("player", (BaseEntity)player).AddField("entity", entity);
+				if (entity is SleepingBag)
+				{
+					int sleepingBagCount = SleepingBag.GetSleepingBagCount(player.userID);
+					eventRecord.AddField("bags_active", sleepingBagCount);
+					eventRecord.AddField("max_sleeping_bags", ConVar.Server.max_sleeping_bags);
+				}
+				eventRecord.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnMountEntity(BasePlayer player, BaseEntity seat, BaseEntity vehicle)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord.New("mount").AddField("player", (BaseEntity)player).AddField("vehicle", vehicle)
+					.AddField("seat", seat)
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnDismountEntity(BasePlayer player, BaseEntity seat, BaseEntity vehicle)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord.New("dismount").AddField("player", (BaseEntity)player).AddField("vehicle", vehicle)
+					.AddField("seat", seat)
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnKeycardSwiped(BasePlayer player, CardReader cardReader)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord.New("keycard_swiped").AddField("player", (BaseEntity)player).AddField("card_level", cardReader.accessLevel)
+					.AddField("entity", (BaseEntity)cardReader)
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnLockedCrateStarted(BasePlayer player, HackableLockedCrate crate)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord.New("hackable_crate_started").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)crate)
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnLockedCrateFinished(ulong player, HackableLockedCrate crate)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				string userWipeId = SingletonComponent<ServerMgr>.Instance.persistance.GetUserWipeId(player);
+				EventRecord.New("hackable_crate_ended").AddField("player_userid", userWipeId).AddField("entity", (BaseEntity)crate)
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnStashHidden(BasePlayer player, StashContainer entity)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord.New("stash_hidden").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)entity)
+					.AddField("owner", SingletonComponent<ServerMgr>.Instance.persistance.GetUserWipeId(entity.OwnerID))
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnStashRevealed(BasePlayer player, StashContainer entity)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord.New("stash_reveal").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)entity)
+					.AddField("owner", SingletonComponent<ServerMgr>.Instance.persistance.GetUserWipeId(entity.OwnerID))
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnAntihackViolation(BasePlayer player, AntiHackType type, string message)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord eventRecord = EventRecord.New("antihack_violation").AddField("player", (BaseEntity)player).AddField("violation_type", (int)type)
+					.AddField("violation", type.ToString())
+					.AddField("message", message);
+				if (BuildInfo.Current != null)
+				{
+					eventRecord.AddField("changeset", BuildInfo.Current.Scm.ChangeId).AddField("network", 2553);
+				}
+				switch (type)
+				{
+				case AntiHackType.SpeedHack:
+					eventRecord.AddField("speedhack_protection", ConVar.AntiHack.speedhack_protection).AddField("speedhack_forgiveness", ConVar.AntiHack.speedhack_forgiveness).AddField("speedhack_forgiveness_inertia", ConVar.AntiHack.speedhack_forgiveness_inertia)
+						.AddField("speedhack_penalty", ConVar.AntiHack.speedhack_penalty)
+						.AddField("speedhack_penalty", ConVar.AntiHack.speedhack_reject)
+						.AddField("speedhack_slopespeed", ConVar.AntiHack.speedhack_slopespeed);
+					break;
+				case AntiHackType.NoClip:
+					eventRecord.AddField("noclip_protection", ConVar.AntiHack.noclip_protection).AddField("noclip_penalty", ConVar.AntiHack.noclip_penalty).AddField("noclip_maxsteps", ConVar.AntiHack.noclip_maxsteps)
+						.AddField("noclip_margin_dismount", ConVar.AntiHack.noclip_margin_dismount)
+						.AddField("noclip_margin", ConVar.AntiHack.noclip_margin)
+						.AddField("noclip_backtracking", ConVar.AntiHack.noclip_backtracking)
+						.AddField("noclip_reject", ConVar.AntiHack.noclip_reject)
+						.AddField("noclip_stepsize", ConVar.AntiHack.noclip_stepsize);
+					break;
+				case AntiHackType.ProjectileHack:
+					eventRecord.AddField("projectile_anglechange", ConVar.AntiHack.projectile_anglechange).AddField("projectile_backtracking", ConVar.AntiHack.projectile_backtracking).AddField("projectile_clientframes", ConVar.AntiHack.projectile_clientframes)
+						.AddField("projectile_damagedepth", ConVar.AntiHack.projectile_damagedepth)
+						.AddField("projectile_desync", ConVar.AntiHack.projectile_desync)
+						.AddField("projectile_forgiveness", ConVar.AntiHack.projectile_forgiveness)
+						.AddField("projectile_impactspawndepth", ConVar.AntiHack.projectile_impactspawndepth)
+						.AddField("projectile_losforgiveness", ConVar.AntiHack.projectile_losforgiveness)
+						.AddField("projectile_penalty", ConVar.AntiHack.projectile_penalty)
+						.AddField("projectile_positionoffset", ConVar.AntiHack.projectile_positionoffset)
+						.AddField("projectile_protection", ConVar.AntiHack.projectile_protection)
+						.AddField("projectile_serverframes", ConVar.AntiHack.projectile_serverframes)
+						.AddField("projectile_terraincheck", ConVar.AntiHack.projectile_terraincheck)
+						.AddField("projectile_trajectory", ConVar.AntiHack.projectile_trajectory)
+						.AddField("projectile_vehiclecheck", ConVar.AntiHack.projectile_vehiclecheck)
+						.AddField("projectile_velocitychange", ConVar.AntiHack.projectile_velocitychange);
+					break;
+				case AntiHackType.InsideTerrain:
+					eventRecord.AddField("terrain_check_geometry", ConVar.AntiHack.terrain_check_geometry).AddField("terrain_kill", ConVar.AntiHack.terrain_kill).AddField("terrain_padding", ConVar.AntiHack.terrain_padding)
+						.AddField("terrain_penalty", ConVar.AntiHack.terrain_penalty)
+						.AddField("terrain_protection", ConVar.AntiHack.terrain_protection)
+						.AddField("terrain_timeslice", ConVar.AntiHack.terrain_timeslice);
+					break;
+				case AntiHackType.MeleeHack:
+					eventRecord.AddField("melee_backtracking", ConVar.AntiHack.melee_backtracking).AddField("melee_clientframes", ConVar.AntiHack.melee_clientframes).AddField("melee_forgiveness", ConVar.AntiHack.melee_forgiveness)
+						.AddField("melee_losforgiveness", ConVar.AntiHack.melee_losforgiveness)
+						.AddField("melee_penalty", ConVar.AntiHack.melee_penalty)
+						.AddField("melee_protection", ConVar.AntiHack.melee_protection)
+						.AddField("melee_serverframes", ConVar.AntiHack.melee_serverframes)
+						.AddField("melee_terraincheck", ConVar.AntiHack.melee_terraincheck)
+						.AddField("melee_vehiclecheck", ConVar.AntiHack.melee_vehiclecheck);
+					break;
+				case AntiHackType.FlyHack:
+					eventRecord.AddField("flyhack_extrusion", ConVar.AntiHack.flyhack_extrusion).AddField("flyhack_forgiveness_horizontal", ConVar.AntiHack.flyhack_forgiveness_horizontal).AddField("flyhack_forgiveness_horizontal_inertia", ConVar.AntiHack.flyhack_forgiveness_horizontal_inertia)
+						.AddField("flyhack_forgiveness_vertical", ConVar.AntiHack.flyhack_forgiveness_vertical)
+						.AddField("flyhack_forgiveness_vertical_inertia", ConVar.AntiHack.flyhack_forgiveness_vertical_inertia)
+						.AddField("flyhack_margin", ConVar.AntiHack.flyhack_margin)
+						.AddField("flyhack_maxsteps", ConVar.AntiHack.flyhack_maxsteps)
+						.AddField("flyhack_penalty", ConVar.AntiHack.flyhack_penalty)
+						.AddField("flyhack_protection", ConVar.AntiHack.flyhack_protection)
+						.AddField("flyhack_reject", ConVar.AntiHack.flyhack_reject);
+					break;
+				case AntiHackType.EyeHack:
+					eventRecord.AddField("eye_clientframes", ConVar.AntiHack.eye_clientframes).AddField("eye_forgiveness", ConVar.AntiHack.eye_forgiveness).AddField("eye_history_forgiveness", ConVar.AntiHack.eye_history_forgiveness)
+						.AddField("eye_history_penalty", ConVar.AntiHack.eye_history_penalty)
+						.AddField("eye_losradius", ConVar.AntiHack.eye_losradius)
+						.AddField("eye_noclip_backtracking", ConVar.AntiHack.eye_noclip_backtracking)
+						.AddField("eye_noclip_cutoff", ConVar.AntiHack.eye_noclip_cutoff)
+						.AddField("eye_penalty", ConVar.AntiHack.eye_penalty)
+						.AddField("eye_protection", ConVar.AntiHack.eye_protection)
+						.AddField("eye_serverframes", ConVar.AntiHack.eye_serverframes)
+						.AddField("eye_terraincheck", ConVar.AntiHack.eye_terraincheck)
+						.AddField("eye_vehiclecheck", ConVar.AntiHack.eye_vehiclecheck);
+					break;
+				case AntiHackType.AttackHack:
+					eventRecord.AddField("maxdesync", ConVar.AntiHack.maxdesync);
+					break;
+				}
+				eventRecord.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnEyehackViolation(BasePlayer player, Vector3 eyePos)
+		{
+			//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord.New("antihack_violation_detailed").AddField("player", (BaseEntity)player).AddField("violation_type", 6)
+					.AddField("eye_pos", eyePos)
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnNoclipViolation(BasePlayer player, Vector3 startPos, Vector3 endPos, int tickCount, Collider collider)
+		{
+			//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+			if (!Stats || !HighFrequencyStats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord.New("antihack_violation_detailed").AddField("player", (BaseEntity)player).AddField("violation_type", 1)
+					.AddField("start_pos", startPos)
+					.AddField("end_pos", endPos)
+					.AddField("tick_count", tickCount)
+					.AddField("collider_name", ((Object)collider).name)
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnFlyhackViolation(BasePlayer player, Vector3 startPos, Vector3 endPos, int tickCount)
+		{
+			//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+			//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord.New("antihack_violation_detailed").AddField("player", (BaseEntity)player).AddField("violation_type", 3)
+					.AddField("start_pos", startPos)
+					.AddField("end_pos", endPos)
+					.AddField("tick_count", tickCount)
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnProjectileHackViolation(BasePlayer.FiredProjectile projectile)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				FiredProjectileKey key = new FiredProjectileKey(projectile.attacker.userID, projectile.id);
+				if (trackedProjectiles.TryGetValue(key, out var value))
+				{
+					value.Record.AddField("projectile_invalid", value: true).AddObject("updates", projectile.updates);
+				}
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnSpeedhackViolation(BasePlayer player, Vector3 startPos, Vector3 endPos, int tickCount)
+		{
+			//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+			//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0051: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0061: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0062: Unknown result type (might be due to invalid IL or missing references)
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord.New("antihack_violation_detailed").AddField("player", (BaseEntity)player).AddField("violation_type", 2)
+					.AddField("start_pos", startPos)
+					.AddField("end_pos", endPos)
+					.AddField("tick_count", tickCount)
+					.AddField("distance", Vector3.Distance(startPos, endPos))
+					.AddField("distance_2d", Vector3Ex.Distance2D(startPos, endPos))
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnTerrainHackViolation(BasePlayer player)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord.New("antihack_violation_detailed").AddField("player", (BaseEntity)player).AddField("violation_type", 10)
+					.AddField("seed", World.Seed)
+					.AddField("size", World.Size)
+					.AddField("map_url", World.Url)
+					.AddField("map_checksum", World.Checksum)
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnEntityTakeDamage(HitInfo info, bool isDeath)
+		{
+			//IL_024b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_025b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_026b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_027b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_028b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_029b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01ae: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01b9: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01c5: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01d0: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00ca: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00d6: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00e2: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00ee: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0315: Unknown result type (might be due to invalid IL or missing references)
+			//IL_031a: Unknown result type (might be due to invalid IL or missing references)
+			//IL_03ea: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0427: Unknown result type (might be due to invalid IL or missing references)
+			//IL_043e: Unknown result type (might be due to invalid IL or missing references)
+			//IL_05ab: Unknown result type (might be due to invalid IL or missing references)
+			//IL_05c2: Unknown result type (might be due to invalid IL or missing references)
+			//IL_05d9: Unknown result type (might be due to invalid IL or missing references)
+			if (!Stats || !HighFrequencyStats)
+			{
+				return;
+			}
+			try
+			{
+				BasePlayer initiatorPlayer = info.InitiatorPlayer;
+				BasePlayer basePlayer = info.HitEntity as BasePlayer;
+				if (((Object)(object)info.Initiator == (Object)null && !isDeath) || (((Object)(object)initiatorPlayer == (Object)null || initiatorPlayer.IsNpc || initiatorPlayer.IsBot) && ((Object)(object)basePlayer == (Object)null || basePlayer.IsNpc || basePlayer.IsBot)))
+				{
+					return;
+				}
+				EventRecord eventRecord = null;
+				float value = -1f;
+				float value2 = -1f;
+				if ((Object)(object)initiatorPlayer != (Object)null)
+				{
+					if (info.IsProjectile())
+					{
+						FiredProjectileKey key = new FiredProjectileKey(initiatorPlayer.userID, info.ProjectileID);
+						if (trackedProjectiles.TryGetValue(key, out var value3))
+						{
+							eventRecord = value3.Record;
+							value = Vector3.Distance(info.HitPositionWorld, value3.FiredProjectile.initialPosition);
+							value = Vector3Ex.Distance2D(info.HitPositionWorld, value3.FiredProjectile.initialPosition);
+							value3.Hit = info.DidHit;
+							if (eventRecord != null && value3.FiredProjectile.updates.Count > 0)
+							{
+								eventRecord.AddObject("projectile_updates", value3.FiredProjectile.updates);
+							}
+							if (eventRecord != null && value3.FiredProjectile.simulatedPositions.Count > 0)
+							{
+								eventRecord.AddObject("simulated_position", value3.FiredProjectile.simulatedPositions);
+							}
+							if (eventRecord != null)
+							{
+								eventRecord.AddField("partial_time", value3.FiredProjectile.partialTime);
+								eventRecord.AddField("desync_lifetime", value3.FiredProjectile.desyncLifeTime);
+							}
+							trackedProjectiles.Remove(key);
+							Pool.Free<PendingFiredProjectile>(ref value3);
+						}
+					}
+					else
+					{
+						value = Vector3.Distance(info.HitNormalWorld, initiatorPlayer.eyes.position);
+						value2 = Vector3Ex.Distance2D(info.HitNormalWorld, initiatorPlayer.eyes.position);
+					}
+				}
+				if (eventRecord == null)
+				{
+					eventRecord = EventRecord.New("entity_damage");
+				}
+				eventRecord.AddField("is_headshot", info.isHeadshot).AddField("victim", info.HitEntity).AddField("damage", info.damageTypes.Total())
+					.AddField("damage_type", info.damageTypes.GetMajorityDamageType().ToString())
+					.AddField("pos_world", info.HitPositionWorld)
+					.AddField("pos_local", info.HitPositionLocal)
+					.AddField("point_start", info.PointStart)
+					.AddField("point_end", info.PointEnd)
+					.AddField("normal_world", info.HitNormalWorld)
+					.AddField("normal_local", info.HitNormalLocal)
+					.AddField("distance_cl", info.ProjectileDistance)
+					.AddField("distance", value)
+					.AddField("distance_2d", value2)
+					.AddField("attacker_parented", info.InitiatorParented);
+				if ((Object)(object)info.HitEntity != (Object)null && (Object)(object)info.HitEntity.model != (Object)null)
+				{
+					eventRecord.AddField("pos_local_model", ((Component)info.HitEntity.model).transform.InverseTransformPoint(info.HitPositionWorld));
+				}
+				if (!info.IsProjectile())
+				{
+					eventRecord.AddField("weapon", (BaseEntity)info.Weapon);
+					eventRecord.AddField("attacker", info.Initiator);
+				}
+				if (info.HitBone != 0)
+				{
+					eventRecord.AddField("bone", info.HitBone).AddField("bone_name", info.boneName).AddField("hit_area", (int)info.boneArea);
+				}
+				if (info.ProjectileID != 0)
+				{
+					eventRecord.AddField("projectile_id", info.ProjectileID).AddField("projectile_integrity", info.ProjectileIntegrity).AddField("projectile_hits", info.ProjectileHits)
+						.AddField("trajectory_mismatch", info.ProjectileTrajectoryMismatch)
+						.AddField("travel_time", info.ProjectileTravelTime)
+						.AddField("projectile_velocity", info.ProjectileVelocity)
+						.AddField("projectile_prefab", ((Object)info.ProjectilePrefab).name);
+				}
+				if ((Object)(object)initiatorPlayer != (Object)null && !info.IsProjectile())
+				{
+					eventRecord.AddField("attacker_eye_pos", initiatorPlayer.eyes.position);
+					eventRecord.AddField("attacker_eye_dir", initiatorPlayer.eyes.BodyForward());
+					if (((object)initiatorPlayer).GetType() == typeof(BasePlayer))
+					{
+						eventRecord.AddField("attacker_life", initiatorPlayer.respawnId);
+					}
+				}
+				else if ((Object)(object)initiatorPlayer != (Object)null)
+				{
+					eventRecord.AddObject("attacker_worn", initiatorPlayer.inventory.containerWear.itemList.Select((Item x) => new SimpleItemAmount(x)));
+					eventRecord.AddObject("attacker_hotbar", initiatorPlayer.inventory.containerBelt.itemList.Select((Item x) => new SimpleItemAmount(x)));
+				}
+				if ((Object)(object)basePlayer != (Object)null)
+				{
+					eventRecord.AddField("victim_life", basePlayer.respawnId);
+					eventRecord.AddObject("victim_worn", basePlayer.inventory.containerWear.itemList.Select((Item x) => new SimpleItemAmount(x)));
+					eventRecord.AddObject("victim_hotbar", basePlayer.inventory.containerBelt.itemList.Select((Item x) => new SimpleItemAmount(x)));
+					eventRecord.AddField("victim_view_dir", basePlayer.tickViewAngles);
+					eventRecord.AddField("victim_eye_pos", basePlayer.eyes.position);
+					eventRecord.AddField("victim_eye_dir", basePlayer.eyes.BodyForward());
+					eventRecord.AddField("victim_parented", info.HitEntityParented);
+				}
+				eventRecord.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnPlayerRespawned(BasePlayer player, BaseEntity targetEntity)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord.New("player_respawn").AddField("player", (BaseEntity)player).AddField("bag", targetEntity)
+					.AddField("life_id", player.respawnId)
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnExplosiveLaunched(BasePlayer player, BaseEntity explosive, BaseEntity launcher = null)
+		{
+			//IL_0030: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0045: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord eventRecord = EventRecord.New("explosive_launch").AddField("player", (BaseEntity)player).AddField("explosive", explosive)
+					.AddField("explosive_velocity", explosive.GetWorldVelocity());
+				Vector3 worldVelocity = explosive.GetWorldVelocity();
+				EventRecord eventRecord2 = eventRecord.AddField("explosive_direction", ((Vector3)(ref worldVelocity)).normalized);
+				if ((Object)(object)launcher != (Object)null)
+				{
+					eventRecord2.AddField("launcher", launcher);
+				}
+				eventRecord2.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnExplosion(TimedExplosive explosive)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord.New("explosion").AddField("entity", (BaseEntity)explosive).Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnItemDespawn(BaseEntity itemContainer, Item item, int dropReason, ulong userId)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord eventRecord = EventRecord.New("item_despawn").AddField("entity", itemContainer).AddField("item", item)
+					.AddField("drop_reason", dropReason);
+				if (userId != 0L)
+				{
+					eventRecord.AddField("player_userid", userId);
+				}
+				eventRecord.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnItemDropped(BasePlayer player, WorldItem entity, DroppedItem.DropReasonEnum dropReason)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord.New("item_drop").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)entity)
+					.AddField("item", entity.GetItem())
+					.AddField("drop_reason", (int)dropReason)
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnItemPickup(BasePlayer player, WorldItem entity)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord.New("item_pickup").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)entity)
+					.AddField("item", entity.GetItem())
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnPlayerConnected(Connection connection)
+		{
+			try
+			{
+				string userWipeId = SingletonComponent<ServerMgr>.Instance.persistance.GetUserWipeId(connection.userid);
+				EventRecord.New("player_connect").AddField("player_userid", userWipeId).AddField("steam_id", connection.userid)
+					.AddField("username", connection.username)
+					.AddField("ip", connection.ipaddress)
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnPlayerDisconnected(Connection connection, string reason)
+		{
+			try
+			{
+				string userWipeId = SingletonComponent<ServerMgr>.Instance.persistance.GetUserWipeId(connection.userid);
+				EventRecord.New("player_disconnect").AddField("player_userid", userWipeId).AddField("steam_id", connection.userid)
+					.AddField("username", connection.username)
+					.AddField("reason", reason)
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnEntityPickedUp(BasePlayer player, BaseEntity entity)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord.New("entity_pickup").AddField("player", (BaseEntity)player).AddField("entity", entity)
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnChatMessage(BasePlayer player, string message, int channel)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord.New("chat").AddField("player", (BaseEntity)player).AddField("message", message)
+					.AddField("channel", channel)
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnVendingMachineOrderChanged(BasePlayer player, VendingMachine vendingMachine, int sellItemId, int sellAmount, bool sellingBp, int buyItemId, int buyAmount, bool buyingBp, bool added)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				ItemDefinition itemDefinition = ItemManager.FindItemDefinition(sellItemId);
+				ItemDefinition itemDefinition2 = ItemManager.FindItemDefinition(buyItemId);
+				EventRecord.New("vending_changed").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)vendingMachine)
+					.AddField("sell_item", itemDefinition.shortname)
+					.AddField("sell_amount", sellAmount)
+					.AddField("buy_item", itemDefinition2.shortname)
+					.AddField("buy_amount", buyAmount)
+					.AddField("is_selling_bp", sellingBp)
+					.AddField("is_buying_bp", buyingBp)
+					.AddField("change", added ? "added" : "removed")
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnBuyFromVendingMachine(BasePlayer player, VendingMachine vendingMachine, int sellItemId, int sellAmount, bool sellingBp, int buyItemId, int buyAmount, bool buyingBp, int numberOfTransactions, float discount, BaseEntity drone = null)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				ItemDefinition itemDefinition = ItemManager.FindItemDefinition(sellItemId);
+				ItemDefinition itemDefinition2 = ItemManager.FindItemDefinition(buyItemId);
+				EventRecord.New("vending_sale").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)vendingMachine)
+					.AddField("sell_item", itemDefinition.shortname)
+					.AddField("sell_amount", sellAmount)
+					.AddField("buy_item", itemDefinition2.shortname)
+					.AddField("buy_amount", buyAmount)
+					.AddField("transactions", numberOfTransactions)
+					.AddField("is_selling_bp", sellingBp)
+					.AddField("is_buying_bp", buyingBp)
+					.AddField("drone_terminal", drone)
+					.AddField("discount", discount)
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnNPCVendor(BasePlayer player, NPCTalking vendor, int scrapCost, string action)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord.New("npc_vendor").AddField("player", (BaseEntity)player).AddField("vendor", (BaseEntity)vendor)
+					.AddField("scrap_amount", scrapCost)
+					.AddField("action", action)
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		private static void LogItemsLooted(BasePlayer looter, BaseEntity entity, ItemContainer container, AttackEntity tool = null)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				if ((Object)(object)entity == (Object)null || container == null)
+				{
+					return;
+				}
+				foreach (Item item in container.itemList)
+				{
+					if (item != null)
+					{
+						string shortname = item.info.shortname;
+						int amount = item.amount;
+						ulong steamId = looter?.userID ?? ((BasePlayer.EncryptedValue<ulong>)0uL);
+						LogResource(ResourceMode.Produced, "loot", shortname, amount, entity, tool, safezone: false, null, steamId);
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void LogResource(ResourceMode mode, string category, string itemName, int amount, BaseEntity sourceEntity = null, AttackEntity tool = null, bool safezone = false, BaseEntity workbench = null, ulong steamId = 0uL, string sourceEntityPrefab = null, Item sourceItem = null, string targetItem = null)
+		{
+			//IL_0073: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0095: Unknown result type (might be due to invalid IL or missing references)
+			if (!Stats || !HighFrequencyStats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord eventRecord = EventRecord.New("item_event").AddField("item_mode", mode.ToString()).AddField("category", category)
+					.AddField("item_name", itemName)
+					.AddField("amount", amount);
+				if ((Object)(object)sourceEntity != (Object)null)
+				{
+					eventRecord.AddField("entity", sourceEntity);
+					string biome = GetBiome(((Component)sourceEntity).transform.position);
+					if (biome != null)
+					{
+						eventRecord.AddField("biome", biome);
+					}
+					if (IsOcean(((Component)sourceEntity).transform.position))
+					{
+						eventRecord.AddField("ocean", value: true);
+					}
+					string monument = GetMonument(sourceEntity);
+					if (monument != null)
+					{
+						eventRecord.AddField("monument", monument);
+					}
+				}
+				if (sourceEntityPrefab != null)
+				{
+					eventRecord.AddField("entity_prefab", sourceEntityPrefab);
+				}
+				if ((Object)(object)tool != (Object)null)
+				{
+					eventRecord.AddField("tool", (BaseEntity)tool);
+				}
+				if (safezone)
+				{
+					eventRecord.AddField("safezone", value: true);
+				}
+				if ((Object)(object)workbench != (Object)null)
+				{
+					eventRecord.AddField("workbench", workbench);
+				}
+				if (sourceEntity is GrowableEntity plant)
+				{
+					eventRecord.AddField("genes", GetGenesAsString(plant));
+				}
+				if (sourceItem != null)
+				{
+					eventRecord.AddField("source_item", sourceItem.info.shortname);
+				}
+				if (targetItem != null)
+				{
+					eventRecord.AddField("target_item", targetItem);
+				}
+				if (steamId != 0L)
+				{
+					string userWipeId = SingletonComponent<ServerMgr>.Instance.persistance.GetUserWipeId(steamId);
+					eventRecord.AddField("player_userid", userWipeId);
+				}
+				eventRecord.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnSkinChanged(BasePlayer player, RepairBench repairBench, Item item, ulong workshopId)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord.New("item_skinned").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)repairBench)
+					.AddField("item", item)
+					.AddField("new_skin", workshopId)
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnItemRepaired(BasePlayer player, BaseEntity repairBench, Item itemToRepair, float conditionBefore, float maxConditionBefore)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord.New("item_repair").AddField("player", (BaseEntity)player).AddField("entity", repairBench)
+					.AddField("item", itemToRepair)
+					.AddField("old_condition", conditionBefore)
+					.AddField("old_max_condition", maxConditionBefore)
+					.AddField("max_condition", itemToRepair.maxConditionNormalized)
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnEntityRepaired(BasePlayer player, BaseEntity entity, float healthBefore, float healthAfter)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord.New("entity_repair").AddField("player", (BaseEntity)player).AddField("entity", entity)
+					.AddField("healing", healthAfter - healthBefore)
+					.AddField("health_before", healthBefore)
+					.AddField("health_after", healthAfter)
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnBuildingBlockUpgraded(BasePlayer player, BuildingBlock buildingBlock, BuildingGrade.Enum targetGrade, uint targetColor, ulong targetSkin)
+		{
+			//IL_005b: Unknown result type (might be due to invalid IL or missing references)
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord.New("block_upgrade").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)buildingBlock)
+					.AddField("old_grade", (int)buildingBlock.grade)
+					.AddField("new_grade", (int)targetGrade)
+					.AddField("color", targetColor)
+					.AddField("biome", GetBiome(((Component)buildingBlock).transform.position))
+					.AddField("skin_old", buildingBlock.skinID)
+					.AddField("skin", targetSkin)
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnBuildingBlockDemolished(BasePlayer player, StabilityEntity buildingBlock)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord.New("block_demolish").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)buildingBlock)
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnPlayerInitializedWipeId(ulong userId, string wipeId)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord.New("player_wipe_id_set").AddField("user_id", userId).AddField("player_wipe_id", wipeId)
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnFreeUnderwaterCrate(BasePlayer player, FreeableLootContainer freeableLootContainer)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord.New("crate_untied").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)freeableLootContainer)
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnVehiclePurchased(BasePlayer player, BaseEntity vehicle)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord.New("vehicle_purchase").AddField("player", (BaseEntity)player).AddField("entity", vehicle)
+					.AddField("price", vehicle)
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnMissionComplete(BasePlayer player, BaseMission mission, BaseMission.MissionFailReason? failReason = null)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord eventRecord = EventRecord.New("mission_complete").AddField("player", (BaseEntity)player).AddField("mission", mission.shortname)
+					.AddField("mission_succeed", value: true);
+				if (failReason.HasValue)
+				{
+					eventRecord.AddField("mission_succeed", value: false).AddField("fail_reason", failReason.Value.ToString());
+				}
+				eventRecord.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnGamblingResult(BasePlayer player, BaseEntity entity, int scrapPaid, int scrapRecieved, Guid? gambleGroupId = null)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord eventRecord = EventRecord.New("gambing").AddField("player", (BaseEntity)player).AddField("entity", entity)
+					.AddField("scrap_input", scrapPaid)
+					.AddField("scrap_output", scrapRecieved);
+				if (gambleGroupId.HasValue)
+				{
+					eventRecord.AddField("gamble_grouping", gambleGroupId.Value);
+				}
+				eventRecord.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnPlayerPinged(BasePlayer player, BasePlayer.PingType type, bool wasViaWheel)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord.New("player_pinged").AddField("player", (BaseEntity)player).AddField("pingType", (int)type)
+					.AddField("viaWheel", wasViaWheel)
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnBagUnclaimed(BasePlayer player, SleepingBag bag)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord.New("bag_unclaim").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)bag)
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnSteamAuth(ulong userId, ulong ownerUserId, string authResponse)
+		{
+			try
+			{
+				EventRecord.New("steam_auth").AddField("user", userId).AddField("owner", ownerUserId)
+					.AddField("response", authResponse)
+					.AddField("server_port", Net.sv.port)
+					.AddField("network_mode", Net.sv.ProtocolId)
+					.AddField("player_count", BasePlayer.activePlayerList.Count)
+					.AddField("max_players", ConVar.Server.maxplayers)
+					.AddField("hostname", ConVar.Server.hostname)
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnBuildingBlockColorChanged(BasePlayer player, BuildingBlock block, uint oldColor, uint newColor)
+		{
+			//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord.New("player_pinged").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)block)
+					.AddField("color_old", oldColor)
+					.AddField("color_new", newColor)
+					.AddField("biome", GetBiome(((Component)block).transform.position))
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnBurstModeToggled(BasePlayer player, BaseProjectile gun, bool state)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord.New("burst_toggle").AddField("player", (BaseEntity)player).AddField("weapon", (BaseEntity)gun)
+					.AddField("enabled", state)
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnParachuteUsed(BasePlayer player, float distanceTravelled, float deployHeight, float timeInAir)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord.New("parachute_used").AddField("player", (BaseEntity)player).AddField("distanceTravelled", distanceTravelled)
+					.AddField("deployHeight", deployHeight)
+					.AddField("timeInAir", timeInAir)
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnTutorialStarted(BasePlayer player)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord.New("tutorial_started").AddField("player", (BaseEntity)player).Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnTutorialCompleted(BasePlayer player, float timeElapsed)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord.New("tutorial_completed").AddField("player", (BaseEntity)player).AddLegacyTimespan("duration", TimeSpan.FromSeconds(timeElapsed))
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnTutorialQuit(BasePlayer player, string activeMissionName)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord.New("tutorial_quit").AddField("player", (BaseEntity)player).AddField("activeMissionName", activeMissionName)
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnBaseInteract(BasePlayer player, BaseEntity entity)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord.New("base_interaction").AddField("player", (BaseEntity)player).AddField("entity", entity)
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnPlayerDeath(BasePlayer player, BasePlayer killer)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord.New("player_death").AddField("player", (BaseEntity)player).AddField("killer", (BaseEntity)killer)
+					.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnCarShredded(MagnetLiftable car, List<Item> produced)
+		{
+			if (!Stats)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord eventRecord = EventRecord.New("car_shredded").AddField("player", (BaseEntity)car.associatedPlayer).AddField("car", car.GetBaseEntity());
+				foreach (Item item in produced)
+				{
+					eventRecord.AddField("item_" + item.info.shortname, item);
+				}
+				eventRecord.Submit();
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
 			}
 		}
 
@@ -762,1658 +2714,6 @@ public static class Analytics
 			}
 			Pool.FreeList<TeamInfo>(ref teams);
 		}
-
-		public static void Initialize()
-		{
-			PushItemDefinitions();
-			PushEntityManifest();
-			((MonoBehaviour)SingletonComponent<ServerMgr>.Instance).StartCoroutine(AggregateLoop());
-		}
-
-		private static void PushServerInfo()
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				EventRecord eventRecord = EventRecord.New("server_info").AddField("seed", World.Seed).AddField("size", World.Size)
-					.AddField("url", World.Url)
-					.AddField("wipe_id", SaveRestore.WipeId)
-					.AddField("ip_convar", Net.sv.ip)
-					.AddField("port_convar", Net.sv.port)
-					.AddField("net_protocol", Net.sv.ProtocolId)
-					.AddField("protocol_network", 2403)
-					.AddField("protocol_save", 239);
-				BuildInfo current = BuildInfo.Current;
-				EventRecord eventRecord2 = eventRecord.AddField("changeset", ((current != null) ? current.Scm.ChangeId : null) ?? "0").AddField("unity_version", Application.unityVersion);
-				BuildInfo current2 = BuildInfo.Current;
-				eventRecord2.AddField("branch", ((current2 != null) ? current2.Scm.Branch : null) ?? "empty").AddField("server_tags", ConVar.Server.tags).AddField("device_id", SystemInfo.deviceUniqueIdentifier)
-					.AddField("network_id", Net.sv.GetLastUIDGiven())
-					.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		private static void PushItemDefinitions()
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				if ((Object)(object)GameManifest.Current == (Object)null)
-				{
-					return;
-				}
-				BuildInfo current = BuildInfo.Current;
-				object obj;
-				if (current == null)
-				{
-					obj = null;
-				}
-				else
-				{
-					ScmInfo scm = current.Scm;
-					obj = ((scm != null) ? scm.ChangeId : null);
-				}
-				if (obj == null)
-				{
-					return;
-				}
-				EventRecord.New("item_definitions").AddObject("items", from x in ItemManager.itemDictionary
-					select x.Value into x
-					select new
-					{
-						item_id = x.itemid,
-						shortname = x.shortname,
-						craft_time = (x.Blueprint?.time ?? 0f),
-						workbench = (x.Blueprint?.workbenchLevelRequired ?? 0),
-						category = x.category.ToString(),
-						display_name = x.displayName.english,
-						despawn_rarity = x.despawnRarity,
-						ingredients = x.Blueprint?.ingredients.Select((ItemAmount y) => new
-						{
-							shortname = y.itemDef.shortname,
-							amount = (int)y.amount
-						})
-					}).AddField("changeset", BuildInfo.Current.Scm.ChangeId)
-					.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		private static void PushEntityManifest()
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				if ((Object)(object)GameManifest.Current == (Object)null)
-				{
-					return;
-				}
-				BuildInfo current = BuildInfo.Current;
-				object obj;
-				if (current == null)
-				{
-					obj = null;
-				}
-				else
-				{
-					ScmInfo scm = current.Scm;
-					obj = ((scm != null) ? scm.ChangeId : null);
-				}
-				if (obj != null)
-				{
-					EventRecord eventRecord = EventRecord.New("entity_manifest").AddObject("entities", GameManifest.Current.entities.Select((string x) => new
-					{
-						shortname = Path.GetFileNameWithoutExtension(x),
-						prefab_id = StringPool.Get(x.ToLower())
-					}));
-					BuildInfo current2 = BuildInfo.Current;
-					eventRecord.AddField("changeset", ((current2 != null) ? current2.Scm.ChangeId : null) ?? "editor").Submit();
-				}
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnFiredProjectile(BasePlayer player, BasePlayer.FiredProjectile projectile, Guid projectileGroupId)
-		{
-			//IL_0021: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0031: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0041: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
-			if (!Stats || !HighFrequencyStats)
-			{
-				return;
-			}
-			try
-			{
-				EventRecord record = EventRecord.New("entity_damage").AddField("start_pos", projectile.position).AddField("start_vel", projectile.initialVelocity)
-					.AddField("velocity_inherit", projectile.inheritedVelocity)
-					.AddField("ammo_item", projectile.itemDef?.shortname)
-					.AddField("weapon", (BaseEntity)projectile.weaponSource)
-					.AddField("projectile_group", projectileGroupId)
-					.AddField("projectile_id", projectile.id)
-					.AddField("attacker", (BaseEntity)player)
-					.AddField("look_dir", player.tickViewAngles)
-					.AddField("model_state", (player.modelStateTick ?? player.modelState).flags);
-				PendingFiredProjectile pendingFiredProjectile = Pool.Get<PendingFiredProjectile>();
-				pendingFiredProjectile.Record = record;
-				pendingFiredProjectile.FiredProjectile = projectile;
-				firedProjectiles[new FiredProjectileKey(player.userID, projectile.id)] = pendingFiredProjectile;
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnFiredProjectileRemoved(BasePlayer player, BasePlayer.FiredProjectile projectile)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				FiredProjectileKey key = new FiredProjectileKey(player.userID, projectile.id);
-				if (!firedProjectiles.TryGetValue(key, out var value))
-				{
-					Debug.LogWarning((object)$"Can't find projectile for player '{player}' with id {projectile.id}");
-					return;
-				}
-				if (!value.Hit)
-				{
-					EventRecord record = value.Record;
-					if (projectile.updates.Count > 0)
-					{
-						record.AddObject("projectile_updates", projectile.updates);
-					}
-					record.Submit();
-				}
-				Pool.Free<PendingFiredProjectile>(ref value);
-				firedProjectiles.Remove(key);
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnQuarryItem(ResourceMode mode, string item, int amount, MiningQuarry sourceEntity)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				AddPendingItems(sourceEntity, item, amount, "quarry", mode == ResourceMode.Consumed);
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnExcavatorProduceItem(Item item, BaseEntity sourceEntity)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				AddPendingItems(sourceEntity, item.info.shortname, item.amount, "excavator", consumed: false);
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnExcavatorConsumeFuel(Item item, int amount, BaseEntity dieselEngine)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				LogResource(ResourceMode.Consumed, "excavator", item.info.shortname, amount, dieselEngine, null, safezone: false, null, 0uL);
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnCraftItem(string item, int amount, BasePlayer player, BaseEntity workbench, bool inSafezone)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				LogResource(ResourceMode.Produced, "craft", item, amount, null, null, inSafezone, workbench, player?.userID ?? 0);
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnCraftMaterialConsumed(string item, int amount, BasePlayer player, BaseEntity workbench, bool inSafezone, string targetItem)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				LogResource(safezone: inSafezone, workbench: workbench, targetItem: targetItem, mode: ResourceMode.Consumed, category: "craft", itemName: item, amount: amount, sourceEntity: null, tool: null, steamId: player?.userID ?? 0);
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnConsumableUsed(BasePlayer player, Item item)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				EventRecord.New("consumeable_used").AddField("player", (BaseEntity)player).AddField("item", item)
-					.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnEntitySpawned(BaseEntity entity)
-		{
-			//IL_0014: Unknown result type (might be due to invalid IL or missing references)
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				trackedSpawnedIds.Add(entity.net.ID);
-				EventRecord.New("entity_spawned").AddField("entity", entity).Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		private static void TryLogEntityKilled(BaseNetworkable entity)
-		{
-			//IL_0014: Unknown result type (might be due to invalid IL or missing references)
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				if (trackedSpawnedIds.Contains(entity.net.ID))
-				{
-					EventRecord.New("entity_killed").AddField("entity", Object.op_Implicit((Object)(object)entity)).Submit();
-				}
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnMedUsed(string itemName, BasePlayer player, BasePlayer target)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				EventRecord.New("med_used").AddField("player", (BaseEntity)player).AddField("target", (BaseEntity)target)
-					.AddField("item_name", itemName)
-					.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnCodelockChanged(BasePlayer player, CodeLock codeLock, string oldCode, string newCode, bool isGuest)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				EventRecord.New("code_change").AddField("player", (BaseEntity)player).AddField("codelock", (BaseEntity)codeLock)
-					.AddField("old_code", oldCode)
-					.AddField("new_code", newCode)
-					.AddField("is_guest", isGuest)
-					.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnCodeLockEntered(BasePlayer player, CodeLock codeLock, bool isGuest)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				EventRecord.New("code_enter").AddField("player", (BaseEntity)player).AddField("codelock", (BaseEntity)codeLock)
-					.AddField("is_guest", isGuest)
-					.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnTeamChanged(string change, ulong teamId, ulong teamLeader, ulong user, List<ulong> members)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			List<string> list = Pool.GetList<string>();
-			try
-			{
-				if (members != null)
-				{
-					foreach (ulong member in members)
-					{
-						list.Add(SingletonComponent<ServerMgr>.Instance.persistance.GetUserWipeId(member));
-					}
-				}
-				EventRecord.New("team_change").AddField("team_leader", SingletonComponent<ServerMgr>.Instance.persistance.GetUserWipeId(teamLeader)).AddField("team", teamId)
-					.AddField("target_user", SingletonComponent<ServerMgr>.Instance.persistance.GetUserWipeId(user))
-					.AddField("change", change)
-					.AddObject("users", list)
-					.AddField("member_count", members.Count)
-					.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-			Pool.FreeList<string>(ref list);
-		}
-
-		public static void OnEntityAuthChanged(BaseEntity entity, BasePlayer player, IEnumerable<ulong> authedList, string change, ulong targetUser)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				string userWipeId = SingletonComponent<ServerMgr>.Instance.persistance.GetUserWipeId(targetUser);
-				EventRecord.New("auth_change").AddField("entity", entity).AddField("player", (BaseEntity)player)
-					.AddField("target", userWipeId)
-					.AddObject("auth_list", authedList.Select((ulong x) => SingletonComponent<ServerMgr>.Instance.persistance.GetUserWipeId(x)))
-					.AddField("change", change)
-					.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnSleepingBagAssigned(BasePlayer player, SleepingBag bag, ulong targetUser)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				string value = ((targetUser != 0L) ? SingletonComponent<ServerMgr>.Instance.persistance.GetUserWipeId(targetUser) : "");
-				EventRecord.New("sleeping_bag_assign").AddField("entity", (BaseEntity)bag).AddField("player", (BaseEntity)player)
-					.AddField("target", value)
-					.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnFallDamage(BasePlayer player, float velocity, float damage)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				EventRecord.New("fall_damage").AddField("player", (BaseEntity)player).AddField("velocity", velocity)
-					.AddField("damage", damage)
-					.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnResearchStarted(BasePlayer player, BaseEntity entity, Item item, int scrapCost)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				EventRecord.New("research_start").AddField("player", (BaseEntity)player).AddField("item", item.info.shortname)
-					.AddField("scrap", scrapCost)
-					.AddField("entity", entity)
-					.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnBlueprintLearned(BasePlayer player, ItemDefinition item, string reason, BaseEntity entity = null)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				EventRecord.New("blueprint_learned").AddField("player", (BaseEntity)player).AddField("item", item.shortname)
-					.AddField("reason", reason)
-					.AddField("entity", entity)
-					.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnItemRecycled(string item, int amount, Recycler recycler)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				LogResource(ResourceMode.Consumed, "recycler", item, amount, recycler, null, safezone: false, null, recycler.LastLootedBy);
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnRecyclerItemProduced(string item, int amount, Recycler recycler, Item sourceItem)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				LogResource(ResourceMode.Produced, "recycler", item, amount, recycler, null, safezone: false, null, recycler.LastLootedBy, null, sourceItem);
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnGatherItem(string item, int amount, BaseEntity sourceEntity, BasePlayer player, AttackEntity weapon = null)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				LogResource(ResourceMode.Produced, "gather", item, amount, sourceEntity, weapon, safezone: false, null, player.userID);
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnFirstLooted(BaseEntity entity, BasePlayer player)
-		{
-			//IL_005d: Unknown result type (might be due to invalid IL or missing references)
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				if (entity is LootContainer lootContainer)
-				{
-					LogItemsLooted(player, entity, lootContainer.inventory);
-					EventRecord.New("loot_entity").AddField("entity", entity).AddField("player", (BaseEntity)player)
-						.AddField("monument", GetMonument(entity))
-						.AddField("biome", GetBiome(((Component)entity).transform.position))
-						.Submit();
-				}
-				else if (entity is LootableCorpse lootableCorpse)
-				{
-					ItemContainer[] containers = lootableCorpse.containers;
-					foreach (ItemContainer container in containers)
-					{
-						LogItemsLooted(player, entity, container);
-					}
-				}
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnLootContainerDestroyed(LootContainer entity, BasePlayer player, AttackEntity weapon)
-		{
-			//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-			//IL_002b: Unknown result type (might be due to invalid IL or missing references)
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				if (entity.DropsLoot && (Object)(object)player != (Object)null && Vector3.Distance(((Component)entity).transform.position, ((Component)player).transform.position) < 50f && entity.inventory?.itemList != null && entity.inventory.itemList.Count > 0)
-				{
-					LogItemsLooted(player, entity, entity.inventory, weapon);
-				}
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnEntityDestroyed(BaseNetworkable entity)
-		{
-			TryLogEntityKilled(entity);
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				if (!(entity is LootContainer lootContainer) || !lootContainer.FirstLooted)
-				{
-					return;
-				}
-				foreach (Item item in lootContainer.inventory.itemList)
-				{
-					OnItemDespawn(lootContainer, item, 3, lootContainer.LastLootedBy);
-				}
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnEntityBuilt(BaseEntity entity, BasePlayer player)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				EventRecord eventRecord = EventRecord.New("entity_built").AddField("player", (BaseEntity)player).AddField("entity", entity);
-				if (entity is SleepingBag)
-				{
-					int sleepingBagCount = SleepingBag.GetSleepingBagCount(player.userID);
-					eventRecord.AddField("bags_active", sleepingBagCount);
-					eventRecord.AddField("max_sleeping_bags", ConVar.Server.max_sleeping_bags);
-				}
-				eventRecord.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnKeycardSwiped(BasePlayer player, CardReader cardReader)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				EventRecord.New("keycard_swiped").AddField("player", (BaseEntity)player).AddField("card_level", cardReader.accessLevel)
-					.AddField("entity", (BaseEntity)cardReader)
-					.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnLockedCrateStarted(BasePlayer player, HackableLockedCrate crate)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				EventRecord.New("hackable_crate_started").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)crate)
-					.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnLockedCrateFinished(ulong player, HackableLockedCrate crate)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				string userWipeId = SingletonComponent<ServerMgr>.Instance.persistance.GetUserWipeId(player);
-				EventRecord.New("hackable_crate_ended").AddField("player_userid", userWipeId).AddField("entity", (BaseEntity)crate)
-					.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnStashHidden(BasePlayer player, StashContainer entity)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				EventRecord.New("stash_hidden").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)entity)
-					.AddField("owner", SingletonComponent<ServerMgr>.Instance.persistance.GetUserWipeId(entity.OwnerID))
-					.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnStashRevealed(BasePlayer player, StashContainer entity)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				EventRecord.New("stash_reveal").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)entity)
-					.AddField("owner", SingletonComponent<ServerMgr>.Instance.persistance.GetUserWipeId(entity.OwnerID))
-					.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnAntihackViolation(BasePlayer player, int type, string message)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				EventRecord.New("antihack_violation").AddField("player", (BaseEntity)player).AddField("violation_type", type)
-					.AddField("message", message)
-					.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnEyehackViolation(BasePlayer player, Vector3 eyePos)
-		{
-			//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				EventRecord.New("antihack_violation_detailed").AddField("player", (BaseEntity)player).AddField("violation_type", 6)
-					.AddField("eye_pos", eyePos)
-					.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnNoclipViolation(BasePlayer player, Vector3 startPos, Vector3 endPos, int tickCount, Collider collider)
-		{
-			//IL_0036: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0041: Unknown result type (might be due to invalid IL or missing references)
-			if (!Stats || !HighFrequencyStats)
-			{
-				return;
-			}
-			try
-			{
-				EventRecord.New("antihack_violation_detailed").AddField("player", (BaseEntity)player).AddField("violation_type", 1)
-					.AddField("start_pos", startPos)
-					.AddField("end_pos", endPos)
-					.AddField("tick_count", tickCount)
-					.AddField("collider_name", ((Object)collider).name)
-					.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnFlyhackViolation(BasePlayer player, Vector3 startPos, Vector3 endPos, int tickCount)
-		{
-			//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-			//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				EventRecord.New("antihack_violation_detailed").AddField("player", (BaseEntity)player).AddField("violation_type", 3)
-					.AddField("start_pos", startPos)
-					.AddField("end_pos", endPos)
-					.AddField("tick_count", tickCount)
-					.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnProjectileHackViolation(BasePlayer.FiredProjectile projectile)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				FiredProjectileKey key = new FiredProjectileKey(projectile.attacker.userID, projectile.id);
-				if (!firedProjectiles.TryGetValue(key, out var value))
-				{
-					Debug.LogWarning((object)$"Can't find projectile for player '{projectile.attacker}' with id {projectile.id}");
-				}
-				else
-				{
-					value.Record.AddField("projectile_invalid", value: true).AddObject("updates", projectile.updates);
-				}
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnSpeedhackViolation(BasePlayer player, Vector3 startPos, Vector3 endPos, int tickCount)
-		{
-			//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-			//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0050: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0051: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0061: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0062: Unknown result type (might be due to invalid IL or missing references)
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				EventRecord.New("antihack_violation_detailed").AddField("player", (BaseEntity)player).AddField("violation_type", 2)
-					.AddField("start_pos", startPos)
-					.AddField("end_pos", endPos)
-					.AddField("tick_count", tickCount)
-					.AddField("distance", Vector3.Distance(startPos, endPos))
-					.AddField("distance_2d", Vector3Ex.Distance2D(startPos, endPos))
-					.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnTerrainHackViolation(BasePlayer player)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				EventRecord.New("antihack_violation_detailed").AddField("player", (BaseEntity)player).AddField("violation_type", 10)
-					.AddField("seed", World.Seed)
-					.AddField("size", World.Size)
-					.AddField("map_url", World.Url)
-					.AddField("map_checksum", World.Checksum)
-					.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnEntityTakeDamage(HitInfo info, bool isDeath)
-		{
-			//IL_01a5: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01b5: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01c5: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01d5: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01e5: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01f5: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00fe: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0109: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0115: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0120: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00cb: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00d7: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00e3: Unknown result type (might be due to invalid IL or missing references)
-			//IL_02ec: Unknown result type (might be due to invalid IL or missing references)
-			//IL_032f: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0346: Unknown result type (might be due to invalid IL or missing references)
-			if (!Stats || !HighFrequencyStats)
-			{
-				return;
-			}
-			try
-			{
-				BasePlayer initiatorPlayer = info.InitiatorPlayer;
-				BasePlayer basePlayer = info.HitEntity as BasePlayer;
-				if (((Object)(object)info.Initiator == (Object)null && !isDeath) || (((Object)(object)initiatorPlayer == (Object)null || initiatorPlayer.IsNpc || initiatorPlayer.IsBot) && ((Object)(object)basePlayer == (Object)null || basePlayer.IsNpc || basePlayer.IsBot)))
-				{
-					return;
-				}
-				EventRecord eventRecord = null;
-				float value = -1f;
-				float value2 = -1f;
-				if ((Object)(object)initiatorPlayer != (Object)null)
-				{
-					if (info.IsProjectile())
-					{
-						FiredProjectileKey key = new FiredProjectileKey(initiatorPlayer.userID, info.ProjectileID);
-						if (firedProjectiles.TryGetValue(key, out var value3))
-						{
-							eventRecord = value3.Record;
-							value = Vector3.Distance(info.HitNormalWorld, value3.FiredProjectile.initialPosition);
-							value = Vector3Ex.Distance2D(info.HitNormalWorld, value3.FiredProjectile.initialPosition);
-							value3.Hit = info.DidHit;
-						}
-					}
-					else
-					{
-						value = Vector3.Distance(info.HitNormalWorld, initiatorPlayer.eyes.position);
-						value = Vector3Ex.Distance2D(info.HitNormalWorld, initiatorPlayer.eyes.position);
-					}
-				}
-				if (eventRecord == null)
-				{
-					eventRecord = EventRecord.New("entity_damage");
-				}
-				eventRecord.AddField("is_hit", value: true).AddField("is_headshot", info.isHeadshot).AddField("victim", info.HitEntity)
-					.AddField("damage", info.damageTypes.Total())
-					.AddField("damage_type", info.damageTypes.GetMajorityDamageType().ToString())
-					.AddField("pos_world", info.HitPositionWorld)
-					.AddField("pos_local", info.HitPositionLocal)
-					.AddField("point_start", info.PointStart)
-					.AddField("point_end", info.PointEnd)
-					.AddField("normal_world", info.HitNormalWorld)
-					.AddField("normal_local", info.HitNormalLocal)
-					.AddField("distance_cl", info.ProjectileDistance)
-					.AddField("distance", value)
-					.AddField("distance_2d", value2);
-				if (!info.IsProjectile())
-				{
-					eventRecord.AddField("weapon", (BaseEntity)info.Weapon);
-					eventRecord.AddField("attacker", info.Initiator);
-				}
-				if (info.HitBone != 0)
-				{
-					eventRecord.AddField("bone", info.HitBone).AddField("bone_name", info.boneName).AddField("hit_area", (int)info.boneArea);
-				}
-				if (info.ProjectileID != 0)
-				{
-					eventRecord.AddField("projectile_id", info.ProjectileID).AddField("projectile_integrity", info.ProjectileIntegrity).AddField("projectile_hits", info.ProjectileHits)
-						.AddField("trajectory_mismatch", info.ProjectileTrajectoryMismatch)
-						.AddField("travel_time", info.ProjectileTravelTime)
-						.AddField("projectile_velocity", info.ProjectileVelocity)
-						.AddField("projectile_prefab", ((Object)info.ProjectilePrefab).name);
-				}
-				if ((Object)(object)initiatorPlayer != (Object)null && !info.IsProjectile())
-				{
-					eventRecord.AddField("attacker_eye_pos", initiatorPlayer.eyes.position);
-					eventRecord.AddField("attacker_eye_dir", initiatorPlayer.eyes.BodyForward());
-					if (((object)initiatorPlayer).GetType() == typeof(BasePlayer))
-					{
-						eventRecord.AddField("attacker_life", initiatorPlayer.respawnId);
-					}
-					if (isDeath)
-					{
-						eventRecord.AddObject("attacker_worn", initiatorPlayer.inventory.containerWear.itemList.Select((Item x) => new SimpleItemAmount(x)));
-						eventRecord.AddObject("attacker_hotbar", initiatorPlayer.inventory.containerBelt.itemList.Select((Item x) => new SimpleItemAmount(x)));
-					}
-				}
-				if ((Object)(object)basePlayer != (Object)null)
-				{
-					eventRecord.AddField("victim_life", basePlayer.respawnId);
-					eventRecord.AddObject("victim_worn", basePlayer.inventory.containerWear.itemList.Select((Item x) => new SimpleItemAmount(x)));
-					eventRecord.AddObject("victim_hotbar", basePlayer.inventory.containerBelt.itemList.Select((Item x) => new SimpleItemAmount(x)));
-				}
-				eventRecord.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnPlayerRespawned(BasePlayer player, BaseEntity targetEntity)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				EventRecord.New("player_respawn").AddField("player", (BaseEntity)player).AddField("bag", targetEntity)
-					.AddField("life_id", player.respawnId)
-					.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnExplosiveLaunched(BasePlayer player, BaseEntity explosive, BaseEntity launcher = null)
-		{
-			//IL_0030: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0040: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0045: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0048: Unknown result type (might be due to invalid IL or missing references)
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				EventRecord eventRecord = EventRecord.New("explosive_launch").AddField("player", (BaseEntity)player).AddField("explosive", explosive)
-					.AddField("explosive_velocity", explosive.GetWorldVelocity());
-				Vector3 worldVelocity = explosive.GetWorldVelocity();
-				EventRecord eventRecord2 = eventRecord.AddField("explosive_direction", ((Vector3)(ref worldVelocity)).normalized);
-				if ((Object)(object)launcher != (Object)null)
-				{
-					eventRecord2.AddField("launcher", launcher);
-				}
-				eventRecord2.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnExplosion(TimedExplosive explosive)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				EventRecord.New("explosion").AddField("entity", (BaseEntity)explosive).Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnItemDespawn(BaseEntity itemContainer, Item item, int dropReason, ulong userId)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				EventRecord eventRecord = EventRecord.New("item_despawn").AddField("entity", itemContainer).AddField("item", item)
-					.AddField("drop_reason", dropReason);
-				if (userId != 0L)
-				{
-					eventRecord.AddField("player_userid", userId);
-				}
-				eventRecord.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnItemDropped(BasePlayer player, WorldItem entity, DroppedItem.DropReasonEnum dropReason)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				EventRecord.New("item_drop").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)entity)
-					.AddField("item", entity.GetItem())
-					.AddField("drop_reason", (int)dropReason)
-					.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnItemPickup(BasePlayer player, WorldItem entity)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				EventRecord.New("item_pickup").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)entity)
-					.AddField("item", entity.GetItem())
-					.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnPlayerConnected(Connection connection)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				string userWipeId = SingletonComponent<ServerMgr>.Instance.persistance.GetUserWipeId(connection.userid);
-				EventRecord.New("player_connect").AddField("player_userid", userWipeId).AddField("username", connection.username)
-					.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnPlayerDisconnected(Connection connection, string reason)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				string userWipeId = SingletonComponent<ServerMgr>.Instance.persistance.GetUserWipeId(connection.userid);
-				EventRecord.New("player_disconnect").AddField("player_userid", userWipeId).AddField("username", connection.username)
-					.AddField("reason", reason)
-					.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnEntityPickedUp(BasePlayer player, BaseEntity entity)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				EventRecord.New("entity_pickup").AddField("player", (BaseEntity)player).AddField("entity", entity)
-					.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnChatMessage(BasePlayer player, string message, int channel)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				EventRecord.New("chat").AddField("player", (BaseEntity)player).AddField("message", message)
-					.AddField("channel", channel)
-					.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnVendingMachineOrderChanged(BasePlayer player, VendingMachine vendingMachine, int sellItemId, int sellAmount, bool sellingBp, int buyItemId, int buyAmount, bool buyingBp, bool added)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				ItemDefinition itemDefinition = ItemManager.FindItemDefinition(sellItemId);
-				ItemDefinition itemDefinition2 = ItemManager.FindItemDefinition(buyItemId);
-				EventRecord.New("vending_changed").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)vendingMachine)
-					.AddField("sell_item", itemDefinition.shortname)
-					.AddField("sell_amount", sellAmount)
-					.AddField("buy_item", itemDefinition2.shortname)
-					.AddField("buy_amount", buyAmount)
-					.AddField("is_selling_bp", sellingBp)
-					.AddField("is_buying_bp", buyingBp)
-					.AddField("change", added ? "added" : "removed")
-					.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnBuyFromVendingMachine(BasePlayer player, VendingMachine vendingMachine, int sellItemId, int sellAmount, bool sellingBp, int buyItemId, int buyAmount, bool buyingBp, int numberOfTransactions, BaseEntity drone = null)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				ItemDefinition itemDefinition = ItemManager.FindItemDefinition(sellItemId);
-				ItemDefinition itemDefinition2 = ItemManager.FindItemDefinition(buyItemId);
-				EventRecord.New("vending_sale").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)vendingMachine)
-					.AddField("sell_item", itemDefinition.shortname)
-					.AddField("sell_amount", sellAmount)
-					.AddField("buy_item", itemDefinition2.shortname)
-					.AddField("buy_amount", buyAmount)
-					.AddField("transactions", numberOfTransactions)
-					.AddField("is_selling_bp", sellingBp)
-					.AddField("is_buying_bp", buyingBp)
-					.AddField("drone_terminal", drone)
-					.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnNPCVendor(BasePlayer player, NPCTalking vendor, int scrapCost, string action)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				EventRecord.New("npc_vendor").AddField("player", (BaseEntity)player).AddField("vendor", (BaseEntity)vendor)
-					.AddField("scrap_amount", scrapCost)
-					.AddField("action", action)
-					.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		private static void LogItemsLooted(BasePlayer looter, BaseEntity entity, ItemContainer container, AttackEntity tool = null)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				if ((Object)(object)entity == (Object)null || container == null)
-				{
-					return;
-				}
-				foreach (Item item in container.itemList)
-				{
-					if (item != null)
-					{
-						string shortname = item.info.shortname;
-						int amount = item.amount;
-						ulong steamId = looter?.userID ?? 0;
-						LogResource(ResourceMode.Produced, "loot", shortname, amount, entity, tool, safezone: false, null, steamId);
-					}
-				}
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void LogResource(ResourceMode mode, string category, string itemName, int amount, BaseEntity sourceEntity = null, AttackEntity tool = null, bool safezone = false, BaseEntity workbench = null, ulong steamId = 0uL, string sourceEntityPrefab = null, Item sourceItem = null, string targetItem = null)
-		{
-			//IL_0073: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0095: Unknown result type (might be due to invalid IL or missing references)
-			if (!Stats || !HighFrequencyStats)
-			{
-				return;
-			}
-			try
-			{
-				EventRecord eventRecord = EventRecord.New("item_event").AddField("item_mode", mode.ToString()).AddField("category", category)
-					.AddField("item_name", itemName)
-					.AddField("amount", amount);
-				if ((Object)(object)sourceEntity != (Object)null)
-				{
-					eventRecord.AddField("entity", sourceEntity);
-					string biome = GetBiome(((Component)sourceEntity).transform.position);
-					if (biome != null)
-					{
-						eventRecord.AddField("biome", biome);
-					}
-					if (IsOcean(((Component)sourceEntity).transform.position))
-					{
-						eventRecord.AddField("ocean", value: true);
-					}
-					string monument = GetMonument(sourceEntity);
-					if (monument != null)
-					{
-						eventRecord.AddField("monument", monument);
-					}
-				}
-				if (sourceEntityPrefab != null)
-				{
-					eventRecord.AddField("entity_prefab", sourceEntityPrefab);
-				}
-				if ((Object)(object)tool != (Object)null)
-				{
-					eventRecord.AddField("tool", (BaseEntity)tool);
-				}
-				if (safezone)
-				{
-					eventRecord.AddField("safezone", value: true);
-				}
-				if ((Object)(object)workbench != (Object)null)
-				{
-					eventRecord.AddField("workbench", workbench);
-				}
-				if (sourceEntity is GrowableEntity plant)
-				{
-					eventRecord.AddField("genes", GetGenesAsString(plant));
-				}
-				if (sourceItem != null)
-				{
-					eventRecord.AddField("source_item", sourceItem.info.shortname);
-				}
-				if (targetItem != null)
-				{
-					eventRecord.AddField("target_item", targetItem);
-				}
-				if (steamId != 0L)
-				{
-					string userWipeId = SingletonComponent<ServerMgr>.Instance.persistance.GetUserWipeId(steamId);
-					eventRecord.AddField("player_userid", userWipeId);
-				}
-				eventRecord.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnSkinChanged(BasePlayer player, RepairBench repairBench, Item item, ulong workshopId)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				EventRecord.New("item_skinned").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)repairBench)
-					.AddField("item", item)
-					.AddField("new_skin", workshopId)
-					.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnItemRepaired(BasePlayer player, BaseEntity repairBench, Item itemToRepair, float conditionBefore, float maxConditionBefore)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				EventRecord.New("item_repair").AddField("player", (BaseEntity)player).AddField("entity", repairBench)
-					.AddField("item", itemToRepair)
-					.AddField("old_condition", conditionBefore)
-					.AddField("old_max_condition", maxConditionBefore)
-					.AddField("max_condition", itemToRepair.maxConditionNormalized)
-					.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnEntityRepaired(BasePlayer player, BaseEntity entity, float healthBefore, float healthAfter)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				EventRecord.New("entity_repair").AddField("player", (BaseEntity)player).AddField("entity", entity)
-					.AddField("healing", healthAfter - healthBefore)
-					.AddField("health_before", healthBefore)
-					.AddField("health_after", healthAfter)
-					.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnBuildingBlockUpgraded(BasePlayer player, BuildingBlock buildingBlock, BuildingGrade.Enum targetGrade, uint targetColor)
-		{
-			//IL_005b: Unknown result type (might be due to invalid IL or missing references)
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				EventRecord.New("block_upgrade").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)buildingBlock)
-					.AddField("old_grade", (int)buildingBlock.grade)
-					.AddField("new_grade", (int)targetGrade)
-					.AddField("color", targetColor)
-					.AddField("biome", GetBiome(((Component)buildingBlock).transform.position))
-					.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnBuildingBlockDemolished(BasePlayer player, BuildingBlock buildingBlock)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				EventRecord.New("block_demolish").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)buildingBlock)
-					.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnPlayerInitializedWipeId(ulong userId, string wipeId)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				EventRecord.New("player_wipe_id_set").AddField("user_id", userId).AddField("player_wipe_id", wipeId)
-					.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnFreeUnderwaterCrate(BasePlayer player, FreeableLootContainer freeableLootContainer)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				EventRecord.New("crate_untied").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)freeableLootContainer)
-					.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnVehiclePurchased(BasePlayer player, BaseEntity vehicle)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				EventRecord.New("vehicle_purchase").AddField("player", (BaseEntity)player).AddField("entity", vehicle)
-					.AddField("price", vehicle)
-					.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnMissionComplete(BasePlayer player, BaseMission mission, BaseMission.MissionFailReason? failReason = null)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				EventRecord eventRecord = EventRecord.New("mission_complete").AddField("player", (BaseEntity)player).AddField("mission", mission.shortname)
-					.AddField("mission_succeed", value: true);
-				if (failReason.HasValue)
-				{
-					eventRecord.AddField("mission_succeed", value: false).AddField("fail_reason", failReason.Value.ToString());
-				}
-				eventRecord.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnGamblingResult(BasePlayer player, BaseEntity entity, int scrapPaid, int scrapRecieved, Guid? gambleGroupId = null)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				EventRecord eventRecord = EventRecord.New("gambing").AddField("player", (BaseEntity)player).AddField("entity", entity)
-					.AddField("scrap_input", scrapPaid)
-					.AddField("scrap_output", scrapRecieved);
-				if (gambleGroupId.HasValue)
-				{
-					eventRecord.AddField("gamble_grouping", gambleGroupId.Value);
-				}
-				eventRecord.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnPlayerPinged(BasePlayer player, BasePlayer.PingType type, bool wasViaWheel)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				EventRecord.New("player_pinged").AddField("player", (BaseEntity)player).AddField("pingType", (int)type)
-					.AddField("viaWheel", wasViaWheel)
-					.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnBagUnclaimed(BasePlayer player, SleepingBag bag)
-		{
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				EventRecord.New("bag_unclaim").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)bag)
-					.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnSteamAuth(ulong userId, ulong ownerUserId, string authResponse)
-		{
-			try
-			{
-				EventRecord.New("steam_auth").AddField("user", userId).AddField("owner", ownerUserId)
-					.AddField("response", authResponse)
-					.AddField("server_port", Net.sv.port)
-					.AddField("network_mode", Net.sv.ProtocolId)
-					.AddField("player_count", BasePlayer.activePlayerList.Count)
-					.AddField("max_players", ConVar.Server.maxplayers)
-					.AddField("hostname", ConVar.Server.hostname)
-					.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
-
-		public static void OnBuildingBlockColorChanged(BasePlayer player, BuildingBlock block, uint oldColor, uint newColor)
-		{
-			//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-			if (!Stats)
-			{
-				return;
-			}
-			try
-			{
-				EventRecord.New("player_pinged").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)block)
-					.AddField("color_old", oldColor)
-					.AddField("color_new", newColor)
-					.AddField("biome", GetBiome(((Component)block).transform.position))
-					.Submit();
-			}
-			catch (Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-		}
 	}
 
 	public class AzureWebInterface
@@ -2421,6 +2721,8 @@ public static class Analytics
 		public static readonly AzureWebInterface client = new AzureWebInterface(isClient: true);
 
 		public static readonly AzureWebInterface server = new AzureWebInterface(isClient: false);
+
+		private AzureAnalyticsUploader GameplayBulkUploader;
 
 		public bool IsClient;
 
@@ -2432,7 +2734,7 @@ public static class Analytics
 
 		private DateTime nextFlush;
 
-		private List<EventRecord> pending = new List<EventRecord>();
+		private ConcurrentQueue<EventRecord> uploadQueue = new ConcurrentQueue<EventRecord>();
 
 		private HttpClient HttpClient = new HttpClient();
 
@@ -2441,26 +2743,63 @@ public static class Analytics
 			CharSet = Encoding.UTF8.WebName
 		};
 
-		public int PendingCount => pending.Count;
+		public int PendingCount => uploadQueue.Count;
 
 		public AzureWebInterface(bool isClient)
 		{
+			//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+			//IL_003c: Expected O, but got Unknown
 			IsClient = isClient;
+			Task.Run((Func<Task>)UploadSchedulingThread);
 		}
 
 		public void EnqueueEvent(EventRecord point)
 		{
-			DateTime utcNow = DateTime.UtcNow;
-			pending.Add(point);
-			if (pending.Count > FlushSize || utcNow > nextFlush)
+			if (!IsClient && !string.IsNullOrEmpty(BulkUploadConnectionString))
 			{
-				nextFlush = utcNow.Add(FlushDelay);
-				List<EventRecord> toUpload = pending;
-				Task.Run(async delegate
+				if (GameplayBulkUploader.NeedsCreation())
 				{
-					await UploadAsync(toUpload);
-				});
-				pending = Pool.GetList<EventRecord>();
+					GameplayBulkUploader = AzureAnalyticsUploader.Create("gameplay_events", TimeSpan.FromMinutes(5.0));
+					GameplayBulkUploader.UseJsonDataObject = true;
+				}
+				GameplayBulkUploader.Append(point);
+			}
+			else
+			{
+				point.MarkSubmitted();
+				uploadQueue.Enqueue(point);
+			}
+		}
+
+		private async Task UploadSchedulingThread()
+		{
+			while (!Application.isQuitting)
+			{
+				try
+				{
+					DateTime utcNow = DateTime.UtcNow;
+					if (uploadQueue.IsEmpty || (uploadQueue.Count < FlushSize && nextFlush > utcNow))
+					{
+						await Task.Delay(1000);
+						continue;
+					}
+					nextFlush = utcNow.Add(FlushDelay);
+					List<EventRecord> list = Pool.GetList<EventRecord>();
+					EventRecord result;
+					while (uploadQueue.TryDequeue(out result))
+					{
+						list.Add(result);
+					}
+					Task.Run(async delegate
+					{
+						await UploadAsync(list);
+					});
+				}
+				catch (Exception ex)
+				{
+					Debug.LogException(ex);
+					await Task.Delay(1000);
+				}
 			}
 		}
 
@@ -2471,119 +2810,29 @@ public static class Analytics
 			streamWriter.Write("[");
 			foreach (EventRecord record in records)
 			{
-				SerializeEvent(record, streamWriter, num);
+				if (num > 0)
+				{
+					streamWriter.Write(',');
+				}
+				record.SerializeAsJson(streamWriter);
 				num++;
 			}
 			streamWriter.Write("]");
 			streamWriter.Flush();
 		}
 
-		private void SerializeEvent(EventRecord record, StreamWriter writer, int index)
-		{
-			//IL_01f6: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01fb: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01fe: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0213: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0228: Unknown result type (might be due to invalid IL or missing references)
-			if (index > 0)
-			{
-				writer.Write(',');
-			}
-			writer.Write("{\"Timestamp\":\"");
-			writer.Write(record.Timestamp.ToString("o"));
-			writer.Write("\",\"Data\":{");
-			bool flag = true;
-			foreach (EventRecordField datum in record.Data)
-			{
-				if (flag)
-				{
-					flag = false;
-				}
-				else
-				{
-					writer.Write(',');
-				}
-				writer.Write("\"");
-				writer.Write(datum.Key1);
-				if (datum.Key2 != null)
-				{
-					writer.Write(datum.Key2);
-				}
-				writer.Write("\":");
-				if (!datum.IsObject)
-				{
-					writer.Write('"');
-				}
-				if (datum.String != null)
-				{
-					if (datum.IsObject)
-					{
-						writer.Write(datum.String);
-					}
-					else
-					{
-						string @string = datum.String;
-						int length = datum.String.Length;
-						for (int i = 0; i < length; i++)
-						{
-							char c = @string[i];
-							switch (c)
-							{
-							case '"':
-							case '\\':
-								writer.Write('\\');
-								writer.Write(c);
-								break;
-							case '\n':
-								writer.Write("\\n");
-								break;
-							case '\r':
-								writer.Write("\\r");
-								break;
-							case '\t':
-								writer.Write("\\t");
-								break;
-							default:
-								writer.Write(c);
-								break;
-							}
-						}
-					}
-				}
-				else if (datum.Float.HasValue)
-				{
-					writer.Write(datum.Float.Value);
-				}
-				else if (datum.Number.HasValue)
-				{
-					writer.Write(datum.Number.Value);
-				}
-				else if (datum.Guid.HasValue)
-				{
-					writer.Write(datum.Guid.Value.ToString("N"));
-				}
-				else if (datum.Vector.HasValue)
-				{
-					writer.Write('(');
-					Vector3 value = datum.Vector.Value;
-					writer.Write(value.x);
-					writer.Write(',');
-					writer.Write(value.y);
-					writer.Write(',');
-					writer.Write(value.z);
-					writer.Write(')');
-				}
-				if (!datum.IsObject)
-				{
-					writer.Write("\"");
-				}
-			}
-			writer.Write('}');
-			writer.Write('}');
-		}
-
 		private async Task UploadAsync(List<EventRecord> records)
 		{
+			if (!(IsClient ? (Application.Manifest?.Features?.ClientAnalytics).GetValueOrDefault() : (Application.Manifest?.Features?.ServerAnalytics).GetValueOrDefault()))
+			{
+				Pool.FreeListAndItems<EventRecord>(ref records);
+				return;
+			}
+			if (records.Count == 0)
+			{
+				Pool.FreeList<EventRecord>(ref records);
+				return;
+			}
 			MemoryStream stream = Pool.Get<MemoryStream>();
 			stream.Position = 0L;
 			stream.SetLength(0L);
@@ -2595,24 +2844,31 @@ public static class Analytics
 				{
 					try
 					{
-						using ByteArrayContent content = new ByteArrayContent(stream.GetBuffer(), 0, (int)stream.Length);
-						content.Headers.ContentType = JsonContentType;
-						if (!string.IsNullOrEmpty(AnalyticsSecret))
+						ByteArrayContent content = new ByteArrayContent(stream.GetBuffer(), 0, (int)stream.Length);
+						try
 						{
-							content.Headers.Add(AnalyticsHeader, AnalyticsSecret);
+							((HttpContent)content).Headers.ContentType = JsonContentType;
+							if (!string.IsNullOrEmpty(AnalyticsSecret))
+							{
+								((HttpHeaders)((HttpContent)content).Headers).Add(AnalyticsHeader, AnalyticsSecret);
+							}
+							else
+							{
+								((HttpHeaders)((HttpContent)content).Headers).Add(AnalyticsHeader, AnalyticsPublicKey);
+							}
+							if (!IsClient)
+							{
+								((HttpHeaders)((HttpContent)content).Headers).Add("X-SERVER-IP", Net.sv.ip);
+								((HttpHeaders)((HttpContent)content).Headers).Add("X-SERVER-PORT", Net.sv.port.ToString());
+							}
+							if (UploadAnalytics)
+							{
+								(await HttpClient.PostAsync(IsClient ? ClientAnalyticsUrl : ServerAnalyticsUrl, (HttpContent)(object)content)).EnsureSuccessStatusCode();
+							}
 						}
-						else
+						finally
 						{
-							content.Headers.Add(AnalyticsHeader, AnalyticsPublicKey);
-						}
-						if (!IsClient)
-						{
-							content.Headers.Add("X-SERVER-IP", Net.sv.ip);
-							content.Headers.Add("X-SERVER-PORT", Net.sv.port.ToString());
-						}
-						if (UploadAnalytics)
-						{
-							(await HttpClient.PostAsync(IsClient ? ClientAnalyticsUrl : ServerAnalyticsUrl, content)).EnsureSuccessStatusCode();
+							((IDisposable)content)?.Dispose();
 						}
 					}
 					catch (Exception ex)
@@ -2621,10 +2877,10 @@ public static class Analytics
 						{
 							Debug.LogException(ex);
 						}
-						goto IL_01e4;
+						goto IL_0297;
 					}
 					break;
-					IL_01e4:
+					IL_0297:
 					if (ticket != null)
 					{
 						try
@@ -2651,12 +2907,7 @@ public static class Analytics
 			}
 			finally
 			{
-				foreach (EventRecord record in records)
-				{
-					EventRecord current = record;
-					Pool.Free<EventRecord>(ref current);
-				}
-				Pool.FreeList<EventRecord>(ref records);
+				Pool.FreeListAndItems<EventRecord>(ref records);
 				Pool.FreeMemoryStream(ref stream);
 			}
 		}
@@ -3083,32 +3334,6 @@ public static class Analytics
 
 	private static HashSet<NetworkableId> trackedSpawnedIds = new HashSet<NetworkableId>();
 
-	public static string ClientAnalyticsUrl { get; set; } = "https://rust-api.facepunch.com/api/public/analytics/rust/client";
-
-
-	[ServerVar(Name = "server_analytics_url")]
-	public static string ServerAnalyticsUrl { get; set; } = "https://rust-api.facepunch.com/api/public/analytics/rust/server";
-
-
-	[ServerVar(Name = "analytics_header", Saved = true)]
-	public static string AnalyticsHeader { get; set; } = "X-API-KEY";
-
-
-	[ServerVar(Name = "analytics_enabled")]
-	public static bool UploadAnalytics { get; set; } = true;
-
-
-	[ServerVar(Name = "analytics_secret", Saved = true)]
-	public static string AnalyticsSecret { get; set; } = "";
-
-
-	public static string AnalyticsPublicKey { get; set; } = "pub878ABLezSB6onshSwBCRGYDCpEI";
-
-
-	[ServerVar(Name = "high_freq_stats", Saved = true)]
-	public static bool HighFrequencyStats { get; set; } = true;
-
-
 	[ServerVar(Name = "stats_blacklist", Saved = true)]
 	public static string stats_blacklist
 	{
@@ -3125,11 +3350,42 @@ public static class Analytics
 			if (string.IsNullOrEmpty(value))
 			{
 				StatsBlacklist = null;
-				return;
 			}
-			StatsBlacklist = new HashSet<string>(value.Split(','));
+			else
+			{
+				StatsBlacklist = new HashSet<string>(value.Split(',', StringSplitOptions.None));
+			}
 		}
 	}
+
+	public static string ClientAnalyticsUrl { get; set; } = "https://rust-api.facepunch.com/api/public/analytics/rust/client";
+
+
+	[ServerVar(Name = "server_analytics_url")]
+	public static string ServerAnalyticsUrl { get; set; } = "https://rust-api.facepunch.com/api/public/analytics/rust/server";
+
+
+	[ServerVar(Name = "analytics_header", Saved = true)]
+	public static string AnalyticsHeader { get; set; } = "X-API-KEY";
+
+
+	[ServerVar(Name = "analytics_enabled", Saved = true)]
+	public static bool UploadAnalytics { get; set; } = true;
+
+
+	[ServerVar(Name = "analytics_secret", Saved = true)]
+	public static string AnalyticsSecret { get; set; } = "";
+
+
+	public static string AnalyticsPublicKey { get; set; } = "pub878ABLezSB6onshSwBCRGYDCpEI";
+
+
+	[ServerVar(Name = "analytics_bulk_upload_url", Saved = true)]
+	public static string BulkUploadConnectionString { get; set; }
+
+	[ServerVar(Name = "high_freq_stats", Saved = true)]
+	public static bool HighFrequencyStats { get; set; } = true;
+
 
 	[ClientVar(Name = "pending_analytics")]
 	[ServerVar(Name = "pending_analytics")]

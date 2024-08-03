@@ -71,7 +71,7 @@ public class ExcavatorArm : BaseEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_SetResourceTarget "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_SetResourceTarget "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_SetResourceTarget", 0);
 				try
@@ -122,7 +122,7 @@ public class ExcavatorArm : BaseEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_StopMining "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_StopMining "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_StopMining", 0);
 				try
@@ -233,7 +233,7 @@ public class ExcavatorArm : BaseEntity
 				while (enumerator.MoveNext())
 				{
 					BasePlayer current = enumerator.Current;
-					if (!current.IsNpc && current.IsConnected)
+					if (!current.IsNpc && current.IsConnected && !current.IsInTutorial)
 					{
 						current.ShowToast(GameTip.Styles.Server_Event, excavatorPhrase);
 					}
@@ -309,7 +309,7 @@ public class ExcavatorArm : BaseEntity
 	[RPC_Server.MaxDistance(3f)]
 	public void RPC_SetResourceTarget(RPCMessage msg)
 	{
-		switch (msg.read.String(256))
+		switch (msg.read.String(256, false))
 		{
 		case "HQM":
 			resourceMiningIndex = 0;

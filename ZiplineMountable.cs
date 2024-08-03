@@ -184,7 +184,7 @@ public class ZiplineMountable : BaseMountable
 		linePoints = targetLinePoints;
 		currentTravelDistance = 0f;
 		mountTime = TimeSince.op_Implicit(0f);
-		GamePhysics.OverlapSphere(((Component)this).transform.position, 6f, ignoreColliders, 1218511105, (QueryTriggerInteraction)1);
+		GamePhysics.OverlapSphere(((Component)this).transform.position, 6f, ignoreColliders, 1084293377, (QueryTriggerInteraction)1);
 		startPosition = ((Component)this).transform.position;
 		startRotation = ((Component)this).transform.rotation;
 		lastSafePosition = startPosition;
@@ -240,7 +240,7 @@ public class ZiplineMountable : BaseMountable
 		List<RaycastHit> list = Pool.GetList<RaycastHit>();
 		Vector3 position = Vector3Ex.WithY(val, val.y - ZipCollider.height * 0.6f);
 		Vector3 position2 = val;
-		GamePhysics.CapsuleSweep(position, position2, ZipCollider.radius, ((Component)this).transform.forward, num, list, 1218511105, (QueryTriggerInteraction)1);
+		GamePhysics.CapsuleSweep(position, position2, ZipCollider.radius, ((Component)this).transform.forward, num, list, 1084293377, (QueryTriggerInteraction)1);
 		foreach (RaycastHit item in list)
 		{
 			RaycastHit current = item;

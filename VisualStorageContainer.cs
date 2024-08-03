@@ -111,10 +111,10 @@ public class VisualStorageContainer : LootContainer
 
 	public void UpdateVisibleItems(ItemContainer msg)
 	{
-		//IL_00ba: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ce: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ea: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fc: Unknown result type (might be due to invalid IL or missing references)
 		for (int i = 0; i < displayModels.Length; i++)
 		{
 			DisplayModel displayModel = displayModels[i];
@@ -132,7 +132,7 @@ public class VisualStorageContainer : LootContainer
 		{
 			ItemDefinition itemDefinition = ItemManager.FindItemDefinition(content.itemid);
 			GameObject val = null;
-			val = ((itemDefinition.worldModelPrefab == null || !itemDefinition.worldModelPrefab.isValid) ? Object.Instantiate<GameObject>(defaultDisplayModel) : itemDefinition.worldModelPrefab.Instantiate());
+			val = ((itemDefinition.GetWorldModel(content.amount) == null || !itemDefinition.GetWorldModel(content.amount).isValid) ? Object.Instantiate<GameObject>(defaultDisplayModel) : itemDefinition.GetWorldModel(content.amount).Instantiate());
 			if (Object.op_Implicit((Object)(object)val))
 			{
 				val.transform.SetPositionAndRotation(((Component)displayNodes[content.slot]).transform.position + new Vector3(0f, 0.25f, 0f), ((Component)displayNodes[content.slot]).transform.rotation);

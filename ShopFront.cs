@@ -23,6 +23,7 @@ public class ShopFront : StorageContainer
 
 	public GameObjectRef transactionCompleteEffect;
 
+	[NonSerialized]
 	public ItemContainer customerInventory;
 
 	private bool swappingItems;
@@ -41,7 +42,7 @@ public class ShopFront : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - AcceptClicked "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - AcceptClicked "));
 				}
 				TimeWarning val2 = TimeWarning.New("AcceptClicked", 0);
 				try
@@ -92,7 +93,7 @@ public class ShopFront : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - CancelClicked "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - CancelClicked "));
 				}
 				TimeWarning val2 = TimeWarning.New("CancelClicked", 0);
 				try
@@ -447,12 +448,12 @@ public class ShopFront : StorageContainer
 
 	public void UpdatePlayers()
 	{
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
-		ClientRPC<NetworkableId, NetworkableId>(null, "CLIENT_ReceivePlayers", (NetworkableId)(((Object)(object)vendorPlayer == (Object)null) ? default(NetworkableId) : vendorPlayer.net.ID), (NetworkableId)(((Object)(object)customerPlayer == (Object)null) ? default(NetworkableId) : customerPlayer.net.ID));
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0056: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
+		ClientRPC<NetworkableId, NetworkableId>(RpcTarget.NetworkGroup("CLIENT_ReceivePlayers"), (NetworkableId)(((Object)(object)vendorPlayer == (Object)null) ? default(NetworkableId) : vendorPlayer.net.ID), (NetworkableId)(((Object)(object)customerPlayer == (Object)null) ? default(NetworkableId) : customerPlayer.net.ID));
 	}
 }

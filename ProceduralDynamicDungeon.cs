@@ -134,12 +134,13 @@ public class ProceduralDynamicDungeon : BaseEntity
 
 	public override void ServerInit()
 	{
-		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
 		if (!Application.isLoadingSave)
 		{
 			baseseed = (seed = (uint)Random.Range(0, 12345567));
-			Debug.Log((object)("Spawning dungeon with seed :" + (int)seed));
+			int num = (int)seed;
+			Debug.Log((object)("Spawning dungeon with seed :" + num));
 		}
 		base.ServerInit();
 		if (!Application.isLoadingSave)

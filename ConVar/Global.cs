@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using Facepunch;
 using Facepunch.Extend;
 using Facepunch.Nexus.Models;
@@ -10,8 +11,10 @@ using Network.Visibility;
 using ProtoBuf;
 using ProtoBuf.Nexus;
 using Rust;
+using Unity.Jobs.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.Profiling;
+using UnityEngine.SceneManagement;
 
 namespace ConVar;
 
@@ -53,15 +56,15 @@ public class Global : ConsoleSystem
 	[ClientVar(Saved = true, Help = "Experimental faster loading, requires game restart (0 = off, 1 = partial, 2 = full)")]
 	public static int asyncLoadingPreset = 0;
 
+	[ServerVar]
+	public static bool updateNetworkPositionWithDebugCameraWhileSpectating = false;
+
 	[ServerVar(Saved = true)]
 	[ClientVar(Saved = true)]
 	public static int perf = 0;
 
 	[ClientVar(ClientInfo = true, Saved = true, Help = "If you're an admin this will enable god mode")]
 	public static bool god = false;
-
-	[ClientVar(ClientInfo = true, Saved = true, Help = "If enabled you will be networked when you're spectating. This means that you will hear audio chat, but also means that cheaters will potentially be able to detect you watching them.")]
-	public static bool specnet = false;
 
 	[ClientVar]
 	[ServerVar(ClientAdmin = true, ServerAdmin = true, Help = "When enabled a player wearing a gingerbread suit will gib like the gingerbread NPC's")]
@@ -90,7 +93,8 @@ public class Global : ConsoleSystem
 	[ClientVar(Saved = true, Help = "Blocks emoji provided by servers from appearing")]
 	public static bool blockServerEmoji = false;
 
-	public static bool showEmojiErrors = true;
+	[ClientVar(Saved = true, Help = "Displays any emoji rendering errors in the console")]
+	public static bool showEmojiErrors = false;
 
 	[ServerVar]
 	[ClientVar]
@@ -103,6 +107,26 @@ public class Global : ConsoleSystem
 		set
 		{
 			_developer = value;
+		}
+	}
+
+	[ServerVar]
+	[ClientVar]
+	public static int job_system_threads
+	{
+		get
+		{
+			return JobsUtility.JobWorkerCount;
+		}
+		set
+		{
+			if (value < 1)
+			{
+				JobsUtility.ResetJobWorkerCount();
+				return;
+			}
+			value = Mathf.Clamp(value, 1, JobsUtility.JobWorkerMaximumCount);
+			JobsUtility.JobWorkerCount = value;
 		}
 	}
 
@@ -154,9 +178,16 @@ public class Global : ConsoleSystem
 	[ServerVar]
 	public static void quit(Arg args)
 	{
-		SingletonComponent<ServerMgr>.Instance.Shutdown();
+		if ((Object)(object)SingletonComponent<ServerMgr>.Instance != (Object)null)
+		{
+			SingletonComponent<ServerMgr>.Instance.Shutdown();
+		}
 		Application.isQuitting = true;
-		Net.sv.Stop("quit");
+		Server sv = Net.sv;
+		if (sv != null)
+		{
+			sv.Stop("quit");
+		}
 		Process.GetCurrentProcess().Kill();
 		Debug.Log((object)"Quitting");
 		Application.Quit();
@@ -203,7 +234,7 @@ public class Global : ConsoleSystem
 			return keyValuePair.Value;
 		}))
 		{
-			text = string.Concat(text, dictionary[item.Key].ToString().PadLeft(10), " ", NumberExtensions.FormatBytes<long>(item.Value, false).PadLeft(15), "\t", item.Key, "\n");
+			text = text + dictionary[item.Key].ToString().PadLeft(10) + " " + NumberExtensions.FormatBytes<long>(item.Value, false).PadLeft(15) + "\t" + item.Key?.ToString() + "\n";
 		}
 		args.ReplyWith(text);
 	}
@@ -280,21 +311,44 @@ public class Global : ConsoleSystem
 		}
 	}
 
+	[ServerVar]
+	public static void sleeptarget(Arg args)
+	{
+		BasePlayer basePlayer = args.Player();
+		if (Object.op_Implicit((Object)(object)basePlayer))
+		{
+			BasePlayer lookingAtPlayer = RelationshipManager.GetLookingAtPlayer(basePlayer);
+			if (!((Object)(object)lookingAtPlayer == (Object)null))
+			{
+				lookingAtPlayer.StartSleeping();
+			}
+		}
+	}
+
 	[ServerUserVar]
 	public static void kill(Arg args)
 	{
 		BasePlayer basePlayer = args.Player();
-		if (Object.op_Implicit((Object)(object)basePlayer) && !basePlayer.IsSpectating() && !basePlayer.IsDead())
+		if (!Object.op_Implicit((Object)(object)basePlayer) || basePlayer.IsSpectating() || basePlayer.IsDead())
 		{
-			if (basePlayer.CanSuicide())
+			return;
+		}
+		if (basePlayer.IsRestrained)
+		{
+			Handcuffs handcuffs = basePlayer.Belt?.GetRestraintItem();
+			if ((Object)(object)handcuffs != (Object)null && handcuffs.BlockSuicide)
 			{
-				basePlayer.MarkSuicide();
-				basePlayer.Hurt(1000f, DamageType.Suicide, basePlayer, useProtection: false);
+				return;
 			}
-			else
-			{
-				basePlayer.ConsoleMessage("You can't suicide again so quickly, wait a while");
-			}
+		}
+		if (basePlayer.CanSuicide())
+		{
+			basePlayer.MarkSuicide();
+			basePlayer.Hurt(1000f, DamageType.Suicide, basePlayer, useProtection: false);
+		}
+		else
+		{
+			basePlayer.ConsoleMessage("You can't suicide again so quickly, wait a while");
 		}
 	}
 
@@ -310,7 +364,7 @@ public class Global : ConsoleSystem
 		{
 			if (developer > 0)
 			{
-				Debug.LogWarning((object)string.Concat(basePlayer, " wanted to respawn but isn't dead or spectating"));
+				Debug.LogWarning((object)(((object)basePlayer)?.ToString() + " wanted to respawn but isn't dead or spectating"));
 			}
 			basePlayer.SendNetworkUpdate();
 		}
@@ -388,6 +442,22 @@ public class Global : ConsoleSystem
 	}
 
 	[ServerVar]
+	public static void toggleSpectateTeamInfo(Arg args)
+	{
+		bool @bool = args.GetBool(0, false);
+		BasePlayer basePlayer = args.Player();
+		if ((Object)(object)basePlayer != (Object)null)
+		{
+			basePlayer.SetSpectateTeamInfo(@bool);
+			args.ReplyWith($"ToggleSpectateTeamInfo is now {@bool}");
+		}
+		else
+		{
+			args.ReplyWith("Invalid player or player is not spectating");
+		}
+	}
+
+	[ServerVar]
 	public static void spectateid(Arg args)
 	{
 		BasePlayer basePlayer = args.Player();
@@ -455,8 +525,8 @@ public class Global : ConsoleSystem
 		}
 		static async void NexusRespawn(BasePlayer player, NexusZoneDetails toZone, NetworkableId sleepingBag)
 		{
-			//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+			//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+			//IL_001f: Unknown result type (might be due to invalid IL or missing references)
 			_ = 1;
 			try
 			{
@@ -510,7 +580,7 @@ public class Global : ConsoleSystem
 		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
 		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer basePlayer = args.Player();
 		if (!Object.op_Implicit((Object)(object)basePlayer))
@@ -542,8 +612,8 @@ public class Global : ConsoleSystem
 		}
 		static async void NexusRemoveBag(BasePlayer player, string zoneKey, NetworkableId sleepingBag)
 		{
-			//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+			//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+			//IL_001f: Unknown result type (might be due to invalid IL or missing references)
 			try
 			{
 				Request val2 = Pool.Get<Request>();
@@ -626,6 +696,51 @@ public class Global : ConsoleSystem
 	}
 
 	[ServerVar]
+	public static void teleporteveryone2me(Arg args)
+	{
+		BasePlayer basePlayer = args.Player();
+		if (Object.op_Implicit((Object)(object)basePlayer))
+		{
+			TeleportPlayersToMe(basePlayer, includeSleepers: true, includeNonSleepers: true);
+		}
+	}
+
+	[ServerVar]
+	public static void teleportsleepers2me(Arg args)
+	{
+		BasePlayer basePlayer = args.Player();
+		if (Object.op_Implicit((Object)(object)basePlayer))
+		{
+			TeleportPlayersToMe(basePlayer, includeSleepers: true, includeNonSleepers: false);
+		}
+	}
+
+	[ServerVar]
+	public static void teleportnonsleepers2me(Arg args)
+	{
+		BasePlayer basePlayer = args.Player();
+		if (Object.op_Implicit((Object)(object)basePlayer))
+		{
+			TeleportPlayersToMe(basePlayer, includeSleepers: false, includeNonSleepers: true);
+		}
+	}
+
+	private static void TeleportPlayersToMe(BasePlayer player, bool includeSleepers, bool includeNonSleepers)
+	{
+		if ((Object)(object)player == (Object)null || !Object.op_Implicit((Object)(object)player) || !player.IsAlive())
+		{
+			return;
+		}
+		foreach (BasePlayer allPlayer in BasePlayer.allPlayerList)
+		{
+			if (allPlayer.IsAlive() && !((Object)(object)allPlayer == (Object)(object)player) && (!allPlayer.IsSleeping() || includeSleepers) && (allPlayer.IsSleeping() || includeNonSleepers))
+			{
+				allPlayer.Teleport(player);
+			}
+		}
+	}
+
+	[ServerVar]
 	public static void teleportany(Arg args)
 	{
 		BasePlayer basePlayer = args.Player();
@@ -678,8 +793,8 @@ public class Global : ConsoleSystem
 	[ServerVar]
 	public static void teleport2owneditem(Arg arg)
 	{
-		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer basePlayer = arg.Player();
 		BasePlayer playerOrSleeper = arg.GetPlayerOrSleeper(0);
 		ulong result;
@@ -707,8 +822,8 @@ public class Global : ConsoleSystem
 	[ServerVar]
 	public static void teleport2autheditem(Arg arg)
 	{
-		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer basePlayer = arg.Player();
 		BasePlayer playerOrSleeper = arg.GetPlayerOrSleeper(0);
 		ulong result;
@@ -743,6 +858,19 @@ public class Global : ConsoleSystem
 			return;
 		}
 		string @string = arg.GetString(0, "");
+		if (arg.HasArgs(1) && @string != "True")
+		{
+			int num = arg.GetInt(0, 0);
+			if (num == -1)
+			{
+				num = basePlayer.State.pointsOfInterest.Count - 1;
+			}
+			if (num >= 0 && num < basePlayer.State.pointsOfInterest.Count)
+			{
+				TeleportToMarker(basePlayer.State.pointsOfInterest[num], basePlayer);
+				return;
+			}
+		}
 		if (!string.IsNullOrEmpty(@string))
 		{
 			foreach (MapNote item in basePlayer.State.pointsOfInterest)
@@ -752,15 +880,6 @@ public class Global : ConsoleSystem
 					TeleportToMarker(item, basePlayer);
 					return;
 				}
-			}
-		}
-		if (arg.HasArgs(1))
-		{
-			int @int = arg.GetInt(0, 0);
-			if (@int >= 0 && @int < basePlayer.State.pointsOfInterest.Count)
-			{
-				TeleportToMarker(basePlayer.State.pointsOfInterest[@int], basePlayer);
-				return;
 			}
 		}
 		int debugMapMarkerIndex = basePlayer.DebugMapMarkerIndex;
@@ -790,13 +909,14 @@ public class Global : ConsoleSystem
 	[ServerVar]
 	public static void teleport2death(Arg arg)
 	{
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer basePlayer = arg.Player();
 		if (basePlayer.ServerCurrentDeathNote == null)
 		{
 			arg.ReplyWith("You don't have a current death note!");
+			return;
 		}
 		Vector3 worldPosition = basePlayer.ServerCurrentDeathNote.worldPosition;
 		basePlayer.Teleport(worldPosition);
@@ -891,7 +1011,7 @@ public class Global : ConsoleSystem
 				((IDisposable)enumerator).Dispose();
 			}
 		}
-		arg.ReplyWith(arg.HasArg("--json") ? val.ToJson() : ((object)val).ToString());
+		arg.ReplyWith(arg.HasArg("--json", false) ? val.ToJson() : ((object)val).ToString());
 	}
 
 	public static uint GingerbreadMaterialID()
@@ -1053,5 +1173,25 @@ public class Global : ConsoleSystem
 			item2.Kill();
 		}
 		Pool.FreeList<DroppedItem>(ref list);
+	}
+
+	[ClientVar]
+	[ServerVar]
+	public static string printAllScenesInBuild(Arg args)
+	{
+		StringBuilder stringBuilder = new StringBuilder();
+		int sceneCountInBuildSettings = SceneManager.sceneCountInBuildSettings;
+		stringBuilder.AppendLine($"Scenes: {sceneCountInBuildSettings}");
+		for (int i = 0; i < sceneCountInBuildSettings; i++)
+		{
+			stringBuilder.AppendLine(SceneUtility.GetScenePathByBuildIndex(i));
+		}
+		return stringBuilder.ToString();
+	}
+
+	[ServerVar(Clientside = true, Help = "Immediately update the manifest")]
+	public static void UpdateManifest(Arg args)
+	{
+		Manifest.UpdateManifest();
 	}
 }

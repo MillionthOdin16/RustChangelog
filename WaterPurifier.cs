@@ -27,11 +27,6 @@ public class WaterPurifier : LiquidContainer
 
 	private float pendingFreshWater;
 
-	public bool IsBoiling()
-	{
-		return HasFlag(Flags.Reserved1);
-	}
-
 	public override void ServerInit()
 	{
 		base.ServerInit();
@@ -45,6 +40,15 @@ public class WaterPurifier : LiquidContainer
 	{
 		base.PostServerLoad();
 		SpawnStorageEnt(load: true);
+	}
+
+	internal override void DoServerDestroy()
+	{
+		base.DoServerDestroy();
+		if ((Object)(object)waterStorage != (Object)null)
+		{
+			waterStorage.Kill();
+		}
 	}
 
 	protected virtual void SpawnStorageEnt(bool load)
@@ -189,5 +193,23 @@ public class WaterPurifier : LiquidContainer
 		{
 			SetFlag(Flags.On, b: false);
 		}
+	}
+
+	public override bool CanPickup(BasePlayer player)
+	{
+		if (base.isServer)
+		{
+			if (base.CanPickup(player) && (Object)(object)waterStorage != (Object)null && waterStorage.inventory != null)
+			{
+				return waterStorage.inventory.IsEmpty();
+			}
+			return false;
+		}
+		return base.CanPickup(player);
+	}
+
+	public bool IsBoiling()
+	{
+		return HasFlag(Flags.Reserved1);
 	}
 }

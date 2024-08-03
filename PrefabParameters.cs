@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[MapGeneration]
 public class PrefabParameters : MonoBehaviour
 {
 	public PrefabPriority Priority = PrefabPriority.Default;

@@ -57,6 +57,9 @@ public class Tugboat : MotorRowboat
 	[SerializeField]
 	private GameObject heavyDamageLights;
 
+	[SerializeField]
+	private TriggerParent parentTrigger;
+
 	[ServerVar]
 	[Help("how long until boat corpses despawn (excluding tugboat)")]
 	public static float tugcorpseseconds = 7200f;
@@ -68,6 +71,8 @@ public class Tugboat : MotorRowboat
 	public static float tugdecaystartdelayminutes = 1440f;
 
 	public bool LightsAreOn => HasFlag(Flags.Reserved5);
+
+	protected override bool AllowKinematicDrift => true;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -99,9 +104,9 @@ public class Tugboat : MotorRowboat
 		int fuelAmount2 = fuelSystem.GetFuelAmount();
 		if (fuelAmount2 != fuelAmount)
 		{
-			ClientRPC(null, "SetFuelAmount", fuelAmount2);
+			ClientRPC(RpcTarget.NetworkGroup("SetFuelAmount"), fuelAmount2);
 		}
-		if (LightsAreOn && !HasFlag(Flags.Reserved1))
+		if (LightsAreOn && !IsOn())
 		{
 			SetFlag(Flags.Reserved5, b: false);
 		}
@@ -132,7 +137,7 @@ public class Tugboat : MotorRowboat
 	{
 		if (IsDriver(player))
 		{
-			if (!HasFlag(Flags.Reserved1))
+			if (!IsOn())
 			{
 				SetFlag(Flags.Reserved5, b: false);
 			}
@@ -146,6 +151,37 @@ public class Tugboat : MotorRowboat
 	protected override void EnterCorpseState()
 	{
 		((FacepunchBehaviour)this).Invoke((Action)base.ActualDeath, tugcorpseseconds);
+	}
+
+	public override bool AnyPlayersOnBoat()
+	{
+		if (base.AnyPlayersOnBoat())
+		{
+			return true;
+		}
+		if ((Object)(object)parentTrigger != (Object)null && parentTrigger.HasAnyEntityContents)
+		{
+			foreach (BaseEntity entityContent in parentTrigger.entityContents)
+			{
+				if ((Object)(object)entityContent.ToPlayer() != (Object)null)
+				{
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	public override bool BuoyancySleep(bool inWater)
+	{
+		SetToKinematic();
+		return true;
+	}
+
+	public override bool BuoyancyWake()
+	{
+		SetToNonKinematic();
+		return true;
 	}
 
 	public override bool SupportsChildDeployables()

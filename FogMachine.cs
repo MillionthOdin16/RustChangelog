@@ -219,6 +219,11 @@ public class FogMachine : ContainerIOEntity
 		}
 	}
 
+	public override int ConsumptionAmount()
+	{
+		return 0;
+	}
+
 	public virtual bool MotionModeEnabled()
 	{
 		return true;
@@ -234,7 +239,7 @@ public class FogMachine : ContainerIOEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SetFogOff "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SetFogOff "));
 				}
 				TimeWarning val2 = TimeWarning.New("SetFogOff", 0);
 				try
@@ -285,7 +290,7 @@ public class FogMachine : ContainerIOEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SetFogOn "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SetFogOn "));
 				}
 				TimeWarning val2 = TimeWarning.New("SetFogOn", 0);
 				try
@@ -336,7 +341,7 @@ public class FogMachine : ContainerIOEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SetMotionDetection "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SetMotionDetection "));
 				}
 				TimeWarning val2 = TimeWarning.New("SetMotionDetection", 0);
 				try

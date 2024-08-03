@@ -28,6 +28,10 @@ public class MapView : FacepunchBehaviour, IPointerDownHandler, IEventSystemHand
 
 	public Transform localPlayerInterestPointRoot;
 
+	public GameObject shelterMarkerContainer;
+
+	public GameObjectRef shelterMapMarkerPrefab;
+
 	public TeamMemberMapMarker[] teamPositions;
 
 	public TeamMemberMapMarker[] clanPositions;
@@ -63,9 +67,13 @@ public class MapView : FacepunchBehaviour, IPointerDownHandler, IEventSystemHand
 
 	public bool ShowTeamMembers = true;
 
+	public bool ShowBagsOnBottom;
+
 	public bool ShowTrainLayer;
 
 	public bool ShowMissions;
+
+	public bool ForceShowVendingMachines;
 
 	[FormerlySerializedAs("ShowTrainLayer")]
 	public bool ShowUndergroundLayers;
@@ -81,6 +89,12 @@ public class MapView : FacepunchBehaviour, IPointerDownHandler, IEventSystemHand
 	public RustImageButton[] UnderwaterButtons;
 
 	public RustImageButton DungeonButton;
+
+	public CanvasLineRenderer CargoPatrolPath;
+
+	public CanvasLineRenderer[] HarborPaths;
+
+	public CanvasLineRenderer FerryPath;
 
 	public UnityEvent onClicked;
 

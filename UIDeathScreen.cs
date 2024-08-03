@@ -37,5 +37,9 @@ public class UIDeathScreen : SingletonComponent<UIDeathScreen>, IUIScreen
 
 	public ExpandedLifeStats ExpandedStats;
 
+	public GameObject OpenStatsButton;
+
 	public CanvasGroup StreamerModeContainer;
+
+	public GameObject SafeZoneInfo;
 }

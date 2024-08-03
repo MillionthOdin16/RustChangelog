@@ -52,7 +52,7 @@ public class ComputerStation : BaseMountable
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - AddBookmark "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - AddBookmark "));
 				}
 				TimeWarning val2 = TimeWarning.New("AddBookmark", 0);
 				try
@@ -88,7 +88,7 @@ public class ComputerStation : BaseMountable
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - BeginControllingBookmark "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - BeginControllingBookmark "));
 				}
 				TimeWarning val2 = TimeWarning.New("BeginControllingBookmark", 0);
 				try
@@ -124,7 +124,7 @@ public class ComputerStation : BaseMountable
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - DeleteBookmark "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - DeleteBookmark "));
 				}
 				TimeWarning val2 = TimeWarning.New("DeleteBookmark", 0);
 				try
@@ -160,7 +160,7 @@ public class ComputerStation : BaseMountable
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_DisconnectControl "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_DisconnectControl "));
 				}
 				TimeWarning val2 = TimeWarning.New("Server_DisconnectControl", 0);
 				try
@@ -309,7 +309,7 @@ public class ComputerStation : BaseMountable
 		{
 			return;
 		}
-		string text = msg.read.String(256);
+		string text = msg.read.String(256, false);
 		if (IsValidIdentifier(text) && controlBookmarks.Contains(text))
 		{
 			controlBookmarks.Remove(text);
@@ -336,15 +336,15 @@ public class ComputerStation : BaseMountable
 	[RPC_Server]
 	public void BeginControllingBookmark(RPCMessage msg)
 	{
-		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ff: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer player = msg.player;
 		if (!IsPlayerAdmin(player))
 		{
 			return;
 		}
-		string text = msg.read.String(256);
+		string text = msg.read.String(256, false);
 		if (!IsValidIdentifier(text) || !controlBookmarks.Contains(text))
 		{
 			return;
@@ -485,7 +485,7 @@ public class ComputerStation : BaseMountable
 				return;
 			}
 			nextAddTime = Time.realtimeSinceStartup + 1f;
-			string identifier = msg.read.String(256);
+			string identifier = msg.read.String(256, false);
 			ForceAddBookmark(identifier);
 			SendControlBookmarks(player);
 		}
@@ -493,8 +493,8 @@ public class ComputerStation : BaseMountable
 
 	public void ControlCheck()
 	{
-		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
 		bool flag = false;
 		BaseEntity baseEntity = currentlyControllingEnt.Get(base.isServer);
 		if (Object.op_Implicit((Object)(object)baseEntity) && Object.op_Implicit((Object)(object)_mounted))
@@ -522,7 +522,7 @@ public class ComputerStation : BaseMountable
 		if (!((Object)(object)player == (Object)null))
 		{
 			string arg = GenerateControlBookmarkString();
-			ClientRPCPlayer(null, player, "ReceiveBookmarks", arg);
+			ClientRPC(RpcTarget.Player("ReceiveBookmarks", player), arg);
 		}
 	}
 

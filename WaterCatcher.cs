@@ -6,6 +6,8 @@ public class WaterCatcher : LiquidContainer
 	[Header("Water Catcher")]
 	public ItemDefinition itemToCreate;
 
+	public WaterCatcherCollectRate collectionRates;
+
 	public float maxItemToCreate = 10f;
 
 	[Header("Outside Test")]
@@ -24,19 +26,19 @@ public class WaterCatcher : LiquidContainer
 
 	private void CollectWater()
 	{
-		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
 		if (!IsFull())
 		{
-			float num = 0.25f;
-			num += Climate.GetFog(((Component)this).transform.position) * 2f;
+			float baseRate = collectionRates.baseRate;
+			baseRate += Climate.GetFog(((Component)this).transform.position) * collectionRates.fogRate;
 			if (TestIsOutside())
 			{
-				num += Climate.GetRain(((Component)this).transform.position);
-				num += Climate.GetSnow(((Component)this).transform.position) * 0.5f;
+				baseRate += Climate.GetRain(((Component)this).transform.position) * collectionRates.rainRate;
+				baseRate += Climate.GetSnow(((Component)this).transform.position) * collectionRates.snowRate;
 			}
-			AddResource(Mathf.CeilToInt(maxItemToCreate * num));
+			AddResource(Mathf.CeilToInt(maxItemToCreate * baseRate));
 		}
 	}
 

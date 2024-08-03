@@ -29,9 +29,15 @@ public class ItemModWearable : ItemMod
 
 	public bool equipOnRightClick = true;
 
+	public bool equipOnPickup;
+
 	public bool npcOnly;
 
 	public GameObjectRef breakEffect = new GameObjectRef();
+
+	public bool preventsMounting;
+
+	public bool preventsMap;
 
 	public GameObjectRef viewmodelAddition;
 
@@ -51,11 +57,11 @@ public class ItemModWearable : ItemMod
 	{
 		if (!entityPrefab.isValid)
 		{
-			Debug.LogWarning((object)("ItemModWearable: entityPrefab is null! " + ((Component)this).gameObject), (Object)(object)((Component)this).gameObject);
+			Debug.LogWarning((object)("ItemModWearable: entityPrefab is null! " + (object)((Component)this).gameObject), (Object)(object)((Component)this).gameObject);
 		}
 		if (entityPrefab.isValid && (Object)(object)targetWearable == (Object)null)
 		{
-			Debug.LogWarning((object)("ItemModWearable: entityPrefab doesn't have a Wearable component! " + ((Component)this).gameObject), (Object)(object)entityPrefab.Get());
+			Debug.LogWarning((object)("ItemModWearable: entityPrefab doesn't have a Wearable component! " + (object)((Component)this).gameObject), (Object)(object)entityPrefab.Get());
 		}
 	}
 
@@ -63,7 +69,7 @@ public class ItemModWearable : ItemMod
 	{
 		if (string.IsNullOrEmpty(entityPrefab.resourcePath))
 		{
-			Debug.LogWarning((object)string.Concat(this, " - entityPrefab is null or something.. - ", entityPrefab.guid));
+			Debug.LogWarning((object)(((object)this)?.ToString() + " - entityPrefab is null or something.. - " + entityPrefab.guid));
 		}
 	}
 

@@ -12,7 +12,9 @@ public class CarPhysics<TCar> where TCar : BaseVehicle, CarPhysics<TCar>.ICar
 
 		float GetSteerInput();
 
-		bool GetSteerModInput();
+		bool GetSteerSpeedMod();
+
+		float GetSteerMaxMult();
 
 		float GetMaxForwardSpeed();
 
@@ -83,6 +85,8 @@ public class CarPhysics<TCar> where TCar : BaseVehicle, CarPhysics<TCar>.ICar
 	private bool hasDriver;
 
 	private bool hadDriver;
+
+	private float steerLerpSpeed;
 
 	private float lastMovingTime = float.MinValue;
 
@@ -207,6 +211,7 @@ public class CarPhysics<TCar> where TCar : BaseVehicle, CarPhysics<TCar>.ICar
 		//IL_03ad: Unknown result type (might be due to invalid IL or missing references)
 		//IL_036c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0371: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03f9: Unknown result type (might be due to invalid IL or missing references)
 		if (rBody.centerOfMass != prevLocalCOM)
 		{
 			COMChanged();
@@ -243,19 +248,92 @@ public class CarPhysics<TCar> where TCar : BaseVehicle, CarPhysics<TCar>.ICar
 			goto IL_00f7;
 		}
 		wasSleeping = true;
-		goto IL_0515;
-		IL_03c1:
-		int num2;
-		bool flag = (byte)num2 != 0;
-		int num3;
-		float num4;
-		for (int i = 0; i < wheelData.Length; i++)
+		goto IL_0574;
+		IL_0564:
+		wasSleeping = false;
+		goto IL_0574;
+		IL_00f7:
+		bool flag = vehicleSettings.canSleep && !hasDriver && Time.time > lastMovingTime + 10f;
+		if (flag && (car.GetParentEntity() as BaseVehicle).IsValid())
 		{
-			ServerWheelData serverWheelData = wheelData[i];
+			flag = false;
+		}
+		if (flag)
+		{
+			for (int i = 0; i < wheelData.Length; i++)
+			{
+				ServerWheelData obj = wheelData[i];
+				obj.wheelCollider.motorTorque = 0f;
+				obj.wheelCollider.brakeTorque = 0f;
+				obj.wheelCollider.steerAngle = 0f;
+			}
+			rBody.Sleep();
+			goto IL_0564;
+		}
+		speedAngle = Vector3.Angle(rBody.velocity, transform.forward) * Mathf.Sign(Vector3.Dot(rBody.velocity, transform.right));
+		float maxDriveForce = car.GetMaxDriveForce();
+		float maxForwardSpeed = car.GetMaxForwardSpeed();
+		float num2 = (car.IsOn() ? car.GetThrottleInput() : 0f);
+		float steerInput = car.GetSteerInput();
+		float brakeInput = (InSlowSpeedExitMode ? 1f : car.GetBrakeInput());
+		float num3 = 1f;
+		if (num < 3f)
+		{
+			num3 = 2.75f;
+		}
+		else if (num < 9f)
+		{
+			float num4 = Mathf.InverseLerp(9f, 3f, num);
+			num3 = Mathf.Lerp(1f, 2.75f, num4);
+		}
+		maxDriveForce *= num3;
+		ComputeSteerAngle(num2, steerInput, dt, speed);
+		if (TimeSince.op_Implicit(timeSinceWaterCheck) > 0.25f)
+		{
+			float num5 = car.WaterFactor();
+			float num6 = 0f;
+			if (car.FindTrigger<TriggerVehicleDrag>(out var result))
+			{
+				num6 = result.vehicleDrag;
+			}
+			float num7 = ((num2 != 0f) ? 0f : 0.25f);
+			float num8 = Mathf.Max(num5, num6);
+			num8 = Mathf.Max(num8, car.GetModifiedDrag());
+			rBody.drag = Mathf.Max(num7, num8);
+			rBody.angularDrag = num8 * 0.5f;
+			timeSinceWaterCheck = TimeSince.op_Implicit(0f);
+		}
+		int num9 = 0;
+		float num10 = 0f;
+		int num11;
+		if (!hasDriver)
+		{
+			val = rBody.velocity;
+			if (((Vector3)(ref val)).magnitude < 2.5f && TimeSince.op_Implicit(car.timeSinceLastPush) > 2f)
+			{
+				num11 = ((car.OnSurface != VehicleTerrainHandler.Surface.Frictionless) ? 1 : 0);
+				goto IL_03d7;
+			}
+		}
+		num11 = 0;
+		goto IL_03d7;
+		IL_0574:
+		hadDriver = hasDriver;
+		return;
+		IL_03d7:
+		bool flag2 = (byte)num11 != 0;
+		bool flag3 = !flag2 && num2 == 0f && num < 0.2f && TimeSince.op_Implicit(car.timeSinceLastPush) > 2f && car.OnSurface != VehicleTerrainHandler.Surface.Frictionless;
+		for (int j = 0; j < wheelData.Length; j++)
+		{
+			ServerWheelData serverWheelData = wheelData[j];
 			serverWheelData.wheelCollider.motorTorque = 1E-05f;
-			if (flag && car.OnSurface != VehicleTerrainHandler.Surface.Frictionless)
+			if (flag2)
 			{
 				serverWheelData.wheelCollider.brakeTorque = 10000f;
+			}
+			else if (flag3)
+			{
+				serverWheelData.wheelCollider.brakeTorque = 1000f;
 			}
 			else
 			{
@@ -268,96 +346,20 @@ public class CarPhysics<TCar> where TCar : BaseVehicle, CarPhysics<TCar>.ICar
 			UpdateSuspension(serverWheelData);
 			if (serverWheelData.isGrounded)
 			{
-				num3++;
-				num4 += wheelData[i].downforce;
+				num9++;
+				num10 += wheelData[j].downforce;
 			}
 		}
-		AdjustHitForces(num3, num4 / (float)num3);
-		float maxForwardSpeed;
-		float num5;
-		float steerInput;
-		float brakeInput;
-		float num6;
-		float maxDriveForce;
-		for (int j = 0; j < wheelData.Length; j++)
+		AdjustHitForces(num9, num10 / (float)num9);
+		for (int k = 0; k < wheelData.Length; k++)
 		{
-			ServerWheelData wd = wheelData[j];
+			ServerWheelData wd = wheelData[k];
 			UpdateLocalFrame(wd, dt);
-			ComputeTyreForces(wd, speed, maxDriveForce, maxForwardSpeed, num5, steerInput, brakeInput, num6);
-			ApplyTyreForces(wd, num5, steerInput, speed);
+			ComputeTyreForces(wd, speed, maxDriveForce, maxForwardSpeed, num2, brakeInput, num3);
+			ApplyTyreForces(wd);
 		}
 		ComputeOverallForces();
-		goto IL_0505;
-		IL_00f7:
-		bool flag2 = vehicleSettings.canSleep && !hasDriver && Time.time > lastMovingTime + 10f;
-		if (flag2 && (car.GetParentEntity() as BaseVehicle).IsValid())
-		{
-			flag2 = false;
-		}
-		if (flag2)
-		{
-			for (int k = 0; k < wheelData.Length; k++)
-			{
-				ServerWheelData obj = wheelData[k];
-				obj.wheelCollider.motorTorque = 0f;
-				obj.wheelCollider.brakeTorque = 0f;
-				obj.wheelCollider.steerAngle = 0f;
-			}
-			rBody.Sleep();
-			goto IL_0505;
-		}
-		speedAngle = Vector3.Angle(rBody.velocity, transform.forward) * Mathf.Sign(Vector3.Dot(rBody.velocity, transform.right));
-		maxDriveForce = car.GetMaxDriveForce();
-		maxForwardSpeed = car.GetMaxForwardSpeed();
-		num5 = (car.IsOn() ? car.GetThrottleInput() : 0f);
-		steerInput = car.GetSteerInput();
-		brakeInput = (InSlowSpeedExitMode ? 1f : car.GetBrakeInput());
-		num6 = 1f;
-		if (num < 3f)
-		{
-			num6 = 2.75f;
-		}
-		else if (num < 9f)
-		{
-			float num7 = Mathf.InverseLerp(9f, 3f, num);
-			num6 = Mathf.Lerp(1f, 2.75f, num7);
-		}
-		maxDriveForce *= num6;
-		ComputeSteerAngle(num5, steerInput, dt, speed);
-		if (TimeSince.op_Implicit(timeSinceWaterCheck) > 0.25f)
-		{
-			float num8 = car.WaterFactor();
-			float num9 = 0f;
-			if (car.FindTrigger<TriggerVehicleDrag>(out var result))
-			{
-				num9 = result.vehicleDrag;
-			}
-			float num10 = ((num5 != 0f) ? 0f : 0.25f);
-			float num11 = Mathf.Max(num8, num9);
-			num11 = Mathf.Max(num11, car.GetModifiedDrag());
-			rBody.drag = Mathf.Max(num10, num11);
-			rBody.angularDrag = num11 * 0.5f;
-			timeSinceWaterCheck = TimeSince.op_Implicit(0f);
-		}
-		num3 = 0;
-		num4 = 0f;
-		if (!hasDriver)
-		{
-			val = rBody.velocity;
-			if (((Vector3)(ref val)).magnitude < 2.5f)
-			{
-				num2 = ((TimeSince.op_Implicit(car.timeSinceLastPush) > 2f) ? 1 : 0);
-				goto IL_03c1;
-			}
-		}
-		num2 = 0;
-		goto IL_03c1;
-		IL_0515:
-		hadDriver = hasDriver;
-		return;
-		IL_0505:
-		wasSleeping = false;
-		goto IL_0515;
+		goto IL_0564;
 	}
 
 	public bool IsGrounded()
@@ -369,7 +371,7 @@ public class CarPhysics<TCar> where TCar : BaseVehicle, CarPhysics<TCar>.ICar
 			{
 				num++;
 			}
-			if (num >= 2)
+			if (num >= Mathf.FloorToInt((float)wheelData.Length * 0.5f))
 			{
 				return true;
 			}
@@ -401,35 +403,58 @@ public class CarPhysics<TCar> where TCar : BaseVehicle, CarPhysics<TCar>.ICar
 		float num2 = Mathf.InverseLerp(0f, vehicleSettings.minSteerLimitSpeed, speed);
 		if (vehicleSettings.steeringLimit)
 		{
-			float num3 = Mathf.Lerp(vehicleSettings.maxSteerAngle, vehicleSettings.minSteerLimitAngle, num2);
-			num = Mathf.Clamp(num, 0f - num3, num3);
+			float num3 = vehicleSettings.maxSteerAngle * car.GetSteerMaxMult();
+			float num4 = vehicleSettings.minSteerLimitAngle * car.GetSteerMaxMult();
+			float num5 = Mathf.Lerp(num3, num4, num2);
+			num = Mathf.Clamp(num, 0f - num5, num5);
 		}
-		float num4 = 0f;
+		float num6 = 0f;
 		if (vehicleSettings.steeringAssist)
 		{
-			float num5 = Mathf.InverseLerp(0.1f, 3f, speed);
-			num4 = speedAngle * vehicleSettings.steeringAssistRatio * num5 * Mathf.InverseLerp(2f, 3f, Mathf.Abs(speedAngle));
+			float num7 = Mathf.InverseLerp(0.1f, 3f, speed);
+			num6 = speedAngle * vehicleSettings.steeringAssistRatio * num7 * Mathf.InverseLerp(2f, 3f, Mathf.Abs(speedAngle));
 		}
-		float num6 = Mathf.Clamp(num + num4, 0f - vehicleSettings.maxSteerAngle, vehicleSettings.maxSteerAngle);
-		if (SteerAngle != num6)
+		float num8 = Mathf.Clamp(num + num6, 0f - vehicleSettings.maxSteerAngle, vehicleSettings.maxSteerAngle);
+		if (SteerAngle == num8)
 		{
-			float num7 = 1f - num2 * 0.7f;
-			float num9;
-			if ((SteerAngle == 0f || Mathf.Sign(num6) == Mathf.Sign(SteerAngle)) && Mathf.Abs(num6) > Mathf.Abs(SteerAngle))
-			{
-				float num8 = SteerAngle / vehicleSettings.maxSteerAngle;
-				num9 = Mathf.Lerp(vehicleSettings.steerMinLerpSpeed * num7, vehicleSettings.steerMaxLerpSpeed * num7, num8 * num8);
-			}
-			else
-			{
-				num9 = vehicleSettings.steerReturnLerpSpeed * num7;
-			}
-			if (car.GetSteerModInput())
-			{
-				num9 *= 1.5f;
-			}
-			SteerAngle = Mathf.MoveTowards(SteerAngle, num6, dt * num9);
+			steerLerpSpeed = 0f;
+			return;
 		}
+		float num9 = Mathf.Abs(SteerAngle / num8);
+		float num10 = 1f - num2 * 0.7f;
+		bool steerSpeedMod = car.GetSteerSpeedMod();
+		if ((SteerAngle == 0f || Mathf.Sign(num8) == Mathf.Sign(SteerAngle)) && Mathf.Abs(num8) > Mathf.Abs(SteerAngle))
+		{
+			float num11 = SteerAngle / vehicleSettings.maxSteerAngle;
+			float num12 = vehicleSettings.steerMinLerpSpeed;
+			if (steerSpeedMod)
+			{
+				num12 *= 2f;
+			}
+			float num13 = Mathf.Lerp(num12 * num10, vehicleSettings.steerMaxLerpSpeed * num10, num11 * num11);
+			if (Mathf.Abs(num8) > Mathf.Abs(SteerAngle) && num9 > 0.85f)
+			{
+				num13 = Mathf.Lerp(num13, 0f, num9);
+			}
+			if (!vehicleSettings.retainLerpSpeed || num13 > steerLerpSpeed)
+			{
+				steerLerpSpeed = num13;
+			}
+		}
+		else
+		{
+			float num14 = vehicleSettings.steerReturnLerpSpeed;
+			if (steerSpeedMod)
+			{
+				num14 *= 1.75f;
+			}
+			steerLerpSpeed = num14 * num10;
+		}
+		if (steerSpeedMod)
+		{
+			steerLerpSpeed *= 1.2f;
+		}
+		SteerAngle = Mathf.MoveTowards(SteerAngle, num8, dt * steerLerpSpeed);
 	}
 
 	private float GetWheelForceDistance(WheelCollider col)
@@ -597,7 +622,7 @@ public class CarPhysics<TCar> where TCar : BaseVehicle, CarPhysics<TCar>.ICar
 		wd.localRigForce = val4 + val3;
 	}
 
-	private void ComputeTyreForces(ServerWheelData wd, float speed, float maxDriveForce, float maxSpeed, float throttleInput, float steerInput, float brakeInput, float driveForceMultiplier)
+	private void ComputeTyreForces(ServerWheelData wd, float speed, float maxDriveForce, float maxSpeed, float throttleInput, float brakeInput, float driveForceMultiplier)
 	{
 		//IL_0388: Unknown result type (might be due to invalid IL or missing references)
 		//IL_038d: Unknown result type (might be due to invalid IL or missing references)
@@ -805,7 +830,7 @@ public class CarPhysics<TCar> where TCar : BaseVehicle, CarPhysics<TCar>.ICar
 		return ((Vector2)(ref tyreSlip)).magnitude;
 	}
 
-	private void ApplyTyreForces(ServerWheelData wd, float throttleInput, float steerInput, float speed)
+	private void ApplyTyreForces(ServerWheelData wd)
 	{
 		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_001e: Unknown result type (might be due to invalid IL or missing references)

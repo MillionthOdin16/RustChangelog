@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Rust.Ai;
 using UnityEngine;
 
 public class SmokeGrenade : TimedExplosive
@@ -31,8 +30,6 @@ public class SmokeGrenade : TimedExplosive
 
 	public override void Explode()
 	{
-		//IL_008b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
 		if (WaterFactor() >= 0.5f)
 		{
 			FinishUp();
@@ -45,17 +42,6 @@ public class SmokeGrenade : TimedExplosive
 			InvalidateNetworkCache();
 			SendNetworkUpdateImmediate();
 			activeGrenades.Add(this);
-			if (Object.op_Implicit((Object)(object)creatorEntity))
-			{
-				Sensation sensation = default(Sensation);
-				sensation.Type = SensationType.Explosion;
-				sensation.Position = ((Component)creatorEntity).transform.position;
-				sensation.Radius = explosionRadius * 17f;
-				sensation.DamagePotential = 0f;
-				sensation.InitiatorPlayer = creatorEntity as BasePlayer;
-				sensation.Initiator = creatorEntity;
-				Sense.Stimulate(sensation);
-			}
 		}
 	}
 

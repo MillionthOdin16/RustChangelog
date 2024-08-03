@@ -27,7 +27,7 @@ public class DeployableBoomBox : ContainerIOEntity, ICassettePlayer, IAudioConne
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - Server_UpdateRadioIP "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - Server_UpdateRadioIP "));
 				}
 				TimeWarning val2 = TimeWarning.New("Server_UpdateRadioIP", 0);
 				try
@@ -82,7 +82,7 @@ public class DeployableBoomBox : ContainerIOEntity, ICassettePlayer, IAudioConne
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ServerTogglePlay "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ServerTogglePlay "));
 				}
 				TimeWarning val2 = TimeWarning.New("ServerTogglePlay", 0);
 				try
@@ -143,16 +143,12 @@ public class DeployableBoomBox : ContainerIOEntity, ICassettePlayer, IAudioConne
 
 	public override int ConsumptionAmount()
 	{
-		if (!IsOn())
-		{
-			return 0;
-		}
-		return PowerUsageWhilePlaying;
+		return 10;
 	}
 
-	public override int DesiredPower()
+	public override int DesiredPower(int inputIndex = 0)
 	{
-		if (!IsOn())
+		if (!IsOn() || inputIndex != 0)
 		{
 			return 0;
 		}

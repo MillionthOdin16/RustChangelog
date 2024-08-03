@@ -189,7 +189,7 @@ public class BaseAIEvent
 		case AIEventType.IsBlinded:
 			return new IsBlindedAIEvent();
 		default:
-			Debug.LogWarning((object)string.Concat("No case for ", eventType, " event in BaseAIEvent.CreateEvent()!"));
+			Debug.LogWarning((object)("No case for " + eventType.ToString() + " event in BaseAIEvent.CreateEvent()!"));
 			return null;
 		}
 	}

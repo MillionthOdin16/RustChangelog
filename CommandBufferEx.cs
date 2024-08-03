@@ -22,7 +22,7 @@ public static class CommandBufferEx
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
 		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
-		cb.SetRenderTarget(RenderTargetIdentifier.op_Implicit(target), 0, (CubemapFace)0, -1);
+		cb.SetRenderTarget(RenderTargetIdentifier.op_Implicit(target), 0, (CubemapFace)(-1), -1);
 		cb.SetGlobalTexture("_Source", source);
 		cb.SetGlobalFloat("_SourceMip", 0f);
 		if (slice >= 0)
@@ -57,7 +57,7 @@ public static class CommandBufferEx
 			cb.SetGlobalFloat("_SourceSlice", (float)sourceSlice);
 			cb.SetGlobalInt("_TargetSlice", targetSlice);
 		}
-		cb.SetRenderTarget(RenderTargetIdentifier.op_Implicit(target), targetMip, (CubemapFace)0, -1);
+		cb.SetRenderTarget(RenderTargetIdentifier.op_Implicit(target), targetMip, (CubemapFace)(-1), -1);
 		cb.DrawMesh(blitMesh, Matrix4x4.identity, mat, 0, pass);
 	}
 

@@ -54,7 +54,7 @@ public class PlanterBox : StorageContainer, ISplashable
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_RequestSaturationUpdate "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_RequestSaturationUpdate "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_RequestSaturationUpdate", 0);
 				try
@@ -163,6 +163,15 @@ public class PlanterBox : StorageContainer, ISplashable
 		if (ItemIsFertilizer(item))
 		{
 			return true;
+		}
+		return false;
+	}
+
+	public override bool CanPickup(BasePlayer player)
+	{
+		if (base.CanPickup(player))
+		{
+			return !HasPlants();
 		}
 		return false;
 	}
@@ -362,6 +371,18 @@ public class PlanterBox : StorageContainer, ISplashable
 		return Mathf.Max(Climate.GetTemperature(((Component)this).transform.position), 15f);
 	}
 
+	private bool HasPlants()
+	{
+		foreach (BaseEntity child in children)
+		{
+			if (child is GrowableEntity)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
 	private void CalculateRainFactor()
 	{
 		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
@@ -413,7 +434,7 @@ public class PlanterBox : StorageContainer, ISplashable
 	{
 		if ((Object)(object)msg.player != (Object)null)
 		{
-			ClientRPCPlayer(null, msg.player, "RPC_ReceiveSaturationUpdate", soilSaturation);
+			ClientRPC(RpcTarget.Player("RPC_ReceiveSaturationUpdate", msg.player), soilSaturation);
 		}
 	}
 

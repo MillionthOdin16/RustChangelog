@@ -33,6 +33,14 @@ public class ItemDefinition : MonoBehaviour
 		public WorldSpawnCondition foundCondition;
 	}
 
+	[Serializable]
+	public struct OverrideWorldModel
+	{
+		public GameObjectRef worldModel;
+
+		public int minStackSize;
+	}
+
 	public enum RedirectVendingBehaviour
 	{
 		NoListing,
@@ -43,7 +51,9 @@ public class ItemDefinition : MonoBehaviour
 	public enum Flag
 	{
 		NoDropping = 1,
-		NotStraightToBelt = 2
+		NotStraightToBelt = 2,
+		NotAllowedInBelt = 4,
+		Backpack = 8
 	}
 
 	public enum AmountType
@@ -55,7 +65,10 @@ public class ItemDefinition : MonoBehaviour
 		OxygenSeconds,
 		Frequency,
 		Generic,
-		BagLimit
+		BagLimit,
+		ShelterLimit,
+		ContentCount,
+		TurretLimit
 	}
 
 	[Header("Item")]
@@ -88,7 +101,13 @@ public class ItemDefinition : MonoBehaviour
 
 	public int stackable;
 
+	public int volume;
+
 	public bool quickDespawn;
+
+	public bool blockStealingInSafeZone;
+
+	public BasePlayer.TutorialItemAllowance tutorialAllowance;
 
 	[Header("Spawn Tables")]
 	[Tooltip("How rare this item is and how much it costs to research")]
@@ -113,6 +132,8 @@ public class ItemDefinition : MonoBehaviour
 	[InspectorFlags]
 	public Flag flags;
 
+	public bool hideSelectedPanel;
+
 	[Tooltip("User can craft this item on any server if they have this steam item")]
 	public SteamInventoryItem steamItem;
 
@@ -122,7 +143,16 @@ public class ItemDefinition : MonoBehaviour
 	[Tooltip("Can only craft this item if the parent is craftable (tech tree)")]
 	public ItemDefinition Parent;
 
+	[Header("World Model")]
 	public GameObjectRef worldModelPrefab;
+
+	public OverrideWorldModel[] worldModelOverrides;
+
+	public bool treatAsComponentForRepairs;
+
+	public bool AlignWorldModelOnDrop;
+
+	public Vector3 WorldModelDropOffset;
 
 	public ItemDefinition isRedirectOf;
 
@@ -138,6 +168,8 @@ public class ItemDefinition : MonoBehaviour
 
 	[NonSerialized]
 	private IPlayerItemDefinition[] _skins2;
+
+	private float _worldModelMass;
 
 	[Tooltip("Panel to show in the inventory menu when selected")]
 	public GameObject panel;
@@ -169,6 +201,10 @@ public class ItemDefinition : MonoBehaviour
 	public bool isWearable => (Object)(object)ItemModWearable != (Object)null;
 
 	public ItemModWearable ItemModWearable { get; private set; }
+
+	public ItemModBurnable ItemModBurnable { get; private set; }
+
+	public ItemModCookable ItemModCookable { get; private set; }
 
 	public bool isHoldable { get; private set; }
 
@@ -227,6 +263,26 @@ public class ItemDefinition : MonoBehaviour
 		return 0uL;
 	}
 
+	public float GetWorldModelMass()
+	{
+		if (_worldModelMass != 0f)
+		{
+			return _worldModelMass;
+		}
+		GameObject val = worldModelPrefab?.Get();
+		if ((Object)(object)val != (Object)null)
+		{
+			WorldModel component = val.GetComponent<WorldModel>();
+			if ((Object)(object)component != (Object)null && component.mass != 0f)
+			{
+				_worldModelMass = component.mass;
+				return _worldModelMass;
+			}
+		}
+		_worldModelMass = 1f;
+		return _worldModelMass;
+	}
+
 	public bool HasFlag(Flag f)
 	{
 		return (flags & f) == f;
@@ -247,7 +303,41 @@ public class ItemDefinition : MonoBehaviour
 		}
 		Children = itemList.Where((ItemDefinition x) => (Object)(object)x.Parent == (Object)(object)this).ToArray();
 		ItemModWearable = ((Component)this).GetComponent<ItemModWearable>();
+		ItemModBurnable = ((Component)this).GetComponent<ItemModBurnable>();
+		ItemModCookable = ((Component)this).GetComponent<ItemModCookable>();
 		isHoldable = (Object)(object)((Component)this).GetComponent<ItemModEntity>() != (Object)null;
 		isUsable = (Object)(object)((Component)this).GetComponent<ItemModEntity>() != (Object)null || (Object)(object)((Component)this).GetComponent<ItemModConsume>() != (Object)null;
+	}
+
+	public GameObjectRef GetWorldModel(int amount)
+	{
+		if (worldModelOverrides == null || worldModelOverrides.Length == 0)
+		{
+			return worldModelPrefab;
+		}
+		for (int num = worldModelOverrides.Length - 1; num >= 0; num--)
+		{
+			if (amount >= worldModelOverrides[num].minStackSize)
+			{
+				return worldModelOverrides[num].worldModel;
+			}
+		}
+		return worldModelPrefab;
+	}
+
+	public int GetWorldModelIndex(int amount)
+	{
+		if (worldModelOverrides == null || worldModelOverrides.Length == 0)
+		{
+			return -1;
+		}
+		for (int num = worldModelOverrides.Length - 1; num >= 0; num--)
+		{
+			if (amount >= worldModelOverrides[num].minStackSize)
+			{
+				return num;
+			}
+		}
+		return -1;
 	}
 }

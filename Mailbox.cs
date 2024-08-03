@@ -28,7 +28,7 @@ public class Mailbox : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_Submit "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_Submit "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_Submit", 0);
 				try
@@ -234,7 +234,7 @@ public class Mailbox : StorageContainer
 		return false;
 	}
 
-	public override int GetIdealSlot(BasePlayer player, Item item)
+	public override int GetIdealSlot(BasePlayer player, ItemContainer container, Item item)
 	{
 		if ((Object)(object)player == (Object)null || PlayerIsOwner(player))
 		{

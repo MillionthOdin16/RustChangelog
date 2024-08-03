@@ -2,6 +2,10 @@ using UnityEngine;
 
 public class ItemModUpgrade : ItemMod
 {
+	public static readonly Phrase UpgradeItemTitle = new Phrase("upgrade_item", "Upgrade");
+
+	public static readonly Phrase UpgradeItemDesc = new Phrase("upgrade_item_desc", "Upgrade item");
+
 	public int numForUpgrade = 10;
 
 	public float upgradeSuccessChance = 1f;

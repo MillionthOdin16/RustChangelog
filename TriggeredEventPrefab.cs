@@ -9,14 +9,16 @@ public class TriggeredEventPrefab : TriggeredEvent
 
 	public Phrase spawnPhrase;
 
-	private void RunEvent()
+	public BaseEntity spawnedEntity;
+
+	public override void RunEvent()
 	{
 		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
 		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
 		Debug.Log((object)("[event] " + targetPrefab.resourcePath));
 		BaseEntity baseEntity = GameManager.server.CreateEntity(targetPrefab.resourcePath);
 		if (!Object.op_Implicit((Object)(object)baseEntity))
@@ -25,6 +27,7 @@ public class TriggeredEventPrefab : TriggeredEvent
 		}
 		((Component)baseEntity).SendMessage("TriggeredEventSpawn", (SendMessageOptions)1);
 		baseEntity.Spawn();
+		spawnedEntity = baseEntity;
 		if (!shouldBroadcastSpawn)
 		{
 			return;
@@ -35,7 +38,7 @@ public class TriggeredEventPrefab : TriggeredEvent
 			while (enumerator.MoveNext())
 			{
 				BasePlayer current = enumerator.Current;
-				if (Object.op_Implicit((Object)(object)current) && current.IsConnected)
+				if (Object.op_Implicit((Object)(object)current) && current.IsConnected && !current.IsInTutorial)
 				{
 					current.ShowToast(GameTip.Styles.Server_Event, spawnPhrase);
 				}
@@ -44,6 +47,17 @@ public class TriggeredEventPrefab : TriggeredEvent
 		finally
 		{
 			((IDisposable)enumerator).Dispose();
+		}
+	}
+
+	public override void Kill()
+	{
+		if (!((Object)(object)spawnedEntity == (Object)null))
+		{
+			base.Kill();
+			spawnedEntity.Kill();
+			spawnedEntity = null;
+			Debug.Log((object)("Killed " + ((Object)this).name));
 		}
 	}
 }

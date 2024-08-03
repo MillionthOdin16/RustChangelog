@@ -35,10 +35,10 @@ public class ItemModConsume : ItemMod
 		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0147: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0152: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0161: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0148: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0153: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0162: Unknown result type (might be due to invalid IL or missing references)
 		if (item.amount < 1)
 		{
 			return;
@@ -86,6 +86,7 @@ public class ItemModConsume : ItemMod
 				player.metabolism.ApplyChange(effect.type, effect.amount * num3 * num4, effect.time * num3 * num4);
 			}
 		}
+		player.ProcessMissionEvent(BaseMission.MissionEventType.CONSUME, item.info.itemid, 1f);
 		if ((Object)(object)player.modifiers != (Object)null)
 		{
 			player.modifiers.Add(consumable.modifiers);

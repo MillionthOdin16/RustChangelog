@@ -33,6 +33,7 @@ public static class BoundsCheckEx
 		{
 			if (!item.isTrigger && (((Component)item).gameObject.layer & LayerMask.op_Implicit(rejectOnLayer)) != 0)
 			{
+				Pool.FreeList<Collider>(ref list);
 				return false;
 			}
 			if (!((Component)item).TryGetComponent<SpawnableBoundsBlocker>(ref spawnableBoundsBlocker))

@@ -30,7 +30,7 @@ public class Detonator : HeldEntity, IRFObject
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ServerSetFrequency "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ServerSetFrequency "));
 				}
 				TimeWarning val2 = TimeWarning.New("ServerSetFrequency", 0);
 				try
@@ -66,7 +66,7 @@ public class Detonator : HeldEntity, IRFObject
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SetPressed "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SetPressed "));
 				}
 				TimeWarning val2 = TimeWarning.New("SetPressed", 0);
 				try

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ConVar;
 using Facepunch;
 using Rust;
 using UnityEngine;
@@ -64,6 +65,10 @@ public class TriggerHurtNotChild : TriggerBase, IServerComponent, IHurtTrigger
 			return null;
 		}
 		if (ignoreNPC && baseEntity.IsNpc)
+		{
+			return null;
+		}
+		if (!Physics.treecollision && obj.layer == 30)
 		{
 			return null;
 		}

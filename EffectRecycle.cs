@@ -1,3 +1,4 @@
+using UnityEngine;
 using UnityEngine.Serialization;
 
 public class EffectRecycle : BaseMonoBehaviour, IClientComponent, IRagdollInhert, IEffectRecycle
@@ -26,4 +27,7 @@ public class EffectRecycle : BaseMonoBehaviour, IClientComponent, IRagdollInhert
 	public PlayMode playMode;
 
 	public ParentDestroyBehaviour onParentDestroyed;
+
+	[Range(1f, 50f)]
+	public int WarmedUpAmount = 1;
 }

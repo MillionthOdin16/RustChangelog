@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -104,6 +105,32 @@ public class Bootstrap : SingletonComponent<Bootstrap>
 			string text = CommandLine.Full.Replace(CommandLine.GetSwitch("-rcon.password", CommandLine.GetSwitch("+rcon.password", "RCONPASSWORD")), "******");
 			WriteToLog("Command Line: " + text);
 		}
+		int parentProcessId = CommandLine.GetSwitchInt("-parent-pid", 0);
+		if (parentProcessId != 0)
+		{
+			try
+			{
+				SynchronizationContext syncContext = SynchronizationContext.Current;
+				Process processById = Process.GetProcessById(parentProcessId);
+				processById.EnableRaisingEvents = true;
+				processById.Exited += delegate
+				{
+					syncContext.Post(delegate
+					{
+						//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+						WriteToLog($"Parent process ID {parentProcessId} exited. Exiting the server now...");
+						ConsoleSystem.Run(Option.Server, "quit", Array.Empty<object>());
+					}, null);
+				};
+				WriteToLog($"Watching parent process ID {parentProcessId}...");
+			}
+			catch (ArgumentException)
+			{
+				WriteToLog($"Parent process ID {parentProcessId} has exited during boot! Exiting now...");
+				Application.Quit();
+			}
+		}
+		UnityHookHandler.EnsureCreated();
 	}
 
 	public static void Init_Systems()
@@ -125,10 +152,16 @@ public class Bootstrap : SingletonComponent<Bootstrap>
 	public static void Init_Config()
 	{
 		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
 		ConsoleNetwork.Init();
 		ConsoleSystem.UpdateValuesFromCommandLine();
 		ConsoleSystem.Run(Option.Server, "server.readcfg", Array.Empty<object>());
 		ServerUsers.Load();
+		if (string.IsNullOrEmpty(ConVar.Server.server_id))
+		{
+			ConVar.Server.server_id = Guid.NewGuid().ToString("N");
+			ConsoleSystem.Run(Option.Server, "server.writecfg", Array.Empty<object>());
+		}
 	}
 
 	public static void NetworkInitRaknet()
@@ -312,7 +345,7 @@ public class Bootstrap : SingletonComponent<Bootstrap>
 		WriteToLog("Loading Scene");
 		yield return CoroutineEx.waitForEndOfFrame;
 		yield return CoroutineEx.waitForEndOfFrame;
-		Physics.solverIterationCount = 3;
+		Physics.defaultSolverIterations = 3;
 		int @int = PlayerPrefs.GetInt("UnityGraphicsQuality");
 		QualitySettings.SetQualityLevel(0);
 		PlayerPrefs.SetInt("UnityGraphicsQuality", @int);
@@ -335,6 +368,29 @@ public class Bootstrap : SingletonComponent<Bootstrap>
 			Object.DontDestroyOnLoad((Object)(object)GameManager.server.CreatePrefab("assets/bundled/prefabs/system/performance.prefab"));
 		}
 		Rust.GC.Collect();
+		DemoConVars.Level = LevelManager.CurrentLevelName;
+		DemoConVars.Seed = World.Seed.ToString();
+		DemoConVars.WorldSize = World.Size.ToString();
+		DemoConVars.LevelUrl = World.Url;
+		DemoConVars.Checksum = World.Checksum;
+		DemoConVars.Hostname = ConVar.Server.hostname;
+		DemoConVars.NetworkVersion = 2553;
+		BuildInfo current = BuildInfo.Current;
+		object obj;
+		if (current == null)
+		{
+			obj = null;
+		}
+		else
+		{
+			ScmInfo scm = current.Scm;
+			obj = ((scm != null) ? scm.ChangeId : null);
+		}
+		if (obj == null)
+		{
+			obj = "0";
+		}
+		DemoConVars.Changeset = (string)obj;
 		Application.isLoading = false;
 	}
 
@@ -434,16 +490,20 @@ public class Bootstrap : SingletonComponent<Bootstrap>
 		yield return CoroutineEx.waitForSecondsRealtime(0.1f);
 		MissionManifest.Get();
 		yield return CoroutineEx.waitForSecondsRealtime(0.1f);
-		ClanManager serverInstance = ClanManager.ServerInstance;
-		if ((Object)(object)serverInstance == (Object)null)
+		if (Clan.enabled)
 		{
-			Debug.LogError((object)"ClanManager was not spawned!");
-			Application.Quit();
-			yield break;
+			ClanManager clanManager = ClanManager.ServerInstance;
+			if ((Object)(object)clanManager == (Object)null)
+			{
+				Debug.LogError((object)"ClanManager was not spawned!");
+				Application.Quit();
+				yield break;
+			}
+			Task initializeTask = clanManager.Initialize();
+			yield return (object)new WaitUntil((Func<bool>)(() => initializeTask.IsCompleted));
+			initializeTask.Wait();
+			clanManager.LoadClanInfoForSleepers();
 		}
-		Task initializeTask = serverInstance.Initialize();
-		yield return (object)new WaitUntil((Func<bool>)(() => initializeTask.IsCompleted));
-		initializeTask.Wait();
 		yield return CoroutineEx.waitForSecondsRealtime(0.1f);
 		if (NexusServer.Started)
 		{

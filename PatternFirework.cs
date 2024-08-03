@@ -89,7 +89,7 @@ public class PatternFirework : MortarFirework, IUGCBrowserEntity
 	{
 		if (PlayerCanModify(rpc.player))
 		{
-			ClientRPCPlayer(null, rpc.player, "OpenDesigner");
+			ClientRPC(RpcTarget.Player("OpenDesigner", rpc.player));
 		}
 	}
 
@@ -215,7 +215,7 @@ public class PatternFirework : MortarFirework, IUGCBrowserEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ServerSetFireworkDesign "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ServerSetFireworkDesign "));
 				}
 				TimeWarning val2 = TimeWarning.New("ServerSetFireworkDesign", 0);
 				try
@@ -270,7 +270,7 @@ public class PatternFirework : MortarFirework, IUGCBrowserEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SetShellFuseLength "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SetShellFuseLength "));
 				}
 				TimeWarning val2 = TimeWarning.New("SetShellFuseLength", 0);
 				try
@@ -325,7 +325,7 @@ public class PatternFirework : MortarFirework, IUGCBrowserEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - StartOpenDesigner "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - StartOpenDesigner "));
 				}
 				TimeWarning val2 = TimeWarning.New("StartOpenDesigner", 0);
 				try

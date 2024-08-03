@@ -17,7 +17,7 @@ public class Deployer : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - DoDeploy "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - DoDeploy "));
 				}
 				TimeWarning val2 = TimeWarning.New("DoDeploy", 0);
 				try
@@ -190,12 +190,16 @@ public class Deployer : HeldEntity
 	{
 		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ca: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0151: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0156: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0102: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0106: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0195: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ea: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ef: Unknown result type (might be due to invalid IL or missing references)
 		if (!HasItemAmount())
 		{
 			return;
@@ -225,6 +229,14 @@ public class Deployer : HeldEntity
 			ownerPlayer.ChatMessage("Building is blocked at placement position!");
 			return;
 		}
+		if (ownerPlayer.IsInTutorial)
+		{
+			TutorialIsland currentTutorialIsland = ownerPlayer.GetCurrentTutorialIsland();
+			if ((Object)(object)currentTutorialIsland != (Object)null && !currentTutorialIsland.CheckPlacement(ownerPlayer, deployable, ((Component)baseEntity).transform.position, ((Component)baseEntity).transform.rotation))
+			{
+				return;
+			}
+		}
 		Item ownerItem = GetOwnerItem();
 		ItemModDeployable modDeployable = GetModDeployable();
 		BaseEntity baseEntity2 = GameManager.server.CreateEntity(modDeployable.entityPrefab.resourcePath);
@@ -240,10 +252,30 @@ public class Deployer : HeldEntity
 			{
 				Effect.server.Run(deployable.placeEffect.resourcePath, ((Component)baseEntity).transform.position, Vector3.up);
 			}
+			if (ownerPlayer.IsInTutorial)
+			{
+				TutorialIsland currentTutorialIsland2 = ownerPlayer.GetCurrentTutorialIsland();
+				if ((Object)(object)currentTutorialIsland2 != (Object)null)
+				{
+					currentTutorialIsland2.OnPlayerBuiltConstruction(ownerPlayer);
+				}
+			}
+			if ((Object)(object)GetOwnerItemDefinition() != (Object)null)
+			{
+				ownerPlayer.ProcessMissionEvent(BaseMission.MissionEventType.DEPLOY, new BaseMission.MissionEventPayload
+				{
+					WorldPosition = ((Component)baseEntity2).transform.position,
+					UintIdentifier = baseEntity2.prefabID,
+					IntIdentifier = GetOwnerItemDefinition().itemid
+				}, 1f);
+			}
 		}
 		modDeployable.OnDeployed(baseEntity2, ownerPlayer);
 		Analytics.Azure.OnEntityBuilt(baseEntity2, ownerPlayer);
-		UseItemAmount(1);
+		if (!ownerPlayer.IsInCreativeMode || !Creative.freeBuild)
+		{
+			UseItemAmount(1);
+		}
 	}
 
 	public void DoDeploy_Regular(Deployable deployable, Ray ray)

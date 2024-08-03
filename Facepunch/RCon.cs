@@ -513,9 +513,9 @@ public class RCon
 
 	private static void OnCommand(Command cmd)
 	{
-		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
 		try
 		{
 			responseIdentifier = cmd.Identifier;
@@ -523,7 +523,7 @@ public class RCon
 			isInput = true;
 			if (Print)
 			{
-				Debug.Log((object)string.Concat("[rcon] ", cmd.Ip, ": ", cmd.Message));
+				Debug.Log((object)("[rcon] " + cmd.Ip?.ToString() + ": " + cmd.Message));
 			}
 			isInput = false;
 			Option server = Option.Server;

@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[MapGeneration]
 public abstract class ProceduralComponent : MonoBehaviour
 {
 	public enum Realm

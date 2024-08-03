@@ -33,7 +33,7 @@ public class NexusTransferTrigger : BaseMonoBehaviour, IServerComponent
 		BaseEntity entity = ((Component)other).gameObject.ToBaseEntity();
 		if (!((Object)(object)entity == (Object)null))
 		{
-			BaseEntity baseEntity = NexusServer.FindRootEntity(entity);
+			BaseEntity baseEntity = NexusServer.FindRootEntity(entity, includeFerry: true);
 			if (_controller.CanTransfer(baseEntity) && PendingEntities.Add(baseEntity))
 			{
 				TransferAndWait();

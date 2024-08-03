@@ -85,7 +85,7 @@ public abstract class BaseCardGameEntity : BaseVehicle
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_Editor_MakeRandomMove "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_Editor_MakeRandomMove "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_Editor_MakeRandomMove", 0);
 				try
@@ -136,7 +136,7 @@ public abstract class BaseCardGameEntity : BaseVehicle
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_Editor_SpawnTestPlayer "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_Editor_SpawnTestPlayer "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_Editor_SpawnTestPlayer", 0);
 				try
@@ -187,7 +187,7 @@ public abstract class BaseCardGameEntity : BaseVehicle
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_LeaveTable "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_LeaveTable "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_LeaveTable", 0);
 				try
@@ -238,7 +238,7 @@ public abstract class BaseCardGameEntity : BaseVehicle
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_OpenLoot "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_OpenLoot "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_OpenLoot", 0);
 				try
@@ -289,7 +289,7 @@ public abstract class BaseCardGameEntity : BaseVehicle
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_Play "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_Play "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_Play", 0);
 				try
@@ -340,7 +340,7 @@ public abstract class BaseCardGameEntity : BaseVehicle
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_PlayerInput "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_PlayerInput "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_PlayerInput", 0);
 				try
@@ -563,7 +563,7 @@ public abstract class BaseCardGameEntity : BaseVehicle
 	{
 		foreach (MountPointInfo mountPoint in mountPoints)
 		{
-			if ((Object)(object)mountPoint.mountable != (Object)null && (Object)(object)mountPoint.mountable.GetMounted() != (Object)null && mountPoint.mountable.GetMounted().userID == id)
+			if ((Object)(object)mountPoint.mountable != (Object)null && (Object)(object)mountPoint.mountable.GetMounted() != (Object)null && (ulong)mountPoint.mountable.GetMounted().userID == id)
 			{
 				return mountPoint.mountable.GetMounted();
 			}
@@ -600,7 +600,7 @@ public abstract class BaseCardGameEntity : BaseVehicle
 			if ((Object)(object)mountable != (Object)null)
 			{
 				BasePlayer mounted = mountable.GetMounted();
-				if ((Object)(object)mounted != (Object)null && mounted.userID == playerID)
+				if ((Object)(object)mounted != (Object)null && (ulong)mounted.userID == playerID)
 				{
 					num = i;
 				}

@@ -35,12 +35,9 @@ public class PlayerModel : ListComponent<PlayerModel>
 		ZiplineHold = 27,
 		Sit_Locomotive = 28,
 		Sit_Throne = 29,
+		Parachute = 30,
 		Standing = 128
 	}
-
-	public Transform[] Shoulders;
-
-	public Transform[] AdditionalSpineBones;
 
 	protected static int speed = Animator.StringToHash("speed");
 
@@ -110,6 +107,12 @@ public class PlayerModel : ListComponent<PlayerModel>
 
 	protected static int ladderType = Animator.StringToHash("ladderType");
 
+	protected static int hasParachute = Animator.StringToHash("hasParachute");
+
+	protected static int nonGroundedTime = Animator.StringToHash("nonGroundedTime");
+
+	protected static int deployParachuteTrigger = Animator.StringToHash("deployParachute");
+
 	public BoxCollider collision;
 
 	public GameObject censorshipCube;
@@ -137,6 +140,8 @@ public class PlayerModel : ListComponent<PlayerModel>
 	public Transform rightHandPropBone;
 
 	public Vector3 rightHandTarget;
+
+	public bool isPreview;
 
 	[Header("IK")]
 	public Vector3 leftHandTargetPosition;
@@ -168,6 +173,8 @@ public class PlayerModel : ListComponent<PlayerModel>
 	public RuntimeAnimatorController SleepGesture;
 
 	public RuntimeAnimatorController CrawlToIncapacitatedGesture;
+
+	public RuntimeAnimatorController CrawlToIncapacitatedGestureHandcuff;
 
 	public RuntimeAnimatorController StandToIncapacitatedGesture;
 
@@ -207,6 +214,10 @@ public class PlayerModel : ListComponent<PlayerModel>
 	public int tempPoseType;
 
 	public uint underwearSkin;
+
+	public Transform[] Shoulders;
+
+	public Transform[] AdditionalSpineBones;
 
 	public ulong overrideSkinSeed { get; private set; }
 

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Facepunch;
 using Facepunch.Rust;
 using Rust;
-using Rust.Ai;
 using UnityEngine;
 
 public class TimedExplosive : BaseEntity, ServerProjectile.IProjectileImpact
@@ -22,6 +21,8 @@ public class TimedExplosive : BaseEntity, ServerProjectile.IProjectileImpact
 
 	public bool onlyDamageParent;
 
+	public bool IgnoreAI;
+
 	public bool BlindAI;
 
 	public float aiBlindDuration = 2.5f;
@@ -33,8 +34,14 @@ public class TimedExplosive : BaseEntity, ServerProjectile.IProjectileImpact
 	[Tooltip("Optional: Will fall back to watersurfaceExplosionEffect or explosionEffect if not assigned.")]
 	public GameObjectRef underwaterExplosionEffect;
 
+	[Min(0f)]
+	public float underwaterExplosionDepth = 1f;
+
 	[Tooltip("Optional: Will fall back to underwaterExplosionEffect or explosionEffect if not assigned.")]
 	public GameObjectRef watersurfaceExplosionEffect;
+
+	[MinMax(0f, 100f)]
+	public MinMax watersurfaceExplosionDepth = new MinMax(0.5f, 10f);
 
 	public GameObjectRef stickEffect;
 
@@ -43,6 +50,8 @@ public class TimedExplosive : BaseEntity, ServerProjectile.IProjectileImpact
 	public bool explosionUsesForward;
 
 	public bool waterCausesExplosion;
+
+	public int vibrationLevel = 3;
 
 	public List<DamageTypeEntry> damageTypes = new List<DamageTypeEntry>();
 
@@ -65,6 +74,10 @@ public class TimedExplosive : BaseEntity, ServerProjectile.IProjectileImpact
 
 	private static BaseEntity[] queryResults = new BaseEntity[64];
 
+	private Vector3 lastPosition = Vector3.zero;
+
+	protected override bool PositionTickFixedTime => true;
+
 	protected virtual bool AlwaysRunWaterCheck => false;
 
 	public void SetDamageScale(float scale)
@@ -85,7 +98,10 @@ public class TimedExplosive : BaseEntity, ServerProjectile.IProjectileImpact
 		lastBounceTime = Time.time;
 		base.ServerInit();
 		SetFuse(GetRandomTimerTime());
-		ReceiveCollisionMessages(b: true);
+		if (((Component)(object)((Component)this).transform).HasComponent<Collider>())
+		{
+			ReceiveCollisionMessages(b: true);
+		}
 		if (waterCausesExplosion || AlwaysRunWaterCheck)
 		{
 			((FacepunchBehaviour)this).InvokeRepeating((Action)WaterCheck, 0f, 0.5f);
@@ -119,6 +135,19 @@ public class TimedExplosive : BaseEntity, ServerProjectile.IProjectileImpact
 		Explode();
 	}
 
+	public void ForceExplode()
+	{
+		if (this is DudTimedExplosive dudTimedExplosive)
+		{
+			dudTimedExplosive.dudChance = 0f;
+		}
+		if (this is RFTimedExplosive rFTimedExplosive)
+		{
+			rFTimedExplosive.DisarmRF();
+		}
+		Explode();
+	}
+
 	public virtual void Explode()
 	{
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
@@ -127,58 +156,62 @@ public class TimedExplosive : BaseEntity, ServerProjectile.IProjectileImpact
 
 	public virtual void Explode(Vector3 explosionFxPos)
 	{
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ce: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_045b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0151: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0156: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03de: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0403: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0112: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_04fa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_04ff: Unknown result type (might be due to invalid IL or missing references)
-		//IL_035e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_035f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_036d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0372: Unknown result type (might be due to invalid IL or missing references)
-		//IL_027d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_027e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_028c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0291: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01f7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01f8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01fd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_020d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03fd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0402: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0119: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0133: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0126: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03b0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03b1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03be: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03c3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02ca: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02cb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02d9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02de: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0244: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0245: Unknown result type (might be due to invalid IL or missing references)
+		//IL_024a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_025a: Unknown result type (might be due to invalid IL or missing references)
 		Analytics.Azure.OnExplosion(this);
 		Collider component = ((Component)this).GetComponent<Collider>();
 		if (Object.op_Implicit((Object)(object)component))
 		{
 			component.enabled = false;
 		}
-		GameObjectRef gameObjectRef = explosionEffect;
-		if (underwaterExplosionEffect.isValid || watersurfaceExplosionEffect.isValid)
+		WaterLevel.WaterInfo waterInfo = WaterLevel.GetWaterInfo(explosionFxPos - new Vector3(0f, 0.25f, 0f), waves: true, volumes: false);
+		if (underwaterExplosionEffect.isValid && waterInfo.isValid && waterInfo.currentDepth >= underwaterExplosionDepth)
 		{
-			WaterLevel.WaterInfo waterInfo = WaterLevel.GetWaterInfo(explosionFxPos - new Vector3(0f, 0.25f, 0f), waves: true, volumes: false);
-			if (waterInfo.isValid && waterInfo.overallDepth > 0.5f)
-			{
-				gameObjectRef = ((!(waterInfo.currentDepth > 1f)) ? (watersurfaceExplosionEffect.isValid ? watersurfaceExplosionEffect : underwaterExplosionEffect) : (underwaterExplosionEffect.isValid ? underwaterExplosionEffect : watersurfaceExplosionEffect));
-			}
+			Effect.server.Run(underwaterExplosionEffect.resourcePath, explosionFxPos, explosionUsesForward ? ((Component)this).transform.forward : Vector3.up, null, broadcast: true);
 		}
-		if (gameObjectRef.isValid)
+		else if (explosionEffect.isValid)
 		{
-			Effect.server.Run(gameObjectRef.resourcePath, explosionFxPos, explosionUsesForward ? ((Component)this).transform.forward : Vector3.up, null, broadcast: true);
+			Effect.server.Run(explosionEffect.resourcePath, explosionFxPos, explosionUsesForward ? ((Component)this).transform.forward : Vector3.up, null, broadcast: true);
+		}
+		if (watersurfaceExplosionEffect.isValid && waterInfo.isValid && waterInfo.overallDepth >= watersurfaceExplosionDepth.x && waterInfo.currentDepth <= watersurfaceExplosionDepth.y)
+		{
+			Effect.server.Run(watersurfaceExplosionEffect.resourcePath, Vector3Ex.WithY(explosionFxPos, waterInfo.surfaceLevel), explosionUsesForward ? ((Component)this).transform.forward : Vector3.up, null, broadcast: true);
 		}
 		if (damageTypes.Count > 0)
 		{
+			Vector3 val = ExplosionCenter();
 			if (onlyDamageParent)
 			{
-				Vector3 val = CenterPoint();
-				DamageUtil.RadiusDamage(creatorEntity, LookupPrefab(), val, minExplosionRadius, explosionRadius, damageTypes, 166144, useLineOfSight: true);
+				DamageUtil.RadiusDamage(creatorEntity, LookupPrefab(), val, minExplosionRadius, explosionRadius, damageTypes, 166144, useLineOfSight: true, IgnoreAI);
 				BaseEntity baseEntity = GetParentEntity();
 				BaseCombatEntity baseCombatEntity = baseEntity as BaseCombatEntity;
 				while ((Object)(object)baseCombatEntity == (Object)null && (Object)(object)baseEntity != (Object)null && baseEntity.HasParent())
@@ -236,49 +269,38 @@ public class TimedExplosive : BaseEntity, ServerProjectile.IProjectileImpact
 					hitInfo3.PointEnd = ((Component)baseEntity).transform.position;
 					baseEntity.OnAttacked(hitInfo3);
 				}
-				if ((Object)(object)creatorEntity != (Object)null && damageTypes != null)
-				{
-					float num3 = 0f;
-					foreach (DamageTypeEntry damageType in damageTypes)
-					{
-						num3 += damageType.amount;
-					}
-					Sensation sensation = default(Sensation);
-					sensation.Type = SensationType.Explosion;
-					sensation.Position = ((Component)creatorEntity).transform.position;
-					sensation.Radius = explosionRadius * 17f;
-					sensation.DamagePotential = num3;
-					sensation.InitiatorPlayer = creatorEntity as BasePlayer;
-					sensation.Initiator = creatorEntity;
-					Sense.Stimulate(sensation);
-				}
 			}
 			else
 			{
-				DamageUtil.RadiusDamage(creatorEntity, LookupPrefab(), CenterPoint(), minExplosionRadius, explosionRadius, damageTypes, 1210222849, useLineOfSight: true);
-				if ((Object)(object)creatorEntity != (Object)null && damageTypes != null)
-				{
-					float num4 = 0f;
-					foreach (DamageTypeEntry damageType2 in damageTypes)
-					{
-						num4 += damageType2.amount;
-					}
-					Sensation sensation = default(Sensation);
-					sensation.Type = SensationType.Explosion;
-					sensation.Position = ((Component)creatorEntity).transform.position;
-					sensation.Radius = explosionRadius * 17f;
-					sensation.DamagePotential = num4;
-					sensation.InitiatorPlayer = creatorEntity as BasePlayer;
-					sensation.Initiator = creatorEntity;
-					Sense.Stimulate(sensation);
-				}
+				DamageUtil.RadiusDamage(creatorEntity, LookupPrefab(), val, minExplosionRadius, explosionRadius, damageTypes, 1210222849, useLineOfSight: true, IgnoreAI);
 			}
+			SeismicSensor.Notify(val, vibrationLevel);
 			BlindAnyAI();
 		}
 		if (!base.IsDestroyed && !HasFlag(Flags.Broken))
 		{
 			Kill(DestroyMode.Gib);
 		}
+	}
+
+	private Vector3 ExplosionCenter()
+	{
+		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
+		if (IsStuck() && parentEntity.Get(base.isServer) is BaseVehicle)
+		{
+			OBB val = WorldSpaceBounds();
+			return CenterPoint() - val.forward * (val.extents.z + 0.1f);
+		}
+		return CenterPoint();
 	}
 
 	private void BlindAnyAI()
@@ -309,6 +331,73 @@ public class TimedExplosive : BaseEntity, ServerProjectile.IProjectileImpact
 					component.SetBlinded(blinded);
 					queryResults[i] = null;
 				}
+			}
+		}
+	}
+
+	public void FixedUpdate()
+	{
+		CheckClippingThroughWalls();
+	}
+
+	private void CheckClippingThroughWalls()
+	{
+		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c8: Unknown result type (might be due to invalid IL or missing references)
+		if (!canStick)
+		{
+			return;
+		}
+		if (lastPosition == default(Vector3) || !parentEntity.IsValid(serverside: true))
+		{
+			lastPosition = CenterPoint();
+			return;
+		}
+		Vector3 val = lastPosition;
+		Vector3 val2 = CenterPoint();
+		Vector3 val3 = val2 - val;
+		lastPosition = val2;
+		if (val == val2 || !IsStuck(bypassColliderCheck: true))
+		{
+			return;
+		}
+		Ray ray = new Ray(val, val2 - val);
+		List<RaycastHit> list = Pool.GetList<RaycastHit>();
+		GamePhysics.TraceAll(ray, 0f, list, Vector3.Distance(val2, val), 2097152, (QueryTriggerInteraction)0);
+		foreach (RaycastHit item in list)
+		{
+			if ((Object)(object)(item.GetEntity() as BuildingBlock) != (Object)null)
+			{
+				Transform transform = ((Component)this).transform;
+				transform.position -= val3;
+				ForceExplode();
+				break;
 			}
 		}
 	}
@@ -358,7 +447,7 @@ public class TimedExplosive : BaseEntity, ServerProjectile.IProjectileImpact
 		{
 			return false;
 		}
-		if (entity is BaseVehicle && !(entity is Tugboat))
+		if (entity is TravellingVendor)
 		{
 			return false;
 		}
@@ -431,17 +520,20 @@ public class TimedExplosive : BaseEntity, ServerProjectile.IProjectileImpact
 		}
 	}
 
-	public bool IsStuck()
+	public bool IsStuck(bool bypassColliderCheck = false)
 	{
 		Rigidbody component = ((Component)this).GetComponent<Rigidbody>();
 		if (Object.op_Implicit((Object)(object)component) && !component.isKinematic)
 		{
 			return false;
 		}
-		Collider component2 = ((Component)this).GetComponent<Collider>();
-		if (Object.op_Implicit((Object)(object)component2) && component2.enabled)
+		if (!bypassColliderCheck)
 		{
-			return false;
+			Collider component2 = ((Component)this).GetComponent<Collider>();
+			if (Object.op_Implicit((Object)(object)component2) && component2.enabled)
+			{
+				return false;
+			}
 		}
 		return parentEntity.IsValid(serverside: true);
 	}
@@ -454,8 +546,8 @@ public class TimedExplosive : BaseEntity, ServerProjectile.IProjectileImpact
 		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d4: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)ent == (Object)null)
 		{
 			return;
@@ -482,6 +574,10 @@ public class TimedExplosive : BaseEntity, ServerProjectile.IProjectileImpact
 			{
 				SetParent(ent, StringPool.closest, worldPositionStays: true);
 			}
+			if (ent is BaseCombatEntity baseCombatEntity)
+			{
+				baseCombatEntity.SetJustAttacked();
+			}
 			if (stickEffect.isValid)
 			{
 				Effect.server.Run(stickEffect.resourcePath, ((Component)this).transform.position, Vector3.up, null, broadcast: true);
@@ -496,7 +592,10 @@ public class TimedExplosive : BaseEntity, ServerProjectile.IProjectileImpact
 		{
 			SetParent(null, worldPositionStays: true, sendImmediate: true);
 			SetMotionEnabled(wantsMotion: true);
-			ReceiveCollisionMessages(b: true);
+			if (((Component)(object)((Component)this).transform).HasComponent<Collider>())
+			{
+				ReceiveCollisionMessages(b: true);
+			}
 		}
 	}
 

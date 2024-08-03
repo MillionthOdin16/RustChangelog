@@ -20,7 +20,7 @@ public class SteamInventory : EntityComponent<BasePlayer>
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - UpdateSteamInventory "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - UpdateSteamInventory "));
 				}
 				TimeWarning val2 = TimeWarning.New("UpdateSteamInventory", 0);
 				try
@@ -99,7 +99,7 @@ public class SteamInventory : EntityComponent<BasePlayer>
 	[BaseEntity.RPC_Server.FromOwner]
 	private async Task UpdateSteamInventory(BaseEntity.RPCMessage msg)
 	{
-		byte[] array = msg.read.BytesWithSize(10485760u);
+		byte[] array = msg.read.BytesWithSize(10485760u, false);
 		if (array == null)
 		{
 			Debug.LogWarning((object)"UpdateSteamInventory: Data is null");
@@ -114,7 +114,7 @@ public class SteamInventory : EntityComponent<BasePlayer>
 		{
 			Debug.LogWarning((object)"UpdateSteamInventory: player is null");
 		}
-		else if (!val.BelongsTo(base.baseEntity.userID))
+		else if (!val.BelongsTo((ulong)base.baseEntity.userID))
 		{
 			Debug.LogWarning((object)$"UpdateSteamPlayer: inventory belongs to someone else (userID={base.baseEntity.userID})");
 		}

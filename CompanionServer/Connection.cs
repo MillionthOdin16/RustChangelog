@@ -78,9 +78,10 @@ public class Connection : IConnection
 		_isControllingCamera = false;
 	}
 
-	public void OnMessage(System.Span<byte> data)
+	public void OnMessage(Span<byte> data)
 	{
 		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
 		if (App.update && App.queuelimit > 0 && data.Length <= App.maxmessagesize)
 		{

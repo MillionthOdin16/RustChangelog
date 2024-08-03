@@ -37,8 +37,6 @@ public class MotorRowboat : BaseBoat
 
 	public float splashAccentFrequencyMax = 10f;
 
-	protected const Flags Flag_EngineOn = Flags.Reserved1;
-
 	protected const Flags Flag_ThrottleOn = Flags.Reserved2;
 
 	protected const Flags Flag_TurnLeft = Flags.Reserved3;
@@ -54,6 +52,8 @@ public class MotorRowboat : BaseBoat
 	protected const Flags Flag_Dying = Flags.Broken;
 
 	private const float submergeFractionMinimum = 0.85f;
+
+	public float deathSinkRate = 0.1f;
 
 	[Header("Fuel")]
 	public GameObjectRef fuelStoragePrefab;
@@ -148,7 +148,7 @@ public class MotorRowboat : BaseBoat
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_EngineToggle "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_EngineToggle "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_EngineToggle", 0);
 				try
@@ -184,7 +184,7 @@ public class MotorRowboat : BaseBoat
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_OpenFuel "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_OpenFuel "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_OpenFuel", 0);
 				try
@@ -263,7 +263,7 @@ public class MotorRowboat : BaseBoat
 		base.DoServerDestroy();
 	}
 
-	public override EntityFuelSystem GetFuelSystem()
+	public override IFuelSystem GetFuelSystem()
 	{
 		return fuelSystem;
 	}
@@ -411,7 +411,12 @@ public class MotorRowboat : BaseBoat
 	{
 		if (fuelSystem.HasFuel(forceCheck: true))
 		{
-			SetFlag(Flags.Reserved1, wantsOn);
+			SetFlag(Flags.On, wantsOn);
+			if (wantsOn)
+			{
+				rigidBody.WakeUp();
+				buoyancy.Wake();
+			}
 		}
 	}
 
@@ -429,7 +434,7 @@ public class MotorRowboat : BaseBoat
 
 	public void CheckInvalidBoat()
 	{
-		bool num = fuelStoragePrefab.isValid && !fuelSystem.fuelStorageInstance.IsValid(base.isServer);
+		bool num = fuelStoragePrefab.isValid && !fuelSystem.HasValidInstance(base.isServer);
 		bool flag = storageUnitPrefab.isValid && !storageUnitInstance.IsValid(base.isServer);
 		if (num || flag)
 		{
@@ -445,7 +450,7 @@ public class MotorRowboat : BaseBoat
 
 	public override bool EngineOn()
 	{
-		return HasFlag(Flags.Reserved1);
+		return IsOn();
 	}
 
 	public float TimeSinceDriver()
@@ -461,9 +466,9 @@ public class MotorRowboat : BaseBoat
 
 	public override void VehicleFixedUpdate()
 	{
-		//IL_00b6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0160: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0161: Unknown result type (might be due to invalid IL or missing references)
 		if (IsTransferProtected())
 		{
 			return;
@@ -483,7 +488,7 @@ public class MotorRowboat : BaseBoat
 		UpdateDrag();
 		if (IsDying)
 		{
-			buoyancy.buoyancyScale = Mathf.Lerp(buoyancy.buoyancyScale, 0f, Time.fixedDeltaTime * 0.1f);
+			buoyancy.buoyancyScale = Mathf.Lerp(buoyancy.buoyancyScale, 0f, Time.fixedDeltaTime * deathSinkRate);
 		}
 		else
 		{
@@ -514,7 +519,7 @@ public class MotorRowboat : BaseBoat
 			Flags num = flags;
 			SetFlag(Flags.Reserved3, steering > 0f, recursive: false, networkupdate: false);
 			SetFlag(Flags.Reserved4, steering < 0f, recursive: false, networkupdate: false);
-			SetFlag(Flags.Reserved1, b, recursive: false, networkupdate: false);
+			SetFlag(Flags.On, b, recursive: false, networkupdate: false);
 			SetFlag(Flags.Reserved2, EngineOn() && gasPedal != 0f, recursive: false, networkupdate: false);
 			SetFlag(Flags.Reserved9, buoyancy.submergedFraction > 0.85f, recursive: false, networkupdate: false);
 			SetFlag(Flags.Reserved6, fuelSystem.HasFuel(), recursive: false, networkupdate: false);
@@ -570,14 +575,13 @@ public class MotorRowboat : BaseBoat
 	public void UpdateDrag()
 	{
 		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ac: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
 		float num = Vector3Ex.SqrMagnitude2D(rigidBody.velocity);
 		float num2 = Mathf.InverseLerp(0f, 2f, num);
-		bool flag = HasFlag(Flags.Reserved1);
-		float num3 = angularDragBase * (flag ? 1f : engineOffAngularDragMultiplier);
+		float num3 = angularDragBase * (IsOn() ? 1f : engineOffAngularDragMultiplier);
 		rigidBody.angularDrag = num3 + angularDragVelocity * num2;
 		rigidBody.drag = landDrag + waterDrag * Mathf.InverseLerp(0f, 1f, buoyancy.submergedFraction);
 		if (offAxisDrag > 0f)
@@ -685,7 +689,7 @@ public class MotorRowboat : BaseBoat
 
 	public override void DisableTransferProtection()
 	{
-		if ((Object)(object)GetDriver() != (Object)null && HasFlag(Flags.Reserved1))
+		if ((Object)(object)GetDriver() != (Object)null && IsOn())
 		{
 			gasPedal = 0f;
 			steering = 0f;
@@ -698,12 +702,12 @@ public class MotorRowboat : BaseBoat
 	{
 		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
 		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
 		base.Save(info);
 		info.msg.motorBoat = Pool.Get<Motorboat>();
 		info.msg.motorBoat.storageid = storageUnitInstance.uid;
-		info.msg.motorBoat.fuelStorageID = fuelSystem.fuelStorageInstance.uid;
+		info.msg.motorBoat.fuelStorageID = fuelSystem.GetInstanceID();
 	}
 
 	protected override bool CanPushNow(BasePlayer pusher)
@@ -756,12 +760,12 @@ public class MotorRowboat : BaseBoat
 
 	public override void Load(LoadInfo info)
 	{
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
 		base.Load(info);
 		if (info.msg.motorBoat != null)
 		{
-			fuelSystem.fuelStorageInstance.uid = info.msg.motorBoat.fuelStorageID;
+			fuelSystem.SetInstanceID(info.msg.motorBoat.fuelStorageID);
 			storageUnitInstance.uid = info.msg.motorBoat.storageid;
 		}
 	}

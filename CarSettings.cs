@@ -41,6 +41,8 @@ public class CarSettings
 
 	public float steerReturnLerpSpeed = 200f;
 
+	public bool retainLerpSpeed;
+
 	[Header("Motor")]
 	public float maxDriveSlip = 4f;
 

@@ -375,30 +375,31 @@ public static class RuntimeUtilities
 		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00b7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00dc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00eb: Expected O, but got Unknown
+		//IL_00ce: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00dd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ec: Expected O, but got Unknown
 		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
 		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
 		if (!m_LutStrips.TryGetValue(size, out var value))
 		{
 			int num = size * size;
-			Color[] array = (Color[])(object)new Color[num * size];
-			float num2 = 1f / ((float)size - 1f);
+			int num2 = size;
+			Color[] array = (Color[])(object)new Color[num * num2];
+			float num3 = 1f / ((float)size - 1f);
 			for (int i = 0; i < size; i++)
 			{
-				int num3 = i * size;
-				float num4 = (float)i * num2;
+				int num4 = i * size;
+				float num5 = (float)i * num3;
 				for (int j = 0; j < size; j++)
 				{
-					float num5 = (float)j * num2;
+					float num6 = (float)j * num3;
 					for (int k = 0; k < size; k++)
 					{
-						float num6 = (float)k * num2;
-						array[j * num + num3 + k] = new Color(num6, num5, num4);
+						float num7 = (float)k * num3;
+						array[j * num + num4 + k] = new Color(num7, num6, num5);
 					}
 				}
 			}
@@ -913,8 +914,7 @@ public static class RuntimeUtilities
 		{
 			expression = ((LambdaExpression)expression).Body;
 		}
-		ExpressionType nodeType = expression.NodeType;
-		if (nodeType == ExpressionType.MemberAccess)
+		if (expression.NodeType == ExpressionType.MemberAccess)
 		{
 			return ((FieldInfo)((MemberExpression)expression).Member).GetCustomAttributes(inherit: false).Cast<Attribute>().ToArray();
 		}
@@ -923,8 +923,7 @@ public static class RuntimeUtilities
 
 	public static string GetFieldPath<TType, TValue>(Expression<Func<TType, TValue>> expr)
 	{
-		ExpressionType nodeType = expr.Body.NodeType;
-		if (nodeType == ExpressionType.MemberAccess)
+		if (expr.Body.NodeType == ExpressionType.MemberAccess)
 		{
 			MemberExpression memberExpression = expr.Body as MemberExpression;
 			List<string> list = new List<string>();

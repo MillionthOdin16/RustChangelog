@@ -41,10 +41,14 @@ public abstract class BaseClanHandler<T> : BasePlayerHandler<T> where T : class
 			//IL_0139: Unknown result type (might be due to invalid IL or missing references)
 			//IL_013a: Unknown result type (might be due to invalid IL or missing references)
 			//IL_0140: Invalid comparison between Unknown and I4
+			//IL_00ca: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00cf: Unknown result type (might be due to invalid IL or missing references)
 			//IL_00d3: Unknown result type (might be due to invalid IL or missing references)
 			//IL_00d8: Unknown result type (might be due to invalid IL or missing references)
 			//IL_00ed: Unknown result type (might be due to invalid IL or missing references)
 			//IL_00ef: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0059: Unknown result type (might be due to invalid IL or missing references)
+			//IL_005e: Unknown result type (might be due to invalid IL or missing references)
 			//IL_0062: Unknown result type (might be due to invalid IL or missing references)
 			//IL_0067: Unknown result type (might be due to invalid IL or missing references)
 			//IL_007c: Unknown result type (might be due to invalid IL or missing references)
@@ -149,18 +153,16 @@ public abstract class BaseClanHandler<T> : BasePlayerHandler<T> where T : class
 	protected IClanBackend ClanBackend { get; private set; }
 
 	[AsyncStateMachine(typeof(BaseClanHandler<>._003CGetClan_003Ed__4))]
-	protected System.Threading.Tasks.ValueTask<IClan> GetClan()
+	protected ValueTask<IClan> GetClan()
 	{
-		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
 		_003CGetClan_003Ed__4 _003CGetClan_003Ed__ = default(_003CGetClan_003Ed__4);
-		_003CGetClan_003Ed__._003C_003E4__this = this;
 		_003CGetClan_003Ed__._003C_003Et__builder = AsyncValueTaskMethodBuilder<IClan>.Create();
+		_003CGetClan_003Ed__._003C_003E4__this = this;
 		_003CGetClan_003Ed__._003C_003E1__state = -1;
-		AsyncValueTaskMethodBuilder<IClan> _003C_003Et__builder = _003CGetClan_003Ed__._003C_003Et__builder;
-		_003C_003Et__builder.Start<_003CGetClan_003Ed__4>(ref _003CGetClan_003Ed__);
+		_003CGetClan_003Ed__._003C_003Et__builder.Start<_003CGetClan_003Ed__4>(ref _003CGetClan_003Ed__);
 		return _003CGetClan_003Ed__._003C_003Et__builder.Task;
 	}
 

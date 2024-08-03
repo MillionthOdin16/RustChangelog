@@ -51,8 +51,8 @@ public class GenerateRiverLayout : ProceduralComponent
 		//IL_015e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0177: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0183: Unknown result type (might be due to invalid IL or missing references)
-		//IL_05c3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_05e4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_05c7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_05e8: Unknown result type (might be due to invalid IL or missing references)
 		//IL_01a2: Unknown result type (might be due to invalid IL or missing references)
 		//IL_046c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0471: Unknown result type (might be due to invalid IL or missing references)
@@ -134,8 +134,7 @@ public class GenerateRiverLayout : ProceduralComponent
 							list2.Add(val);
 							if (list2.Count >= 25)
 							{
-								int num8 = TerrainMeta.Path.Rivers.Count + list.Count;
-								PathList pathList = new PathList("River " + num8, list2.ToArray());
+								PathList pathList = new PathList("River " + (TerrainMeta.Path.Rivers.Count + list.Count), list2.ToArray());
 								pathList.Spline = true;
 								pathList.Width = 36f;
 								pathList.InnerPadding = 1f;
@@ -166,12 +165,12 @@ public class GenerateRiverLayout : ProceduralComponent
 				}
 			}
 			list.Sort((PathList a, PathList b) => b.Path.Points.Length.CompareTo(a.Path.Points.Length));
-			int num9 = Mathf.RoundToInt(10f * TerrainMeta.Size.x * TerrainMeta.Size.z * 1E-06f);
-			int num10 = Mathf.NextPowerOfTwo((int)((float)World.Size / 36f));
-			bool[,] array = new bool[num10, num10];
+			int num8 = Mathf.RoundToInt(10f * TerrainMeta.Size.x * TerrainMeta.Size.z * 1E-06f);
+			int num9 = Mathf.NextPowerOfTwo((int)((float)World.Size / 36f));
+			bool[,] array = new bool[num9, num9];
 			for (int j = 0; j < list.Count; j++)
 			{
-				if (j >= num9)
+				if (j >= num8)
 				{
 					ListEx.RemoveUnordered<PathList>(list, j--);
 					continue;
@@ -191,42 +190,42 @@ public class GenerateRiverLayout : ProceduralComponent
 				{
 					continue;
 				}
+				int num10 = -1;
 				int num11 = -1;
-				int num12 = -1;
 				for (int l = 0; l < pathList2.Path.Points.Length; l++)
 				{
 					Vector3 val3 = pathList2.Path.Points[l];
-					int num13 = Mathf.Clamp((int)(TerrainMeta.NormalizeX(val3.x) * (float)num10), 0, num10 - 1);
-					int num14 = Mathf.Clamp((int)(TerrainMeta.NormalizeZ(val3.z) * (float)num10), 0, num10 - 1);
-					if (num11 == num13 && num12 == num14)
+					int num12 = Mathf.Clamp((int)(TerrainMeta.NormalizeX(val3.x) * (float)num9), 0, num9 - 1);
+					int num13 = Mathf.Clamp((int)(TerrainMeta.NormalizeZ(val3.z) * (float)num9), 0, num9 - 1);
+					if (num10 == num12 && num11 == num13)
 					{
 						continue;
 					}
-					if (array[num14, num13])
+					if (array[num13, num12])
 					{
 						ListEx.RemoveUnordered<PathList>(list, j--);
 						flag = true;
 						break;
 					}
-					if (num11 != num13 && num12 != num14)
+					if (num10 != num12 && num11 != num13)
 					{
+						if (num10 != -1)
+						{
+							array[num13, num10] = true;
+						}
 						if (num11 != -1)
 						{
-							array[num14, num11] = true;
+							array[num11, num12] = true;
 						}
-						if (num12 != -1)
-						{
-							array[num12, num13] = true;
-						}
+						num10 = num12;
 						num11 = num13;
-						num12 = num14;
-						array[num14, num13] = true;
+						array[num13, num12] = true;
 					}
 					else
 					{
+						num10 = num12;
 						num11 = num13;
-						num12 = num14;
-						array[num14, num13] = true;
+						array[num13, num12] = true;
 					}
 				}
 			}

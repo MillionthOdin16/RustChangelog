@@ -42,7 +42,7 @@ public class FishingBobber : BaseCombatEntity
 		base.ServerInit();
 	}
 
-	public void InitialiseBobber(BasePlayer forPlayer, WaterBody forBody, Vector3 targetPos)
+	public void InitialiseBobber(BasePlayer forPlayer, WaterBody forBody, Vector3 targetPos, float maxDuration)
 	{
 		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
@@ -63,6 +63,7 @@ public class FishingBobber : BaseCombatEntity
 		initialCastTime = TimeSince.op_Implicit(0f);
 		initialDistance = Vector3.Distance(targetPos, Vector3Ex.WithY(((Component)forPlayer).transform.position, targetPos.y));
 		((FacepunchBehaviour)this).InvokeRepeating((Action)ProcessInitialCast, 0f, 0f);
+		((FacepunchBehaviour)this).Invoke((Action)TimeOutBobber, maxDuration);
 	}
 
 	private void ProcessInitialCast()
@@ -225,10 +226,15 @@ public class FishingBobber : BaseCombatEntity
 		}
 		Vector3 position = ((Component)this).transform.position;
 		val = pos - position;
-		if (GamePhysics.Trace(new Ray(position, ((Vector3)(ref val)).normalized), 0.1f, out var _, checkLength, 1218511105, (QueryTriggerInteraction)0))
+		if (GamePhysics.Trace(new Ray(position, ((Vector3)(ref val)).normalized), 0.1f, out var _, checkLength, 1084293377, (QueryTriggerInteraction)0))
 		{
 			return false;
 		}
 		return true;
+	}
+
+	private void TimeOutBobber()
+	{
+		Kill();
 	}
 }

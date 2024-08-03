@@ -37,6 +37,8 @@ public class StorageContainer : DecayEntity, IItemContainerEntity, IIdealSlotEnt
 
 	public ItemDefinition allowedItem2;
 
+	public ItemDefinition[] blockedItems;
+
 	public int maxStackSize;
 
 	public bool needsBuildingPrivilegeToUse;
@@ -80,7 +82,7 @@ public class StorageContainer : DecayEntity, IItemContainerEntity, IIdealSlotEnt
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_OpenLoot "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_OpenLoot "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_OpenLoot", 0);
 				try
@@ -236,6 +238,7 @@ public class StorageContainer : DecayEntity, IItemContainerEntity, IIdealSlotEnt
 			CreateInventory(giveUID: true);
 			OnInventoryFirstCreated(inventory);
 		}
+		inventory?.SetBlacklist(blockedItems);
 		base.ServerInit();
 	}
 
@@ -262,6 +265,7 @@ public class StorageContainer : DecayEntity, IItemContainerEntity, IIdealSlotEnt
 		inventory.entityOwner = this;
 		inventory.allowedContents = ((allowedContents == (ItemContainer.ContentsType)0) ? ItemContainer.ContentsType.Generic : allowedContents);
 		inventory.SetOnlyAllowedItems(allowedItem, allowedItem2);
+		inventory.SetBlacklist(blockedItems);
 		inventory.maxStackSize = maxStackSize;
 		inventory.ServerInitialize(null, inventorySlots);
 		if (giveUID)
@@ -386,7 +390,7 @@ public class StorageContainer : DecayEntity, IItemContainerEntity, IIdealSlotEnt
 			SetFlag(Flags.Open, b: true);
 			AddContainers(player.inventory.loot);
 			player.inventory.loot.SendImmediate();
-			player.ClientRPCPlayer(null, player, "RPC_OpenLootPanel", panelToOpen);
+			player.ClientRPC(RpcTarget.Player("RPC_OpenLootPanel", player), panelToOpen);
 			SendNetworkUpdate();
 			return true;
 		}
@@ -501,12 +505,12 @@ public class StorageContainer : DecayEntity, IItemContainerEntity, IIdealSlotEnt
 		}
 	}
 
-	public virtual int GetIdealSlot(BasePlayer player, Item item)
+	public virtual int GetIdealSlot(BasePlayer player, ItemContainer container, Item item)
 	{
 		return -1;
 	}
 
-	public virtual ItemContainerId GetIdealContainer(BasePlayer player, Item item, bool altMove)
+	public virtual ItemContainerId GetIdealContainer(BasePlayer player, Item item, ItemMoveModifier modifier)
 	{
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0008: Unknown result type (might be due to invalid IL or missing references)

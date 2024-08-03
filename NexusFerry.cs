@@ -12,6 +12,21 @@ using UnityEngine;
 
 public class NexusFerry : BaseEntity
 {
+	public enum State
+	{
+		Invalid,
+		SailingIn,
+		Queued,
+		Arrival,
+		Docking,
+		Stopping,
+		Waiting,
+		CastingOff,
+		Departure,
+		SailingOut,
+		Transferring
+	}
+
 	private readonly struct Edge
 	{
 		public readonly Node Next;
@@ -212,28 +227,7 @@ public class NexusFerry : BaseEntity
 		}
 	}
 
-	public enum State
-	{
-		Invalid,
-		SailingIn,
-		Queued,
-		Arrival,
-		Docking,
-		Stopping,
-		Waiting,
-		CastingOff,
-		Departure,
-		SailingOut,
-		Transferring
-	}
-
-	private TimeSince _sincePathCalculation;
-
-	private Vector3? _pathTargetPosition;
-
-	private Quaternion? _pathTargetRotation;
-
-	private Vector3 _velocity;
+	public static readonly Phrase RetiringPhrase = new Phrase("ferry.not_in_service", "Not In Service");
 
 	[Header("NexusFerry")]
 	public float TravelVelocity = 20f;
@@ -249,6 +243,12 @@ public class NexusFerry : BaseEntity
 	public float VelocityPreservationOnTurn = 0.1f;
 
 	public float TargetDistanceThreshold = 10f;
+
+	public GameObjectRef hornEffect;
+
+	public Transform hornEffectTransform;
+
+	public float departureHornLeadTime = 5f;
 
 	[Header("Pathing")]
 	public SphereCollider SphereCaster;
@@ -285,6 +285,8 @@ public class NexusFerry : BaseEntity
 
 	private int _nextScheduleIndex;
 
+	private bool _departureHornPlayed;
+
 	public static readonly ListHashSet<NexusFerry> All = new ListHashSet<NexusFerry>(8);
 
 	private List<NetworkableId> _transferredIds;
@@ -298,6 +300,14 @@ public class NexusFerry : BaseEntity
 	private TimeSince _sinceLastTransferAttempt;
 
 	private RealTimeSince _sinceLastNextIndexUpdate;
+
+	private TimeSince _sincePathCalculation;
+
+	private Vector3? _pathTargetPosition;
+
+	private Quaternion? _pathTargetRotation;
+
+	private Vector3 _velocity;
 
 	public string OwnerZone => _ownerZone;
 
@@ -317,6 +327,439 @@ public class NexusFerry : BaseEntity
 	}
 
 	protected override bool PositionTickFixedTime => true;
+
+	public void Initialize(string ownerZone, List<string> schedule)
+	{
+		//IL_00b7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bd: Unknown result type (might be due to invalid IL or missing references)
+		try
+		{
+			if (string.IsNullOrWhiteSpace(ownerZone))
+			{
+				throw new ArgumentNullException("ownerZone");
+			}
+			if (schedule == null)
+			{
+				throw new ArgumentNullException("schedule");
+			}
+			if (schedule.Count <= 1 || !schedule.Contains(ownerZone, StringComparer.InvariantCultureIgnoreCase))
+			{
+				throw new ArgumentException("Ferry schedule is invalid", "schedule");
+			}
+			_timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+			_ownerZone = ownerZone;
+			_schedule = schedule;
+			_scheduleIndex = List.FindIndex<string>((IReadOnlyList<string>)schedule, ownerZone, (IEqualityComparer<string>)StringComparer.InvariantCultureIgnoreCase);
+			_state = State.Stopping;
+			_departureHornPlayed = false;
+			if (_scheduleIndex < 0)
+			{
+				throw new InvalidOperationException("Ferry couldn't find the owner zone in its schedule");
+			}
+			EnsureInitialized();
+			Transform targetTransform = GetTargetTransform(_state);
+			((Component)this).transform.SetPositionAndRotation(targetTransform.position, targetTransform.rotation);
+		}
+		catch
+		{
+			Kill();
+			throw;
+		}
+	}
+
+	private void EnsureInitialized()
+	{
+		_targetDock = SingletonComponent<NexusDock>.Instance;
+		if ((Object)(object)_targetDock == (Object)null)
+		{
+			throw new InvalidOperationException("Ferry has no dock to go to!");
+		}
+	}
+
+	public override void ServerInit()
+	{
+		base.ServerInit();
+		if (!Application.isLoadingSave)
+		{
+			if (!NexusServer.Started)
+			{
+				Debug.LogError((object)"NexusFerry will not work without being connected to a nexus - destroying.");
+				Kill();
+				return;
+			}
+			if (string.IsNullOrWhiteSpace(_ownerZone) || _schedule == null || _schedule.Count <= 1 || !_schedule.Contains(_ownerZone))
+			{
+				Debug.LogError((object)"NexusFerry has not been initialized (you can't spawn them manually) - destroying.");
+				Kill();
+				return;
+			}
+		}
+		EnsureInitialized();
+		All.Add(this);
+	}
+
+	public override void DestroyShared()
+	{
+		base.DestroyShared();
+		if (base.isServer)
+		{
+			All.Remove(this);
+		}
+		if (_transferredIds != null)
+		{
+			Pool.FreeList<NetworkableId>(ref _transferredIds);
+		}
+	}
+
+	public void FixedUpdate()
+	{
+		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
+		if (!base.isServer)
+		{
+			return;
+		}
+		if (RealTimeSince.op_Implicit(_sinceLastNextIndexUpdate) > 10f)
+		{
+			_sinceLastNextIndexUpdate = RealTimeSince.op_Implicit(0f);
+			int num = TryGetNextScheduleIndex() ?? (-1);
+			if (num != _nextScheduleIndex)
+			{
+				_nextScheduleIndex = num;
+				SendNetworkUpdate();
+			}
+		}
+		if (_state == State.Waiting)
+		{
+			EnsureInitialized();
+			if (!_departureHornPlayed && _targetDock.WaitTime - TimeSince.op_Implicit(_sinceStartedWaiting) < departureHornLeadTime)
+			{
+				PlayDepartureHornEffect();
+			}
+			if (!(TimeSince.op_Implicit(_sinceStartedWaiting) >= _targetDock.WaitTime))
+			{
+				return;
+			}
+			SwitchToNextState();
+		}
+		if (MoveTowardsTarget())
+		{
+			SwitchToNextState();
+		}
+	}
+
+	public FerryStatus GetStatus()
+	{
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		FerryStatus obj = Pool.Get<FerryStatus>();
+		obj.entityId = net.ID;
+		obj.timestamp = _timestamp;
+		obj.ownerZone = _ownerZone;
+		obj.schedule = List.ShallowClonePooled<string>(_schedule);
+		obj.scheduleIndex = _scheduleIndex;
+		obj.state = (int)_state;
+		obj.isRetiring = _isRetiring;
+		return obj;
+	}
+
+	public void Retire()
+	{
+		_isRetiring = true;
+	}
+
+	public void UpdateSchedule(List<string> schedule)
+	{
+		if (_schedule != null)
+		{
+			Pool.FreeList<string>(ref _schedule);
+		}
+		_schedule = List.ShallowClonePooled<string>(schedule);
+	}
+
+	public override float GetNetworkTime()
+	{
+		return Time.fixedTime;
+	}
+
+	private void SwitchToNextState()
+	{
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		if (_state == State.SailingOut)
+		{
+			if (!_isTransferring && TimeSince.op_Implicit(_sinceLastTransferAttempt) >= 5f)
+			{
+				_sinceLastTransferAttempt = TimeSince.op_Implicit(0f);
+				TransferToNextZone();
+			}
+			return;
+		}
+		if (_state == State.Departure && (Object)(object)_targetDock != (Object)null)
+		{
+			_targetDock.Depart(this);
+		}
+		State nextState = GetNextState(_state);
+		_state = nextState;
+		SendNetworkUpdate();
+		if (_state == State.Waiting)
+		{
+			_sinceStartedWaiting = TimeSince.op_Implicit(0f);
+			_departureHornPlayed = false;
+		}
+		if (_state == State.CastingOff)
+		{
+			EjectInactiveEntities(_isRetiring);
+			if (_isRetiring)
+			{
+				Kill();
+			}
+		}
+	}
+
+	private static State GetNextState(State currentState)
+	{
+		State state = currentState + 1;
+		if (state >= State.SailingOut)
+		{
+			state = State.SailingOut;
+		}
+		return state;
+	}
+
+	private static State GetPreviousState(State currentState)
+	{
+		if ((uint)currentState <= 3u || (uint)(currentState - 9) <= 1u)
+		{
+			return State.Invalid;
+		}
+		return currentState - 1;
+	}
+
+	private async void TransferToNextZone()
+	{
+		if (_isTransferring)
+		{
+			return;
+		}
+		int? num = TryGetNextScheduleIndex();
+		if (!num.HasValue)
+		{
+			return;
+		}
+		_isTransferring = true;
+		int oldScheduleIndex = _scheduleIndex;
+		State oldState = _state;
+		try
+		{
+			_scheduleIndex = num.Value;
+			string text = _schedule[_scheduleIndex];
+			_state = State.Transferring;
+			Debug.Log((object)("Sending ferry to " + text));
+			await NexusServer.TransferEntity(this, text, "ferry");
+		}
+		finally
+		{
+			_isTransferring = false;
+			_scheduleIndex = oldScheduleIndex;
+			_state = oldState;
+		}
+	}
+
+	private int? TryGetNextScheduleIndex()
+	{
+		string zoneKey = NexusServer.ZoneKey;
+		int num = (_scheduleIndex + 1) % _schedule.Count;
+		for (int i = 0; i < _schedule.Count; i++)
+		{
+			string text = _schedule[num];
+			if (!string.Equals(text, zoneKey, StringComparison.InvariantCultureIgnoreCase) && NexusServer.TryGetZoneStatus(text, out var status) && status.IsOnline)
+			{
+				return num;
+			}
+			num++;
+			if (num >= _schedule.Count)
+			{
+				num = 0;
+			}
+		}
+		return null;
+	}
+
+	private void EjectInactiveEntities(bool forceAll = false)
+	{
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
+		HashSet<NetworkableId> hashSet = Pool.Get<HashSet<NetworkableId>>();
+		hashSet.Clear();
+		if (_transferredIds != null)
+		{
+			foreach (NetworkableId transferredId in _transferredIds)
+			{
+				hashSet.Add(transferredId);
+			}
+		}
+		List<BaseEntity> list = Pool.GetList<BaseEntity>();
+		foreach (BaseEntity child in children)
+		{
+			if (!(child is NPCAutoTurret) && (hashSet.Contains(child.net.ID) || forceAll) && (!IsEntityActive(child) || forceAll))
+			{
+				list.Add(child);
+			}
+		}
+		foreach (BaseEntity item in list)
+		{
+			EjectEntity(item);
+		}
+		Pool.FreeList<BaseEntity>(ref list);
+		hashSet.Clear();
+		Pool.Free<HashSet<NetworkableId>>(ref hashSet);
+	}
+
+	private void EjectEntity(BaseEntity entity)
+	{
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		if (!((Object)(object)entity == (Object)null))
+		{
+			if ((Object)(object)_targetDock != (Object)null && _targetDock.TryFindEjectionPosition(out var position))
+			{
+				entity.SetParent(null);
+				entity.ServerPosition = position;
+				entity.SendNetworkUpdateImmediate();
+			}
+			else
+			{
+				Debug.LogWarning((object)$"Couldn't find an ejection point for {entity}", (Object)(object)entity);
+			}
+		}
+	}
+
+	private static bool IsEntityActive(BaseEntity entity)
+	{
+		bool result = false;
+		if (entity is BasePlayer player)
+		{
+			result = IsPlayerReady(player);
+		}
+		else if (entity is BaseVehicle baseVehicle)
+		{
+			List<BasePlayer> list = Pool.GetList<BasePlayer>();
+			baseVehicle.GetMountedPlayers(list);
+			foreach (BasePlayer item in list)
+			{
+				if (IsPlayerReady(item))
+				{
+					result = true;
+					break;
+				}
+			}
+			Pool.FreeList<BasePlayer>(ref list);
+		}
+		return result;
+	}
+
+	private static bool IsPlayerReady(BasePlayer player)
+	{
+		if ((Object)(object)player != (Object)null && player.IsConnected)
+		{
+			return !player.IsLoadingAfterTransfer();
+		}
+		return false;
+	}
+
+	private void PlayDepartureHornEffect()
+	{
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		if (hornEffect.isValid)
+		{
+			Effect.server.Run(hornEffect.resourcePath, this, 0u, hornEffectTransform.localPosition, Vector3.up);
+		}
+		_departureHornPlayed = true;
+	}
+
+	public override void PostServerLoad()
+	{
+		base.PostServerLoad();
+		((FacepunchBehaviour)this).Invoke(base.DisableTransferProtectionAction, 0.1f);
+	}
+
+	public override void Save(SaveInfo info)
+	{
+		//IL_00e1: Unknown result type (might be due to invalid IL or missing references)
+		base.Save(info);
+		info.msg.nexusFerry = Pool.Get<NexusFerry>();
+		info.msg.nexusFerry.timestamp = _timestamp;
+		info.msg.nexusFerry.ownerZone = _ownerZone;
+		info.msg.nexusFerry.schedule = List.ShallowClonePooled<string>(_schedule);
+		info.msg.nexusFerry.scheduleIndex = _scheduleIndex;
+		info.msg.nexusFerry.state = (int)_state;
+		info.msg.nexusFerry.isRetiring = _isRetiring;
+		info.msg.nexusFerry.nextScheduleIndex = _nextScheduleIndex;
+		if (info.forTransfer)
+		{
+			List<NetworkableId> list = Pool.GetList<NetworkableId>();
+			foreach (BaseEntity child in children)
+			{
+				list.Add(child.net.ID);
+			}
+			info.msg.nexusFerry.transferredIds = list;
+		}
+		else
+		{
+			info.msg.nexusFerry.transferredIds = List.ShallowClonePooled<NetworkableId>(_transferredIds) ?? Pool.GetList<NetworkableId>();
+		}
+	}
+
+	public override void Load(LoadInfo info)
+	{
+		base.Load(info);
+		if (info.msg.nexusFerry == null)
+		{
+			return;
+		}
+		_timestamp = info.msg.nexusFerry.timestamp;
+		_ownerZone = info.msg.nexusFerry.ownerZone;
+		if (_schedule != null)
+		{
+			Pool.FreeList<string>(ref _schedule);
+		}
+		_schedule = List.ShallowClonePooled<string>(info.msg.nexusFerry.schedule);
+		_scheduleIndex = info.msg.nexusFerry.scheduleIndex;
+		_state = (State)info.msg.nexusFerry.state;
+		_isRetiring = info.msg.nexusFerry.isRetiring;
+		_nextScheduleIndex = info.msg.nexusFerry.nextScheduleIndex;
+		if (base.isServer)
+		{
+			if (_transferredIds != null)
+			{
+				Pool.FreeList<NetworkableId>(ref _transferredIds);
+			}
+			_transferredIds = List.ShallowClonePooled<NetworkableId>(info.msg.nexusFerry.transferredIds);
+			if (_state == State.Transferring)
+			{
+				_state = State.SailingIn;
+			}
+		}
+	}
+
+	public static NexusFerry Get(NetworkableId entityId, long timestamp)
+	{
+		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
+		if (BaseNetworkable.serverEntities.Find(entityId) is NexusFerry nexusFerry && nexusFerry._timestamp == timestamp)
+		{
+			return nexusFerry;
+		}
+		return null;
+	}
 
 	private bool MoveTowardsTarget()
 	{
@@ -854,420 +1297,5 @@ public class NexusFerry : BaseEntity
 		}
 		Pool.FreeList<Vector3>(ref list);
 		return true;
-	}
-
-	public void Initialize(string ownerZone, List<string> schedule)
-	{
-		//IL_00b0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b6: Unknown result type (might be due to invalid IL or missing references)
-		try
-		{
-			if (string.IsNullOrWhiteSpace(ownerZone))
-			{
-				throw new ArgumentNullException("ownerZone");
-			}
-			if (schedule == null)
-			{
-				throw new ArgumentNullException("schedule");
-			}
-			if (schedule.Count <= 1 || !schedule.Contains(ownerZone, StringComparer.InvariantCultureIgnoreCase))
-			{
-				throw new ArgumentException("Ferry schedule is invalid", "schedule");
-			}
-			_timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-			_ownerZone = ownerZone;
-			_schedule = schedule;
-			_scheduleIndex = List.FindIndex<string>((IReadOnlyList<string>)schedule, ownerZone, (IEqualityComparer<string>)StringComparer.InvariantCultureIgnoreCase);
-			_state = State.Stopping;
-			if (_scheduleIndex < 0)
-			{
-				throw new InvalidOperationException("Ferry couldn't find the owner zone in its schedule");
-			}
-			EnsureInitialized();
-			Transform targetTransform = GetTargetTransform(_state);
-			((Component)this).transform.SetPositionAndRotation(targetTransform.position, targetTransform.rotation);
-		}
-		catch
-		{
-			Kill();
-			throw;
-		}
-	}
-
-	private void EnsureInitialized()
-	{
-		_targetDock = SingletonComponent<NexusDock>.Instance;
-		if ((Object)(object)_targetDock == (Object)null)
-		{
-			throw new InvalidOperationException("Ferry has no dock to go to!");
-		}
-	}
-
-	public override void ServerInit()
-	{
-		base.ServerInit();
-		if (!Application.isLoadingSave)
-		{
-			if (!NexusServer.Started)
-			{
-				Debug.LogError((object)"NexusFerry will not work without being connected to a nexus - destroying.");
-				Kill();
-				return;
-			}
-			if (string.IsNullOrWhiteSpace(_ownerZone) || _schedule == null || _schedule.Count <= 1 || !_schedule.Contains(_ownerZone))
-			{
-				Debug.LogError((object)"NexusFerry has not been initialized (you can't spawn them manually) - destroying.");
-				Kill();
-				return;
-			}
-		}
-		EnsureInitialized();
-		All.Add(this);
-	}
-
-	public override void DestroyShared()
-	{
-		base.DestroyShared();
-		if (base.isServer)
-		{
-			All.Remove(this);
-		}
-		if (_transferredIds != null)
-		{
-			Pool.FreeList<NetworkableId>(ref _transferredIds);
-		}
-	}
-
-	public void FixedUpdate()
-	{
-		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
-		if (!base.isServer)
-		{
-			return;
-		}
-		if (RealTimeSince.op_Implicit(_sinceLastNextIndexUpdate) > 10f)
-		{
-			_sinceLastNextIndexUpdate = RealTimeSince.op_Implicit(0f);
-			int num = TryGetNextScheduleIndex() ?? (-1);
-			if (num != _nextScheduleIndex)
-			{
-				_nextScheduleIndex = num;
-				SendNetworkUpdate();
-			}
-		}
-		if (_state == State.Waiting)
-		{
-			EnsureInitialized();
-			if (!(TimeSince.op_Implicit(_sinceStartedWaiting) >= _targetDock.WaitTime))
-			{
-				return;
-			}
-			SwitchToNextState();
-		}
-		if (MoveTowardsTarget())
-		{
-			SwitchToNextState();
-		}
-	}
-
-	public FerryStatus GetStatus()
-	{
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-		FerryStatus obj = Pool.Get<FerryStatus>();
-		obj.entityId = net.ID;
-		obj.timestamp = _timestamp;
-		obj.ownerZone = _ownerZone;
-		obj.schedule = List.ShallowClonePooled<string>(_schedule);
-		obj.scheduleIndex = _scheduleIndex;
-		obj.state = (int)_state;
-		obj.isRetiring = _isRetiring;
-		return obj;
-	}
-
-	public void Retire()
-	{
-		_isRetiring = true;
-	}
-
-	public void UpdateSchedule(List<string> schedule)
-	{
-		if (_schedule != null)
-		{
-			Pool.FreeList<string>(ref _schedule);
-		}
-		_schedule = List.ShallowClonePooled<string>(schedule);
-	}
-
-	public override float GetNetworkTime()
-	{
-		return Time.fixedTime;
-	}
-
-	private void SwitchToNextState()
-	{
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-		if (_state == State.SailingOut)
-		{
-			if (!_isTransferring && TimeSince.op_Implicit(_sinceLastTransferAttempt) >= 5f)
-			{
-				_sinceLastTransferAttempt = TimeSince.op_Implicit(0f);
-				TransferToNextZone();
-			}
-			return;
-		}
-		if (_state == State.Departure && (Object)(object)_targetDock != (Object)null)
-		{
-			_targetDock.Depart(this);
-		}
-		State nextState = GetNextState(_state);
-		_state = nextState;
-		SendNetworkUpdate();
-		if (_state == State.Waiting)
-		{
-			_sinceStartedWaiting = TimeSince.op_Implicit(0f);
-		}
-		if (_state == State.CastingOff)
-		{
-			EjectInactiveEntities(_isRetiring);
-			if (_isRetiring)
-			{
-				Kill();
-			}
-		}
-	}
-
-	private static State GetNextState(State currentState)
-	{
-		State state = currentState + 1;
-		if (state >= State.SailingOut)
-		{
-			state = State.SailingOut;
-		}
-		return state;
-	}
-
-	private static State GetPreviousState(State currentState)
-	{
-		if ((uint)currentState <= 3u || (uint)(currentState - 9) <= 1u)
-		{
-			return State.Invalid;
-		}
-		return currentState - 1;
-	}
-
-	private async void TransferToNextZone()
-	{
-		if (_isTransferring)
-		{
-			return;
-		}
-		int? num = TryGetNextScheduleIndex();
-		if (!num.HasValue)
-		{
-			return;
-		}
-		_isTransferring = true;
-		int oldScheduleIndex = _scheduleIndex;
-		State oldState = _state;
-		try
-		{
-			_scheduleIndex = num.Value;
-			string text = _schedule[_scheduleIndex];
-			_state = State.Transferring;
-			Debug.Log((object)("Sending ferry to " + text));
-			await NexusServer.TransferEntity(this, text, "ferry");
-		}
-		finally
-		{
-			_isTransferring = false;
-			_scheduleIndex = oldScheduleIndex;
-			_state = oldState;
-		}
-	}
-
-	private int? TryGetNextScheduleIndex()
-	{
-		string zoneKey = NexusServer.ZoneKey;
-		int num = (_scheduleIndex + 1) % _schedule.Count;
-		for (int i = 0; i < _schedule.Count; i++)
-		{
-			string text = _schedule[num];
-			if (!string.Equals(text, zoneKey, StringComparison.InvariantCultureIgnoreCase) && NexusServer.TryGetZoneStatus(text, out var status) && status.IsOnline)
-			{
-				return num;
-			}
-			num++;
-			if (num >= _schedule.Count)
-			{
-				num = 0;
-			}
-		}
-		return null;
-	}
-
-	private void EjectInactiveEntities(bool forceAll = false)
-	{
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
-		HashSet<NetworkableId> hashSet = Pool.Get<HashSet<NetworkableId>>();
-		hashSet.Clear();
-		if (_transferredIds != null)
-		{
-			foreach (NetworkableId transferredId in _transferredIds)
-			{
-				hashSet.Add(transferredId);
-			}
-		}
-		List<BaseEntity> list = Pool.GetList<BaseEntity>();
-		foreach (BaseEntity child in children)
-		{
-			if (!(child is NPCAutoTurret) && (hashSet.Contains(child.net.ID) || forceAll) && (!IsEntityActive(child) || forceAll))
-			{
-				list.Add(child);
-			}
-		}
-		foreach (BaseEntity item in list)
-		{
-			EjectEntity(item);
-		}
-		Pool.FreeList<BaseEntity>(ref list);
-		hashSet.Clear();
-		Pool.Free<HashSet<NetworkableId>>(ref hashSet);
-	}
-
-	private void EjectEntity(BaseEntity entity)
-	{
-		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
-		if (!((Object)(object)entity == (Object)null))
-		{
-			if ((Object)(object)_targetDock != (Object)null && _targetDock.TryFindEjectionPosition(out var position))
-			{
-				entity.SetParent(null);
-				entity.ServerPosition = position;
-				entity.SendNetworkUpdateImmediate();
-			}
-			else
-			{
-				Debug.LogWarning((object)$"Couldn't find an ejection point for {entity}", (Object)(object)entity);
-			}
-		}
-	}
-
-	private static bool IsEntityActive(BaseEntity entity)
-	{
-		bool result = false;
-		if (entity is BasePlayer player)
-		{
-			result = IsPlayerReady(player);
-		}
-		else if (entity is BaseVehicle baseVehicle)
-		{
-			List<BasePlayer> list = Pool.GetList<BasePlayer>();
-			baseVehicle.GetMountedPlayers(list);
-			foreach (BasePlayer item in list)
-			{
-				if (IsPlayerReady(item))
-				{
-					result = true;
-					break;
-				}
-			}
-			Pool.FreeList<BasePlayer>(ref list);
-		}
-		return result;
-	}
-
-	private static bool IsPlayerReady(BasePlayer player)
-	{
-		if ((Object)(object)player != (Object)null && player.IsConnected)
-		{
-			return !player.IsLoadingAfterTransfer();
-		}
-		return false;
-	}
-
-	public override void PostServerLoad()
-	{
-		base.PostServerLoad();
-		((FacepunchBehaviour)this).Invoke(base.DisableTransferProtectionAction, 0.1f);
-	}
-
-	public override void Save(SaveInfo info)
-	{
-		//IL_00e1: Unknown result type (might be due to invalid IL or missing references)
-		base.Save(info);
-		info.msg.nexusFerry = Pool.Get<NexusFerry>();
-		info.msg.nexusFerry.timestamp = _timestamp;
-		info.msg.nexusFerry.ownerZone = _ownerZone;
-		info.msg.nexusFerry.schedule = List.ShallowClonePooled<string>(_schedule);
-		info.msg.nexusFerry.scheduleIndex = _scheduleIndex;
-		info.msg.nexusFerry.state = (int)_state;
-		info.msg.nexusFerry.isRetiring = _isRetiring;
-		info.msg.nexusFerry.nextScheduleIndex = _nextScheduleIndex;
-		if (info.forTransfer)
-		{
-			List<NetworkableId> list = Pool.GetList<NetworkableId>();
-			foreach (BaseEntity child in children)
-			{
-				list.Add(child.net.ID);
-			}
-			info.msg.nexusFerry.transferredIds = list;
-		}
-		else
-		{
-			info.msg.nexusFerry.transferredIds = List.ShallowClonePooled<NetworkableId>(_transferredIds) ?? Pool.GetList<NetworkableId>();
-		}
-	}
-
-	public override void Load(LoadInfo info)
-	{
-		base.Load(info);
-		if (info.msg.nexusFerry == null)
-		{
-			return;
-		}
-		_timestamp = info.msg.nexusFerry.timestamp;
-		_ownerZone = info.msg.nexusFerry.ownerZone;
-		if (_schedule != null)
-		{
-			Pool.FreeList<string>(ref _schedule);
-		}
-		_schedule = List.ShallowClonePooled<string>(info.msg.nexusFerry.schedule);
-		_scheduleIndex = info.msg.nexusFerry.scheduleIndex;
-		_state = (State)info.msg.nexusFerry.state;
-		_isRetiring = info.msg.nexusFerry.isRetiring;
-		_nextScheduleIndex = info.msg.nexusFerry.nextScheduleIndex;
-		if (base.isServer)
-		{
-			if (_transferredIds != null)
-			{
-				Pool.FreeList<NetworkableId>(ref _transferredIds);
-			}
-			_transferredIds = List.ShallowClonePooled<NetworkableId>(info.msg.nexusFerry.transferredIds);
-			if (_state == State.Transferring)
-			{
-				_state = State.SailingIn;
-			}
-		}
-	}
-
-	public static NexusFerry Get(NetworkableId entityId, long timestamp)
-	{
-		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
-		if (BaseNetworkable.serverEntities.Find(entityId) is NexusFerry nexusFerry && nexusFerry._timestamp == timestamp)
-		{
-			return nexusFerry;
-		}
-		return null;
 	}
 }

@@ -35,7 +35,7 @@ public class PowerLineWire : MonoBehaviour
 		//IL_0023: Expected O, but got Unknown
 		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0097: Unknown result type (might be due to invalid IL or missing references)
 		if (objs != null && objs.Count > 1)
 		{
 			GameObject val = null;

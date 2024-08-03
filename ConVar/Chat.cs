@@ -47,7 +47,7 @@ public class Chat : ConsoleSystem
 
 	[StructLayout(LayoutKind.Auto)]
 	[CompilerGenerated]
-	private struct _003CsayAs_003Ed__18 : IAsyncStateMachine
+	private struct _003CsayAs_003Ed__19 : IAsyncStateMachine
 	{
 		public int _003C_003E1__state;
 
@@ -73,48 +73,54 @@ public class Chat : ConsoleSystem
 
 		private void MoveNext()
 		{
-			//IL_071e: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0723: Unknown result type (might be due to invalid IL or missing references)
-			//IL_072b: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0790: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0795: Unknown result type (might be due to invalid IL or missing references)
-			//IL_079d: Unknown result type (might be due to invalid IL or missing references)
-			//IL_081d: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0822: Unknown result type (might be due to invalid IL or missing references)
-			//IL_082a: Unknown result type (might be due to invalid IL or missing references)
-			//IL_073c: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0741: Unknown result type (might be due to invalid IL or missing references)
-			//IL_07ae: Unknown result type (might be due to invalid IL or missing references)
-			//IL_07b3: Unknown result type (might be due to invalid IL or missing references)
-			//IL_083b: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0841: Invalid comparison between Unknown and I4
-			//IL_075b: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0760: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0725: Unknown result type (might be due to invalid IL or missing references)
+			//IL_072a: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0732: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0797: Unknown result type (might be due to invalid IL or missing references)
+			//IL_079c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_07a4: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0827: Unknown result type (might be due to invalid IL or missing references)
+			//IL_082c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0834: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0743: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0748: Unknown result type (might be due to invalid IL or missing references)
 			//IL_07b5: Unknown result type (might be due to invalid IL or missing references)
-			//IL_07b7: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0775: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0777: Unknown result type (might be due to invalid IL or missing references)
-			//IL_06e9: Unknown result type (might be due to invalid IL or missing references)
-			//IL_06ee: Unknown result type (might be due to invalid IL or missing references)
-			//IL_07eb: Unknown result type (might be due to invalid IL or missing references)
-			//IL_07f0: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0703: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0705: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0805: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0807: Unknown result type (might be due to invalid IL or missing references)
-			//IL_04fd: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0502: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0519: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0529: Unknown result type (might be due to invalid IL or missing references)
-			//IL_052e: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0533: Unknown result type (might be due to invalid IL or missing references)
+			//IL_07ba: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0845: Unknown result type (might be due to invalid IL or missing references)
+			//IL_084b: Invalid comparison between Unknown and I4
+			//IL_0759: Unknown result type (might be due to invalid IL or missing references)
+			//IL_075e: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0762: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0767: Unknown result type (might be due to invalid IL or missing references)
+			//IL_07bc: Unknown result type (might be due to invalid IL or missing references)
+			//IL_07be: Unknown result type (might be due to invalid IL or missing references)
+			//IL_077c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_077e: Unknown result type (might be due to invalid IL or missing references)
+			//IL_06e7: Unknown result type (might be due to invalid IL or missing references)
+			//IL_06ec: Unknown result type (might be due to invalid IL or missing references)
+			//IL_06f0: Unknown result type (might be due to invalid IL or missing references)
+			//IL_06f5: Unknown result type (might be due to invalid IL or missing references)
+			//IL_07e9: Unknown result type (might be due to invalid IL or missing references)
+			//IL_07ee: Unknown result type (might be due to invalid IL or missing references)
+			//IL_07f2: Unknown result type (might be due to invalid IL or missing references)
+			//IL_07f7: Unknown result type (might be due to invalid IL or missing references)
+			//IL_070a: Unknown result type (might be due to invalid IL or missing references)
+			//IL_070c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_080c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_080e: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0504: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0509: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0520: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0530: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0535: Unknown result type (might be due to invalid IL or missing references)
+			//IL_053a: Unknown result type (might be due to invalid IL or missing references)
 			int num = _003C_003E1__state;
 			bool result;
 			try
 			{
 				if ((uint)num <= 2u)
 				{
-					goto IL_069e;
+					goto IL_06a5;
 				}
 				if (!Object.op_Implicit((Object)(object)player))
 				{
@@ -152,10 +158,10 @@ public class Chat : ConsoleSystem
 						_003CstrChatText_003E5__2 = StringEx.EscapeRichText(_003CstrChatText_003E5__2);
 						if (!Server.emojiOwnershipCheck)
 						{
-							goto IL_01b5;
+							goto IL_01b6;
 						}
 						List<(TmProEmojiRedirector.EmojiSub, int)> list = Pool.GetList<(TmProEmojiRedirector.EmojiSub, int)>();
-						TmProEmojiRedirector.FindEmojiSubstitutions(_003CstrChatText_003E5__2, RustEmojiLibrary.Instance, list, isServer: true);
+						TmProEmojiRedirector.FindEmojiSubstitutions(_003CstrChatText_003E5__2, RustEmojiLibrary.Instance, list, richText: false, isServer: true);
 						bool flag = true;
 						List<(TmProEmojiRedirector.EmojiSub, int)>.Enumerator enumerator = list.GetEnumerator();
 						try
@@ -179,14 +185,14 @@ public class Chat : ConsoleSystem
 						Pool.FreeList<(TmProEmojiRedirector.EmojiSub, int)>(ref list);
 						if (flag)
 						{
-							goto IL_01b5;
+							goto IL_01b6;
 						}
 						Debug.Log((object)"player tried to use emoji they don't own, reject!");
 						result = false;
 					}
 				}
 				goto end_IL_0007;
-				IL_069e:
+				IL_06a5:
 				ClanManager serverInstance = default(ClanManager);
 				try
 				{
@@ -204,30 +210,30 @@ public class Chat : ConsoleSystem
 							{
 								num = (_003C_003E1__state = 0);
 								_003C_003Eu__1 = awaiter2;
-								_003C_003Et__builder.AwaitUnsafeOnCompleted<ValueTaskAwaiter<ClanValueResult<IClan>>, _003CsayAs_003Ed__18>(ref awaiter2, ref this);
+								_003C_003Et__builder.AwaitUnsafeOnCompleted<ValueTaskAwaiter<ClanValueResult<IClan>>, _003CsayAs_003Ed__19>(ref awaiter2, ref this);
 								return;
 							}
-							goto IL_073a;
+							goto IL_0741;
 						}
 						awaiter2 = serverInstance.Backend.GetByMember(userId).GetAwaiter();
 						if (!awaiter2.IsCompleted)
 						{
 							num = (_003C_003E1__state = 1);
 							_003C_003Eu__1 = awaiter2;
-							_003C_003Et__builder.AwaitUnsafeOnCompleted<ValueTaskAwaiter<ClanValueResult<IClan>>, _003CsayAs_003Ed__18>(ref awaiter2, ref this);
+							_003C_003Et__builder.AwaitUnsafeOnCompleted<ValueTaskAwaiter<ClanValueResult<IClan>>, _003CsayAs_003Ed__19>(ref awaiter2, ref this);
 							return;
 						}
-						goto IL_07ac;
+						goto IL_07b3;
 					case 0:
 						awaiter2 = _003C_003Eu__1;
 						_003C_003Eu__1 = default(ValueTaskAwaiter<ClanValueResult<IClan>>);
 						num = (_003C_003E1__state = -1);
-						goto IL_073a;
+						goto IL_0741;
 					case 1:
 						awaiter2 = _003C_003Eu__1;
 						_003C_003Eu__1 = default(ValueTaskAwaiter<ClanValueResult<IClan>>);
 						num = (_003C_003E1__state = -1);
-						goto IL_07ac;
+						goto IL_07b3;
 					case 2:
 						{
 							awaiter = _003C_003Eu__2;
@@ -235,10 +241,10 @@ public class Chat : ConsoleSystem
 							num = (_003C_003E1__state = -1);
 							break;
 						}
-						IL_073a:
+						IL_0741:
 						result2 = awaiter2.GetResult();
-						goto IL_07b5;
-						IL_07b5:
+						goto IL_07bc;
+						IL_07bc:
 						val = result2;
 						if (val.IsSuccess)
 						{
@@ -247,19 +253,19 @@ public class Chat : ConsoleSystem
 							{
 								num = (_003C_003E1__state = 2);
 								_003C_003Eu__2 = awaiter;
-								_003C_003Et__builder.AwaitUnsafeOnCompleted<ValueTaskAwaiter<ClanResult>, _003CsayAs_003Ed__18>(ref awaiter, ref this);
+								_003C_003Et__builder.AwaitUnsafeOnCompleted<ValueTaskAwaiter<ClanResult>, _003CsayAs_003Ed__19>(ref awaiter, ref this);
 								return;
 							}
 							break;
 						}
 						result = false;
-						goto end_IL_069e;
-						IL_07ac:
+						goto end_IL_06a5;
+						IL_07b3:
 						result2 = awaiter2.GetResult();
-						goto IL_07b5;
+						goto IL_07bc;
 					}
 					result = (int)awaiter.GetResult() == 1;
-					end_IL_069e:;
+					end_IL_06a5:;
 				}
 				catch (Exception ex)
 				{
@@ -267,10 +273,10 @@ public class Chat : ConsoleSystem
 					result = false;
 				}
 				goto end_IL_0007;
-				IL_01b5:
+				IL_01b6:
 				if (serverlog)
 				{
-					ServerConsole.PrintColoured(ConsoleColor.DarkYellow, string.Concat("[", targetChannel, "] ", username, ": "), ConsoleColor.DarkGreen, _003CstrChatText_003E5__2);
+					ServerConsole.PrintColoured(ConsoleColor.DarkYellow, "[" + targetChannel.ToString() + "] " + username + ": ", ConsoleColor.DarkGreen, _003CstrChatText_003E5__2);
 					string text = ((object)player)?.ToString() ?? $"{username}[{userId}]";
 					if (targetChannel == ChatChannel.Team)
 					{
@@ -403,16 +409,20 @@ public class Chat : ConsoleSystem
 					result = false;
 					goto end_IL_0007;
 				}
-				goto IL_069e;
+				goto IL_06a5;
 				end_IL_0007:;
 			}
 			catch (Exception exception)
 			{
 				_003C_003E1__state = -2;
+				_003CstrChatText_003E5__2 = null;
+				_003CstrName_003E5__3 = null;
 				_003C_003Et__builder.SetException(exception);
 				return;
 			}
 			_003C_003E1__state = -2;
+			_003CstrChatText_003E5__2 = null;
+			_003CstrName_003E5__3 = null;
 			_003C_003Et__builder.SetResult(result);
 		}
 
@@ -445,6 +455,9 @@ public class Chat : ConsoleSystem
 	public static bool localchat = false;
 
 	private const float textVolumeBoost = 0.2f;
+
+	[ReplicatedVar]
+	public static bool hideChatInTutorial = true;
 
 	[ServerVar]
 	[ClientVar]
@@ -510,13 +523,15 @@ public class Chat : ConsoleSystem
 
 	private static void sayImpl(ChatChannel targetChannel, Arg arg)
 	{
+		//IL_0183: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0188: Unknown result type (might be due to invalid IL or missing references)
 		if (!enabled)
 		{
 			arg.ReplyWith("Chat is disabled.");
 			return;
 		}
 		BasePlayer player = arg.Player();
-		if (!Object.op_Implicit((Object)(object)player) || player.HasPlayerFlag(BasePlayer.PlayerFlags.ChatMute))
+		if (!Object.op_Implicit((Object)(object)player) || (hideChatInTutorial && player.IsInTutorial) || player.HasPlayerFlag(BasePlayer.PlayerFlags.ChatMute))
 		{
 			return;
 		}
@@ -539,18 +554,18 @@ public class Chat : ConsoleSystem
 			}
 		}
 		string @string = arg.GetString(0, "text");
-		System.Threading.Tasks.ValueTask<bool> valueTask = sayAs(targetChannel, player.userID, player.displayName, @string, player);
+		ValueTask<bool> val = sayAs(targetChannel, player.userID, player.displayName, @string, player);
 		Analytics.Azure.OnChatMessage(player, @string, (int)targetChannel);
 		player.NextChatTime = Time.realtimeSinceStartup + 1.5f;
-		if (valueTask.IsCompletedSuccessfully)
+		if (val.IsCompletedSuccessfully)
 		{
-			if (!valueTask.Result)
+			if (!val.Result)
 			{
 				player.NextChatTime = Time.realtimeSinceStartup;
 			}
 			return;
 		}
-		Task<bool> task = valueTask.AsTask();
+		Task<bool> task = val.AsTask();
 		task.GetAwaiter().OnCompleted(delegate
 		{
 			try
@@ -584,23 +599,21 @@ public class Chat : ConsoleSystem
 		return result;
 	}
 
-	[AsyncStateMachine(typeof(_003CsayAs_003Ed__18))]
-	internal static System.Threading.Tasks.ValueTask<bool> sayAs(ChatChannel targetChannel, ulong userId, string username, string message, BasePlayer player = null)
+	[AsyncStateMachine(typeof(_003CsayAs_003Ed__19))]
+	internal static ValueTask<bool> sayAs(ChatChannel targetChannel, ulong userId, string username, string message, BasePlayer player = null)
 	{
-		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-		_003CsayAs_003Ed__18 _003CsayAs_003Ed__ = default(_003CsayAs_003Ed__18);
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
+		_003CsayAs_003Ed__19 _003CsayAs_003Ed__ = default(_003CsayAs_003Ed__19);
+		_003CsayAs_003Ed__._003C_003Et__builder = AsyncValueTaskMethodBuilder<bool>.Create();
 		_003CsayAs_003Ed__.targetChannel = targetChannel;
 		_003CsayAs_003Ed__.userId = userId;
 		_003CsayAs_003Ed__.username = username;
 		_003CsayAs_003Ed__.message = message;
 		_003CsayAs_003Ed__.player = player;
-		_003CsayAs_003Ed__._003C_003Et__builder = AsyncValueTaskMethodBuilder<bool>.Create();
 		_003CsayAs_003Ed__._003C_003E1__state = -1;
-		AsyncValueTaskMethodBuilder<bool> _003C_003Et__builder = _003CsayAs_003Ed__._003C_003Et__builder;
-		_003C_003Et__builder.Start<_003CsayAs_003Ed__18>(ref _003CsayAs_003Ed__);
+		_003CsayAs_003Ed__._003C_003Et__builder.Start<_003CsayAs_003Ed__19>(ref _003CsayAs_003Ed__);
 		return _003CsayAs_003Ed__._003C_003Et__builder.Task;
 	}
 

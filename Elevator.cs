@@ -125,16 +125,16 @@ public class Elevator : IOEntity, IFlagNotify
 
 	protected bool RequestMoveLiftTo(int targetFloor, out float timeToTravel, Elevator fromElevator)
 	{
-		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00df: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ac: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d3: Unknown result type (might be due to invalid IL or missing references)
 		timeToTravel = 0f;
 		if (IsBusy())
 		{
@@ -148,16 +148,14 @@ public class Elevator : IOEntity, IFlagNotify
 		{
 			return false;
 		}
-		if (!liftEntity.CanMove())
-		{
-			return false;
-		}
 		int num = LiftPositionToFloor();
 		if (num == targetFloor)
 		{
-			OpenLiftDoors();
 			OpenDoorsAtFloor(num);
-			fromElevator.OpenLiftDoors();
+			return false;
+		}
+		if (!liftEntity.CanMove())
+		{
 			return false;
 		}
 		Vector3 worldSpaceFloorPosition = GetWorldSpaceFloorPosition(targetFloor);

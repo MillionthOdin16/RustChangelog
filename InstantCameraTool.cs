@@ -44,7 +44,7 @@ public class InstantCameraTool : HeldEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - TakePhoto "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - TakePhoto "));
 				}
 				TimeWarning val2 = TimeWarning.New("TakePhoto", 0);
 				try
@@ -107,27 +107,27 @@ public class InstantCameraTool : HeldEntity
 	[RPC_Server.CallsPerSecond(3uL)]
 	private void TakePhoto(RPCMessage msg)
 	{
-		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0142: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0116: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0148: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0153: Unknown result type (might be due to invalid IL or missing references)
 		//IL_011c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0123: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0122: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0129: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0187: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0197: Unknown result type (might be due to invalid IL or missing references)
-		//IL_019c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ac: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0201: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_018d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ab: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0207: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer player = msg.player;
 		Item item = GetItem();
 		if ((Object)(object)player == (Object)null || item == null || item.condition <= 0f)
 		{
 			return;
 		}
-		byte[] array = msg.read.BytesWithSize(10485760u);
+		byte[] array = msg.read.BytesWithSize(10485760u, false);
 		if (array.Length > 102400 || !ImageProcessing.IsValidJPG(array, resolutionX, resolutionY))
 		{
 			return;

@@ -195,4 +195,34 @@ public static class BoundsEx
 		((Rect)(ref result)).max = Vector2Ex.ToCanvas(((Rect)(ref result)).max, target, (Camera)null);
 		return result;
 	}
+
+	public static float InnerDistToEdge2D(this Bounds b, Vector3 point)
+	{
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
+		float num = Mathf.Abs(point.x - ((Bounds)(ref b)).min.x);
+		float num2 = Mathf.Abs(point.x - ((Bounds)(ref b)).max.x);
+		float num3 = Mathf.Abs(point.z - ((Bounds)(ref b)).min.z);
+		float num4 = Mathf.Abs(point.z - ((Bounds)(ref b)).max.z);
+		return Mathf.Min(new float[4] { num, num2, num3, num4 });
+	}
+
+	public static float MaxExtent(this Bounds b)
+	{
+		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		return Mathf.Max(new float[3]
+		{
+			((Bounds)(ref b)).extents.x,
+			((Bounds)(ref b)).extents.y,
+			((Bounds)(ref b)).extents.z
+		});
+	}
 }

@@ -68,6 +68,7 @@ public class Listener : IDisposable, IBroadcastSender<Connection, AppBroadcast>
 	{
 		//IL_00c1: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00cb: Expected O, but got Unknown
+		Listener listener = this;
 		Address = ipAddress;
 		Port = port;
 		Limiter = new ConnectionLimiter();
@@ -83,17 +84,17 @@ public class Listener : IDisposable, IBroadcastSender<Connection, AppBroadcast>
 			//IL_0098: Unknown result type (might be due to invalid IL or missing references)
 			//IL_00a2: Expected O, but got Unknown
 			IPAddress address = socket.ConnectionInfo.ClientIpAddress;
-			if (!Limiter.TryAdd(address) || _ipBans.IsBanned(address))
+			if (!listener.Limiter.TryAdd(address) || listener._ipBans.IsBanned(address))
 			{
 				socket.Close();
 			}
 			else
 			{
-				long connectionId = Interlocked.Increment(ref _nextConnectionId);
-				Connection conn = new Connection(connectionId, this, socket);
+				long connectionId = Interlocked.Increment(ref listener._nextConnectionId);
+				Connection conn = new Connection(connectionId, listener, socket);
 				socket.OnClose = delegate
 				{
-					Limiter.Remove(address);
+					listener.Limiter.Remove(address);
 					syncContext.Post(delegate(object c)
 					{
 						((Connection)c).OnClose();

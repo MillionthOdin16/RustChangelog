@@ -62,7 +62,7 @@ public class Socket_Base : PrefabAttribute
 		return position + rotation * worldPosition;
 	}
 
-	public OBB GetSelectBounds(Vector3 position, Quaternion rotation)
+	public virtual OBB GetSelectBounds(Vector3 position, Quaternion rotation)
 	{
 		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
@@ -146,14 +146,14 @@ public class Socket_Base : PrefabAttribute
 		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
 		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
 		Quaternion val = Quaternion.LookRotation(target.normal, Vector3.up) * Quaternion.Euler(target.rotation);
 		Vector3 val2 = target.position;
 		val2 -= val * position;
-		return new Construction.Placement
+		return new Construction.Placement(target)
 		{
 			rotation = val,
 			position = val2

@@ -118,24 +118,24 @@ public class BaseMagnet : MonoBehaviour
 	{
 		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0095: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_013a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_013f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0141: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0143: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0153: Unknown result type (might be due to invalid IL or missing references)
-		//IL_016a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0172: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0179: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ea: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0154: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0159: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0165: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0166: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0168: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0184: Unknown result type (might be due to invalid IL or missing references)
+		//IL_018c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0193: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0104: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0114: Unknown result type (might be due to invalid IL or missing references)
 		if (!isMagnetOn)
 		{
 			return;
@@ -148,7 +148,7 @@ public class BaseMagnet : MonoBehaviour
 		OBB val = default(OBB);
 		foreach (BaseEntity entityContent in magnetTrigger.entityContents)
 		{
-			if (!entityContent.syncPosition)
+			if ((Object)(object)entityContent == (Object)null || !entityContent.syncPosition)
 			{
 				continue;
 			}
@@ -160,13 +160,17 @@ public class BaseMagnet : MonoBehaviour
 			((OBB)(ref val))._002Ector(((Component)entityContent).transform.position, ((Component)entityContent).transform.rotation, entityContent.bounds);
 			if (((OBB)(ref val)).Contains(attachDepthPoint.position))
 			{
-				((Component)entityContent).GetComponent<MagnetLiftable>().SetMagnetized(wantsOn: true, this, associatedPlayer);
-				if ((Object)(object)((Joint)fixedJoint).connectedBody == (Object)null)
+				MagnetLiftable component2 = ((Component)entityContent).GetComponent<MagnetLiftable>();
+				if ((Object)(object)component2 != (Object)null)
 				{
-					Effect.server.Run(attachEffect.resourcePath, attachDepthPoint.position, -attachDepthPoint.up);
-					((Joint)fixedJoint).connectedBody = component;
-					SetCollisionsEnabled(((Component)component).gameObject, wants: false);
-					continue;
+					component2.SetMagnetized(wantsOn: true, this, associatedPlayer);
+					if ((Object)(object)((Joint)fixedJoint).connectedBody == (Object)null)
+					{
+						Effect.server.Run(attachEffect.resourcePath, attachDepthPoint.position, -attachDepthPoint.up);
+						((Joint)fixedJoint).connectedBody = component;
+						SetCollisionsEnabled(((Component)component).gameObject, wants: false);
+						continue;
+					}
 				}
 			}
 			if ((Object)(object)((Joint)fixedJoint).connectedBody == (Object)null)

@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using ConVar;
 using Facepunch;
 using Network;
@@ -13,8 +14,6 @@ public class TreeManager : BaseEntity
 
 	public static TreeManager server;
 
-	private const int maxTreesPerPacket = 100;
-
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
 		TimeWarning val = TimeWarning.New("TreeManager.OnRpcMessage", 0);
@@ -25,7 +24,7 @@ public class TreeManager : BaseEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SERVER_RequestTrees "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SERVER_RequestTrees "));
 				}
 				TimeWarning val2 = TimeWarning.New("SERVER_RequestTrees", 0);
 				try
@@ -107,6 +106,15 @@ public class TreeManager : BaseEntity
 		return result;
 	}
 
+	public int GetTreeCount()
+	{
+		if ((Object)(object)server == (Object)(object)this)
+		{
+			return entities.Count;
+		}
+		return -1;
+	}
+
 	public override void ServerInit()
 	{
 		base.ServerInit();
@@ -115,16 +123,20 @@ public class TreeManager : BaseEntity
 
 	public static void OnTreeDestroyed(BaseEntity billboardEntity)
 	{
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
 		entities.Remove(billboardEntity);
 		if (!Application.isLoading && !Application.isQuitting)
 		{
-			server.ClientRPC<NetworkableId>(null, "CLIENT_TreeDestroyed", billboardEntity.net.ID);
+			server.ClientRPC<NetworkableId>(RpcTarget.NetworkGroup("CLIENT_TreeDestroyed"), billboardEntity.net.ID);
 		}
 	}
 
 	public static void OnTreeSpawned(BaseEntity billboardEntity)
 	{
+		if (billboardEntity.net.group != null && billboardEntity.net.group.restricted)
+		{
+			return;
+		}
 		entities.Add(billboardEntity);
 		if (Application.isLoading || Application.isQuitting)
 		{
@@ -134,7 +146,7 @@ public class TreeManager : BaseEntity
 		try
 		{
 			ExtractTreeNetworkData(billboardEntity, val);
-			server.ClientRPC<Tree>(null, "CLIENT_TreeSpawned", val);
+			server.ClientRPC<Tree>(RpcTarget.NetworkGroup("CLIENT_TreeSpawned"), val);
 		}
 		finally
 		{
@@ -158,6 +170,7 @@ public class TreeManager : BaseEntity
 
 	public static void SendSnapshot(BasePlayer player)
 	{
+		Stopwatch stopwatch = Stopwatch.StartNew();
 		BufferList<BaseEntity> values = entities.Values;
 		TreeList val = null;
 		for (int i = 0; i < values.Count; i++)
@@ -171,18 +184,23 @@ public class TreeManager : BaseEntity
 				val.trees = Pool.GetList<Tree>();
 			}
 			val.trees.Add(val2);
-			if (val.trees.Count >= 100)
+			if (val.trees.Count >= ConVar.Server.maxpacketsize_globaltrees)
 			{
-				server.ClientRPCPlayer<TreeList>(null, player, "CLIENT_ReceiveTrees", val);
+				server.ClientRPC<TreeList>(RpcTarget.Player("CLIENT_ReceiveTrees", player), val);
 				val.Dispose();
 				val = null;
 			}
 		}
 		if (val != null)
 		{
-			server.ClientRPCPlayer<TreeList>(null, player, "CLIENT_ReceiveTrees", val);
+			server.ClientRPC<TreeList>(RpcTarget.Player("CLIENT_ReceiveTrees", player), val);
 			val.Dispose();
 			val = null;
+		}
+		stopwatch.Stop();
+		if (Net.global_network_debug)
+		{
+			Debug.Log((object)$"Took {stopwatch.ElapsedMilliseconds}ms to send {values.Count} global trees to {((object)player).ToString()}");
 		}
 	}
 

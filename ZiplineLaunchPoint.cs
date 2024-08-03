@@ -43,7 +43,7 @@ public class ZiplineLaunchPoint : BaseEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - MountPlayer "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - MountPlayer "));
 				}
 				TimeWarning val2 = TimeWarning.New("MountPlayer", 0);
 				try
@@ -179,7 +179,7 @@ public class ZiplineLaunchPoint : BaseEntity
 		foundPositions.Clear();
 		Vector3 position = LineDeparturePoint.position;
 		List<ZiplineTarget> list = Pool.GetList<ZiplineTarget>();
-		GamePhysics.OverlapSphere<ZiplineTarget>(position + ((Component)this).transform.forward * 200f, 200f, list, 1218511105, (QueryTriggerInteraction)1);
+		GamePhysics.OverlapSphere<ZiplineTarget>(position + ((Component)this).transform.forward * 200f, 200f, list, 1084293377, (QueryTriggerInteraction)1);
 		ZiplineTarget ziplineTarget = null;
 		float num = float.MaxValue;
 		float num2 = 3f;
@@ -265,9 +265,9 @@ public class ZiplineLaunchPoint : BaseEntity
 		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 val = CalculateLineMidPoint(from, to) - Vector3.up * 0.75f;
-		if (GamePhysics.LineOfSightRadius(from, to, 1218511105, 0.5f, 2f) && GamePhysics.LineOfSightRadius(from, val, 1218511105, 0.5f, 2f))
+		if (GamePhysics.LineOfSightRadius(from, to, 1084293377, 0.5f, 2f) && GamePhysics.LineOfSightRadius(from, val, 1084293377, 0.5f, 2f))
 		{
-			return GamePhysics.LineOfSightRadius(val, to, 1218511105, 0.5f, 2f);
+			return GamePhysics.LineOfSightRadius(val, to, 1084293377, 0.5f, 2f);
 		}
 		return false;
 	}
@@ -425,7 +425,7 @@ public class ZiplineLaunchPoint : BaseEntity
 			{
 				array2[j] = LineSlackAmount;
 			}
-			points = Pool.GetList<Vector3>();
+			points = new List<Vector3>();
 			Bezier.ApplyLineSlack(array, array2, ref points, 25);
 		}
 	}

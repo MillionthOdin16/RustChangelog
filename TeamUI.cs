@@ -1,4 +1,5 @@
 using System;
+using Rust.UI;
 using TMPro;
 using UnityEngine;
 
@@ -29,4 +30,8 @@ public class TeamUI : MonoBehaviour
 
 	[NonSerialized]
 	public static string pendingTeamLeaderName;
+
+	public GameObject teamMemberDetailsPanel;
+
+	public RustText selectedTeamMemberNameText;
 }

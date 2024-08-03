@@ -13,18 +13,18 @@ public class GC : ConsoleSystem
 	[ClientVar]
 	public static int debuglevel = 1;
 
-	private static int m_buffer = 256;
+	[ClientVar(Saved = true)]
+	public static int buffer = Rust.GC.gcDefaultValue;
 
-	[ClientVar]
-	public static int buffer
+	public static int safeBuffer
 	{
 		get
 		{
-			return m_buffer;
+			return Rust.GC.GetSafeGCValue(buffer);
 		}
 		set
 		{
-			m_buffer = Mathf.Clamp(value, 64, 4096);
+			buffer = value;
 		}
 	}
 

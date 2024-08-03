@@ -149,7 +149,17 @@ public static class GamePhysics
 		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
 		layerMask = HandleIgnoreCollision(position, layerMask);
-		BufferToList(Physics.OverlapSphereNonAlloc(position, radius, colBuffer, layerMask, triggerInteraction), list);
+		int count = Physics.OverlapSphereNonAlloc(position, radius, colBuffer, layerMask, triggerInteraction);
+		BufferToList(colBuffer, count, list);
+	}
+
+	public static bool OverlapSphere(Vector3 position, float radius, int layerMask = -5, QueryTriggerInteraction triggerInteraction = 1)
+	{
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		layerMask = HandleIgnoreCollision(position, layerMask);
+		return Physics.OverlapSphereNonAlloc(position, radius, colBuffer, layerMask, triggerInteraction) > 0;
 	}
 
 	public static void CapsuleSweep(Vector3 position0, Vector3 position1, float radius, Vector3 direction, float distance, List<RaycastHit> list, int layerMask = -5, QueryTriggerInteraction triggerInteraction = 1)
@@ -174,7 +184,8 @@ public static class GamePhysics
 		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
 		layerMask = HandleIgnoreCollision(point0, layerMask);
 		layerMask = HandleIgnoreCollision(point1, layerMask);
-		BufferToList(Physics.OverlapCapsuleNonAlloc(point0, point1, radius, colBuffer, layerMask, triggerInteraction), list);
+		int count = Physics.OverlapCapsuleNonAlloc(point0, point1, radius, colBuffer, layerMask, triggerInteraction);
+		BufferToList(colBuffer, count, list);
 	}
 
 	public static void OverlapOBB(OBB obb, List<Collider> list, int layerMask = -5, QueryTriggerInteraction triggerInteraction = 1)
@@ -189,7 +200,8 @@ public static class GamePhysics
 		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
 		layerMask = HandleIgnoreCollision(obb.position, layerMask);
-		BufferToList(Physics.OverlapBoxNonAlloc(obb.position, obb.extents, colBuffer, obb.rotation, layerMask, triggerInteraction), list);
+		int count = Physics.OverlapBoxNonAlloc(obb.position, obb.extents, colBuffer, obb.rotation, layerMask, triggerInteraction);
+		BufferToList(colBuffer, count, list);
 	}
 
 	public static void OverlapBounds(Bounds bounds, List<Collider> list, int layerMask = -5, QueryTriggerInteraction triggerInteraction = 1)
@@ -200,19 +212,16 @@ public static class GamePhysics
 		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
 		layerMask = HandleIgnoreCollision(((Bounds)(ref bounds)).center, layerMask);
-		BufferToList(Physics.OverlapBoxNonAlloc(((Bounds)(ref bounds)).center, ((Bounds)(ref bounds)).extents, colBuffer, Quaternion.identity, layerMask, triggerInteraction), list);
+		int count = Physics.OverlapBoxNonAlloc(((Bounds)(ref bounds)).center, ((Bounds)(ref bounds)).extents, colBuffer, Quaternion.identity, layerMask, triggerInteraction);
+		BufferToList(colBuffer, count, list);
 	}
 
-	private static void BufferToList(int count, List<Collider> list)
+	private static void BufferToList(Collider[] buffer, int count, List<Collider> list)
 	{
-		if (count >= colBuffer.Length)
-		{
-			Debug.LogWarning((object)"Physics query is exceeding collider buffer length.");
-		}
 		for (int i = 0; i < count; i++)
 		{
-			list.Add(colBuffer[i]);
-			colBuffer[i] = null;
+			list.Add(buffer[i]);
+			buffer[i] = null;
 		}
 	}
 
@@ -279,7 +288,8 @@ public static class GamePhysics
 		//IL_0009: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
 		layerMask = HandleIgnoreCollision(position, layerMask);
-		BufferToList(Physics.OverlapSphereNonAlloc(position, radius, colBuffer, layerMask, triggerInteraction), list);
+		int count = Physics.OverlapSphereNonAlloc(position, radius, colBuffer, layerMask, triggerInteraction);
+		BufferToList(colBuffer, count, list);
 	}
 
 	public static void OverlapCapsule<T>(Vector3 point0, Vector3 point1, float radius, List<T> list, int layerMask = -5, QueryTriggerInteraction triggerInteraction = 1) where T : Component
@@ -291,7 +301,8 @@ public static class GamePhysics
 		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
 		layerMask = HandleIgnoreCollision(point0, layerMask);
 		layerMask = HandleIgnoreCollision(point1, layerMask);
-		BufferToList(Physics.OverlapCapsuleNonAlloc(point0, point1, radius, colBuffer, layerMask, triggerInteraction), list);
+		int count = Physics.OverlapCapsuleNonAlloc(point0, point1, radius, colBuffer, layerMask, triggerInteraction);
+		BufferToList(colBuffer, count, list);
 	}
 
 	public static void OverlapOBB<T>(OBB obb, List<T> list, int layerMask = -5, QueryTriggerInteraction triggerInteraction = 1) where T : Component
@@ -306,7 +317,8 @@ public static class GamePhysics
 		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
 		layerMask = HandleIgnoreCollision(obb.position, layerMask);
-		BufferToList(Physics.OverlapBoxNonAlloc(obb.position, obb.extents, colBuffer, obb.rotation, layerMask, triggerInteraction), list);
+		int count = Physics.OverlapBoxNonAlloc(obb.position, obb.extents, colBuffer, obb.rotation, layerMask, triggerInteraction);
+		BufferToList(colBuffer, count, list);
 	}
 
 	public static void OverlapBounds<T>(Bounds bounds, List<T> list, int layerMask = -5, QueryTriggerInteraction triggerInteraction = 1) where T : Component
@@ -317,23 +329,20 @@ public static class GamePhysics
 		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
 		layerMask = HandleIgnoreCollision(((Bounds)(ref bounds)).center, layerMask);
-		BufferToList(Physics.OverlapBoxNonAlloc(((Bounds)(ref bounds)).center, ((Bounds)(ref bounds)).extents, colBuffer, Quaternion.identity, layerMask, triggerInteraction), list);
+		int count = Physics.OverlapBoxNonAlloc(((Bounds)(ref bounds)).center, ((Bounds)(ref bounds)).extents, colBuffer, Quaternion.identity, layerMask, triggerInteraction);
+		BufferToList(colBuffer, count, list);
 	}
 
-	private static void BufferToList<T>(int count, List<T> list) where T : Component
+	private static void BufferToList<T>(Collider[] buffer, int count, List<T> list) where T : Component
 	{
-		if (count >= colBuffer.Length)
-		{
-			Debug.LogWarning((object)"Physics query is exceeding collider buffer length.");
-		}
 		for (int i = 0; i < count; i++)
 		{
-			T component = ((Component)colBuffer[i]).gameObject.GetComponent<T>();
+			T component = ((Component)buffer[i]).gameObject.GetComponent<T>();
 			if (Object.op_Implicit((Object)(object)component))
 			{
 				list.Add(component);
 			}
-			colBuffer[i] = null;
+			buffer[i] = null;
 		}
 	}
 
@@ -501,11 +510,11 @@ public static class GamePhysics
 		//IL_00ef: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00fc: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0105: Unknown result type (might be due to invalid IL or missing references)
-		if (!ValidBounds.Test(p0))
+		if (!ValidBounds.TestOuterBounds(p0))
 		{
 			return false;
 		}
-		if (!ValidBounds.Test(p1))
+		if (!ValidBounds.TestOuterBounds(p1))
 		{
 			return false;
 		}
@@ -562,6 +571,8 @@ public static class GamePhysics
 	public static bool Verify(Collider collider, Vector3 point, BaseEntity ignoreEntity = null)
 	{
 		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)collider == (Object)null)
 		{
@@ -574,6 +585,10 @@ public static class GamePhysics
 		if (collider is TerrainCollider)
 		{
 			if (Object.op_Implicit((Object)(object)TerrainMeta.Collision) && TerrainMeta.Collision.GetIgnore(point))
+			{
+				return false;
+			}
+			if (point == Vector3.zero)
 			{
 				return false;
 			}

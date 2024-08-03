@@ -1,7 +1,6 @@
 using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using System.Threading;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -13,9 +12,9 @@ public static class PerformanceMetrics
 	{
 		public static readonly _003C_003Ec _003C_003E9 = new _003C_003Ec();
 
-		public static UnityAction _003C_003E9__3_0;
+		public static UnityAction _003C_003E9__10_0;
 
-		internal void _003CSetup_003Eb__3_0()
+		internal void _003CSetup_003Eb__10_0()
 		{
 			OnBeforeRender?.Invoke();
 		}
@@ -25,62 +24,49 @@ public static class PerformanceMetrics
 
 	private static Action OnBeforeRender;
 
-	private static int _mainThreadId;
+	public static PerformanceSamplePoint LastFrame { get; private set; }
 
-	public static PerformanceSamplePoint GetCurrent(bool reset = false)
-	{
-		PerformanceSamplePoint result = current;
-		if (reset)
-		{
-			current = default(PerformanceSamplePoint);
-		}
-		return result;
-	}
+	public static PerformanceSamplePoint PerformancePerSecond { get; set; }
 
 	public static void Setup()
 	{
 		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
 		//IL_001f: Expected O, but got Unknown
-		object obj = _003C_003Ec._003C_003E9__3_0;
+		object obj = _003C_003Ec._003C_003E9__10_0;
 		if (obj == null)
 		{
 			UnityAction val = delegate
 			{
 				OnBeforeRender?.Invoke();
 			};
-			_003C_003Ec._003C_003E9__3_0 = val;
+			_003C_003Ec._003C_003E9__10_0 = val;
 			obj = (object)val;
 		}
 		Application.onBeforeRender += (UnityAction)obj;
-		_mainThreadId = Thread.CurrentThread.ManagedThreadId;
 		AddStopwatch(PerformanceSample.PreCull, ref OnBeforeRender, ref CameraUpdateHook.RustCamera_PreRender);
 		AddStopwatch(PerformanceSample.Update, ref PreUpdateHook.OnUpdate, ref PostUpdateHook.OnUpdate);
 		AddStopwatch(PerformanceSample.LateUpdate, ref PreUpdateHook.OnLateUpdate, ref PostUpdateHook.OnLateUpdate);
 		AddStopwatch(PerformanceSample.Render, ref CameraUpdateHook.PreRender, ref CameraUpdateHook.PostRender);
 		AddStopwatch(PerformanceSample.FixedUpdate, ref PreUpdateHook.OnFixedUpdate, ref PostUpdateHook.OnFixedUpdate);
+		AddStopwatch(PerformanceSample.PhysicsUpdate, ref PostUpdateHook.OnFixedUpdate, ref PreUpdateHook.PostPhysicsUpdate);
 		AddCPUTimeStopwatch();
 	}
 
 	private static void AddCPUTimeStopwatch()
 	{
 		Stopwatch watch = new Stopwatch();
-		int lastFrame = 0;
-		TimeSpan lastTime = default(TimeSpan);
-		StartOfFrameHook.OnStartOfFrame = (Action)Delegate.Combine(StartOfFrameHook.OnStartOfFrame, (Action)delegate
+		PreUpdateHook.StartOfFrame = (Action)Delegate.Combine(PreUpdateHook.StartOfFrame, (Action)delegate
 		{
-			current.TotalCPU += lastTime;
+			PerformancePerSecond = PerformancePerSecond.Add(current);
+			LastFrame = current;
+			current = default(PerformanceSamplePoint);
+			watch.Restart();
 			current.CpuUpdateCount++;
-			lastTime = default(TimeSpan);
-			if (Time.frameCount != lastFrame)
-			{
-				lastFrame = Time.frameCount;
-				watch.Restart();
-			}
 		});
-		CameraUpdateHook.PostRender = (Action)Delegate.Combine(CameraUpdateHook.PostRender, (Action)delegate
+		PostUpdateHook.EndOfFrame = (Action)Delegate.Combine(PostUpdateHook.EndOfFrame, (Action)delegate
 		{
-			lastTime = watch.Elapsed;
+			current.TotalCPU += watch.Elapsed;
 		});
 	}
 
@@ -122,10 +108,11 @@ public static class PerformanceMetrics
 					current.Render += watch.Elapsed;
 					current.RenderCount++;
 					break;
-				case PerformanceSample.TotalCPU:
-					current.TotalCPU += watch.Elapsed;
+				case PerformanceSample.PhysicsUpdate:
+					current.PhysicsUpdate += watch.Elapsed;
 					break;
 				case PerformanceSample.NetworkMessage:
+				case PerformanceSample.TotalCPU:
 					break;
 				}
 			}

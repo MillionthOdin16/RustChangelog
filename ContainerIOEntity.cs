@@ -58,7 +58,7 @@ public class ContainerIOEntity : IOEntity, IItemContainerEntity, IIdealSlotEntit
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_OpenLoot "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_OpenLoot "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_OpenLoot", 0);
 				try
@@ -237,7 +237,7 @@ public class ContainerIOEntity : IOEntity, IItemContainerEntity, IIdealSlotEntit
 			SetFlag(Flags.Open, b: true);
 			player.inventory.loot.AddContainer(inventory);
 			player.inventory.loot.SendImmediate();
-			player.ClientRPCPlayer(null, player, "RPC_OpenLootPanel", lootPanelName);
+			player.ClientRPC(RpcTarget.Player("RPC_OpenLootPanel", player), lootPanelName);
 			SendNetworkUpdate();
 			return true;
 		}
@@ -255,12 +255,12 @@ public class ContainerIOEntity : IOEntity, IItemContainerEntity, IIdealSlotEntit
 		return false;
 	}
 
-	public virtual int GetIdealSlot(BasePlayer player, Item item)
+	public virtual int GetIdealSlot(BasePlayer player, ItemContainer container, Item item)
 	{
 		return -1;
 	}
 
-	public virtual ItemContainerId GetIdealContainer(BasePlayer player, Item item, bool altMove)
+	public virtual ItemContainerId GetIdealContainer(BasePlayer player, Item item, ItemMoveModifier modifier)
 	{
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0008: Unknown result type (might be due to invalid IL or missing references)

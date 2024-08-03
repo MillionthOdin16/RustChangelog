@@ -20,7 +20,7 @@ public class SleepingBagCamper : SleepingBag
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ServerClearBed "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ServerClearBed "));
 				}
 				TimeWarning val2 = TimeWarning.New("ServerClearBed", 0);
 				try
@@ -115,21 +115,27 @@ public class SleepingBagCamper : SleepingBag
 		}
 	}
 
-	public override bool IsOccupied(ulong userID)
+	public override RespawnState GetRespawnState(ulong userID)
 	{
-		if (base.IsOccupied(userID))
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000a: Invalid comparison between Unknown and I4
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		RespawnState respawnState = base.GetRespawnState(userID);
+		if ((int)respawnState != 1)
 		{
-			return true;
+			return respawnState;
 		}
 		if (AssociatedSeat.IsValid(base.isServer))
 		{
 			BasePlayer mounted = AssociatedSeat.Get(base.isServer).GetMounted();
-			if ((Object)(object)mounted != (Object)null)
+			if ((Object)(object)mounted != (Object)null && (ulong)mounted.userID != userID)
 			{
-				return mounted.userID != userID;
+				return (RespawnState)2;
 			}
 		}
-		return false;
+		return (RespawnState)1;
 	}
 
 	[RPC_Server]

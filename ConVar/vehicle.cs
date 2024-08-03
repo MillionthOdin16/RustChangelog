@@ -65,7 +65,7 @@ public class vehicle : ConsoleSystem
 		}
 		int @int = arg.GetInt(0, 2);
 		@int = Mathf.Clamp(@int, 1, 3);
-		BaseVehicle[] array = Object.FindObjectsOfType<BaseVehicle>();
+		BaseVehicle[] array = BaseEntity.Util.FindAll<BaseVehicle>();
 		int num = 0;
 		BaseVehicle[] array2 = array;
 		foreach (BaseVehicle baseVehicle in array2)
@@ -75,7 +75,7 @@ public class vehicle : ConsoleSystem
 				num++;
 			}
 		}
-		MLRS[] array3 = Object.FindObjectsOfType<MLRS>();
+		MLRS[] array3 = BaseEntity.Util.FindAll<MLRS>();
 		foreach (MLRS mLRS in array3)
 		{
 			if (mLRS.isServer && Vector3.Distance(((Component)mLRS).transform.position, ((Component)basePlayer).transform.position) <= 10f && mLRS.AdminFixUp())
@@ -84,6 +84,32 @@ public class vehicle : ConsoleSystem
 			}
 		}
 		arg.ReplyWith($"Fixed up {num} vehicles.");
+	}
+
+	[ServerVar]
+	public static void autohover(Arg arg)
+	{
+		BasePlayer basePlayer = arg.Player();
+		if ((Object)(object)basePlayer == (Object)null)
+		{
+			arg.ReplyWith("Null player.");
+			return;
+		}
+		if (!basePlayer.IsAdmin)
+		{
+			arg.ReplyWith("Must be an admin to use autohover.");
+			return;
+		}
+		BaseHelicopter baseHelicopter = basePlayer.GetMountedVehicle() as BaseHelicopter;
+		if ((Object)(object)baseHelicopter != (Object)null)
+		{
+			bool flag = baseHelicopter.ToggleAutoHover(basePlayer);
+			arg.ReplyWith($"Toggled auto-hover to {flag}.");
+		}
+		else
+		{
+			arg.ReplyWith("Must be mounted in a helicopter first.");
+		}
 	}
 
 	[ServerVar]
@@ -108,14 +134,40 @@ public class vehicle : ConsoleSystem
 	}
 
 	[ServerVar]
+	public static void killpushbikes(Arg args)
+	{
+		Bike[] array = BaseEntity.Util.FindAll<Bike>();
+		foreach (Bike bike in array)
+		{
+			if (bike.poweredBy == Bike.PoweredBy.Human)
+			{
+				bike.Kill();
+			}
+		}
+	}
+
+	[ServerVar]
+	public static void killmotorbikes(Arg args)
+	{
+		Bike[] array = BaseEntity.Util.FindAll<Bike>();
+		foreach (Bike bike in array)
+		{
+			if (bike.poweredBy == Bike.PoweredBy.Fuel)
+			{
+				bike.Kill();
+			}
+		}
+	}
+
+	[ServerVar]
 	public static void killminis(Arg args)
 	{
-		MiniCopter[] array = BaseEntity.Util.FindAll<MiniCopter>();
-		foreach (MiniCopter miniCopter in array)
+		PlayerHelicopter[] array = BaseEntity.Util.FindAll<PlayerHelicopter>();
+		foreach (PlayerHelicopter playerHelicopter in array)
 		{
-			if (((Object)miniCopter).name.ToLower().Contains("minicopter"))
+			if (((Object)playerHelicopter).name.ToLower().Contains("minicopter"))
 			{
-				miniCopter.Kill();
+				playerHelicopter.Kill();
 			}
 		}
 	}
@@ -161,5 +213,48 @@ public class vehicle : ConsoleSystem
 				drone.Kill();
 			}
 		}
+	}
+
+	[ServerVar(Help = "Print out boat drift status for all boats")]
+	public static void boatdriftinfo(Arg args)
+	{
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Expected O, but got Unknown
+		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
+		TextTable val = new TextTable();
+		val.AddColumn("id");
+		val.AddColumn("name");
+		val.AddColumn("position");
+		val.AddColumn("status");
+		val.AddColumn("drift");
+		BaseBoat[] array = BaseEntity.Util.FindAll<BaseBoat>();
+		BaseBoat[] array2 = array;
+		foreach (BaseBoat baseBoat in array2)
+		{
+			if (baseBoat.IsValid())
+			{
+				string text = (baseBoat.IsAlive() ? "alive" : "dead");
+				string driftStatus = baseBoat.GetDriftStatus();
+				string[] obj = new string[5]
+				{
+					((object)(NetworkableId)(ref baseBoat.net.ID)).ToString(),
+					baseBoat.ShortPrefabName,
+					null,
+					null,
+					null
+				};
+				Vector3 position = ((Component)baseBoat).transform.position;
+				obj[2] = ((object)(Vector3)(ref position)).ToString();
+				obj[3] = text;
+				obj[4] = driftStatus;
+				val.AddRow(obj);
+			}
+		}
+		if (array.Length == 0)
+		{
+			args.ReplyWith("No boats in world");
+		}
+		args.ReplyWith(((object)val).ToString());
 	}
 }

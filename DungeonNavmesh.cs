@@ -5,6 +5,7 @@ using System.Diagnostics;
 using ConVar;
 using Rust;
 using Rust.Ai;
+using Unity.AI.Navigation;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -101,10 +102,10 @@ public class DungeonNavmesh : FacepunchBehaviour, IServerComponent
 	[ContextMenu("Update Monument Nav Mesh")]
 	public void UpdateNavMeshAsync()
 	{
-		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
 		if (!HasBuildOperationStarted && !AiManager.nav_disable && AI.npc_enable)
 		{
 			float realtimeSinceStartup = Time.realtimeSinceStartup;
@@ -135,14 +136,14 @@ public class DungeonNavmesh : FacepunchBehaviour, IServerComponent
 
 	public void SourcesCollected()
 	{
-		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
 		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0093: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
 		int count = sources.Count;
 		Debug.Log((object)("Source count Pre cull : " + sources.Count));
 		Vector3 val = default(Vector3);
@@ -264,16 +265,5 @@ public class DungeonNavmesh : FacepunchBehaviour, IServerComponent
 			Debug.Log((object)$"Monument Navmesh Build took {BuildTimer.Elapsed.TotalSeconds:0.00} seconds");
 			BuildingOperation = null;
 		}
-	}
-
-	public void OnDrawGizmosSelected()
-	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-		Gizmos.color = Color.magenta * new Color(1f, 1f, 1f, 0.5f);
-		Gizmos.DrawCube(((Component)this).transform.position, ((Bounds)(ref Bounds)).size);
 	}
 }

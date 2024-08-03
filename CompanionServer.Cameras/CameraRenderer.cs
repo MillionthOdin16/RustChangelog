@@ -204,27 +204,27 @@ public class CameraRenderer : IPooled
 		//IL_02e7: Unknown result type (might be due to invalid IL or missing references)
 		//IL_02e9: Unknown result type (might be due to invalid IL or missing references)
 		//IL_02eb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0431: Unknown result type (might be due to invalid IL or missing references)
-		//IL_044b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0340: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0345: Unknown result type (might be due to invalid IL or missing references)
-		//IL_034a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_035e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0367: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0369: Unknown result type (might be due to invalid IL or missing references)
-		//IL_036e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_037c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0381: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0386: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0388: Unknown result type (might be due to invalid IL or missing references)
-		//IL_038d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0391: Unknown result type (might be due to invalid IL or missing references)
-		//IL_039b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03a0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03ae: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03ba: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03bf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03c4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0432: Unknown result type (might be due to invalid IL or missing references)
+		//IL_044c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0341: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0346: Unknown result type (might be due to invalid IL or missing references)
+		//IL_034b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_035f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0368: Unknown result type (might be due to invalid IL or missing references)
+		//IL_036a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_036f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_037d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0382: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0387: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0389: Unknown result type (might be due to invalid IL or missing references)
+		//IL_038e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0392: Unknown result type (might be due to invalid IL or missing references)
+		//IL_039c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03a1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03af: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03bb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03c0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03c5: Unknown result type (might be due to invalid IL or missing references)
 		CameraRendererManager instance = SingletonComponent<CameraRendererManager>.Instance;
 		if ((Object)(object)instance == (Object)null)
 		{
@@ -375,7 +375,7 @@ public class CameraRenderer : IPooled
 			{
 				break;
 			}
-			Collider collider = BurstUtil.GetCollider(foundColliderId);
+			Collider collider = CameraBurstUtil.GetCollider(foundColliderId);
 			if ((Object)(object)collider == (Object)null)
 			{
 				continue;

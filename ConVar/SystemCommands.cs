@@ -19,7 +19,7 @@ public static class SystemCommands
 			arg.ReplyWith("Format is 'cpu_affinity {core,core1-core2,etc}'");
 			return;
 		}
-		string[] array = arg.GetString(0, "").Split(',');
+		string[] array = arg.GetString(0, "").Split(',', StringSplitOptions.None);
 		HashSet<int> hashSet = new HashSet<int>();
 		string[] array2 = array;
 		foreach (string text in array2)
@@ -34,7 +34,7 @@ public static class SystemCommands
 				{
 					continue;
 				}
-				string[] array3 = text.Split('-');
+				string[] array3 = text.Split('-', StringSplitOptions.None);
 				if (array3.Length != 2)
 				{
 					arg.ReplyWith("Failed to parse section " + text + ", format should be '0-15'");

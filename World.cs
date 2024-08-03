@@ -12,11 +12,42 @@ using UnityEngine;
 
 public static class World
 {
+	public struct SpawnTiming
+	{
+		public string category;
+
+		public Prefab prefab;
+
+		public Vector3 position;
+
+		public Quaternion rotation;
+
+		public Vector3 scale;
+
+		public TimeSpan time;
+	}
+
+	private static uint _size;
+
+	private static Stopwatch spawnTimer = new Stopwatch();
+
+	private static List<SpawnTiming> spawnTimings = new List<SpawnTiming>();
+
 	public static uint Seed { get; set; }
 
 	public static uint Salt { get; set; }
 
-	public static uint Size { get; set; }
+	public static uint Size
+	{
+		get
+		{
+			return _size;
+		}
+		set
+		{
+			_size = value;
+		}
+	}
 
 	public static string Checksum { get; set; }
 
@@ -47,6 +78,10 @@ public static class World
 		[MethodImpl(MethodImplOptions.NoInlining)]
 		get
 		{
+			if (MapUploader.IsUploaded)
+			{
+				return MapUploader.OriginalName;
+			}
 			if (CanLoadFromUrl())
 			{
 				return Path.GetFileNameWithoutExtension(WWW.UnEscapeURL(Url));
@@ -60,11 +95,15 @@ public static class World
 		[MethodImpl(MethodImplOptions.NoInlining)]
 		get
 		{
+			if (MapUploader.IsUploaded)
+			{
+				return MapUploader.OriginalMapFileName;
+			}
 			if (CanLoadFromUrl())
 			{
 				return Name + ".map";
 			}
-			return Name.Replace(" ", "").ToLower() + "." + Size + "." + Seed + "." + 239 + ".map";
+			return Name.Replace(" ", "").ToLower() + "." + Size + "." + Seed + "." + 252 + ".map";
 		}
 	}
 
@@ -82,11 +121,15 @@ public static class World
 		[MethodImpl(MethodImplOptions.NoInlining)]
 		get
 		{
+			if (MapUploader.IsUploaded)
+			{
+				return MapUploader.OriginalSaveFileName;
+			}
 			if (CanLoadFromUrl())
 			{
-				return Name + "." + 239 + ".sav";
+				return Name + "." + 252 + ".sav";
 			}
-			return Name.Replace(" ", "").ToLower() + "." + Size + "." + Seed + "." + 239 + ".sav";
+			return Name.Replace(" ", "").ToLower() + "." + Size + "." + Seed + "." + 252 + ".sav";
 		}
 	}
 
@@ -102,6 +145,10 @@ public static class World
 	[MethodImpl(MethodImplOptions.NoInlining)]
 	public static string GetServerBrowserMapName()
 	{
+		if (MapUploader.IsUploaded)
+		{
+			return Name;
+		}
 		if (!CanLoadFromUrl())
 		{
 			return Name;
@@ -132,7 +179,7 @@ public static class World
 			return;
 		}
 		Regex regex1 = new Regex("proceduralmap\\.[0-9]+\\.[0-9]+\\.[0-9]+\\.map");
-		Regex regex2 = new Regex("\\.[0-9]+\\.[0-9]+\\." + 239 + "\\.map");
+		Regex regex2 = new Regex("\\.[0-9]+\\.[0-9]+\\." + 252 + "\\.map");
 		foreach (string item in from path in Directory.GetFiles(MapFolderName, "*.map")
 			where regex1.IsMatch(path) && !regex2.IsMatch(path)
 			select path)
@@ -169,7 +216,7 @@ public static class World
 
 	private static string SeedIdentifier()
 	{
-		return SystemInfo.deviceUniqueIdentifier + "_" + 239 + "_" + Server.identity;
+		return SystemInfo.deviceUniqueIdentifier + "_" + 252 + "_" + Server.identity;
 	}
 
 	public static void InitSalt(int salt)
@@ -254,7 +301,7 @@ public static class World
 		if (!Cached)
 		{
 			rotation = Quaternion.Euler(((Quaternion)(ref rotation)).eulerAngles);
-			Spawn(category, prefab, position, rotation, scale);
+			SpawnPrefab(category, prefab, position, rotation, scale);
 		}
 	}
 
@@ -426,7 +473,7 @@ public static class World
 				int index = value2.Count - 1;
 				PrefabData prefab = value2[index];
 				value2.RemoveAt(index);
-				Spawn(prefab);
+				SpawnPrefabData(prefab);
 				spawnedCount++;
 			}
 			Status(statusFunction, "Spawning World ({0}/{1})", spawnedCount, totalCount);
@@ -447,7 +494,7 @@ public static class World
 				sw.Reset();
 				sw.Start();
 			}
-			Spawn(Serialization.world.prefabs[i]);
+			SpawnPrefabData(Serialization.world.prefabs[i]);
 		}
 	}
 
@@ -455,7 +502,7 @@ public static class World
 	{
 		for (int i = 0; i < Serialization.world.prefabs.Count; i++)
 		{
-			Spawn(Serialization.world.prefabs[i]);
+			SpawnPrefabData(Serialization.world.prefabs[i]);
 		}
 	}
 
@@ -469,7 +516,7 @@ public static class World
 				string text = StringPool.Get(val.id);
 				if (string.IsNullOrEmpty(folder) || text.StartsWith(folder))
 				{
-					Spawn(val);
+					SpawnPrefabData(val);
 					SpawnIndex++;
 					continue;
 				}
@@ -489,7 +536,7 @@ public static class World
 				string text = StringPool.Get(val.id);
 				if (folders == null || StringEx.StartsWithAny(text, folders))
 				{
-					Spawn(val);
+					SpawnPrefabData(val);
 					SpawnIndex++;
 					continue;
 				}
@@ -499,30 +546,44 @@ public static class World
 		}
 	}
 
-	private static void Spawn(PrefabData prefab)
+	private static void SpawnPrefabData(PrefabData prefab)
 	{
-		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-		Spawn(prefab.category, Prefab.Load(prefab.id), VectorData.op_Implicit(prefab.position), VectorData.op_Implicit(prefab.rotation), VectorData.op_Implicit(prefab.scale));
+		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		string autospawnPath = StringPool.Get(prefab.id);
+		uint id = prefab.id;
+		if (SceneToPrefab.monument_scenes && SceneToPrefab.TryRemapAutospawnToSceneSpawner(autospawnPath, out var spawnerPath))
+		{
+			autospawnPath = spawnerPath;
+			id = StringPool.Get(autospawnPath);
+		}
+		SpawnPrefab(prefab.category, Prefab.Load(id), VectorData.op_Implicit(prefab.position), VectorData.op_Implicit(prefab.rotation), VectorData.op_Implicit(prefab.scale));
 	}
 
-	private static void Spawn(string category, Prefab prefab, Vector3 position, Quaternion rotation, Vector3 scale)
+	private static void SpawnPrefab(string category, Prefab prefab, Vector3 position, Quaternion rotation, Vector3 scale)
 	{
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
 		if (prefab != null && Object.op_Implicit((Object)(object)prefab.Object))
 		{
+			spawnTimer.Restart();
 			if (!Cached)
 			{
 				prefab.ApplyTerrainPlacements(position, rotation, scale);
@@ -533,6 +594,16 @@ public static class World
 			{
 				val.SetHierarchyGroup(category);
 			}
+			spawnTimer.Stop();
+			spawnTimings.Add(new SpawnTiming
+			{
+				category = category,
+				prefab = prefab,
+				position = position,
+				rotation = rotation,
+				scale = scale,
+				time = spawnTimer.Elapsed
+			});
 		}
 	}
 
@@ -554,5 +625,15 @@ public static class World
 	private static void Status(Action<string> statusFunction, string status, params object[] objs)
 	{
 		statusFunction?.Invoke(string.Format(status, objs));
+	}
+
+	public static IEnumerable<SpawnTiming> GetSpawnTimings()
+	{
+		return spawnTimings;
+	}
+
+	public static void ResetTiming()
+	{
+		spawnTimings.Clear();
 	}
 }

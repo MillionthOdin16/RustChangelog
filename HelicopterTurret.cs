@@ -122,7 +122,7 @@ public class HelicopterTurret : MonoBehaviour
 		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
 		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-		_heliAI.FireGun(((Component)_target).transform.position + new Vector3(0f, 0.25f, 0f), PatrolHelicopter.bulletAccuracy, left);
+		_heliAI.FireGun(((Component)_target).transform.position + new Vector3(0f, 0.25f, 0f), ConVar.PatrolHelicopter.bulletAccuracy, left);
 	}
 
 	public Vector3 GetPositionForEntity(BaseCombatEntity potentialtarget)

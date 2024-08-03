@@ -11,7 +11,8 @@ public class ColliderInfo : MonoBehaviour
 		Melee = 4,
 		Opaque = 8,
 		Airflow = 0x10,
-		OnlyBlockBuildingBlock = 0x20
+		OnlyBlockBuildingBlock = 0x20,
+		Monument = 0x40
 	}
 
 	public const Flags FlagsNone = (Flags)0;

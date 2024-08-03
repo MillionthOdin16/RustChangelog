@@ -1,0 +1,116 @@
+using System.Collections.Generic;
+using Facepunch;
+using Network;
+
+public struct RpcTarget
+{
+	public string Function;
+
+	public SendInfo Connections;
+
+	public bool ToNetworkGroup;
+
+	public bool UsingPooledConnections;
+
+	public static RpcTarget NetworkGroup(string funcName)
+	{
+		RpcTarget result = default(RpcTarget);
+		result.Function = funcName;
+		result.ToNetworkGroup = true;
+		return result;
+	}
+
+	public static RpcTarget NetworkGroup(string funcName, BaseNetworkable entity)
+	{
+		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
+		RpcTarget result = default(RpcTarget);
+		result.Function = funcName;
+		result.Connections = new SendInfo(entity.net.group.subscribers);
+		return result;
+	}
+
+	public static RpcTarget NetworkGroup(string funcName, BaseNetworkable entity, SendMethod method, Priority priority)
+	{
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		RpcTarget result = default(RpcTarget);
+		result.Function = funcName;
+		SendInfo connections = default(SendInfo);
+		((SendInfo)(ref connections))._002Ector(entity.net.group.subscribers);
+		connections.method = method;
+		connections.priority = priority;
+		result.Connections = connections;
+		return result;
+	}
+
+	public static RpcTarget Player(string funcName, BasePlayer target)
+	{
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
+		RpcTarget result = default(RpcTarget);
+		result.Function = funcName;
+		result.Connections = new SendInfo(target.net.connection);
+		return result;
+	}
+
+	public static RpcTarget Player(string funcName, Connection connection)
+	{
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		RpcTarget result = default(RpcTarget);
+		result.Function = funcName;
+		result.Connections = new SendInfo(connection);
+		return result;
+	}
+
+	public static RpcTarget Players(string funcName, List<Connection> connections)
+	{
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		RpcTarget result = default(RpcTarget);
+		result.Function = funcName;
+		result.Connections = new SendInfo(connections);
+		return result;
+	}
+
+	public static RpcTarget SendInfo(string funcName, SendInfo sendInfo)
+	{
+		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		RpcTarget result = default(RpcTarget);
+		result.Function = funcName;
+		result.Connections = sendInfo;
+		return result;
+	}
+
+	public static RpcTarget PlayerAndSpectators(string funcName, BasePlayer player)
+	{
+		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
+		List<Connection> list = Pool.GetList<Connection>();
+		if (player.net.connection != null)
+		{
+			list.Add(player.net.connection);
+		}
+		if (player.IsBeingSpectated && player.children != null)
+		{
+			foreach (BaseEntity child in player.children)
+			{
+				if (child is BasePlayer basePlayer)
+				{
+					list.Add(basePlayer.net.connection);
+				}
+			}
+		}
+		RpcTarget result = default(RpcTarget);
+		result.Function = funcName;
+		result.Connections = new SendInfo(list);
+		result.UsingPooledConnections = true;
+		return result;
+	}
+}

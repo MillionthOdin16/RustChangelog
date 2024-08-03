@@ -24,14 +24,14 @@ public class TerrainPathChildObjects : MonoBehaviour
 		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0034: Expected O, but got Unknown
 		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0101: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010b: Expected I4, but got Unknown
-		//IL_010e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0118: Expected I4, but got Unknown
-		//IL_01c8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01d2: Expected I4, but got Unknown
-		//IL_01d5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01df: Expected I4, but got Unknown
+		//IL_0105: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010f: Expected I4, but got Unknown
+		//IL_0112: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011c: Expected I4, but got Unknown
+		//IL_01d0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01da: Expected I4, but got Unknown
+		//IL_01dd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01e7: Expected I4, but got Unknown
 		if (!World.Cached && !World.Networked)
 		{
 			List<Vector3> list = new List<Vector3>();

@@ -10,15 +10,8 @@ using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.Serialization;
 
-public class BaseVehicle : BaseMountable
+public class BaseVehicle : BaseMountable, VehicleSpawner.IVehicleSpawnUser
 {
-	public enum ClippingCheckMode
-	{
-		OnMountOnly,
-		Always,
-		AlwaysHeadOnly
-	}
-
 	public enum DismountStyle
 	{
 		Closest,
@@ -38,8 +31,21 @@ public class BaseVehicle : BaseMountable
 
 		public GameObjectRef prefab;
 
+		[NonSerialized]
 		[HideInInspector]
 		public BaseMountable mountable;
+	}
+
+	public enum RagdollMode
+	{
+		Collide,
+		FallThrough
+	}
+
+	public enum ClippingCheckMode
+	{
+		OnMountOnly,
+		Always
 	}
 
 	public readonly struct Enumerable : IEnumerable<MountPointInfo>, IEnumerable
@@ -185,6 +191,47 @@ public class BaseVehicle : BaseMountable
 		}
 	}
 
+	[Header("Base Vehicle")]
+	[Tooltip("Allow players to mount other mountables/ladders from this vehicle")]
+	public bool mountChaining = true;
+
+	public bool checkVehicleClipping;
+
+	public LayerMask excludeCollisionLayers;
+
+	public DismountStyle dismountStyle;
+
+	public bool shouldShowHudHealth;
+
+	public bool ignoreDamageFromOutside;
+
+	[Header("Base Vehicle - Mount Points")]
+	public List<MountPointInfo> mountPoints;
+
+	public RagdollMode mountedPlayerRagdolls;
+
+	public ClippingCheckMode clippingChecks;
+
+	[Header("Base Vehicle - Damage")]
+	public DamageRenderer damageRenderer;
+
+	[FormerlySerializedAs("explosionDamageMultiplier")]
+	public float explosionForceMultiplier = 100f;
+
+	public float explosionForceMax = 10000f;
+
+	public const Flags Flag_OnlyOwnerEntry = Flags.Locked;
+
+	public const Flags Flag_Headlights = Flags.Reserved5;
+
+	public const Flags Flag_Stationary = Flags.Reserved7;
+
+	public const Flags Flag_SeatsFull = Flags.Reserved11;
+
+	protected const Flags Flag_AnyMounted = Flags.InUse;
+
+	private readonly List<BaseVehicle> childVehicles = new List<BaseVehicle>(0);
+
 	private const float MIN_TIME_BETWEEN_PUSHES = 1f;
 
 	public TimeSince timeSinceLastPush;
@@ -206,55 +253,6 @@ public class BaseVehicle : BaseMountable
 	private Vector3 safeAreaOrigin;
 
 	private float spawnTime = -1f;
-
-	[Tooltip("Allow players to mount other mountables/ladders from this vehicle")]
-	public bool mountChaining = true;
-
-	public ClippingCheckMode clippingChecks;
-
-	public bool checkVehicleClipping;
-
-	public DismountStyle dismountStyle;
-
-	public bool shouldShowHudHealth;
-
-	public bool ignoreDamageFromOutside;
-
-	[Header("Rigidbody (Optional)")]
-	public Rigidbody rigidBody;
-
-	[Header("Mount Points")]
-	public List<MountPointInfo> mountPoints;
-
-	public bool doClippingAndVisChecks = true;
-
-	[Header("Damage")]
-	public DamageRenderer damageRenderer;
-
-	[FormerlySerializedAs("explosionDamageMultiplier")]
-	public float explosionForceMultiplier = 400f;
-
-	public float explosionForceMax = 75000f;
-
-	public const Flags Flag_OnlyOwnerEntry = Flags.Locked;
-
-	public const Flags Flag_Headlights = Flags.Reserved5;
-
-	public const Flags Flag_Stationary = Flags.Reserved7;
-
-	public const Flags Flag_SeatsFull = Flags.Reserved11;
-
-	protected const Flags Flag_AnyMounted = Flags.InUse;
-
-	private readonly List<BaseVehicle> childVehicles = new List<BaseVehicle>(0);
-
-	public virtual bool AlwaysAllowBradleyTargeting => false;
-
-	protected bool RecentlyPushed => TimeSince.op_Implicit(timeSinceLastPush) < 1f;
-
-	protected override bool PositionTickFixedTime => true;
-
-	protected virtual bool CanSwapSeats => true;
 
 	public bool IsMovingOrOn
 	{
@@ -282,6 +280,16 @@ public class BaseVehicle : BaseMountable
 
 	public Enumerable allMountPoints => new Enumerable(this);
 
+	public bool IsClient => base.isClient;
+
+	public virtual bool AlwaysAllowBradleyTargeting => false;
+
+	protected bool RecentlyPushed => TimeSince.op_Implicit(timeSinceLastPush) < 1f;
+
+	protected override bool PositionTickFixedTime => true;
+
+	protected virtual bool CanSwapSeats => true;
+
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
 		TimeWarning val = TimeWarning.New("BaseVehicle.OnRpcMessage", 0);
@@ -292,7 +300,7 @@ public class BaseVehicle : BaseMountable
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_WantsPush "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_WantsPush "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_WantsPush", 0);
 				try
@@ -344,6 +352,153 @@ public class BaseVehicle : BaseMountable
 			((IDisposable)val)?.Dispose();
 		}
 		return base.OnRpcMessage(player, rpc, msg);
+	}
+
+	public bool IsStationary()
+	{
+		return HasFlag(Flags.Reserved7);
+	}
+
+	public bool IsMoving()
+	{
+		return !HasFlag(Flags.Reserved7);
+	}
+
+	public bool IsAuthed(BasePlayer player)
+	{
+		foreach (BaseEntity child in children)
+		{
+			VehiclePrivilege vehiclePrivilege = child as VehiclePrivilege;
+			if (!((Object)(object)vehiclePrivilege == (Object)null))
+			{
+				return vehiclePrivilege.IsAuthed(player);
+			}
+		}
+		return true;
+	}
+
+	public override bool AnyMounted()
+	{
+		return HasFlag(Flags.InUse);
+	}
+
+	public override bool PlayerIsMounted(BasePlayer player)
+	{
+		if (player.IsValid())
+		{
+			return (Object)(object)player.GetMountedVehicle() == (Object)(object)this;
+		}
+		return false;
+	}
+
+	protected virtual bool CanPushNow(BasePlayer pusher)
+	{
+		return !IsOn();
+	}
+
+	public bool HasMountPoints()
+	{
+		if (mountPoints.Count > 0)
+		{
+			return true;
+		}
+		using (Enumerator enumerator = allMountPoints.GetEnumerator())
+		{
+			if (enumerator.MoveNext())
+			{
+				_ = enumerator.Current;
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public override bool CanBeLooted(BasePlayer player)
+	{
+		if (IsAlive() && !base.IsDestroyed)
+		{
+			return (Object)(object)player != (Object)null;
+		}
+		return false;
+	}
+
+	public bool IsFlipped()
+	{
+		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
+		return Vector3.Dot(Vector3.up, ((Component)this).transform.up) <= 0f;
+	}
+
+	public virtual bool IsVehicleRoot()
+	{
+		return true;
+	}
+
+	public override bool DirectlyMountable()
+	{
+		return IsVehicleRoot();
+	}
+
+	public override BaseVehicle VehicleParent()
+	{
+		return null;
+	}
+
+	protected override void OnChildAdded(BaseEntity child)
+	{
+		base.OnChildAdded(child);
+		if (!IsDead() && !base.IsDestroyed && child is BaseVehicle baseVehicle && !baseVehicle.IsVehicleRoot() && !childVehicles.Contains(baseVehicle))
+		{
+			childVehicles.Add(baseVehicle);
+		}
+	}
+
+	protected override void OnChildRemoved(BaseEntity child)
+	{
+		base.OnChildRemoved(child);
+		if (child is BaseVehicle baseVehicle && !baseVehicle.IsVehicleRoot())
+		{
+			childVehicles.Remove(baseVehicle);
+		}
+	}
+
+	public MountPointInfo GetMountPoint(int index)
+	{
+		if (index < 0)
+		{
+			return null;
+		}
+		if (index < mountPoints.Count)
+		{
+			return mountPoints[index];
+		}
+		index -= mountPoints.Count;
+		int num = 0;
+		foreach (BaseVehicle childVehicle in childVehicles)
+		{
+			if ((Object)(object)childVehicle == (Object)null)
+			{
+				continue;
+			}
+			foreach (MountPointInfo allMountPoint in childVehicle.allMountPoints)
+			{
+				if (num == index)
+				{
+					return allMountPoint;
+				}
+				num++;
+			}
+		}
+		return null;
+	}
+
+	public override float GetSpeed()
+	{
+		if (IsStationary())
+		{
+			return 0f;
+		}
+		return base.GetSpeed();
 	}
 
 	public override void OnAttacked(HitInfo info)
@@ -409,14 +564,14 @@ public class BaseVehicle : BaseMountable
 
 	public override void VehicleFixedUpdate()
 	{
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d2: Unknown result type (might be due to invalid IL or missing references)
 		base.VehicleFixedUpdate();
-		if (clippingChecks != 0 && AnyMounted() && Physics.OverlapBox(((Component)this).transform.TransformPoint(((Bounds)(ref bounds)).center), ((Bounds)(ref bounds)).extents, ((Component)this).transform.rotation, GetClipCheckMask()).Length != 0)
+		if (clippingChecks == ClippingCheckMode.Always && AnyMounted() && Physics.OverlapBox(((Component)this).transform.TransformPoint(((Bounds)(ref bounds)).center), ((Bounds)(ref bounds)).extents, ((Component)this).transform.rotation, GetClipCheckMask()).Length != 0)
 		{
 			CheckSeatsForClipping();
 		}
@@ -440,9 +595,13 @@ public class BaseVehicle : BaseMountable
 		}
 	}
 
-	private int GetClipCheckMask()
+	protected override int GetClipCheckMask()
 	{
 		int num = (IsFlipped() ? 1218511105 : 1210122497);
+		if (!Physics.treecollision)
+		{
+			num &= -1073741825;
+		}
 		if (checkVehicleClipping)
 		{
 			num |= 0x2000;
@@ -485,45 +644,12 @@ public class BaseVehicle : BaseMountable
 
 	public virtual int StartingFuelUnits()
 	{
-		EntityFuelSystem fuelSystem = GetFuelSystem();
+		IFuelSystem fuelSystem = GetFuelSystem();
 		if (fuelSystem != null)
 		{
 			return Mathf.FloorToInt((float)fuelSystem.GetFuelCapacity() * 0.2f);
 		}
 		return 0;
-	}
-
-	public bool InSafeZone()
-	{
-		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
-		return InSafeZone(triggers, ((Component)this).transform.position);
-	}
-
-	public static bool InSafeZone(List<TriggerBase> triggers, Vector3 position)
-	{
-		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
-		BaseGameMode activeGameMode = BaseGameMode.GetActiveGameMode(serverside: true);
-		if ((Object)(object)activeGameMode != (Object)null && !activeGameMode.safeZone)
-		{
-			return false;
-		}
-		float num = 0f;
-		if (triggers != null)
-		{
-			for (int i = 0; i < triggers.Count; i++)
-			{
-				TriggerSafeZone triggerSafeZone = triggers[i] as TriggerSafeZone;
-				if (!((Object)(object)triggerSafeZone == (Object)null))
-				{
-					float safeLevel = triggerSafeZone.GetSafeLevel(position);
-					if (safeLevel > num)
-					{
-						num = safeLevel;
-					}
-				}
-			}
-		}
-		return num > 0f;
 	}
 
 	public virtual bool IsSeatVisible(BaseMountable mountable, Vector3 eyePos, int mask = 1218511105)
@@ -535,7 +661,7 @@ public class BaseVehicle : BaseMountable
 		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
-		if (!doClippingAndVisChecks)
+		if (!clippingAndVisChecks)
 		{
 			return true;
 		}
@@ -547,87 +673,44 @@ public class BaseVehicle : BaseMountable
 		return GamePhysics.LineOfSight(eyePos, p, mask);
 	}
 
-	public virtual bool IsSeatClipping(BaseMountable mountable)
+	protected override bool IsSeatClipping(BaseMountable mountable, Vector3 startPos, float radius, int mask, Vector3 seatPos, Vector3 direction)
 	{
-		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0137: Unknown result type (might be due to invalid IL or missing references)
-		//IL_013c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0141: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0143: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0145: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0120: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0092: Unknown result type (might be due to invalid IL or missing references)
-		if (!doClippingAndVisChecks)
+		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		if (!checkVehicleClipping)
 		{
-			return false;
+			return base.IsSeatClipping(mountable, startPos, radius, mask, seatPos, direction);
 		}
-		if ((Object)(object)mountable == (Object)null)
+		List<Collider> list = Pool.GetList<Collider>();
+		if (clippingChecksLocation == ClippingCheckLocation.HeadOnly)
 		{
-			return false;
-		}
-		int clipCheckMask = GetClipCheckMask();
-		Vector3 position = ((Component)mountable.eyePositionOverride).transform.position;
-		Vector3 position2 = ((Component)mountable).transform.position;
-		Vector3 val = position - position2;
-		float num = 0.4f;
-		if (mountable.modifiesPlayerCollider)
-		{
-			num = Mathf.Min(num, mountable.customPlayerCollider.radius);
-		}
-		Vector3 val2 = position - val * (num - 0.2f);
-		bool result = false;
-		if (checkVehicleClipping)
-		{
-			List<Collider> list = Pool.GetList<Collider>();
-			if (clippingChecks == ClippingCheckMode.AlwaysHeadOnly)
-			{
-				GamePhysics.OverlapSphere(val2, num, list, clipCheckMask, (QueryTriggerInteraction)1);
-			}
-			else
-			{
-				Vector3 point = position2 + val * (num + 0.05f);
-				GamePhysics.OverlapCapsule(val2, point, num, list, clipCheckMask, (QueryTriggerInteraction)1);
-			}
-			foreach (Collider item in list)
-			{
-				BaseEntity baseEntity = item.ToBaseEntity();
-				if ((Object)(object)baseEntity != (Object)(object)this && !EqualNetID((BaseNetworkable)baseEntity))
-				{
-					result = true;
-					break;
-				}
-			}
-			Pool.FreeList<Collider>(ref list);
-		}
-		else if (clippingChecks == ClippingCheckMode.AlwaysHeadOnly)
-		{
-			result = GamePhysics.CheckSphere(val2, num, clipCheckMask, (QueryTriggerInteraction)1);
+			GamePhysics.OverlapSphere(startPos, radius, list, mask, (QueryTriggerInteraction)1);
 		}
 		else
 		{
-			Vector3 end = position2 + val * (num + 0.05f);
-			result = GamePhysics.CheckCapsule(val2, end, num, clipCheckMask, (QueryTriggerInteraction)1);
+			Vector3 point = seatPos + direction * (radius + 0.05f);
+			GamePhysics.OverlapCapsule(startPos, point, radius, list, mask, (QueryTriggerInteraction)1);
 		}
-		return result;
+		foreach (Collider item in list)
+		{
+			BaseEntity baseEntity = item.ToBaseEntity();
+			if ((Object)(object)baseEntity != (Object)(object)this && !EqualNetID((BaseNetworkable)baseEntity) && (Object)(object)mountable != (Object)(object)this && !mountable.EqualNetID((BaseNetworkable)baseEntity))
+			{
+				Pool.FreeList<Collider>(ref list);
+				return true;
+			}
+		}
+		Pool.FreeList<Collider>(ref list);
+		return false;
 	}
 
 	public virtual void CheckSeatsForClipping()
@@ -686,7 +769,7 @@ public class BaseVehicle : BaseMountable
 		{
 			return false;
 		}
-		GetFuelSystem()?.AdminAddFuel();
+		GetFuelSystem()?.FillFuel();
 		SetHealth(MaxHealth());
 		SendNetworkUpdate();
 		return true;
@@ -756,17 +839,22 @@ public class BaseVehicle : BaseMountable
 
 	public override void Hurt(HitInfo info)
 	{
-		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
-		if (!IsDead() && !IsTransferProtected() && (Object)(object)rigidBody != (Object)null && !rigidBody.isKinematic)
+		DoExplosionForce(info);
+		base.Hurt(info);
+	}
+
+	public void DoExplosionForce(HitInfo info)
+	{
+		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
+		if (!IsDead() && !IsTransferProtected() && !((Object)(object)rigidBody == (Object)null) && !rigidBody.isKinematic)
 		{
-			float num = info.damageTypes.Get(DamageType.Explosion) + info.damageTypes.Get(DamageType.AntiVehicle);
+			float num = info.damageTypes.Get(DamageType.Explosion) + info.damageTypes.Get(DamageType.AntiVehicle) * 0.5f;
 			if (num > 3f)
 			{
 				float num2 = Mathf.Min(num * explosionForceMultiplier, explosionForceMax);
 				rigidBody.AddExplosionForce(num2, info.HitPositionWorld, 1f, 2.5f);
 			}
 		}
-		base.Hurt(info);
 	}
 
 	public int NumMounted()
@@ -846,6 +934,45 @@ public class BaseVehicle : BaseMountable
 		return false;
 	}
 
+	public bool HasPassenger()
+	{
+		if (HasMountPoints())
+		{
+			foreach (MountPointInfo allMountPoint in allMountPoints)
+			{
+				if (allMountPoint != null && (Object)(object)allMountPoint.mountable != (Object)null && !allMountPoint.isDriver && allMountPoint.mountable.AnyMounted())
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+		return base.AnyMounted();
+	}
+
+	public bool IsPassenger(BasePlayer player)
+	{
+		if (HasMountPoints())
+		{
+			foreach (MountPointInfo allMountPoint in allMountPoints)
+			{
+				if (allMountPoint != null && (Object)(object)allMountPoint.mountable != (Object)null && !allMountPoint.isDriver)
+				{
+					BasePlayer mounted = allMountPoint.mountable.GetMounted();
+					if ((Object)(object)mounted != (Object)null && (Object)(object)mounted == (Object)(object)player)
+					{
+						return true;
+					}
+				}
+			}
+		}
+		else if ((Object)(object)_mounted != (Object)null)
+		{
+			return (Object)(object)_mounted == (Object)(object)player;
+		}
+		return false;
+	}
+
 	public BasePlayer GetDriver()
 	{
 		if (HasMountPoints())
@@ -853,6 +980,29 @@ public class BaseVehicle : BaseMountable
 			foreach (MountPointInfo allMountPoint in allMountPoints)
 			{
 				if (allMountPoint != null && (Object)(object)allMountPoint.mountable != (Object)null && allMountPoint.isDriver)
+				{
+					BasePlayer mounted = allMountPoint.mountable.GetMounted();
+					if ((Object)(object)mounted != (Object)null)
+					{
+						return mounted;
+					}
+				}
+			}
+		}
+		else if ((Object)(object)_mounted != (Object)null)
+		{
+			return _mounted;
+		}
+		return null;
+	}
+
+	public BasePlayer GetPassenger()
+	{
+		if (HasMountPoints())
+		{
+			foreach (MountPointInfo allMountPoint in allMountPoints)
+			{
+				if (allMountPoint != null && (Object)(object)allMountPoint.mountable != (Object)null && !allMountPoint.isDriver)
 				{
 					BasePlayer mounted = allMountPoint.mountable.GetMounted();
 					if ((Object)(object)mounted != (Object)null)
@@ -978,14 +1128,14 @@ public class BaseVehicle : BaseMountable
 		return false;
 	}
 
-	public virtual bool IsPlayerSeatSwapValid(BasePlayer player, int fromIndex, int toIndex)
+	public virtual bool IsPlayerSeatSwapValid(BasePlayer player, int fromIndex, int toIndex, bool forcingRestrainedPlayer)
 	{
-		return true;
+		return !player.IsRestrained || forcingRestrainedPlayer;
 	}
 
-	public void SwapSeats(BasePlayer player, int targetSeat = 0)
+	public void SwapSeats(BasePlayer player, int targetSeat = 0, bool forcingRestrainedPlayer = false)
 	{
-		//IL_00af: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ba: Unknown result type (might be due to invalid IL or missing references)
 		if (!HasMountPoints() || !CanSwapSeats)
 		{
 			return;
@@ -1009,7 +1159,7 @@ public class BaseVehicle : BaseMountable
 					num = 0;
 				}
 				MountPointInfo mountPoint = GetMountPoint(num);
-				if ((Object)(object)mountPoint?.mountable != (Object)null && !mountPoint.mountable.AnyMounted() && mountPoint.mountable.CanSwapToThis(player) && !IsSeatClipping(mountPoint.mountable) && IsSeatVisible(mountPoint.mountable, player.eyes.position) && IsPlayerSeatSwapValid(player, playerSeat, num))
+				if ((Object)(object)mountPoint?.mountable != (Object)null && !mountPoint.mountable.AnyMounted() && mountPoint.mountable.CanSwapToThis(player) && !(mountPoint.isDriver && forcingRestrainedPlayer) && !IsSeatClipping(mountPoint.mountable) && IsSeatVisible(mountPoint.mountable, player.eyes.position) && IsPlayerSeatSwapValid(player, playerSeat, num, forcingRestrainedPlayer))
 				{
 					baseMountable = mountPoint.mountable;
 					break;
@@ -1087,7 +1237,7 @@ public class BaseVehicle : BaseMountable
 		}
 	}
 
-	public virtual EntityFuelSystem GetFuelSystem()
+	public virtual IFuelSystem GetFuelSystem()
 	{
 		return null;
 	}
@@ -1114,9 +1264,9 @@ public class BaseVehicle : BaseMountable
 
 	public BaseMountable GetIdealMountPoint(Vector3 eyePos, Vector3 pos, BasePlayer playerFor = null)
 	{
-		//IL_00cb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0117: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0130: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)playerFor == (Object)null)
 		{
 			return null;
@@ -1137,7 +1287,7 @@ public class BaseVehicle : BaseMountable
 		float num = float.PositiveInfinity;
 		foreach (MountPointInfo allMountPoint in allMountPoints)
 		{
-			if (allMountPoint.mountable.AnyMounted())
+			if (allMountPoint.mountable.AnyMounted() || (allMountPoint.isDriver && playerFor.IsRestrained))
 			{
 				continue;
 			}
@@ -1333,12 +1483,12 @@ public class BaseVehicle : BaseMountable
 	{
 		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ea: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ef: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0109: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00dc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0113: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0118: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e6: Unknown result type (might be due to invalid IL or missing references)
 		BaseVehicle baseVehicle = VehicleParent();
 		if ((Object)(object)baseVehicle != (Object)null)
 		{
@@ -1359,7 +1509,12 @@ public class BaseVehicle : BaseMountable
 		}
 		if (list.Count == 0)
 		{
-			Debug.LogWarning((object)("Failed to find dismount position for player :" + player.displayName + " / " + player.userID + " on obj : " + ((Object)((Component)this).gameObject).name));
+			string[] obj = new string[6] { "Failed to find dismount position for player :", player.displayName, " / ", null, null, null };
+			BasePlayer.EncryptedValue<ulong> userID = player.userID;
+			obj[3] = userID.ToString();
+			obj[4] = " on obj : ";
+			obj[5] = ((Object)((Component)this).gameObject).name;
+			Debug.LogWarning((object)string.Concat(obj));
 			Pool.FreeList<Vector3>(ref list);
 			res = ((Component)player).transform.position;
 			return false;
@@ -1493,7 +1648,7 @@ public class BaseVehicle : BaseMountable
 		}
 		if (IsFlipped())
 		{
-			float num = rigidBody.mass * 8f;
+			float num = rigidBody.mass * 9f;
 			Vector3 val = Vector3.forward * num;
 			if (Vector3.Dot(((Component)this).transform.InverseTransformVector(((Component)this).transform.position - ((Component)player).transform.position), Vector3.right) > 0f)
 			{
@@ -1509,7 +1664,7 @@ public class BaseVehicle : BaseMountable
 		{
 			Vector3 val2 = Vector3.ProjectOnPlane(((Component)this).transform.position - player.eyes.position, ((Component)this).transform.up);
 			Vector3 normalized = ((Vector3)(ref val2)).normalized;
-			float num2 = rigidBody.mass * 4f;
+			float num2 = rigidBody.mass * 5f;
 			rigidBody.AddForce(normalized * num2, (ForceMode)1);
 		}
 	}
@@ -1539,141 +1694,8 @@ public class BaseVehicle : BaseMountable
 		}
 	}
 
-	public bool IsStationary()
-	{
-		return HasFlag(Flags.Reserved7);
-	}
-
-	public bool IsMoving()
-	{
-		return !HasFlag(Flags.Reserved7);
-	}
-
-	public bool IsAuthed(BasePlayer player)
-	{
-		foreach (BaseEntity child in children)
-		{
-			VehiclePrivilege vehiclePrivilege = child as VehiclePrivilege;
-			if (!((Object)(object)vehiclePrivilege == (Object)null))
-			{
-				return vehiclePrivilege.IsAuthed(player);
-			}
-		}
-		return true;
-	}
-
-	public override bool AnyMounted()
-	{
-		return HasFlag(Flags.InUse);
-	}
-
-	public override bool PlayerIsMounted(BasePlayer player)
-	{
-		if (player.IsValid())
-		{
-			return (Object)(object)player.GetMountedVehicle() == (Object)(object)this;
-		}
-		return false;
-	}
-
-	protected virtual bool CanPushNow(BasePlayer pusher)
-	{
-		return !IsOn();
-	}
-
-	public bool HasMountPoints()
-	{
-		if (mountPoints.Count > 0)
-		{
-			return true;
-		}
-		using (Enumerator enumerator = allMountPoints.GetEnumerator())
-		{
-			if (enumerator.MoveNext())
-			{
-				_ = enumerator.Current;
-				return true;
-			}
-		}
-		return false;
-	}
-
-	public override bool CanBeLooted(BasePlayer player)
-	{
-		if (IsAlive() && !base.IsDestroyed)
-		{
-			return (Object)(object)player != (Object)null;
-		}
-		return false;
-	}
-
-	public bool IsFlipped()
-	{
-		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
-		return Vector3.Dot(Vector3.up, ((Component)this).transform.up) <= 0f;
-	}
-
-	public virtual bool IsVehicleRoot()
+	public virtual bool AllowPlayerInstigatedDismount(BasePlayer player)
 	{
 		return true;
-	}
-
-	public override bool DirectlyMountable()
-	{
-		return IsVehicleRoot();
-	}
-
-	public override BaseVehicle VehicleParent()
-	{
-		return null;
-	}
-
-	protected override void OnChildAdded(BaseEntity child)
-	{
-		base.OnChildAdded(child);
-		if (!IsDead() && !base.IsDestroyed && child is BaseVehicle baseVehicle && !baseVehicle.IsVehicleRoot() && !childVehicles.Contains(baseVehicle))
-		{
-			childVehicles.Add(baseVehicle);
-		}
-	}
-
-	protected override void OnChildRemoved(BaseEntity child)
-	{
-		base.OnChildRemoved(child);
-		if (child is BaseVehicle baseVehicle && !baseVehicle.IsVehicleRoot())
-		{
-			childVehicles.Remove(baseVehicle);
-		}
-	}
-
-	public MountPointInfo GetMountPoint(int index)
-	{
-		if (index < 0)
-		{
-			return null;
-		}
-		if (index < mountPoints.Count)
-		{
-			return mountPoints[index];
-		}
-		index -= mountPoints.Count;
-		int num = 0;
-		foreach (BaseVehicle childVehicle in childVehicles)
-		{
-			if ((Object)(object)childVehicle == (Object)null)
-			{
-				continue;
-			}
-			foreach (MountPointInfo allMountPoint in childVehicle.allMountPoints)
-			{
-				if (num == index)
-				{
-					return allMountPoint;
-				}
-				num++;
-			}
-		}
-		return null;
 	}
 }

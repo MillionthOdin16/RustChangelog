@@ -25,12 +25,6 @@ public class BaseVehicleModule : BaseVehicle, IPrefabPreProcess
 		public Renderer[] renderers;
 	}
 
-	public Item AssociatedItemInstance;
-
-	private TimeSince timeSinceItemLockRefresh;
-
-	private const float TIME_BETWEEN_LOCK_REFRESH = 1f;
-
 	[Header("Vehicle Module")]
 	[SerializeField]
 	private Transform centreOfMassTransform;
@@ -69,8 +63,11 @@ public class BaseVehicleModule : BaseVehicle, IPrefabPreProcess
 
 	private bool prevRefreshVehicleIsLockable;
 
-	public bool PropagateDamage { get; private set; } = true;
+	public Item AssociatedItemInstance;
 
+	private TimeSince timeSinceItemLockRefresh;
+
+	private const float TIME_BETWEEN_LOCK_REFRESH = 1f;
 
 	public BaseModularVehicle Vehicle { get; private set; }
 
@@ -91,6 +88,9 @@ public class BaseVehicleModule : BaseVehicle, IPrefabPreProcess
 
 	public virtual bool HasAnEngine => false;
 
+	public bool PropagateDamage { get; private set; } = true;
+
+
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
 		TimeWarning val = TimeWarning.New("BaseVehicleModule.OnRpcMessage", 0);
@@ -101,7 +101,7 @@ public class BaseVehicleModule : BaseVehicle, IPrefabPreProcess
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_Use "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_Use "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_Use", 0);
 				try
@@ -153,156 +153,6 @@ public class BaseVehicleModule : BaseVehicle, IPrefabPreProcess
 			((IDisposable)val)?.Dispose();
 		}
 		return base.OnRpcMessage(player, rpc, msg);
-	}
-
-	public virtual void NonUserSpawn()
-	{
-	}
-
-	public override void VehicleFixedUpdate()
-	{
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
-		if (isSpawned && IsOnAVehicle)
-		{
-			base.VehicleFixedUpdate();
-			if (Vehicle.IsEditableNow && AssociatedItemInstance != null && TimeSince.op_Implicit(timeSinceItemLockRefresh) > 1f)
-			{
-				AssociatedItemInstance.LockUnlock(!CanBeMovedNow());
-				timeSinceItemLockRefresh = TimeSince.op_Implicit(0f);
-			}
-			for (int i = 0; i < slidingComponents.Length; i++)
-			{
-				slidingComponents[i].ServerUpdateTick(this);
-			}
-		}
-	}
-
-	public override void Hurt(HitInfo info)
-	{
-		if (!IsTransferProtected() && IsOnAVehicle)
-		{
-			Vehicle.ModuleHurt(this, info);
-		}
-		base.Hurt(info);
-	}
-
-	public override void OnHealthChanged(float oldValue, float newValue)
-	{
-		base.OnHealthChanged(oldValue, newValue);
-		if (!base.isServer)
-		{
-			return;
-		}
-		if (IsOnAVehicle)
-		{
-			if (Vehicle.IsDead())
-			{
-				return;
-			}
-			if (AssociatedItemInstance != null)
-			{
-				AssociatedItemInstance.condition = Health();
-			}
-			if (newValue <= 0f)
-			{
-				Vehicle.ModuleReachedZeroHealth();
-			}
-		}
-		RefreshConditionals(canGib: true);
-	}
-
-	public bool CanBeMovedNow()
-	{
-		if (IsOnAVehicle)
-		{
-			return CanBeMovedNowOnVehicle();
-		}
-		return true;
-	}
-
-	protected virtual bool CanBeMovedNowOnVehicle()
-	{
-		return true;
-	}
-
-	public virtual float GetAdjustedDriveForce(float absSpeed, float topSpeed)
-	{
-		return 0f;
-	}
-
-	public void AcceptPropagatedDamage(float amount, DamageType type, BaseEntity attacker = null, bool useProtection = true)
-	{
-		PropagateDamage = false;
-		Hurt(amount, type, attacker, useProtection);
-		PropagateDamage = true;
-	}
-
-	public override void Die(HitInfo info = null)
-	{
-	}
-
-	[RPC_Server]
-	[RPC_Server.MaxDistance(3f)]
-	public void RPC_Use(RPCMessage msg)
-	{
-		BasePlayer player = msg.player;
-		if (!CanBeUsedNowBy(player))
-		{
-			return;
-		}
-		string lookingAtColldierName = msg.read.String(256);
-		VehicleModuleSlidingComponent[] array = slidingComponents;
-		foreach (VehicleModuleSlidingComponent vehicleModuleSlidingComponent in array)
-		{
-			if (PlayerIsLookingAtUsable(lookingAtColldierName, vehicleModuleSlidingComponent.interactionColliderName))
-			{
-				vehicleModuleSlidingComponent.Use(this);
-				break;
-			}
-		}
-		VehicleModuleButtonComponent[] array2 = buttonComponents;
-		foreach (VehicleModuleButtonComponent vehicleModuleButtonComponent in array2)
-		{
-			if ((Object)(object)vehicleModuleButtonComponent == (Object)null)
-			{
-				break;
-			}
-			if (PlayerIsLookingAtUsable(lookingAtColldierName, vehicleModuleButtonComponent.interactionColliderName))
-			{
-				vehicleModuleButtonComponent.ServerUse(player, this);
-				break;
-			}
-		}
-	}
-
-	public override void AdminKill()
-	{
-		if (IsOnAVehicle)
-		{
-			Vehicle.AdminKill();
-		}
-	}
-
-	public override bool AdminFixUp(int tier)
-	{
-		if (IsOnAVehicle && Vehicle.IsDead())
-		{
-			return false;
-		}
-		return base.AdminFixUp(tier);
-	}
-
-	public virtual void OnPlayerDismountedVehicle(BasePlayer player)
-	{
-	}
-
-	public override void Save(SaveInfo info)
-	{
-		base.Save(info);
-		info.msg.vehicleModule = Pool.Get<VehicleModule>();
-		info.msg.vehicleModule.socketIndex = FirstSocketIndex;
 	}
 
 	public override void PreProcess(IPrefabProcessor process, GameObject rootObj, string name, bool serverside, bool clientside, bool bundling)
@@ -634,5 +484,151 @@ public class BaseVehicleModule : BaseVehicle, IPrefabPreProcess
 	public override bool IsVehicleRoot()
 	{
 		return false;
+	}
+
+	public override void VehicleFixedUpdate()
+	{
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
+		if (isSpawned && IsOnAVehicle)
+		{
+			base.VehicleFixedUpdate();
+			if (Vehicle.IsEditableNow && AssociatedItemInstance != null && TimeSince.op_Implicit(timeSinceItemLockRefresh) > 1f)
+			{
+				AssociatedItemInstance.LockUnlock(!CanBeMovedNow());
+				timeSinceItemLockRefresh = TimeSince.op_Implicit(0f);
+			}
+			for (int i = 0; i < slidingComponents.Length; i++)
+			{
+				slidingComponents[i].ServerUpdateTick(this);
+			}
+		}
+	}
+
+	public override void Hurt(HitInfo info)
+	{
+		if (!IsTransferProtected() && IsOnAVehicle)
+		{
+			Vehicle.ModuleHurt(this, info);
+		}
+		base.Hurt(info);
+	}
+
+	public override void OnHealthChanged(float oldValue, float newValue)
+	{
+		base.OnHealthChanged(oldValue, newValue);
+		if (!base.isServer)
+		{
+			return;
+		}
+		if (IsOnAVehicle)
+		{
+			if (Vehicle.IsDead())
+			{
+				return;
+			}
+			if (AssociatedItemInstance != null)
+			{
+				AssociatedItemInstance.condition = Health();
+			}
+			if (newValue <= 0f)
+			{
+				Vehicle.ModuleReachedZeroHealth();
+			}
+		}
+		RefreshConditionals(canGib: true);
+	}
+
+	public bool CanBeMovedNow()
+	{
+		if (IsOnAVehicle)
+		{
+			return CanBeMovedNowOnVehicle();
+		}
+		return true;
+	}
+
+	protected virtual bool CanBeMovedNowOnVehicle()
+	{
+		return true;
+	}
+
+	public virtual float GetAdjustedDriveForce(float absSpeed, float topSpeed)
+	{
+		return 0f;
+	}
+
+	public void AcceptPropagatedDamage(float amount, DamageType type, BaseEntity attacker = null, bool useProtection = true)
+	{
+		PropagateDamage = false;
+		Hurt(amount, type, attacker, useProtection);
+		PropagateDamage = true;
+	}
+
+	public override void Die(HitInfo info = null)
+	{
+	}
+
+	[RPC_Server]
+	[RPC_Server.MaxDistance(3f)]
+	public void RPC_Use(RPCMessage msg)
+	{
+		BasePlayer player = msg.player;
+		if (!CanBeUsedNowBy(player))
+		{
+			return;
+		}
+		string lookingAtColldierName = msg.read.String(256, false);
+		VehicleModuleSlidingComponent[] array = slidingComponents;
+		foreach (VehicleModuleSlidingComponent vehicleModuleSlidingComponent in array)
+		{
+			if (PlayerIsLookingAtUsable(lookingAtColldierName, vehicleModuleSlidingComponent.interactionColliderName))
+			{
+				vehicleModuleSlidingComponent.Use(this);
+				break;
+			}
+		}
+		VehicleModuleButtonComponent[] array2 = buttonComponents;
+		foreach (VehicleModuleButtonComponent vehicleModuleButtonComponent in array2)
+		{
+			if ((Object)(object)vehicleModuleButtonComponent == (Object)null)
+			{
+				break;
+			}
+			if (PlayerIsLookingAtUsable(lookingAtColldierName, vehicleModuleButtonComponent.interactionColliderName))
+			{
+				vehicleModuleButtonComponent.ServerUse(player, this);
+				break;
+			}
+		}
+	}
+
+	public override void AdminKill()
+	{
+		if (IsOnAVehicle)
+		{
+			Vehicle.AdminKill();
+		}
+	}
+
+	public override bool AdminFixUp(int tier)
+	{
+		if (IsOnAVehicle && Vehicle.IsDead())
+		{
+			return false;
+		}
+		return base.AdminFixUp(tier);
+	}
+
+	public virtual void OnPlayerDismountedVehicle(BasePlayer player)
+	{
+	}
+
+	public override void Save(SaveInfo info)
+	{
+		base.Save(info);
+		info.msg.vehicleModule = Pool.Get<VehicleModule>();
+		info.msg.vehicleModule.socketIndex = FirstSocketIndex;
 	}
 }

@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 
+[MapGeneration]
 public class TerrainAnchor : PrefabAttribute
 {
 	public float Extents = 1f;

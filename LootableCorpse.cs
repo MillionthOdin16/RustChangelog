@@ -53,7 +53,7 @@ public class LootableCorpse : BaseCorpse, LootPanel.IHasLootPanel
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_LootCorpse "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_LootCorpse "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_LootCorpse", 0);
 				try
@@ -138,9 +138,9 @@ public class LootableCorpse : BaseCorpse, LootPanel.IHasLootPanel
 		containers = null;
 	}
 
-	public void TakeFrom(params ItemContainer[] source)
+	public void TakeFrom(BaseEntity fromEntity, params ItemContainer[] source)
 	{
-		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00be: Unknown result type (might be due to invalid IL or missing references)
 		Assert.IsTrue(containers == null, "Initializing Twice");
 		TimeWarning val = TimeWarning.New("Corpse.TakeFrom", 0);
 		try
@@ -152,6 +152,7 @@ public class LootableCorpse : BaseCorpse, LootPanel.IHasLootPanel
 				containers[i].ServerInitialize(null, source[i].capacity);
 				containers[i].GiveUID();
 				containers[i].entityOwner = this;
+				containers[i].containerVolume = source[i].containerVolume;
 				Item[] array = source[i].itemList.ToArray();
 				foreach (Item item in array)
 				{
@@ -166,6 +167,16 @@ public class LootableCorpse : BaseCorpse, LootPanel.IHasLootPanel
 		finally
 		{
 			((IDisposable)val)?.Dispose();
+		}
+		HeadDispenser headDispenser = default(HeadDispenser);
+		if (((Component)this).gameObject.TryGetComponent<HeadDispenser>(ref headDispenser))
+		{
+			GameObject val2 = GameManager.server.FindPrefab(fromEntity.prefabID);
+			BasePlayer overrideEntity = default(BasePlayer);
+			if ((Object)(object)val2 != (Object)null && val2.TryGetComponent<BasePlayer>(ref overrideEntity))
+			{
+				headDispenser.overrideEntity = overrideEntity;
+			}
 		}
 	}
 
@@ -216,7 +227,7 @@ public class LootableCorpse : BaseCorpse, LootPanel.IHasLootPanel
 			}
 		}
 		player.inventory.loot.SendImmediate();
-		ClientRPCPlayer(null, player, "RPC_ClientLootCorpse");
+		ClientRPC(RpcTarget.Player("RPC_ClientLootCorpse", player));
 		SendNetworkUpdate();
 	}
 

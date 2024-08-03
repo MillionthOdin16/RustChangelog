@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Facepunch;
 using ProtoBuf;
@@ -7,6 +8,7 @@ public class WhitelistLootContainer : LootContainer
 {
 	public static readonly Phrase CantLootToast = new Phrase("whitelistcontainer.noloot", "You are not authorized to access this box");
 
+	[NonSerialized]
 	public List<ulong> whitelist = new List<ulong>();
 
 	public override void Save(SaveInfo info)
@@ -60,8 +62,8 @@ public class WhitelistLootContainer : LootContainer
 
 	public override bool PlayerOpenLoot(BasePlayer player, string panelToOpen = "", bool doPositionChecks = true)
 	{
-		ulong userID = player.userID;
-		if (!whitelist.Contains(userID))
+		ulong item = player.userID.Get();
+		if (!whitelist.Contains(item))
 		{
 			player.ShowToast(GameTip.Styles.Red_Normal, CantLootToast);
 			return false;

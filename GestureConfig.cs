@@ -28,17 +28,12 @@ public class GestureConfig : ScriptableObject
 		Loop
 	}
 
-	public enum ViewMode
-	{
-		FirstPerson,
-		ThirdPerson
-	}
-
 	public enum GestureActionType
 	{
 		None,
 		ShowNameTag,
-		DanceAchievement
+		DanceAchievement,
+		Surrender
 	}
 
 	[ReadOnly]
@@ -49,6 +44,8 @@ public class GestureConfig : ScriptableObject
 	public string convarName;
 
 	public Phrase gestureName;
+
+	public Phrase gestureDescription;
 
 	public Sprite icon;
 
@@ -67,6 +64,12 @@ public class GestureConfig : ScriptableObject
 
 	public bool canDuckDuringGesture;
 
+	public bool hideInWheel;
+
+	public bool hasViewmodelAnimation = true;
+
+	public float viewmodelHolsterDelay;
+
 	public MovementCapabilities movementMode;
 
 	public AnimationType animationType;
@@ -74,6 +77,8 @@ public class GestureConfig : ScriptableObject
 	public BasePlayer.CameraMode viewMode;
 
 	public bool useRootMotion;
+
+	public bool forceForwardRotation;
 
 	[Header("Ownership")]
 	public GestureActionType actionType;

@@ -19,4 +19,6 @@ public class LootPanelToolCupboard : LootPanel
 	public Tooltip costToolTip;
 
 	public Phrase blocksPhrase;
+
+	public GameObject toolsRow;
 }

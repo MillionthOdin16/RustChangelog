@@ -75,6 +75,10 @@ public class TriggerHurtEx : TriggerBase, IServerComponent, IHurtTrigger
 		{
 			return null;
 		}
+		if (baseEntity.IsNpc && baseEntity is NPCPlayer)
+		{
+			return null;
+		}
 		return ((Component)baseEntity).gameObject;
 	}
 

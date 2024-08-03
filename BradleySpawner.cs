@@ -68,7 +68,8 @@ public class BradleySpawner : MonoBehaviour, IServerComponent
 		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
 		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)spawned != (Object)null)
 		{
 			Debug.LogWarning((object)"Bradley attempting to spawn but one already exists!");
@@ -78,6 +79,7 @@ public class BradleySpawner : MonoBehaviour, IServerComponent
 			Vector3 position = ((Component)path.interestZones[Random.Range(0, path.interestZones.Count)]).transform.position;
 			BaseEntity baseEntity = GameManager.server.CreateEntity(bradleyPrefab.resourcePath, position);
 			BradleyAPC component = ((Component)baseEntity).GetComponent<BradleyAPC>();
+			component.RoadSpawned = false;
 			if (Object.op_Implicit((Object)(object)component))
 			{
 				baseEntity.Spawn();
@@ -87,7 +89,8 @@ public class BradleySpawner : MonoBehaviour, IServerComponent
 			{
 				baseEntity.Kill();
 			}
-			Debug.Log((object)("BradleyAPC Spawned at :" + position));
+			Vector3 val = position;
+			Debug.Log((object)("BradleyAPC Spawned at :" + ((object)(Vector3)(ref val)).ToString()));
 			spawned = component;
 		}
 	}

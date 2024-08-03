@@ -46,7 +46,11 @@ public class AttackEntity : HeldEntity
 
 	public bool wantsRecoilComp;
 
-	private float nextAttackTime = float.NegativeInfinity;
+	public bool showCrosshairOnTutorial;
+
+	public bool noHeadshots;
+
+	private EncryptedValue<float> nextAttackTime = float.NegativeInfinity;
 
 	protected bool UsingInfiniteAmmoCheat
 	{
@@ -88,6 +92,11 @@ public class AttackEntity : HeldEntity
 	{
 	}
 
+	public virtual bool ServerTryReload(IAmmoContainer ammoSource)
+	{
+		return true;
+	}
+
 	public virtual void TopUpAmmo()
 	{
 	}
@@ -119,17 +128,17 @@ public class AttackEntity : HeldEntity
 
 	public bool HasAttackCooldown()
 	{
-		return Time.time < nextAttackTime;
+		return Time.time < (float)nextAttackTime;
 	}
 
 	protected float GetAttackCooldown()
 	{
-		return Mathf.Max(nextAttackTime - Time.time, 0f);
+		return Mathf.Max((float)nextAttackTime - Time.time, 0f);
 	}
 
 	protected float GetAttackIdle()
 	{
-		return Mathf.Max(Time.time - nextAttackTime, 0f);
+		return Mathf.Max(Time.time - (float)nextAttackTime, 0f);
 	}
 
 	protected float CalculateCooldownTime(float nextTime, float cooldown, bool catchup)
@@ -223,45 +232,53 @@ public class AttackEntity : HeldEntity
 		return true;
 	}
 
-	protected bool ValidateEyePos(BasePlayer player, Vector3 eyePos)
+	protected bool ValidateEyePos(BasePlayer player, Vector3 eyePos, bool checkLineOfSight = true)
 	{
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_016d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0178: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01af: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0149: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0168: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0172: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0233: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0238: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0240: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0245: Unknown result type (might be due to invalid IL or missing references)
-		//IL_024d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0252: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0254: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0255: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0257: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0259: Unknown result type (might be due to invalid IL or missing references)
-		//IL_026a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_026c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0312: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0317: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0319: Unknown result type (might be due to invalid IL or missing references)
-		//IL_031a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_031c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_031e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0247: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0248: Unknown result type (might be due to invalid IL or missing references)
+		//IL_024a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_024c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04cb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_025d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_025f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0327: Unknown result type (might be due to invalid IL or missing references)
+		//IL_032c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_032e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_032f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0331: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0333: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0335: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02a7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0348: Unknown result type (might be due to invalid IL or missing references)
+		//IL_034a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_029d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_029f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_02b9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02cb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03d5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03d7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0387: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0399: Unknown result type (might be due to invalid IL or missing references)
-		//IL_048c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0420: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0432: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02bb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02d5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02d7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03ff: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0401: Unknown result type (might be due to invalid IL or missing references)
+		//IL_039c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_039e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03b8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03ba: Unknown result type (might be due to invalid IL or missing references)
+		//IL_044a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_044c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0466: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0468: Unknown result type (might be due to invalid IL or missing references)
 		bool flag = true;
 		if (Vector3Ex.IsNaNOrInfinity(eyePos))
 		{
@@ -272,78 +289,102 @@ public class AttackEntity : HeldEntity
 		}
 		if (ConVar.AntiHack.eye_protection > 0)
 		{
-			float num = 1f + ConVar.AntiHack.eye_forgiveness;
-			float eye_clientframes = ConVar.AntiHack.eye_clientframes;
-			float eye_serverframes = ConVar.AntiHack.eye_serverframes;
-			float num2 = eye_clientframes / 60f;
-			float num3 = eye_serverframes * Mathx.Max(Time.deltaTime, Time.smoothDeltaTime, Time.fixedDeltaTime);
-			float num4 = (player.desyncTimeClamped + num2 + num3) * num;
-			int num5 = 2162688;
-			if (ConVar.AntiHack.eye_terraincheck)
-			{
-				num5 |= 0x800000;
-			}
+			Vector3 val;
 			if (ConVar.AntiHack.eye_protection >= 1)
 			{
-				float num6 = player.MaxVelocity();
-				Vector3 parentVelocity = player.GetParentVelocity();
-				float num7 = num6 + ((Vector3)(ref parentVelocity)).magnitude;
-				float num8 = player.BoundsPadding() + num4 * num7;
-				float num9 = Vector3.Distance(player.eyes.position, eyePos);
-				if (num9 > num8)
+				val = player.GetParentVelocity();
+				float magnitude = ((Vector3)(ref val)).magnitude;
+				val = player.GetMountVelocity();
+				float num = magnitude + ((Vector3)(ref val)).magnitude;
+				float num2 = ((((player.HasParent() || player.isMounted) ? ConVar.AntiHack.eye_distance_parented_mounted_forgiveness : 0f) + player.estimatedSpeed > 0f) ? ConVar.AntiHack.eye_forgiveness : 0f);
+				float num3 = num + num2;
+				float num4 = player.tickHistory.Distance(player, eyePos);
+				if (num4 > num3)
 				{
 					string shortPrefabName2 = base.ShortPrefabName;
-					AntiHack.Log(player, AntiHackType.EyeHack, "Distance (" + shortPrefabName2 + " on attack with " + num9 + "m > " + num8 + "m)");
+					AntiHack.Log(player, AntiHackType.EyeHack, "Distance (" + shortPrefabName2 + " on attack with " + num4 + "m > " + num3 + "m)");
 					player.stats.combat.LogInvalid(player, this, "eye_distance");
 					flag = false;
 				}
 			}
 			if (ConVar.AntiHack.eye_protection >= 3)
 			{
-				float num10 = Mathf.Abs(player.GetMountVelocity().y + player.GetParentVelocity().y);
-				float num11 = player.BoundsPadding() + num4 * num10 + player.GetJumpHeight();
-				float num12 = Mathf.Abs(player.eyes.position.y - eyePos.y);
-				if (num12 > num11)
+				float num5 = Mathf.Abs(player.GetMountVelocity().y + player.GetParentVelocity().y) + player.GetJumpHeight();
+				float num6 = Mathf.Abs(player.eyes.position.y - eyePos.y);
+				if (num6 > num5)
 				{
 					string shortPrefabName3 = base.ShortPrefabName;
-					AntiHack.Log(player, AntiHackType.EyeHack, "Altitude (" + shortPrefabName3 + " on attack with " + num12 + "m > " + num11 + "m)");
+					AntiHack.Log(player, AntiHackType.EyeHack, "Altitude (" + shortPrefabName3 + " on attack with " + num6 + "m > " + num5 + "m)");
 					player.stats.combat.LogInvalid(player, this, "eye_altitude");
 					flag = false;
 				}
 			}
-			if (ConVar.AntiHack.eye_protection >= 2)
+			if (checkLineOfSight)
 			{
-				Vector3 center = player.eyes.center;
-				Vector3 position = player.eyes.position;
-				if (!GamePhysics.LineOfSightRadius(center, position, num5, ConVar.AntiHack.eye_losradius) || !GamePhysics.LineOfSightRadius(position, eyePos, num5, ConVar.AntiHack.eye_losradius))
+				int num7 = 2162688;
+				if (ConVar.AntiHack.eye_terraincheck)
 				{
-					string shortPrefabName4 = base.ShortPrefabName;
-					AntiHack.Log(player, AntiHackType.EyeHack, string.Concat("Line of sight (", shortPrefabName4, " on attack) ", center, " ", position, " ", eyePos));
-					player.stats.combat.LogInvalid(player, this, "eye_los");
-					flag = false;
+					num7 |= 0x800000;
 				}
-			}
-			if (ConVar.AntiHack.eye_protection >= 4 && !player.HasParent())
-			{
-				Vector3 position2 = player.eyes.position;
-				float num13 = Vector3.Distance(position2, eyePos);
-				Collider collider;
-				if (num13 > ConVar.AntiHack.eye_noclip_cutoff)
+				if (ConVar.AntiHack.eye_vehiclecheck)
 				{
-					if (AntiHack.TestNoClipping(position2, eyePos, player.NoClipRadius(ConVar.AntiHack.eye_noclip_margin), ConVar.AntiHack.eye_noclip_backtracking, ConVar.AntiHack.noclip_protection >= 2, out collider))
+					num7 |= 0x8000000;
+				}
+				if (ConVar.AntiHack.eye_protection >= 2)
+				{
+					Vector3 center = player.eyes.center;
+					Vector3 position = player.eyes.position;
+					if (!GamePhysics.LineOfSightRadius(center, position, num7, ConVar.AntiHack.eye_losradius) || !GamePhysics.LineOfSightRadius(position, eyePos, num7, ConVar.AntiHack.eye_losradius))
 					{
-						string shortPrefabName5 = base.ShortPrefabName;
-						AntiHack.Log(player, AntiHackType.EyeHack, string.Concat("NoClip (", shortPrefabName5, " on attack) ", position2, " ", eyePos));
-						player.stats.combat.LogInvalid(player, this, "eye_noclip");
+						string shortPrefabName4 = base.ShortPrefabName;
+						string[] obj = new string[8] { "Line of sight (", shortPrefabName4, " on attack) ", null, null, null, null, null };
+						val = center;
+						obj[3] = ((object)(Vector3)(ref val)).ToString();
+						obj[4] = " ";
+						val = position;
+						obj[5] = ((object)(Vector3)(ref val)).ToString();
+						obj[6] = " ";
+						val = eyePos;
+						obj[7] = ((object)(Vector3)(ref val)).ToString();
+						AntiHack.Log(player, AntiHackType.EyeHack, string.Concat(obj));
+						player.stats.combat.LogInvalid(player, this, "eye_los");
 						flag = false;
 					}
 				}
-				else if (num13 > 0.01f && AntiHack.TestNoClipping(position2, eyePos, 0.01f, ConVar.AntiHack.eye_noclip_backtracking, ConVar.AntiHack.noclip_protection >= 2, out collider))
+				if (ConVar.AntiHack.eye_protection >= 4 && !player.HasParent())
 				{
-					string shortPrefabName6 = base.ShortPrefabName;
-					AntiHack.Log(player, AntiHackType.EyeHack, string.Concat("NoClip (", shortPrefabName6, " on attack) ", position2, " ", eyePos));
-					player.stats.combat.LogInvalid(player, this, "eye_noclip");
-					flag = false;
+					Vector3 position2 = player.eyes.position;
+					float num8 = Vector3.Distance(position2, eyePos);
+					Collider collider;
+					if (num8 > ConVar.AntiHack.eye_noclip_cutoff)
+					{
+						if (AntiHack.TestNoClipping(position2, eyePos, player.NoClipRadius(ConVar.AntiHack.eye_noclip_margin), ConVar.AntiHack.eye_noclip_backtracking, ConVar.AntiHack.noclip_protection >= 2, out collider))
+						{
+							string shortPrefabName5 = base.ShortPrefabName;
+							string[] obj2 = new string[6] { "NoClip (", shortPrefabName5, " on attack) ", null, null, null };
+							val = position2;
+							obj2[3] = ((object)(Vector3)(ref val)).ToString();
+							obj2[4] = " ";
+							val = eyePos;
+							obj2[5] = ((object)(Vector3)(ref val)).ToString();
+							AntiHack.Log(player, AntiHackType.EyeHack, string.Concat(obj2));
+							player.stats.combat.LogInvalid(player, this, "eye_noclip");
+							flag = false;
+						}
+					}
+					else if (num8 > 0.01f && AntiHack.TestNoClipping(position2, eyePos, 0.01f, ConVar.AntiHack.eye_noclip_backtracking, ConVar.AntiHack.noclip_protection >= 2, out collider))
+					{
+						string shortPrefabName6 = base.ShortPrefabName;
+						string[] obj3 = new string[6] { "NoClip (", shortPrefabName6, " on attack) ", null, null, null };
+						val = position2;
+						obj3[3] = ((object)(Vector3)(ref val)).ToString();
+						obj3[4] = " ";
+						val = eyePos;
+						obj3[5] = ((object)(Vector3)(ref val)).ToString();
+						AntiHack.Log(player, AntiHackType.EyeHack, string.Concat(obj3));
+						player.stats.combat.LogInvalid(player, this, "eye_noclip");
+						flag = false;
+					}
 				}
 			}
 			if (!flag)

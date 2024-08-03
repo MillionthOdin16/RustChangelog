@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ConVar;
 using Facepunch;
 using Rust.UI;
+using Unity.AI.Navigation;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.EventSystems;
@@ -54,10 +56,13 @@ public class PrefabPreProcess : IPrefabProcessor
 		typeof(GraphicRaycaster)
 	};
 
-	public static Type[] serversideOnlyTypes = new Type[2]
+	public static Type[] serversideOnlyTypes = new Type[5]
 	{
 		typeof(IServerComponent),
-		typeof(NavMeshObstacle)
+		typeof(NavMeshLink),
+		typeof(NavMeshSurface),
+		typeof(NavMeshObstacle),
+		typeof(NavMeshModifierVolume)
 	};
 
 	public bool isClientside;
@@ -136,87 +141,109 @@ public class PrefabPreProcess : IPrefabProcessor
 		return false;
 	}
 
-	public void ProcessObject(string name, GameObject go, bool resetLocalTransform = true)
+	public void ProcessObject(string name, GameObject go, PreProcessPrefabOptions options)
 	{
-		//IL_0147: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0118: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0128: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0136: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0146: Unknown result type (might be due to invalid IL or missing references)
 		//IL_016d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0172: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0181: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0177: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017c: Unknown result type (might be due to invalid IL or missing references)
-		if (!isClientside)
+		//IL_0171: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0174: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0196: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ac: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a6: Unknown result type (might be due to invalid IL or missing references)
+		StringPool.Get(name);
+		bool flag = go.GetComponent<StripEmptyChildren>() != null && Render.IsInstancingEnabled;
+		if (options.StripComponents)
 		{
-			Type[] array = clientsideOnlyTypes;
-			foreach (Type t in array)
+			if (!isClientside)
 			{
-				DestroyComponents(t, go, isClientside, isServerside);
+				Type[] array = clientsideOnlyTypes;
+				foreach (Type t in array)
+				{
+					DestroyComponents(t, go, isClientside, isServerside);
+				}
+				foreach (IClientComponentEx item in FindComponents<IClientComponentEx>(go.transform))
+				{
+					item.PreClientComponentCull((IPrefabProcessor)(object)this);
+				}
 			}
-			foreach (IClientComponentEx item in FindComponents<IClientComponentEx>(go.transform))
+			if (!isServerside)
 			{
-				item.PreClientComponentCull((IPrefabProcessor)(object)this);
+				Type[] array = serversideOnlyTypes;
+				foreach (Type t2 in array)
+				{
+					DestroyComponents(t2, go, isClientside, isServerside);
+				}
+				foreach (IServerComponentEx item2 in FindComponents<IServerComponentEx>(go.transform))
+				{
+					item2.PreServerComponentCull((IPrefabProcessor)(object)this);
+				}
 			}
+			DestroyComponents(typeof(IEditorComponent), go, isClientside, isServerside);
 		}
-		if (!isServerside)
-		{
-			Type[] array = serversideOnlyTypes;
-			foreach (Type t2 in array)
-			{
-				DestroyComponents(t2, go, isClientside, isServerside);
-			}
-			foreach (IServerComponentEx item2 in FindComponents<IServerComponentEx>(go.transform))
-			{
-				item2.PreServerComponentCull((IPrefabProcessor)(object)this);
-			}
-		}
-		DestroyComponents(typeof(IEditorComponent), go, isClientside, isServerside);
-		if (resetLocalTransform)
+		if (options.ResetLocalTransform)
 		{
 			go.transform.localPosition = Vector3.zero;
 			go.transform.localRotation = Quaternion.identity;
 		}
 		List<Transform> list = FindComponents<Transform>(go.transform);
 		list.Reverse();
-		MeshColliderCookingOptions val = (MeshColliderCookingOptions)14;
-		MeshColliderCookingOptions cookingOptions = (MeshColliderCookingOptions)30;
-		MeshColliderCookingOptions val2 = (MeshColliderCookingOptions)(-1);
-		foreach (MeshCollider item3 in FindComponents<MeshCollider>(go.transform))
+		if (options.UpdateMeshCooking)
 		{
-			if (item3.cookingOptions == val || item3.cookingOptions == val2)
+			MeshColliderCookingOptions val = (MeshColliderCookingOptions)14;
+			MeshColliderCookingOptions cookingOptions = (MeshColliderCookingOptions)30;
+			MeshColliderCookingOptions val2 = (MeshColliderCookingOptions)(-1);
+			foreach (MeshCollider item3 in FindComponents<MeshCollider>(go.transform))
 			{
-				item3.cookingOptions = cookingOptions;
+				if (item3.cookingOptions == val || item3.cookingOptions == val2)
+				{
+					item3.cookingOptions = cookingOptions;
+				}
 			}
 		}
-		foreach (IPrefabPreProcess item4 in FindComponents<IPrefabPreProcess>(go.transform))
+		if (options.PreProcess)
 		{
-			item4.PreProcess((IPrefabProcessor)(object)this, go, name, isServerside, isClientside, isBundling);
+			foreach (IPrefabPreProcess item4 in FindComponents<IPrefabPreProcess>(go.transform))
+			{
+				item4.PreProcess((IPrefabProcessor)(object)this, go, name, isServerside, isClientside, isBundling);
+			}
 		}
-		foreach (Transform item5 in list)
+		if (options.StripEmptyChildren)
 		{
-			if (!Object.op_Implicit((Object)(object)item5) || !Object.op_Implicit((Object)(object)((Component)item5).gameObject))
+			foreach (Transform item5 in list)
 			{
-				continue;
-			}
-			if (isServerside && ((Component)item5).gameObject.CompareTag("Server Cull"))
-			{
-				RemoveComponents(((Component)item5).gameObject);
-				NominateForDeletion(((Component)item5).gameObject);
-			}
-			if (isClientside)
-			{
-				bool num = ((Component)item5).gameObject.CompareTag("Client Cull");
-				bool flag = (Object)(object)item5 != (Object)(object)go.transform && (Object)(object)((Component)item5).gameObject.GetComponent<BaseEntity>() != (Object)null;
-				if (num || flag)
+				if (!Object.op_Implicit((Object)(object)item5) || !Object.op_Implicit((Object)(object)((Component)item5).gameObject))
+				{
+					continue;
+				}
+				if (isServerside && ((Component)item5).gameObject.CompareTag("Server Cull"))
 				{
 					RemoveComponents(((Component)item5).gameObject);
 					NominateForDeletion(((Component)item5).gameObject);
 				}
+				if (isClientside)
+				{
+					bool num = ((Component)item5).gameObject.CompareTag("Client Cull");
+					bool flag2 = (Object)(object)item5 != (Object)(object)go.transform && (Object)(object)((Component)item5).gameObject.GetComponent<BaseEntity>() != (Object)null;
+					if (num || flag2)
+					{
+						RemoveComponents(((Component)item5).gameObject);
+						NominateForDeletion(((Component)item5).gameObject);
+					}
+					else if (flag)
+					{
+						NominateForDeletion(((Component)item5).gameObject);
+					}
+				}
 			}
 		}
 		RunCleanupQueue();
+		if (!options.PostProcess)
+		{
+			return;
+		}
 		foreach (IPrefabPostProcess item6 in FindComponents<IPrefabPostProcess>(go.transform))
 		{
 			item6.PostProcess((IPrefabProcessor)(object)this, go, name, isServerside, isClientside, isBundling);
@@ -233,7 +260,7 @@ public class PrefabPreProcess : IPrefabProcessor
 			((Object)go).name = ((Object)val).name;
 			if (NeedsProcessing(go))
 			{
-				ProcessObject(name, go);
+				ProcessObject(name, go, PreProcessPrefabOptions.Default);
 			}
 			AddPrefab(name, go);
 		}

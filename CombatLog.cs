@@ -92,12 +92,12 @@ public class CombatLog
 	{
 		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ea: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00eb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f5: Unknown result type (might be due to invalid IL or missing references)
 		Event val = default(Event);
 		float distance = 0f;
 		if (hitInfo != null)
@@ -215,7 +215,7 @@ public class CombatLog
 					distance = item.health_new;
 					string text7 = distance.ToString("0.0");
 					string text8 = item.info;
-					if (!player.IsDestroyed && player.userID == requestingUser && item.attacker_dead)
+					if (!player.IsDestroyed && (ulong)player.userID == requestingUser && item.attacker_dead)
 					{
 						text8 = "you died first (" + text8 + ")";
 					}

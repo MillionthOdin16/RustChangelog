@@ -17,9 +17,20 @@ public class WeaponRack : StorageContainer
 		Stand
 	}
 
+	public enum SpecialRackType
+	{
+		None,
+		WesternDLC
+	}
+
+	[Header("Text")]
+	public Phrase textLoadAmmos;
+
 	public RackType Type;
 
 	public float GridCellSize = 0.15f;
+
+	public bool SetGridCellSizeFromCollision = true;
 
 	public int Capacity = 30;
 
@@ -44,11 +55,18 @@ public class WeaponRack : StorageContainer
 
 	private WeaponRackSlot[] gridSlots;
 
-	private int[] gridCellContents;
+	private WeaponRackSlot[] gridCellSlotReferences;
+
+	public int ForceItemRotation = -1;
+
+	public bool CreatePegs = true;
+
+	[Header("Custom Rack")]
+	public SpecialRackType CustomRackType;
+
+	public Transform CustomCenter;
 
 	private static HashSet<int> usedSlots = new HashSet<int>();
-
-	private static HashSet<int> updatedSlots = new HashSet<int>();
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -60,7 +78,7 @@ public class WeaponRack : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - LoadWeaponAmmo "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - LoadWeaponAmmo "));
 				}
 				TimeWarning val2 = TimeWarning.New("LoadWeaponAmmo", 0);
 				try
@@ -96,7 +114,7 @@ public class WeaponRack : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ReqMountWeapon "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ReqMountWeapon "));
 				}
 				TimeWarning val2 = TimeWarning.New("ReqMountWeapon", 0);
 				try
@@ -151,7 +169,7 @@ public class WeaponRack : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ReqSwapWeapon "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ReqSwapWeapon "));
 				}
 				TimeWarning val2 = TimeWarning.New("ReqSwapWeapon", 0);
 				try
@@ -206,7 +224,7 @@ public class WeaponRack : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ReqTakeAll "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ReqTakeAll "));
 				}
 				TimeWarning val2 = TimeWarning.New("ReqTakeAll", 0);
 				try
@@ -261,7 +279,7 @@ public class WeaponRack : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ReqTakeWeapon "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ReqTakeWeapon "));
 				}
 				TimeWarning val2 = TimeWarning.New("ReqTakeWeapon", 0);
 				try
@@ -316,7 +334,7 @@ public class WeaponRack : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - ReqUnloadWeapon "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - ReqUnloadWeapon "));
 				}
 				TimeWarning val2 = TimeWarning.New("ReqUnloadWeapon", 0);
 				try
@@ -372,6 +390,304 @@ public class WeaponRack : StorageContainer
 			((IDisposable)val)?.Dispose();
 		}
 		return base.OnRpcMessage(player, rpc, msg);
+	}
+
+	public override void InitShared()
+	{
+		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		base.InitShared();
+		if (SetGridCellSizeFromCollision)
+		{
+			GridCellSize = Collision.size.x / (float)GridCellCountX;
+		}
+		gridSlots = new WeaponRackSlot[Capacity];
+		for (int i = 0; i < gridSlots.Length; i++)
+		{
+			gridSlots[i] = new WeaponRackSlot();
+		}
+		ClearGridCellContentsRefs();
+	}
+
+	private void ClearGridCellContentsRefs()
+	{
+		if (gridCellSlotReferences == null)
+		{
+			gridCellSlotReferences = new WeaponRackSlot[GridCellCountX * GridCellCountY];
+			return;
+		}
+		for (int i = 0; i < gridCellSlotReferences.Length; i++)
+		{
+			gridCellSlotReferences[i] = null;
+		}
+	}
+
+	private void SetupSlot(WeaponRackSlot slot)
+	{
+		if (slot != null && !((Object)(object)slot.ItemDef == (Object)null))
+		{
+			SetGridCellContents(slot, clear: false);
+		}
+	}
+
+	private void ClearSlot(WeaponRackSlot slot)
+	{
+		if (slot != null && slot.Used)
+		{
+			SetGridCellContents(slot, clear: true);
+		}
+	}
+
+	private void SetGridCellContents(WeaponRackSlot slot, bool clear)
+	{
+		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		if (slot == null)
+		{
+			return;
+		}
+		WorldModelRackMountConfig forItemDef = WorldModelRackMountConfig.GetForItemDef(slot.ItemDef);
+		if ((Object)(object)forItemDef == (Object)null)
+		{
+			return;
+		}
+		Vector2Int xYForIndex = GetXYForIndex(slot.GridSlotIndex);
+		Vector2Int weaponSize = GetWeaponSize(forItemDef, slot.Rotation);
+		Vector2Int weaponStart = GetWeaponStart(xYForIndex, weaponSize, clamp: false);
+		if (((Vector2Int)(ref weaponStart)).x < 0 || ((Vector2Int)(ref weaponStart)).y < 0 || ((Vector2Int)(ref weaponStart)).x + ((Vector2Int)(ref weaponSize)).x > GridCellCountX || ((Vector2Int)(ref weaponStart)).y + ((Vector2Int)(ref weaponSize)).y > GridCellCountY)
+		{
+			return;
+		}
+		for (int i = ((Vector2Int)(ref weaponStart)).y; i < ((Vector2Int)(ref weaponStart)).y + ((Vector2Int)(ref weaponSize)).y; i++)
+		{
+			for (int j = ((Vector2Int)(ref weaponStart)).x; j < ((Vector2Int)(ref weaponStart)).x + ((Vector2Int)(ref weaponSize)).x; j++)
+			{
+				gridCellSlotReferences[GetGridCellIndex(j, i)] = (clear ? null : slot);
+			}
+		}
+		slot.SetUsed(!clear);
+	}
+
+	public override void Load(LoadInfo info)
+	{
+		base.Load(info);
+		usedSlots.Clear();
+		ClearGridCellContentsRefs();
+		if (info.msg.weaponRack == null)
+		{
+			return;
+		}
+		foreach (WeaponRackItem item in info.msg.weaponRack.items)
+		{
+			usedSlots.Add(item.inventorySlot);
+			gridSlots[item.inventorySlot].InitFromProto(item);
+		}
+		for (int i = 0; i < Capacity; i++)
+		{
+			if (usedSlots.Contains(i))
+			{
+				SetupSlot(gridSlots[i]);
+			}
+			else
+			{
+				ClearSlot(gridSlots[i]);
+			}
+		}
+	}
+
+	public WeaponRackSlot GetWeaponAtIndex(int gridIndex)
+	{
+		if (gridIndex < 0)
+		{
+			return null;
+		}
+		if (gridIndex >= gridCellSlotReferences.Length)
+		{
+			return null;
+		}
+		return gridCellSlotReferences[gridIndex];
+	}
+
+	public Vector2Int GetXYForIndex(int index)
+	{
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		return new Vector2Int(index % GridCellCountX, index / GridCellCountX);
+	}
+
+	private Vector2Int GetWeaponSize(WorldModelRackMountConfig config, int rotation)
+	{
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		int num = ((Type == RackType.Board) ? config.XSize : config.ZSize);
+		int num2 = ((Type == RackType.Board) ? config.YSize : config.XSize);
+		if (rotation != 0 && Type == RackType.Board)
+		{
+			return new Vector2Int(num2, num);
+		}
+		return new Vector2Int(num, num2);
+	}
+
+	private Vector2Int GetWeaponStart(Vector2Int targetXY, Vector2Int size, bool clamp)
+	{
+		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
+		if (Type == RackType.Board)
+		{
+			((Vector2Int)(ref targetXY)).x = ((Vector2Int)(ref targetXY)).x - ((Vector2Int)(ref size)).x / 2;
+			((Vector2Int)(ref targetXY)).y = ((Vector2Int)(ref targetXY)).y - ((Vector2Int)(ref size)).y / 2;
+		}
+		if (clamp)
+		{
+			((Vector2Int)(ref targetXY)).x = Mathf.Max(((Vector2Int)(ref targetXY)).x, 0);
+			((Vector2Int)(ref targetXY)).y = Mathf.Max(((Vector2Int)(ref targetXY)).y, 0);
+		}
+		return targetXY;
+	}
+
+	public bool CanAcceptWeaponType(WorldModelRackMountConfig weaponConfig)
+	{
+		if ((Object)(object)weaponConfig == (Object)null)
+		{
+			return false;
+		}
+		if (weaponConfig.ExcludedRackTypes.Contains(Type))
+		{
+			return false;
+		}
+		if (CustomRackType != 0 && weaponConfig.FindCustomRackPosition(CustomRackType) == null)
+		{
+			return false;
+		}
+		return true;
+	}
+
+	public int GetBestPlacementCellIndex(Vector2Int targetXY, WorldModelRackMountConfig config, int rotation, WeaponRackSlot ignoreSlot)
+	{
+		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
+		if (Type == RackType.Stand)
+		{
+			((Vector2Int)(ref targetXY)).y = 0;
+		}
+		int gridCellIndex = GetGridCellIndex(((Vector2Int)(ref targetXY)).x, ((Vector2Int)(ref targetXY)).y);
+		if (GridCellsFree(config, gridCellIndex, rotation, ignoreSlot))
+		{
+			return gridCellIndex;
+		}
+		float num = float.MaxValue;
+		int result = -1;
+		Vector2Int weaponSize = GetWeaponSize(config, rotation);
+		Vector2Int weaponStart = GetWeaponStart(targetXY, weaponSize, clamp: true);
+		Vector2Int val = default(Vector2Int);
+		for (int i = ((Vector2Int)(ref weaponStart)).y; i < ((Vector2Int)(ref weaponStart)).y + ((Vector2Int)(ref weaponSize)).y + 1; i++)
+		{
+			if (Type == RackType.Stand && i != 0)
+			{
+				continue;
+			}
+			for (int j = ((Vector2Int)(ref weaponStart)).x; j < ((Vector2Int)(ref weaponStart)).x + ((Vector2Int)(ref weaponSize)).x + 1; j++)
+			{
+				gridCellIndex = GetGridCellIndex(j, i);
+				if (GridCellsFree(config, gridCellIndex, rotation, ignoreSlot))
+				{
+					((Vector2Int)(ref val)).x = j;
+					((Vector2Int)(ref val)).y = i;
+					float num2 = Vector2Int.Distance(targetXY, val);
+					if (!(num2 >= num))
+					{
+						result = gridCellIndex;
+						num = num2;
+					}
+				}
+			}
+		}
+		return result;
+	}
+
+	public int GetGridIndexAtPosition(Vector3 pos)
+	{
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		float num = Collision.size.x - (pos.x + Collision.size.x / 2f);
+		float num2 = pos.y + Collision.size.y / 2f;
+		int num3 = (int)(num / GridCellSize);
+		return (int)(num2 / GridCellSize) * GridCellCountX + num3;
+	}
+
+	private bool GridCellsFree(WorldModelRackMountConfig config, int gridIndex, int rotation, WeaponRackSlot ignoreGridSlot)
+	{
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		if (gridIndex == -1)
+		{
+			return false;
+		}
+		Vector2Int xYForIndex = GetXYForIndex(gridIndex);
+		Vector2Int weaponSize = GetWeaponSize(config, rotation);
+		Vector2Int weaponStart = GetWeaponStart(xYForIndex, weaponSize, clamp: false);
+		if (((Vector2Int)(ref weaponStart)).x < 0 || ((Vector2Int)(ref weaponStart)).y < 0)
+		{
+			return false;
+		}
+		for (int i = ((Vector2Int)(ref weaponStart)).y; i < ((Vector2Int)(ref weaponStart)).y + ((Vector2Int)(ref weaponSize)).y; i++)
+		{
+			for (int j = ((Vector2Int)(ref weaponStart)).x; j < ((Vector2Int)(ref weaponStart)).x + ((Vector2Int)(ref weaponSize)).x; j++)
+			{
+				int gridCellIndex = GetGridCellIndex(j, i);
+				if (gridCellIndex == -1 || !GridCellFree(gridCellIndex, ignoreGridSlot))
+				{
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
+	private int GetGridCellIndex(int x, int y)
+	{
+		if (x < 0 || x >= GridCellCountX || y < 0 || y >= GridCellCountY)
+		{
+			return -1;
+		}
+		return y * GridCellCountX + x;
+	}
+
+	private bool GridCellFree(int index, WeaponRackSlot ignoreSlot)
+	{
+		if (gridCellSlotReferences[index] != null)
+		{
+			if (ignoreSlot != null)
+			{
+				return gridCellSlotReferences[index] == ignoreSlot;
+			}
+			return false;
+		}
+		return true;
+	}
+
+	private static bool ItemIsRackMountable(Item item)
+	{
+		return (Object)(object)WorldModelRackMountConfig.GetForItemDef(item.info) != (Object)null;
 	}
 
 	public override void ServerInit()
@@ -449,16 +765,30 @@ public class WeaponRack : StorageContainer
 
 	private void SwapPlayerWeapon(BasePlayer player, int gridCellIndex, int takeFromBeltIndex, int rotation)
 	{
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-		Item item = player.GetHeldEntity().GetItem();
-		WorldModelRackMountConfig forItemDef = WorldModelRackMountConfig.GetForItemDef(item.info);
-		if (!((Object)(object)forItemDef == (Object)null) && GetWeaponAtIndex(gridCellIndex) != null)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		Item item = player.GetHeldEntity()?.GetItem();
+		if (item == null)
 		{
-			int bestPlacementCellIndex = GetBestPlacementCellIndex(GetXYForIndex(gridCellIndex), forItemDef, rotation, gridCellIndex);
+			return;
+		}
+		WorldModelRackMountConfig forItemDef = WorldModelRackMountConfig.GetForItemDef(item.info);
+		if ((Object)(object)forItemDef == (Object)null)
+		{
+			return;
+		}
+		WeaponRackSlot weaponAtIndex = GetWeaponAtIndex(gridCellIndex);
+		if (weaponAtIndex != null)
+		{
+			int mountSlotIndex = gridCellIndex;
+			if (CustomRackType != 0)
+			{
+				gridCellIndex = 0;
+			}
+			int bestPlacementCellIndex = GetBestPlacementCellIndex(GetXYForIndex(gridCellIndex), forItemDef, rotation, weaponAtIndex);
 			if (bestPlacementCellIndex != -1)
 			{
 				item.RemoveFromContainer();
-				GivePlayerWeapon(player, gridCellIndex, takeFromBeltIndex, tryHold: false);
+				GivePlayerWeapon(player, mountSlotIndex, takeFromBeltIndex, tryHold: false);
 				MountWeapon(item, player, bestPlacementCellIndex, rotation, sendUpdate: false);
 				ItemManager.DoRemoves();
 				SendNetworkUpdateImmediate();
@@ -480,11 +810,15 @@ public class WeaponRack : StorageContainer
 
 	private void GivePlayerWeapon(BasePlayer player, int mountSlotIndex, int playerBeltIndex = -1, bool tryHold = true, bool sendUpdate = true)
 	{
-		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00bb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
+		if ((Object)(object)player == (Object)null)
+		{
+			return;
+		}
 		WeaponRackSlot weaponAtIndex = GetWeaponAtIndex(mountSlotIndex);
 		if (weaponAtIndex == null)
 		{
@@ -500,9 +834,9 @@ public class WeaponRack : StorageContainer
 		{
 			if ((tryHold && (Object)(object)player.GetHeldEntity() == (Object)null) || playerBeltIndex != -1)
 			{
-				ClientRPCPlayer<int, ItemId>(null, player, "SetActiveBeltSlot", slot.position, slot.uid);
+				ClientRPC<int, ItemId>(RpcTarget.Player("SetActiveBeltSlot", player), slot.position, slot.uid);
 			}
-			ClientRPCPlayer(null, player, "PlayGrabSound", slot.info.itemid);
+			ClientRPC(RpcTarget.Player("PlayGrabSound", player), slot.info.itemid);
 		}
 		else if (!slot.MoveToContainer(player.inventory.containerMain))
 		{
@@ -529,6 +863,10 @@ public class WeaponRack : StorageContainer
 
 	private void GivePlayerAllWeapons(BasePlayer player, int mountSlotIndex)
 	{
+		if ((Object)(object)player == (Object)null)
+		{
+			return;
+		}
 		WeaponRackSlot weaponAtIndex = GetWeaponAtIndex(mountSlotIndex);
 		if (weaponAtIndex != null)
 		{
@@ -560,8 +898,12 @@ public class WeaponRack : StorageContainer
 
 	private void UnloadWeapon(BasePlayer player, int mountSlotIndex)
 	{
+		if ((Object)(object)player == (Object)null)
+		{
+			return;
+		}
 		WeaponRackSlot weaponAtIndex = GetWeaponAtIndex(mountSlotIndex);
-		if (weaponAtIndex == null)
+		if (weaponAtIndex == null || !weaponAtIndex.CanBeReloadedAtWeaponRack())
 		{
 			return;
 		}
@@ -580,7 +922,7 @@ public class WeaponRack : StorageContainer
 				component.UnloadAmmo(slot, player);
 				SetSlotAmmoDetails(weaponAtIndex, slot);
 				SendNetworkUpdateImmediate();
-				ClientRPCPlayer(null, player, "PlayAmmoSound", ammoType.itemid, 1);
+				ClientRPC(RpcTarget.Player("PlayAmmoSound", player), ammoType.itemid, 1);
 			}
 		}
 	}
@@ -603,6 +945,10 @@ public class WeaponRack : StorageContainer
 
 	private void MountWeapon(BasePlayer player, int gridCellIndex, int rotation)
 	{
+		if ((Object)(object)player == (Object)null)
+		{
+			return;
+		}
 		HeldEntity heldEntity = player.GetHeldEntity();
 		if (!((Object)(object)heldEntity == (Object)null))
 		{
@@ -621,11 +967,19 @@ public class WeaponRack : StorageContainer
 
 	private void SetSlotAmmoDetails(WeaponRackSlot slot, Item item)
 	{
-		slot.SetAmmoDetails(item);
+		slot?.SetAmmoDetails(item);
 	}
 
 	private bool MountWeapon(Item item, BasePlayer player, int gridCellIndex, int rotation, bool sendUpdate = true)
 	{
+		if (item == null)
+		{
+			return false;
+		}
+		if ((Object)(object)player == (Object)null)
+		{
+			return false;
+		}
 		int itemid = item.info.itemid;
 		WorldModelRackMountConfig forItemDef = WorldModelRackMountConfig.GetForItemDef(item.info);
 		if ((Object)(object)forItemDef == (Object)null)
@@ -637,18 +991,18 @@ public class WeaponRack : StorageContainer
 		{
 			return false;
 		}
-		if (!GridCellsFree(forItemDef, gridCellIndex, rotation, -1))
+		if (!GridCellsFree(forItemDef, gridCellIndex, rotation, null))
 		{
 			return false;
 		}
-		if (item.MoveToContainer(base.inventory))
+		if (item.MoveToContainer(base.inventory, -1, allowStack: false) && item.position >= 0 && item.position < gridSlots.Length)
 		{
 			WeaponRackSlot slot = gridSlots[item.position];
 			SetSlotItem(slot, item, gridCellIndex, rotation);
 			SetupSlot(slot);
 			if ((Object)(object)player != (Object)null)
 			{
-				ClientRPCPlayer(null, player, "PlayMountSound", itemid);
+				ClientRPC(RpcTarget.Player("PlayMountSound", player), itemid);
 			}
 		}
 		if (sendUpdate)
@@ -661,13 +1015,13 @@ public class WeaponRack : StorageContainer
 
 	private void PlayMountSound(int itemID)
 	{
-		ClientRPC(null, "PlayMountSound", itemID);
+		ClientRPC(RpcTarget.NetworkGroup("PlayMountSound"), itemID);
 	}
 
 	[RPC_Server]
 	private void LoadWeaponAmmo(RPCMessage msg)
 	{
-		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e6: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer player = msg.player;
 		if (!Object.op_Implicit((Object)(object)player))
 		{
@@ -676,7 +1030,7 @@ public class WeaponRack : StorageContainer
 		int gridIndex = msg.read.Int32();
 		int num = msg.read.Int32();
 		WeaponRackSlot weaponAtIndex = GetWeaponAtIndex(gridIndex);
-		if (weaponAtIndex == null)
+		if (weaponAtIndex == null || !weaponAtIndex.CanBeReloadedAtWeaponRack())
 		{
 			return;
 		}
@@ -700,325 +1054,32 @@ public class WeaponRack : StorageContainer
 		{
 			return;
 		}
+		if ((Object)(object)itemDefinition == (Object)(object)SnowballGun.SnowballInventoryItem)
+		{
+			itemDefinition = SnowballGun.SnowballAmmoItem;
+			if (!((Object)(object)itemDefinition != (Object)null))
+			{
+				return;
+			}
+			num = itemDefinition.itemid;
+		}
+		if ((Object)(object)itemDefinition == (Object)null)
+		{
+			return;
+		}
 		ItemModProjectile component2 = ((Component)itemDefinition).GetComponent<ItemModProjectile>();
 		if (!((Object)(object)component2 == (Object)null) && component2.IsAmmo(component.primaryMagazine.definition.ammoTypes))
 		{
 			if (num != component.primaryMagazine.ammoType.itemid && component.primaryMagazine.contents > 0)
 			{
 				player.GiveItem(ItemManager.CreateByItemID(component.primaryMagazine.ammoType.itemid, component.primaryMagazine.contents, 0uL));
-				component.primaryMagazine.contents = 0;
+				component.SetAmmoCount(0);
 			}
 			component.primaryMagazine.ammoType = itemDefinition;
-			component.primaryMagazine.Reload(player);
+			component.TryReloadMagazine(player.inventory);
 			SetSlotAmmoDetails(weaponAtIndex, slot);
 			SendNetworkUpdateImmediate();
-			ItemManager.DoRemoves();
-			player.inventory.ServerUpdate(0f);
-			ClientRPCPlayer(null, player, "PlayAmmoSound", itemDefinition.itemid, 0);
+			ClientRPC(RpcTarget.Player("PlayAmmoSound", player), itemDefinition.itemid, 0);
 		}
-	}
-
-	public override void InitShared()
-	{
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		base.InitShared();
-		GridCellSize = Collision.size.x / (float)GridCellCountX;
-		gridSlots = new WeaponRackSlot[Capacity];
-		for (int i = 0; i < gridSlots.Length; i++)
-		{
-			gridSlots[i] = new WeaponRackSlot();
-		}
-		ClearGridCellContents();
-	}
-
-	private void ClearGridCellContents()
-	{
-		gridCellContents = new int[GridCellCountX * GridCellCountY];
-		for (int i = 0; i < gridCellContents.Length; i++)
-		{
-			gridCellContents[i] = -1;
-		}
-	}
-
-	private void SetupSlot(WeaponRackSlot slot)
-	{
-		if (slot != null && !((Object)(object)slot.ItemDef == (Object)null))
-		{
-			SetGridCellContents(slot, slot.GridSlotIndex);
-		}
-	}
-
-	private void ClearSlot(WeaponRackSlot slot)
-	{
-		if (slot != null && slot.Used)
-		{
-			SetGridCellContents(slot, -1);
-		}
-	}
-
-	private void SetGridCellContents(WeaponRackSlot slot, int value)
-	{
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-		if (slot == null)
-		{
-			return;
-		}
-		slot.Used = value != -1;
-		WorldModelRackMountConfig forItemDef = WorldModelRackMountConfig.GetForItemDef(slot.ItemDef);
-		if ((Object)(object)forItemDef == (Object)null)
-		{
-			return;
-		}
-		Vector2Int xYForIndex = GetXYForIndex(slot.GridSlotIndex);
-		Vector2Int weaponSize = GetWeaponSize(forItemDef, slot.Rotation);
-		Vector2Int weaponStart = GetWeaponStart(xYForIndex, weaponSize, clamp: false);
-		if (((Vector2Int)(ref weaponStart)).x < 0 || ((Vector2Int)(ref weaponStart)).y < 0)
-		{
-			return;
-		}
-		for (int i = ((Vector2Int)(ref weaponStart)).y; i < ((Vector2Int)(ref weaponStart)).y + ((Vector2Int)(ref weaponSize)).y; i++)
-		{
-			for (int j = ((Vector2Int)(ref weaponStart)).x; j < ((Vector2Int)(ref weaponStart)).x + ((Vector2Int)(ref weaponSize)).x; j++)
-			{
-				gridCellContents[GetGridCellIndex(j, i)] = value;
-			}
-		}
-	}
-
-	public override void Load(LoadInfo info)
-	{
-		base.Load(info);
-		usedSlots.Clear();
-		updatedSlots.Clear();
-		ClearGridCellContents();
-		if (info.msg.weaponRack == null)
-		{
-			return;
-		}
-		foreach (WeaponRackItem item in info.msg.weaponRack.items)
-		{
-			usedSlots.Add(item.inventorySlot);
-			WeaponRackSlot weaponRackSlot = gridSlots[item.inventorySlot];
-			if (!weaponRackSlot.Used || item.itemID != weaponRackSlot.ClientItemID || item.skinid != weaponRackSlot.ClientItemSkinID)
-			{
-				updatedSlots.Add(item.inventorySlot);
-			}
-			weaponRackSlot.InitFromProto(item);
-		}
-		for (int i = 0; i < Capacity; i++)
-		{
-			if (usedSlots.Contains(i))
-			{
-				SetupSlot(gridSlots[i]);
-				continue;
-			}
-			if (gridSlots[i].Used)
-			{
-				updatedSlots.Add(i);
-			}
-			ClearSlot(gridSlots[i]);
-		}
-	}
-
-	public WeaponRackSlot GetWeaponAtIndex(int gridIndex)
-	{
-		if (gridIndex < 0)
-		{
-			return null;
-		}
-		if (gridIndex >= gridCellContents.Length)
-		{
-			return null;
-		}
-		int num = gridCellContents[gridIndex];
-		if (num == -1)
-		{
-			return null;
-		}
-		WeaponRackSlot[] array = gridSlots;
-		foreach (WeaponRackSlot weaponRackSlot in array)
-		{
-			if (weaponRackSlot.Used && weaponRackSlot.GridSlotIndex == num)
-			{
-				return weaponRackSlot;
-			}
-		}
-		return null;
-	}
-
-	public Vector2Int GetXYForIndex(int index)
-	{
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
-		return new Vector2Int(index % GridCellCountX, index / GridCellCountX);
-	}
-
-	private Vector2Int GetWeaponSize(WorldModelRackMountConfig config, int rotation)
-	{
-		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
-		int num = ((Type == RackType.Board) ? config.XSize : config.ZSize);
-		int num2 = ((Type == RackType.Board) ? config.YSize : config.XSize);
-		if (rotation != 0 && Type == RackType.Board)
-		{
-			return new Vector2Int(num2, num);
-		}
-		return new Vector2Int(num, num2);
-	}
-
-	private Vector2Int GetWeaponStart(Vector2Int targetXY, Vector2Int size, bool clamp)
-	{
-		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
-		if (Type == RackType.Board)
-		{
-			((Vector2Int)(ref targetXY)).x = ((Vector2Int)(ref targetXY)).x - ((Vector2Int)(ref size)).x / 2;
-			((Vector2Int)(ref targetXY)).y = ((Vector2Int)(ref targetXY)).y - ((Vector2Int)(ref size)).y / 2;
-		}
-		if (clamp)
-		{
-			((Vector2Int)(ref targetXY)).x = Mathf.Max(((Vector2Int)(ref targetXY)).x, 0);
-			((Vector2Int)(ref targetXY)).y = Mathf.Max(((Vector2Int)(ref targetXY)).y, 0);
-		}
-		return targetXY;
-	}
-
-	public bool CanAcceptWeaponType(WorldModelRackMountConfig weaponConfig)
-	{
-		if ((Object)(object)weaponConfig == (Object)null)
-		{
-			return false;
-		}
-		if (weaponConfig.ExcludedRackTypes.Contains(Type))
-		{
-			return false;
-		}
-		return true;
-	}
-
-	public int GetBestPlacementCellIndex(Vector2Int targetXY, WorldModelRackMountConfig config, int rotation, int ignoreGridSlotWeapon)
-	{
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
-		if (Type == RackType.Stand)
-		{
-			((Vector2Int)(ref targetXY)).y = 0;
-		}
-		int gridCellIndex = GetGridCellIndex(((Vector2Int)(ref targetXY)).x, ((Vector2Int)(ref targetXY)).y);
-		if (GridCellsFree(config, gridCellIndex, rotation, ignoreGridSlotWeapon))
-		{
-			return gridCellIndex;
-		}
-		float num = float.MaxValue;
-		int result = -1;
-		Vector2Int weaponSize = GetWeaponSize(config, rotation);
-		Vector2Int weaponStart = GetWeaponStart(targetXY, weaponSize, clamp: true);
-		for (int i = ((Vector2Int)(ref weaponStart)).y; i < ((Vector2Int)(ref weaponStart)).y + ((Vector2Int)(ref weaponSize)).y + 1; i++)
-		{
-			if (Type == RackType.Stand && i != 0)
-			{
-				continue;
-			}
-			for (int j = ((Vector2Int)(ref weaponStart)).x; j < ((Vector2Int)(ref weaponStart)).x + ((Vector2Int)(ref weaponSize)).x + 1; j++)
-			{
-				gridCellIndex = GetGridCellIndex(j, i);
-				if (GridCellsFree(config, gridCellIndex, rotation, ignoreGridSlotWeapon))
-				{
-					float num2 = Vector2Int.Distance(targetXY, new Vector2Int(j, i));
-					if (!(num2 >= num))
-					{
-						result = gridCellIndex;
-						num = num2;
-					}
-				}
-			}
-		}
-		return result;
-	}
-
-	public int GetGridIndexAtPosition(Vector3 pos)
-	{
-		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
-		float num = Collision.size.x - (pos.x + Collision.size.x / 2f);
-		float num2 = pos.y + Collision.size.y / 2f;
-		int num3 = (int)(num / GridCellSize);
-		return (int)(num2 / GridCellSize) * GridCellCountX + num3;
-	}
-
-	private bool GridCellsFree(WorldModelRackMountConfig config, int gridIndex, int rotation, int ignoreGridSlotWeapon)
-	{
-		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-		if (gridIndex == -1)
-		{
-			return false;
-		}
-		Vector2Int xYForIndex = GetXYForIndex(gridIndex);
-		Vector2Int weaponSize = GetWeaponSize(config, rotation);
-		Vector2Int weaponStart = GetWeaponStart(xYForIndex, weaponSize, clamp: false);
-		if (((Vector2Int)(ref weaponStart)).x < 0 || ((Vector2Int)(ref weaponStart)).y < 0)
-		{
-			return false;
-		}
-		for (int i = ((Vector2Int)(ref weaponStart)).y; i < ((Vector2Int)(ref weaponStart)).y + ((Vector2Int)(ref weaponSize)).y; i++)
-		{
-			for (int j = ((Vector2Int)(ref weaponStart)).x; j < ((Vector2Int)(ref weaponStart)).x + ((Vector2Int)(ref weaponSize)).x; j++)
-			{
-				int gridCellIndex = GetGridCellIndex(j, i);
-				if (gridCellIndex == -1 || !GridCellFree(gridCellIndex, ignoreGridSlotWeapon))
-				{
-					return false;
-				}
-			}
-		}
-		return true;
-	}
-
-	private int GetGridCellIndex(int x, int y)
-	{
-		if (x < 0 || x >= GridCellCountX || y < 0 || y >= GridCellCountY)
-		{
-			return -1;
-		}
-		return y * GridCellCountX + x;
-	}
-
-	private bool GridCellFree(int index, int ignoreGridSlotWeapon)
-	{
-		if (gridCellContents[index] != -1)
-		{
-			if (ignoreGridSlotWeapon != -1)
-			{
-				return gridCellContents[index] == ignoreGridSlotWeapon;
-			}
-			return false;
-		}
-		return true;
-	}
-
-	private static bool ItemIsRackMountable(Item item)
-	{
-		return (Object)(object)WorldModelRackMountConfig.GetForItemDef(item.info) != (Object)null;
 	}
 }

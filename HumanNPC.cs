@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using ProtoBuf;
 using UnityEngine;
 
@@ -161,8 +162,8 @@ public class HumanNPC : NPCPlayer, IAISenses, IAIAttack, IThinker
 		{
 			return;
 		}
-		Vector3 val = eyes.BodyForward();
-		Vector3 val2 = target.CenterPoint() - eyes.position;
+		Vector3 val = base.eyes.BodyForward();
+		Vector3 val2 = target.CenterPoint() - base.eyes.position;
 		float num = Vector3.Dot(val, ((Vector3)(ref val2)).normalized);
 		if (targetIsLOS)
 		{
@@ -343,17 +344,17 @@ public class HumanNPC : NPCPlayer, IAISenses, IAIAttack, IThinker
 				Vector3 val6 = ((Component)baseEntity).transform.InverseTransformDirection(newAim);
 				Vector3 val7 = default(Vector3);
 				((Vector3)(ref val7))._002Ector(newAim.x, val6.y, newAim.z);
-				eyes.rotation = Quaternion.Lerp(eyes.rotation, Quaternion.LookRotation(val7, ((Component)baseEntity).transform.up), num * 25f);
-				val = eyes.bodyRotation;
+				base.eyes.rotation = Quaternion.Lerp(base.eyes.rotation, Quaternion.LookRotation(val7, ((Component)baseEntity).transform.up), num * 25f);
+				val = base.eyes.bodyRotation;
 				viewAngles = ((Quaternion)(ref val)).eulerAngles;
-				ServerRotation = eyes.bodyRotation;
+				ServerRotation = base.eyes.bodyRotation;
 				return;
 			}
 		}
-		eyes.rotation = (base.isMounted ? Quaternion.Slerp(eyes.rotation, Quaternion.Euler(newAim), num * 70f) : Quaternion.Lerp(eyes.rotation, Quaternion.LookRotation(newAim, ((Component)this).transform.up), num * 25f));
-		val = eyes.rotation;
+		base.eyes.rotation = (base.isMounted ? Quaternion.Slerp(base.eyes.rotation, Quaternion.Euler(newAim), num * 70f) : Quaternion.Lerp(base.eyes.rotation, Quaternion.LookRotation(newAim, ((Component)this).transform.up), num * 25f));
+		val = base.eyes.rotation;
 		viewAngles = ((Quaternion)(ref val)).eulerAngles;
-		ServerRotation = eyes.rotation;
+		ServerRotation = base.eyes.rotation;
 	}
 
 	public void SetStationaryAimPoint(Vector3 aimAt)
@@ -375,23 +376,27 @@ public class HumanNPC : NPCPlayer, IAISenses, IAIAttack, IThinker
 		return false;
 	}
 
-	public override BaseCorpse CreateCorpse()
+	public override BaseCorpse CreateCorpse(PlayerFlags flagsOnDeath, Vector3 posOnDeath, Quaternion rotOnDeath, List<TriggerBase> triggersOnDeath)
 	{
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
 		TimeWarning val = TimeWarning.New("Create corpse", 0);
 		try
 		{
-			NPCPlayerCorpse nPCPlayerCorpse = DropCorpse("assets/prefabs/npc/scientist/scientist_corpse.prefab") as NPCPlayerCorpse;
+			NPCPlayerCorpse nPCPlayerCorpse = DropCorpse("assets/prefabs/npc/scientist/scientist_corpse.prefab", flagsOnDeath, modelState) as NPCPlayerCorpse;
 			if (Object.op_Implicit((Object)(object)nPCPlayerCorpse))
 			{
-				((Component)nPCPlayerCorpse).transform.position = ((Component)nPCPlayerCorpse).transform.position + Vector3.down * NavAgent.baseOffset;
+				if ((Object)(object)NavAgent != (Object)null)
+				{
+					Transform transform = ((Component)nPCPlayerCorpse).transform;
+					transform.position += Vector3.down * NavAgent.baseOffset;
+				}
 				nPCPlayerCorpse.SetLootableIn(2f);
 				nPCPlayerCorpse.SetFlag(Flags.Reserved5, HasPlayerFlag(PlayerFlags.DisplaySash));
 				nPCPlayerCorpse.SetFlag(Flags.Reserved2, b: true);
-				nPCPlayerCorpse.TakeFrom(inventory.containerMain, inventory.containerWear, inventory.containerBelt);
+				nPCPlayerCorpse.TakeFrom(this, base.inventory.containerMain, base.inventory.containerWear, base.inventory.containerBelt);
 				nPCPlayerCorpse.playerName = OverrideCorpseName();
 				nPCPlayerCorpse.playerSteamID = userID;
 				nPCPlayerCorpse.Spawn();
@@ -412,7 +417,7 @@ public class HumanNPC : NPCPlayer, IAISenses, IAIAttack, IThinker
 						LootContainer.LootSpawnSlot lootSpawnSlot = lootSpawnSlots[j];
 						for (int k = 0; k < lootSpawnSlot.numberToSpawn; k++)
 						{
-							if (Random.Range(0f, 1f) <= lootSpawnSlot.probability)
+							if ((string.IsNullOrEmpty(lootSpawnSlot.onlyWithLoadoutNamed) || lootSpawnSlot.onlyWithLoadoutNamed == GetLoadoutName()) && Random.Range(0f, 1f) <= lootSpawnSlot.probability)
 							{
 								lootSpawnSlot.definition.SpawnIntoContainer(nPCPlayerCorpse.containers[0]);
 							}
@@ -436,7 +441,7 @@ public class HumanNPC : NPCPlayer, IAISenses, IAIAttack, IThinker
 	public override void AttackerInfo(DeathInfo info)
 	{
 		base.AttackerInfo(info);
-		info.inflictorName = inventory.containerBelt.GetSlot(0).info.shortname;
+		info.inflictorName = base.inventory.containerBelt.GetSlot(0).info.shortname;
 		info.attackerName = base.ShortPrefabName;
 	}
 
@@ -486,6 +491,14 @@ public class HumanNPC : NPCPlayer, IAISenses, IAIAttack, IThinker
 
 	public bool CanSeeTarget(BaseEntity entity)
 	{
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		return CanSeeTarget(entity, Vector3.zero);
+	}
+
+	public bool CanSeeTarget(BaseEntity entity, Vector3 fromOffset)
+	{
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer basePlayer = entity as BasePlayer;
 		if ((Object)(object)basePlayer == (Object)null)
 		{
@@ -493,9 +506,9 @@ public class HumanNPC : NPCPlayer, IAISenses, IAIAttack, IThinker
 		}
 		if (AdditionalLosBlockingLayer == 0)
 		{
-			return IsPlayerVisibleToUs(basePlayer, 1218519041);
+			return IsPlayerVisibleToUs(basePlayer, fromOffset, 1218519041);
 		}
-		return IsPlayerVisibleToUs(basePlayer, 0x48A12001 | (1 << AdditionalLosBlockingLayer));
+		return IsPlayerVisibleToUs(basePlayer, fromOffset, 0x48A12001 | (1 << AdditionalLosBlockingLayer));
 	}
 
 	public bool NeedsToReload()
@@ -550,8 +563,8 @@ public class HumanNPC : NPCPlayer, IAISenses, IAIAttack, IThinker
 			{
 				float num2 = Vector3.Distance(((Component)player).transform.position, ((Component)this).transform.position);
 				float num3 = 1f - Mathf.InverseLerp(1f, Brain.SenseRange, num2);
-				Vector3 val = ((Component)player).transform.position - eyes.position;
-				float num4 = Vector3.Dot(((Vector3)(ref val)).normalized, eyes.BodyForward());
+				Vector3 val = ((Component)player).transform.position - base.eyes.position;
+				float num4 = Vector3.Dot(((Vector3)(ref val)).normalized, base.eyes.BodyForward());
 				num3 += Mathf.InverseLerp(Brain.VisionCone, 1f, num4) / 2f;
 				num3 += (Brain.Senses.Memory.IsLOS(player) ? 2f : 0f);
 				if (num3 > num)
@@ -600,13 +613,13 @@ public class HumanNPC : NPCPlayer, IAISenses, IAIAttack, IThinker
 		{
 			return null;
 		}
-		if ((Object)(object)inventory == (Object)null || inventory.containerBelt == null)
+		if ((Object)(object)base.inventory == (Object)null || base.inventory.containerBelt == null)
 		{
 			return null;
 		}
-		for (int i = 0; i < inventory.containerBelt.capacity; i++)
+		for (int i = 0; i < base.inventory.containerBelt.capacity; i++)
 		{
-			Item slot = inventory.containerBelt.GetSlot(i);
+			Item slot = base.inventory.containerBelt.GetSlot(i);
 			if (slot != null && slot.amount > 1 && (Object)(object)(slot.GetHeldEntity() as MedicalTool) != (Object)null)
 			{
 				return slot;

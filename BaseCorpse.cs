@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using ConVar;
 using Facepunch;
 using ProtoBuf;
@@ -13,8 +14,20 @@ public class BaseCorpse : BaseCombatEntity
 	[NonSerialized]
 	internal ResourceDispenser resourceDispenser;
 
+	public const float CORPSE_SLEEP_THRESHOLD = 0.05f;
+
+	protected Rigidbody rigidBody;
+
+	public bool blockDamageIfNotGather;
+
 	[NonSerialized]
 	public SpawnGroup spawnGroup;
+
+	private const float RAGDOLL_PUSH_DIST = 0.5f;
+
+	private const float RAGDOLL_PUSH_FORCE = 2.5f;
+
+	public virtual bool CorpseIsRagdoll => false;
 
 	public override TraitFlag Traits => base.Traits | TraitFlag.Food | TraitFlag.Meat;
 
@@ -26,13 +39,13 @@ public class BaseCorpse : BaseCombatEntity
 
 	public override void ServerInit()
 	{
-		SetupRigidBody();
+		base.ServerInit();
+		rigidBody = SetupRigidBody();
 		ResetRemovalTime();
 		resourceDispenser = ((Component)this).GetComponent<ResourceDispenser>();
-		base.ServerInit();
 	}
 
-	public virtual void InitCorpse(BaseEntity pr)
+	public virtual void ServerInitCorpse(BaseEntity pr, Vector3 posOnDeah, Quaternion rotOnDeath, BasePlayer.PlayerFlags playerFlagsOnDeath, ModelState modelState)
 	{
 		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
@@ -133,13 +146,17 @@ public class BaseCorpse : BaseCombatEntity
 
 	private Rigidbody SetupRigidBody()
 	{
-		//IL_0158: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0170: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0189: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0176: Unknown result type (might be due to invalid IL or missing references)
+		//IL_017b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_018e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d5: Unknown result type (might be due to invalid IL or missing references)
+		if (!prefabRagdoll.isValid)
+		{
+			return ((Component)this).GetComponent<Rigidbody>();
+		}
 		if (base.isServer)
 		{
 			GameObject val = base.gameManager.FindPrefab(prefabRagdoll.resourcePath);
@@ -175,13 +192,13 @@ public class BaseCorpse : BaseCombatEntity
 		if ((Object)(object)val2 == (Object)null)
 		{
 			val2 = ((Component)this).gameObject.AddComponent<Rigidbody>();
+			val2.mass = 10f;
+			val2.drag = 0.5f;
+			val2.angularDrag = 0.5f;
 		}
-		val2.mass = 10f;
 		val2.useGravity = true;
-		val2.drag = 0.5f;
-		val2.angularDrag = 0.5f;
 		val2.collisionDetectionMode = (CollisionDetectionMode)0;
-		val2.sleepThreshold = 0.05f;
+		val2.sleepThreshold = Mathf.Max(0.05f, Physics.sleepThreshold);
 		if (base.isServer)
 		{
 			Buoyancy component3 = ((Component)this).GetComponent<Buoyancy>();
@@ -219,16 +236,58 @@ public class BaseCorpse : BaseCombatEntity
 
 	public override void OnAttacked(HitInfo info)
 	{
-		if (base.isServer)
+		if (!base.isServer)
 		{
-			ResetRemovalTime();
+			return;
+		}
+		ResetRemovalTime();
+		if (!blockDamageIfNotGather || !(info.Weapon is BaseMelee baseMelee) || baseMelee.GetGatherInfoFromIndex(ResourceDispenser.GatherType.Flesh).gatherDamage != 0f)
+		{
 			if (Object.op_Implicit((Object)(object)resourceDispenser))
 			{
-				resourceDispenser.OnAttacked(info);
+				resourceDispenser.DoGather(info, this);
 			}
 			if (!info.DidGather)
 			{
 				base.OnAttacked(info);
+			}
+			if (CorpseIsRagdoll)
+			{
+				PushRagdoll(info);
+			}
+		}
+	}
+
+	protected virtual void PushRagdoll(HitInfo info)
+	{
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		List<Rigidbody> list = Pool.GetList<Rigidbody>();
+		Vis.Components<Rigidbody>(info.HitPositionWorld, 0.5f, list, 512, (QueryTriggerInteraction)2);
+		PushRigidbodies(list, info.HitPositionWorld, info.attackNormal);
+		Pool.FreeList<Rigidbody>(ref list);
+	}
+
+	protected void PushRigidbodies(List<Rigidbody> rbs, Vector3 hitPos, Vector3 hitNormal)
+	{
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
+		foreach (Rigidbody rb in rbs)
+		{
+			float num = Vector3.Distance(hitPos, rb.position);
+			float num2 = 1f - Mathf.InverseLerp(0f, 0.5f, num);
+			if (!(num2 <= 0f))
+			{
+				if (num2 < 0.5f)
+				{
+					num2 = 0.5f;
+				}
+				rb.AddForceAtPosition(hitNormal * 2.5f * num2, hitPos, (ForceMode)1);
 			}
 		}
 	}

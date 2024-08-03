@@ -27,7 +27,7 @@ public class Music : ConsoleSystem
 		{
 			stringBuilder.Append("Current music info: ");
 			stringBuilder.AppendLine();
-			stringBuilder.Append("  theme: " + SingletonComponent<MusicManager>.Instance.currentTheme);
+			stringBuilder.Append("  theme: " + (object)SingletonComponent<MusicManager>.Instance.currentTheme);
 			stringBuilder.AppendLine();
 			stringBuilder.Append("  intensity: " + SingletonComponent<MusicManager>.Instance.intensity);
 			stringBuilder.AppendLine();

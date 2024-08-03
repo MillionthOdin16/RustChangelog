@@ -65,7 +65,7 @@ public class Pool : ConsoleSystem
 				NumberExtensions.FormatNumberShort(value.ItemsSpilled)
 			});
 		}
-		arg.ReplyWith(arg.HasArg("--json") ? val.ToJson() : ((object)val).ToString());
+		arg.ReplyWith(arg.HasArg("--json", false) ? val.ToJson() : ((object)val).ToString());
 	}
 
 	[ServerVar]
@@ -96,7 +96,7 @@ public class Pool : ConsoleSystem
 				NumberExtensions.FormatBytes<int>(num2, false)
 			});
 		}
-		arg.ReplyWith(arg.HasArg("--json") ? val.ToJson() : ((object)val).ToString());
+		arg.ReplyWith(arg.HasArg("--json", false) ? val.ToJson() : ((object)val).ToString());
 	}
 
 	[ServerVar]
@@ -115,23 +115,31 @@ public class Pool : ConsoleSystem
 		TextTable val = new TextTable();
 		val.AddColumn("id");
 		val.AddColumn("name");
+		val.AddColumn("missed");
 		val.AddColumn("count");
-		foreach (KeyValuePair<uint, PrefabPool> item in pool.storage)
+		val.AddColumn("target");
+		val.AddColumn("added");
+		val.AddColumn("removed");
+		foreach (PrefabPool item in pool.storage.Values.OrderByDescending((PrefabPool x) => x.Missed))
 		{
-			string text = item.Key.ToString();
-			string text2 = StringPool.Get(item.Key);
-			string text3 = item.Value.Count.ToString();
-			if (string.IsNullOrEmpty(@string) || StringEx.Contains(text2, @string, CompareOptions.IgnoreCase))
+			string text = StringPool.Get(item.PrefabName).ToString();
+			string prefabName = item.PrefabName;
+			string text2 = item.Count.ToString();
+			if (string.IsNullOrEmpty(@string) || StringEx.Contains(prefabName, @string, CompareOptions.IgnoreCase))
 			{
-				val.AddRow(new string[3]
+				val.AddRow(new string[7]
 				{
 					text,
-					Path.GetFileNameWithoutExtension(text2),
-					text3
+					Path.GetFileNameWithoutExtension(prefabName),
+					text2,
+					item.TargetCapacity.ToString(),
+					item.Missed.ToString(),
+					item.Pushed.ToString(),
+					item.Popped.ToString()
 				});
 			}
 		}
-		arg.ReplyWith(arg.HasArg("--json") ? val.ToJson() : ((object)val).ToString());
+		arg.ReplyWith(arg.HasArg("--json", false) ? val.ToJson() : ((object)val).ToString());
 	}
 
 	[ServerVar]
@@ -160,7 +168,7 @@ public class Pool : ConsoleSystem
 				val.AddRow(new string[3] { text, text2, text3 });
 			}
 		}
-		arg.ReplyWith(arg.HasArg("--json") ? val.ToJson() : ((object)val).ToString());
+		arg.ReplyWith(arg.HasArg("--json", false) ? val.ToJson() : ((object)val).ToString());
 	}
 
 	[ServerVar]

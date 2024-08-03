@@ -13,6 +13,7 @@ public class UIBlackoutOverlay : MonoBehaviour
 		NVG = 5,
 		FULLWHITE = 6,
 		SUNGLASSES = 7,
+		PRISONERHOOD = 8,
 		NONE = 64
 	}
 

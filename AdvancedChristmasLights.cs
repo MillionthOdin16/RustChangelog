@@ -14,6 +14,8 @@ public class AdvancedChristmasLights : IOEntity
 		public Vector3 point;
 
 		public Vector3 normal;
+
+		public float slack;
 	}
 
 	public enum AnimationType
@@ -60,7 +62,7 @@ public class AdvancedChristmasLights : IOEntity
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - SetAnimationStyle "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - SetAnimationStyle "));
 				}
 				TimeWarning val2 = TimeWarning.New("SetAnimationStyle", 0);
 				try
@@ -129,7 +131,7 @@ public class AdvancedChristmasLights : IOEntity
 		return finalized;
 	}
 
-	public void AddPoint(Vector3 newPoint, Vector3 newNormal)
+	public void AddPoint(Vector3 newPoint, Vector3 newNormal, float slackLevel)
 	{
 		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
@@ -144,6 +146,7 @@ public class AdvancedChristmasLights : IOEntity
 		pointEntry item = default(pointEntry);
 		item.point = newPoint;
 		item.normal = newNormal;
+		item.slack = slackLevel;
 		points.Add(item);
 		if (base.isServer)
 		{
@@ -187,6 +190,7 @@ public class AdvancedChristmasLights : IOEntity
 			StringPoint val = Pool.Get<StringPoint>();
 			val.point = point.point;
 			val.normal = point.normal;
+			val.slack = point.slack;
 			info.msg.lightString.points.Add(val);
 		}
 	}
@@ -203,7 +207,7 @@ public class AdvancedChristmasLights : IOEntity
 		ClearPoints();
 		foreach (StringPoint point in info.msg.lightString.points)
 		{
-			AddPoint(point.point, point.normal);
+			AddPoint(point.point, point.normal, point.slack);
 		}
 		lengthUsed = info.msg.lightString.lengthUsed;
 		animationStyle = (AnimationType)info.msg.lightString.animationStyle;
@@ -211,11 +215,6 @@ public class AdvancedChristmasLights : IOEntity
 		{
 			FinishEditing();
 		}
-	}
-
-	public bool IsStyle(AnimationType testType)
-	{
-		return testType == animationStyle;
 	}
 
 	public bool CanPlayerManipulate(BasePlayer player)
@@ -231,7 +230,9 @@ public class AdvancedChristmasLights : IOEntity
 		num = Mathf.Clamp(num, 1, 7);
 		if (Global.developer > 0)
 		{
-			Debug.Log((object)("Set animation style to :" + num + " old was : " + (int)animationStyle));
+			string text = num.ToString();
+			int num2 = (int)animationStyle;
+			Debug.Log((object)("Set animation style to :" + text + " old was : " + num2));
 		}
 		AnimationType animationType = (AnimationType)num;
 		if (animationType != animationStyle)

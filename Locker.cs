@@ -21,15 +21,19 @@ public class Locker : StorageContainer
 
 	private const int maxGearSets = 3;
 
-	private const int attireSize = 7;
+	private const int attireSize = 8;
 
 	private const int beltSize = 6;
 
 	private const int columnSize = 2;
 
-	private Item[] clothingBuffer = new Item[7];
+	private const int backpackSlotIndex = 7;
 
-	private const int setSize = 13;
+	private Item[] clothingBuffer = new Item[8];
+
+	private const int setSize = 14;
+
+	private bool isTransferringIndustrialItem;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -41,7 +45,7 @@ public class Locker : StorageContainer
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
 				if (Global.developer > 2)
 				{
-					Debug.Log((object)string.Concat("SV_RPCMessage: ", player, " - RPC_Equip "));
+					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - RPC_Equip "));
 				}
 				TimeWarning val2 = TimeWarning.New("RPC_Equip", 0);
 				try
@@ -106,7 +110,7 @@ public class Locker : StorageContainer
 		{
 			return RowType.Clothing;
 		}
-		if (slot % 13 >= 7)
+		if (slot % 14 >= 8)
 		{
 			return RowType.Belt;
 		}
@@ -124,9 +128,29 @@ public class Locker : StorageContainer
 		SetFlag(Flags.Reserved1, b: false);
 	}
 
+	public void OnIndustrialItemTransferBegin()
+	{
+		isTransferringIndustrialItem = true;
+	}
+
+	public void OnIndustrialItemTransferEnd()
+	{
+		isTransferringIndustrialItem = false;
+	}
+
 	public override bool ItemFilter(Item item, int targetSlot)
 	{
 		if (!base.ItemFilter(item, targetSlot))
+		{
+			return false;
+		}
+		bool num = item.IsBackpack();
+		bool flag = IsBackpackSlot(targetSlot);
+		if (num != flag)
+		{
+			return false;
+		}
+		if (isTransferringIndustrialItem && GetRowType(targetSlot) == RowType.Belt && item.info.category == ItemCategory.Attire)
 		{
 			return false;
 		}
@@ -137,37 +161,42 @@ public class Locker : StorageContainer
 		return GetRowType(targetSlot) == RowType.Belt;
 	}
 
+	private bool IsBackpackSlot(int slot)
+	{
+		return (slot - 7) % 14 == 0;
+	}
+
 	[RPC_Server]
 	[RPC_Server.IsVisible(3f)]
 	public void RPC_Equip(RPCMessage msg)
 	{
-		//IL_00cf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00dc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0117: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0124: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_022a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_022f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01af: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01bc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01e8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ee: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01f5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01fb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00da: Unknown result type (might be due to invalid IL or missing references)
+		//IL_022d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0232: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0120: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0127: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01bf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01eb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01fe: Unknown result type (might be due to invalid IL or missing references)
 		int num = msg.read.Int32();
 		if (num < 0 || num >= 3 || IsEquipping())
 		{
 			return;
 		}
 		BasePlayer player = msg.player;
-		int num2 = num * 13;
+		int num2 = num * 14;
 		bool flag = false;
-		for (int i = 0; i < player.inventory.containerWear.capacity; i++)
+		for (int i = 0; i < clothingBuffer.Length; i++)
 		{
 			Item slot = player.inventory.containerWear.GetSlot(i);
 			if (slot != null)
@@ -176,7 +205,7 @@ public class Locker : StorageContainer
 				clothingBuffer[i] = slot;
 			}
 		}
-		for (int j = 0; j < 7; j++)
+		for (int j = 0; j < 8; j++)
 		{
 			int num3 = num2 + j;
 			Item slot2 = base.inventory.GetSlot(num3);
@@ -192,7 +221,7 @@ public class Locker : StorageContainer
 			if (item != null)
 			{
 				flag = true;
-				if (item.info.category != ItemCategory.Attire || !item.MoveToContainer(base.inventory, num3))
+				if (!item.MoveToContainer(base.inventory, num3) && !item.MoveToContainer(player.inventory.containerWear, j))
 				{
 					item.Drop(GetDropPosition(), GetDropVelocity());
 				}
@@ -201,7 +230,7 @@ public class Locker : StorageContainer
 		}
 		for (int k = 0; k < 6; k++)
 		{
-			int num4 = num2 + k + 7;
+			int num4 = num2 + k + 8;
 			int iTargetPos = k;
 			Item slot3 = base.inventory.GetSlot(num4);
 			Item slot4 = player.inventory.containerBelt.GetSlot(k);
@@ -231,7 +260,7 @@ public class Locker : StorageContainer
 		}
 	}
 
-	public override int GetIdealSlot(BasePlayer player, Item item)
+	public override int GetIdealSlot(BasePlayer player, ItemContainer container, Item item)
 	{
 		for (int i = 0; i < inventorySlots; i++)
 		{
@@ -257,13 +286,19 @@ public class Locker : StorageContainer
 
 	private bool DoesWearableConflictWithRow(Item item, int pos)
 	{
-		int num = pos / 13 * 13;
+		int num = pos / 14 * 14;
 		ItemModWearable itemModWearable = item.info.ItemModWearable;
 		if ((Object)(object)itemModWearable == (Object)null)
 		{
 			return false;
 		}
-		for (int i = num; i < num + 7; i++)
+		bool num2 = item.IsBackpack();
+		bool flag = IsBackpackSlot(pos);
+		if (num2 != flag)
+		{
+			return true;
+		}
+		for (int i = num; i < num + 8; i++)
 		{
 			Item slot = base.inventory.GetSlot(i);
 			if (slot != null)
@@ -287,13 +322,13 @@ public class Locker : StorageContainer
 		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
 		if (localPosition.x < -0.3f)
 		{
-			return new Vector2i(26, 38);
+			return new Vector2i(28, 41);
 		}
 		if (localPosition.x > 0.3f)
 		{
-			return new Vector2i(0, 12);
+			return new Vector2i(0, 13);
 		}
-		return new Vector2i(13, 25);
+		return new Vector2i(14, 27);
 	}
 
 	public override bool SupportsChildDeployables()

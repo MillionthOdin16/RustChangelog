@@ -106,17 +106,40 @@ public class IndustrialStorageAdaptor : IndustrialEntity, IIndustrialStorage
 
 	public void OnStorageItemTransferBegin()
 	{
-		if ((Object)(object)cachedParent != (Object)null && cachedParent is VendingMachine vendingMachine)
+		if ((Object)(object)cachedParent != (Object)null)
 		{
-			vendingMachine.OnIndustrialItemTransferBegins();
+			if (cachedParent is VendingMachine vendingMachine)
+			{
+				vendingMachine.OnIndustrialItemTransferBegins();
+			}
+			else if (cachedParent is Locker locker)
+			{
+				locker.OnIndustrialItemTransferBegin();
+			}
 		}
 	}
 
 	public void OnStorageItemTransferEnd()
 	{
-		if ((Object)(object)cachedParent != (Object)null && cachedParent is VendingMachine vendingMachine)
+		if ((Object)(object)cachedParent != (Object)null)
 		{
-			vendingMachine.OnIndustrialItemTransferEnds();
+			if (cachedParent is VendingMachine vendingMachine)
+			{
+				vendingMachine.OnIndustrialItemTransferEnds();
+			}
+			else if (cachedParent is Locker locker)
+			{
+				locker.OnIndustrialItemTransferEnd();
+			}
+		}
+	}
+
+	public override void OnParentChanging(BaseEntity oldParent, BaseEntity newParent)
+	{
+		base.OnParentChanging(oldParent, newParent);
+		if ((Object)(object)newParent != (Object)null)
+		{
+			cachedContainer = null;
 		}
 	}
 

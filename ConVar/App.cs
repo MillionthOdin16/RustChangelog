@@ -18,7 +18,7 @@ public class App : ConsoleSystem
 {
 	[StructLayout(LayoutKind.Auto)]
 	[CompilerGenerated]
-	private struct _003CGetPublicIPAsync_003Ed__19 : IAsyncStateMachine
+	private struct _003CGetPublicIPAsync_003Ed__20 : IAsyncStateMachine
 	{
 		public int _003C_003E1__state;
 
@@ -60,7 +60,7 @@ public class App : ConsoleSystem
 					{
 						num = (_003C_003E1__state = 0);
 						_003C_003Eu__1 = awaiter;
-						_003C_003Et__builder.AwaitUnsafeOnCompleted<TaskAwaiter, _003CGetPublicIPAsync_003Ed__19>(ref awaiter, ref this);
+						_003C_003Et__builder.AwaitUnsafeOnCompleted<TaskAwaiter, _003CGetPublicIPAsync_003Ed__20>(ref awaiter, ref this);
 						return;
 					}
 					goto IL_00cc;
@@ -70,10 +70,12 @@ public class App : ConsoleSystem
 			catch (Exception exception)
 			{
 				_003C_003E1__state = -2;
+				_003Ctimer_003E5__2 = null;
 				_003C_003Et__builder.SetException(exception);
 				return;
 			}
 			_003C_003E1__state = -2;
+			_003Ctimer_003E5__2 = null;
 			_003C_003Et__builder.SetResult(result);
 		}
 
@@ -164,6 +166,29 @@ public class App : ConsoleSystem
 		arg.ReplyWith($"Server ID: {serverid}\nListening on: {listener.Address}:{listener.Port}\nApp connects to: {GetPublicIP()}:{port}");
 	}
 
+	[ServerVar(Help = "Retry initializing the Rust+ companion server if it previously failed")]
+	public static void retry_initialize(Arg arg)
+	{
+		if (CompanionServer.Server.IsEnabled)
+		{
+			arg.ReplyWith("Companion server is already initialized!");
+			return;
+		}
+		if (port < 0)
+		{
+			arg.ReplyWith("Companion server port is invalid, cannot initialize companion server");
+			return;
+		}
+		BaseGameMode activeGameMode = BaseGameMode.GetActiveGameMode(serverside: true);
+		if ((Object)(object)activeGameMode != (Object)null && !activeGameMode.rustPlus)
+		{
+			arg.ReplyWith("Companion server is disabled by gamemode, cannot initialize companion server");
+			return;
+		}
+		arg.ReplyWith("Trying to initialize companion server...");
+		CompanionServer.Server.Initialize();
+	}
+
 	[ServerVar]
 	public static void resetlimiter(Arg arg)
 	{
@@ -217,18 +242,16 @@ public class App : ConsoleSystem
 		return IPAddress.Any;
 	}
 
-	[AsyncStateMachine(typeof(_003CGetPublicIPAsync_003Ed__19))]
-	public static System.Threading.Tasks.ValueTask<string> GetPublicIPAsync()
+	[AsyncStateMachine(typeof(_003CGetPublicIPAsync_003Ed__20))]
+	public static ValueTask<string> GetPublicIPAsync()
 	{
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-		_003CGetPublicIPAsync_003Ed__19 _003CGetPublicIPAsync_003Ed__ = default(_003CGetPublicIPAsync_003Ed__19);
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		_003CGetPublicIPAsync_003Ed__20 _003CGetPublicIPAsync_003Ed__ = default(_003CGetPublicIPAsync_003Ed__20);
 		_003CGetPublicIPAsync_003Ed__._003C_003Et__builder = AsyncValueTaskMethodBuilder<string>.Create();
 		_003CGetPublicIPAsync_003Ed__._003C_003E1__state = -1;
-		AsyncValueTaskMethodBuilder<string> _003C_003Et__builder = _003CGetPublicIPAsync_003Ed__._003C_003Et__builder;
-		_003C_003Et__builder.Start<_003CGetPublicIPAsync_003Ed__19>(ref _003CGetPublicIPAsync_003Ed__);
+		_003CGetPublicIPAsync_003Ed__._003C_003Et__builder.Start<_003CGetPublicIPAsync_003Ed__20>(ref _003CGetPublicIPAsync_003Ed__);
 		return _003CGetPublicIPAsync_003Ed__._003C_003Et__builder.Task;
 	}
 

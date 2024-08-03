@@ -62,6 +62,12 @@ public class BaseNavigator : BaseMonoBehaviour
 
 	public string DefaultArea = "Walkable";
 
+	public bool CanPathFindToChaseTargetIfNoMovePoint;
+
+	public int PathFindChaseLOSAttemptCount = 5;
+
+	public float PathFindChaseLOSDistanceMultiplier = 1.5f;
+
 	[Header("Stuck Detection")]
 	public bool TriggerStuckEvent;
 
@@ -103,6 +109,10 @@ public class BaseNavigator : BaseMonoBehaviour
 	public float MaxRoamDistanceFromHome = -1f;
 
 	[Header("Misc")]
+	public float FaceTargetChaseDistance = 10f;
+
+	public bool CanUseRandomMovePointIfNonFound;
+
 	public float MaxWaterDepth = 0.75f;
 
 	public bool SpeedBasedAvoidancePriority;
@@ -283,7 +293,7 @@ public class BaseNavigator : BaseMonoBehaviour
 		((Behaviour)Agent).enabled = flag;
 		if (flag && CanEnableNavMeshNavigation())
 		{
-			PlaceOnNavMesh();
+			PlaceOnNavMesh(2f);
 		}
 	}
 
@@ -327,20 +337,20 @@ public class BaseNavigator : BaseMonoBehaviour
 		}
 	}
 
-	public bool PlaceOnNavMesh()
+	public bool PlaceOnNavMesh(float yOffset)
 	{
 		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
 		if (Agent.isOnNavMesh)
 		{
 			return true;
 		}
 		bool flag = false;
 		float maxRange = (IsSwimming() ? 30f : 6f);
-		if (GetNearestNavmeshPosition(((Component)this).transform.position + Vector3.one * 2f, out var position, maxRange))
+		if (GetNearestNavmeshPosition(((Component)this).transform.position + Vector3.one * yOffset, out var position, maxRange))
 		{
 			flag = Warp(position);
 			if (flag)
@@ -867,22 +877,28 @@ public class BaseNavigator : BaseMonoBehaviour
 
 	private Vector3 GetNextPathPosition()
 	{
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
 		if (currentAStarPath != null && currentAStarPath.Count > 0)
 		{
-			return currentAStarPath.Peek().Position;
+			IAIPathNode iAIPathNode = currentAStarPath.Peek();
+			if (iAIPathNode == null || !iAIPathNode.IsValid())
+			{
+				return ((Component)this).transform.position;
+			}
+			return iAIPathNode.Position;
 		}
 		return Agent.nextPosition;
 	}
 
 	private bool ValidateNextPosition(ref Vector3 moveToPosition)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		bool flag = ValidBounds.Test(moveToPosition);
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		bool flag = ValidBounds.Test(BaseEntity, moveToPosition);
 		if ((Object)(object)BaseEntity != (Object)null && !flag && (Object)(object)((Component)this).transform != (Object)null && !BaseEntity.IsDestroyed)
 		{
-			Debug.Log((object)string.Concat("Invalid NavAgent Position: ", this, " ", ((object)(Vector3)(ref moveToPosition)).ToString(), " (destroying)"));
+			Debug.Log((object)("Invalid NavAgent Position: " + ((object)this)?.ToString() + " " + ((object)(Vector3)(ref moveToPosition)).ToString() + " (destroying)"));
 			BaseEntity.Kill();
 			return false;
 		}
@@ -1285,5 +1301,20 @@ public class BaseNavigator : BaseMonoBehaviour
 	public void SetBrakingEnabled(bool flag)
 	{
 		Agent.autoBraking = flag;
+	}
+
+	public static int GetNavMeshAgentID(string name)
+	{
+		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
+		for (int i = 0; i < NavMesh.GetSettingsCount(); i++)
+		{
+			NavMeshBuildSettings settingsByIndex = NavMesh.GetSettingsByIndex(i);
+			if (name == NavMesh.GetSettingsNameFromID(((NavMeshBuildSettings)(ref settingsByIndex)).agentTypeID))
+			{
+				return ((NavMeshBuildSettings)(ref settingsByIndex)).agentTypeID;
+			}
+		}
+		return -1;
 	}
 }
