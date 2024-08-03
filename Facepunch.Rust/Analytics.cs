@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -156,6 +157,18 @@ public static class Analytics
 			public const string DismountEntity = "dismount";
 
 			public const string BurstToggle = "burst_toggle";
+
+			public const string TutorialStarted = "tutorial_started";
+
+			public const string TutorialCompleted = "tutorial_completed";
+
+			public const string TutorialQuit = "tutorial_quit";
+
+			public const string BaseInteraction = "base_interaction";
+
+			public const string PlayerDeath = "player_death";
+
+			public const string CarShredded = "car_shredded";
 		}
 
 		private struct SimpleItemAmount
@@ -349,7 +362,7 @@ public static class Analytics
 			}
 		}
 
-		private static Dictionary<FiredProjectileKey, PendingFiredProjectile> firedProjectiles = new Dictionary<FiredProjectileKey, PendingFiredProjectile>();
+		private static Dictionary<FiredProjectileKey, PendingFiredProjectile> trackedProjectiles = new Dictionary<FiredProjectileKey, PendingFiredProjectile>();
 
 		private static Dictionary<int, string> geneCache = new Dictionary<int, string>();
 
@@ -357,17 +370,7 @@ public static class Analytics
 
 		private static Dictionary<PendingItemsKey, PendingItemsData> pendingItems = new Dictionary<PendingItemsKey, PendingItemsData>();
 
-		public static bool Stats
-		{
-			get
-			{
-				if (!string.IsNullOrEmpty(AnalyticsSecret) || ConVar.Server.official)
-				{
-					return ConVar.Server.stats;
-				}
-				return false;
-			}
-		}
+		public static bool GameplayAnalytics => GameplayAnalyticsConVar;
 
 		public static void Initialize()
 		{
@@ -378,7 +381,7 @@ public static class Analytics
 
 		private static void PushServerInfo()
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
@@ -390,14 +393,13 @@ public static class Analytics
 					.AddField("ip_convar", Net.sv.ip)
 					.AddField("port_convar", Net.sv.port)
 					.AddField("net_protocol", Net.sv.ProtocolId)
-					.AddField("protocol_network", 2511)
-					.AddField("protocol_save", 243);
+					.AddField("protocol_network", 2555)
+					.AddField("protocol_save", 253);
 				BuildInfo current = BuildInfo.Current;
 				EventRecord eventRecord2 = eventRecord.AddField("changeset", ((current != null) ? current.Scm.ChangeId : null) ?? "0").AddField("unity_version", Application.unityVersion);
 				BuildInfo current2 = BuildInfo.Current;
-				eventRecord2.AddField("branch", ((current2 != null) ? current2.Scm.Branch : null) ?? "empty").AddField("server_tags", ConVar.Server.tags).AddField("device_id", SystemInfo.deviceUniqueIdentifier)
-					.AddField("network_id", Net.sv.GetLastUIDGiven())
-					.Submit();
+				SubmitPoint(eventRecord2.AddField("branch", ((current2 != null) ? current2.Scm.Branch : null) ?? "empty").AddField("server_tags", ConVar.Server.tags).AddField("device_id", SystemInfo.deviceUniqueIdentifier)
+					.AddField("network_id", Net.sv.GetLastUIDGiven()));
 			}
 			catch (Exception ex)
 			{
@@ -407,7 +409,7 @@ public static class Analytics
 
 		private static void PushItemDefinitions()
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
@@ -432,7 +434,7 @@ public static class Analytics
 				{
 					return;
 				}
-				EventRecord.New("item_definitions").AddObject("items", from x in ItemManager.itemDictionary
+				SubmitPoint(EventRecord.New("item_definitions").AddObject("items", from x in ItemManager.itemDictionary
 					select x.Value into x
 					select new
 					{
@@ -448,8 +450,7 @@ public static class Analytics
 							shortname = y.itemDef.shortname,
 							amount = (int)y.amount
 						})
-					}).AddField("changeset", BuildInfo.Current.Scm.ChangeId)
-					.Submit();
+					}).AddField("changeset", BuildInfo.Current.Scm.ChangeId));
 			}
 			catch (Exception ex)
 			{
@@ -459,7 +460,7 @@ public static class Analytics
 
 		private static void PushEntityManifest()
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
@@ -488,7 +489,7 @@ public static class Analytics
 						prefab_id = StringPool.Get(x.ToLower())
 					}));
 					BuildInfo current2 = BuildInfo.Current;
-					eventRecord.AddField("changeset", ((current2 != null) ? current2.Scm.ChangeId : null) ?? "editor").Submit();
+					SubmitPoint(eventRecord.AddField("changeset", ((current2 != null) ? current2.Scm.ChangeId : null) ?? "editor"));
 				}
 			}
 			catch (Exception ex)
@@ -497,13 +498,18 @@ public static class Analytics
 			}
 		}
 
+		private static void SubmitPoint(EventRecord point)
+		{
+			point.Submit();
+		}
+
 		public static void OnFiredProjectile(BasePlayer player, BasePlayer.FiredProjectile projectile, Guid projectileGroupId)
 		{
-			//IL_0021: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0031: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0041: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
-			if (!Stats || !HighFrequencyStats)
+			//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+			//IL_002a: Unknown result type (might be due to invalid IL or missing references)
+			//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+			//IL_009c: Unknown result type (might be due to invalid IL or missing references)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
@@ -522,7 +528,7 @@ public static class Analytics
 				PendingFiredProjectile pendingFiredProjectile = Pool.Get<PendingFiredProjectile>();
 				pendingFiredProjectile.Record = record;
 				pendingFiredProjectile.FiredProjectile = projectile;
-				firedProjectiles[new FiredProjectileKey(player.userID, projectile.id)] = pendingFiredProjectile;
+				trackedProjectiles[new FiredProjectileKey(player.userID, projectile.id)] = pendingFiredProjectile;
 			}
 			catch (Exception ex)
 			{
@@ -532,16 +538,15 @@ public static class Analytics
 
 		public static void OnFiredProjectileRemoved(BasePlayer player, BasePlayer.FiredProjectile projectile)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
 			try
 			{
 				FiredProjectileKey key = new FiredProjectileKey(player.userID, projectile.id);
-				if (!firedProjectiles.TryGetValue(key, out var value))
+				if (!trackedProjectiles.TryGetValue(key, out var value))
 				{
-					Debug.LogWarning((object)$"Can't find projectile for player '{player}' with id {projectile.id}");
 					return;
 				}
 				if (!value.Hit)
@@ -551,10 +556,10 @@ public static class Analytics
 					{
 						record.AddObject("projectile_updates", projectile.updates);
 					}
-					record.Submit();
+					SubmitPoint(record);
 				}
 				Pool.Free<PendingFiredProjectile>(ref value);
-				firedProjectiles.Remove(key);
+				trackedProjectiles.Remove(key);
 			}
 			catch (Exception ex)
 			{
@@ -564,7 +569,7 @@ public static class Analytics
 
 		public static void OnQuarryItem(ResourceMode mode, string item, int amount, MiningQuarry sourceEntity)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
@@ -580,7 +585,7 @@ public static class Analytics
 
 		public static void OnExcavatorProduceItem(Item item, BaseEntity sourceEntity)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
@@ -596,7 +601,7 @@ public static class Analytics
 
 		public static void OnExcavatorConsumeFuel(Item item, int amount, BaseEntity dieselEngine)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
@@ -612,13 +617,13 @@ public static class Analytics
 
 		public static void OnCraftItem(string item, int amount, BasePlayer player, BaseEntity workbench, bool inSafezone)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
 			try
 			{
-				LogResource(ResourceMode.Produced, "craft", item, amount, null, null, inSafezone, workbench, player?.userID ?? 0);
+				LogResource(ResourceMode.Produced, "craft", item, amount, null, null, inSafezone, workbench, player?.userID ?? ((BasePlayer.EncryptedValue<ulong>)0uL));
 			}
 			catch (Exception ex)
 			{
@@ -628,13 +633,13 @@ public static class Analytics
 
 		public static void OnCraftMaterialConsumed(string item, int amount, BasePlayer player, BaseEntity workbench, bool inSafezone, string targetItem)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
 			try
 			{
-				LogResource(safezone: inSafezone, workbench: workbench, targetItem: targetItem, mode: ResourceMode.Consumed, category: "craft", itemName: item, amount: amount, sourceEntity: null, tool: null, steamId: player?.userID ?? 0);
+				LogResource(safezone: inSafezone, workbench: workbench, targetItem: targetItem, mode: ResourceMode.Consumed, category: "craft", itemName: item, amount: amount, sourceEntity: null, tool: null, steamId: player?.userID ?? ((BasePlayer.EncryptedValue<ulong>)0uL));
 			}
 			catch (Exception ex)
 			{
@@ -644,14 +649,13 @@ public static class Analytics
 
 		public static void OnConsumableUsed(BasePlayer player, Item item)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
 			try
 			{
-				EventRecord.New("consumeable_used").AddField("player", (BaseEntity)player).AddField("item", item)
-					.Submit();
+				SubmitPoint(EventRecord.New("consumeable_used").AddField("player", (BaseEntity)player).AddField("item", item));
 			}
 			catch (Exception ex)
 			{
@@ -662,14 +666,14 @@ public static class Analytics
 		public static void OnEntitySpawned(BaseEntity entity)
 		{
 			//IL_0014: Unknown result type (might be due to invalid IL or missing references)
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
 			try
 			{
 				trackedSpawnedIds.Add(entity.net.ID);
-				EventRecord.New("entity_spawned").AddField("entity", entity).Submit();
+				SubmitPoint(EventRecord.New("entity_spawned").AddField("entity", entity));
 			}
 			catch (Exception ex)
 			{
@@ -680,7 +684,7 @@ public static class Analytics
 		private static void TryLogEntityKilled(BaseNetworkable entity)
 		{
 			//IL_001e: Unknown result type (might be due to invalid IL or missing references)
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
@@ -688,7 +692,7 @@ public static class Analytics
 			{
 				if (entity.IsValid() && trackedSpawnedIds.Contains(entity.net.ID))
 				{
-					EventRecord.New("entity_killed").AddField("entity", Object.op_Implicit((Object)(object)entity)).Submit();
+					SubmitPoint(EventRecord.New("entity_killed").AddField("entity", Object.op_Implicit((Object)(object)entity)));
 				}
 			}
 			catch (Exception ex)
@@ -699,15 +703,14 @@ public static class Analytics
 
 		public static void OnMedUsed(string itemName, BasePlayer player, BasePlayer target)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
 			try
 			{
-				EventRecord.New("med_used").AddField("player", (BaseEntity)player).AddField("target", (BaseEntity)target)
-					.AddField("item_name", itemName)
-					.Submit();
+				SubmitPoint(EventRecord.New("med_used").AddField("player", (BaseEntity)player).AddField("target", (BaseEntity)target)
+					.AddField("item_name", itemName));
 			}
 			catch (Exception ex)
 			{
@@ -717,17 +720,16 @@ public static class Analytics
 
 		public static void OnCodelockChanged(BasePlayer player, CodeLock codeLock, string oldCode, string newCode, bool isGuest)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
 			try
 			{
-				EventRecord.New("code_change").AddField("player", (BaseEntity)player).AddField("codelock", (BaseEntity)codeLock)
+				SubmitPoint(EventRecord.New("code_change").AddField("player", (BaseEntity)player).AddField("codelock", (BaseEntity)codeLock)
 					.AddField("old_code", oldCode)
 					.AddField("new_code", newCode)
-					.AddField("is_guest", isGuest)
-					.Submit();
+					.AddField("is_guest", isGuest));
 			}
 			catch (Exception ex)
 			{
@@ -737,15 +739,14 @@ public static class Analytics
 
 		public static void OnCodeLockEntered(BasePlayer player, CodeLock codeLock, bool isGuest)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
 			try
 			{
-				EventRecord.New("code_enter").AddField("player", (BaseEntity)player).AddField("codelock", (BaseEntity)codeLock)
-					.AddField("is_guest", isGuest)
-					.Submit();
+				SubmitPoint(EventRecord.New("code_enter").AddField("player", (BaseEntity)player).AddField("codelock", (BaseEntity)codeLock)
+					.AddField("is_guest", isGuest));
 			}
 			catch (Exception ex)
 			{
@@ -755,7 +756,7 @@ public static class Analytics
 
 		public static void OnTeamChanged(string change, ulong teamId, ulong teamLeader, ulong user, List<ulong> members)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
@@ -769,12 +770,11 @@ public static class Analytics
 						list.Add(SingletonComponent<ServerMgr>.Instance.persistance.GetUserWipeId(member));
 					}
 				}
-				EventRecord.New("team_change").AddField("team_leader", SingletonComponent<ServerMgr>.Instance.persistance.GetUserWipeId(teamLeader)).AddField("team", teamId)
+				SubmitPoint(EventRecord.New("team_change").AddField("team_leader", SingletonComponent<ServerMgr>.Instance.persistance.GetUserWipeId(teamLeader)).AddField("team", teamId)
 					.AddField("target_user", SingletonComponent<ServerMgr>.Instance.persistance.GetUserWipeId(user))
 					.AddField("change", change)
 					.AddObject("users", list)
-					.AddField("member_count", members.Count)
-					.Submit();
+					.AddField("member_count", members.Count));
 			}
 			catch (Exception ex)
 			{
@@ -785,18 +785,17 @@ public static class Analytics
 
 		public static void OnEntityAuthChanged(BaseEntity entity, BasePlayer player, IEnumerable<ulong> authedList, string change, ulong targetUser)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
 			try
 			{
 				string userWipeId = SingletonComponent<ServerMgr>.Instance.persistance.GetUserWipeId(targetUser);
-				EventRecord.New("auth_change").AddField("entity", entity).AddField("player", (BaseEntity)player)
+				SubmitPoint(EventRecord.New("auth_change").AddField("entity", entity).AddField("player", (BaseEntity)player)
 					.AddField("target", userWipeId)
 					.AddObject("auth_list", authedList.Select((ulong x) => SingletonComponent<ServerMgr>.Instance.persistance.GetUserWipeId(x)))
-					.AddField("change", change)
-					.Submit();
+					.AddField("change", change));
 			}
 			catch (Exception ex)
 			{
@@ -806,16 +805,15 @@ public static class Analytics
 
 		public static void OnSleepingBagAssigned(BasePlayer player, SleepingBag bag, ulong targetUser)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
 			try
 			{
 				string value = ((targetUser != 0L) ? SingletonComponent<ServerMgr>.Instance.persistance.GetUserWipeId(targetUser) : "");
-				EventRecord.New("sleeping_bag_assign").AddField("entity", (BaseEntity)bag).AddField("player", (BaseEntity)player)
-					.AddField("target", value)
-					.Submit();
+				SubmitPoint(EventRecord.New("sleeping_bag_assign").AddField("entity", (BaseEntity)bag).AddField("player", (BaseEntity)player)
+					.AddField("target", value));
 			}
 			catch (Exception ex)
 			{
@@ -825,15 +823,14 @@ public static class Analytics
 
 		public static void OnFallDamage(BasePlayer player, float velocity, float damage)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
 			try
 			{
-				EventRecord.New("fall_damage").AddField("player", (BaseEntity)player).AddField("velocity", velocity)
-					.AddField("damage", damage)
-					.Submit();
+				SubmitPoint(EventRecord.New("fall_damage").AddField("player", (BaseEntity)player).AddField("velocity", velocity)
+					.AddField("damage", damage));
 			}
 			catch (Exception ex)
 			{
@@ -843,16 +840,15 @@ public static class Analytics
 
 		public static void OnResearchStarted(BasePlayer player, BaseEntity entity, Item item, int scrapCost)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
 			try
 			{
-				EventRecord.New("research_start").AddField("player", (BaseEntity)player).AddField("item", item.info.shortname)
+				SubmitPoint(EventRecord.New("research_start").AddField("player", (BaseEntity)player).AddField("item", item.info.shortname)
 					.AddField("scrap", scrapCost)
-					.AddField("entity", entity)
-					.Submit();
+					.AddField("entity", entity));
 			}
 			catch (Exception ex)
 			{
@@ -862,17 +858,16 @@ public static class Analytics
 
 		public static void OnBlueprintLearned(BasePlayer player, ItemDefinition item, string reason, int scrapCost, BaseEntity entity)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
 			try
 			{
-				EventRecord.New("blueprint_learned").AddField("player", (BaseEntity)player).AddField("item", item.shortname)
+				SubmitPoint(EventRecord.New("blueprint_learned").AddField("player", (BaseEntity)player).AddField("item", item.shortname)
 					.AddField("reason", reason)
 					.AddField("entity", entity)
-					.AddField("scrap_cost", scrapCost)
-					.Submit();
+					.AddField("scrap_cost", scrapCost));
 			}
 			catch (Exception ex)
 			{
@@ -882,7 +877,7 @@ public static class Analytics
 
 		public static void OnItemRecycled(string item, int amount, Recycler recycler)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
@@ -898,7 +893,7 @@ public static class Analytics
 
 		public static void OnRecyclerItemProduced(string item, int amount, Recycler recycler, Item sourceItem)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
@@ -914,7 +909,7 @@ public static class Analytics
 
 		public static void OnGatherItem(string item, int amount, BaseEntity sourceEntity, BasePlayer player, AttackEntity weapon = null)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
@@ -931,7 +926,7 @@ public static class Analytics
 		public static void OnFirstLooted(BaseEntity entity, BasePlayer player)
 		{
 			//IL_005d: Unknown result type (might be due to invalid IL or missing references)
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
@@ -940,10 +935,9 @@ public static class Analytics
 				if (entity is LootContainer lootContainer)
 				{
 					LogItemsLooted(player, entity, lootContainer.inventory);
-					EventRecord.New("loot_entity").AddField("entity", entity).AddField("player", (BaseEntity)player)
+					SubmitPoint(EventRecord.New("loot_entity").AddField("entity", entity).AddField("player", (BaseEntity)player)
 						.AddField("monument", GetMonument(entity))
-						.AddField("biome", GetBiome(((Component)entity).transform.position))
-						.Submit();
+						.AddField("biome", GetBiome(((Component)entity).transform.position)));
 				}
 				else if (entity is LootableCorpse lootableCorpse)
 				{
@@ -964,7 +958,7 @@ public static class Analytics
 		{
 			//IL_0020: Unknown result type (might be due to invalid IL or missing references)
 			//IL_002b: Unknown result type (might be due to invalid IL or missing references)
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
@@ -984,13 +978,13 @@ public static class Analytics
 		public static void OnEntityDestroyed(BaseNetworkable entity)
 		{
 			TryLogEntityKilled(entity);
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
 			try
 			{
-				if (!(entity is LootContainer lootContainer) || !lootContainer.FirstLooted)
+				if (!(entity is LootContainer lootContainer) || lootContainer.FirstLooterId != 0L)
 				{
 					return;
 				}
@@ -1007,7 +1001,7 @@ public static class Analytics
 
 		public static void OnEntityBuilt(BaseEntity entity, BasePlayer player)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
@@ -1020,7 +1014,7 @@ public static class Analytics
 					eventRecord.AddField("bags_active", sleepingBagCount);
 					eventRecord.AddField("max_sleeping_bags", ConVar.Server.max_sleeping_bags);
 				}
-				eventRecord.Submit();
+				SubmitPoint(eventRecord);
 			}
 			catch (Exception ex)
 			{
@@ -1030,15 +1024,14 @@ public static class Analytics
 
 		public static void OnMountEntity(BasePlayer player, BaseEntity seat, BaseEntity vehicle)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
 			try
 			{
-				EventRecord.New("mount").AddField("player", (BaseEntity)player).AddField("vehicle", vehicle)
-					.AddField("seat", seat)
-					.Submit();
+				SubmitPoint(EventRecord.New("mount").AddField("player", (BaseEntity)player).AddField("vehicle", vehicle)
+					.AddField("seat", seat));
 			}
 			catch (Exception ex)
 			{
@@ -1048,15 +1041,14 @@ public static class Analytics
 
 		public static void OnDismountEntity(BasePlayer player, BaseEntity seat, BaseEntity vehicle)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
 			try
 			{
-				EventRecord.New("dismount").AddField("player", (BaseEntity)player).AddField("vehicle", vehicle)
-					.AddField("seat", seat)
-					.Submit();
+				SubmitPoint(EventRecord.New("dismount").AddField("player", (BaseEntity)player).AddField("vehicle", vehicle)
+					.AddField("seat", seat));
 			}
 			catch (Exception ex)
 			{
@@ -1066,15 +1058,14 @@ public static class Analytics
 
 		public static void OnKeycardSwiped(BasePlayer player, CardReader cardReader)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
 			try
 			{
-				EventRecord.New("keycard_swiped").AddField("player", (BaseEntity)player).AddField("card_level", cardReader.accessLevel)
-					.AddField("entity", (BaseEntity)cardReader)
-					.Submit();
+				SubmitPoint(EventRecord.New("keycard_swiped").AddField("player", (BaseEntity)player).AddField("card_level", cardReader.accessLevel)
+					.AddField("entity", (BaseEntity)cardReader));
 			}
 			catch (Exception ex)
 			{
@@ -1084,14 +1075,13 @@ public static class Analytics
 
 		public static void OnLockedCrateStarted(BasePlayer player, HackableLockedCrate crate)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
 			try
 			{
-				EventRecord.New("hackable_crate_started").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)crate)
-					.Submit();
+				SubmitPoint(EventRecord.New("hackable_crate_started").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)crate));
 			}
 			catch (Exception ex)
 			{
@@ -1101,15 +1091,14 @@ public static class Analytics
 
 		public static void OnLockedCrateFinished(ulong player, HackableLockedCrate crate)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
 			try
 			{
 				string userWipeId = SingletonComponent<ServerMgr>.Instance.persistance.GetUserWipeId(player);
-				EventRecord.New("hackable_crate_ended").AddField("player_userid", userWipeId).AddField("entity", (BaseEntity)crate)
-					.Submit();
+				SubmitPoint(EventRecord.New("hackable_crate_ended").AddField("player_userid", userWipeId).AddField("entity", (BaseEntity)crate));
 			}
 			catch (Exception ex)
 			{
@@ -1119,15 +1108,14 @@ public static class Analytics
 
 		public static void OnStashHidden(BasePlayer player, StashContainer entity)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
 			try
 			{
-				EventRecord.New("stash_hidden").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)entity)
-					.AddField("owner", SingletonComponent<ServerMgr>.Instance.persistance.GetUserWipeId(entity.OwnerID))
-					.Submit();
+				SubmitPoint(EventRecord.New("stash_hidden").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)entity)
+					.AddField("owner", SingletonComponent<ServerMgr>.Instance.persistance.GetUserWipeId(entity.OwnerID)));
 			}
 			catch (Exception ex)
 			{
@@ -1137,15 +1125,14 @@ public static class Analytics
 
 		public static void OnStashRevealed(BasePlayer player, StashContainer entity)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
 			try
 			{
-				EventRecord.New("stash_reveal").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)entity)
-					.AddField("owner", SingletonComponent<ServerMgr>.Instance.persistance.GetUserWipeId(entity.OwnerID))
-					.Submit();
+				SubmitPoint(EventRecord.New("stash_reveal").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)entity)
+					.AddField("owner", SingletonComponent<ServerMgr>.Instance.persistance.GetUserWipeId(entity.OwnerID)));
 			}
 			catch (Exception ex)
 			{
@@ -1153,17 +1140,95 @@ public static class Analytics
 			}
 		}
 
-		public static void OnAntihackViolation(BasePlayer player, int type, string message)
+		public static void OnAntihackViolation(BasePlayer player, AntiHackType type, string message)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
 			try
 			{
-				EventRecord.New("antihack_violation").AddField("player", (BaseEntity)player).AddField("violation_type", type)
-					.AddField("message", message)
-					.Submit();
+				EventRecord eventRecord = EventRecord.New("antihack_violation").AddField("player", (BaseEntity)player).AddField("violation_type", (int)type)
+					.AddField("violation", type.ToString())
+					.AddField("message", message);
+				if (BuildInfo.Current != null)
+				{
+					eventRecord.AddField("changeset", BuildInfo.Current.Scm.ChangeId).AddField("network", 2555);
+				}
+				switch (type)
+				{
+				case AntiHackType.SpeedHack:
+					eventRecord.AddField("speedhack_protection", ConVar.AntiHack.speedhack_protection).AddField("speedhack_forgiveness", ConVar.AntiHack.speedhack_forgiveness).AddField("speedhack_forgiveness_inertia", ConVar.AntiHack.speedhack_forgiveness_inertia)
+						.AddField("speedhack_penalty", ConVar.AntiHack.speedhack_penalty)
+						.AddField("speedhack_penalty", ConVar.AntiHack.speedhack_reject)
+						.AddField("speedhack_slopespeed", ConVar.AntiHack.speedhack_slopespeed);
+					break;
+				case AntiHackType.NoClip:
+					eventRecord.AddField("noclip_protection", ConVar.AntiHack.noclip_protection).AddField("noclip_penalty", ConVar.AntiHack.noclip_penalty).AddField("noclip_maxsteps", ConVar.AntiHack.noclip_maxsteps)
+						.AddField("noclip_margin_dismount", ConVar.AntiHack.noclip_margin_dismount)
+						.AddField("noclip_margin", ConVar.AntiHack.noclip_margin)
+						.AddField("noclip_backtracking", ConVar.AntiHack.noclip_backtracking)
+						.AddField("noclip_reject", ConVar.AntiHack.noclip_reject)
+						.AddField("noclip_stepsize", ConVar.AntiHack.noclip_stepsize);
+					break;
+				case AntiHackType.ProjectileHack:
+					eventRecord.AddField("projectile_anglechange", ConVar.AntiHack.projectile_anglechange).AddField("projectile_backtracking", ConVar.AntiHack.projectile_backtracking).AddField("projectile_clientframes", ConVar.AntiHack.projectile_clientframes)
+						.AddField("projectile_damagedepth", ConVar.AntiHack.projectile_damagedepth)
+						.AddField("projectile_desync", ConVar.AntiHack.projectile_desync)
+						.AddField("projectile_forgiveness", ConVar.AntiHack.projectile_forgiveness)
+						.AddField("projectile_impactspawndepth", ConVar.AntiHack.projectile_impactspawndepth)
+						.AddField("projectile_losforgiveness", ConVar.AntiHack.projectile_losforgiveness)
+						.AddField("projectile_penalty", ConVar.AntiHack.projectile_penalty)
+						.AddField("projectile_positionoffset", ConVar.AntiHack.projectile_positionoffset)
+						.AddField("projectile_protection", ConVar.AntiHack.projectile_protection)
+						.AddField("projectile_serverframes", ConVar.AntiHack.projectile_serverframes)
+						.AddField("projectile_terraincheck", ConVar.AntiHack.projectile_terraincheck)
+						.AddField("projectile_trajectory", ConVar.AntiHack.projectile_trajectory)
+						.AddField("projectile_vehiclecheck", ConVar.AntiHack.projectile_vehiclecheck)
+						.AddField("projectile_velocitychange", ConVar.AntiHack.projectile_velocitychange);
+					break;
+				case AntiHackType.InsideTerrain:
+					eventRecord.AddField("terrain_check_geometry", ConVar.AntiHack.terrain_check_geometry).AddField("terrain_kill", ConVar.AntiHack.terrain_kill).AddField("terrain_padding", ConVar.AntiHack.terrain_padding)
+						.AddField("terrain_penalty", ConVar.AntiHack.terrain_penalty)
+						.AddField("terrain_protection", ConVar.AntiHack.terrain_protection)
+						.AddField("terrain_timeslice", ConVar.AntiHack.terrain_timeslice);
+					break;
+				case AntiHackType.MeleeHack:
+					eventRecord.AddField("melee_backtracking", ConVar.AntiHack.melee_backtracking).AddField("melee_clientframes", ConVar.AntiHack.melee_clientframes).AddField("melee_forgiveness", ConVar.AntiHack.melee_forgiveness)
+						.AddField("melee_losforgiveness", ConVar.AntiHack.melee_losforgiveness)
+						.AddField("melee_penalty", ConVar.AntiHack.melee_penalty)
+						.AddField("melee_protection", ConVar.AntiHack.melee_protection)
+						.AddField("melee_serverframes", ConVar.AntiHack.melee_serverframes)
+						.AddField("melee_terraincheck", ConVar.AntiHack.melee_terraincheck)
+						.AddField("melee_vehiclecheck", ConVar.AntiHack.melee_vehiclecheck);
+					break;
+				case AntiHackType.FlyHack:
+					eventRecord.AddField("flyhack_extrusion", ConVar.AntiHack.flyhack_extrusion).AddField("flyhack_forgiveness_horizontal", ConVar.AntiHack.flyhack_forgiveness_horizontal).AddField("flyhack_forgiveness_horizontal_inertia", ConVar.AntiHack.flyhack_forgiveness_horizontal_inertia)
+						.AddField("flyhack_forgiveness_vertical", ConVar.AntiHack.flyhack_forgiveness_vertical)
+						.AddField("flyhack_forgiveness_vertical_inertia", ConVar.AntiHack.flyhack_forgiveness_vertical_inertia)
+						.AddField("flyhack_margin", ConVar.AntiHack.flyhack_margin)
+						.AddField("flyhack_maxsteps", ConVar.AntiHack.flyhack_maxsteps)
+						.AddField("flyhack_penalty", ConVar.AntiHack.flyhack_penalty)
+						.AddField("flyhack_protection", ConVar.AntiHack.flyhack_protection)
+						.AddField("flyhack_reject", ConVar.AntiHack.flyhack_reject);
+					break;
+				case AntiHackType.EyeHack:
+					eventRecord.AddField("eye_clientframes", ConVar.AntiHack.eye_clientframes).AddField("eye_forgiveness", ConVar.AntiHack.eye_forgiveness).AddField("eye_history_forgiveness", ConVar.AntiHack.eye_history_forgiveness)
+						.AddField("eye_history_penalty", ConVar.AntiHack.eye_history_penalty)
+						.AddField("eye_losradius", ConVar.AntiHack.eye_losradius)
+						.AddField("eye_noclip_backtracking", ConVar.AntiHack.eye_noclip_backtracking)
+						.AddField("eye_noclip_cutoff", ConVar.AntiHack.eye_noclip_cutoff)
+						.AddField("eye_penalty", ConVar.AntiHack.eye_penalty)
+						.AddField("eye_protection", ConVar.AntiHack.eye_protection)
+						.AddField("eye_serverframes", ConVar.AntiHack.eye_serverframes)
+						.AddField("eye_terraincheck", ConVar.AntiHack.eye_terraincheck)
+						.AddField("eye_vehiclecheck", ConVar.AntiHack.eye_vehiclecheck);
+					break;
+				case AntiHackType.AttackHack:
+					eventRecord.AddField("maxdesync", ConVar.AntiHack.maxdesync);
+					break;
+				}
+				SubmitPoint(eventRecord);
 			}
 			catch (Exception ex)
 			{
@@ -1174,15 +1239,14 @@ public static class Analytics
 		public static void OnEyehackViolation(BasePlayer player, Vector3 eyePos)
 		{
 			//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
 			try
 			{
-				EventRecord.New("antihack_violation_detailed").AddField("player", (BaseEntity)player).AddField("violation_type", 6)
-					.AddField("eye_pos", eyePos)
-					.Submit();
+				SubmitPoint(EventRecord.New("antihack_violation_detailed").AddField("player", (BaseEntity)player).AddField("violation_type", 6)
+					.AddField("eye_pos", eyePos));
 			}
 			catch (Exception ex)
 			{
@@ -1192,20 +1256,19 @@ public static class Analytics
 
 		public static void OnNoclipViolation(BasePlayer player, Vector3 startPos, Vector3 endPos, int tickCount, Collider collider)
 		{
-			//IL_0036: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0041: Unknown result type (might be due to invalid IL or missing references)
-			if (!Stats || !HighFrequencyStats)
+			//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+			//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
 			try
 			{
-				EventRecord.New("antihack_violation_detailed").AddField("player", (BaseEntity)player).AddField("violation_type", 1)
+				SubmitPoint(EventRecord.New("antihack_violation_detailed").AddField("player", (BaseEntity)player).AddField("violation_type", 1)
 					.AddField("start_pos", startPos)
 					.AddField("end_pos", endPos)
 					.AddField("tick_count", tickCount)
-					.AddField("collider_name", ((Object)collider).name)
-					.Submit();
+					.AddField("collider_name", ((Object)collider).name));
 			}
 			catch (Exception ex)
 			{
@@ -1217,17 +1280,16 @@ public static class Analytics
 		{
 			//IL_002f: Unknown result type (might be due to invalid IL or missing references)
 			//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
 			try
 			{
-				EventRecord.New("antihack_violation_detailed").AddField("player", (BaseEntity)player).AddField("violation_type", 3)
+				SubmitPoint(EventRecord.New("antihack_violation_detailed").AddField("player", (BaseEntity)player).AddField("violation_type", 3)
 					.AddField("start_pos", startPos)
 					.AddField("end_pos", endPos)
-					.AddField("tick_count", tickCount)
-					.Submit();
+					.AddField("tick_count", tickCount));
 			}
 			catch (Exception ex)
 			{
@@ -1237,18 +1299,14 @@ public static class Analytics
 
 		public static void OnProjectileHackViolation(BasePlayer.FiredProjectile projectile)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
 			try
 			{
 				FiredProjectileKey key = new FiredProjectileKey(projectile.attacker.userID, projectile.id);
-				if (!firedProjectiles.TryGetValue(key, out var value))
-				{
-					Debug.LogWarning((object)$"Can't find projectile for player '{projectile.attacker}' with id {projectile.id}");
-				}
-				else
+				if (trackedProjectiles.TryGetValue(key, out var value))
 				{
 					value.Record.AddField("projectile_invalid", value: true).AddObject("updates", projectile.updates);
 				}
@@ -1267,19 +1325,18 @@ public static class Analytics
 			//IL_0051: Unknown result type (might be due to invalid IL or missing references)
 			//IL_0061: Unknown result type (might be due to invalid IL or missing references)
 			//IL_0062: Unknown result type (might be due to invalid IL or missing references)
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
 			try
 			{
-				EventRecord.New("antihack_violation_detailed").AddField("player", (BaseEntity)player).AddField("violation_type", 2)
+				SubmitPoint(EventRecord.New("antihack_violation_detailed").AddField("player", (BaseEntity)player).AddField("violation_type", 2)
 					.AddField("start_pos", startPos)
 					.AddField("end_pos", endPos)
 					.AddField("tick_count", tickCount)
 					.AddField("distance", Vector3.Distance(startPos, endPos))
-					.AddField("distance_2d", Vector3Ex.Distance2D(startPos, endPos))
-					.Submit();
+					.AddField("distance_2d", Vector3Ex.Distance2D(startPos, endPos)));
 			}
 			catch (Exception ex)
 			{
@@ -1289,18 +1346,17 @@ public static class Analytics
 
 		public static void OnTerrainHackViolation(BasePlayer player)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
 			try
 			{
-				EventRecord.New("antihack_violation_detailed").AddField("player", (BaseEntity)player).AddField("violation_type", 10)
+				SubmitPoint(EventRecord.New("antihack_violation_detailed").AddField("player", (BaseEntity)player).AddField("violation_type", 10)
 					.AddField("seed", World.Seed)
 					.AddField("size", World.Size)
 					.AddField("map_url", World.Url)
-					.AddField("map_checksum", World.Checksum)
-					.Submit();
+					.AddField("map_checksum", World.Checksum));
 			}
 			catch (Exception ex)
 			{
@@ -1310,24 +1366,29 @@ public static class Analytics
 
 		public static void OnEntityTakeDamage(HitInfo info, bool isDeath)
 		{
-			//IL_01a6: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01b6: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01c6: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01d6: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01e6: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01f6: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00fe: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0109: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0115: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0120: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00cb: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00d7: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00e3: Unknown result type (might be due to invalid IL or missing references)
-			//IL_02ed: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0330: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0347: Unknown result type (might be due to invalid IL or missing references)
-			if (!Stats || !HighFrequencyStats)
+			//IL_0244: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0254: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0264: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0274: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0284: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0294: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01a7: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01b2: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01be: Unknown result type (might be due to invalid IL or missing references)
+			//IL_01c9: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00c3: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00cf: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00db: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00e7: Unknown result type (might be due to invalid IL or missing references)
+			//IL_030e: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0313: Unknown result type (might be due to invalid IL or missing references)
+			//IL_03e3: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0420: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0437: Unknown result type (might be due to invalid IL or missing references)
+			//IL_05a4: Unknown result type (might be due to invalid IL or missing references)
+			//IL_05bb: Unknown result type (might be due to invalid IL or missing references)
+			//IL_05d2: Unknown result type (might be due to invalid IL or missing references)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
@@ -1347,12 +1408,27 @@ public static class Analytics
 					if (info.IsProjectile())
 					{
 						FiredProjectileKey key = new FiredProjectileKey(initiatorPlayer.userID, info.ProjectileID);
-						if (firedProjectiles.TryGetValue(key, out var value3))
+						if (trackedProjectiles.TryGetValue(key, out var value3))
 						{
 							eventRecord = value3.Record;
-							value = Vector3.Distance(info.HitNormalWorld, value3.FiredProjectile.initialPosition);
-							value = Vector3Ex.Distance2D(info.HitNormalWorld, value3.FiredProjectile.initialPosition);
+							value = Vector3.Distance(info.HitPositionWorld, value3.FiredProjectile.initialPosition);
+							value = Vector3Ex.Distance2D(info.HitPositionWorld, value3.FiredProjectile.initialPosition);
 							value3.Hit = info.DidHit;
+							if (eventRecord != null && value3.FiredProjectile.updates.Count > 0)
+							{
+								eventRecord.AddObject("projectile_updates", value3.FiredProjectile.updates);
+							}
+							if (eventRecord != null && value3.FiredProjectile.simulatedPositions.Count > 0)
+							{
+								eventRecord.AddObject("simulated_position", value3.FiredProjectile.simulatedPositions);
+							}
+							if (eventRecord != null)
+							{
+								eventRecord.AddField("partial_time", value3.FiredProjectile.partialTime);
+								eventRecord.AddField("desync_lifetime", value3.FiredProjectile.desyncLifeTime);
+							}
+							trackedProjectiles.Remove(key);
+							Pool.Free<PendingFiredProjectile>(ref value3);
 						}
 					}
 					else
@@ -1365,8 +1441,7 @@ public static class Analytics
 				{
 					eventRecord = EventRecord.New("entity_damage");
 				}
-				eventRecord.AddField("is_hit", value: true).AddField("is_headshot", info.isHeadshot).AddField("victim", info.HitEntity)
-					.AddField("damage", info.damageTypes.Total())
+				eventRecord.AddField("is_headshot", info.isHeadshot).AddField("victim", info.HitEntity).AddField("damage", info.damageTypes.Total())
 					.AddField("damage_type", info.damageTypes.GetMajorityDamageType().ToString())
 					.AddField("pos_world", info.HitPositionWorld)
 					.AddField("pos_local", info.HitPositionLocal)
@@ -1376,7 +1451,12 @@ public static class Analytics
 					.AddField("normal_local", info.HitNormalLocal)
 					.AddField("distance_cl", info.ProjectileDistance)
 					.AddField("distance", value)
-					.AddField("distance_2d", value2);
+					.AddField("distance_2d", value2)
+					.AddField("attacker_parented", info.InitiatorParented);
+				if ((Object)(object)info.HitEntity != (Object)null && (Object)(object)info.HitEntity.model != (Object)null)
+				{
+					eventRecord.AddField("pos_local_model", ((Component)info.HitEntity.model).transform.InverseTransformPoint(info.HitPositionWorld));
+				}
 				if (!info.IsProjectile())
 				{
 					eventRecord.AddField("weapon", (BaseEntity)info.Weapon);
@@ -1402,19 +1482,23 @@ public static class Analytics
 					{
 						eventRecord.AddField("attacker_life", initiatorPlayer.respawnId);
 					}
-					if (isDeath)
-					{
-						eventRecord.AddObject("attacker_worn", initiatorPlayer.inventory.containerWear.itemList.Select((Item x) => new SimpleItemAmount(x)));
-						eventRecord.AddObject("attacker_hotbar", initiatorPlayer.inventory.containerBelt.itemList.Select((Item x) => new SimpleItemAmount(x)));
-					}
+				}
+				else if ((Object)(object)initiatorPlayer != (Object)null)
+				{
+					eventRecord.AddObject("attacker_worn", initiatorPlayer.inventory.containerWear.itemList.Select((Item x) => new SimpleItemAmount(x)));
+					eventRecord.AddObject("attacker_hotbar", initiatorPlayer.inventory.containerBelt.itemList.Select((Item x) => new SimpleItemAmount(x)));
 				}
 				if ((Object)(object)basePlayer != (Object)null)
 				{
 					eventRecord.AddField("victim_life", basePlayer.respawnId);
 					eventRecord.AddObject("victim_worn", basePlayer.inventory.containerWear.itemList.Select((Item x) => new SimpleItemAmount(x)));
 					eventRecord.AddObject("victim_hotbar", basePlayer.inventory.containerBelt.itemList.Select((Item x) => new SimpleItemAmount(x)));
+					eventRecord.AddField("victim_view_dir", basePlayer.tickViewAngles);
+					eventRecord.AddField("victim_eye_pos", basePlayer.eyes.position);
+					eventRecord.AddField("victim_eye_dir", basePlayer.eyes.BodyForward());
+					eventRecord.AddField("victim_parented", info.HitEntityParented);
 				}
-				eventRecord.Submit();
+				SubmitPoint(eventRecord);
 			}
 			catch (Exception ex)
 			{
@@ -1424,15 +1508,14 @@ public static class Analytics
 
 		public static void OnPlayerRespawned(BasePlayer player, BaseEntity targetEntity)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
 			try
 			{
-				EventRecord.New("player_respawn").AddField("player", (BaseEntity)player).AddField("bag", targetEntity)
-					.AddField("life_id", player.respawnId)
-					.Submit();
+				SubmitPoint(EventRecord.New("player_respawn").AddField("player", (BaseEntity)player).AddField("bag", targetEntity)
+					.AddField("life_id", player.respawnId));
 			}
 			catch (Exception ex)
 			{
@@ -1446,7 +1529,7 @@ public static class Analytics
 			//IL_0040: Unknown result type (might be due to invalid IL or missing references)
 			//IL_0045: Unknown result type (might be due to invalid IL or missing references)
 			//IL_0048: Unknown result type (might be due to invalid IL or missing references)
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
@@ -1460,7 +1543,7 @@ public static class Analytics
 				{
 					eventRecord2.AddField("launcher", launcher);
 				}
-				eventRecord2.Submit();
+				SubmitPoint(eventRecord2);
 			}
 			catch (Exception ex)
 			{
@@ -1470,13 +1553,13 @@ public static class Analytics
 
 		public static void OnExplosion(TimedExplosive explosive)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
 			try
 			{
-				EventRecord.New("explosion").AddField("entity", (BaseEntity)explosive).Submit();
+				SubmitPoint(EventRecord.New("explosion").AddField("entity", (BaseEntity)explosive));
 			}
 			catch (Exception ex)
 			{
@@ -1486,7 +1569,7 @@ public static class Analytics
 
 		public static void OnItemDespawn(BaseEntity itemContainer, Item item, int dropReason, ulong userId)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
@@ -1498,7 +1581,7 @@ public static class Analytics
 				{
 					eventRecord.AddField("player_userid", userId);
 				}
-				eventRecord.Submit();
+				SubmitPoint(eventRecord);
 			}
 			catch (Exception ex)
 			{
@@ -1508,16 +1591,15 @@ public static class Analytics
 
 		public static void OnItemDropped(BasePlayer player, WorldItem entity, DroppedItem.DropReasonEnum dropReason)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
 			try
 			{
-				EventRecord.New("item_drop").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)entity)
+				SubmitPoint(EventRecord.New("item_drop").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)entity)
 					.AddField("item", entity.GetItem())
-					.AddField("drop_reason", (int)dropReason)
-					.Submit();
+					.AddField("drop_reason", (int)dropReason));
 			}
 			catch (Exception ex)
 			{
@@ -1527,15 +1609,14 @@ public static class Analytics
 
 		public static void OnItemPickup(BasePlayer player, WorldItem entity)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
 			try
 			{
-				EventRecord.New("item_pickup").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)entity)
-					.AddField("item", entity.GetItem())
-					.Submit();
+				SubmitPoint(EventRecord.New("item_pickup").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)entity)
+					.AddField("item", entity.GetItem()));
 			}
 			catch (Exception ex)
 			{
@@ -1545,15 +1626,12 @@ public static class Analytics
 
 		public static void OnPlayerConnected(Connection connection)
 		{
-			if (!Stats)
-			{
-				return;
-			}
 			try
 			{
 				string userWipeId = SingletonComponent<ServerMgr>.Instance.persistance.GetUserWipeId(connection.userid);
-				EventRecord.New("player_connect").AddField("player_userid", userWipeId).AddField("username", connection.username)
-					.Submit();
+				SubmitPoint(EventRecord.New("player_connect").AddField("player_userid", userWipeId).AddField("steam_id", connection.userid)
+					.AddField("username", connection.username)
+					.AddField("ip", connection.ipaddress));
 			}
 			catch (Exception ex)
 			{
@@ -1563,16 +1641,12 @@ public static class Analytics
 
 		public static void OnPlayerDisconnected(Connection connection, string reason)
 		{
-			if (!Stats)
-			{
-				return;
-			}
 			try
 			{
 				string userWipeId = SingletonComponent<ServerMgr>.Instance.persistance.GetUserWipeId(connection.userid);
-				EventRecord.New("player_disconnect").AddField("player_userid", userWipeId).AddField("username", connection.username)
-					.AddField("reason", reason)
-					.Submit();
+				SubmitPoint(EventRecord.New("player_disconnect").AddField("player_userid", userWipeId).AddField("steam_id", connection.userid)
+					.AddField("username", connection.username)
+					.AddField("reason", reason));
 			}
 			catch (Exception ex)
 			{
@@ -1582,14 +1656,13 @@ public static class Analytics
 
 		public static void OnEntityPickedUp(BasePlayer player, BaseEntity entity)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
 			try
 			{
-				EventRecord.New("entity_pickup").AddField("player", (BaseEntity)player).AddField("entity", entity)
-					.Submit();
+				SubmitPoint(EventRecord.New("entity_pickup").AddField("player", (BaseEntity)player).AddField("entity", entity));
 			}
 			catch (Exception ex)
 			{
@@ -1599,15 +1672,14 @@ public static class Analytics
 
 		public static void OnChatMessage(BasePlayer player, string message, int channel)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
 			try
 			{
-				EventRecord.New("chat").AddField("player", (BaseEntity)player).AddField("message", message)
-					.AddField("channel", channel)
-					.Submit();
+				SubmitPoint(EventRecord.New("chat").AddField("player", (BaseEntity)player).AddField("message", message)
+					.AddField("channel", channel));
 			}
 			catch (Exception ex)
 			{
@@ -1617,7 +1689,7 @@ public static class Analytics
 
 		public static void OnVendingMachineOrderChanged(BasePlayer player, VendingMachine vendingMachine, int sellItemId, int sellAmount, bool sellingBp, int buyItemId, int buyAmount, bool buyingBp, bool added)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
@@ -1625,15 +1697,14 @@ public static class Analytics
 			{
 				ItemDefinition itemDefinition = ItemManager.FindItemDefinition(sellItemId);
 				ItemDefinition itemDefinition2 = ItemManager.FindItemDefinition(buyItemId);
-				EventRecord.New("vending_changed").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)vendingMachine)
+				SubmitPoint(EventRecord.New("vending_changed").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)vendingMachine)
 					.AddField("sell_item", itemDefinition.shortname)
 					.AddField("sell_amount", sellAmount)
 					.AddField("buy_item", itemDefinition2.shortname)
 					.AddField("buy_amount", buyAmount)
 					.AddField("is_selling_bp", sellingBp)
 					.AddField("is_buying_bp", buyingBp)
-					.AddField("change", added ? "added" : "removed")
-					.Submit();
+					.AddField("change", added ? "added" : "removed"));
 			}
 			catch (Exception ex)
 			{
@@ -1641,9 +1712,9 @@ public static class Analytics
 			}
 		}
 
-		public static void OnBuyFromVendingMachine(BasePlayer player, VendingMachine vendingMachine, int sellItemId, int sellAmount, bool sellingBp, int buyItemId, int buyAmount, bool buyingBp, int numberOfTransactions, BaseEntity drone = null)
+		public static void OnBuyFromVendingMachine(BasePlayer player, VendingMachine vendingMachine, int sellItemId, int sellAmount, bool sellingBp, int buyItemId, int buyAmount, bool buyingBp, int numberOfTransactions, float discount, BaseEntity drone = null)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
@@ -1651,7 +1722,7 @@ public static class Analytics
 			{
 				ItemDefinition itemDefinition = ItemManager.FindItemDefinition(sellItemId);
 				ItemDefinition itemDefinition2 = ItemManager.FindItemDefinition(buyItemId);
-				EventRecord.New("vending_sale").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)vendingMachine)
+				SubmitPoint(EventRecord.New("vending_sale").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)vendingMachine)
 					.AddField("sell_item", itemDefinition.shortname)
 					.AddField("sell_amount", sellAmount)
 					.AddField("buy_item", itemDefinition2.shortname)
@@ -1660,7 +1731,7 @@ public static class Analytics
 					.AddField("is_selling_bp", sellingBp)
 					.AddField("is_buying_bp", buyingBp)
 					.AddField("drone_terminal", drone)
-					.Submit();
+					.AddField("discount", discount));
 			}
 			catch (Exception ex)
 			{
@@ -1670,16 +1741,15 @@ public static class Analytics
 
 		public static void OnNPCVendor(BasePlayer player, NPCTalking vendor, int scrapCost, string action)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
 			try
 			{
-				EventRecord.New("npc_vendor").AddField("player", (BaseEntity)player).AddField("vendor", (BaseEntity)vendor)
+				SubmitPoint(EventRecord.New("npc_vendor").AddField("player", (BaseEntity)player).AddField("vendor", (BaseEntity)vendor)
 					.AddField("scrap_amount", scrapCost)
-					.AddField("action", action)
-					.Submit();
+					.AddField("action", action));
 			}
 			catch (Exception ex)
 			{
@@ -1689,7 +1759,7 @@ public static class Analytics
 
 		private static void LogItemsLooted(BasePlayer looter, BaseEntity entity, ItemContainer container, AttackEntity tool = null)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
@@ -1705,7 +1775,7 @@ public static class Analytics
 					{
 						string shortname = item.info.shortname;
 						int amount = item.amount;
-						ulong steamId = looter?.userID ?? 0;
+						ulong steamId = looter?.userID ?? ((BasePlayer.EncryptedValue<ulong>)0uL);
 						LogResource(ResourceMode.Produced, "loot", shortname, amount, entity, tool, safezone: false, null, steamId);
 					}
 				}
@@ -1718,9 +1788,9 @@ public static class Analytics
 
 		public static void LogResource(ResourceMode mode, string category, string itemName, int amount, BaseEntity sourceEntity = null, AttackEntity tool = null, bool safezone = false, BaseEntity workbench = null, ulong steamId = 0uL, string sourceEntityPrefab = null, Item sourceItem = null, string targetItem = null)
 		{
-			//IL_0073: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0095: Unknown result type (might be due to invalid IL or missing references)
-			if (!Stats || !HighFrequencyStats)
+			//IL_006c: Unknown result type (might be due to invalid IL or missing references)
+			//IL_008e: Unknown result type (might be due to invalid IL or missing references)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
@@ -1780,7 +1850,7 @@ public static class Analytics
 					string userWipeId = SingletonComponent<ServerMgr>.Instance.persistance.GetUserWipeId(steamId);
 					eventRecord.AddField("player_userid", userWipeId);
 				}
-				eventRecord.Submit();
+				SubmitPoint(eventRecord);
 			}
 			catch (Exception ex)
 			{
@@ -1790,16 +1860,15 @@ public static class Analytics
 
 		public static void OnSkinChanged(BasePlayer player, RepairBench repairBench, Item item, ulong workshopId)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
 			try
 			{
-				EventRecord.New("item_skinned").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)repairBench)
+				SubmitPoint(EventRecord.New("item_skinned").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)repairBench)
 					.AddField("item", item)
-					.AddField("new_skin", workshopId)
-					.Submit();
+					.AddField("new_skin", workshopId));
 			}
 			catch (Exception ex)
 			{
@@ -1809,18 +1878,17 @@ public static class Analytics
 
 		public static void OnItemRepaired(BasePlayer player, BaseEntity repairBench, Item itemToRepair, float conditionBefore, float maxConditionBefore)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
 			try
 			{
-				EventRecord.New("item_repair").AddField("player", (BaseEntity)player).AddField("entity", repairBench)
+				SubmitPoint(EventRecord.New("item_repair").AddField("player", (BaseEntity)player).AddField("entity", repairBench)
 					.AddField("item", itemToRepair)
 					.AddField("old_condition", conditionBefore)
 					.AddField("old_max_condition", maxConditionBefore)
-					.AddField("max_condition", itemToRepair.maxConditionNormalized)
-					.Submit();
+					.AddField("max_condition", itemToRepair.maxConditionNormalized));
 			}
 			catch (Exception ex)
 			{
@@ -1830,17 +1898,16 @@ public static class Analytics
 
 		public static void OnEntityRepaired(BasePlayer player, BaseEntity entity, float healthBefore, float healthAfter)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
 			try
 			{
-				EventRecord.New("entity_repair").AddField("player", (BaseEntity)player).AddField("entity", entity)
+				SubmitPoint(EventRecord.New("entity_repair").AddField("player", (BaseEntity)player).AddField("entity", entity)
 					.AddField("healing", healthAfter - healthBefore)
 					.AddField("health_before", healthBefore)
-					.AddField("health_after", healthAfter)
-					.Submit();
+					.AddField("health_after", healthAfter));
 			}
 			catch (Exception ex)
 			{
@@ -1851,20 +1918,19 @@ public static class Analytics
 		public static void OnBuildingBlockUpgraded(BasePlayer player, BuildingBlock buildingBlock, BuildingGrade.Enum targetGrade, uint targetColor, ulong targetSkin)
 		{
 			//IL_005b: Unknown result type (might be due to invalid IL or missing references)
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
 			try
 			{
-				EventRecord.New("block_upgrade").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)buildingBlock)
+				SubmitPoint(EventRecord.New("block_upgrade").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)buildingBlock)
 					.AddField("old_grade", (int)buildingBlock.grade)
 					.AddField("new_grade", (int)targetGrade)
 					.AddField("color", targetColor)
 					.AddField("biome", GetBiome(((Component)buildingBlock).transform.position))
 					.AddField("skin_old", buildingBlock.skinID)
-					.AddField("skin", targetSkin)
-					.Submit();
+					.AddField("skin", targetSkin));
 			}
 			catch (Exception ex)
 			{
@@ -1872,16 +1938,15 @@ public static class Analytics
 			}
 		}
 
-		public static void OnBuildingBlockDemolished(BasePlayer player, BuildingBlock buildingBlock)
+		public static void OnBuildingBlockDemolished(BasePlayer player, StabilityEntity buildingBlock)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
 			try
 			{
-				EventRecord.New("block_demolish").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)buildingBlock)
-					.Submit();
+				SubmitPoint(EventRecord.New("block_demolish").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)buildingBlock));
 			}
 			catch (Exception ex)
 			{
@@ -1891,14 +1956,13 @@ public static class Analytics
 
 		public static void OnPlayerInitializedWipeId(ulong userId, string wipeId)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
 			try
 			{
-				EventRecord.New("player_wipe_id_set").AddField("user_id", userId).AddField("player_wipe_id", wipeId)
-					.Submit();
+				SubmitPoint(EventRecord.New("player_wipe_id_set").AddField("user_id", userId).AddField("player_wipe_id", wipeId));
 			}
 			catch (Exception ex)
 			{
@@ -1908,14 +1972,13 @@ public static class Analytics
 
 		public static void OnFreeUnderwaterCrate(BasePlayer player, FreeableLootContainer freeableLootContainer)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
 			try
 			{
-				EventRecord.New("crate_untied").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)freeableLootContainer)
-					.Submit();
+				SubmitPoint(EventRecord.New("crate_untied").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)freeableLootContainer));
 			}
 			catch (Exception ex)
 			{
@@ -1925,15 +1988,14 @@ public static class Analytics
 
 		public static void OnVehiclePurchased(BasePlayer player, BaseEntity vehicle)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
 			try
 			{
-				EventRecord.New("vehicle_purchase").AddField("player", (BaseEntity)player).AddField("entity", vehicle)
-					.AddField("price", vehicle)
-					.Submit();
+				SubmitPoint(EventRecord.New("vehicle_purchase").AddField("player", (BaseEntity)player).AddField("entity", vehicle)
+					.AddField("price", vehicle));
 			}
 			catch (Exception ex)
 			{
@@ -1943,7 +2005,7 @@ public static class Analytics
 
 		public static void OnMissionComplete(BasePlayer player, BaseMission mission, BaseMission.MissionFailReason? failReason = null)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
@@ -1955,7 +2017,7 @@ public static class Analytics
 				{
 					eventRecord.AddField("mission_succeed", value: false).AddField("fail_reason", failReason.Value.ToString());
 				}
-				eventRecord.Submit();
+				SubmitPoint(eventRecord);
 			}
 			catch (Exception ex)
 			{
@@ -1965,7 +2027,7 @@ public static class Analytics
 
 		public static void OnGamblingResult(BasePlayer player, BaseEntity entity, int scrapPaid, int scrapRecieved, Guid? gambleGroupId = null)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
@@ -1978,7 +2040,7 @@ public static class Analytics
 				{
 					eventRecord.AddField("gamble_grouping", gambleGroupId.Value);
 				}
-				eventRecord.Submit();
+				SubmitPoint(eventRecord);
 			}
 			catch (Exception ex)
 			{
@@ -1988,15 +2050,14 @@ public static class Analytics
 
 		public static void OnPlayerPinged(BasePlayer player, BasePlayer.PingType type, bool wasViaWheel)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
 			try
 			{
-				EventRecord.New("player_pinged").AddField("player", (BaseEntity)player).AddField("pingType", (int)type)
-					.AddField("viaWheel", wasViaWheel)
-					.Submit();
+				SubmitPoint(EventRecord.New("player_pinged").AddField("player", (BaseEntity)player).AddField("pingType", (int)type)
+					.AddField("viaWheel", wasViaWheel));
 			}
 			catch (Exception ex)
 			{
@@ -2006,14 +2067,13 @@ public static class Analytics
 
 		public static void OnBagUnclaimed(BasePlayer player, SleepingBag bag)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
 			try
 			{
-				EventRecord.New("bag_unclaim").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)bag)
-					.Submit();
+				SubmitPoint(EventRecord.New("bag_unclaim").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)bag));
 			}
 			catch (Exception ex)
 			{
@@ -2025,14 +2085,13 @@ public static class Analytics
 		{
 			try
 			{
-				EventRecord.New("steam_auth").AddField("user", userId).AddField("owner", ownerUserId)
+				SubmitPoint(EventRecord.New("steam_auth").AddField("user", userId).AddField("owner", ownerUserId)
 					.AddField("response", authResponse)
 					.AddField("server_port", Net.sv.port)
 					.AddField("network_mode", Net.sv.ProtocolId)
 					.AddField("player_count", BasePlayer.activePlayerList.Count)
 					.AddField("max_players", ConVar.Server.maxplayers)
-					.AddField("hostname", ConVar.Server.hostname)
-					.Submit();
+					.AddField("hostname", ConVar.Server.hostname));
 			}
 			catch (Exception ex)
 			{
@@ -2043,17 +2102,16 @@ public static class Analytics
 		public static void OnBuildingBlockColorChanged(BasePlayer player, BuildingBlock block, uint oldColor, uint newColor)
 		{
 			//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
 			try
 			{
-				EventRecord.New("player_pinged").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)block)
+				SubmitPoint(EventRecord.New("player_pinged").AddField("player", (BaseEntity)player).AddField("entity", (BaseEntity)block)
 					.AddField("color_old", oldColor)
 					.AddField("color_new", newColor)
-					.AddField("biome", GetBiome(((Component)block).transform.position))
-					.Submit();
+					.AddField("biome", GetBiome(((Component)block).transform.position)));
 			}
 			catch (Exception ex)
 			{
@@ -2063,15 +2121,14 @@ public static class Analytics
 
 		public static void OnBurstModeToggled(BasePlayer player, BaseProjectile gun, bool state)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
 			try
 			{
-				EventRecord.New("burst_toggle").AddField("player", (BaseEntity)player).AddField("weapon", (BaseEntity)gun)
-					.AddField("enabled", state)
-					.Submit();
+				SubmitPoint(EventRecord.New("burst_toggle").AddField("player", (BaseEntity)player).AddField("weapon", (BaseEntity)gun)
+					.AddField("enabled", state));
 			}
 			catch (Exception ex)
 			{
@@ -2081,16 +2138,116 @@ public static class Analytics
 
 		public static void OnParachuteUsed(BasePlayer player, float distanceTravelled, float deployHeight, float timeInAir)
 		{
-			if (!Stats)
+			if (!GameplayAnalytics)
 			{
 				return;
 			}
 			try
 			{
-				EventRecord.New("parachute_used").AddField("player", (BaseEntity)player).AddField("distanceTravelled", distanceTravelled)
+				SubmitPoint(EventRecord.New("parachute_used").AddField("player", (BaseEntity)player).AddField("distanceTravelled", distanceTravelled)
 					.AddField("deployHeight", deployHeight)
-					.AddField("timeInAir", timeInAir)
-					.Submit();
+					.AddField("timeInAir", timeInAir));
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnTutorialStarted(BasePlayer player)
+		{
+			if (!GameplayAnalytics)
+			{
+				return;
+			}
+			try
+			{
+				SubmitPoint(EventRecord.New("tutorial_started").AddField("player", (BaseEntity)player));
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnTutorialCompleted(BasePlayer player, float timeElapsed)
+		{
+			if (!GameplayAnalytics)
+			{
+				return;
+			}
+			try
+			{
+				SubmitPoint(EventRecord.New("tutorial_completed").AddField("player", (BaseEntity)player).AddLegacyTimespan("duration", TimeSpan.FromSeconds(timeElapsed)));
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnTutorialQuit(BasePlayer player, string activeMissionName)
+		{
+			if (!GameplayAnalytics)
+			{
+				return;
+			}
+			try
+			{
+				SubmitPoint(EventRecord.New("tutorial_quit").AddField("player", (BaseEntity)player).AddField("activeMissionName", activeMissionName));
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnBaseInteract(BasePlayer player, BaseEntity entity)
+		{
+			if (!GameplayAnalytics)
+			{
+				return;
+			}
+			try
+			{
+				SubmitPoint(EventRecord.New("base_interaction").AddField("player", (BaseEntity)player).AddField("entity", entity));
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnPlayerDeath(BasePlayer player, BasePlayer killer)
+		{
+			if (!GameplayAnalytics)
+			{
+				return;
+			}
+			try
+			{
+				SubmitPoint(EventRecord.New("player_death").AddField("player", (BaseEntity)player).AddField("killer", (BaseEntity)killer));
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+		}
+
+		public static void OnCarShredded(MagnetLiftable car, List<Item> produced)
+		{
+			if (!GameplayAnalytics)
+			{
+				return;
+			}
+			try
+			{
+				EventRecord eventRecord = EventRecord.New("car_shredded").AddField("player", (BaseEntity)car.associatedPlayer).AddField("car", car.GetBaseEntity());
+				foreach (Item item in produced)
+				{
+					eventRecord.AddField("item_" + item.info.shortname, item);
+				}
+				SubmitPoint(eventRecord);
 			}
 			catch (Exception ex)
 			{
@@ -2196,7 +2353,7 @@ public static class Analytics
 			while (!Application.isQuitting)
 			{
 				yield return CoroutineEx.waitForSecondsRealtime(60f);
-				if (Stats)
+				if (GameplayAnalytics)
 				{
 					yield return TryCatch(AggregatePlayers(blueprints: false, positions: true));
 					if (loop % 60 == 0)
@@ -2286,16 +2443,16 @@ public static class Analytics
 			}
 			Debug.Log((object)$"Took {Math.Round(DateTime.UtcNow.Subtract(startTime).TotalSeconds, 1)}s to aggregate {totalCount} entities & items...");
 			_ = DateTime.UtcNow;
-			EventRecord.New("entity_sum").AddObject("counts", entityDict.Select(delegate(KeyValuePair<EntityKey, int> x)
+			SubmitPoint(EventRecord.New("entity_sum").AddObject("counts", entityDict.Select(delegate(KeyValuePair<EntityKey, int> x)
 			{
 				EntitySumItem result = default(EntitySumItem);
 				result.PrefabId = x.Key.PrefabId;
 				result.Grade = x.Key.Grade;
 				result.Count = x.Value;
 				return result;
-			})).Submit();
+			})));
 			yield return null;
-			EventRecord.New("item_sum").AddObject("counts", itemDict).Submit();
+			SubmitPoint(EventRecord.New("item_sum").AddObject("counts", itemDict));
 			yield return null;
 		}
 
@@ -2411,18 +2568,17 @@ public static class Analytics
 			}
 			if (blueprints)
 			{
-				EventRecord.New("blueprint_aggregate_online").AddObject("blueprints", playerBps.Select((KeyValuePair<int, int> x) => new
+				SubmitPoint(EventRecord.New("blueprint_aggregate_online").AddObject("blueprints", playerBps.Select((KeyValuePair<int, int> x) => new
 				{
 					Key = ItemManager.FindItemDefinition(x.Key).shortname,
 					value = x.Value
-				})).Submit();
+				})));
 			}
 			if (!positions)
 			{
 				yield break;
 			}
-			EventRecord.New("player_positions").AddObject("positions", playerPositions).AddObject("player_count", playerPositions.Count)
-				.Submit();
+			SubmitPoint(EventRecord.New("player_positions").AddObject("positions", playerPositions).AddObject("player_count", playerPositions.Count));
 			foreach (PlayerAggregate item4 in playerPositions)
 			{
 				PlayerAggregate current5 = item4;
@@ -2489,9 +2645,8 @@ public static class Analytics
 					watch.Restart();
 				}
 			}
-			EventRecord.New("online_teams").AddObject("teams", teams).AddField("users_in_team", inTeam)
-				.AddField("users_not_in_team", notInTeam)
-				.Submit();
+			SubmitPoint(EventRecord.New("online_teams").AddObject("teams", teams).AddField("users_in_team", inTeam)
+				.AddField("users_not_in_team", notInTeam));
 			foreach (TeamInfo item2 in teams)
 			{
 				TeamInfo current4 = item2;
@@ -2507,6 +2662,8 @@ public static class Analytics
 
 		public static readonly AzureWebInterface server = new AzureWebInterface(isClient: false);
 
+		private AzureAnalyticsUploader GameplayBulkUploader;
+
 		public bool IsClient;
 
 		public int MaxRetries = 1;
@@ -2517,7 +2674,7 @@ public static class Analytics
 
 		private DateTime nextFlush;
 
-		private List<EventRecord> pending = new List<EventRecord>();
+		private ConcurrentQueue<EventRecord> uploadQueue = new ConcurrentQueue<EventRecord>();
 
 		private HttpClient HttpClient = new HttpClient();
 
@@ -2526,28 +2683,63 @@ public static class Analytics
 			CharSet = Encoding.UTF8.WebName
 		};
 
-		public int PendingCount => pending.Count;
+		public int PendingCount => uploadQueue.Count;
 
 		public AzureWebInterface(bool isClient)
 		{
 			//IL_0032: Unknown result type (might be due to invalid IL or missing references)
 			//IL_003c: Expected O, but got Unknown
 			IsClient = isClient;
+			Task.Run((Func<Task>)UploadSchedulingThread);
 		}
 
 		public void EnqueueEvent(EventRecord point)
 		{
-			DateTime utcNow = DateTime.UtcNow;
-			pending.Add(point);
-			if (pending.Count > FlushSize || utcNow > nextFlush)
+			if (!IsClient && !string.IsNullOrEmpty(BulkUploadConnectionString))
 			{
-				nextFlush = utcNow.Add(FlushDelay);
-				List<EventRecord> toUpload = pending;
-				Task.Run(async delegate
+				if (GameplayBulkUploader.NeedsCreation())
 				{
-					await UploadAsync(toUpload);
-				});
-				pending = Pool.GetList<EventRecord>();
+					GameplayBulkUploader = AzureAnalyticsUploader.Create("gameplay_events", TimeSpan.FromMinutes(5.0));
+					GameplayBulkUploader.UseJsonDataObject = true;
+				}
+				GameplayBulkUploader.Append(point);
+			}
+			else
+			{
+				point.MarkSubmitted();
+				uploadQueue.Enqueue(point);
+			}
+		}
+
+		private async Task UploadSchedulingThread()
+		{
+			while (!Application.isQuitting)
+			{
+				try
+				{
+					DateTime utcNow = DateTime.UtcNow;
+					if (uploadQueue.IsEmpty || (uploadQueue.Count < FlushSize && nextFlush > utcNow))
+					{
+						await Task.Delay(1000);
+						continue;
+					}
+					nextFlush = utcNow.Add(FlushDelay);
+					List<EventRecord> list = Pool.GetList<EventRecord>();
+					EventRecord result;
+					while (uploadQueue.TryDequeue(out result))
+					{
+						list.Add(result);
+					}
+					Task.Run(async delegate
+					{
+						await UploadAsync(list);
+					});
+				}
+				catch (Exception ex)
+				{
+					Debug.LogException(ex);
+					await Task.Delay(1000);
+				}
 			}
 		}
 
@@ -2558,119 +2750,29 @@ public static class Analytics
 			streamWriter.Write("[");
 			foreach (EventRecord record in records)
 			{
-				SerializeEvent(record, streamWriter, num);
+				if (num > 0)
+				{
+					streamWriter.Write(',');
+				}
+				record.SerializeAsJson(streamWriter);
 				num++;
 			}
 			streamWriter.Write("]");
 			streamWriter.Flush();
 		}
 
-		private void SerializeEvent(EventRecord record, StreamWriter writer, int index)
-		{
-			//IL_01f6: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01fb: Unknown result type (might be due to invalid IL or missing references)
-			//IL_01fe: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0213: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0228: Unknown result type (might be due to invalid IL or missing references)
-			if (index > 0)
-			{
-				writer.Write(',');
-			}
-			writer.Write("{\"Timestamp\":\"");
-			writer.Write(record.Timestamp.ToString("o"));
-			writer.Write("\",\"Data\":{");
-			bool flag = true;
-			foreach (EventRecordField datum in record.Data)
-			{
-				if (flag)
-				{
-					flag = false;
-				}
-				else
-				{
-					writer.Write(',');
-				}
-				writer.Write("\"");
-				writer.Write(datum.Key1);
-				if (datum.Key2 != null)
-				{
-					writer.Write(datum.Key2);
-				}
-				writer.Write("\":");
-				if (!datum.IsObject)
-				{
-					writer.Write('"');
-				}
-				if (datum.String != null)
-				{
-					if (datum.IsObject)
-					{
-						writer.Write(datum.String);
-					}
-					else
-					{
-						string @string = datum.String;
-						int length = datum.String.Length;
-						for (int i = 0; i < length; i++)
-						{
-							char c = @string[i];
-							switch (c)
-							{
-							case '"':
-							case '\\':
-								writer.Write('\\');
-								writer.Write(c);
-								break;
-							case '\n':
-								writer.Write("\\n");
-								break;
-							case '\r':
-								writer.Write("\\r");
-								break;
-							case '\t':
-								writer.Write("\\t");
-								break;
-							default:
-								writer.Write(c);
-								break;
-							}
-						}
-					}
-				}
-				else if (datum.Float.HasValue)
-				{
-					writer.Write(datum.Float.Value);
-				}
-				else if (datum.Number.HasValue)
-				{
-					writer.Write(datum.Number.Value);
-				}
-				else if (datum.Guid.HasValue)
-				{
-					writer.Write(datum.Guid.Value.ToString("N"));
-				}
-				else if (datum.Vector.HasValue)
-				{
-					writer.Write('(');
-					Vector3 value = datum.Vector.Value;
-					writer.Write(value.x);
-					writer.Write(',');
-					writer.Write(value.y);
-					writer.Write(',');
-					writer.Write(value.z);
-					writer.Write(')');
-				}
-				if (!datum.IsObject)
-				{
-					writer.Write("\"");
-				}
-			}
-			writer.Write('}');
-			writer.Write('}');
-		}
-
 		private async Task UploadAsync(List<EventRecord> records)
 		{
+			if (!(IsClient ? (Application.Manifest?.Features?.ClientAnalytics).GetValueOrDefault() : (Application.Manifest?.Features?.ServerAnalytics).GetValueOrDefault()))
+			{
+				Pool.FreeListAndItems<EventRecord>(ref records);
+				return;
+			}
+			if (records.Count == 0)
+			{
+				Pool.FreeList<EventRecord>(ref records);
+				return;
+			}
 			MemoryStream stream = Pool.Get<MemoryStream>();
 			stream.Position = 0L;
 			stream.SetLength(0L);
@@ -2699,10 +2801,7 @@ public static class Analytics
 								((HttpHeaders)((HttpContent)content).Headers).Add("X-SERVER-IP", Net.sv.ip);
 								((HttpHeaders)((HttpContent)content).Headers).Add("X-SERVER-PORT", Net.sv.port.ToString());
 							}
-							if (UploadAnalytics)
-							{
-								(await HttpClient.PostAsync(IsClient ? ClientAnalyticsUrl : ServerAnalyticsUrl, (HttpContent)(object)content)).EnsureSuccessStatusCode();
-							}
+							(await HttpClient.PostAsync(IsClient ? ClientAnalyticsUrl : ServerAnalyticsUrl, (HttpContent)(object)content)).EnsureSuccessStatusCode();
 						}
 						finally
 						{
@@ -2715,10 +2814,10 @@ public static class Analytics
 						{
 							Debug.LogException(ex);
 						}
-						goto IL_01e4;
+						goto IL_028d;
 					}
 					break;
-					IL_01e4:
+					IL_028d:
 					if (ticket != null)
 					{
 						try
@@ -2745,12 +2844,7 @@ public static class Analytics
 			}
 			finally
 			{
-				foreach (EventRecord record in records)
-				{
-					EventRecord current = record;
-					Pool.Free<EventRecord>(ref current);
-				}
-				Pool.FreeList<EventRecord>(ref records);
+				Pool.FreeListAndItems<EventRecord>(ref records);
 				Pool.FreeMemoryStream(ref stream);
 			}
 		}
@@ -3173,33 +3267,7 @@ public static class Analytics
 		}
 	}
 
-	public static HashSet<string> StatsBlacklist;
-
 	private static HashSet<NetworkableId> trackedSpawnedIds = new HashSet<NetworkableId>();
-
-	[ServerVar(Name = "stats_blacklist", Saved = true)]
-	public static string stats_blacklist
-	{
-		get
-		{
-			if (StatsBlacklist != null)
-			{
-				return string.Join(",", StatsBlacklist);
-			}
-			return "";
-		}
-		set
-		{
-			if (string.IsNullOrEmpty(value))
-			{
-				StatsBlacklist = null;
-			}
-			else
-			{
-				StatsBlacklist = new HashSet<string>(value.Split(',', StringSplitOptions.None));
-			}
-		}
-	}
 
 	public static string ClientAnalyticsUrl { get; set; } = "https://rust-api.facepunch.com/api/public/analytics/rust/client";
 
@@ -3208,30 +3276,33 @@ public static class Analytics
 	public static string ServerAnalyticsUrl { get; set; } = "https://rust-api.facepunch.com/api/public/analytics/rust/server";
 
 
-	[ServerVar(Name = "analytics_header", Saved = true)]
+	[ServerVar(Name = "analytics_header", Saved = true, Help = "Header key of secret when uploading analytics")]
 	public static string AnalyticsHeader { get; set; } = "X-API-KEY";
 
 
-	[ServerVar(Name = "analytics_enabled")]
-	public static bool UploadAnalytics { get; set; } = true;
-
-
-	[ServerVar(Name = "analytics_secret", Saved = true)]
+	[ServerVar(Name = "analytics_secret", Saved = true, Help = "Header secret value when uploading analytics")]
 	public static string AnalyticsSecret { get; set; } = "";
 
 
 	public static string AnalyticsPublicKey { get; set; } = "pub878ABLezSB6onshSwBCRGYDCpEI";
 
 
-	[ServerVar(Name = "high_freq_stats", Saved = true)]
-	public static bool HighFrequencyStats { get; set; } = true;
+	[ServerVar(Name = "analytics_bulk_upload_url", Saved = true, Help = "Azure blob container url + SAS token, enables a more efficient upload method")]
+	public static string BulkUploadConnectionString { get; set; }
+
+	[ServerVar(Name = "performance_analytics", Saved = true, Help = "Toggle to turn off server performance collection")]
+	public static bool ServerPerformanceConVar { get; set; } = true;
 
 
-	[ClientVar(Name = "pending_analytics")]
-	[ServerVar(Name = "pending_analytics")]
+	[ServerVar(Name = "gameplay_analytics", Saved = true, Help = "Toggle whether gameplay analytics is collected")]
+	public static bool GameplayAnalyticsConVar { get; set; }
+
+	[ClientVar(Name = "pending_analytics", Help = "Shows how many analytics events are pending upload")]
+	[ServerVar(Name = "pending_analytics", Help = "Shows how many analytics events are pending upload")]
 	public static void GetPendingAnalytics(Arg arg)
 	{
-		int pendingCount = AzureWebInterface.server.PendingCount;
-		arg.ReplyWith($"Pending: {pendingCount}");
+		StringBuilder stringBuilder = new StringBuilder();
+		stringBuilder.AppendLine($"Server Pending: {AzureWebInterface.server.PendingCount}");
+		arg.ReplyWith(stringBuilder.ToString());
 	}
 }

@@ -29,9 +29,15 @@ public class ItemModWearable : ItemMod
 
 	public bool equipOnRightClick = true;
 
+	public bool equipOnPickup;
+
 	public bool npcOnly;
 
 	public GameObjectRef breakEffect = new GameObjectRef();
+
+	public bool preventsMounting;
+
+	public bool preventsMap;
 
 	public GameObjectRef viewmodelAddition;
 

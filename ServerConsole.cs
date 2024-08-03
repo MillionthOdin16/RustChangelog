@@ -8,11 +8,13 @@ using Windows;
 
 public class ServerConsole : SingletonComponent<ServerConsole>
 {
-	private ConsoleWindow console = new ConsoleWindow();
+	private ConsoleWindow console;
 
-	private ConsoleInput input = new ConsoleInput();
+	private ConsoleInput input;
 
 	private float nextUpdate;
+
+	private static bool consoleEnabled => !CommandLine.HasSwitch("-noconsole");
 
 	private DateTime currentGameTime
 	{
@@ -36,6 +38,13 @@ public class ServerConsole : SingletonComponent<ServerConsole>
 
 	public void OnEnable()
 	{
+		if (!consoleEnabled)
+		{
+			((Behaviour)this).enabled = false;
+			return;
+		}
+		console = new ConsoleWindow();
+		input = new ConsoleInput();
 		console.Initialize();
 		input.OnInputText += OnInputText;
 		Output.OnMessage += HandleLog;
@@ -49,8 +58,11 @@ public class ServerConsole : SingletonComponent<ServerConsole>
 	private void OnDisable()
 	{
 		Output.OnMessage -= HandleLog;
-		input.OnInputText -= OnInputText;
-		console.Shutdown();
+		if (input != null)
+		{
+			input.OnInputText -= OnInputText;
+		}
+		console?.Shutdown();
 	}
 
 	private void OnInputText(string obj)
@@ -61,7 +73,7 @@ public class ServerConsole : SingletonComponent<ServerConsole>
 
 	public static void PrintColoured(params object[] objects)
 	{
-		if ((Object)(object)SingletonComponent<ServerConsole>.Instance == (Object)null)
+		if ((Object)(object)SingletonComponent<ServerConsole>.Instance == (Object)null || SingletonComponent<ServerConsole>.Instance.input == null)
 		{
 			return;
 		}
@@ -121,15 +133,18 @@ public class ServerConsole : SingletonComponent<ServerConsole>
 		{
 			System.Console.ForegroundColor = ConsoleColor.Gray;
 		}
-		input.ClearLine(input.statusText.Length);
-		System.Console.WriteLine(message);
-		input.RedrawInputLine();
+		if (input != null)
+		{
+			input.ClearLine(input.statusText.Length);
+			System.Console.WriteLine(message);
+			input.RedrawInputLine();
+		}
 	}
 
 	private void Update()
 	{
 		UpdateStatus();
-		input.Update();
+		input?.Update();
 	}
 
 	private void UpdateStatus()
@@ -137,7 +152,7 @@ public class ServerConsole : SingletonComponent<ServerConsole>
 		if (!(nextUpdate > Time.realtimeSinceStartup) && Net.sv != null && ((BaseNetwork)Net.sv).IsConnected())
 		{
 			nextUpdate = Time.realtimeSinceStartup + 0.33f;
-			if (input.valid)
+			if (input != null && input.valid)
 			{
 				string text = NumberExtensions.FormatSeconds((long)Time.realtimeSinceStartup);
 				string text2 = currentGameTime.ToString("[H:mm]");

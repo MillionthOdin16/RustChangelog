@@ -9,6 +9,20 @@ public class XORSwitch : IOEntity
 
 	private bool firstRun = true;
 
+	public override int ConsumptionAmount()
+	{
+		return 0;
+	}
+
+	public override bool WantsPower(int inputIndex)
+	{
+		if (input1Amount != 0)
+		{
+			return input2Amount == 0;
+		}
+		return true;
+	}
+
 	public override void ResetState()
 	{
 		base.ResetState();
@@ -22,7 +36,7 @@ public class XORSwitch : IOEntity
 			return 0;
 		}
 		int num = Mathf.Max(input1Amount, input2Amount);
-		return Mathf.Max(0, num - ConsumptionAmount());
+		return Mathf.Max(0, num);
 	}
 
 	public override void UpdateHasPower(int inputAmount, int inputSlot)

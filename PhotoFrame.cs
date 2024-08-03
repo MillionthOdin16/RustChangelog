@@ -31,6 +31,8 @@ public class PhotoFrame : StorageContainer, ILOD, IImageReceiver, ISignage, IUGC
 
 	public uint[] GetContentCRCs => new uint[1] { _overlayTextureCrc };
 
+	public override bool ShouldTransferAssociatedFiles => true;
+
 	public BaseNetworkable UgcEntity => this;
 
 	public Vector2i TextureSize => new Vector2i(PaintableSource.texWidth, PaintableSource.texHeight);
@@ -361,7 +363,7 @@ public class PhotoFrame : StorageContainer, ILOD, IImageReceiver, ISignage, IUGC
 		}
 		if (IsLocked())
 		{
-			return player.userID == base.OwnerID;
+			return (ulong)player.userID == base.OwnerID;
 		}
 		return true;
 	}

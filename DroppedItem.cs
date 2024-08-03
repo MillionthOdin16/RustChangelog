@@ -3,7 +3,7 @@ using ConVar;
 using Facepunch.Rust;
 using UnityEngine;
 
-public class DroppedItem : WorldItem
+public class DroppedItem : WorldItem, IContainerSounds
 {
 	public enum DropReasonEnum
 	{
@@ -13,20 +13,56 @@ public class DroppedItem : WorldItem
 		Loot
 	}
 
+	public class DroppedItemUnderwaterQueue : PersistentObjectWorkQueue<DroppedItem>
+	{
+		protected override void RunJob(DroppedItem entity)
+		{
+			if ((Object)(object)entity != (Object)null)
+			{
+				entity.CheckUnderwaterStatus(canSplash: true);
+			}
+		}
+	}
+
 	[Header("DroppedItem")]
 	public GameObject itemModel;
 
+	public GameObjectRef splashEffect;
+
 	private Collider childCollider;
 
-	private Rigidbody rB;
+	[ServerVar(Help = "How many milliseconds to spend on updating underwater drag levels")]
+	public static float underwater_drag_budget_ms = 0.1f;
 
-	private const int INTERACTION_ONLY_LAYER = 19;
+	private const Flags FLAG_STUCK = Flags.Reserved1;
+
+	private const Flags FLAG_UNDERWATER = Flags.Reserved2;
+
+	private int originalLayer = -1;
 
 	[NonSerialized]
 	public DropReasonEnum DropReason;
 
 	[NonSerialized]
 	public ulong DroppedBy;
+
+	[NonSerialized]
+	public DateTime DroppedTime;
+
+	[NonSerialized]
+	public bool NeverCombine;
+
+	private Rigidbody rB;
+
+	private CollisionDetectionMode originalCollisionMode;
+
+	private Vector3 prevLocalPos;
+
+	private const float SLEEP_CHECK_FREQUENCY = 11f;
+
+	private const float AIR_DRAG = 0.1f;
+
+	private const float UNDERWATER_DRAG = 7f;
 
 	private bool hasLastPos;
 
@@ -36,6 +72,52 @@ public class DroppedItem : WorldItem
 
 	private Quaternion lastGoodRot;
 
+	private Action cachedSleepCheck;
+
+	private float maxBoundsExtent;
+
+	private readonly Vector3 smallVerticalOffset = new Vector3(0f, 0.05f, 0f);
+
+	public static DroppedItemUnderwaterQueue underwaterStatusQueue = new DroppedItemUnderwaterQueue();
+
+	private TimeSince lastUnderwaterFlowImpulse;
+
+	private bool StuckInSomething => HasFlag(Flags.Reserved1);
+
+	public SoundDefinition OpenSound
+	{
+		get
+		{
+			if (item == null)
+			{
+				return null;
+			}
+			ItemModContainer component = ((Component)item.info).GetComponent<ItemModContainer>();
+			if ((Object)(object)component == (Object)null)
+			{
+				return null;
+			}
+			return component.openSound;
+		}
+	}
+
+	public SoundDefinition CloseSound
+	{
+		get
+		{
+			if (item == null)
+			{
+				return null;
+			}
+			ItemModContainer component = ((Component)item.info).GetComponent<ItemModContainer>();
+			if ((Object)(object)component == (Object)null)
+			{
+				return null;
+			}
+			return component.closeSound;
+		}
+	}
+
 	public override float GetNetworkTime()
 	{
 		return Time.fixedTime;
@@ -43,12 +125,22 @@ public class DroppedItem : WorldItem
 
 	public override void ServerInit()
 	{
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
 		base.ServerInit();
 		if (GetDespawnDuration() < float.PositiveInfinity)
 		{
 			((FacepunchBehaviour)this).Invoke((Action)IdleDestroy, GetDespawnDuration());
 		}
 		ReceiveCollisionMessages(b: true);
+		prevLocalPos = ((Component)this).transform.localPosition;
+		((PersistentObjectWorkQueue<DroppedItem>)underwaterStatusQueue).Add(this);
+	}
+
+	internal override void DoServerDestroy()
+	{
+		base.DoServerDestroy();
+		((PersistentObjectWorkQueue<DroppedItem>)underwaterStatusQueue).Remove(this);
 	}
 
 	public virtual float GetDespawnDuration()
@@ -77,12 +169,12 @@ public class DroppedItem : WorldItem
 
 	public void OnDroppedOn(DroppedItem di)
 	{
-		//IL_0222: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0227: Unknown result type (might be due to invalid IL or missing references)
-		//IL_025e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0263: Unknown result type (might be due to invalid IL or missing references)
-		//IL_026e: Unknown result type (might be due to invalid IL or missing references)
-		if (item == null || di.item == null || (Object)(object)di.item.info != (Object)(object)item.info || (di.item.IsBlueprint() && di.item.blueprintTarget != item.blueprintTarget) || (di.item.hasCondition && di.item.condition != di.item.maxCondition) || (item.hasCondition && item.condition != item.maxCondition))
+		//IL_0233: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0238: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0270: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0275: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0280: Unknown result type (might be due to invalid IL or missing references)
+		if (item == null || di.item == null || (Object)(object)di.item.info != (Object)(object)item.info || (di.item.IsBlueprint() && di.item.blueprintTarget != item.blueprintTarget) || NeverCombine || di.NeverCombine || (di.item.hasCondition && di.item.condition != di.item.maxCondition) || (item.hasCondition && item.condition != item.maxCondition))
 		{
 			return;
 		}
@@ -130,9 +222,13 @@ public class DroppedItem : WorldItem
 	public override void OnParentChanging(BaseEntity oldParent, BaseEntity newParent)
 	{
 		base.OnParentChanging(oldParent, newParent);
-		if ((Object)(object)newParent != (Object)null)
+		if ((Object)(object)newParent != (Object)null && (Object)(object)newParent != (Object)(object)oldParent)
 		{
 			OnParented();
+		}
+		else if ((Object)(object)newParent == (Object)null && (Object)(object)oldParent != (Object)null)
+		{
+			OnUnparented();
 		}
 	}
 
@@ -171,79 +267,174 @@ public class DroppedItem : WorldItem
 		}
 		((Component)this).transform.position = val;
 		((Component)this).transform.rotation = rotation;
-		((Component)childCollider).gameObject.layer = ((Component)this).gameObject.layer;
-		rB.isKinematic = false;
-		rB.useGravity = true;
-		rB.WakeUp();
+		Unstick();
 		if (GetDespawnDuration() < float.PositiveInfinity)
 		{
 			((FacepunchBehaviour)this).Invoke((Action)IdleDestroy, GetDespawnDuration());
 		}
 	}
 
-	public void GoKinematic()
+	public void StickIn()
 	{
-		rB.isKinematic = true;
-		if (Object.op_Implicit((Object)(object)childCollider))
-		{
-			((Component)childCollider).gameObject.layer = 19;
-		}
+		SetFlag(Flags.Reserved1, b: true);
 	}
 
-	protected override bool TransformHasMoved()
+	public void Unstick()
 	{
-		if (base.TransformHasMoved() && !rB.isKinematic)
+		SetFlag(Flags.Reserved1, b: false);
+	}
+
+	private void SleepCheck()
+	{
+		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		if (!HasParent() || StuckInSomething)
 		{
-			return !rB.IsSleeping();
+			return;
 		}
-		return false;
+		if (rB.isKinematic)
+		{
+			if (maxBoundsExtent == 0f)
+			{
+				float num;
+				if (!((Object)(object)childCollider != (Object)null))
+				{
+					num = Vector3Ex.Max(((Bounds)(ref bounds)).extents);
+				}
+				else
+				{
+					Bounds val = childCollider.bounds;
+					num = Vector3Ex.Max(((Bounds)(ref val)).extents);
+				}
+				maxBoundsExtent = num;
+			}
+			if (!GamePhysics.Trace(new Ray(CenterPoint(), Vector3.down), 0f, out var _, maxBoundsExtent + 0.1f, -928830719, (QueryTriggerInteraction)1, this))
+			{
+				BecomeActive();
+			}
+		}
+		else if (Vector3.SqrMagnitude(((Component)this).transform.localPosition - prevLocalPos) < 0.075f)
+		{
+			BecomeInactive();
+		}
+		prevLocalPos = ((Component)this).transform.localPosition;
+	}
+
+	private void OnPhysicsNeighbourChanged()
+	{
+		if (!StuckInSomething)
+		{
+			BecomeActive();
+		}
 	}
 
 	public override void OnPositionalNetworkUpdate()
 	{
+		base.OnPositionalNetworkUpdate();
+		CheckValidPosition();
+	}
+
+	protected override bool ShouldUpdateNetworkPosition()
+	{
+		if (syncPosition)
+		{
+			return !rB.isKinematic;
+		}
+		return false;
+	}
+
+	private void CheckValidPosition()
+	{
 		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
 		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
 		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00e8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0106: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
-		if ((Object)(object)rB != (Object)null && (Object)(object)childCollider != (Object)null)
+		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d7: Unknown result type (might be due to invalid IL or missing references)
+		if (!((Object)(object)rB != (Object)null) || !((Object)(object)childCollider != (Object)null))
 		{
-			Bounds val = childCollider.bounds;
-			Vector3 center = ((Bounds)(ref val)).center;
-			Vector3 val2 = center - lastGoodColliderCentre;
-			Ray ray = default(Ray);
-			((Ray)(ref ray))._002Ector(lastGoodColliderCentre, ((Vector3)(ref val2)).normalized);
-			if (hasLastPos && GamePhysics.Trace(ray, 0f, out var _, ((Vector3)(ref val2)).magnitude, 1084293377, (QueryTriggerInteraction)1, this))
+			return;
+		}
+		Bounds val = childCollider.bounds;
+		Vector3 val2 = ((Bounds)(ref val)).center + smallVerticalOffset;
+		Vector3 val3 = val2 - lastGoodColliderCentre;
+		Ray ray = default(Ray);
+		((Ray)(ref ray))._002Ector(lastGoodColliderCentre, ((Vector3)(ref val3)).normalized);
+		if (hasLastPos && GamePhysics.Trace(ray, 0f, out var _, ((Vector3)(ref val3)).magnitude, 1218511105, (QueryTriggerInteraction)1, this))
+		{
+			((Component)this).transform.position = lastGoodPos + smallVerticalOffset;
+			((Component)this).transform.rotation = lastGoodRot;
+			if (!rB.isKinematic)
 			{
-				((Component)this).transform.position = lastGoodPos;
-				((Component)this).transform.rotation = lastGoodRot;
 				rB.velocity = Vector3.zero;
 				rB.angularVelocity = Vector3.zero;
-				Physics.SyncTransforms();
 			}
-			else
+			Physics.SyncTransforms();
+		}
+		else
+		{
+			lastGoodColliderCentre = val2;
+			lastGoodPos = ((Component)this).transform.position;
+			lastGoodRot = ((Component)this).transform.rotation;
+			hasLastPos = true;
+		}
+	}
+
+	private void OnUnparented()
+	{
+		if (cachedSleepCheck != null)
+		{
+			((FacepunchBehaviour)this).CancelInvoke(cachedSleepCheck);
+		}
+	}
+
+	private void OnParented()
+	{
+		if ((Object)(object)childCollider == (Object)null)
+		{
+			return;
+		}
+		if (Object.op_Implicit((Object)(object)childCollider))
+		{
+			childCollider.enabled = false;
+			((FacepunchBehaviour)this).Invoke((Action)EnableCollider, 0.1f);
+		}
+		if (base.isServer && !StuckInSomething)
+		{
+			if (cachedSleepCheck == null)
 			{
-				lastGoodColliderCentre = center;
-				lastGoodPos = ((Component)this).transform.position;
-				lastGoodRot = ((Component)this).transform.rotation;
-				hasLastPos = true;
+				cachedSleepCheck = SleepCheck;
 			}
+			((FacepunchBehaviour)this).InvokeRandomized(cachedSleepCheck, 5.5f, 11f, Random.Range(-1.1f, 1.1f));
 		}
 	}
 
@@ -251,6 +442,8 @@ public class DroppedItem : WorldItem
 	{
 		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0144: Unknown result type (might be due to invalid IL or missing references)
 		base.PostInitShared();
 		GameObject val = null;
 		val = ((item == null || !item.GetWorldModel().isValid) ? Object.Instantiate<GameObject>(itemModel) : item.GetWorldModel().Instantiate());
@@ -270,46 +463,104 @@ public class DroppedItem : WorldItem
 			{
 				childCollider.enabled = true;
 			}
+			originalLayer = ((Component)childCollider).gameObject.layer;
 		}
 		if (base.isServer)
 		{
-			WorldModel component = val.GetComponent<WorldModel>();
-			float mass = (Object.op_Implicit((Object)(object)component) ? component.mass : 1f);
-			float drag = 0.1f;
 			float angularDrag = 0.1f;
 			rB = ((Component)this).gameObject.AddComponent<Rigidbody>();
-			rB.mass = mass;
-			rB.drag = drag;
+			UpdateItemMass();
+			rB.drag = 0.1f;
 			rB.angularDrag = angularDrag;
 			rB.interpolation = (RigidbodyInterpolation)0;
 			rB.collisionDetectionMode = (CollisionDetectionMode)3;
+			originalCollisionMode = rB.collisionDetectionMode;
+			rB.sleepThreshold = Mathf.Max(0.05f, Physics.sleepThreshold);
 			Renderer[] componentsInChildren = val.GetComponentsInChildren<Renderer>(true);
 			for (int i = 0; i < componentsInChildren.Length; i++)
 			{
 				componentsInChildren[i].enabled = false;
 			}
+			CheckValidPosition();
+			CheckUnderwaterStatus(canSplash: false);
+			UpdateUnderwaterDrag();
 		}
 		if (item != null)
 		{
-			PhysicsEffects component2 = ((Component)this).gameObject.GetComponent<PhysicsEffects>();
-			if ((Object)(object)component2 != (Object)null)
+			PhysicsEffects component = ((Component)this).gameObject.GetComponent<PhysicsEffects>();
+			if ((Object)(object)component != (Object)null)
 			{
-				component2.entity = this;
+				component.entity = this;
 				if ((Object)(object)item.info.physImpactSoundDef != (Object)null)
 				{
-					component2.physImpactSoundDef = item.info.physImpactSoundDef;
+					component.physImpactSoundDef = item.info.physImpactSoundDef;
 				}
+			}
+			Buoyancy component2 = val.GetComponent<Buoyancy>();
+			if ((Object)(object)component2 != (Object)null && base.isServer)
+			{
+				component2.rigidBody = rB;
 			}
 		}
 		val.SetActive(true);
 	}
 
-	private void OnParented()
+	public override void OnFlagsChanged(Flags old, Flags next)
 	{
-		if (!((Object)(object)childCollider == (Object)null) && Object.op_Implicit((Object)(object)childCollider))
+		base.OnFlagsChanged(old, next);
+		if (!old.HasFlag(Flags.Reserved1) && next.HasFlag(Flags.Reserved1))
 		{
-			childCollider.enabled = false;
-			((FacepunchBehaviour)this).Invoke((Action)EnableCollider, 0.1f);
+			BecomeInactive();
+		}
+		else if (old.HasFlag(Flags.Reserved1) && !next.HasFlag(Flags.Reserved1))
+		{
+			BecomeActive();
+		}
+		if (base.isServer && old.HasFlag(Flags.Reserved2) != next.HasFlag(Flags.Reserved2))
+		{
+			UpdateUnderwaterDrag();
+		}
+	}
+
+	private void BecomeActive()
+	{
+		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
+		if (base.isServer)
+		{
+			rB.isKinematic = false;
+			rB.collisionDetectionMode = originalCollisionMode;
+			rB.WakeUp();
+			if (HasParent())
+			{
+				Rigidbody component = ((Component)GetParentEntity()).GetComponent<Rigidbody>();
+				if ((Object)(object)component != (Object)null)
+				{
+					rB.velocity = component.velocity;
+					rB.angularVelocity = component.angularVelocity;
+				}
+			}
+			prevLocalPos = ((Component)this).transform.localPosition;
+		}
+		if ((Object)(object)childCollider != (Object)null)
+		{
+			((Component)childCollider).gameObject.layer = originalLayer;
+		}
+	}
+
+	private void BecomeInactive()
+	{
+		if (base.isServer)
+		{
+			rB.collisionDetectionMode = (CollisionDetectionMode)0;
+			rB.isKinematic = true;
+		}
+		if ((Object)(object)childCollider != (Object)null)
+		{
+			((Component)childCollider).gameObject.layer = 19;
 		}
 	}
 
@@ -321,8 +572,69 @@ public class DroppedItem : WorldItem
 		}
 	}
 
+	public void UpdateItemMass()
+	{
+		if ((Object)(object)rB == (Object)null)
+		{
+			rB = ((Component)this).GetComponent<Rigidbody>();
+		}
+		if ((Object)(object)rB == (Object)null || item == null || item.contents?.itemList == null)
+		{
+			return;
+		}
+		float num = item.info.GetWorldModelMass();
+		ItemModContainer component = ((Component)item.info).GetComponent<ItemModContainer>();
+		if ((Object)(object)component != (Object)null)
+		{
+			_ = component.worldWeightScale;
+		}
+		foreach (Item item in item.contents.itemList)
+		{
+			num += item.info.GetWorldModelMass() * component.worldWeightScale;
+		}
+		if ((Object)(object)component != (Object)null && component.maxWeight > 0f)
+		{
+			num = Mathf.Min(component.maxWeight, num);
+		}
+		rB.mass = num;
+	}
+
 	public override bool ShouldInheritNetworkGroup()
 	{
 		return false;
+	}
+
+	private void CheckUnderwaterStatus(bool canSplash)
+	{
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d4: Unknown result type (might be due to invalid IL or missing references)
+		bool flag = WaterLevel.Test(((Component)this).transform.position, waves: false, volumes: true, this);
+		if (canSplash && flag && !HasFlag(Flags.Reserved2) && splashEffect.isValid)
+		{
+			Effect.server.Run(splashEffect.resourcePath, ((Component)this).transform.position, Vector3.zero);
+		}
+		SetFlag(Flags.Reserved2, flag);
+		if (flag && (Object)(object)rB != (Object)null && !rB.IsSleeping() && TimeSince.op_Implicit(lastUnderwaterFlowImpulse) > 1f)
+		{
+			lastUnderwaterFlowImpulse = TimeSince.op_Implicit(0f - Random.Range(0f, 1f));
+			rB.AddForceAtPosition(Random.onUnitSphere, ((Component)this).transform.position + Random.onUnitSphere * 3f, (ForceMode)1);
+		}
+	}
+
+	private void UpdateUnderwaterDrag()
+	{
+		if ((Object)(object)rB != (Object)null)
+		{
+			rB.drag = (HasFlag(Flags.Reserved2) ? 7f : 0.1f);
+		}
 	}
 }

@@ -7,8 +7,8 @@ public class TargetTrigger : TriggerBase
 
 	internal override GameObject InterestedInObject(GameObject obj)
 	{
-		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
 		obj = base.InterestedInObject(obj);
 		if ((Object)(object)obj == (Object)null)
 		{

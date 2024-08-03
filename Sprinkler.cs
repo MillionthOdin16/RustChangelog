@@ -31,6 +31,11 @@ public class Sprinkler : IOEntity
 		return 2;
 	}
 
+	public override int DesiredPower(int inputIndex = 0)
+	{
+		return Mathf.Clamp(currentEnergy, 0, ConsumptionAmount());
+	}
+
 	public override void UpdateHasPower(int inputAmount, int inputSlot)
 	{
 		base.UpdateHasPower(inputAmount, inputSlot);
@@ -97,13 +102,15 @@ public class Sprinkler : IOEntity
 			}
 			if (cachedSplashables.Count > 0)
 			{
-				int amount = num / cachedSplashables.Count;
+				int num3 = num / cachedSplashables.Count;
+				float num4 = (float)(num % cachedSplashables.Count) / (float)cachedSplashables.Count;
 				foreach (ISplashable cachedSplashable in cachedSplashables)
 				{
+					int amount = num3 + ((Random.value < num4) ? 1 : 0);
 					if (!cachedSplashable.IsUnityNull() && cachedSplashable.WantsSplash(currentFuelType, amount))
 					{
-						int num3 = cachedSplashable.DoSplash(currentFuelType, amount);
-						num -= num3;
+						int num5 = cachedSplashable.DoSplash(currentFuelType, amount);
+						num -= num5;
 						if (num <= 0)
 						{
 							break;

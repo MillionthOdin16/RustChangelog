@@ -6,7 +6,7 @@ namespace Facepunch.CardGames;
 
 public class StackOfCards
 {
-	private List<PlayingCard> cards;
+	private readonly List<PlayingCard> cards;
 
 	public StackOfCards(int numDecks)
 	{
@@ -47,10 +47,15 @@ public class StackOfCards
 		while (num > 1)
 		{
 			num--;
-			int index = Random.Range(0, num);
-			PlayingCard value = cards[index];
-			cards[index] = cards[num];
-			cards[num] = value;
+			int num2 = Random.Range(0, num);
+			List<PlayingCard> list = cards;
+			int index = num2;
+			List<PlayingCard> list2 = cards;
+			int index2 = num;
+			PlayingCard playingCard = cards[num];
+			PlayingCard playingCard2 = cards[num2];
+			PlayingCard playingCard4 = (list[index] = playingCard);
+			playingCard4 = (list2[index2] = playingCard2);
 		}
 	}
 

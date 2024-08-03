@@ -18,6 +18,9 @@ public class MapLayerRenderer : SingletonComponent<MapLayerRenderer>
 
 	private int? _underwaterLabFloorCount;
 
+	[ClientVar(ClientAdmin = true)]
+	public static bool DebugLabs;
+
 	public void Render(MapLayer layer)
 	{
 		if (layer < MapLayer.TrainTunnels)
@@ -111,11 +114,11 @@ public class MapLayerRenderer : SingletonComponent<MapLayerRenderer>
 		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
 		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ac: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bb: Unknown result type (might be due to invalid IL or missing references)
 		CommandBuffer val = new CommandBuffer
 		{
 			name = "DungeonsLayer Render"
@@ -123,24 +126,28 @@ public class MapLayerRenderer : SingletonComponent<MapLayerRenderer>
 		if ((Object)(object)closest != (Object)null && closest.spawnedCells != null)
 		{
 			Matrix4x4 val2 = Matrix4x4.Translate(closest.mapOffset);
-			MeshFilter val4 = default(MeshFilter);
 			foreach (ProceduralDungeonCell spawnedCell in closest.spawnedCells)
 			{
-				if ((Object)(object)spawnedCell == (Object)null || spawnedCell.mapRenderers == null || spawnedCell.mapRenderers.Length == 0)
+				if ((Object)(object)spawnedCell == (Object)null || spawnedCell.mapRendererLods == null || spawnedCell.mapRendererLods.Length == 0)
 				{
 					continue;
 				}
-				MeshRenderer[] mapRenderers = spawnedCell.mapRenderers;
-				foreach (MeshRenderer val3 in mapRenderers)
+				RendererLOD[] mapRendererLods = spawnedCell.mapRendererLods;
+				foreach (RendererLOD rendererLOD in mapRendererLods)
 				{
-					if (!((Object)(object)val3 == (Object)null) && ((Component)val3).TryGetComponent<MeshFilter>(ref val4))
+					if ((Object)(object)rendererLOD == (Object)null)
 					{
-						Mesh sharedMesh = val4.sharedMesh;
-						int subMeshCount = sharedMesh.subMeshCount;
-						Matrix4x4 val5 = val2 * ((Component)val3).transform.localToWorldMatrix;
+						continue;
+					}
+					Matrix4x4 localToWorldMatrix;
+					Mesh finalLodMesh = rendererLOD.GetFinalLodMesh(out localToWorldMatrix);
+					if (!((Object)(object)finalLodMesh == (Object)null))
+					{
+						int subMeshCount = finalLodMesh.subMeshCount;
+						Matrix4x4 val3 = val2 * localToWorldMatrix;
 						for (int j = 0; j < subMeshCount; j++)
 						{
-							val.DrawMesh(sharedMesh, val5, renderMaterial, j);
+							val.DrawMesh(finalLodMesh, val3, renderMaterial, j);
 						}
 					}
 				}
@@ -188,31 +195,28 @@ public class MapLayerRenderer : SingletonComponent<MapLayerRenderer>
 		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0011: Expected O, but got Unknown
-		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
 		CommandBuffer val = new CommandBuffer
 		{
 			name = "TrainLayer Render"
 		};
-		MeshFilter val3 = default(MeshFilter);
 		foreach (DungeonGridCell dungeonGridCell in TerrainMeta.Path.DungeonGridCells)
 		{
-			if (dungeonGridCell.MapRenderers == null || dungeonGridCell.MapRenderers.Length == 0)
+			if (dungeonGridCell.MapRendererLods == null || dungeonGridCell.MapRendererLods.Length == 0)
 			{
 				continue;
 			}
-			MeshRenderer[] mapRenderers = dungeonGridCell.MapRenderers;
-			foreach (MeshRenderer val2 in mapRenderers)
+			RendererLOD[] mapRendererLods = dungeonGridCell.MapRendererLods;
+			for (int i = 0; i < mapRendererLods.Length; i++)
 			{
-				if (!((Object)(object)val2 == (Object)null) && ((Component)val2).TryGetComponent<MeshFilter>(ref val3))
+				Matrix4x4 localToWorldMatrix;
+				Mesh finalLodMesh = mapRendererLods[i].GetFinalLodMesh(out localToWorldMatrix);
+				if (!((Object)(object)finalLodMesh == (Object)null))
 				{
-					Mesh sharedMesh = val3.sharedMesh;
-					int subMeshCount = sharedMesh.subMeshCount;
-					Matrix4x4 localToWorldMatrix = ((Component)val2).transform.localToWorldMatrix;
+					int subMeshCount = finalLodMesh.subMeshCount;
 					for (int j = 0; j < subMeshCount; j++)
 					{
-						val.DrawMesh(sharedMesh, localToWorldMatrix, renderMaterial, j);
+						val.DrawMesh(finalLodMesh, localToWorldMatrix, renderMaterial, j);
 					}
 				}
 			}
@@ -241,6 +245,10 @@ public class MapLayerRenderer : SingletonComponent<MapLayerRenderer>
 		}
 		List<DungeonBaseInfo> dungeonBaseEntrances = TerrainMeta.Path.DungeonBaseEntrances;
 		_underwaterLabFloorCount = ((dungeonBaseEntrances != null && dungeonBaseEntrances.Count > 0) ? dungeonBaseEntrances.Max((DungeonBaseInfo l) => l.Floors.Count) : 0);
+		if (DebugLabs && dungeonBaseEntrances != null)
+		{
+			Debug.Log((object)$"Setup underwater lab: count: {dungeonBaseEntrances.Count} floors: {_underwaterLabFloorCount.Value}");
+		}
 		return _underwaterLabFloorCount.Value;
 	}
 
@@ -249,14 +257,11 @@ public class MapLayerRenderer : SingletonComponent<MapLayerRenderer>
 		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0011: Expected O, but got Unknown
-		//IL_00bd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f6: Unknown result type (might be due to invalid IL or missing references)
 		CommandBuffer val = new CommandBuffer
 		{
 			name = "UnderwaterLabLayer Render"
 		};
-		MeshFilter val3 = default(MeshFilter);
 		foreach (DungeonBaseInfo dungeonBaseEntrance in TerrainMeta.Path.DungeonBaseEntrances)
 		{
 			if (dungeonBaseEntrance.Floors.Count <= floor)
@@ -265,21 +270,33 @@ public class MapLayerRenderer : SingletonComponent<MapLayerRenderer>
 			}
 			foreach (DungeonBaseLink link in dungeonBaseEntrance.Floors[floor].Links)
 			{
-				if (link.MapRenderers == null || link.MapRenderers.Length == 0)
+				if (link.MapRendererLods == null || link.MapRendererLods.Length == 0)
 				{
+					if (DebugLabs)
+					{
+						Debug.Log((object)$"{link} has no renderers");
+					}
 					continue;
 				}
-				MeshRenderer[] mapRenderers = link.MapRenderers;
-				foreach (MeshRenderer val2 in mapRenderers)
+				RendererLOD[] mapRendererLods = link.MapRendererLods;
+				foreach (RendererLOD rendererLOD in mapRendererLods)
 				{
-					if (!((Object)(object)val2 == (Object)null) && ((Component)val2).TryGetComponent<MeshFilter>(ref val3))
+					if ((Object)(object)rendererLOD == (Object)null)
 					{
-						Mesh sharedMesh = val3.sharedMesh;
-						int subMeshCount = sharedMesh.subMeshCount;
-						Matrix4x4 localToWorldMatrix = ((Component)val2).transform.localToWorldMatrix;
+						if (DebugLabs)
+						{
+							Debug.Log((object)$"{link} has a null renderer");
+						}
+						continue;
+					}
+					Matrix4x4 localToWorldMatrix;
+					Mesh finalLodMesh = rendererLOD.GetFinalLodMesh(out localToWorldMatrix);
+					if (!((Object)(object)finalLodMesh == (Object)null))
+					{
+						int subMeshCount = finalLodMesh.subMeshCount;
 						for (int j = 0; j < subMeshCount; j++)
 						{
-							val.DrawMesh(sharedMesh, localToWorldMatrix, renderMaterial, j);
+							val.DrawMesh(finalLodMesh, localToWorldMatrix, renderMaterial, j);
 						}
 					}
 				}

@@ -46,11 +46,11 @@ public class ReclaimBackpack : StorageContainer
 
 	public override bool OnStartBeingLooted(BasePlayer baseEntity)
 	{
-		if ((baseEntity.InSafeZone() || InSafeZone()) && baseEntity.userID != playerSteamID)
+		if ((baseEntity.InSafeZone() || InSafeZone()) && (ulong)baseEntity.userID != playerSteamID)
 		{
 			return false;
 		}
-		if (onlyOwnerLoot && baseEntity.userID != playerSteamID)
+		if (onlyOwnerLoot && (ulong)baseEntity.userID != playerSteamID)
 		{
 			return false;
 		}

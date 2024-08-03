@@ -7,18 +7,6 @@ public class EngineAudioSet : ScriptableObject
 
 	public int priority;
 
-	public float idleVolume = 0.4f;
-
-	public float maxVolume = 0.6f;
-
-	public float volumeChangeRateUp = 48f;
-
-	public float volumeChangeRateDown = 16f;
-
-	public float idlePitch = 0.25f;
-
-	public float maxPitch = 1.5f;
-
 	public float idleRpm = 600f;
 
 	public float gearUpRpm = 5000f;
@@ -26,6 +14,8 @@ public class EngineAudioSet : ScriptableObject
 	public float gearDownRpm = 2500f;
 
 	public int numGears = 5;
+
+	public float minRpm = 10f;
 
 	public float maxRpm = 6000f;
 

@@ -46,13 +46,13 @@ public struct RaycastRayProcessingJob : IJobParallelFor
 		//IL_00d5: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00d9: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00de: Unknown result type (might be due to invalid IL or missing references)
-		ref readonly RaycastHit @readonly = ref raycastHits.GetReadonly<RaycastHit>(index);
+		ref RaycastHit @readonly = BurstUtil.GetReadonly<RaycastHit>(ref raycastHits, index);
 		int colliderId = @readonly.GetColliderId();
 		bool num = colliderId != 0;
 		byte b = 0;
 		if (num)
 		{
-			int num2 = Interlocked.Increment(ref BurstUtil.Get(in foundCollidersIndex, 0));
+			int num2 = Interlocked.Increment(ref BurstUtil.Get<int>(ref foundCollidersIndex, 0));
 			if (num2 <= foundColliders.Length)
 			{
 				foundColliders[num2 - 1] = colliderId;
@@ -61,7 +61,7 @@ public struct RaycastRayProcessingJob : IJobParallelFor
 			if (num3 >= 0)
 			{
 				b = colliderMaterials[num3];
-				Interlocked.Increment(ref BurstUtil.Get(in colliderHits, num3));
+				Interlocked.Increment(ref BurstUtil.Get<int>(ref colliderHits, num3));
 			}
 		}
 		float distance;

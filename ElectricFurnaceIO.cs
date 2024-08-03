@@ -13,7 +13,7 @@ public class ElectricFurnaceIO : IOEntity, IIndustrialStorage
 		return PowerConsumption;
 	}
 
-	public override int DesiredPower()
+	public override int DesiredPower(int inputIndex = 0)
 	{
 		if ((Object)(object)GetParentEntity() == (Object)null)
 		{
@@ -26,39 +26,19 @@ public class ElectricFurnaceIO : IOEntity, IIndustrialStorage
 		return PowerConsumption;
 	}
 
-	public override void OnFlagsChanged(Flags old, Flags next)
-	{
-		base.OnFlagsChanged(old, next);
-		if (base.isServer)
-		{
-			ElectricOven parentOven = GetParentOven();
-			if ((Object)(object)parentOven != (Object)null)
-			{
-				parentOven.OnIOEntityFlagsChanged(old, next);
-			}
-		}
-	}
-
 	public override void UpdateHasPower(int inputAmount, int inputSlot)
 	{
-		if (inputSlot == 0)
+		base.UpdateHasPower(inputAmount, inputSlot);
+		ElectricOven parentOven = GetParentOven();
+		if (!((Object)(object)parentOven == (Object)null))
 		{
-			base.UpdateHasPower(inputAmount, inputSlot);
-		}
-		if (inputSlot == 1 && inputAmount > 0)
-		{
-			ElectricOven parentOven = GetParentOven();
-			if ((Object)(object)parentOven != (Object)null)
+			if (inputAmount > 0)
 			{
 				parentOven.StartCooking();
 			}
-		}
-		if (inputSlot == 2 && inputAmount > 0)
-		{
-			ElectricOven parentOven2 = GetParentOven();
-			if ((Object)(object)parentOven2 != (Object)null)
+			else
 			{
-				parentOven2.StopCooking();
+				parentOven.StopCooking();
 			}
 		}
 	}

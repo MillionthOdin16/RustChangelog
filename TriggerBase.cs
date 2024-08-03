@@ -41,7 +41,7 @@ public class TriggerBase : BaseMonoBehaviour
 			GameObject[] array = contents.ToArray();
 			foreach (GameObject targetObj in array)
 			{
-				OnTriggerExit(targetObj);
+				OnTriggerExitImpl(targetObj);
 			}
 			contents = null;
 		}
@@ -88,7 +88,7 @@ public class TriggerBase : BaseMonoBehaviour
 		{
 			return;
 		}
-		BaseEntity baseEntity = obj.ToBaseEntity();
+		BaseEntity baseEntity = obj.ToBaseEntity(allowDestroyed: true);
 		if (!Object.op_Implicit((Object)(object)baseEntity))
 		{
 			return;
@@ -100,7 +100,7 @@ public class TriggerBase : BaseMonoBehaviour
 			{
 				Debug.LogWarning((object)("Trigger " + ((object)this).ToString() + " contains null object."));
 			}
-			else if ((Object)(object)content.ToBaseEntity() == (Object)(object)baseEntity)
+			else if ((Object)(object)content.ToBaseEntity(allowDestroyed: true) == (Object)(object)baseEntity)
 			{
 				flag = true;
 				break;
@@ -220,14 +220,14 @@ public class TriggerBase : BaseMonoBehaviour
 		List<GameObject> list = Pool.GetList<GameObject>();
 		foreach (GameObject content in contents)
 		{
-			if ((Object)(object)content != (Object)null && (Object)(object)content.GetComponentInParent<BaseEntity>() == (Object)(object)ent)
+			if ((Object)(object)content != (Object)null && (Object)(object)content.ToBaseEntity(allowDestroyed: true) == (Object)(object)ent)
 			{
 				list.Add(content);
 			}
 		}
 		foreach (GameObject item in list)
 		{
-			OnTriggerExit(item);
+			OnTriggerExitImpl(item);
 		}
 		Pool.FreeList<GameObject>(ref list);
 	}
@@ -286,7 +286,7 @@ public class TriggerBase : BaseMonoBehaviour
 		GameObject val = InterestedInObject(((Component)collider).gameObject);
 		if (!((Object)(object)val == (Object)null))
 		{
-			OnTriggerExit(val);
+			OnTriggerExitImpl(val);
 			if (Debugging.checktriggers)
 			{
 				RemoveInvalidEntities();
@@ -294,7 +294,7 @@ public class TriggerBase : BaseMonoBehaviour
 		}
 	}
 
-	private void OnTriggerExit(GameObject targetObj)
+	private void OnTriggerExitImpl(GameObject targetObj)
 	{
 		if (contents != null && contents.Contains(targetObj))
 		{

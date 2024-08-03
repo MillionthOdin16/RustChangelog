@@ -118,7 +118,12 @@ public class HuntingTrophy : StorageContainer
 						val3 = TimeWarning.New("Call", 0);
 						try
 						{
-							ServerRequestClear();
+							RPCMessage rPCMessage = default(RPCMessage);
+							rPCMessage.connection = msg.connection;
+							rPCMessage.player = player;
+							rPCMessage.read = msg.read;
+							RPCMessage msg2 = rPCMessage;
+							ServerRequestClear(msg2);
 						}
 						finally
 						{
@@ -191,6 +196,11 @@ public class HuntingTrophy : StorageContainer
 		return base.OnRpcMessage(player, rpc, msg);
 	}
 
+	public override int GetIdealSlot(BasePlayer player, ItemContainer container, Item item)
+	{
+		return 0;
+	}
+
 	public override bool ItemFilter(Item item, int targetSlot)
 	{
 		if ((Object)(object)ItemModAssociatedEntity<HeadEntity>.GetAssociatedEntity(item) == (Object)null)
@@ -228,17 +238,29 @@ public class HuntingTrophy : StorageContainer
 				currentTrophyData.count++;
 			}
 		}
-		slot.Remove();
+		for (int i = 1; i <= base.inventory.capacity; i++)
+		{
+			if (base.inventory.GetSlot(i) == null)
+			{
+				slot.MoveToContainer(base.inventory, i);
+				break;
+			}
+		}
 		SendNetworkUpdate();
 	}
 
 	[RPC_Server]
 	[RPC_Server.IsVisible(3f)]
-	private void ServerRequestClear()
+	private void ServerRequestClear(RPCMessage msg)
 	{
 		if (CurrentTrophyData != null)
 		{
 			Pool.Free<HeadData>(ref CurrentTrophyData);
+			Item[] array = base.inventory.itemList.ToArray();
+			foreach (Item item in array)
+			{
+				msg.player.GiveItem(item);
+			}
 			SendNetworkUpdate();
 		}
 	}
@@ -256,6 +278,10 @@ public class HuntingTrophy : StorageContainer
 	public bool CanSubmitHead(HeadEntity headEnt)
 	{
 		bool flag = false;
+		if ((Object)(object)headEnt == (Object)null || headEnt.CurrentTrophyData == null)
+		{
+			return false;
+		}
 		bool flag2 = CurrentTrophyData != null;
 		if (flag2 && headEnt.CurrentTrophyData.entitySource == CurrentTrophyData.entitySource && headEnt.CurrentTrophyData.playerId == CurrentTrophyData.playerId && headEnt.CurrentTrophyData.horseBreed == CurrentTrophyData.horseBreed)
 		{

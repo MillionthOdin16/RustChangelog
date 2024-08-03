@@ -35,18 +35,21 @@ public class Pool : ConsoleSystem
 	[ClientVar]
 	public static void print_memory(Arg arg)
 	{
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001e: Expected O, but got Unknown
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0038: Expected O, but got Unknown
 		if (Pool.Directory.Count == 0)
 		{
 			arg.ReplyWith("Memory pool is empty.");
 			return;
 		}
+		bool flag = arg.HasArg("--raw", true);
+		bool flag2 = arg.HasArg("--json", true);
 		TextTable val = new TextTable();
 		val.AddColumn("type");
 		val.AddColumn("capacity");
 		val.AddColumn("pooled");
 		val.AddColumn("active");
+		val.AddColumn("max");
 		val.AddColumn("hits");
 		val.AddColumn("misses");
 		val.AddColumn("spills");
@@ -54,18 +57,35 @@ public class Pool : ConsoleSystem
 		{
 			Type key = item.Key;
 			IPoolCollection value = item.Value;
-			val.AddRow(new string[7]
+			val.AddRow(new string[8]
 			{
 				key.ToString().Replace("System.Collections.Generic.", ""),
-				NumberExtensions.FormatNumberShort(value.ItemsCapacity),
-				NumberExtensions.FormatNumberShort(value.ItemsInStack),
-				NumberExtensions.FormatNumberShort(value.ItemsInUse),
-				NumberExtensions.FormatNumberShort(value.ItemsTaken),
-				NumberExtensions.FormatNumberShort(value.ItemsCreated),
-				NumberExtensions.FormatNumberShort(value.ItemsSpilled)
+				flag ? value.ItemsCapacity.ToString() : NumberExtensions.FormatNumberShort(value.ItemsCapacity),
+				flag ? value.ItemsInStack.ToString() : NumberExtensions.FormatNumberShort(value.ItemsInStack),
+				flag ? value.ItemsInUse.ToString() : NumberExtensions.FormatNumberShort(value.ItemsInUse),
+				flag ? value.MaxItemsInUse.ToString() : NumberExtensions.FormatNumberShort(value.MaxItemsInUse),
+				flag ? value.ItemsTaken.ToString() : NumberExtensions.FormatNumberShort(value.ItemsTaken),
+				flag ? value.ItemsCreated.ToString() : NumberExtensions.FormatNumberShort(value.ItemsCreated),
+				flag ? value.ItemsSpilled.ToString() : NumberExtensions.FormatNumberShort(value.ItemsSpilled)
 			});
 		}
-		arg.ReplyWith(arg.HasArg("--json") ? val.ToJson() : ((object)val).ToString());
+		arg.ReplyWith(flag2 ? val.ToJson() : ((object)val).ToString());
+	}
+
+	[ServerVar]
+	[ClientVar]
+	public static void reset_max_pool_counter(Arg arg)
+	{
+		if (Pool.Directory.Count == 0)
+		{
+			arg.ReplyWith("Memory pool is empty.");
+			return;
+		}
+		foreach (IPoolCollection value in Pool.Directory.Values)
+		{
+			value.ResetMaxUsageCounter();
+		}
+		arg.ReplyWith("Reset max item counter of pool");
 	}
 
 	[ServerVar]
@@ -96,7 +116,7 @@ public class Pool : ConsoleSystem
 				NumberExtensions.FormatBytes<int>(num2, false)
 			});
 		}
-		arg.ReplyWith(arg.HasArg("--json") ? val.ToJson() : ((object)val).ToString());
+		arg.ReplyWith(arg.HasArg("--json", false) ? val.ToJson() : ((object)val).ToString());
 	}
 
 	[ServerVar]
@@ -139,7 +159,7 @@ public class Pool : ConsoleSystem
 				});
 			}
 		}
-		arg.ReplyWith(arg.HasArg("--json") ? val.ToJson() : ((object)val).ToString());
+		arg.ReplyWith(arg.HasArg("--json", false) ? val.ToJson() : ((object)val).ToString());
 	}
 
 	[ServerVar]
@@ -168,7 +188,7 @@ public class Pool : ConsoleSystem
 				val.AddRow(new string[3] { text, text2, text3 });
 			}
 		}
-		arg.ReplyWith(arg.HasArg("--json") ? val.ToJson() : ((object)val).ToString());
+		arg.ReplyWith(arg.HasArg("--json", false) ? val.ToJson() : ((object)val).ToString());
 	}
 
 	[ServerVar]

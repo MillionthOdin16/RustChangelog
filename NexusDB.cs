@@ -81,7 +81,7 @@ public class NexusDB : Database
 	public List<(Guid Id, long Time, byte[] Data)> ReadJournal()
 	{
 		IntPtr intPtr = ((Database)this).Prepare("SELECT id, time, data FROM journal ORDER BY time ASC");
-		return ((Database)this).ExecuteAndReadQueryResults<(Guid, long, byte[])>(intPtr, (Func<IntPtr, (Guid, long, byte[])>)ReadJournalRow, true).ToList();
+		return ((Database)this).ExecuteAndReadQueryResults<(Guid, long, byte[])>(intPtr, (Func<IntPtr, (Guid, long, byte[])>)ReadJournalRow).ToList();
 	}
 
 	private static (Guid, long, byte[]) ReadJournalRow(IntPtr stmHandle)
@@ -117,7 +117,7 @@ public class NexusDB : Database
 				foreach (NetworkableId entityId in entityIds)
 				{
 					Database.Bind<ulong>(intPtr, 1, entityId.Value);
-					((Database)this).ExecuteQuery(intPtr, false);
+					((Database)this).ExecuteQuery(intPtr);
 				}
 				((Database)this).Commit();
 				TransferredCount += entityIds.Count;
@@ -130,14 +130,14 @@ public class NexusDB : Database
 		}
 		finally
 		{
-			((Database)this).Finalize(intPtr);
+			((Database)this).Complete(intPtr);
 		}
 	}
 
 	public List<NetworkableId> ReadTransferred()
 	{
 		IntPtr intPtr = ((Database)this).Prepare("SELECT id FROM transferred");
-		return ((Database)this).ExecuteAndReadQueryResults<NetworkableId>(intPtr, (Func<IntPtr, NetworkableId>)((IntPtr h) => new NetworkableId((ulong)Database.GetColumnValue<uint>(h, 0))), true).ToList();
+		return ((Database)this).ExecuteAndReadQueryResults<NetworkableId>(intPtr, (Func<IntPtr, NetworkableId>)((IntPtr h) => new NetworkableId((ulong)Database.GetColumnValue<uint>(h, 0)))).ToList();
 	}
 
 	public void ClearTransferred()

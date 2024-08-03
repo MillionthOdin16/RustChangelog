@@ -7,6 +7,7 @@ using System.Linq;
 using ConVar;
 using Facepunch;
 using Facepunch.Math;
+using Facepunch.Rust;
 using Network;
 using Newtonsoft.Json;
 using ProtoBuf;
@@ -16,6 +17,7 @@ using UnityEngine.Assertions;
 
 public class SaveRestore : SingletonComponent<SaveRestore>
 {
+	[JsonModel]
 	public class SaveExtraData
 	{
 		public string WipeId;
@@ -95,7 +97,7 @@ public class SaveRestore : SingletonComponent<SaveRestore>
 			writer.Write(JsonConvert.SerializeObject((object)saveExtraData));
 			writer.Write((sbyte)68);
 			writer.Write(Epoch.FromDateTime(SaveCreatedTime));
-			writer.Write(243u);
+			writer.Write(253u);
 			BaseNetworkable.SaveInfo saveInfo = default(BaseNetworkable.SaveInfo);
 			saveInfo.forDisk = true;
 			if (!AndWait)
@@ -196,6 +198,9 @@ public class SaveRestore : SingletonComponent<SaveRestore>
 			timerWrite.Elapsed.TotalSeconds.ToString("0.00"),
 			timerDisk.Elapsed.TotalSeconds.ToString("0.00")
 		});
+		PerformanceLogging.server?.SetTiming("save.cache", timerCache.Elapsed);
+		PerformanceLogging.server?.SetTiming("save.write", timerWrite.Elapsed);
+		PerformanceLogging.server?.SetTiming("save.disk", timerDisk.Elapsed);
 		NexusServer.PostGameSaved();
 	}
 
@@ -311,41 +316,69 @@ public class SaveRestore : SingletonComponent<SaveRestore>
 		return true;
 	}
 
-	public static void ClearMapEntities()
+	public static List<BaseEntity> FindMapEntities()
 	{
-		BaseEntity[] array = Object.FindObjectsOfType<BaseEntity>();
-		if (array.Length == 0)
-		{
-			return;
-		}
-		DebugEx.Log((object)("Destroying " + array.Length + " old entities"), (StackTraceLogType)0);
+		return new List<BaseEntity>(Object.FindObjectsOfType<BaseEntity>());
+	}
+
+	public static void ClearMapEntities(List<BaseEntity> entities)
+	{
+		int count = entities.Count;
+		DebugEx.Log((object)("Destroying " + count + " old entities"), (StackTraceLogType)0);
 		Stopwatch stopwatch = Stopwatch.StartNew();
-		for (int i = 0; i < array.Length; i++)
+		for (int num = count - 1; num >= 0; num--)
 		{
-			array[i].Kill();
-			if (stopwatch.Elapsed.TotalMilliseconds > 2000.0)
+			BaseEntity baseEntity = entities[num];
+			if (baseEntity.enableSaving || !((Object)(object)((Component)baseEntity).GetComponent<DisableSave>() != (Object)null))
 			{
-				stopwatch.Reset();
-				stopwatch.Start();
-				DebugEx.Log((object)("\t" + (i + 1) + " / " + array.Length), (StackTraceLogType)0);
+				baseEntity.KillAsMapEntity();
+				if (stopwatch.Elapsed.TotalMilliseconds > 2000.0)
+				{
+					stopwatch.Reset();
+					stopwatch.Start();
+					DebugEx.Log((object)("\t" + (count - num) + " / " + count), (StackTraceLogType)0);
+				}
+				entities.RemoveAt(num);
 			}
 		}
 		ItemManager.Heartbeat();
 		DebugEx.Log((object)"\tdone.", (StackTraceLogType)0);
 	}
 
+	public static void SpawnMapEntities(List<BaseEntity> entities)
+	{
+		DebugEx.Log((object)("Spawning " + entities.Count + " entities from map"), (StackTraceLogType)0);
+		foreach (BaseEntity entity in entities)
+		{
+			if (!((Object)(object)entity == (Object)null))
+			{
+				entity.SpawnAsMapEntity();
+			}
+		}
+		DebugEx.Log((object)"\tdone.", (StackTraceLogType)0);
+		DebugEx.Log((object)("Postprocessing " + entities.Count + " entities from map"), (StackTraceLogType)0);
+		foreach (BaseEntity entity2 in entities)
+		{
+			if (!((Object)(object)entity2 == (Object)null))
+			{
+				entity2.PostMapEntitySpawn();
+			}
+		}
+		DebugEx.Log((object)"\tdone.", (StackTraceLogType)0);
+	}
+
 	public static bool Load(string strFilename = "", bool allowOutOfDateSaves = false)
 	{
-		//IL_02a6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0230: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0235: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0373: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0384: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0389: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0341: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02ce: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02d3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03ad: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02ad: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0237: Unknown result type (might be due to invalid IL or missing references)
+		//IL_023c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_037a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_038b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0390: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0348: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02d5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02da: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03b4: Unknown result type (might be due to invalid IL or missing references)
 		SaveCreatedTime = DateTime.UtcNow;
 		try
 		{
@@ -362,6 +395,7 @@ public class SaveRestore : SingletonComponent<SaveRestore>
 				}
 				strFilename = "TestSaves/" + strFilename;
 			}
+			List<BaseEntity> list = FindMapEntities();
 			Dictionary<BaseEntity, Entity> dictionary = new Dictionary<BaseEntity, Entity>();
 			using (FileStream fileStream = File.OpenRead(strFilename))
 			{
@@ -382,7 +416,7 @@ public class SaveRestore : SingletonComponent<SaveRestore>
 					binaryReader.ReadChar();
 					SaveCreatedTime = Epoch.ToDateTime((long)binaryReader.ReadInt32());
 				}
-				if (binaryReader.ReadUInt32() != 243)
+				if (binaryReader.ReadUInt32() != 253)
 				{
 					if (allowOutOfDateSaves)
 					{
@@ -393,7 +427,7 @@ public class SaveRestore : SingletonComponent<SaveRestore>
 						Debug.LogWarning((object)"This save is from an older version. It might not load properly.");
 					}
 				}
-				ClearMapEntities();
+				ClearMapEntities(list);
 				Assert.IsTrue(BaseEntity.saveList.Count == 0, "BaseEntity.saveList isn't empty!");
 				Net.sv.Reset();
 				Application.isLoadingSave = true;
@@ -446,25 +480,35 @@ public class SaveRestore : SingletonComponent<SaveRestore>
 						if (Object.op_Implicit((Object)(object)baseEntity))
 						{
 							baseEntity.InitLoad(entData.baseNetworkable.uid);
+							baseEntity.PreServerLoad();
 							dictionary.Add(baseEntity, entData);
 						}
 					}
 				}
 			}
-			DebugEx.Log((object)("Spawning " + dictionary.Count + " entities"), (StackTraceLogType)0);
+			DebugEx.Log((object)("Spawning " + list.Count + " entities from map"), (StackTraceLogType)0);
+			foreach (BaseEntity item in list)
+			{
+				if (!((Object)(object)item == (Object)null))
+				{
+					item.SpawnAsMapEntity();
+				}
+			}
+			DebugEx.Log((object)"\tdone.", (StackTraceLogType)0);
+			DebugEx.Log((object)("Spawning " + dictionary.Count + " entities from save"), (StackTraceLogType)0);
 			BaseNetworkable.LoadInfo info = default(BaseNetworkable.LoadInfo);
 			info.fromDisk = true;
 			Stopwatch stopwatch = Stopwatch.StartNew();
 			int num2 = 0;
-			foreach (KeyValuePair<BaseEntity, Entity> item in dictionary)
+			foreach (KeyValuePair<BaseEntity, Entity> item2 in dictionary)
 			{
-				BaseEntity key = item.Key;
+				BaseEntity key = item2.Key;
 				if ((Object)(object)key == (Object)null)
 				{
 					continue;
 				}
 				RCon.Update();
-				info.msg = item.Value;
+				info.msg = item2.Value;
 				key.Spawn();
 				key.Load(info);
 				if (key.IsValid())
@@ -478,9 +522,20 @@ public class SaveRestore : SingletonComponent<SaveRestore>
 					}
 				}
 			}
-			foreach (KeyValuePair<BaseEntity, Entity> item2 in dictionary)
+			DebugEx.Log((object)"\tdone.", (StackTraceLogType)0);
+			DebugEx.Log((object)("Postprocessing " + list.Count + " entities from map"), (StackTraceLogType)0);
+			foreach (BaseEntity item3 in list)
 			{
-				BaseEntity key2 = item2.Key;
+				if (!((Object)(object)item3 == (Object)null))
+				{
+					item3.PostMapEntitySpawn();
+				}
+			}
+			DebugEx.Log((object)"\tdone.", (StackTraceLogType)0);
+			DebugEx.Log((object)("Postprocessing " + list.Count + " entities from save"), (StackTraceLogType)0);
+			foreach (KeyValuePair<BaseEntity, Entity> item4 in dictionary)
+			{
+				BaseEntity key2 = item4.Key;
 				if (!((Object)(object)key2 == (Object)null))
 				{
 					RCon.Update();

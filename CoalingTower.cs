@@ -618,7 +618,7 @@ public class CoalingTower : IOEntity, INotifyEntityTrigger
 		SendNetworkUpdate();
 		if (status != 0)
 		{
-			ClientRPC(null, "ActionFailed", (byte)status, arg2: false);
+			ClientRPC(RpcTarget.NetworkGroup("ActionFailed"), (byte)status, arg2: false);
 		}
 	}
 
@@ -686,7 +686,7 @@ public class CoalingTower : IOEntity, INotifyEntityTrigger
 		SetFlag(Flags.Reserved4, b: false);
 		if (status != 0)
 		{
-			ClientRPC(null, "IssueDuringShunt");
+			ClientRPC(RpcTarget.NetworkGroup("IssueDuringShunt"));
 		}
 	}
 
@@ -696,7 +696,7 @@ public class CoalingTower : IOEntity, INotifyEntityTrigger
 	{
 		if (!TryUnloadActiveWagon(out var attemptStatus) && (Object)(object)msg.player != (Object)null)
 		{
-			ClientRPCPlayer(null, msg.player, "ActionFailed", (byte)attemptStatus, arg2: true);
+			ClientRPC(RpcTarget.Player("ActionFailed", msg.player), (byte)attemptStatus, arg2: true);
 		}
 	}
 
@@ -710,7 +710,7 @@ public class CoalingTower : IOEntity, INotifyEntityTrigger
 		}
 		else if ((Object)(object)msg.player != (Object)null)
 		{
-			ClientRPCPlayer(null, msg.player, "ActionFailed", (byte)attemptStatus, arg2: true);
+			ClientRPC(RpcTarget.Player("ActionFailed", msg.player), (byte)attemptStatus, arg2: true);
 		}
 	}
 
@@ -724,7 +724,7 @@ public class CoalingTower : IOEntity, INotifyEntityTrigger
 		}
 		else if ((Object)(object)msg.player != (Object)null)
 		{
-			ClientRPCPlayer(null, msg.player, "ActionFailed", (byte)attemptStatus, arg2: true);
+			ClientRPC(RpcTarget.Player("ActionFailed", msg.player), (byte)attemptStatus, arg2: true);
 		}
 	}
 

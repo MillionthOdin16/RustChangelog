@@ -8,9 +8,21 @@ using UnityEngine;
 
 public class DecayEntity : BaseCombatEntity
 {
+	[Serializable]
+	public struct DebrisPosition
+	{
+		public Vector3 Position;
+
+		public Vector3 Rotation;
+
+		public bool dropToTerrain;
+	}
+
 	public GameObjectRef debrisPrefab;
 
 	public Vector3 debrisRotationOffset = Vector3.zero;
+
+	public DebrisPosition[] DebrisPositions;
 
 	[NonSerialized]
 	public uint buildingID;
@@ -29,7 +41,11 @@ public class DecayEntity : BaseCombatEntity
 
 	private float decayVariance = 1f;
 
+	public Upkeep Upkeep => upkeep;
+
 	public virtual bool BypassInsideDecayMultiplier => false;
+
+	public virtual bool AllowOnCargoShip => false;
 
 	public override void ResetState()
 	{
@@ -200,14 +216,34 @@ public class DecayEntity : BaseCombatEntity
 		return Mathf.Max(0f, 0f - upkeepTimer);
 	}
 
+	public virtual float GetEntityDecayDuration()
+	{
+		return decay.GetDecayDuration(this);
+	}
+
+	public virtual float GetEntityHealScale()
+	{
+		return decay.GetHealScale(this);
+	}
+
+	public virtual float GetEntityDecayDelay()
+	{
+		return decay.GetDecayDelay(this);
+	}
+
 	public virtual void DecayTick()
 	{
 		if (decay == null)
 		{
 			return;
 		}
-		float num = Time.time - lastDecayTick;
-		if (num < ConVar.Decay.tick)
+		float num = decay.GetDecayTickOverride();
+		if (num == 0f)
+		{
+			num = ConVar.Decay.tick;
+		}
+		float num2 = Time.time - lastDecayTick;
+		if (num2 < num)
 		{
 			return;
 		}
@@ -216,10 +252,10 @@ public class DecayEntity : BaseCombatEntity
 		{
 			return;
 		}
-		float num2 = num * ConVar.Decay.scale;
+		float num3 = num2 * ConVar.Decay.scale;
 		if (ConVar.Decay.upkeep)
 		{
-			upkeepTimer += num2;
+			upkeepTimer += num3;
 			if (upkeepTimer > 0f)
 			{
 				BuildingPrivlidge buildingPrivilege = GetBuildingPrivilege();
@@ -230,29 +266,29 @@ public class DecayEntity : BaseCombatEntity
 			}
 			if (upkeepTimer < 1f)
 			{
-				if (base.healthFraction < 1f && ConVar.Decay.upkeep_heal_scale > 0f && base.SecondsSinceAttacked > 600f)
+				if (base.healthFraction < 1f && GetEntityHealScale() > 0f && base.SecondsSinceAttacked > 600f)
 				{
-					float num3 = num / decay.GetDecayDuration(this) * ConVar.Decay.upkeep_heal_scale;
-					Heal(MaxHealth() * num3);
+					float num4 = num2 / GetEntityDecayDuration() * GetEntityHealScale();
+					Heal(MaxHealth() * num4);
 				}
 				return;
 			}
 			upkeepTimer = 1f;
 		}
-		decayTimer += num2;
-		if (decayTimer < decay.GetDecayDelay(this))
+		decayTimer += num3;
+		if (decayTimer < GetEntityDecayDelay())
 		{
 			return;
 		}
 		TimeWarning val = TimeWarning.New("DecayTick", 0);
 		try
 		{
-			float num4 = 1f;
+			float num5 = 1f;
 			if (ConVar.Decay.upkeep)
 			{
 				if (!BypassInsideDecayMultiplier && !IsOutside())
 				{
-					num4 *= ConVar.Decay.upkeep_inside_decay_scale;
+					num5 *= ConVar.Decay.upkeep_inside_decay_scale;
 				}
 			}
 			else
@@ -262,14 +298,14 @@ public class DecayEntity : BaseCombatEntity
 					DecayPoint decayPoint = decayPoints[i];
 					if (decayPoint.IsOccupied(this))
 					{
-						num4 -= decayPoint.protection;
+						num5 -= decayPoint.protection;
 					}
 				}
 			}
-			if (num4 > 0f)
+			if (num5 > 0f)
 			{
-				float num5 = num2 / decay.GetDecayDuration(this) * MaxHealth();
-				Hurt(num5 * num4 * decayVariance, DamageType.Decay);
+				float num6 = num3 / GetEntityDecayDuration() * MaxHealth();
+				Hurt(num6 * num5 * decayVariance, DamageType.Decay);
 			}
 		}
 		finally
@@ -286,21 +322,66 @@ public class DecayEntity : BaseCombatEntity
 
 	public override void OnKilled(HitInfo info)
 	{
-		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
 		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
 		if (debrisPrefab.isValid)
 		{
-			BaseEntity baseEntity = GameManager.server.CreateEntity(debrisPrefab.resourcePath, ((Component)this).transform.position, ((Component)this).transform.rotation * Quaternion.Euler(debrisRotationOffset));
+			if (DebrisPositions != null && DebrisPositions.Length != 0)
+			{
+				DebrisPosition[] debrisPositions = DebrisPositions;
+				for (int i = 0; i < debrisPositions.Length; i++)
+				{
+					DebrisPosition debrisPosition = debrisPositions[i];
+					SpawnDebris(debrisPosition.Position, Quaternion.Euler(debrisPosition.Rotation), debrisPosition.dropToTerrain);
+				}
+			}
+			else
+			{
+				SpawnDebris(Vector3.zero, Quaternion.Euler(debrisRotationOffset), dropToTerrain: false);
+			}
+		}
+		base.OnKilled(info);
+	}
+
+	private void SpawnDebris(Vector3 localPos, Quaternion rot, bool dropToTerrain)
+	{
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0097: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0029: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
+		Vector3 val = ((Component)this).transform.TransformPoint(localPos);
+		RaycastHit val2 = default(RaycastHit);
+		if (dropToTerrain && Physics.Raycast(val, Vector3.down, ref val2, 6f, 8388608))
+		{
+			float num = val.y - ((RaycastHit)(ref val2)).point.y;
+			val.y = ((RaycastHit)(ref val2)).point.y;
+			localPos.y -= num;
+		}
+		List<DebrisEntity> list = Pool.GetList<DebrisEntity>();
+		Vis.Entities(val, 0.1f, list, 256, (QueryTriggerInteraction)2);
+		if (list.Count <= 0)
+		{
+			BaseEntity baseEntity = GameManager.server.CreateEntity(debrisPrefab.resourcePath, ((Component)this).transform.TransformPoint(localPos), ((Component)this).transform.rotation * rot);
 			if (Object.op_Implicit((Object)(object)baseEntity))
 			{
 				baseEntity.SetParent(parentEntity.Get(serverside: true), worldPositionStays: true);
 				baseEntity.Spawn();
 			}
 		}
-		base.OnKilled(info);
 	}
 
 	public override bool SupportsChildDeployables()

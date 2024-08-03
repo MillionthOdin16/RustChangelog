@@ -3,7 +3,11 @@ using UnityEngine.UI;
 
 public class WorkbenchPanel : LootPanel, IInventoryChanged
 {
-	public Button experimentButton;
+	public GameObject tier1Button;
+
+	public GameObject tier2Button;
+
+	public GameObject tier3Button;
 
 	public Text timerText;
 

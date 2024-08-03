@@ -35,6 +35,8 @@ public class FlameThrower : AttackEntity
 
 	public List<DamageTypeEntry> damagePerSec;
 
+	public float playerDamageMultiplier = 4f;
+
 	public SoundDefinition flameStart3P;
 
 	public SoundDefinition flameLoop3P;
@@ -43,7 +45,7 @@ public class FlameThrower : AttackEntity
 
 	public SoundDefinition pilotLoopSoundDef;
 
-	private float tickRate = 0.25f;
+	private float tickRate = 0.15f;
 
 	private float lastFlameTick;
 
@@ -328,10 +330,13 @@ public class FlameThrower : AttackEntity
 
 	public override void ServerUse()
 	{
-		if (!IsOnFire())
+		if (!IsOnFire() && !ServerIsReloading())
 		{
-			SetFlameState(wantsOn: true);
-			((FacepunchBehaviour)this).Invoke((Action)StopFlameState, 0.2f);
+			if (!IsFlameOn())
+			{
+				SetFlameState(wantsOn: true);
+			}
+			((FacepunchBehaviour)this).Invoke((Action)StopFlameState, 1.25f);
 			base.ServerUse();
 		}
 	}
@@ -360,6 +365,7 @@ public class FlameThrower : AttackEntity
 	{
 		if (!ServerIsReloading())
 		{
+			SetFlameState(wantsOn: false);
 			lastReloadTime = Time.time;
 			StartAttackCooldown(reloadDuration);
 			GetOwnerPlayer().SignalBroadcast(Signal.Reload);
@@ -412,7 +418,13 @@ public class FlameThrower : AttackEntity
 		SetFlag(Flags.OnFire, wantsOn);
 		if (IsFlameOn())
 		{
-			nextFlameTime = Time.realtimeSinceStartup + 1f;
+			float num = 1f;
+			BasePlayer ownerPlayer = GetOwnerPlayer();
+			if ((Object)(object)ownerPlayer != (Object)null && ownerPlayer.IsNpc)
+			{
+				num = 0.4f;
+			}
+			nextFlameTime = Time.realtimeSinceStartup + num;
 			lastFlameTick = Time.realtimeSinceStartup;
 			((FacepunchBehaviour)this).InvokeRepeating((Action)FlameTick, tickRate, tickRate);
 		}
@@ -446,18 +458,22 @@ public class FlameThrower : AttackEntity
 		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
 		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0155: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_016c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0170: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0186: Unknown result type (might be due to invalid IL or missing references)
-		//IL_018c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0102: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0107: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0160: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0167: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0171: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0176: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01fd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_020f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0213: Unknown result type (might be due to invalid IL or missing references)
+		//IL_021d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0222: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0229: Unknown result type (might be due to invalid IL or missing references)
+		//IL_022f: Unknown result type (might be due to invalid IL or missing references)
 		float num = Time.realtimeSinceStartup - lastFlameTick;
 		lastFlameTick = Time.realtimeSinceStartup;
 		BasePlayer ownerPlayer = GetOwnerPlayer();
@@ -478,16 +494,29 @@ public class FlameThrower : AttackEntity
 		float num3 = (ownerPlayer.IsNpc ? npcDamageScale : 1f);
 		float amount = damagePerSec[0].amount;
 		damagePerSec[0].amount = amount * num * num3;
-		DamageUtil.RadiusDamage(ownerPlayer, LookupPrefab(), ((RaycastHit)(ref val2)).point - ((Ray)(ref val)).direction * 0.1f, flameRadius * 0.5f, flameRadius, damagePerSec, 2279681, useLineOfSight: true);
+		int num4 = 2146305;
+		int layers = 133376;
+		if (!ownerPlayer.IsNpc)
+		{
+			num4 |= 0x800;
+		}
+		DamageUtil.RadiusDamage(ownerPlayer, LookupPrefab(), ((RaycastHit)(ref val2)).point - ((Ray)(ref val)).direction * 0.1f, flameRadius * 0.5f, flameRadius, damagePerSec, num4, useLineOfSight: true, ignoreAI: false, ignoreAttackingPlayer: true);
+		damagePerSec[0].amount = damagePerSec[0].amount * playerDamageMultiplier;
+		DamageUtil.RadiusDamage(ownerPlayer, LookupPrefab(), ((RaycastHit)(ref val2)).point - ((Ray)(ref val)).direction * 0.1f, flameRadius * 0.5f, flameRadius, damagePerSec, layers, useLineOfSight: true, ignoreAI: false, ignoreAttackingPlayer: true);
 		damagePerSec[0].amount = amount;
 		if (num2 && Time.realtimeSinceStartup >= nextFlameTime && ((RaycastHit)(ref val2)).distance > 1.1f)
 		{
-			nextFlameTime = Time.realtimeSinceStartup + 0.45f;
+			nextFlameTime = Time.realtimeSinceStartup + (ownerPlayer.IsNpc ? 0.25f : 0.45f);
 			Vector3 point = ((RaycastHit)(ref val2)).point;
 			BaseEntity baseEntity = GameManager.server.CreateEntity(fireballPrefab.resourcePath, point - ((Ray)(ref val)).direction * 0.25f);
 			if (Object.op_Implicit((Object)(object)baseEntity))
 			{
 				baseEntity.creatorEntity = ownerPlayer;
+				FireBall fireBall = baseEntity as FireBall;
+				if ((Object)(object)fireBall != (Object)null && ownerPlayer.IsNpc)
+				{
+					fireBall.ignoreNPC = true;
+				}
 				baseEntity.Spawn();
 			}
 		}
@@ -496,7 +525,7 @@ public class FlameThrower : AttackEntity
 			SetFlameState(wantsOn: false);
 		}
 		Item ownerItem = GetOwnerItem();
-		if (ownerItem != null && !base.UsingInfiniteAmmoCheat)
+		if (ownerItem != null && !base.UsingInfiniteAmmoCheat && !ownerPlayer.IsNpc)
 		{
 			ownerItem.LoseCondition(num);
 		}

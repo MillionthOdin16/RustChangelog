@@ -92,24 +92,24 @@ public class SmartSwitch : AppIOEntity
 		return base.OnRpcMessage(player, rpc, msg);
 	}
 
-	public override bool WantsPower()
+	public override bool WantsPower(int inputIndex)
 	{
-		return IsOn();
+		if (inputIndex == 0)
+		{
+			return IsOn();
+		}
+		return false;
+	}
+
+	public override int ConsumptionAmount()
+	{
+		return 0;
 	}
 
 	public override void ServerInit()
 	{
 		base.ServerInit();
 		SetFlag(Flags.Busy, b: false);
-	}
-
-	public override int ConsumptionAmount()
-	{
-		if (!IsOn())
-		{
-			return 0;
-		}
-		return 1;
 	}
 
 	public override void ResetIOState()
@@ -130,7 +130,7 @@ public class SmartSwitch : AppIOEntity
 	{
 		if (inputSlot != 0)
 		{
-			return GetCurrentEnergy();
+			return currentEnergy;
 		}
 		return base.CalculateCurrentEnergy(inputAmount, inputSlot);
 	}

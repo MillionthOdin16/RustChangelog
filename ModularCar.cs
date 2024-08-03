@@ -289,25 +289,40 @@ public class ModularCar : BaseModularVehicle, IVehicleLockUser, VehicleChassisVi
 				TimeWarning val2 = TimeWarning.New("RPC_TryMountWithKeycode", 0);
 				try
 				{
-					TimeWarning val3 = TimeWarning.New("Call", 0);
+					TimeWarning val3 = TimeWarning.New("Conditions", 0);
 					try
 					{
-						RPCMessage rPCMessage = default(RPCMessage);
-						rPCMessage.connection = msg.connection;
-						rPCMessage.player = player;
-						rPCMessage.read = msg.read;
-						RPCMessage msg4 = rPCMessage;
-						RPC_TryMountWithKeycode(msg4);
+						if (!RPC_Server.MaxDistance.Test(2818660542u, "RPC_TryMountWithKeycode", this, player, 3f))
+						{
+							return true;
+						}
 					}
 					finally
 					{
 						((IDisposable)val3)?.Dispose();
 					}
-				}
-				catch (Exception ex3)
-				{
-					Debug.LogException(ex3);
-					player.Kick("RPC Error in RPC_TryMountWithKeycode");
+					try
+					{
+						val3 = TimeWarning.New("Call", 0);
+						try
+						{
+							RPCMessage rPCMessage = default(RPCMessage);
+							rPCMessage.connection = msg.connection;
+							rPCMessage.player = player;
+							rPCMessage.read = msg.read;
+							RPCMessage msg4 = rPCMessage;
+							RPC_TryMountWithKeycode(msg4);
+						}
+						finally
+						{
+							((IDisposable)val3)?.Dispose();
+						}
+					}
+					catch (Exception ex3)
+					{
+						Debug.LogException(ex3);
+						player.Kick("RPC Error in RPC_TryMountWithKeycode");
+					}
 				}
 				finally
 				{
@@ -376,13 +391,13 @@ public class ModularCar : BaseModularVehicle, IVehicleLockUser, VehicleChassisVi
 
 	public override void Load(LoadInfo info)
 	{
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
 		base.Load(info);
 		if (info.msg.modularCar == null)
 		{
 			return;
 		}
-		engineController.FuelSystem.fuelStorageInstance.uid = info.msg.modularCar.fuelStorageID;
+		engineController.FuelSystem.SetInstanceID(info.msg.modularCar.fuelStorageID);
 		cachedFuelFraction = info.msg.modularCar.fuelFraction;
 		bool hasALock = CarLock.HasALock;
 		CarLock.Load(info);
@@ -617,7 +632,7 @@ public class ModularCar : BaseModularVehicle, IVehicleLockUser, VehicleChassisVi
 		return Mathf.Clamp(num, -1f, 1f);
 	}
 
-	public bool GetSteerModInput()
+	public bool GetSteerSpeedMod(float speed)
 	{
 		BufferList<DriverSeatInputs> values = driverSeatInputs.Values;
 		for (int i = 0; i < values.Count; i++)
@@ -628,6 +643,11 @@ public class ModularCar : BaseModularVehicle, IVehicleLockUser, VehicleChassisVi
 			}
 		}
 		return false;
+	}
+
+	public float GetSteerMaxMult(float speed)
+	{
+		return 1f;
 	}
 
 	public override void VehicleFixedUpdate()
@@ -719,7 +739,7 @@ public class ModularCar : BaseModularVehicle, IVehicleLockUser, VehicleChassisVi
 
 	public override void PlayerServerInput(InputState inputState, BasePlayer player)
 	{
-		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
 		MountPointInfo playerSeatInfo = GetPlayerSeatInfo(player);
 		if (playerSeatInfo == null || !playerSeatInfo.isDriver)
 		{
@@ -730,7 +750,7 @@ public class ModularCar : BaseModularVehicle, IVehicleLockUser, VehicleChassisVi
 			this.driverSeatInputs.Add(playerSeatInfo.mountable, new DriverSeatInputs());
 		}
 		DriverSeatInputs driverSeatInputs = this.driverSeatInputs[playerSeatInfo.mountable];
-		if (inputState.IsDown(BUTTON.DUCK))
+		if (inputState.IsDown(BUTTON.FIRE_THIRD))
 		{
 			driverSeatInputs.steerInput += inputState.MouseDelta().x * 0.1f;
 		}
@@ -798,15 +818,15 @@ public class ModularCar : BaseModularVehicle, IVehicleLockUser, VehicleChassisVi
 
 	public override void Save(SaveInfo info)
 	{
+		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
 		base.Save(info);
 		info.msg.modularCar = Pool.Get<ModularCar>();
 		info.msg.modularCar.steerAngle = SteerAngle;
 		info.msg.modularCar.driveWheelVel = DriveWheelVelocity;
 		info.msg.modularCar.throttleInput = GetThrottleInput();
 		info.msg.modularCar.brakeInput = GetBrakeInput();
-		info.msg.modularCar.fuelStorageID = GetFuelSystem().fuelStorageInstance.uid;
+		info.msg.modularCar.fuelStorageID = GetFuelSystem().GetInstanceID();
 		info.msg.modularCar.fuelFraction = GetFuelFraction();
 		CarLock.Save(info);
 	}
@@ -902,7 +922,7 @@ public class ModularCar : BaseModularVehicle, IVehicleLockUser, VehicleChassisVi
 	public override void OnEngineStartFailed()
 	{
 		bool arg = !HasAnyWorkingEngines() || engineController.IsWaterlogged();
-		ClientRPC(null, "EngineStartFailed", arg);
+		ClientRPC(RpcTarget.NetworkGroup("EngineStartFailed"), arg);
 	}
 
 	public CarWheel[] GetWheels()
@@ -1077,7 +1097,7 @@ public class ModularCar : BaseModularVehicle, IVehicleLockUser, VehicleChassisVi
 			byte b = (byte)(GetBrakeInput() * 15f);
 			byte arg = (byte)(num + (b << 4));
 			byte arg2 = (byte)(GetFuelFraction() * 255f);
-			ClientRPC(null, "ModularCarUpdate", SteerAngle, arg, DriveWheelVelocity, arg2);
+			ClientRPC(RpcTarget.NetworkGroup("ModularCarUpdate"), SteerAngle, arg, DriveWheelVelocity, arg2);
 		}
 	}
 
@@ -1147,7 +1167,6 @@ public class ModularCar : BaseModularVehicle, IVehicleLockUser, VehicleChassisVi
 			ItemModVehicleModule itemModVehicleModule = modularCarPresetConfig.socketItemDefs[i];
 			if ((Object)(object)itemModVehicleModule != (Object)null && base.Inventory.SocketsAreFree(i, itemModVehicleModule.socketsTaken))
 			{
-				itemModVehicleModule.doNonUserSpawn = true;
 				Item item = ItemManager.Create(((Component)itemModVehicleModule).GetComponent<ItemDefinition>(), 1, 0uL);
 				float num = Random.Range(spawnSettings.minStartHealthPercent, spawnSettings.maxStartHealthPercent);
 				item.condition = item.maxCondition * num;
@@ -1204,11 +1223,12 @@ public class ModularCar : BaseModularVehicle, IVehicleLockUser, VehicleChassisVi
 		}
 		else
 		{
-			ClientRPC(null, "CodeEntryFailed");
+			ClientRPC(RpcTarget.NetworkGroup("CodeEntryFailed"));
 		}
 	}
 
 	[RPC_Server]
+	[RPC_Server.MaxDistance(3f)]
 	public void RPC_TryMountWithKeycode(RPCMessage msg)
 	{
 		BasePlayer player = msg.player;
@@ -1221,7 +1241,7 @@ public class ModularCar : BaseModularVehicle, IVehicleLockUser, VehicleChassisVi
 			}
 			else
 			{
-				ClientRPC(null, "CodeEntryFailed");
+				ClientRPC(RpcTarget.NetworkGroup("CodeEntryFailed"));
 			}
 		}
 	}

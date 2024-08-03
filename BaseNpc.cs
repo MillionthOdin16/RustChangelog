@@ -233,6 +233,8 @@ public class BaseNpc : BaseCombatEntity
 
 	public bool LegacyNavigation = true;
 
+	public bool canSwim = true;
+
 	private Vector3 stepDirection;
 
 	private float maxFleeTime;
@@ -302,6 +304,8 @@ public class BaseNpc : BaseCombatEntity
 
 	public DamageType AttackDamageType = DamageType.Bite;
 
+	public float MinimumTargetHealthFraction;
+
 	[Tooltip("Stamina to use per attack")]
 	public float AttackCost = 0.1f;
 
@@ -313,7 +317,7 @@ public class BaseNpc : BaseCombatEntity
 
 	public NavMeshAgent NavAgent;
 
-	public LayerMask movementMask = LayerMask.op_Implicit(429990145);
+	public LayerMask movementMask = LayerMask.op_Implicit(1503731969);
 
 	public float stuckDuration;
 
@@ -371,8 +375,6 @@ public class BaseNpc : BaseCombatEntity
 	private Vector3 lastStuckPos;
 
 	private float nextFlinchTime;
-
-	private float _lastHeardGunshotTime = float.NegativeInfinity;
 
 	public int AgentTypeIndex
 	{
@@ -603,10 +605,6 @@ public class BaseNpc : BaseCombatEntity
 		}
 	}
 
-	public float SecondsSinceLastHeardGunshot => Time.time - _lastHeardGunshotTime;
-
-	public Vector3 LastHeardGunshotDirection { get; set; }
-
 	public float TargetSpeed { get; set; }
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
@@ -629,16 +627,23 @@ public class BaseNpc : BaseCombatEntity
 
 	public void TickAi()
 	{
-		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
 		if (!AI.think)
 		{
 			return;
 		}
 		if ((Object)(object)TerrainMeta.WaterMap != (Object)null)
 		{
-			waterDepth = TerrainMeta.WaterMap.GetDepth(ServerPosition);
 			wasSwimming = swimming;
-			swimming = waterDepth > Stats.WaterLevelNeck * 0.25f;
+			if (canSwim)
+			{
+				waterDepth = TerrainMeta.WaterMap.GetDepth(ServerPosition);
+				swimming = waterDepth > Stats.WaterLevelNeck * 0.25f;
+			}
+			else
+			{
+				swimming = false;
+			}
 		}
 		else
 		{
@@ -1116,10 +1121,10 @@ public class BaseNpc : BaseCombatEntity
 
 	private bool ValidateNextPosition(ref Vector3 moveToPosition)
 	{
-		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
-		if (!ValidBounds.Test(moveToPosition) && (Object)(object)((Component)this).transform != (Object)null && !base.IsDestroyed)
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
+		if (!ValidBounds.Test(this, moveToPosition) && (Object)(object)((Component)this).transform != (Object)null && !base.IsDestroyed)
 		{
 			string[] obj = new string[5]
 			{
@@ -1299,7 +1304,7 @@ public class BaseNpc : BaseCombatEntity
 		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
 		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00af: Unknown result type (might be due to invalid IL or missing references)
 		if (!Object.op_Implicit((Object)(object)AttackTarget) || !AttackReady())
 		{
 			return;
@@ -1315,21 +1320,21 @@ public class BaseNpc : BaseCombatEntity
 				Stamina.Use(AttackCost);
 				BusyTimer.Activate(0.5f);
 				SignalBroadcast(Signal.Attack);
-				ClientRPC<Vector3>(null, "Attack", AttackTarget.ServerPosition);
+				ClientRPC<Vector3>(RpcTarget.NetworkGroup("Attack"), AttackTarget.ServerPosition);
 			}
 		}
 	}
 
 	public void Attack(BaseCombatEntity target)
 	{
-		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
 		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		if (!((Object)(object)target == (Object)null))
+		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
+		if (!((Object)(object)target == (Object)null) && (!(MinimumTargetHealthFraction > 0f) || !(target.healthFraction < MinimumTargetHealthFraction)))
 		{
 			Vector3 val = target.ServerPosition - ServerPosition;
 			if (((Vector3)(ref val)).magnitude > 0.001f)
@@ -1340,19 +1345,19 @@ public class BaseNpc : BaseCombatEntity
 			target.Hurt(AttackDamage, AttackDamageType, this);
 			Stamina.Use(AttackCost);
 			SignalBroadcast(Signal.Attack);
-			ClientRPC<Vector3>(null, "Attack", target.ServerPosition);
+			ClientRPC<Vector3>(RpcTarget.NetworkGroup("Attack"), target.ServerPosition);
 		}
 	}
 
 	public virtual void Eat()
 	{
-		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
 		if (Object.op_Implicit((Object)(object)FoodTarget))
 		{
 			BusyTimer.Activate(0.5f);
 			FoodTarget.Eat(this, 0.5f);
 			StartEating(Random.value * 5f + 0.5f);
-			ClientRPC<Vector3>(null, "Eat", ((Component)FoodTarget).transform.position);
+			ClientRPC<Vector3>(RpcTarget.NetworkGroup("Eat"), ((Component)FoodTarget).transform.position);
 		}
 	}
 
@@ -1363,8 +1368,8 @@ public class BaseNpc : BaseCombatEntity
 
 	public virtual void Startled()
 	{
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		ClientRPC<Vector3>(null, "Startled", ((Component)this).transform.position);
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		ClientRPC<Vector3>(RpcTarget.NetworkGroup("Startled"), ((Component)this).transform.position);
 	}
 
 	private bool IsAfraid()
@@ -2197,25 +2202,5 @@ public class BaseNpc : BaseCombatEntity
 			baseCorpse.TakeChildren(this);
 		}
 		((FacepunchBehaviour)this).Invoke((Action)base.KillMessage, 0.5f);
-	}
-
-	public override void OnSensation(Sensation sensation)
-	{
-	}
-
-	protected virtual void OnSenseGunshot(Sensation sensation)
-	{
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
-		_lastHeardGunshotTime = Time.time;
-		Vector3 val = sensation.Position - ((Component)this).transform.localPosition;
-		LastHeardGunshotDirection = ((Vector3)(ref val)).normalized;
-		if (CurrentBehaviour != Behaviour.Attack)
-		{
-			CurrentBehaviour = Behaviour.Flee;
-		}
 	}
 }

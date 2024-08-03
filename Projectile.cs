@@ -137,6 +137,12 @@ public class Projectile : BaseMonoBehaviour
 	[NonSerialized]
 	public bool invisible;
 
+	[NonSerialized]
+	public bool noheadshots;
+
+	[NonSerialized]
+	public float currentThickness;
+
 	private static uint _fleshMaterialID;
 
 	private static uint _waterMaterialID;

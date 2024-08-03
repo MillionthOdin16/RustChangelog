@@ -47,6 +47,10 @@ public class CH47Helicopter : BaseHelicopter
 		return false;
 	}
 
+	protected override void ApplyHandbrake()
+	{
+	}
+
 	protected override bool CanPushNow(BasePlayer pusher)
 	{
 		return false;

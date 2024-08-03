@@ -1,7 +1,44 @@
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 public class PlayerEyes : EntityComponent<BasePlayer>
 {
+	public struct EncryptedValue<TInner> where TInner : unmanaged
+	{
+		private TInner _value;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public TInner Get()
+		{
+			return _value;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Set(TInner value)
+		{
+			_value = value;
+		}
+
+		public override string ToString()
+		{
+			return Get().ToString();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static implicit operator EncryptedValue<TInner>(TInner value)
+		{
+			EncryptedValue<TInner> result = default(EncryptedValue<TInner>);
+			result.Set(value);
+			return result;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static implicit operator TInner(EncryptedValue<TInner> encrypted)
+		{
+			return encrypted.Get();
+		}
+	}
+
 	public static readonly Vector3 EyeOffset = new Vector3(0f, 1.5f, 0f);
 
 	public static readonly Vector3 DuckOffset = new Vector3(0f, -0.6f, 0f);
@@ -14,7 +51,7 @@ public class PlayerEyes : EntityComponent<BasePlayer>
 
 	public LazyAimProperties defaultLazyAim;
 
-	private Vector3 viewOffset = Vector3.zero;
+	private EncryptedValue<Vector3> viewOffset = Vector3.zero;
 
 	public Vector3 worldMountedPosition
 	{
@@ -49,27 +86,28 @@ public class PlayerEyes : EntityComponent<BasePlayer>
 	{
 		get
 		{
-			//IL_008e: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0099: Unknown result type (might be due to invalid IL or missing references)
-			//IL_009e: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00b9: Unknown result type (might be due to invalid IL or missing references)
-			//IL_00be: Unknown result type (might be due to invalid IL or missing references)
-			//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0031: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0036: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0037: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0038: Unknown result type (might be due to invalid IL or missing references)
-			//IL_004c: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0057: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0072: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0077: Unknown result type (might be due to invalid IL or missing references)
-			//IL_007d: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0082: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0096: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00a1: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00b6: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00bb: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00c6: Unknown result type (might be due to invalid IL or missing references)
+			//IL_00cb: Unknown result type (might be due to invalid IL or missing references)
+			//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0034: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+			//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+			//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+			//IL_004f: Unknown result type (might be due to invalid IL or missing references)
+			//IL_005a: Unknown result type (might be due to invalid IL or missing references)
+			//IL_006f: Unknown result type (might be due to invalid IL or missing references)
+			//IL_007a: Unknown result type (might be due to invalid IL or missing references)
+			//IL_007f: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0085: Unknown result type (might be due to invalid IL or missing references)
+			//IL_008a: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0047: Unknown result type (might be due to invalid IL or missing references)
 			if (Object.op_Implicit((Object)(object)base.baseEntity) && base.baseEntity.isMounted)
 			{
 				Vector3 val = base.baseEntity.GetMounted().EyePositionForPlayer(base.baseEntity, GetLookRotation());
@@ -77,9 +115,9 @@ public class PlayerEyes : EntityComponent<BasePlayer>
 				{
 					return val;
 				}
-				return ((Component)this).transform.position + ((Component)this).transform.up * (EyeOffset.y + viewOffset.y) + BodyLeanOffset;
+				return ((Component)this).transform.position + ((Component)this).transform.up * (EyeOffset.y + viewOffset.Get().y) + BodyLeanOffset;
 			}
-			return ((Component)this).transform.position + ((Component)this).transform.rotation * (EyeOffset + viewOffset) + BodyLeanOffset;
+			return ((Component)this).transform.position + ((Component)this).transform.rotation * (EyeOffset + (Vector3)viewOffset) + BodyLeanOffset;
 		}
 	}
 
@@ -111,7 +149,7 @@ public class PlayerEyes : EntityComponent<BasePlayer>
 		}
 	}
 
-	public Vector3 offset => ((Component)this).transform.up * (EyeOffset.y + viewOffset.y);
+	public Vector3 offset => ((Component)this).transform.up * (EyeOffset.y + viewOffset.Get().y);
 
 	public Quaternion rotation
 	{
@@ -155,12 +193,9 @@ public class PlayerEyes : EntityComponent<BasePlayer>
 	public void NetworkUpdate(Quaternion rot)
 	{
 		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
 		if (base.baseEntity.IsCrawling())
 		{
 			viewOffset = CrawlOffset;

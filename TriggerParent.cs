@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using Facepunch;
 using Rust;
 using UnityEngine;
 
@@ -128,6 +130,45 @@ public class TriggerParent : TriggerBase, IServerComponent
 		return true;
 	}
 
+	public void ForceParentEarly(BaseEntity ent)
+	{
+		OnEntityEnter(ent);
+		((FacepunchBehaviour)this).Invoke((Action)CheckAllParenting, 0.1f);
+	}
+
+	private void CheckAllParenting()
+	{
+		List<BaseEntity> list = Pool.GetList<BaseEntity>();
+		if (contents != null)
+		{
+			foreach (GameObject content in contents)
+			{
+				if (!((Object)(object)content == (Object)null))
+				{
+					BaseEntity baseEntity = content.ToBaseEntity();
+					if ((Object)(object)baseEntity != (Object)null && !list.Contains(baseEntity))
+					{
+						list.Add(baseEntity);
+					}
+				}
+			}
+		}
+		List<BaseEntity> list2 = Pool.GetList<BaseEntity>();
+		foreach (BaseEntity entityContent in entityContents)
+		{
+			if (!list.Contains(entityContent))
+			{
+				list2.Add(entityContent);
+			}
+		}
+		foreach (BaseEntity item in list2)
+		{
+			OnEntityLeave(item);
+		}
+		Pool.FreeList<BaseEntity>(ref list2);
+		Pool.FreeList<BaseEntity>(ref list);
+	}
+
 	protected void Parent(BaseEntity ent)
 	{
 		BaseEntity baseEntity = ((Component)this).gameObject.ToBaseEntity();
@@ -139,8 +180,9 @@ public class TriggerParent : TriggerBase, IServerComponent
 
 	protected void Unparent(BaseEntity ent)
 	{
-		//IL_00cb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f6: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)ent.GetParentEntity() != (Object)(object)((Component)this).gameObject.ToBaseEntity())
 		{
 			return;
@@ -168,8 +210,9 @@ public class TriggerParent : TriggerBase, IServerComponent
 			if (associatedMountable.GetDismountPosition(basePlayer, out var res))
 			{
 				basePlayer.MovePosition(res);
+				((Component)basePlayer).transform.rotation = Quaternion.identity;
 				basePlayer.SendNetworkUpdateImmediate();
-				basePlayer.ClientRPCPlayer<Vector3>(null, basePlayer, "ForcePositionTo", res);
+				basePlayer.ClientRPC<Vector3>(RpcTarget.Player("ForcePositionTo", basePlayer), res);
 			}
 			else
 			{
@@ -228,23 +271,17 @@ public class TriggerParent : TriggerBase, IServerComponent
 		//IL_0016: Unknown result type (might be due to invalid IL or missing references)
 		//IL_001b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 val = ent.PivotPoint() + ((Component)ent).transform.up * 0.1f;
 		float maxDistance = triggerHeight + 0.1f;
-		Ray ray = default(Ray);
-		((Ray)(ref ray))._002Ector(val, -((Component)this).transform.up);
-		Debug.DrawRay(((Ray)(ref ray)).origin, ((Ray)(ref ray)).direction, Color.blue, 1f);
-		if (GamePhysics.Trace(ray, 0f, out var hitInfo, maxDistance, 429990145, (QueryTriggerInteraction)1, ent) && (Object)(object)((RaycastHit)(ref hitInfo)).collider != (Object)null)
+		if (GamePhysics.Trace(new Ray(val, -((Component)this).transform.up), 0f, out var hitInfo, maxDistance, 1503731969, (QueryTriggerInteraction)1, ent) && (Object)(object)((RaycastHit)(ref hitInfo)).collider != (Object)null)
 		{
-			BaseEntity other = ((Component)this).gameObject.ToBaseEntity();
+			BaseEntity toFind = ((Component)this).gameObject.ToBaseEntity();
 			BaseEntity baseEntity = ((RaycastHit)(ref hitInfo)).collider.ToBaseEntity();
-			if ((Object)(object)baseEntity == (Object)null || !baseEntity.EqualNetID((BaseNetworkable)other))
+			if ((Object)(object)baseEntity == (Object)null || !baseEntity.HasEntityInParents(toFind))
 			{
 				return true;
 			}

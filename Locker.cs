@@ -174,20 +174,20 @@ public class Locker : StorageContainer
 		//IL_00cd: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00d4: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00da: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0115: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0122: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0222: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0227: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ad: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ba: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01e0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01e6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ed: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01f3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_022d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0232: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0120: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0127: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01bf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01eb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01fe: Unknown result type (might be due to invalid IL or missing references)
 		int num = msg.read.Int32();
 		if (num < 0 || num >= 3 || IsEquipping())
 		{
@@ -221,7 +221,7 @@ public class Locker : StorageContainer
 			if (item != null)
 			{
 				flag = true;
-				if (item.info.category != ItemCategory.Attire || !item.MoveToContainer(base.inventory, num3))
+				if (!item.MoveToContainer(base.inventory, num3) && !item.MoveToContainer(player.inventory.containerWear, j))
 				{
 					item.Drop(GetDropPosition(), GetDropVelocity());
 				}
@@ -260,7 +260,7 @@ public class Locker : StorageContainer
 		}
 	}
 
-	public override int GetIdealSlot(BasePlayer player, Item item)
+	public override int GetIdealSlot(BasePlayer player, ItemContainer container, Item item)
 	{
 		for (int i = 0; i < inventorySlots; i++)
 		{

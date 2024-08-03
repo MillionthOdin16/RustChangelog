@@ -12,13 +12,12 @@ public static class TerrainCheckEx
 		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
 		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
 		if (anchors.Length == 0)
 		{
 			return true;
@@ -31,10 +30,6 @@ public static class TerrainCheckEx
 				val = rot * val;
 			}
 			Vector3 val2 = pos + val;
-			if (TerrainMeta.OutOfBounds(val2))
-			{
-				return false;
-			}
 			if (filter != null && filter.GetFactor(val2) == 0f)
 			{
 				return false;

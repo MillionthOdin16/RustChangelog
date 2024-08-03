@@ -28,4 +28,13 @@ public class VirtualItemIcon : MonoBehaviour
 	public Image maxConditionFill;
 
 	public Image cornerIcon;
+
+	[Header("Slots")]
+	public GameObject slots;
+
+	public Image[] slotImages;
+
+	public static Phrase attachmentsPhrase = new Phrase("vendor_attachments", "Attachments");
+
+	public static Phrase ammoPhrase = new Phrase("vendor_ammo", "Ammo");
 }

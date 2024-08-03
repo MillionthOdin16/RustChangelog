@@ -180,7 +180,7 @@ public class PlayerLoot : EntityComponent<BasePlayer>
 					val.containers.Add(container.Save());
 				}
 			}
-			base.baseEntity.ClientRPCPlayer<PlayerUpdateLoot>(null, base.baseEntity, "UpdateLoot", val);
+			base.baseEntity.ClientRPC<PlayerUpdateLoot>(RpcTarget.Player("UpdateLoot", base.baseEntity), val);
 		}
 		finally
 		{
@@ -213,10 +213,23 @@ public class PlayerLoot : EntityComponent<BasePlayer>
 
 	public void AddContainer(ItemContainer container)
 	{
+		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
 		if (container != null)
 		{
 			containers.Add(container);
 			container.onDirty += MarkDirty;
+			if ((Object)(object)container.entityOwner != (Object)null)
+			{
+				base.baseEntity.ProcessMissionEvent(BaseMission.MissionEventType.OPEN_STORAGE, new BaseMission.MissionEventPayload
+				{
+					UintIdentifier = container.entityOwner.prefabID,
+					NetworkIdentifier = container.entityOwner.net.ID,
+					WorldPosition = ((Component)container.entityOwner).transform.position
+				}, 0f);
+			}
 		}
 	}
 

@@ -80,8 +80,8 @@ public class Monument : TerrainPlacement
 			//IL_0062: Unknown result type (might be due to invalid IL or missing references)
 			//IL_008a: Unknown result type (might be due to invalid IL or missing references)
 			//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
-			//IL_011b: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0143: Unknown result type (might be due to invalid IL or missing references)
+			//IL_0176: Unknown result type (might be due to invalid IL or missing references)
+			//IL_019e: Unknown result type (might be due to invalid IL or missing references)
 			float normZ = TerrainMeta.HeightMap.Coordinate(z);
 			float normX = TerrainMeta.HeightMap.Coordinate(x);
 			Vector3 val = default(Vector3);
@@ -91,9 +91,17 @@ public class Monument : TerrainPlacement
 			num3 = ((!useBlendMap) ? Mathf.InverseLerp(Radius, Radius - Fade, Vector3Ex.Magnitude2D(val2)) : blenddata.GetInterpolatedVector((val2.x + extents.x) / size.x, (val2.z + extents.z) / size.z).w);
 			if (num3 != 0f)
 			{
-				float num4 = TerrainMeta.NormalizeY(position.y + offset.y + heightdata.GetInterpolatedHalf((val2.x + extents.x) / size.x, (val2.z + extents.z) / size.z) * size.y);
-				num4 = Mathf.SmoothStep(TerrainMeta.HeightMap.GetHeight01(x, z), num4, num3);
-				TerrainMeta.HeightMap.SetHeight(x, z, num4);
+				int num4 = Mathx.Min(x, z, TerrainMeta.HeightMap.res - 1 - x, TerrainMeta.HeightMap.res - 1 - z);
+				if (num4 < 10)
+				{
+					num3 *= Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0f, 10f, (float)num4));
+				}
+				if (num3 != 0f)
+				{
+					float num5 = TerrainMeta.NormalizeY(position.y + offset.y + heightdata.GetInterpolatedHalf((val2.x + extents.x) / size.x, (val2.z + extents.z) / size.z) * size.y);
+					num5 = Mathf.SmoothStep(TerrainMeta.HeightMap.GetHeight01(x, z), num5, num3);
+					TerrainMeta.HeightMap.SetHeight(x, z, num5);
+				}
 			}
 		});
 	}

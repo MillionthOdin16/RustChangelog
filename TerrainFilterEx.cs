@@ -16,9 +16,8 @@ public static class TerrainFilterEx
 		//IL_0025: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
 		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
 		if (filters.Length == 0)
 		{
 			return true;
@@ -28,10 +27,6 @@ public static class TerrainFilterEx
 			Vector3 val = Vector3.Scale(terrainFilter.worldPosition, scale);
 			val = rot * val;
 			Vector3 val2 = pos + val;
-			if (TerrainMeta.OutOfBounds(val2))
-			{
-				return false;
-			}
 			if (globalFilter != null && globalFilter.GetFactor(val2) == 0f)
 			{
 				return false;

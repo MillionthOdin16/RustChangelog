@@ -79,7 +79,7 @@ public class RFReceiver : IOEntity, IRFObject
 		return frequency;
 	}
 
-	public override bool WantsPower()
+	public override bool WantsPower(int inputIndex)
 	{
 		return IsOn();
 	}

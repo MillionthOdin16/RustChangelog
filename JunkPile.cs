@@ -36,6 +36,17 @@ public class JunkPile : BaseEntity
 		isSinking = false;
 	}
 
+	internal override void DoServerDestroy()
+	{
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		base.DoServerDestroy();
+		StabilityEntity.UpdateSurroundingsQueue updateSurroundingsQueue = StabilityEntity.updateSurroundingsQueue;
+		OBB val = WorldSpaceBounds();
+		((ObjectWorkQueue<Bounds>)updateSurroundingsQueue).Add(((OBB)(ref val)).ToBounds());
+	}
+
 	private void SpawnInitial()
 	{
 		SpawnGroup[] array = spawngroups;
@@ -91,25 +102,28 @@ public class JunkPile : BaseEntity
 
 	public void SinkAndDestroy()
 	{
-		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
-		((FacepunchBehaviour)this).CancelInvoke((Action)SinkAndDestroy);
-		SpawnGroup[] array = spawngroups;
-		for (int i = 0; i < array.Length; i++)
+		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
+		if (base.isServer)
 		{
-			array[i].Clear();
+			((FacepunchBehaviour)this).CancelInvoke((Action)SinkAndDestroy);
+			SpawnGroup[] array = spawngroups;
+			for (int i = 0; i < array.Length; i++)
+			{
+				array[i].Clear();
+			}
+			SetFlag(Flags.Reserved8, b: true, recursive: true);
+			if ((Object)(object)NPCSpawn != (Object)null)
+			{
+				NPCSpawn.Clear();
+			}
+			ClientRPC(RpcTarget.NetworkGroup("CLIENT_StartSink"));
+			Transform transform = ((Component)this).transform;
+			transform.position -= new Vector3(0f, 5f, 0f);
+			isSinking = true;
+			((FacepunchBehaviour)this).Invoke((Action)KillMe, 22f);
 		}
-		SetFlag(Flags.Reserved8, b: true, recursive: true);
-		if ((Object)(object)NPCSpawn != (Object)null)
-		{
-			NPCSpawn.Clear();
-		}
-		ClientRPC(null, "CLIENT_StartSink");
-		Transform transform = ((Component)this).transform;
-		transform.position -= new Vector3(0f, 5f, 0f);
-		isSinking = true;
-		((FacepunchBehaviour)this).Invoke((Action)KillMe, 22f);
 	}
 
 	public void KillMe()

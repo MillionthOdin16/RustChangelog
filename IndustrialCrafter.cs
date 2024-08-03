@@ -24,7 +24,7 @@ public class IndustrialCrafter : IndustrialEntity, IItemContainerEntity, IIdealS
 
 	public const Flags FullOutput = Flags.Reserved2;
 
-	public Renderer[] MeshRenderers;
+	public Renderer MeshRenderer;
 
 	public ParticleSystemContainer JobCompleteFx;
 
@@ -259,7 +259,7 @@ public class IndustrialCrafter : IndustrialEntity, IItemContainerEntity, IIdealS
 			SetFlag(Flags.Open, b: true);
 			player.inventory.loot.AddContainer(inventory);
 			player.inventory.loot.SendImmediate();
-			player.ClientRPCPlayer(null, player, "RPC_OpenLootPanel", LootPanelName);
+			player.ClientRPC(RpcTarget.Player("RPC_OpenLootPanel", player), LootPanelName);
 			SendNetworkUpdate();
 			return true;
 		}
@@ -328,8 +328,8 @@ public class IndustrialCrafter : IndustrialEntity, IItemContainerEntity, IIdealS
 	protected override void RunJob()
 	{
 		//IL_01bf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01df: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01eb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01e3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ef: Unknown result type (might be due to invalid IL or missing references)
 		base.RunJob();
 		if (Server.industrialCrafterFrequency <= 0f || HasFlag(Flags.Reserved1) || (Object)(object)currentlyCrafting != (Object)null)
 		{
@@ -382,7 +382,7 @@ public class IndustrialCrafter : IndustrialEntity, IItemContainerEntity, IIdealS
 			((FacepunchBehaviour)this).Invoke((Action)CompleteCraft, time);
 			jobFinishes = TimeUntilWithDuration.op_Implicit(time);
 			SetFlag(Flags.Reserved1, b: true);
-			ClientRPC(null, "ClientUpdateCraftTimeRemaining", TimeUntilWithDuration.op_Implicit(jobFinishes), jobFinishes.Duration);
+			ClientRPC(RpcTarget.NetworkGroup("ClientUpdateCraftTimeRemaining"), TimeUntilWithDuration.op_Implicit(jobFinishes), jobFinishes.Duration);
 			break;
 		}
 	}
@@ -571,6 +571,21 @@ public class IndustrialCrafter : IndustrialEntity, IItemContainerEntity, IIdealS
 		}
 	}
 
+	public override bool ShouldDrainBattery(IOEntity battery)
+	{
+		return IsOn();
+	}
+
+	public override bool WantsPassthroughPower()
+	{
+		return false;
+	}
+
+	public override bool WantsPower(int inputIndex)
+	{
+		return inputIndex == 1;
+	}
+
 	public virtual void SetSwitch(bool wantsOn)
 	{
 		if (wantsOn != IsOn())
@@ -613,12 +628,12 @@ public class IndustrialCrafter : IndustrialEntity, IItemContainerEntity, IIdealS
 		return base.CanPickup(player);
 	}
 
-	public int GetIdealSlot(BasePlayer player, Item item)
+	public int GetIdealSlot(BasePlayer player, ItemContainer container, Item item)
 	{
 		return -1;
 	}
 
-	public ItemContainerId GetIdealContainer(BasePlayer player, Item item, bool altMove)
+	public ItemContainerId GetIdealContainer(BasePlayer player, Item item, ItemMoveModifier modifier)
 	{
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0008: Unknown result type (might be due to invalid IL or missing references)

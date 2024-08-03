@@ -159,7 +159,16 @@ public class ClanChangeTracker : IClanChangeSink
 			basePlayer.SendNetworkUpdateImmediate();
 			if (basePlayer.IsConnected)
 			{
-				_clanManager.ClientRPCPlayer(null, basePlayer, "Client_CurrentClanChanged");
+				_clanManager.ClientRPC(RpcTarget.Player("Client_CurrentClanChanged", basePlayer));
+			}
+			IClan serverClan = default(IClan);
+			if (_clanManager.Backend.TryGet(basePlayer.clanId, ref serverClan))
+			{
+				basePlayer.serverClan = serverClan;
+			}
+			else
+			{
+				basePlayer.LoadClanInfo();
 			}
 		}
 	}

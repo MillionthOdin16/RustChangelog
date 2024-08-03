@@ -140,7 +140,7 @@ public class LootableCorpse : BaseCorpse, LootPanel.IHasLootPanel
 
 	public void TakeFrom(BaseEntity fromEntity, params ItemContainer[] source)
 	{
-		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00be: Unknown result type (might be due to invalid IL or missing references)
 		Assert.IsTrue(containers == null, "Initializing Twice");
 		TimeWarning val = TimeWarning.New("Corpse.TakeFrom", 0);
 		try
@@ -152,6 +152,7 @@ public class LootableCorpse : BaseCorpse, LootPanel.IHasLootPanel
 				containers[i].ServerInitialize(null, source[i].capacity);
 				containers[i].GiveUID();
 				containers[i].entityOwner = this;
+				containers[i].containerVolume = source[i].containerVolume;
 				Item[] array = source[i].itemList.ToArray();
 				foreach (Item item in array)
 				{
@@ -226,7 +227,7 @@ public class LootableCorpse : BaseCorpse, LootPanel.IHasLootPanel
 			}
 		}
 		player.inventory.loot.SendImmediate();
-		ClientRPCPlayer(null, player, "RPC_ClientLootCorpse");
+		ClientRPC(RpcTarget.Player("RPC_ClientLootCorpse", player));
 		SendNetworkUpdate();
 	}
 

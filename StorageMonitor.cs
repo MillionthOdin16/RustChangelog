@@ -6,7 +6,11 @@ using UnityEngine;
 
 public class StorageMonitor : AppIOEntity
 {
-	private readonly Action<Item, bool> _onContainerChangedHandler;
+	private readonly Action<Item, bool> _onItemAddedRemoved;
+
+	private readonly Action<Item, int> _onItemAddedToStack;
+
+	private readonly Action<Item, int> _onItemRemovedFromStack;
 
 	private readonly Action _resetSwitchHandler;
 
@@ -27,7 +31,9 @@ public class StorageMonitor : AppIOEntity
 
 	public StorageMonitor()
 	{
-		_onContainerChangedHandler = OnContainerChanged;
+		_onItemAddedRemoved = OnItemAddedRemoved;
+		_onItemAddedToStack = OnItemAddedToStack;
+		_onItemRemovedFromStack = OnItemRemovedFromStack;
 		_resetSwitchHandler = ResetSwitch;
 	}
 
@@ -67,7 +73,11 @@ public class StorageMonitor : AppIOEntity
 		if ((Object)(object)storageContainer != (Object)null && storageContainer.inventory != null)
 		{
 			ItemContainer inventory = storageContainer.inventory;
-			inventory.onItemAddedRemoved = (Action<Item, bool>)Delegate.Combine(inventory.onItemAddedRemoved, _onContainerChangedHandler);
+			inventory.onItemAddedRemoved = (Action<Item, bool>)Delegate.Combine(inventory.onItemAddedRemoved, _onItemAddedRemoved);
+			ItemContainer inventory2 = storageContainer.inventory;
+			inventory2.onItemAddedToStack = (Action<Item, int>)Delegate.Combine(inventory2.onItemAddedToStack, _onItemAddedToStack);
+			ItemContainer inventory3 = storageContainer.inventory;
+			inventory3.onItemRemovedFromStack = (Action<Item, int>)Delegate.Combine(inventory3.onItemRemovedFromStack, _onItemRemovedFromStack);
 		}
 	}
 
@@ -78,7 +88,11 @@ public class StorageMonitor : AppIOEntity
 		if ((Object)(object)storageContainer != (Object)null && storageContainer.inventory != null)
 		{
 			ItemContainer inventory = storageContainer.inventory;
-			inventory.onItemAddedRemoved = (Action<Item, bool>)Delegate.Remove(inventory.onItemAddedRemoved, _onContainerChangedHandler);
+			inventory.onItemAddedRemoved = (Action<Item, bool>)Delegate.Remove(inventory.onItemAddedRemoved, _onItemAddedRemoved);
+			ItemContainer inventory2 = storageContainer.inventory;
+			inventory2.onItemAddedToStack = (Action<Item, int>)Delegate.Remove(inventory2.onItemAddedToStack, _onItemAddedToStack);
+			ItemContainer inventory3 = storageContainer.inventory;
+			inventory3.onItemRemovedFromStack = (Action<Item, int>)Delegate.Remove(inventory3.onItemRemovedFromStack, _onItemRemovedFromStack);
 		}
 	}
 
@@ -112,7 +126,22 @@ public class StorageMonitor : AppIOEntity
 		}
 	}
 
-	private void OnContainerChanged(Item item, bool added)
+	private void OnItemAddedRemoved(Item item, bool added)
+	{
+		OnContainerChanged();
+	}
+
+	private void OnItemAddedToStack(Item item, int amount)
+	{
+		OnContainerChanged();
+	}
+
+	private void OnItemRemovedFromStack(Item item, int amount)
+	{
+		OnContainerChanged();
+	}
+
+	private void OnContainerChanged()
 	{
 		if (HasFlag(Flags.Reserved8))
 		{

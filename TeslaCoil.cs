@@ -32,9 +32,18 @@ public class TeslaCoil : IOEntity
 		return Mathf.CeilToInt(maxDamageOutput / powerToDamageRatio);
 	}
 
+	public override int DesiredPower(int inputIndex = 0)
+	{
+		if (!CanDischarge())
+		{
+			return 0;
+		}
+		return Mathf.Clamp(currentEnergy, 0, ConsumptionAmount());
+	}
+
 	public bool CanDischarge()
 	{
-		return base.healthFraction >= 0.25f;
+		return base.healthFraction >= 0.1f;
 	}
 
 	public override void UpdateFromInput(int inputAmount, int inputSlot)
@@ -88,7 +97,16 @@ public class TeslaCoil : IOEntity
 		Hurt(amount, DamageType.ElectricShock, this, useProtection: false);
 		if (!CanDischarge())
 		{
-			MarkDirty();
+			SendChangedToRoot(forceUpdate: true);
+		}
+	}
+
+	public override void OnRepair()
+	{
+		base.OnRepair();
+		if (CanDischarge())
+		{
+			SendChangedToRoot(forceUpdate: true);
 		}
 	}
 }

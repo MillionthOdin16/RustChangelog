@@ -9,8 +9,9 @@ using UnityEngine.Assertions;
 
 public class SprayCanSpray : DecayEntity, ISplashable
 {
-	public DateTime sprayTimestamp;
+	private DateTime sprayTimestamp;
 
+	[NonSerialized]
 	public ulong sprayedByPlayer;
 
 	public static ListHashSet<SprayCanSpray> AllSprays = new ListHashSet<SprayCanSpray>(8);

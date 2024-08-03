@@ -159,8 +159,17 @@ public class WildlifeTrap : StorageContainer
 		if (!item.MoveToContainer(base.inventory))
 		{
 			item.Remove();
+			OnTrappedWildlife(setFlag: false);
 		}
 		else
+		{
+			OnTrappedWildlife(setFlag: true);
+		}
+	}
+
+	protected void OnTrappedWildlife(bool setFlag)
+	{
+		if (setFlag)
 		{
 			SetFlag(Flags.Reserved1, b: true);
 		}
@@ -173,7 +182,7 @@ public class WildlifeTrap : StorageContainer
 		SetFlag(Flags.Reserved1, b: false);
 	}
 
-	public bool HasBait()
+	public virtual bool HasBait()
 	{
 		return GetBaitCalories() > 0;
 	}
@@ -213,7 +222,7 @@ public class WildlifeTrap : StorageContainer
 		itemContainer.canAcceptItem = (Func<Item, int, bool>)Delegate.Combine(itemContainer.canAcceptItem, new Func<Item, int, bool>(CanAcceptItem));
 	}
 
-	private bool CanAcceptItem(Item item, int slot)
+	protected virtual bool CanAcceptItem(Item item, int slot)
 	{
 		if (CalculateBaitCalories(item) > 0)
 		{

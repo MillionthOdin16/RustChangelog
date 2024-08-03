@@ -221,7 +221,7 @@ public class PuzzleReset : FacepunchBehaviour
 			while (enumerator3.MoveNext())
 			{
 				BasePlayer current3 = enumerator3.Current;
-				if (!current3.IsNpc && current3.IsConnected)
+				if (!current3.IsNpc && current3.IsConnected && !current3.IsInTutorial)
 				{
 					current3.ShowToast(GameTip.Styles.Server_Event, resetPhrase);
 				}

@@ -93,7 +93,7 @@ public class BaseFirework : BaseCombatEntity, IIgniteable
 
 	public void StaggeredTryLightFuse()
 	{
-		if (IsExhausted() || IsLit())
+		if (IsExhausted() || (IsLit() && _activeFireworks.Contains(this)))
 		{
 			return;
 		}

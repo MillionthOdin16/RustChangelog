@@ -34,6 +34,49 @@ public class OreResourceEntity : StagedResourceEntity
 		return base.OnRpcMessage(player, rpc, msg);
 	}
 
+	public override void OnAttacked(HitInfo info)
+	{
+		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0145: Unknown result type (might be due to invalid IL or missing references)
+		if (!info.DidGather && info.gatherScale > 0f)
+		{
+			Jackhammer jackhammer = info.Weapon as Jackhammer;
+			if (Object.op_Implicit((Object)(object)_hotSpot) || Object.op_Implicit((Object)(object)jackhammer))
+			{
+				if ((Object)(object)_hotSpot == (Object)null)
+				{
+					_hotSpot = SpawnBonusSpot(lastNodeDir);
+				}
+				if (Vector3.Distance(info.HitPositionWorld, ((Component)_hotSpot).transform.position) <= ((Component)_hotSpot).GetComponent<SphereCollider>().radius * 1.5f || (Object)(object)jackhammer != (Object)null)
+				{
+					float num = (((Object)(object)jackhammer == (Object)null) ? 1f : jackhammer.HotspotBonusScale);
+					bonusesKilled++;
+					info.gatherScale = 1f + Mathf.Clamp((float)bonusesKilled * 0.5f, 0f, 2f * num);
+					_hotSpot.FireFinishEffect();
+					ClientRPC<int, Vector3>(null, "PlayBonusLevelSound", bonusesKilled, ((Component)_hotSpot).transform.position);
+				}
+				else if (bonusesKilled > 0)
+				{
+					bonusesKilled = 0;
+					Effect.server.Run(bonusFailEffect.resourcePath, ((Component)this).transform.position, ((Component)this).transform.up);
+				}
+				if (bonusesKilled > 0)
+				{
+					CleanupBonus();
+				}
+			}
+		}
+		if ((Object)(object)_hotSpot == (Object)null)
+		{
+			DelayedBonusSpawn();
+		}
+		base.OnAttacked(info);
+	}
+
 	protected override void UpdateNetworkStage()
 	{
 		int num = stage;
@@ -86,54 +129,6 @@ public class OreResourceEntity : StagedResourceEntity
 		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
 		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
 		Effect.server.Run(finishEffect.resourcePath, ((Component)this).transform.position, ((Component)this).transform.up);
-	}
-
-	public override void OnAttacked(HitInfo info)
-	{
-		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0155: Unknown result type (might be due to invalid IL or missing references)
-		if (base.isClient)
-		{
-			base.OnAttacked(info);
-			return;
-		}
-		if (!info.DidGather && info.gatherScale > 0f)
-		{
-			Jackhammer jackhammer = info.Weapon as Jackhammer;
-			if (Object.op_Implicit((Object)(object)_hotSpot) || Object.op_Implicit((Object)(object)jackhammer))
-			{
-				if ((Object)(object)_hotSpot == (Object)null)
-				{
-					_hotSpot = SpawnBonusSpot(lastNodeDir);
-				}
-				if (Vector3.Distance(info.HitPositionWorld, ((Component)_hotSpot).transform.position) <= ((Component)_hotSpot).GetComponent<SphereCollider>().radius * 1.5f || (Object)(object)jackhammer != (Object)null)
-				{
-					float num = (((Object)(object)jackhammer == (Object)null) ? 1f : jackhammer.HotspotBonusScale);
-					bonusesKilled++;
-					info.gatherScale = 1f + Mathf.Clamp((float)bonusesKilled * 0.5f, 0f, 2f * num);
-					_hotSpot.FireFinishEffect();
-					ClientRPC<int, Vector3>(null, "PlayBonusLevelSound", bonusesKilled, ((Component)_hotSpot).transform.position);
-				}
-				else if (bonusesKilled > 0)
-				{
-					bonusesKilled = 0;
-					Effect.server.Run(bonusFailEffect.resourcePath, ((Component)this).transform.position, ((Component)this).transform.up);
-				}
-				if (bonusesKilled > 0)
-				{
-					CleanupBonus();
-				}
-			}
-		}
-		if ((Object)(object)_hotSpot == (Object)null)
-		{
-			DelayedBonusSpawn();
-		}
-		base.OnAttacked(info);
 	}
 
 	public void DelayedBonusSpawn()

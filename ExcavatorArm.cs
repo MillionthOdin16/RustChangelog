@@ -233,7 +233,7 @@ public class ExcavatorArm : BaseEntity
 				while (enumerator.MoveNext())
 				{
 					BasePlayer current = enumerator.Current;
-					if (!current.IsNpc && current.IsConnected)
+					if (!current.IsNpc && current.IsConnected && !current.IsInTutorial)
 					{
 						current.ShowToast(GameTip.Styles.Server_Event, excavatorPhrase);
 					}

@@ -142,28 +142,28 @@ public class BuildingProximity : PrefabAttribute
 		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ce: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00cf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0153: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0154: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0155: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_016a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_016c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_016e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0173: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0177: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0179: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0180: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0182: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0187: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0189: Unknown result type (might be due to invalid IL or missing references)
-		//IL_018e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0193: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0156: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0157: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0158: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0171: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0176: Unknown result type (might be due to invalid IL or missing references)
+		//IL_017a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_017c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0183: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0185: Unknown result type (might be due to invalid IL or missing references)
+		//IL_018a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_018c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0191: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0196: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b7: Unknown result type (might be due to invalid IL or missing references)
 		ProximityInfo result = default(ProximityInfo);
 		result.hit = false;
 		result.connection = false;
@@ -190,15 +190,15 @@ public class BuildingProximity : PrefabAttribute
 		{
 			for (int k = 0; k < construction1.allSockets.Length; k++)
 			{
-				NeighbourSocket neighbourSocket = construction1.allSockets[k] as NeighbourSocket;
-				if (neighbourSocket == null)
+				Socket_Base socket_Base = construction1.allSockets[k];
+				if (!(socket_Base is NeighbourSocket) && !(socket_Base is StabilitySocket))
 				{
 					continue;
 				}
 				for (int l = 0; l < construction2.allSockets.Length; l++)
 				{
 					Socket_Base socket2 = construction2.allSockets[l];
-					if (neighbourSocket.CanConnect(position1, rotation1, socket2, position2, rotation2))
+					if (socket_Base.CanConnect(position1, rotation1, socket2, position2, rotation2))
 					{
 						result.connection = true;
 						return result;

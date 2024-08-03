@@ -49,10 +49,10 @@ public class DirectionalDamageTrigger : TriggerBase
 	{
 		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0095: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ac: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ad: Unknown result type (might be due to invalid IL or missing references)
 		if (attackEffect.isValid)
 		{
 			Effect.server.Run(attackEffect.resourcePath, ((Component)this).transform.position, Vector3.up);

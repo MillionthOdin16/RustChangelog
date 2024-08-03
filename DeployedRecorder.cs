@@ -100,14 +100,14 @@ public class DeployedRecorder : StorageContainer, ICassettePlayer
 
 	public void OnCassetteInserted(Cassette c)
 	{
-		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
-		ClientRPC<NetworkableId>(null, "Client_OnCassetteInserted", c.net.ID);
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		ClientRPC<NetworkableId>(RpcTarget.NetworkGroup("Client_OnCassetteInserted"), c.net.ID);
 		SendNetworkUpdate();
 	}
 
 	public void OnCassetteRemoved(Cassette c)
 	{
-		ClientRPC(null, "Client_OnCassetteRemoved");
+		ClientRPC(RpcTarget.NetworkGroup("Client_OnCassetteRemoved"));
 		ServerTogglePlay(play: false);
 	}
 

@@ -126,7 +126,16 @@ public abstract class DeployVolume : PrefabAttribute
 				continue;
 			}
 			ColliderInfo component = gameObject.GetComponent<ColliderInfo>();
-			if (((Object)(object)component != (Object)null && component.HasFlag(ColliderInfo.Flags.OnlyBlockBuildingBlock) && !volume.IsBuildingBlock) || (!((Object)(object)component == (Object)null) && volume.ignore != 0 && component.HasFlag(volume.ignore)))
+			if ((Object)(object)component != (Object)null && component.HasFlag(ColliderInfo.Flags.OnlyBlockBuildingBlock) && !volume.IsBuildingBlock)
+			{
+				continue;
+			}
+			if (gameObject.HasCustomTag(GameObjectTag.BlockPlacement))
+			{
+				return true;
+			}
+			MonumentInfo monument = list[i].GetMonument();
+			if (((Object)(object)monument != (Object)null && !monument.IsSafeZone && volume.ignore.HasFlag(ColliderInfo.Flags.Monument)) || ((Object)(object)component != (Object)null && (volume.ignore & component.flags) != 0) || (!((Object)(object)component == (Object)null) && volume.ignore != 0 && component.HasFlag(volume.ignore)))
 			{
 				continue;
 			}
@@ -135,35 +144,30 @@ public abstract class DeployVolume : PrefabAttribute
 				return true;
 			}
 			BaseEntity entity = list[i].ToBaseEntity();
-			bool flag = false;
-			if (volume.entityGroups != null)
+			if (volume.entityGroups.Length != 0)
 			{
 				EntityListScriptableObject[] array = volume.entityGroups;
 				foreach (EntityListScriptableObject entityListScriptableObject in array)
 				{
-					if (entityListScriptableObject.entities == null || entityListScriptableObject.entities.Length == 0)
+					if (entityListScriptableObject.entities.IsNullOrEmpty())
 					{
 						Debug.LogWarning((object)("Skipping entity group '" + ((Object)entityListScriptableObject).name + "' when checking volume: there are no entities"));
-						continue;
 					}
-					if (CheckEntityList(entity, entityListScriptableObject.entities, entityListScriptableObject.whitelist))
+					else if (CheckEntityList(entity, entityListScriptableObject.entities, trueIfAnyFound: true))
 					{
-						flag = true;
-						continue;
+						return true;
 					}
-					return false;
 				}
 			}
-			if (CheckEntityList(entity, volume.entityList, volume.entityMode == EntityMode.IncludeList))
+			if (volume.entityList.Length != 0 && CheckEntityList(entity, volume.entityList, volume.entityMode == EntityMode.IncludeList))
 			{
 				return true;
 			}
-			return false;
 		}
 		return false;
 	}
 
-	private static bool CheckEntityList(BaseEntity entity, BaseEntity[] entities, bool whitelist)
+	private static bool CheckEntityList(BaseEntity entity, BaseEntity[] entities, bool trueIfAnyFound)
 	{
 		if (entities == null || entities.Length == 0)
 		{
@@ -179,9 +183,14 @@ public abstract class DeployVolume : PrefabAttribute
 					flag = true;
 					break;
 				}
+				if (entity is ModularCar && baseEntity is ModularCar)
+				{
+					flag = true;
+					break;
+				}
 			}
 		}
-		if (whitelist)
+		if (trueIfAnyFound)
 		{
 			return flag;
 		}

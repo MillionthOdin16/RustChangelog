@@ -14,8 +14,6 @@ public class BuildingBlock : StabilityEntity
 	public static class BlockFlags
 	{
 		public const Flags CanRotate = Flags.Reserved1;
-
-		public const Flags CanDemolish = Flags.Reserved2;
 	}
 
 	public class UpdateSkinWorkQueue : ObjectWorkQueue<BuildingBlock>
@@ -63,6 +61,10 @@ public class BuildingBlock : StabilityEntity
 
 	public static UpdateSkinWorkQueue updateSkinQueueServer;
 
+	public static readonly Phrase RotateTitle;
+
+	public static readonly Phrase RotateDesc;
+
 	private bool globalNetworkCooldown;
 
 	public bool CullBushes;
@@ -70,6 +72,8 @@ public class BuildingBlock : StabilityEntity
 	public bool CheckForPipesOnModelChange;
 
 	public OBBComponent AlternativePipeBounds;
+
+	public override bool CanBeDemolished => true;
 
 	public int modelState { get; private set; }
 
@@ -99,108 +103,6 @@ public class BuildingBlock : StabilityEntity
 		TimeWarning val = TimeWarning.New("BuildingBlock.OnRpcMessage", 0);
 		try
 		{
-			if (rpc == 2858062413u && (Object)(object)player != (Object)null)
-			{
-				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
-				if (Global.developer > 2)
-				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - DoDemolish "));
-				}
-				TimeWarning val2 = TimeWarning.New("DoDemolish", 0);
-				try
-				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
-					try
-					{
-						if (!RPC_Server.MaxDistance.Test(2858062413u, "DoDemolish", this, player, 3f))
-						{
-							return true;
-						}
-					}
-					finally
-					{
-						((IDisposable)val3)?.Dispose();
-					}
-					try
-					{
-						val3 = TimeWarning.New("Call", 0);
-						try
-						{
-							RPCMessage rPCMessage = default(RPCMessage);
-							rPCMessage.connection = msg.connection;
-							rPCMessage.player = player;
-							rPCMessage.read = msg.read;
-							RPCMessage msg2 = rPCMessage;
-							DoDemolish(msg2);
-						}
-						finally
-						{
-							((IDisposable)val3)?.Dispose();
-						}
-					}
-					catch (Exception ex)
-					{
-						Debug.LogException(ex);
-						player.Kick("RPC Error in DoDemolish");
-					}
-				}
-				finally
-				{
-					((IDisposable)val2)?.Dispose();
-				}
-				return true;
-			}
-			if (rpc == 216608990 && (Object)(object)player != (Object)null)
-			{
-				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
-				if (Global.developer > 2)
-				{
-					Debug.Log((object)("SV_RPCMessage: " + ((object)player)?.ToString() + " - DoImmediateDemolish "));
-				}
-				TimeWarning val2 = TimeWarning.New("DoImmediateDemolish", 0);
-				try
-				{
-					TimeWarning val3 = TimeWarning.New("Conditions", 0);
-					try
-					{
-						if (!RPC_Server.MaxDistance.Test(216608990u, "DoImmediateDemolish", this, player, 3f))
-						{
-							return true;
-						}
-					}
-					finally
-					{
-						((IDisposable)val3)?.Dispose();
-					}
-					try
-					{
-						val3 = TimeWarning.New("Call", 0);
-						try
-						{
-							RPCMessage rPCMessage = default(RPCMessage);
-							rPCMessage.connection = msg.connection;
-							rPCMessage.player = player;
-							rPCMessage.read = msg.read;
-							RPCMessage msg3 = rPCMessage;
-							DoImmediateDemolish(msg3);
-						}
-						finally
-						{
-							((IDisposable)val3)?.Dispose();
-						}
-					}
-					catch (Exception ex2)
-					{
-						Debug.LogException(ex2);
-						player.Kick("RPC Error in DoImmediateDemolish");
-					}
-				}
-				finally
-				{
-					((IDisposable)val2)?.Dispose();
-				}
-				return true;
-			}
 			if (rpc == 1956645865 && (Object)(object)player != (Object)null)
 			{
 				Assert.IsTrue(player.isServer, "SV_RPC Message is using a clientside player!");
@@ -232,17 +134,17 @@ public class BuildingBlock : StabilityEntity
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg4 = rPCMessage;
-							DoRotation(msg4);
+							RPCMessage msg2 = rPCMessage;
+							DoRotation(msg2);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex3)
+					catch (Exception ex)
 					{
-						Debug.LogException(ex3);
+						Debug.LogException(ex);
 						player.Kick("RPC Error in DoRotation");
 					}
 				}
@@ -283,17 +185,17 @@ public class BuildingBlock : StabilityEntity
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg5 = rPCMessage;
-							DoUpgradeToGrade(msg5);
+							RPCMessage msg3 = rPCMessage;
+							DoUpgradeToGrade(msg3);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex4)
+					catch (Exception ex2)
 					{
-						Debug.LogException(ex4);
+						Debug.LogException(ex2);
 						player.Kick("RPC Error in DoUpgradeToGrade");
 					}
 				}
@@ -334,17 +236,17 @@ public class BuildingBlock : StabilityEntity
 							rPCMessage.connection = msg.connection;
 							rPCMessage.player = player;
 							rPCMessage.read = msg.read;
-							RPCMessage msg6 = rPCMessage;
-							DoUpgradeToGrade_Delayed(msg6);
+							RPCMessage msg4 = rPCMessage;
+							DoUpgradeToGrade_Delayed(msg4);
 						}
 						finally
 						{
 							((IDisposable)val3)?.Dispose();
 						}
 					}
-					catch (Exception ex5)
+					catch (Exception ex3)
 					{
-						Debug.LogException(ex5);
+						Debug.LogException(ex3);
 						player.Kick("RPC Error in DoUpgradeToGrade_Delayed");
 					}
 				}
@@ -442,66 +344,6 @@ public class BuildingBlock : StabilityEntity
 		return true;
 	}
 
-	private bool CanDemolish(BasePlayer player)
-	{
-		if (IsDemolishable())
-		{
-			return HasDemolishPrivilege(player);
-		}
-		return false;
-	}
-
-	private bool IsDemolishable()
-	{
-		if (!ConVar.Server.pve && !HasFlag(Flags.Reserved2))
-		{
-			return false;
-		}
-		return true;
-	}
-
-	private bool HasDemolishPrivilege(BasePlayer player)
-	{
-		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-		return player.IsBuildingAuthed(((Component)this).transform.position, ((Component)this).transform.rotation, bounds);
-	}
-
-	[RPC_Server]
-	[RPC_Server.MaxDistance(3f)]
-	private void DoDemolish(RPCMessage msg)
-	{
-		if (msg.player.CanInteract() && CanDemolish(msg.player))
-		{
-			Analytics.Azure.OnBuildingBlockDemolished(msg.player, this);
-			Kill(DestroyMode.Gib);
-		}
-	}
-
-	[RPC_Server]
-	[RPC_Server.MaxDistance(3f)]
-	private void DoImmediateDemolish(RPCMessage msg)
-	{
-		if (msg.player.CanInteract() && msg.player.IsAdmin)
-		{
-			Analytics.Azure.OnBuildingBlockDemolished(msg.player, this);
-			Kill(DestroyMode.Gib);
-		}
-	}
-
-	private void StopBeingDemolishable()
-	{
-		SetFlag(Flags.Reserved2, b: false);
-		SendNetworkUpdate();
-	}
-
-	private void StartBeingDemolishable()
-	{
-		SetFlag(Flags.Reserved2, b: true);
-		((FacepunchBehaviour)this).Invoke((Action)StopBeingDemolishable, 600f);
-	}
-
 	public void SetConditionalModel(int state)
 	{
 		if (state != modelState)
@@ -521,6 +363,10 @@ public class BuildingBlock : StabilityEntity
 
 	private bool CanChangeToGrade(BuildingGrade.Enum iGrade, ulong iSkin, BasePlayer player)
 	{
+		if (player.IsInCreativeMode && Creative.freeBuild)
+		{
+			return true;
+		}
 		if (HasUpgradePrivilege(iGrade, iSkin, player))
 		{
 			return !IsUpgradeBlocked();
@@ -530,9 +376,13 @@ public class BuildingBlock : StabilityEntity
 
 	private bool HasUpgradePrivilege(BuildingGrade.Enum iGrade, ulong iSkin, BasePlayer player)
 	{
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
+		if (player.IsInCreativeMode && Creative.freeBuild)
+		{
+			return true;
+		}
 		if (iGrade < grade)
 		{
 			return false;
@@ -566,6 +416,10 @@ public class BuildingBlock : StabilityEntity
 
 	private bool CanAffordUpgrade(BuildingGrade.Enum iGrade, ulong iSkin, BasePlayer player)
 	{
+		if ((Object)(object)player != (Object)null && player.IsInCreativeMode && Creative.freeBuild)
+		{
+			return true;
+		}
 		foreach (ItemAmount item in blockDefinition.GetGrade(iGrade, iSkin).CostToBuild(grade))
 		{
 			if ((float)player.inventory.GetAmount(item.itemid) < item.amount)
@@ -628,7 +482,7 @@ public class BuildingBlock : StabilityEntity
 			{
 				playerCustomColourToApply = msg.player.LastBlockColourChangeId;
 			}
-			ClientRPC(null, "DoUpgradeEffect", (int)@enum, num);
+			ClientRPC(RpcTarget.NetworkGroup("DoUpgradeEffect"), (int)@enum, num);
 			Analytics.Azure.OnBuildingBlockUpgraded(msg.player, this, @enum, playerCustomColourToApply, num);
 			OnSkinChanged(skinID, num);
 			ChangeGrade(@enum, playEffect: true);
@@ -639,22 +493,33 @@ public class BuildingBlock : StabilityEntity
 	[RPC_Server.MaxDistance(3f)]
 	private void DoUpgradeToGrade(RPCMessage msg)
 	{
+		//IL_01af: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b4: Unknown result type (might be due to invalid IL or missing references)
 		if (!msg.player.CanInteract())
 		{
 			return;
 		}
 		ConstructionGrade constructionGrade = blockDefinition.GetGrade((BuildingGrade.Enum)msg.read.Int32(), msg.read.UInt64());
-		if (!(constructionGrade == null) && CanChangeToGrade(constructionGrade.gradeBase.type, constructionGrade.gradeBase.skin, msg.player) && CanAffordUpgrade(constructionGrade.gradeBase.type, constructionGrade.gradeBase.skin, msg.player) && !(base.SecondsSinceAttacked < 30f) && (constructionGrade.gradeBase.skin == 0L || msg.player.blueprints.steamInventory.HasItem((int)constructionGrade.gradeBase.skin)))
+		if (!(constructionGrade == null) && CanChangeToGrade(constructionGrade.gradeBase.type, constructionGrade.gradeBase.skin, msg.player) && CanAffordUpgrade(constructionGrade.gradeBase.type, constructionGrade.gradeBase.skin, msg.player) && !(base.SecondsSinceAttacked < 30f) && (constructionGrade.gradeBase.alwaysUnlock || constructionGrade.gradeBase.skin == 0L || msg.player.blueprints.steamInventory.HasItem((int)constructionGrade.gradeBase.skin)))
 		{
 			PayForUpgrade(constructionGrade, msg.player);
 			if ((Object)(object)msg.player != (Object)null)
 			{
 				playerCustomColourToApply = msg.player.LastBlockColourChangeId;
 			}
-			ClientRPC(null, "DoUpgradeEffect", (int)constructionGrade.gradeBase.type, constructionGrade.gradeBase.skin);
+			ClientRPC(RpcTarget.NetworkGroup("DoUpgradeEffect"), (int)constructionGrade.gradeBase.type, constructionGrade.gradeBase.skin);
+			BuildingGrade.Enum @enum = grade;
 			Analytics.Azure.OnBuildingBlockUpgraded(msg.player, this, constructionGrade.gradeBase.type, playerCustomColourToApply, constructionGrade.gradeBase.skin);
 			OnSkinChanged(skinID, constructionGrade.gradeBase.skin);
 			ChangeGrade(constructionGrade.gradeBase.type, playEffect: true);
+			if ((Object)(object)msg.player != (Object)null && @enum != constructionGrade.gradeBase.type)
+			{
+				msg.player.ProcessMissionEvent(BaseMission.MissionEventType.UPGRADE_BUILDING_GRADE, new BaseMission.MissionEventPayload
+				{
+					NetworkIdentifier = net.ID,
+					IntIdentifier = (int)constructionGrade.gradeBase.type
+				}, 1f);
+			}
 		}
 	}
 
@@ -685,6 +550,10 @@ public class BuildingBlock : StabilityEntity
 
 	private void PayForUpgrade(ConstructionGrade g, BasePlayer player)
 	{
+		if (player.IsInCreativeMode && Creative.freeBuild)
+		{
+			return;
+		}
 		List<Item> list = new List<Item>();
 		foreach (ItemAmount item in g.CostToBuild(grade))
 		{
@@ -705,7 +574,7 @@ public class BuildingBlock : StabilityEntity
 		{
 			customColour = newColour;
 			SendNetworkUpdateImmediate();
-			ClientRPC(null, "RefreshSkin");
+			ClientRPC(RpcTarget.NetworkGroup("RefreshSkin"));
 			GlobalNetworkHandler.server.TrySendNetworkUpdate(this);
 		}
 	}
@@ -961,8 +830,18 @@ public class BuildingBlock : StabilityEntity
 
 	private bool IsRotationBlocked()
 	{
-		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0031: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
+		if (children != null)
+		{
+			foreach (BaseEntity child in children)
+			{
+				if (child is TimedExplosive)
+				{
+					return true;
+				}
+			}
+		}
 		if (!blockDefinition.checkVolumeOnRotate)
 		{
 			return false;
@@ -996,7 +875,7 @@ public class BuildingBlock : StabilityEntity
 			UpdateSkin(force: true);
 			RefreshNeighbours(linkToNeighbours: false);
 			SendNetworkUpdateImmediate();
-			ClientRPC(null, "RefreshSkin");
+			ClientRPC(RpcTarget.NetworkGroup("RefreshSkin"));
 			if (!globalNetworkCooldown)
 			{
 				globalNetworkCooldown = true;
@@ -1056,7 +935,6 @@ public class BuildingBlock : StabilityEntity
 		}
 		if (info.fromDisk)
 		{
-			SetFlag(Flags.Reserved2, b: false);
 			SetFlag(Flags.Reserved1, b: false);
 			UpdateSkin();
 		}
@@ -1077,7 +955,7 @@ public class BuildingBlock : StabilityEntity
 
 	public override void ServerInit()
 	{
-		//IL_0095: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
 		blockDefinition = PrefabAttribute.server.Find<Construction>(prefabID);
 		if (blockDefinition == null)
 		{
@@ -1088,10 +966,6 @@ public class BuildingBlock : StabilityEntity
 		if (HasFlag(Flags.Reserved1) || !Application.isLoadingSave)
 		{
 			StartBeingRotatable();
-		}
-		if (HasFlag(Flags.Reserved2) || !Application.isLoadingSave)
-		{
-			StartBeingDemolishable();
 		}
 		if (!CullBushes || Application.isLoadingSave)
 		{
@@ -1115,7 +989,7 @@ public class BuildingBlock : StabilityEntity
 		{
 			(info.Initiator as BasePlayer).Hurt(info.damageTypes.Total(), DamageType.Generic);
 		}
-		else
+		else if (!Object.op_Implicit((Object)(object)info.Initiator) || !(info.Initiator is BasePlayer basePlayer) || !basePlayer.IsInTutorial)
 		{
 			base.Hurt(info);
 		}
@@ -1143,6 +1017,10 @@ public class BuildingBlock : StabilityEntity
 		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00b0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ce: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d8: Expected O, but got Unknown
+		//IL_00e2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ec: Expected O, but got Unknown
 		Vector3[] array = new Vector3[5];
 		Vector3 val = new Vector3(0f, 1f, 0f);
 		array[0] = ((Vector3)(ref val)).normalized;
@@ -1156,5 +1034,7 @@ public class BuildingBlock : StabilityEntity
 		array[4] = ((Vector3)(ref val)).normalized;
 		outsideLookupOffsets = (Vector3[])(object)array;
 		updateSkinQueueServer = new UpdateSkinWorkQueue();
+		RotateTitle = new Phrase("rotate", "Rotate");
+		RotateDesc = new Phrase("rotate_building_desc", "Rotate or flip this block to face a different direction");
 	}
 }

@@ -249,6 +249,12 @@ public class AI : ConsoleSystem
 	}
 
 	[ServerVar]
+	public static void aizonestats(Arg args)
+	{
+		args.ReplyWith("AIInformationZone count: " + AIInformationZone.zones.Count);
+	}
+
+	[ServerVar]
 	public static void killscientists(Arg args)
 	{
 		ScientistNPC[] array = BaseEntity.Util.FindAll<ScientistNPC>();

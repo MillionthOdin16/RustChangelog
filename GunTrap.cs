@@ -124,25 +124,24 @@ public class GunTrap : StorageContainer
 		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
 		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ef: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0164: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0169: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0123: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0130: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0135: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ad: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00af: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0168: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0122: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0127: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0134: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0139: Unknown result type (might be due to invalid IL or missing references)
 		float damageAmount = 10f;
 		Vector3 val = ((Component)muzzlePos).transform.position - muzzlePos.forward * 0.25f;
 		Vector3 val2 = AimConeUtil.GetModifiedAimConeDirection(inputVec: ((Component)muzzlePos).transform.forward, aimCone: aimCone);
-		Vector3 arg = val + val2 * 300f;
-		ClientRPC<Vector3>(null, "CLIENT_FireGun", arg);
+		ClientRPC<Vector3>(arg1: val + val2 * 300f, target: RpcTarget.NetworkGroup("CLIENT_FireGun"));
 		List<RaycastHit> list = Pool.GetList<RaycastHit>();
 		int layerMask = 1220225793;
 		GamePhysics.TraceAll(new Ray(val, val2), 0.1f, list, 300f, layerMask, (QueryTriggerInteraction)0);
@@ -170,7 +169,7 @@ public class GunTrap : StorageContainer
 			}
 			if (!((Object)(object)entity != (Object)null) || entity.ShouldBlockProjectiles())
 			{
-				arg = ((RaycastHit)(ref hit)).point;
+				Vector3 point = ((RaycastHit)(ref hit)).point;
 				break;
 			}
 		}
@@ -199,6 +198,10 @@ public class GunTrap : StorageContainer
 
 	private BuildingPrivlidge GetCachedTc()
 	{
+		if ((Object)(object)_cachedTc != (Object)null && _cachedTc.IsDestroyed)
+		{
+			_cachedTc = null;
+		}
 		if ((Object)(object)_cachedTc == (Object)null || Time.realtimeSinceStartup > _cacheTimeout)
 		{
 			_cachedTc = null;
@@ -212,10 +215,6 @@ public class GunTrap : StorageContainer
 				return GetNearestBuildingPrivledge();
 			}
 			_cacheTimeout = Time.realtimeSinceStartup + 3f;
-		}
-		if ((Object)(object)_cachedTc != (Object)null && _cachedTc.IsDestroyed)
-		{
-			_cachedTc = null;
 		}
 		return _cachedTc;
 	}

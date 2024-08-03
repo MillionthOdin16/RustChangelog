@@ -8,7 +8,7 @@ public class DummySwitch : IOEntity
 
 	public float duration = -1f;
 
-	public override bool WantsPower()
+	public override bool WantsPower(int inputIndex)
 	{
 		return IsOn();
 	}

@@ -953,7 +953,16 @@ public class ModularCarGarage : ContainerIOEntity
 		info.msg.vehicleLift.occupantLockState = (int)OccupantLockState;
 	}
 
-	public override ItemContainerId GetIdealContainer(BasePlayer player, Item item, bool altMove)
+	public override bool CanPickup(BasePlayer player)
+	{
+		if (base.CanPickup(player))
+		{
+			return !PlatformIsOccupied;
+		}
+		return false;
+	}
+
+	public override ItemContainerId GetIdealContainer(BasePlayer player, Item item, ItemMoveModifier modifier)
 	{
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
@@ -1131,8 +1140,8 @@ public class ModularCarGarage : ContainerIOEntity
 		//IL_000d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0012: Unknown result type (might be due to invalid IL or missing references)
 		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer player = msg.player;
@@ -1245,8 +1254,8 @@ public class ModularCarGarage : ContainerIOEntity
 	[RPC_Server.IsVisible(3f)]
 	public void RPC_RequestAddLock(RPCMessage msg)
 	{
-		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b8: Unknown result type (might be due to invalid IL or missing references)
 		if (!HasOccupant || carOccupant.CarLock.HasALock)
 		{
 			return;
@@ -1283,8 +1292,8 @@ public class ModularCarGarage : ContainerIOEntity
 	[RPC_Server.IsVisible(3f)]
 	public void RPC_RequestNewCode(RPCMessage msg)
 	{
-		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
 		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
 		if (!HasOccupant || !carOccupant.CarLock.HasALock)
 		{
 			return;

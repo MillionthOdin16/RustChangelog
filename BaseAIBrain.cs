@@ -14,6 +14,7 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 {
 	public class BasicAIState
 	{
+		[NonSerialized]
 		public BaseAIBrain brain;
 
 		protected float _lastStateExitTime;
@@ -778,6 +779,8 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 
 	public float BlindDurationMultiplier = 1f;
 
+	public float MovementTickStartDelay = 1f;
+
 	public AIState ClientCurrentState;
 
 	public Vector3 mainInterestPoint;
@@ -1013,7 +1016,7 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 		if (UseAIDesign && !((Object)(object)msg.player == (Object)null) && AIDesign != null && PlayerCanDesignAI(msg.player))
 		{
 			msg.player.designingAIEntity = GetBaseEntity();
-			msg.player.ClientRPCPlayer<AIDesign>(null, msg.player, "StartDesigningAI", AIDesign.ToProto(currentStateContainerID));
+			msg.player.ClientRPC<AIDesign>(RpcTarget.Player("StartDesigningAI", msg.player), AIDesign.ToProto(currentStateContainerID));
 			DesigningPlayer = msg.player;
 			SetOwningPlayer(msg.player);
 		}
@@ -1330,8 +1333,9 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 
 	private void StartMovementTick()
 	{
+		lastMovementTickTime = Time.realtimeSinceStartup;
 		((FacepunchBehaviour)this).CancelInvoke((Action)TickMovement);
-		((FacepunchBehaviour)this).InvokeRandomized((Action)TickMovement, 1f, 0.1f, 0.010000001f);
+		((FacepunchBehaviour)this).InvokeRandomized((Action)TickMovement, MovementTickStartDelay, 0.1f, 0.010000001f);
 	}
 
 	private void StopMovementTick()
@@ -1388,7 +1392,7 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 		return states.ContainsKey(state);
 	}
 
-	protected bool SwitchToState(AIState newState, int stateContainerID = -1)
+	public bool SwitchToState(AIState newState, int stateContainerID = -1)
 	{
 		if (!HasState(newState))
 		{
@@ -1434,7 +1438,7 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 			BaseEntity baseEntity = GetBaseEntity();
 			if ((Object)(object)baseEntity != (Object)null)
 			{
-				baseEntity.ClientRPC(null, "ClientChangeState", (int)((CurrentState != null) ? CurrentState.StateType : AIState.None));
+				baseEntity.ClientRPC(RpcTarget.NetworkGroup("ClientChangeState"), (int)((CurrentState != null) ? CurrentState.StateType : AIState.None));
 			}
 		}
 	}
@@ -1705,7 +1709,7 @@ public class BaseAIBrain : EntityComponent<BaseEntity>, IAISleepable, IAIDesign,
 	{
 		if ((Object)(object)DesigningPlayer != (Object)null)
 		{
-			DesigningPlayer.ClientRPCPlayer(null, DesigningPlayer, "OnDebugAIEventTriggeredStateChange", previousStateID, newStateID, sourceEventID);
+			DesigningPlayer.ClientRPC(RpcTarget.Player("OnDebugAIEventTriggeredStateChange", DesigningPlayer), previousStateID, newStateID, sourceEventID);
 		}
 	}
 

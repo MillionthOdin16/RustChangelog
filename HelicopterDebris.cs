@@ -58,10 +58,10 @@ public class HelicopterDebris : ServerGib
 
 	public override void OnAttacked(HitInfo info)
 	{
-		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0065: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
 		if (IsTooHot() && info.WeaponPrefab is BaseMelee)
 		{
 			if (info.Initiator is BasePlayer)

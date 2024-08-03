@@ -1476,14 +1476,14 @@ public class GrowableEntity : BaseCombatEntity, IInstanceDataReceiver
 	{
 		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
 		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00af: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0095: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b6: Unknown result type (might be due to invalid IL or missing references)
 		if (State == PlantProperties.State.Dying && !((Object)(object)Properties.removeDyingItem == (Object)null))
 		{
 			if (Properties.removeDyingEffect.isValid)
@@ -1537,7 +1537,7 @@ public class GrowableEntity : BaseCombatEntity, IInstanceDataReceiver
 			val.happiness = OverallQuality;
 			val.temperatureModifier = TemperatureQuality;
 			val.waterConsumption = WaterConsumption;
-			ClientRPCPlayer<GrowableEntity>(null, msg.player, "RPC_ReceiveQualityUpdate", val);
+			ClientRPC<GrowableEntity>(RpcTarget.Player("RPC_ReceiveQualityUpdate", msg.player), val);
 		}
 	}
 }

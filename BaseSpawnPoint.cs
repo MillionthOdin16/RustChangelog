@@ -6,7 +6,9 @@ public abstract class BaseSpawnPoint : MonoBehaviour, IServerComponent
 	public enum SpawnPointType
 	{
 		Normal,
-		Tugboat
+		Tugboat,
+		Motorbike,
+		Bicycle
 	}
 
 	public SpawnPointType spawnPointType;
@@ -40,7 +42,7 @@ public abstract class BaseSpawnPoint : MonoBehaviour, IServerComponent
 		}
 	}
 
-	public virtual bool IsAvailableTo(GameObjectRef prefabRef)
+	public virtual bool IsAvailableTo(GameObject prefab)
 	{
 		return ((Component)this).gameObject.activeSelf;
 	}

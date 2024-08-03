@@ -7,6 +7,8 @@ public static class Vis
 
 	private static Collider[] colBuffer = (Collider[])(object)new Collider[8192];
 
+	private static HashSet<object> hashSet = new HashSet<object>();
+
 	private static void Buffer(Vector3 position, float radius, int layerMask = -1, QueryTriggerInteraction triggerInteraction = 2)
 	{
 		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
@@ -74,11 +76,13 @@ public static class Vis
 		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
 		Buffer(position, radius, layerMask, triggerInteraction);
+		hashSet.Clear();
 		for (int i = 0; i < colCount; i++)
 		{
 			Collider val = colBuffer[i];
-			if (!((Object)(object)val == (Object)null) && val.enabled && val.ToBaseEntity() is T item)
+			if (!((Object)(object)val == (Object)null) && val.enabled && val.ToBaseEntity() is T item && !hashSet.Contains(item))
 			{
+				hashSet.Add(item);
 				list.Add(item);
 			}
 		}
@@ -89,6 +93,7 @@ public static class Vis
 		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0003: Unknown result type (might be due to invalid IL or missing references)
 		Buffer(position, radius, layerMask, triggerInteraction);
+		hashSet.Clear();
 		for (int i = 0; i < colCount; i++)
 		{
 			Collider val = colBuffer[i];
@@ -97,8 +102,9 @@ public static class Vis
 				continue;
 			}
 			BaseEntity baseEntity = val.ToBaseEntity();
-			if (!((Object)(object)baseEntity == (Object)null))
+			if (!((Object)(object)baseEntity == (Object)null) && !hashSet.Contains(baseEntity))
 			{
+				hashSet.Add(baseEntity);
 				T component = ((Component)baseEntity).GetComponent<T>();
 				if (!((Object)(object)component == (Object)null))
 				{
@@ -168,21 +174,19 @@ public static class Vis
 		}
 	}
 
-	public static void Entities<T>(OBB bounds, List<T> list, int layerMask = -1, QueryTriggerInteraction triggerInteraction = 2) where T : BaseEntity
+	public static void Entities<T>(OBB bounds, List<T> list, int layerMask = -1, QueryTriggerInteraction triggerInteraction = 2) where T : class
 	{
 		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
 		Buffer(bounds, layerMask, triggerInteraction);
+		hashSet.Clear();
 		for (int i = 0; i < colCount; i++)
 		{
 			Collider val = colBuffer[i];
-			if (!((Object)(object)val == (Object)null) && val.enabled)
+			if (!((Object)(object)val == (Object)null) && val.enabled && val.ToBaseEntity() is T item && !hashSet.Contains(item))
 			{
-				T val2 = val.ToBaseEntity() as T;
-				if (!((Object)(object)val2 == (Object)null))
-				{
-					list.Add(val2);
-				}
+				hashSet.Add(item);
+				list.Add(item);
 			}
 		}
 	}
@@ -192,6 +196,7 @@ public static class Vis
 		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
 		Buffer(bounds, layerMask, triggerInteraction);
+		hashSet.Clear();
 		for (int i = 0; i < colCount; i++)
 		{
 			Collider val = colBuffer[i];
@@ -200,8 +205,9 @@ public static class Vis
 				continue;
 			}
 			BaseEntity baseEntity = val.ToBaseEntity();
-			if (!((Object)(object)baseEntity == (Object)null))
+			if (!((Object)(object)baseEntity == (Object)null) && !hashSet.Contains(baseEntity))
 			{
+				hashSet.Add(baseEntity);
 				T component = ((Component)baseEntity).GetComponent<T>();
 				if (!((Object)(object)component == (Object)null))
 				{
@@ -268,22 +274,20 @@ public static class Vis
 		}
 	}
 
-	public static void Entities<T>(Vector3 startPosition, Vector3 endPosition, float radius, List<T> list, int layerMask = -1, QueryTriggerInteraction triggerInteraction = 2) where T : BaseEntity
+	public static void Entities<T>(Vector3 startPosition, Vector3 endPosition, float radius, List<T> list, int layerMask = -1, QueryTriggerInteraction triggerInteraction = 2) where T : class
 	{
 		//IL_0000: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
 		Buffer(startPosition, endPosition, radius, layerMask, triggerInteraction);
+		hashSet.Clear();
 		for (int i = 0; i < colCount; i++)
 		{
 			Collider val = colBuffer[i];
-			if (!((Object)(object)val == (Object)null) && val.enabled)
+			if (!((Object)(object)val == (Object)null) && val.enabled && val.ToBaseEntity() is T item && !hashSet.Contains(item))
 			{
-				T val2 = val.ToBaseEntity() as T;
-				if (!((Object)(object)val2 == (Object)null))
-				{
-					list.Add(val2);
-				}
+				hashSet.Add(item);
+				list.Add(item);
 			}
 		}
 	}
@@ -294,6 +298,7 @@ public static class Vis
 		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
 		Buffer(startPosition, endPosition, radius, layerMask, triggerInteraction);
+		hashSet.Clear();
 		for (int i = 0; i < colCount; i++)
 		{
 			Collider val = colBuffer[i];
@@ -302,8 +307,9 @@ public static class Vis
 				continue;
 			}
 			BaseEntity baseEntity = val.ToBaseEntity();
-			if (!((Object)(object)baseEntity == (Object)null))
+			if (!((Object)(object)baseEntity == (Object)null) && !hashSet.Contains(baseEntity))
 			{
+				hashSet.Add(baseEntity);
 				T component = ((Component)baseEntity).GetComponent<T>();
 				if (!((Object)(object)component == (Object)null))
 				{

@@ -226,7 +226,7 @@ public class NeonSign : Signage
 			if (currentFrame != 0)
 			{
 				currentFrame = 0;
-				ClientRPC(null, "SetFrame", currentFrame);
+				ClientRPC(RpcTarget.NetworkGroup("SetFrame"), currentFrame);
 			}
 			((FacepunchBehaviour)this).InvokeRepeating(animationLoopAction, animationSpeed, animationSpeed);
 			isAnimating = true;
@@ -255,7 +255,7 @@ public class NeonSign : Signage
 		}
 		if (currentFrame != num)
 		{
-			ClientRPC(null, "SetFrame", currentFrame);
+			ClientRPC(RpcTarget.NetworkGroup("SetFrame"), currentFrame);
 		}
 	}
 

@@ -411,34 +411,36 @@ public class FishShoal : IDisposable
 		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00dd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ea: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0127: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0129: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0140: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0142: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0158: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0161: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0163: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0165: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0167: Unknown result type (might be due to invalid IL or missing references)
-		//IL_016c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0171: Unknown result type (might be due to invalid IL or missing references)
-		//IL_018c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_019a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01f2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01f4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01fb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0202: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00de: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0102: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0146: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0148: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0152: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0160: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0176: Unknown result type (might be due to invalid IL or missing references)
+		//IL_017a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_017f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0181: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0183: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0185: Unknown result type (might be due to invalid IL or missing references)
+		//IL_018a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_018f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01aa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0210: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0212: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0219: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0220: Unknown result type (might be due to invalid IL or missing references)
 		float num = TerrainMeta.WaterMap.GetHeight(float3.op_Implicit(cameraPosition)) - 3f;
 		float height = TerrainMeta.HeightMap.GetHeight(float3.op_Implicit(cameraPosition));
 		if (math.abs(num - height) < 4f || num < height)
@@ -446,7 +448,7 @@ public class FishShoal : IDisposable
 			return;
 		}
 		int num2 = fishCount[0];
-		int num3 = Mathf.CeilToInt((float)(fishType.maxCount * GetPopulationScaleForPoint(cameraPosition))) - num2;
+		int num3 = Mathf.Min(Mathf.CeilToInt((float)(fishType.maxCount * GetPopulationScaleForPoint(cameraPosition))) - num2, 5);
 		if (num3 <= 0)
 		{
 			return;
@@ -460,7 +462,7 @@ public class FishShoal : IDisposable
 			((Random)(ref random))._002Ector((uint)(i * 3245 + num4));
 			float3 val = cameraPosition + ((Random)(ref random)).NextFloat3Direction() * ((Random)(ref random)).NextFloat(40f);
 			val.y = ((Random)(ref random)).NextFloat(math.max(height + 1f, cameraPosition.y - 30f), math.min(num, cameraPosition.y + 30f));
-			if (!((Object)(object)WaterSystem.Instance == (Object)null) && WaterLevel.Test(float3.op_Implicit(val), waves: false, volumes: false) && !(TerrainMeta.HeightMap.GetHeight(float3.op_Implicit(val)) > val.y))
+			if (!((Object)(object)WaterSystem.Instance == (Object)null) && WaterLevel.Test(float3.op_Implicit(val), waves: false, volumes: false) && !(TerrainMeta.HeightMap.GetHeight(float3.op_Implicit(val)) > val.y) && !EnvironmentManager.Check(float3.op_Implicit(val), EnvironmentType.UnderwaterLab, 30f))
 			{
 				float3 target = GetTarget(val, ref random);
 				float3 val2 = math.normalize(target - val);
@@ -618,7 +620,7 @@ public class FishShoal : IDisposable
 		fishBuffer.Dispose();
 	}
 
-	public void OnDrawGizmos()
+	public void OnDrawGizmosSelected()
 	{
 		((JobHandle)(ref jobHandle)).Complete();
 		_ = fishCount[0];

@@ -5,6 +5,7 @@ using ConVar;
 using Facepunch;
 using Facepunch.Rust;
 using Network;
+using ProtoBuf;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.Serialization;
@@ -333,7 +334,7 @@ public class SprayCan : HeldEntity
 		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00b9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0118: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011c: Unknown result type (might be due to invalid IL or missing references)
 		if (!IsBusy() && CanSprayFreehand(msg.player))
 		{
 			Vector3 val = msg.read.Vector3();
@@ -349,7 +350,7 @@ public class SprayCan : HeldEntity
 				sprayCanSpray_Freehand.EnableChanges(msg.player);
 				sprayCanSpray_Freehand.Spawn();
 				paintingLine = sprayCanSpray_Freehand;
-				ClientRPC(null, "Client_ChangeSprayColour", num);
+				ClientRPC(RpcTarget.NetworkGroup("Client_ChangeSprayColour"), num);
 				SetFlag(Flags.Busy, b: true);
 				SetFlag(Flags.Reserved1, b: true);
 				CheckAchievementPosition(val);
@@ -412,32 +413,32 @@ public class SprayCan : HeldEntity
 		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0027: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00c4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c9: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00d8: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00dd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_065e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0297: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ea: Unknown result type (might be due to invalid IL or missing references)
+		//IL_06bd: Unknown result type (might be due to invalid IL or missing references)
 		//IL_029c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02a5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02a1: Unknown result type (might be due to invalid IL or missing references)
 		//IL_02aa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_041c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_041e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0411: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0352: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0357: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0365: Unknown result type (might be due to invalid IL or missing references)
-		//IL_036a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0438: Unknown result type (might be due to invalid IL or missing references)
-		//IL_043d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_043f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_042d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_045e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_046c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_05f7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_060f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02af: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0454: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0456: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0449: Unknown result type (might be due to invalid IL or missing references)
+		//IL_038a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_038f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_039d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03a2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0470: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0475: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0477: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0465: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0496: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04a4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0652: Unknown result type (might be due to invalid IL or missing references)
+		//IL_066a: Unknown result type (might be due to invalid IL or missing references)
 		if (IsBusy())
 		{
 			return;
@@ -531,8 +532,14 @@ public class SprayCan : HeldEntity
 					BaseEntity baseEntity3 = baseEntity2.GetParentEntity();
 					float health = baseEntity2.Health();
 					EntityRef[] slots = baseEntity2.GetSlots();
+					ulong ownerID = baseEntity2.OwnerID;
 					float lastAttackedTime = ((baseEntity2 is BaseCombatEntity baseCombatEntity) ? baseCombatEntity.lastAttackedTime : 0f);
-					bool flag2 = baseEntity2 is Door;
+					HashSet<PlayerNameID> hashSet = null;
+					if (baseEntity2 is BuildingPrivlidge buildingPrivlidge)
+					{
+						hashSet = new HashSet<PlayerNameID>(buildingPrivlidge.authorizedPlayers);
+					}
+					bool flag2 = baseEntity2 is Door || baseEntity2 is BuildingPrivlidge;
 					Dictionary<ContainerSet, List<Item>> dictionary2 = new Dictionary<ContainerSet, List<Item>>();
 					SaveEntityStorage(baseEntity2, dictionary2, 0);
 					List<ChildPreserveInfo> list = Pool.GetList<ChildPreserveInfo>();
@@ -565,6 +572,7 @@ public class SprayCan : HeldEntity
 					baseEntity2.SetParent(baseEntity3);
 					((Component)baseEntity2).transform.localPosition = localPosition;
 					((Component)baseEntity2).transform.localRotation = localRotation;
+					baseEntity2.OwnerID = ownerID;
 					if (GetItemDefinitionForEntity(baseEntity2, out var def2, useRedirect: false) && (Object)(object)def2.isRedirectOf != (Object)null)
 					{
 						baseEntity2.skinID = 0uL;
@@ -582,6 +590,10 @@ public class SprayCan : HeldEntity
 					{
 						baseCombatEntity2.SetHealth(health);
 						baseCombatEntity2.lastAttackedTime = lastAttackedTime;
+					}
+					if (baseEntity2 is BuildingPrivlidge buildingPrivlidge2 && hashSet != null)
+					{
+						buildingPrivlidge2.authorizedPlayers = hashSet;
 					}
 					if (dictionary2.Count > 0)
 					{
@@ -616,11 +628,11 @@ public class SprayCan : HeldEntity
 					}
 					Pool.FreeList<ChildPreserveInfo>(ref list);
 				}
-				ClientRPC<int, NetworkableId>(null, "Client_ReskinResult", 1, baseEntity2.net.ID);
+				ClientRPC<int, NetworkableId>(RpcTarget.NetworkGroup("Client_ReskinResult"), 1, baseEntity2.net.ID);
 			}
 		}
 		LoseCondition(ConditionLossPerReskin);
-		ClientRPC(null, "Client_ChangeSprayColour", -1);
+		ClientRPC(RpcTarget.NetworkGroup("Client_ChangeSprayColour"), -1);
 		SetFlag(Flags.Busy, b: true);
 		((FacepunchBehaviour)this).Invoke((Action)ClearBusy, SprayCooldown);
 		static void RestoreEntityStorage(BaseEntity baseEntity, int index, Dictionary<ContainerSet, List<Item>> copy)
@@ -669,7 +681,7 @@ public class SprayCan : HeldEntity
 		}
 		void SprayFailResponse(SprayFailReason reason)
 		{
-			ClientRPC(null, "Client_ReskinResult", 0, (int)reason);
+			ClientRPC(RpcTarget.NetworkGroup("Client_ReskinResult"), 0, (int)reason);
 		}
 	}
 
@@ -701,37 +713,37 @@ public class SprayCan : HeldEntity
 	[RPC_Server.IsActiveItem]
 	private void CreateSpray(RPCMessage msg)
 	{
-		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0097: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0095: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00a0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ad: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00be: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_013b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_013c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0165: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00af: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0144: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0145: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016e: Unknown result type (might be due to invalid IL or missing references)
 		if (IsBusy())
 		{
 			return;
 		}
-		ClientRPC(null, "Client_ChangeSprayColour", -1);
+		ClientRPC(RpcTarget.NetworkGroup("Client_ChangeSprayColour"), -1);
 		SetFlag(Flags.Busy, b: true);
 		((FacepunchBehaviour)this).Invoke((Action)ClearBusy, SprayCooldown);
 		Vector3 val = msg.read.Vector3();

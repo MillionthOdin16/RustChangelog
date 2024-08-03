@@ -231,7 +231,8 @@ public class TrainEngine : TrainCar, IEngineControllerUser, IEntity
 	public override void InitShared()
 	{
 		base.InitShared();
-		engineController = new VehicleEngineController<TrainEngine>(this, base.isServer, engineStartupTime, fuelStoragePrefab);
+		EntityFuelSystem fuelSystem = new EntityFuelSystem(base.isServer, fuelStoragePrefab, children);
+		engineController = new VehicleEngineController<TrainEngine>(this, fuelSystem, base.isServer, engineStartupTime);
 		if (base.isServer)
 		{
 			bool b = SeedRandom.Range((uint)net.ID.Value, 0, 2) == 0;
@@ -241,11 +242,11 @@ public class TrainEngine : TrainCar, IEngineControllerUser, IEntity
 
 	public override void Load(LoadInfo info)
 	{
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
 		base.Load(info);
 		if (info.msg.trainEngine != null)
 		{
-			engineController.FuelSystem.fuelStorageInstance.uid = info.msg.trainEngine.fuelStorageID;
+			engineController.FuelSystem.SetInstanceID(info.msg.trainEngine.fuelStorageID);
 			SetThrottle((EngineSpeeds)info.msg.trainEngine.throttleSetting);
 		}
 	}
@@ -323,7 +324,7 @@ public class TrainEngine : TrainCar, IEngineControllerUser, IEntity
 			CurThrottleSetting = throttle;
 			if (base.isServer)
 			{
-				ClientRPC(null, "SetThrottle", (sbyte)throttle);
+				ClientRPC(RpcTarget.NetworkGroup("SetThrottle"), (sbyte)throttle);
 			}
 		}
 	}
@@ -378,7 +379,7 @@ public class TrainEngine : TrainCar, IEngineControllerUser, IEntity
 			float fuelPerSecond = Mathf.Lerp(idleFuelPerSec, maxFuelPerSec, Mathf.Abs(GetThrottleFraction()));
 			if (engineController.TickFuel(fuelPerSecond) > 0)
 			{
-				ClientRPC(null, "SetFuelAmount", GetFuelAmount());
+				ClientRPC(RpcTarget.NetworkGroup("SetFuelAmount"), GetFuelAmount());
 			}
 			if (completeTrain != null && completeTrain.LinedUpToUnload != lastSentLinedUpToUnload)
 			{
@@ -393,19 +394,19 @@ public class TrainEngine : TrainCar, IEngineControllerUser, IEntity
 
 	public override void Save(SaveInfo info)
 	{
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
 		base.Save(info);
 		info.msg.trainEngine = Pool.Get<TrainEngine>();
 		info.msg.trainEngine.throttleSetting = (int)CurThrottleSetting;
-		info.msg.trainEngine.fuelStorageID = GetFuelSystem().fuelStorageInstance.uid;
+		info.msg.trainEngine.fuelStorageID = GetFuelSystem().GetInstanceID();
 		info.msg.trainEngine.fuelAmount = GetFuelAmount();
 		info.msg.trainEngine.numConnectedCars = completeTrain.NumTrainCars;
 		info.msg.trainEngine.linedUpToUnload = completeTrain.LinedUpToUnload;
 		lastSentLinedUpToUnload = completeTrain.LinedUpToUnload;
 	}
 
-	public override EntityFuelSystem GetFuelSystem()
+	public override IFuelSystem GetFuelSystem()
 	{
 		return engineController.FuelSystem;
 	}
@@ -463,7 +464,7 @@ public class TrainEngine : TrainCar, IEngineControllerUser, IEntity
 				}
 				else
 				{
-					buttonHoldTime += player.clientTickInterval;
+					buttonHoldTime += Player.clientTickInterval;
 					if (buttonHoldTime > 0.55f)
 					{
 						action();

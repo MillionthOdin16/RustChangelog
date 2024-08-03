@@ -26,6 +26,8 @@ public class ServerProjectile : EntityComponent<BaseEntity>, IServerComponent
 
 	public float radius;
 
+	public bool IgnoreAI;
+
 	private bool impacted;
 
 	private float swimRandom;
@@ -88,18 +90,18 @@ public class ServerProjectile : EntityComponent<BaseEntity>, IServerComponent
 		//IL_0155: Unknown result type (might be due to invalid IL or missing references)
 		//IL_015a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_015c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0245: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0250: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0256: Unknown result type (might be due to invalid IL or missing references)
-		//IL_025b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_026d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0272: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ce: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ea: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ef: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0207: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0209: Unknown result type (might be due to invalid IL or missing references)
+		//IL_025a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0265: Unknown result type (might be due to invalid IL or missing references)
+		//IL_026b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0270: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0282: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0287: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01e3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ff: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0204: Unknown result type (might be due to invalid IL or missing references)
+		//IL_021c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_021e: Unknown result type (might be due to invalid IL or missing references)
 		if (impacted)
 		{
 			return false;
@@ -126,7 +128,7 @@ public class ServerProjectile : EntityComponent<BaseEntity>, IServerComponent
 		{
 			RaycastHit current = item;
 			BaseEntity entity = current.GetEntity();
-			if ((!((Object)(object)entity != (Object)null) || !entity.isClient) && IsAValidHit(entity))
+			if ((!((Object)(object)entity != (Object)null) || !entity.isClient) && (!IgnoreAI || !IsAnIgnoredAI(entity)) && IsAValidHit(entity))
 			{
 				ColliderInfo colliderInfo = (((Object)(object)((RaycastHit)(ref current)).collider != (Object)null) ? ((Component)((RaycastHit)(ref current)).collider).GetComponent<ColliderInfo>() : null);
 				if ((Object)(object)colliderInfo == (Object)null || colliderInfo.HasFlag(ColliderInfo.Flags.Shootable))
@@ -156,6 +158,11 @@ public class ServerProjectile : EntityComponent<BaseEntity>, IServerComponent
 			return hitEnt.net.ID != base.baseEntity.creatorEntity.net.ID;
 		}
 		return true;
+	}
+
+	protected virtual bool IsAnIgnoredAI(BaseEntity hitEnt)
+	{
+		return hitEnt is ScientistNPC;
 	}
 
 	public virtual void InitializeVelocity(Vector3 overrideVel)

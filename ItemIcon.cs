@@ -60,6 +60,8 @@ public class ItemIcon : BaseMonoBehaviour, IPointerClickHandler, IEventSystemHan
 
 	public GameObject lightEnabled;
 
+	public GameObject burstEnabled;
+
 	public bool allowSelection = true;
 
 	public bool allowDropping = true;

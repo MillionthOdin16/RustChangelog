@@ -12,6 +12,8 @@ public class TransferHandler : BaseNexusRequestHandler<TransferRequest>
 {
 	private static readonly Dictionary<ulong, ulong> UidMapping = new Dictionary<ulong, ulong>();
 
+	private static readonly Dictionary<NetworkableId, Entity> UidToEntity = new Dictionary<NetworkableId, Entity>();
+
 	private static readonly Dictionary<BaseEntity, Entity> EntityToSpawn = new Dictionary<BaseEntity, Entity>();
 
 	private static readonly Dictionary<ulong, BasePlayer> SpawnedPlayers = new Dictionary<ulong, BasePlayer>();
@@ -24,20 +26,22 @@ public class TransferHandler : BaseNexusRequestHandler<TransferRequest>
 
 	protected override void Handle()
 	{
-		//IL_0164: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ba: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01c1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01cc: Unknown result type (might be due to invalid IL or missing references)
 		UidMapping.Clear();
 		base.Request.InspectUids((UidInspector<ulong>)UpdateWithNewUid);
+		UidToEntity.Clear();
 		PlayerIds.Clear();
 		EntitiesToProtect.Clear();
 		foreach (Entity entity in base.Request.entities)
 		{
+			UidToEntity.Add(entity.baseNetworkable.uid, entity);
 			if (entity.basePlayer != null)
 			{
 				ulong userid = entity.basePlayer.userid;
-				Debug.Log((object)$"Found player {userid} in transfer");
 				PlayerIds.Add(userid.ToString("G"));
 				BasePlayer basePlayer = BasePlayer.FindByID(userid) ?? BasePlayer.FindSleeping(userid);
 				if ((Object)(object)basePlayer != (Object)null)
@@ -109,7 +113,6 @@ public class TransferHandler : BaseNexusRequestHandler<TransferRequest>
 		}
 		if (PlayerIds.Count > 0)
 		{
-			Debug.Log((object)("Completing transfers for players: " + string.Join(", ", PlayerIds)));
 			CompleteTransfers();
 		}
 		static void UpdateWithNewUid(UidType type, ref ulong prevUid)
@@ -163,21 +166,26 @@ public class TransferHandler : BaseNexusRequestHandler<TransferRequest>
 		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0092: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0097: Unknown result type (might be due to invalid IL or missing references)
 		//IL_009c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ed: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ef: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0107: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0111: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0113: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0118: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0121: Unknown result type (might be due to invalid IL or missing references)
+		//IL_018d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0192: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0194: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0199: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ac: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01bd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0112: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_016f: Unknown result type (might be due to invalid IL or missing references)
 		Entity obj = base.Request.entities[0];
 		Vector3 pos = obj.baseEntity.pos;
 		Quaternion val = Quaternion.Euler(obj.baseEntity.rot);
@@ -188,10 +196,25 @@ public class TransferHandler : BaseNexusRequestHandler<TransferRequest>
 			val2.y = pos.y;
 		}
 		Vector3 val4 = val2 - pos;
-		Quaternion val5 = val3 * Quaternion.Inverse(val);
+		Quaternion val5 = Quaternion.Inverse(val) * val3;
 		foreach (Entity entity in base.Request.entities)
 		{
-			if (entity.baseEntity != null && (entity.parent == null || !((NetworkableId)(ref entity.parent.uid)).IsValid))
+			if (entity.baseEntity == null)
+			{
+				continue;
+			}
+			if (entity.parent != null && ((NetworkableId)(ref entity.parent.uid)).IsValid)
+			{
+				if (!UidToEntity.TryGetValue(entity.parent.uid, out var _))
+				{
+					Debug.LogError((object)$"Transferred entity (ID={entity.baseNetworkable.uid}) has a parent set but it wasn't found in the transfer! The parent is required to correctly restore this entity's position!");
+				}
+				if (((Vector3)(ref entity.baseEntity.pos)).magnitude > 100f)
+				{
+					Debug.LogError((object)$"Transferred entity (ID={entity.baseNetworkable.uid}) has a valid parent (ID={entity.parent.uid}) but its position ({entity.baseEntity.pos}) doesn't seem to be in local space! This will probably not work properly!");
+				}
+			}
+			else
 			{
 				BaseEntity baseEntity = entity.baseEntity;
 				baseEntity.pos += val4;
@@ -218,6 +241,7 @@ public class TransferHandler : BaseNexusRequestHandler<TransferRequest>
 				if ((Object)(object)baseEntity != (Object)null)
 				{
 					baseEntity.InitLoad(entity.baseNetworkable.uid);
+					baseEntity.PreServerLoad();
 					EntityToSpawn.Add(baseEntity, entity);
 				}
 			}

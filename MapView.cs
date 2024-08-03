@@ -28,6 +28,10 @@ public class MapView : FacepunchBehaviour, IPointerDownHandler, IEventSystemHand
 
 	public Transform localPlayerInterestPointRoot;
 
+	public GameObject shelterMarkerContainer;
+
+	public GameObjectRef shelterMapMarkerPrefab;
+
 	public TeamMemberMapMarker[] teamPositions;
 
 	public TeamMemberMapMarker[] clanPositions;
@@ -85,6 +89,12 @@ public class MapView : FacepunchBehaviour, IPointerDownHandler, IEventSystemHand
 	public RustImageButton[] UnderwaterButtons;
 
 	public RustImageButton DungeonButton;
+
+	public CanvasLineRenderer CargoPatrolPath;
+
+	public CanvasLineRenderer[] HarborPaths;
+
+	public CanvasLineRenderer FerryPath;
 
 	public UnityEvent onClicked;
 

@@ -138,7 +138,7 @@ public class FishMount : StorageContainer
 			Effect.server.Run(FishInteractSound.resourcePath, ((Component)this).transform.position);
 			SetFlag(Flags.Busy, b: true);
 			((FacepunchBehaviour)this).Invoke((Action)ClearBusy, UseCooldown);
-			ClientRPC(null, "PlayAnimation");
+			ClientRPC(RpcTarget.NetworkGroup("PlayAnimation"));
 		}
 	}
 

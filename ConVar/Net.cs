@@ -21,6 +21,9 @@ public class Net : ConsoleSystem
 	[ServerVar(Help = "Toggle printing time taken to send all trees & all global entities to client when they connect")]
 	public static bool global_network_debug = false;
 
+	[ServerVar(Help = "Toggle checking network group bounds whenever an entity changes its network group")]
+	public static bool network_group_debug = false;
+
 	[ServerVar(Help = "(default) true = only broadcast to clients with global networking enabled, false = broadcast to every client regardless")]
 	public static bool limit_global_update_broadcast = true;
 }

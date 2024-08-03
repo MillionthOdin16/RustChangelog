@@ -32,8 +32,8 @@ public class ScrapTransportHelicopterWheelEffects : MonoBehaviour, IServerCompon
 		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
 		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0089: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
 		if (impactEffect.isValid && !(Time.time < lastEffectPlayed + minTimeBetweenEffects) && (!(Vector3.Distance(((Component)this).transform.position, lastCollisionPos) < minDistBetweenEffects) || lastEffectPlayed == 0f))
 		{
 			Effect.server.Run(impactEffect.resourcePath, ((Component)this).transform.position, ((Component)this).transform.up);

@@ -85,23 +85,24 @@ public class GenerateRoadLayout : ProceduralComponent
 
 	public override void Process(uint seed)
 	{
-		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0092: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0815: Unknown result type (might be due to invalid IL or missing references)
-		//IL_075a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0777: Unknown result type (might be due to invalid IL or missing references)
-		//IL_08eb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_090d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_07b3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_07d0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_082a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_076f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_078c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0900: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0922: Unknown result type (might be due to invalid IL or missing references)
+		//IL_07c8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_07e5: Unknown result type (might be due to invalid IL or missing references)
 		if (World.Networked)
 		{
 			TerrainMeta.Path.Roads.Clear();
 			TerrainMeta.Path.Roads.AddRange(World.GetPaths("Road"));
+			TerrainMeta.Path.AddRoad(TerrainMeta.Path.Roads, addToMaster: false);
 			{
 				foreach (PathList road in TerrainMeta.Path.Roads)
 				{
@@ -304,6 +305,6 @@ public class GenerateRoadLayout : ProceduralComponent
 			item2.Path.RecalculateTangents();
 			item2.AdjustPlacementMap(20f);
 		}
-		TerrainMeta.Path.Roads.AddRange(list);
+		TerrainMeta.Path.AddRoad(list);
 	}
 }

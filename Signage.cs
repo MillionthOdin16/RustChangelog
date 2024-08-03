@@ -36,6 +36,8 @@ public class Signage : IOEntity, ILOD, ISignage, IUGCBrowserEntity
 
 	public uint[] GetContentCRCs => GetTextureCRCs();
 
+	public override bool ShouldTransferAssociatedFiles => true;
+
 	public Vector2i TextureSize
 	{
 		get
@@ -246,7 +248,7 @@ public class Signage : IOEntity, ILOD, ISignage, IUGCBrowserEntity
 		}
 		if (IsLocked())
 		{
-			return player.userID == base.OwnerID;
+			return (ulong)player.userID == base.OwnerID;
 		}
 		if (!HeldEntityCheck(player))
 		{
@@ -405,7 +407,7 @@ public class Signage : IOEntity, ILOD, ISignage, IUGCBrowserEntity
 		info.msg.sign = Pool.Get<Sign>();
 		info.msg.sign.imageid = 0u;
 		info.msg.sign.imageIds = list;
-		if (editHistory == null || editHistory.Count <= 0)
+		if (editHistory == null || editHistory.Count <= 0 || !info.forDisk)
 		{
 			return;
 		}

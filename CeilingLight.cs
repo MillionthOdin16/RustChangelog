@@ -25,24 +25,20 @@ public class CeilingLight : IOEntity
 
 	public override int ConsumptionAmount()
 	{
-		if (IsOn())
-		{
-			return 2;
-		}
-		return base.ConsumptionAmount();
+		return 2;
 	}
 
 	public override void Hurt(HitInfo info)
 	{
-		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
 		if (base.isServer)
 		{
 			if (info.damageTypes.Has(DamageType.Explosion))
 			{
-				ClientRPC<int, Vector3, Vector3>(null, "ClientPhysPush", 0, info.attackNormal * 3f * (info.damageTypes.Total() / 50f), info.HitPositionWorld);
+				ClientRPC<int, Vector3, Vector3>(RpcTarget.NetworkGroup("ClientPhysPush"), 0, info.attackNormal * 3f * (info.damageTypes.Total() / 50f), info.HitPositionWorld);
 			}
 			base.Hurt(info);
 		}
@@ -110,14 +106,14 @@ public class CeilingLight : IOEntity
 
 	public override void OnAttacked(HitInfo info)
 	{
-		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
 		float num = 3f * (info.damageTypes.Total() / 50f);
-		ClientRPC<NetworkableId, Vector3, Vector3>(null, "ClientPhysPush", (NetworkableId)(((Object)(object)info.Initiator != (Object)null && info.Initiator is BasePlayer && !info.IsPredicting) ? info.Initiator.net.ID : default(NetworkableId)), info.attackNormal * num, info.HitPositionWorld);
+		ClientRPC<NetworkableId, Vector3, Vector3>(RpcTarget.NetworkGroup("ClientPhysPush"), (NetworkableId)(((Object)(object)info.Initiator != (Object)null && info.Initiator is BasePlayer && !info.IsPredicting) ? info.Initiator.net.ID : default(NetworkableId)), info.attackNormal * num, info.HitPositionWorld);
 		base.OnAttacked(info);
 	}
 }

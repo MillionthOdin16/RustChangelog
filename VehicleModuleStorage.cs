@@ -4,7 +4,6 @@ using Facepunch;
 using Network;
 using ProtoBuf;
 using Rust;
-using Rust.Modular;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -180,15 +179,6 @@ public class VehicleModuleStorage : VehicleModuleSeating
 		AssociatedItemInstance?.LockUnlock(!CanBeMovedNowOnVehicle());
 	}
 
-	public override void NonUserSpawn()
-	{
-		EngineStorage engineStorage = GetContainer() as EngineStorage;
-		if ((Object)(object)engineStorage != (Object)null)
-		{
-			engineStorage.NonUserSpawn();
-		}
-	}
-
 	internal override void DoServerDestroy()
 	{
 		if (vehicle.vehiclesdroploot)
@@ -299,7 +289,7 @@ public class VehicleModuleStorage : VehicleModuleSeating
 			}
 			else
 			{
-				base.Car.ClientRPC(null, "CodeEntryFailed");
+				base.Car.ClientRPC(RpcTarget.NetworkGroup("CodeEntryFailed"));
 			}
 		}
 	}

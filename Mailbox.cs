@@ -168,10 +168,10 @@ public class Mailbox : StorageContainer
 
 	public void SubmitInputItems(BasePlayer fromPlayer)
 	{
-		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0089: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
 		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
@@ -234,7 +234,7 @@ public class Mailbox : StorageContainer
 		return false;
 	}
 
-	public override int GetIdealSlot(BasePlayer player, Item item)
+	public override int GetIdealSlot(BasePlayer player, ItemContainer container, Item item)
 	{
 		if ((Object)(object)player == (Object)null || PlayerIsOwner(player))
 		{

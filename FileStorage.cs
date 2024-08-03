@@ -33,7 +33,7 @@ public class FileStorage : IDisposable
 			//IL_000e: Unknown result type (might be due to invalid IL or missing references)
 			IntPtr intPtr = ((Database)this).Prepare("SELECT filetype, crc, part, data FROM data WHERE entid = ?");
 			Database.Bind<ulong>(intPtr, 1, entityID.Value);
-			return ((Database)this).ExecuteAndReadQueryResults<AssociatedFile>(intPtr, (Func<IntPtr, AssociatedFile>)ReadAssociatedFileRow, true);
+			return ((Database)this).ExecuteAndReadQueryResults<AssociatedFile>(intPtr, (Func<IntPtr, AssociatedFile>)ReadAssociatedFileRow);
 		}
 
 		private static AssociatedFile ReadAssociatedFileRow(IntPtr stmHandle)
@@ -53,7 +53,7 @@ public class FileStorage : IDisposable
 
 	private MruDictionary<uint, CacheData> _cache = new MruDictionary<uint, CacheData>(1000, (Action<uint, CacheData>)null);
 
-	public static FileStorage server = new FileStorage("sv.files." + 243, server: true);
+	public static FileStorage server = new FileStorage("sv.files." + 253, server: true);
 
 	protected FileStorage(string name, bool server)
 	{

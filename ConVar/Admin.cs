@@ -25,6 +25,7 @@ public class Admin : ConsoleSystem
 	}
 
 	[Preserve]
+	[JsonModel]
 	public struct PlayerInfo
 	{
 		public string SteamID;
@@ -49,6 +50,7 @@ public class Admin : ConsoleSystem
 	}
 
 	[Preserve]
+	[JsonModel]
 	public struct ServerInfoOutput
 	{
 		public string Hostname;
@@ -60,6 +62,8 @@ public class Admin : ConsoleSystem
 		public int Queued;
 
 		public int Joining;
+
+		public int ReservedSlots;
 
 		public int EntityCount;
 
@@ -91,6 +95,7 @@ public class Admin : ConsoleSystem
 	}
 
 	[Preserve]
+	[JsonModel]
 	public struct ServerConvarInfo
 	{
 		public string FullName;
@@ -101,6 +106,7 @@ public class Admin : ConsoleSystem
 	}
 
 	[Preserve]
+	[JsonModel]
 	public struct ServerUGCInfo
 	{
 		public NetworkableId entityId;
@@ -148,21 +154,21 @@ public class Admin : ConsoleSystem
 	[ServerVar(Help = "Print out currently connected clients")]
 	public static void status(Arg arg)
 	{
-		//IL_00f9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ff: Expected O, but got Unknown
-		//IL_015c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0161: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0100: Expected O, but got Unknown
+		//IL_015d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0162: Unknown result type (might be due to invalid IL or missing references)
 		string @string = arg.GetString(0, "");
 		if (@string == "--json")
 		{
 			@string = arg.GetString(1, "");
 		}
-		bool flag = arg.HasArg("--json");
+		bool flag = arg.HasArg("--json", false);
 		string text = string.Empty;
 		if (!flag && @string.Length == 0)
 		{
 			text = text + "hostname: " + Server.hostname + "\n";
-			text = text + "version : " + 2511 + " secure (secure mode enabled, connected to Steam3)\n";
+			text = text + "version : " + 2555 + " secure (secure mode enabled, connected to Steam3)\n";
 			text = text + "map     : " + Server.level + "\n";
 			text += $"players : {((IEnumerable<BasePlayer>)BasePlayer.activePlayerList).Count()} ({Server.maxplayers} max) ({SingletonComponent<ServerMgr>.Instance.connectionQueue.Queued} queued) ({SingletonComponent<ServerMgr>.Instance.connectionQueue.Joining} joining)\n\n";
 		}
@@ -332,7 +338,7 @@ public class Admin : ConsoleSystem
 			}
 			action(uInt, arg2);
 		}
-		arg.ReplyWith(arg.HasArg("--json") ? table.ToJson() : ((object)table).ToString());
+		arg.ReplyWith(arg.HasArg("--json", false) ? table.ToJson() : ((object)table).ToString());
 	}
 
 	[ServerVar(Help = "upgrade_radius 'grade' 'radius'")]
@@ -361,38 +367,35 @@ public class Admin : ConsoleSystem
 		}
 	}
 
-	private static void SkinRadiusInternal(Arg arg, bool changeAnyGrade)
+	public static BuildingGrade FindBuildingSkin(string name, out string error)
 	{
-		//IL_048a: Unknown result type (might be due to invalid IL or missing references)
-		BasePlayer basePlayer = arg.Player();
-		if ((Object)(object)basePlayer == (Object)null)
-		{
-			arg.ReplyWith("This must be called from the client");
-			return;
-		}
-		float @float = arg.GetFloat(1, 0f);
-		string @string = arg.GetString(0, "");
 		BuildingGrade buildingGrade = null;
+		error = null;
 		IEnumerable<BuildingGrade> source = from x in PrefabAttribute.server.FindAll<ConstructionGrade>(2194854973u)
 			select x.gradeBase;
-		switch (@string)
+		switch (name)
 		{
 		case "twig":
+		case "0":
 			buildingGrade = source.FirstOrDefault((BuildingGrade x) => ((Object)x).name == "twigs");
 			break;
 		case "wood":
+		case "1":
 			buildingGrade = source.FirstOrDefault((BuildingGrade x) => ((Object)x).name == "wood");
 			break;
 		case "stone":
+		case "2":
 			buildingGrade = source.FirstOrDefault((BuildingGrade x) => ((Object)x).name == "stone");
 			break;
 		case "metal":
 		case "sheetmetal":
+		case "3":
 			buildingGrade = source.FirstOrDefault((BuildingGrade x) => ((Object)x).name == "metal");
 			break;
 		case "hqm":
 		case "armored":
 		case "armoured":
+		case "4":
 			buildingGrade = source.FirstOrDefault((BuildingGrade x) => ((Object)x).name == "toptier");
 			break;
 		case "adobe":
@@ -410,13 +413,39 @@ public class Admin : ConsoleSystem
 		case "brick":
 			buildingGrade = source.FirstOrDefault((BuildingGrade x) => ((Object)x).name == "brick");
 			break;
+		case "frontier":
+			buildingGrade = source.FirstOrDefault((BuildingGrade x) => ((Object)x).name == "frontier");
+			break;
+		case "gingerbread":
+			buildingGrade = source.FirstOrDefault((BuildingGrade x) => ((Object)x).name == "gingerbread");
+			break;
 		default:
-			arg.ReplyWith("Valid skins are: twig, wood, stone, metal, hqm, adobe, shipping, brutalist, brick");
-			return;
+			error = "Valid skins are: twig, wood, stone, metal, hqm, adobe, shipping, brutalist, brick, frontier, gingerbread";
+			return null;
 		}
 		if ((Object)(object)buildingGrade == (Object)null)
 		{
-			arg.ReplyWith("Unable to find skin object for " + @string);
+			error = "Unable to find skin object for '" + name + "'";
+		}
+		return buildingGrade;
+	}
+
+	private static void SkinRadiusInternal(Arg arg, bool changeAnyGrade)
+	{
+		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
+		BasePlayer basePlayer = arg.Player();
+		if ((Object)(object)basePlayer == (Object)null)
+		{
+			arg.ReplyWith("This must be called from the client");
+			return;
+		}
+		float @float = arg.GetFloat(1, 0f);
+		string @string = arg.GetString(0, "");
+		string error;
+		BuildingGrade buildingGrade = FindBuildingSkin(@string, out error);
+		if ((Object)(object)buildingGrade == (Object)null)
+		{
+			arg.ReplyWith(error);
 			return;
 		}
 		if (!buildingGrade.enabledInStandalone)
@@ -564,6 +593,7 @@ public class Admin : ConsoleSystem
 			return;
 		}
 		ServerUsers.Set(uInt, ServerUsers.UserGroup.Moderator, @string, string2, -1L);
+		ServerUsers.Save();
 		BasePlayer basePlayer = BasePlayer.FindByID(uInt);
 		if ((Object)(object)basePlayer != (Object)null)
 		{
@@ -596,6 +626,7 @@ public class Admin : ConsoleSystem
 			return;
 		}
 		ServerUsers.Set(uInt, ServerUsers.UserGroup.Owner, @string, string2, -1L);
+		ServerUsers.Save();
 		BasePlayer basePlayer = BasePlayer.FindByID(uInt);
 		if ((Object)(object)basePlayer != (Object)null)
 		{
@@ -621,6 +652,7 @@ public class Admin : ConsoleSystem
 			return;
 		}
 		ServerUsers.Remove(uInt);
+		ServerUsers.Save();
 		BasePlayer basePlayer = BasePlayer.FindByID(uInt);
 		if ((Object)(object)basePlayer != (Object)null)
 		{
@@ -646,6 +678,7 @@ public class Admin : ConsoleSystem
 			return;
 		}
 		ServerUsers.Remove(uInt);
+		ServerUsers.Save();
 		BasePlayer basePlayer = BasePlayer.FindByID(uInt);
 		if ((Object)(object)basePlayer != (Object)null)
 		{
@@ -839,7 +872,7 @@ public class Admin : ConsoleSystem
 		{
 			((IDisposable)enumerator).Dispose();
 		}
-		arg.ReplyWith(arg.HasArg("--json") ? val.ToJson() : ((object)val).ToString());
+		arg.ReplyWith(arg.HasArg("--json", false) ? val.ToJson() : ((object)val).ToString());
 	}
 
 	[ServerVar(Help = "Sends a message in chat")]
@@ -861,7 +894,13 @@ public class Admin : ConsoleSystem
 			while (enumerator.MoveNext())
 			{
 				BasePlayer current = enumerator.Current;
-				text = text + current.userID + ":\"" + current.displayName + "\"\n";
+				string[] obj = new string[5] { text, null, null, null, null };
+				BasePlayer.EncryptedValue<ulong> userID = current.userID;
+				obj[1] = userID.ToString();
+				obj[2] = ":\"";
+				obj[3] = current.displayName;
+				obj[4] = "\"\n";
+				text = string.Concat(obj);
 				num++;
 			}
 		}
@@ -1087,7 +1126,7 @@ public class Admin : ConsoleSystem
 			while (enumerator.MoveNext())
 			{
 				BasePlayer current = enumerator.Current;
-				current.ClientRPCPlayer(null, current, "GetPerformanceReport", @string, @int);
+				current.ClientRPC(RpcTarget.Player("GetPerformanceReport", current), @string, @int);
 			}
 		}
 		finally
@@ -1113,7 +1152,7 @@ public class Admin : ConsoleSystem
 			while (enumerator.MoveNext())
 			{
 				BasePlayer current = enumerator.Current;
-				current.ClientRPCPlayer(null, current, "GetPerformanceReport_Frametime", JsonConvert.SerializeObject((object)clientFrametimeRequest));
+				current.ClientRPC(RpcTarget.Player("GetPerformanceReport_Frametime", current), JsonConvert.SerializeObject((object)clientFrametimeRequest));
 			}
 		}
 		finally
@@ -1188,8 +1227,8 @@ public class Admin : ConsoleSystem
 	[ServerVar]
 	public static string teaminfo(Arg arg)
 	{
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0046: Expected O, but got Unknown
+		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004b: Expected O, but got Unknown
 		ulong num = arg.GetUInt64(0, 0uL);
 		if (num == 0L)
 		{
@@ -1221,7 +1260,7 @@ public class Admin : ConsoleSystem
 				(memberId == playerTeam.teamLeader) ? "x" : ""
 			});
 		}
-		if (!arg.HasArg("--json"))
+		if (!arg.HasArg("--json", false))
 		{
 			return $"ID: {playerTeam.teamID}\n\n{val}";
 		}
@@ -1277,11 +1316,11 @@ public class Admin : ConsoleSystem
 		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0093: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00a3: Expected O, but got Unknown
-		//IL_00dc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0104: Expected O, but got Unknown
+		//IL_00dd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0105: Expected O, but got Unknown
 		if ((Object)(object)entity == (Object)null)
 		{
 			return false;
@@ -1312,7 +1351,7 @@ public class Admin : ConsoleSystem
 			}
 			else
 			{
-				autoTurret.authorizedPlayers.RemoveAll((PlayerNameID x) => x.userid == userId);
+				autoTurret.authorizedPlayers.RemoveWhere((PlayerNameID x) => x.userid == userId);
 			}
 			autoTurret.SendNetworkUpdate();
 		}
@@ -1329,7 +1368,7 @@ public class Admin : ConsoleSystem
 			}
 			else
 			{
-				buildingPrivlidge.authorizedPlayers.RemoveAll((PlayerNameID x) => x.userid == userId);
+				buildingPrivlidge.authorizedPlayers.RemoveWhere((PlayerNameID x) => x.userid == userId);
 			}
 			buildingPrivlidge.SendNetworkUpdate();
 		}
@@ -1366,7 +1405,24 @@ public class Admin : ConsoleSystem
 		string @string = arg.GetString(0, "");
 		if ((Object)(object)arg.Player() != (Object)null)
 		{
-			Debug.Log((object)("[ENTCMD] " + arg.Player().displayName + "/" + arg.Player().userID + " used *" + @string + "* on ent: " + ((Object)baseEntity).name));
+			string[] obj = new string[8]
+			{
+				"[ENTCMD] ",
+				arg.Player().displayName,
+				"/",
+				null,
+				null,
+				null,
+				null,
+				null
+			};
+			BasePlayer.EncryptedValue<ulong> userID = arg.Player().userID;
+			obj[3] = userID.ToString();
+			obj[4] = " used *";
+			obj[5] = @string;
+			obj[6] = "* on ent: ";
+			obj[7] = ((Object)baseEntity).name;
+			Debug.Log((object)string.Concat(obj));
 		}
 		switch (@string)
 		{
@@ -1392,14 +1448,18 @@ public class Admin : ConsoleSystem
 			arg.ReplyWith(AuthList(baseEntity));
 			return;
 		case "upgrade":
-			arg.ReplyWith(ChangeGrade(baseEntity, arg.GetInt(2, 1), 0, BuildingGrade.Enum.None, arg.GetFloat(3, 0f)));
+			arg.ReplyWith(ChangeGrade(baseEntity, arg.GetInt(2, 1), 0, BuildingGrade.Enum.None, 0uL, arg.GetFloat(3, 0f)));
 			return;
 		case "downgrade":
-			arg.ReplyWith(ChangeGrade(baseEntity, 0, arg.GetInt(2, 1), BuildingGrade.Enum.None, arg.GetFloat(3, 0f)));
+			arg.ReplyWith(ChangeGrade(baseEntity, 0, arg.GetInt(2, 1), BuildingGrade.Enum.None, 0uL, arg.GetFloat(3, 0f)));
 			return;
 		case "setgrade":
-			arg.ReplyWith(ChangeGrade(baseEntity, 0, 0, (BuildingGrade.Enum)arg.GetInt(2, 0), arg.GetFloat(3, 0f)));
+		{
+			string error;
+			BuildingGrade buildingGrade = FindBuildingSkin(arg.GetString(2, ""), out error);
+			arg.ReplyWith(ChangeGrade(baseEntity, 0, 0, buildingGrade.type, buildingGrade.skin, arg.GetFloat(3, 0f)));
 			return;
+		}
 		case "repair":
 			RunInRadius(arg.GetFloat(2, 0f), baseEntity, delegate(BaseCombatEntity entity)
 			{
@@ -1415,9 +1475,9 @@ public class Admin : ConsoleSystem
 
 	private static string AuthList(BaseEntity ent)
 	{
-		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006d: Expected O, but got Unknown
-		List<PlayerNameID> authorizedPlayers;
+		//IL_00dc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e2: Expected O, but got Unknown
+		List<PlayerNameID> list;
 		if (!(ent is BuildingPrivlidge buildingPrivlidge))
 		{
 			if (!(ent is AutoTurret autoTurret))
@@ -1432,20 +1492,28 @@ public class Admin : ConsoleSystem
 				}
 				return CodeLockAuthList(codeLock);
 			}
-			authorizedPlayers = autoTurret.authorizedPlayers;
+			list = new List<PlayerNameID>();
+			foreach (PlayerNameID authorizedPlayer in autoTurret.authorizedPlayers)
+			{
+				list.Add(authorizedPlayer);
+			}
 		}
 		else
 		{
-			authorizedPlayers = buildingPrivlidge.authorizedPlayers;
+			list = new List<PlayerNameID>();
+			foreach (PlayerNameID authorizedPlayer2 in buildingPrivlidge.authorizedPlayers)
+			{
+				list.Add(authorizedPlayer2);
+			}
 		}
-		if (authorizedPlayers == null || authorizedPlayers.Count == 0)
+		if (list == null || list.Count == 0)
 		{
 			return "Nobody is authed to this entity";
 		}
 		TextTable val = new TextTable();
 		val.AddColumn("steamID");
 		val.AddColumn("username");
-		foreach (PlayerNameID item in authorizedPlayers)
+		foreach (PlayerNameID item in list)
 		{
 			val.AddRow(new string[2]
 			{
@@ -1518,7 +1586,7 @@ public class Admin : ConsoleSystem
 
 	public static string GetPlayerName(ulong steamId)
 	{
-		BasePlayer basePlayer = BasePlayer.allPlayerList.FirstOrDefault((BasePlayer p) => p.userID == steamId);
+		BasePlayer basePlayer = BasePlayer.allPlayerList.FirstOrDefault((BasePlayer p) => (ulong)p.userID == steamId);
 		string text;
 		if (!((Object)(object)basePlayer != (Object)null))
 		{
@@ -1535,7 +1603,7 @@ public class Admin : ConsoleSystem
 		return text;
 	}
 
-	public static string ChangeGrade(BaseEntity entity, int increaseBy = 0, int decreaseBy = 0, BuildingGrade.Enum targetGrade = BuildingGrade.Enum.None, float radius = 0f)
+	public static string ChangeGrade(BaseEntity entity, int increaseBy = 0, int decreaseBy = 0, BuildingGrade.Enum targetGrade = BuildingGrade.Enum.None, ulong skin = 0uL, float radius = 0f)
 	{
 		if ((Object)(object)(entity as BuildingBlock) == (Object)null)
 		{
@@ -1555,7 +1623,7 @@ public class Admin : ConsoleSystem
 			}
 			if (grade != block.grade)
 			{
-				block.ChangeGrade(grade);
+				block.ChangeGradeAndSkin(targetGrade, skin);
 			}
 		});
 		int count = Pool.GetList<BuildingBlock>().Count;
@@ -1623,6 +1691,7 @@ public class Admin : ConsoleSystem
 		result.Players = BasePlayer.activePlayerList.Count;
 		result.Queued = SingletonComponent<ServerMgr>.Instance.connectionQueue.Queued;
 		result.Joining = SingletonComponent<ServerMgr>.Instance.connectionQueue.Joining;
+		result.ReservedSlots = SingletonComponent<ServerMgr>.Instance.connectionQueue.ReservedCount;
 		result.EntityCount = BaseNetworkable.serverEntities.Count;
 		result.GameTime = (((Object)(object)TOD_Sky.Instance != (Object)null) ? TOD_Sky.Instance.Cycle.DateTime.ToString() : DateTime.UtcNow.ToString());
 		result.Uptime = (int)Time.realtimeSinceStartup;
@@ -1635,7 +1704,7 @@ public class Admin : ConsoleSystem
 		result.NetworkOut = (int)((Net.sv != null) ? ((BaseNetwork)Net.sv).GetStat((Connection)null, (StatTypeLong)1) : 0);
 		result.Restarting = SingletonComponent<ServerMgr>.Instance.Restarting;
 		result.SaveCreatedTime = SaveRestore.SaveCreatedTime.ToString();
-		result.Version = 2511;
+		result.Version = 2555;
 		result.Protocol = Protocol.printable;
 		return result;
 	}
@@ -1779,7 +1848,7 @@ public class Admin : ConsoleSystem
 		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
 		if (allowAdminUI && !((Object)(object)arg.Player() == (Object)null))
 		{
 			uint uInt = arg.GetUInt(0, 0u);
@@ -1794,7 +1863,7 @@ public class Admin : ConsoleSystem
 				val.channel = 2;
 				val.method = (SendMethod)0;
 				SendInfo sendInfo = val;
-				arg.Player().ClientRPCEx(sendInfo, null, "AdminReceivedUGC", uInt, (uint)array.Length, array, uInt2, (byte)@int);
+				arg.Player().ClientRPC(RpcTarget.SendInfo("AdminReceivedUGC", sendInfo), uInt, (uint)array.Length, array, uInt2, (byte)@int);
 			}
 		}
 	}
@@ -1836,8 +1905,8 @@ public class Admin : ConsoleSystem
 		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
 		if (allowAdminUI)
 		{
 			NetworkableId entityID = arg.GetEntityID(0);
@@ -1849,7 +1918,7 @@ public class Admin : ConsoleSystem
 				val.channel = 2;
 				val.method = (SendMethod)0;
 				SendInfo sendInfo = val;
-				arg.Player().ClientRPCEx<NetworkableId, byte[]>(sendInfo, null, "AdminReceivedPatternFirework", entityID, patternFirework.Design.ToProtoBytes());
+				arg.Player().ClientRPC<NetworkableId, byte[]>(RpcTarget.SendInfo("AdminReceivedPatternFirework", sendInfo), entityID, patternFirework.Design.ToProtoBytes());
 			}
 		}
 	}
@@ -1975,7 +2044,7 @@ public class Admin : ConsoleSystem
 			val.AddRow(obj);
 		}
 		Pool.FreeList<EntityAssociation>(ref list);
-		if (arg.HasArg("--json"))
+		if (arg.HasArg("--json", false))
 		{
 			arg.ReplyWith(val.ToJson());
 			return;
@@ -2022,7 +2091,7 @@ public class Admin : ConsoleSystem
 			val.AddRow(obj);
 		}
 		Pool.FreeList<EntityAssociation>(ref list);
-		if (arg.HasArg("--json"))
+		if (arg.HasArg("--json", false))
 		{
 			arg.ReplyWith(val.ToJson());
 			return;
@@ -2050,7 +2119,7 @@ public class Admin : ConsoleSystem
 					continue;
 				}
 				bool flag = false;
-				if (useOwnerId && baseEntity.OwnerID == ply.userID)
+				if (useOwnerId && baseEntity.OwnerID == (ulong)ply.userID)
 				{
 					flag = true;
 				}

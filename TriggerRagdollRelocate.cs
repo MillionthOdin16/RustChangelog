@@ -6,8 +6,8 @@ public class TriggerRagdollRelocate : TriggerBase
 
 	internal override void OnObjectAdded(GameObject obj, Collider col)
 	{
-		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
 		base.OnObjectAdded(obj, col);
 		BaseEntity baseEntity = obj.transform.ToBaseEntity();
 		if ((Object)(object)baseEntity != (Object)null && baseEntity.isServer)

@@ -26,7 +26,7 @@ public class ItemModDeployable : MonoBehaviour
 		}
 		if (ent is BuildingPrivlidge buildingPrivlidge)
 		{
-			buildingPrivlidge.AddPlayer(player);
+			buildingPrivlidge.AddPlayer(player, player.userID);
 		}
 	}
 }

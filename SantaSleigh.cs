@@ -24,6 +24,14 @@ public class SantaSleigh : BaseEntity
 
 	public float hohoho_additional_spacing = 2f;
 
+	public Vector3 swimScale;
+
+	public Vector3 swimSpeed;
+
+	public float appliedSwimScale = 1f;
+
+	public float appliedSwimRotation = 20f;
+
 	private Vector3 startPos;
 
 	private Vector3 endPos;
@@ -36,15 +44,7 @@ public class SantaSleigh : BaseEntity
 
 	private Vector3 dropPosition = Vector3.zero;
 
-	public Vector3 swimScale;
-
-	public Vector3 swimSpeed;
-
 	private float swimRandom;
-
-	public float appliedSwimScale = 1f;
-
-	public float appliedSwimRotation = 20f;
 
 	private const string path = "assets/prefabs/misc/xmas/sleigh/santasleigh.prefab";
 
@@ -93,7 +93,7 @@ public class SantaSleigh : BaseEntity
 	public void SendHoHoHo()
 	{
 		((FacepunchBehaviour)this).Invoke((Action)SendHoHoHo, hohohospacing + Random.Range(0f, hohoho_additional_spacing));
-		ClientRPC(null, "ClientPlayHoHoHo");
+		ClientRPC(RpcTarget.NetworkGroup("ClientPlayHoHoHo"));
 	}
 
 	public Vector3 RandomDropPosition()

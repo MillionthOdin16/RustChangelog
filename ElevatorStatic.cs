@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Facepunch;
+using Rust;
 using UnityEngine;
 
 public class ElevatorStatic : Elevator
@@ -17,15 +18,23 @@ public class ElevatorStatic : Elevator
 
 	public override void Spawn()
 	{
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
 		base.Spawn();
 		SetFlag(Flags.Reserved2, b: true);
 		SetFlag(Flags.Reserved1, StaticTop);
+		if (!Application.isLoadingSave)
+		{
+			UpdateFloorPositions();
+		}
+	}
+
+	private void UpdateFloorPositions()
+	{
+		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0024: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
 		if (!base.IsTop)
 		{
 			return;
@@ -38,7 +47,7 @@ public class ElevatorStatic : Elevator
 			if ((Object)(object)((RaycastHit)(ref current)).transform.parent != (Object)null)
 			{
 				ElevatorStatic component = ((Component)((RaycastHit)(ref current)).transform.parent).GetComponent<ElevatorStatic>();
-				if ((Object)(object)component != (Object)null && (Object)(object)component != (Object)(object)this && component.isServer)
+				if (!((Object)(object)component == (Object)null) && !((Object)(object)component == (Object)(object)this) && !component.isClient && !component.IsDestroyed)
 				{
 					floorPositions.Add(component);
 				}
@@ -51,6 +60,12 @@ public class ElevatorStatic : Elevator
 		{
 			floorPositions[i].SetFloorDetails(i, this);
 		}
+	}
+
+	public override void PostServerLoad()
+	{
+		base.PostServerLoad();
+		UpdateFloorPositions();
 	}
 
 	public override void PostMapEntitySpawn()

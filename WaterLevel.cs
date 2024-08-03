@@ -109,12 +109,13 @@ public static class WaterLevel
 		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
 		//IL_005b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0103: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e2: Unknown result type (might be due to invalid IL or missing references)
 		TimeWarning val = TimeWarning.New("WaterLevel.GetWaterInfo", 0);
 		try
 		{
@@ -132,7 +133,7 @@ public static class WaterLevel
 					return result;
 				}
 			}
-			bool flag2 = doDeepwaterChecks && pos.y < waterHeight - 10f;
+			bool flag2 = doDeepwaterChecks && (pos.y < waterHeight - 10f || TerrainMeta.OutOfBounds(pos));
 			int num = (Object.op_Implicit((Object)(object)TerrainMeta.TopologyMap) ? TerrainMeta.TopologyMap.GetTopologyFast(posUV) : 0);
 			if ((flag || flag2 || (num & 0x3C180) == 0) && Object.op_Implicit((Object)(object)WaterSystem.Collision) && WaterSystem.Collision.GetIgnore(pos))
 			{

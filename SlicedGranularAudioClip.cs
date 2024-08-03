@@ -81,6 +81,8 @@ public class SlicedGranularAudioClip : MonoBehaviour, IClientComponent
 		}
 	}
 
+	public AudioSource source;
+
 	public AudioClip sourceClip;
 
 	public AudioClip granularClip;
@@ -110,4 +112,6 @@ public class SlicedGranularAudioClip : MonoBehaviour, IClientComponent
 	public List<int> startPositions = new List<int>();
 
 	public int lastStartPositionIdx = int.MaxValue;
+
+	public bool playOnAwake = true;
 }

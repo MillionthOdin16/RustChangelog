@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -7,6 +9,7 @@ using System.Net.Sockets;
 using System.Text;
 using ConVar;
 using Facepunch.Rcon;
+using Facepunch.Rust.Profiling;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using UnityEngine;
@@ -360,7 +363,7 @@ public class RCon
 
 	internal static Listener listenerNew = null;
 
-	private static Queue<Command> Commands = new Queue<Command>();
+	private static ConcurrentQueue<Command> Commands = new ConcurrentQueue<Command>();
 
 	private static float lastRunTime = 0f;
 
@@ -371,6 +374,8 @@ public class RCon
 	private static int responseConnection;
 
 	private static bool isInput;
+
+	private static Stopwatch timer = new Stopwatch();
 
 	internal static int SERVERDATA_AUTH = 3;
 
@@ -383,6 +388,43 @@ public class RCon
 	internal static int SERVERDATA_CONSOLE_LOG = 4;
 
 	internal static int SERVERDATA_SWITCH_UTF8 = 5;
+
+	[ServerVar(Help = "Print a table of connected RCON clients. Use '--json' to return a JSON object")]
+	public static void print_rcon_clients(Arg arg)
+	{
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0031: Expected O, but got Unknown
+		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c6: Unknown result type (might be due to invalid IL or missing references)
+		if (listenerNew == null)
+		{
+			arg.ReplyWith("No RCON server running");
+			return;
+		}
+		bool flag = arg.HasArg("--json", true);
+		IList<RconClientStats> clientStats = listenerNew.GetClientStats();
+		TextTable val = new TextTable();
+		val.AddColumns(new string[8] { "index", "connection_id", "ip", "port", "connected_time", "inbound_messages", "outbound_messages", "broadcast_messages" });
+		for (int i = 0; i < clientStats.Count; i++)
+		{
+			RconClientStats val2 = clientStats[i];
+			TimeSpan timeSpan = DateTime.UtcNow.Subtract(val2.ConnectedAt);
+			val.AddRow(new string[8]
+			{
+				i.ToString(),
+				val2.ConnectionId.ToString(),
+				val2.IP.ToString(),
+				val2.Port.ToString(),
+				Math.Floor(timeSpan.TotalSeconds).ToString(),
+				val2.RecievedMessages.ToString(),
+				val2.SentMessages.ToString(),
+				val2.BroadcastedMessages.ToString()
+			});
+		}
+		arg.ReplyWith(flag ? val.ToJson() : ((object)val).ToString());
+	}
 
 	public static void Initialize()
 	{
@@ -411,13 +453,10 @@ public class RCon
 			listenerNew.SslCertificatePassword = CommandLine.GetSwitch("-rcon.sslpwd", (string)null);
 			listenerNew.OnMessage = delegate(IPAddress ip, int id, string msg)
 			{
-				lock (Commands)
-				{
-					Command item = JsonConvert.DeserializeObject<Command>(msg);
-					item.Ip = ip;
-					item.ConnectionId = id;
-					Commands.Enqueue(item);
-				}
+				Command item = JsonConvert.DeserializeObject<Command>(msg);
+				item.Ip = ip;
+				item.ConnectionId = id;
+				Commands.Enqueue(item);
 			};
 			listenerNew.Start();
 			Debug.Log((object)("WebSocket RCon Started on " + Port));
@@ -474,12 +513,10 @@ public class RCon
 
 	public static void Update()
 	{
-		lock (Commands)
+		Command result;
+		while (Commands.TryDequeue(out result))
 		{
-			while (Commands.Count > 0)
-			{
-				OnCommand(Commands.Dequeue());
-			}
+			OnCommand(result);
 		}
 		if (listener == null || lastRunTime + 0.02f >= Time.realtimeSinceStartup)
 		{
@@ -513,9 +550,9 @@ public class RCon
 
 	private static void OnCommand(Command cmd)
 	{
-		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
 		try
 		{
 			responseIdentifier = cmd.Identifier;
@@ -526,8 +563,19 @@ public class RCon
 				Debug.Log((object)("[rcon] " + cmd.Ip?.ToString() + ": " + cmd.Message));
 			}
 			isInput = false;
+			timer.Restart();
 			Option server = Option.Server;
 			string text = ConsoleSystem.Run(((Option)(ref server)).Quiet(), cmd.Message, Array.Empty<object>());
+			timer.Stop();
+			TimeSpan elapsed = timer.Elapsed;
+			if (RconProfiler.mode > 0)
+			{
+				RconProfiler.ExecutionTime += elapsed;
+			}
+			if (elapsed > RuntimeProfiler.RconCommandWarningThreshold)
+			{
+				LagSpikeProfiler.RconCommand(timer.Elapsed, cmd.Message);
+			}
 			if (text != null)
 			{
 				OnMessage(text, string.Empty, (LogType)3);

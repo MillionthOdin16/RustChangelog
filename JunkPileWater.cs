@@ -28,6 +28,8 @@ public class JunkPileWater : JunkPile
 
 	public float updateCullRange = 16f;
 
+	public float VehicleCheckRadius = 5f;
+
 	private Quaternion baseRotation = Quaternion.identity;
 
 	private bool first = true;
@@ -53,12 +55,17 @@ public class JunkPileWater : JunkPile
 		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
 		Vector3 position = ((Component)this).transform.position;
 		position.y = TerrainMeta.WaterMap.GetHeight(((Component)this).transform.position);
 		((Component)this).transform.position = position;
 		base.Spawn();
 		Quaternion rotation = ((Component)this).transform.rotation;
 		baseRotation = Quaternion.Euler(0f, ((Quaternion)(ref rotation)).eulerAngles.y, 0f);
+		if (Physics.CheckSphere(((Component)this).transform.position, VehicleCheckRadius, 134217728))
+		{
+			Kill();
+		}
 	}
 
 	public void FixedUpdate()

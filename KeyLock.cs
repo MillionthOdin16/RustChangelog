@@ -187,7 +187,7 @@ public class KeyLock : BaseLock
 		{
 			return false;
 		}
-		if (player.userID == base.OwnerID)
+		if ((ulong)player.userID == base.OwnerID)
 		{
 			return true;
 		}

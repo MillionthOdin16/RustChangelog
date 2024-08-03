@@ -28,6 +28,10 @@ public class Chainsaw : BaseMelee
 
 	private Vector2 saveST;
 
+	public static readonly Phrase UnloadAmmoTitle = new Phrase("unload_ammo", "Unload Ammo");
+
+	public static readonly Phrase UnloadAmmoDesc = new Phrase("unload_ammo_desc", "Unload the ammunition in this weapon and place it in your inventory.");
+
 	[Header("Chainsaw")]
 	public float fuelPerSec = 1f;
 
@@ -53,6 +57,8 @@ public class Chainsaw : BaseMelee
 	private int failedAttempts;
 
 	public float engineStartChance = 0.33f;
+
+	private TimeSince lastReloadSignalFromClient;
 
 	private float ammoRemainder;
 
@@ -283,6 +289,17 @@ public class Chainsaw : BaseMelee
 		return HasFlag(Flags.Busy);
 	}
 
+	protected override void OnReceivedSignalServer(Signal signal, string arg)
+	{
+		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		base.OnReceivedSignalServer(signal, arg);
+		if (signal == Signal.Reload && base.isServer)
+		{
+			lastReloadSignalFromClient = TimeSince.op_Implicit(0f);
+		}
+	}
+
 	public void ServerNPCStart()
 	{
 		if (!HasFlag(Flags.On))
@@ -371,8 +388,10 @@ public class Chainsaw : BaseMelee
 	[RPC_Server.IsActiveItem]
 	public void DoReload(RPCMessage msg)
 	{
+		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer ownerPlayer = GetOwnerPlayer();
-		if (!((Object)(object)ownerPlayer == (Object)null) && !IsAttacking())
+		if (!((Object)(object)ownerPlayer == (Object)null) && !IsAttacking() && (ownerPlayer.IsNpc || (!(TimeSince.op_Implicit(lastReloadSignalFromClient) < reloadDuration * 0.25f) && !(TimeSince.op_Implicit(lastReloadSignalFromClient) > reloadDuration * 2f))))
 		{
 			Item item;
 			while (ammo < maxAmmo && (item = GetAmmo()) != null && item.amount > 0)
@@ -426,6 +445,12 @@ public class Chainsaw : BaseMelee
 	public void EngineTick()
 	{
 		ReduceAmmo(0.05f);
+		BasePlayer ownerPlayer = GetOwnerPlayer();
+		if ((Object)(object)ownerPlayer != (Object)null && ownerPlayer.IsSleeping())
+		{
+			SetEngineStatus(status: false);
+			SetAttackStatus(status: false);
+		}
 	}
 
 	public void AttackTick()

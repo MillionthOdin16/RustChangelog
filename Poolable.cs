@@ -45,6 +45,10 @@ public class Poolable : MonoBehaviour, IClientComponent, IPrefabPostProcess
 	{
 		get
 		{
+			if (Object.op_Implicit((Object)(object)((Component)this).GetComponent<CodeLock>()))
+			{
+				return 200;
+			}
 			if ((Object)(object)((Component)this).GetComponent<LootPanel>() != (Object)null)
 			{
 				return 1;
@@ -59,7 +63,11 @@ public class Poolable : MonoBehaviour, IClientComponent, IPrefabPostProcess
 			}
 			if ((Object)(object)((Component)this).GetComponent<Door>() != (Object)null)
 			{
-				return 100;
+				if ((bool)((Component)this).GetComponent<Construction>())
+				{
+					return 100;
+				}
+				return 1;
 			}
 			if ((Object)(object)((Component)this).GetComponent<Projectile>() != (Object)null)
 			{
@@ -68,6 +76,14 @@ public class Poolable : MonoBehaviour, IClientComponent, IPrefabPostProcess
 			if ((Object)(object)((Component)this).GetComponent<Gib>() != (Object)null)
 			{
 				return 100;
+			}
+			if (Object.op_Implicit((Object)(object)((Component)this).GetComponent<UIMapVendingMachineMarker>()))
+			{
+				return 25;
+			}
+			if (Object.op_Implicit((Object)(object)((Component)this).GetComponent<UIMapVendingMachineMarkerCluster>()))
+			{
+				return 25;
 			}
 			return 1;
 		}

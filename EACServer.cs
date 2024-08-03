@@ -147,15 +147,19 @@ public static class EACServer
 
 	private static void OnAuthenticatedLocal(Connection connection)
 	{
-		if (connection.authStatus == string.Empty)
+		if (!Server.strictauth_eac && connection.authStatusEAC == string.Empty)
 		{
-			connection.authStatus = "ok";
+			connection.authStatusEAC = "ok";
 		}
 		connection2status[connection] = (AntiCheatCommonClientAuthStatus)1;
 	}
 
 	private static void OnAuthenticatedRemote(Connection connection)
 	{
+		if (Server.strictauth_eac && connection.authStatusEAC == string.Empty)
+		{
+			connection.authStatusEAC = "ok";
+		}
 		connection2status[connection] = (AntiCheatCommonClientAuthStatus)2;
 	}
 
@@ -186,7 +190,7 @@ public static class EACServer
 			Result resultCode = ((VerifyIdTokenCallbackInfo)(ref data)).ResultCode;
 			string text = "Verify ID token " + ((object)(Result)(ref resultCode)).ToString();
 			Debug.Log((object)$"[EAC] Kicking {connection.userid} / {connection.username} ({text})");
-			connection.authStatus = "eactoken";
+			connection.authStatusEAC = "eactoken";
 			Net.sv.Kick(connection, "EAC: " + text, false);
 			return;
 		}
@@ -196,7 +200,7 @@ public static class EACServer
 		{
 			string text4 = "Verify ID token account mismatch with " + text2 + " != " + text3;
 			Debug.Log((object)$"[EAC] Kicking {connection.userid} / {connection.username} ({text4})");
-			connection.authStatus = "eactoken";
+			connection.authStatusEAC = "eactoken";
 			Net.sv.Kick(connection, "EAC: " + text4, false);
 		}
 	}
@@ -282,11 +286,11 @@ public static class EACServer
 				}
 				Utf8String actionReasonDetailsString = ((OnClientActionRequiredCallbackInfo)(ref data)).ActionReasonDetailsString;
 				Debug.Log((object)$"[EAC] Kicking {connection.userid} / {connection.username} ({actionReasonDetailsString})");
-				connection.authStatus = "eac";
+				connection.authStatusEAC = "eac";
 				Net.sv.Kick(connection, Utf8String.op_Implicit(Utf8String.op_Implicit("EAC: ") + actionReasonDetailsString), false);
 				if ((int)((OnClientActionRequiredCallbackInfo)(ref data)).ActionReasonCode == 10 || (int)((OnClientActionRequiredCallbackInfo)(ref data)).ActionReasonCode == 9)
 				{
-					connection.authStatus = "eacbanned";
+					connection.authStatusEAC = "eacbanned";
 					ConsoleNetwork.BroadcastToAllClients("chat.add", 2, 0, "<color=#fff>SERVER</color> Kicking " + connection.username + " (banned by anticheat)");
 					if ((int)((OnClientActionRequiredCallbackInfo)(ref data)).ActionReasonCode == 10)
 					{
@@ -786,33 +790,40 @@ public static class EACServer
 		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0048: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0074: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00be: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0107: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0124: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0135: Unknown result type (might be due to invalid IL or missing references)
-		//IL_013b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0152: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0163: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0169: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0180: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0191: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0197: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0095: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00dd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ed: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0102: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0127: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0151: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0162: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0168: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0179: Unknown result type (might be due to invalid IL or missing references)
+		//IL_017f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0190: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0196: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01a7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ad: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01be: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01e8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01db: Unknown result type (might be due to invalid IL or missing references)
 		if (!CanSendAnalytics || player.net == null || player.net.connection == null)
 		{
 			return;
@@ -822,13 +833,19 @@ public static class EACServer
 		{
 			Vector3 position = player.eyes.position;
 			Quaternion rotation = player.eyes.rotation;
+			Vector3 center = player.GetCenter();
 			LogPlayerTickOptions val2 = default(LogPlayerTickOptions);
 			((LogPlayerTickOptions)(ref val2)).PlayerHandle = GetClient(player.net.connection);
 			Vec3f value = default(Vec3f);
+			((Vec3f)(ref value)).x = center.x;
+			((Vec3f)(ref value)).y = center.y;
+			((Vec3f)(ref value)).z = center.z;
+			((LogPlayerTickOptions)(ref val2)).PlayerPosition = value;
+			value = default(Vec3f);
 			((Vec3f)(ref value)).x = position.x;
 			((Vec3f)(ref value)).y = position.y;
 			((Vec3f)(ref value)).z = position.z;
-			((LogPlayerTickOptions)(ref val2)).PlayerPosition = value;
+			((LogPlayerTickOptions)(ref val2)).PlayerViewPosition = value;
 			Quat value2 = default(Quat);
 			((Quat)(ref value2)).w = rotation.w;
 			((Quat)(ref value2)).x = rotation.x;

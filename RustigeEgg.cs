@@ -140,7 +140,7 @@ public class RustigeEgg : BaseCombatEntity
 	[RPC_Server.IsVisible(3f)]
 	public void RPC_Open(RPCMessage msg)
 	{
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)msg.player == (Object)null)
 		{
 			return;
@@ -150,7 +150,7 @@ public class RustigeEgg : BaseCombatEntity
 		{
 			if (flag)
 			{
-				ClientRPC<Vector3>(null, "FaceEggPosition", msg.player.eyes.position);
+				ClientRPC<Vector3>(RpcTarget.NetworkGroup("FaceEggPosition"), msg.player.eyes.position);
 				((FacepunchBehaviour)this).Invoke((Action)CloseEgg, 60f);
 			}
 			else

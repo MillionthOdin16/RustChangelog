@@ -42,6 +42,10 @@ public class WaterBall : BaseEntity
 	public static bool DoSplash(Vector3 position, float radius, ItemDefinition liquidDef, int amount)
 	{
 		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0095: Unknown result type (might be due to invalid IL or missing references)
 		List<BaseEntity> list = Pool.GetList<BaseEntity>();
 		Vis.Entities(position, radius, list, 1220225811, (QueryTriggerInteraction)2);
 		int num = 0;
@@ -53,7 +57,15 @@ public class WaterBall : BaseEntity
 			{
 				if (!item.isClient && item is ISplashable splashable && !list2.Contains(splashable) && splashable.WantsSplash(liquidDef, amount))
 				{
-					list2.Add(splashable);
+					bool flag = true;
+					if (item is PlanterBox && !GamePhysics.LineOfSight(((Component)item).transform.position + new Vector3(0f, 1f, 0f), position, 2097152))
+					{
+						flag = false;
+					}
+					if (flag)
+					{
+						list2.Add(splashable);
+					}
 				}
 			}
 			if (list2.Count == 0)

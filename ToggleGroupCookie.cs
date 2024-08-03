@@ -13,7 +13,7 @@ public class ToggleGroupCookie : MonoBehaviour
 		string @string = PlayerPrefs.GetString("ToggleGroupCookie_" + ((Object)this).name);
 		if (!string.IsNullOrEmpty(@string))
 		{
-			Transform val = ((Component)this).transform.Find(@string);
+			Transform val = FindChild(((Component)this).transform, @string);
 			if (Object.op_Implicit((Object)(object)val))
 			{
 				Toggle component = ((Component)val).GetComponent<Toggle>();
@@ -68,5 +68,20 @@ public class ToggleGroupCookie : MonoBehaviour
 		{
 			PlayerPrefs.SetString("ToggleGroupCookie_" + ((Object)this).name, ((Object)((Component)val).gameObject).name);
 		}
+	}
+
+	private static Transform FindChild(Transform parent, string name)
+	{
+		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0015: Expected O, but got Unknown
+		foreach (Transform item in parent)
+		{
+			Transform val = item;
+			if (((Object)val).name == name)
+			{
+				return val;
+			}
+		}
+		return null;
 	}
 }

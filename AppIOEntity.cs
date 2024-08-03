@@ -150,7 +150,7 @@ public abstract class AppIOEntity : IOEntity
 		}
 		else
 		{
-			player.ClientRPCPlayer(null, player, "HandleCompanionPairingResult", (int)notificationSendResult);
+			player.ClientRPC(RpcTarget.Player("HandleCompanionPairingResult", player), (int)notificationSendResult);
 		}
 	}
 

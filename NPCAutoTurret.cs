@@ -10,7 +10,7 @@ public class NPCAutoTurret : AutoTurret
 
 	private bool useLeftMuzzle;
 
-	[ServerVar(Help = "How many seconds until a sleeping player is considered hostile")]
+	[ReplicatedVar(Help = "How many seconds until a sleeping player is considered hostile")]
 	public static float sleeperhostiledelay = 1200f;
 
 	public override void ServerInit()

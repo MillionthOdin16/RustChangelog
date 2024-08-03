@@ -114,9 +114,9 @@ public class TerrainConfig : ScriptableObject
 
 	private List<string> stoneyMatNames;
 
-	public Texture AlbedoArray => AlbedoArrays[Mathf.Clamp(QualitySettings.masterTextureLimit, 0, 2)];
+	public Texture AlbedoArray => AlbedoArrays[Mathf.Clamp(QualitySettings.globalTextureMipmapLimit, 0, 2)];
 
-	public Texture NormalArray => NormalArrays[Mathf.Clamp(QualitySettings.masterTextureLimit, 0, 2)];
+	public Texture NormalArray => NormalArrays[Mathf.Clamp(QualitySettings.globalTextureMipmapLimit, 0, 2)];
 
 	public PhysicMaterial[] GetPhysicMaterials()
 	{

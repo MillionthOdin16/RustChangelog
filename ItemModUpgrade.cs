@@ -2,6 +2,10 @@ using UnityEngine;
 
 public class ItemModUpgrade : ItemMod
 {
+	public static readonly Phrase UpgradeItemTitle = new Phrase("upgrade_item", "Upgrade");
+
+	public static readonly Phrase UpgradeItemDesc = new Phrase("upgrade_item_desc", "Upgrade item");
+
 	public int numForUpgrade = 10;
 
 	public float upgradeSuccessChance = 1f;
@@ -18,9 +22,9 @@ public class ItemModUpgrade : ItemMod
 
 	public override void ServerCommand(Item item, string command, BasePlayer player)
 	{
-		//IL_00eb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ec: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f9: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0080: Unknown result type (might be due to invalid IL or missing references)

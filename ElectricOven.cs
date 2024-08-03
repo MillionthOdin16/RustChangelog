@@ -1,3 +1,4 @@
+using System;
 using Facepunch;
 using ProtoBuf;
 using Rust;
@@ -10,8 +11,6 @@ public class ElectricOven : BaseOven
 	public Transform IoEntityAnchor;
 
 	private EntityRef<IOEntity> spawnedIo;
-
-	private bool resumeCookingWhenPowerResumes;
 
 	protected override bool CanRunWithNoFuel
 	{
@@ -47,20 +46,6 @@ public class ElectricOven : BaseOven
 		}
 	}
 
-	public void OnIOEntityFlagsChanged(Flags old, Flags next)
-	{
-		if (!next.HasFlag(Flags.Reserved8) && IsOn())
-		{
-			StopCooking();
-			resumeCookingWhenPowerResumes = true;
-		}
-		else if (next.HasFlag(Flags.Reserved8) && !IsOn() && resumeCookingWhenPowerResumes)
-		{
-			StartCooking();
-			resumeCookingWhenPowerResumes = false;
-		}
-	}
-
 	public override void Save(SaveInfo info)
 	{
 		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
@@ -80,6 +65,42 @@ public class ElectricOven : BaseOven
 		if (info.msg.simpleUID != null)
 		{
 			spawnedIo.uid = info.msg.simpleUID.uid;
+		}
+	}
+
+	public override void OvenFull()
+	{
+		((FacepunchBehaviour)this).Invoke((Action)PauseCooking, 0f);
+	}
+
+	private void PauseCooking()
+	{
+		UpdateAttachmentTemperature();
+		if (base.inventory != null)
+		{
+			base.inventory.temperature = 15f;
+			foreach (Item item in base.inventory.itemList)
+			{
+				if (item.HasFlag(Item.Flag.OnFire))
+				{
+					item.SetFlag(Item.Flag.OnFire, b: false);
+					item.MarkDirty();
+				}
+				if (item.HasFlag(Item.Flag.Cooking))
+				{
+					item.SetFlag(Item.Flag.Cooking, b: false);
+					item.MarkDirty();
+				}
+			}
+		}
+		SetFlag(Flags.Reserved8, b: true);
+	}
+
+	public override void OnItemAddedOrRemoved(Item item, bool bAdded)
+	{
+		if (item != null && !bAdded && HasFlag(Flags.Reserved8))
+		{
+			SetFlag(Flags.Reserved8, b: false);
 		}
 	}
 
