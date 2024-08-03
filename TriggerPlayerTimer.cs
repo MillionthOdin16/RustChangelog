@@ -2,7 +2,7 @@ using System;
 using Rust;
 using UnityEngine;
 
-public class TriggerPlayerTimer : TriggerBase
+public class TriggerPlayerTimer : TriggerBase, IServerComponent
 {
 	public BaseEntity TargetEntity;
 

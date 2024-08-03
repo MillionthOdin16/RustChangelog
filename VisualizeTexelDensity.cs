@@ -175,12 +175,19 @@ public class VisualizeTexelDensity : MonoBehaviour
 		return false;
 	}
 
+	private void OnPreCull()
+	{
+		if ((Object)(object)texelDensityCamera != (Object)null)
+		{
+			texelDensityCamera.Render();
+		}
+	}
+
 	private void OnRenderImage(RenderTexture source, RenderTexture destination)
 	{
 		if (initialized)
 		{
 			UpdateViewTexelDensity(CheckScreenResized(((Texture)source).width, ((Texture)source).height));
-			texelDensityCamera.Render();
 			texelDensityOverlayMat.SetTexture("_TexelDensityMap", (Texture)(object)texelDensityRT);
 			texelDensityOverlayMat.SetFloat("_Opacity", overlayOpacity);
 			Graphics.Blit((Texture)(object)source, destination, texelDensityOverlayMat, 0);

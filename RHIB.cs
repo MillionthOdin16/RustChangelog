@@ -132,10 +132,6 @@ public class RHIB : MotorRowboat
 
 	public void AddFuel(int amount)
 	{
-		StorageContainer storageContainer = fuelSystem.fuelStorageInstance.Get(serverside: true);
-		if (Object.op_Implicit((Object)(object)storageContainer))
-		{
-			((Component)storageContainer).GetComponent<StorageContainer>().inventory.AddItem(ItemManager.FindItemDefinition("lowgradefuel"), amount, 0uL);
-		}
+		fuelSystem.AddFuel(amount);
 	}
 }

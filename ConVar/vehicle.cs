@@ -134,6 +134,32 @@ public class vehicle : ConsoleSystem
 	}
 
 	[ServerVar]
+	public static void killpushbikes(Arg args)
+	{
+		Bike[] array = BaseEntity.Util.FindAll<Bike>();
+		foreach (Bike bike in array)
+		{
+			if (bike.poweredBy == Bike.PoweredBy.Human)
+			{
+				bike.Kill();
+			}
+		}
+	}
+
+	[ServerVar]
+	public static void killmotorbikes(Arg args)
+	{
+		Bike[] array = BaseEntity.Util.FindAll<Bike>();
+		foreach (Bike bike in array)
+		{
+			if (bike.poweredBy == Bike.PoweredBy.Fuel)
+			{
+				bike.Kill();
+			}
+		}
+	}
+
+	[ServerVar]
 	public static void killminis(Arg args)
 	{
 		PlayerHelicopter[] array = BaseEntity.Util.FindAll<PlayerHelicopter>();

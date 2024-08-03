@@ -72,6 +72,8 @@ public class Tugboat : MotorRowboat
 
 	public bool LightsAreOn => HasFlag(Flags.Reserved5);
 
+	protected override bool AllowKinematicDrift => true;
+
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
 		TimeWarning val = TimeWarning.New("Tugboat.OnRpcMessage", 0);
@@ -102,7 +104,7 @@ public class Tugboat : MotorRowboat
 		int fuelAmount2 = fuelSystem.GetFuelAmount();
 		if (fuelAmount2 != fuelAmount)
 		{
-			ClientRPC(null, "SetFuelAmount", fuelAmount2);
+			ClientRPC(RpcTarget.NetworkGroup("SetFuelAmount"), fuelAmount2);
 		}
 		if (LightsAreOn && !IsOn())
 		{
@@ -168,6 +170,18 @@ public class Tugboat : MotorRowboat
 			}
 		}
 		return false;
+	}
+
+	public override bool BuoyancySleep(bool inWater)
+	{
+		SetToKinematic();
+		return true;
+	}
+
+	public override bool BuoyancyWake()
+	{
+		SetToNonKinematic();
+		return true;
 	}
 
 	public override bool SupportsChildDeployables()

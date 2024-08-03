@@ -28,6 +28,8 @@ public class FlameJet : MonoBehaviour
 
 	public Color currentColor;
 
+	public bool externalUpdate;
+
 	private void Initialize()
 	{
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
@@ -49,7 +51,7 @@ public class FlameJet : MonoBehaviour
 
 	public void LateUpdate()
 	{
-		if (on || currentColor.a > 0f)
+		if (!externalUpdate)
 		{
 			UpdateLine();
 		}
@@ -65,7 +67,7 @@ public class FlameJet : MonoBehaviour
 		return x * x;
 	}
 
-	private void UpdateLine()
+	public void UpdateLine()
 	{
 		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0047: Unknown result type (might be due to invalid IL or missing references)

@@ -130,7 +130,7 @@ public class SleepingBagCamper : SleepingBag
 		if (AssociatedSeat.IsValid(base.isServer))
 		{
 			BasePlayer mounted = AssociatedSeat.Get(base.isServer).GetMounted();
-			if ((Object)(object)mounted != (Object)null && mounted.userID != userID)
+			if ((Object)(object)mounted != (Object)null && (ulong)mounted.userID != userID)
 			{
 				return (RespawnState)2;
 			}

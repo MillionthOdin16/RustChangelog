@@ -18,7 +18,7 @@ public class VehicleSpawner : BaseEntity
 
 		bool IsDespawnEligable();
 
-		EntityFuelSystem GetFuelSystem();
+		IFuelSystem GetFuelSystem();
 
 		int StartingFuelUnits();
 
@@ -165,7 +165,7 @@ public class VehicleSpawner : BaseEntity
 		//IL_009d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00a2: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b6: Unknown result type (might be due to invalid IL or missing references)
 		List<BasePlayer> list = Pool.GetList<BasePlayer>();
 		Vis.Entities(((Component)spawnOffset).transform.position, radius, list, 131072, (QueryTriggerInteraction)2);
 		foreach (BasePlayer item in list)
@@ -176,7 +176,7 @@ public class VehicleSpawner : BaseEntity
 				position += Vector3Ex.Direction2D(((Component)item).transform.position, ((Component)spawnOffset).transform.position) * radius;
 				position += Vector3.up * 0.1f;
 				item.MovePosition(position);
-				item.ClientRPCPlayer<Vector3>(null, item, "ForcePositionTo", position);
+				item.ClientRPC<Vector3>(RpcTarget.Player("ForcePositionTo", item), position);
 			}
 		}
 		Pool.FreeList<BasePlayer>(ref list);

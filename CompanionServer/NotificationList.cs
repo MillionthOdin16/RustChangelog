@@ -69,7 +69,7 @@ public class NotificationList
 		}
 	}
 
-	public void IntersectWith(List<PlayerNameID> players)
+	public void IntersectWith(HashSet<PlayerNameID> players)
 	{
 		List<ulong> list = Pool.GetList<ulong>();
 		foreach (PlayerNameID player in players)

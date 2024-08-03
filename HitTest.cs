@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class HitTest
@@ -37,6 +38,8 @@ public class HitTest
 
 	public BaseEntity ignoreEntity;
 
+	public System.Type ignoredType;
+
 	public BaseEntity HitEntity;
 
 	public Vector3 HitPoint;
@@ -57,10 +60,10 @@ public class HitTest
 		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
 		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
 		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0089: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
 		type = other.type;
 		AttackRay = other.AttackRay;
 		Radius = other.Radius;
@@ -69,6 +72,7 @@ public class HitTest
 		RayHit = other.RayHit;
 		damageProperties = other.damageProperties;
 		ignoreEntity = other.ignoreEntity;
+		ignoredType = other.ignoredType;
 		if (copyHitInfo)
 		{
 			HitEntity = other.HitEntity;
@@ -144,5 +148,6 @@ public class HitTest
 		HitTransform = null;
 		HitPart = 0u;
 		HitMaterial = null;
+		ignoredType = null;
 	}
 }

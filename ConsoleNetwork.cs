@@ -1,27 +1,32 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using ConVar;
+using Facepunch.Rust.Profiling;
 using Network;
 using UnityEngine;
 
 public static class ConsoleNetwork
 {
+	private static Stopwatch timer = new Stopwatch();
+
 	internal static void Init()
 	{
 	}
 
 	internal static void OnClientCommand(Message packet)
 	{
-		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
 		if (packet.read.Unread > Server.maxpacketsize_command)
 		{
 			Debug.LogWarning((object)"Dropping client command due to size");
 			return;
 		}
+		timer.Restart();
 		string text = packet.read.StringRaw(8388608, false);
 		if (packet.connection == null || !packet.connection.connected)
 		{
@@ -34,6 +39,10 @@ public static class ConsoleNetwork
 		if (!string.IsNullOrEmpty(text2))
 		{
 			SendClientReply(packet.connection, text2);
+		}
+		if (timer.Elapsed > RuntimeProfiler.ConsoleCommandWarningThreshold)
+		{
+			LagSpikeProfiler.ConsoleCommand(timer.Elapsed, packet, text);
 		}
 	}
 

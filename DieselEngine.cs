@@ -24,6 +24,8 @@ public class DieselEngine : StorageContainer
 
 	private const string EXCAVATOR_ACTIVATED_STAT = "excavator_activated";
 
+	private BasePlayer startedByPlayer;
+
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
 		TimeWarning val = TimeWarning.New("DieselEngine.OnRpcMessage", 0);
@@ -88,11 +90,6 @@ public class DieselEngine : StorageContainer
 		return base.OnRpcMessage(player, rpc, msg);
 	}
 
-	public override bool CanOpenLootPanel(BasePlayer player, string panelName)
-	{
-		return base.CanOpenLootPanel(player, panelName);
-	}
-
 	public void FixedUpdate()
 	{
 		if (!base.isClient && IsOn())
@@ -119,6 +116,7 @@ public class DieselEngine : StorageContainer
 			if (GetFuelAmount() > 0)
 			{
 				EngineOn();
+				startedByPlayer = msg.player;
 				if (GameInfo.HasAchievements && (Object)(object)msg.player != (Object)null)
 				{
 					msg.player.stats.Add("excavator_activated", 1, Stats.All);
@@ -146,6 +144,10 @@ public class DieselEngine : StorageContainer
 		}
 		slot.UseItem(amount);
 		Analytics.Azure.OnExcavatorConsumeFuel(slot, amount, this);
+		if ((Object)(object)startedByPlayer != (Object)null && startedByPlayer.serverClan != null)
+		{
+			startedByPlayer.AddClanScore((ClanScoreEventType)8, amount);
+		}
 		UpdateHasFuelFlag();
 		return true;
 	}
@@ -205,8 +207,12 @@ public class DieselEngine : StorageContainer
 	public override void Save(SaveInfo info)
 	{
 		base.Save(info);
-		info.msg.ioEntity = Pool.Get<IOEntity>();
-		info.msg.ioEntity.genericFloat1 = cachedFuelTime;
+		info.msg.dieselEngine = Pool.Get<DieselEngine>();
+		info.msg.dieselEngine.fuelTime = cachedFuelTime;
+		if (info.forDisk)
+		{
+			info.msg.dieselEngine.startedByPlayer = (((Object)(object)startedByPlayer != (Object)null) ? startedByPlayer.userID : ((BasePlayer.EncryptedValue<ulong>)0uL));
+		}
 	}
 
 	public override void Load(LoadInfo info)
@@ -215,6 +221,14 @@ public class DieselEngine : StorageContainer
 		if (info.msg.ioEntity != null)
 		{
 			cachedFuelTime = info.msg.ioEntity.genericFloat1;
+		}
+		else if (info.msg.dieselEngine != null)
+		{
+			cachedFuelTime = info.msg.dieselEngine.fuelTime;
+			if (base.isServer)
+			{
+				startedByPlayer = BasePlayer.FindAwakeOrSleepingByID(info.msg.dieselEngine.startedByPlayer);
+			}
 		}
 	}
 

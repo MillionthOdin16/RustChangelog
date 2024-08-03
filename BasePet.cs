@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Rust;
 using UnityEngine;
@@ -26,6 +27,7 @@ public class BasePet : NPCPlayer, IThinker
 
 	private BaseEntity _mapMarkerInstance;
 
+	[NonSerialized]
 	[HideInInspector]
 	public bool inQueue;
 
@@ -127,13 +129,13 @@ public class BasePet : NPCPlayer, IThinker
 
 	public void ApplyPetStatModifiers()
 	{
-		if ((Object)(object)inventory == (Object)null)
+		if ((Object)(object)base.inventory == (Object)null)
 		{
 			return;
 		}
-		for (int i = 0; i < inventory.containerWear.capacity; i++)
+		for (int i = 0; i < base.inventory.containerWear.capacity; i++)
 		{
-			Item slot = inventory.containerWear.GetSlot(i);
+			Item slot = base.inventory.containerWear.GetSlot(i);
 			if (slot != null)
 			{
 				ItemModPetStats component = ((Component)slot.info).GetComponent<ItemModPetStats>();

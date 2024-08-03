@@ -80,7 +80,9 @@ public class Ragdoll : EntityComponent<BaseEntity>, IPrefabPreProcess
 
 	protected bool isServer => !IsClient;
 
-	public bool IsInactive => rigidbodies[0].isKinematic;
+	public bool IsSleeping => !rigidbodies[0].IsSleeping();
+
+	public bool IsKinematic => rigidbodies[0].isKinematic;
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
@@ -97,10 +99,10 @@ public class Ragdoll : EntityComponent<BaseEntity>, IPrefabPreProcess
 
 	private void SetUpPhysics(bool isServer)
 	{
-		//IL_0167: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0171: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0187: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0168: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0172: Unknown result type (might be due to invalid IL or missing references)
+		//IL_017e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0188: Unknown result type (might be due to invalid IL or missing references)
 		if (isSetUp)
 		{
 			return;
@@ -125,7 +127,7 @@ public class Ragdoll : EntityComponent<BaseEntity>, IPrefabPreProcess
 		SetInterpolationMode(((Component)this).transform.parent, isServer);
 		foreach (Rigidbody rigidbody in rigidbodies)
 		{
-			SetCollisionMode(rigidbody);
+			SetCollisionMode(rigidbody, isServer);
 			rigidbody.angularDrag = 1f;
 			rigidbody.drag = 1f;
 			rigidbody.detectCollisions = true;
@@ -186,22 +188,22 @@ public class Ragdoll : EntityComponent<BaseEntity>, IPrefabPreProcess
 		return false;
 	}
 
-	private static void SetCollisionMode(Rigidbody rigidBody)
+	private static void SetCollisionMode(Rigidbody rigidBody, bool isServer)
 	{
-		int ragdollmode = Physics.ragdollmode;
-		if (ragdollmode <= 0)
+		int serverragdollmode = Physics.serverragdollmode;
+		if (serverragdollmode <= 0)
 		{
 			rigidBody.collisionDetectionMode = (CollisionDetectionMode)0;
 		}
-		if (ragdollmode == 1)
+		if (serverragdollmode == 1)
 		{
 			rigidBody.collisionDetectionMode = (CollisionDetectionMode)1;
 		}
-		if (ragdollmode == 2)
+		if (serverragdollmode == 2)
 		{
 			rigidBody.collisionDetectionMode = (CollisionDetectionMode)2;
 		}
-		if (ragdollmode >= 3)
+		if (serverragdollmode >= 3)
 		{
 			rigidBody.collisionDetectionMode = (CollisionDetectionMode)3;
 		}
@@ -329,7 +331,10 @@ public class Ragdoll : EntityComponent<BaseEntity>, IPrefabPreProcess
 			RemoveRootBoneOffset();
 			((FacepunchBehaviour)this).InvokeRepeating((Action)SyncJointsToClients, 0f, 0.1f);
 		}
-		MoveRigidbodiesToRoot();
+		else
+		{
+			MoveRigidbodiesToRoot();
+		}
 		SetUpPhysics(isServer: true);
 	}
 
@@ -342,6 +347,18 @@ public class Ragdoll : EntityComponent<BaseEntity>, IPrefabPreProcess
 		}
 	}
 
+	public bool IsFullySleeping()
+	{
+		foreach (Rigidbody rigidbody in rigidbodies)
+		{
+			if (!rigidbody.IsSleeping())
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+
 	private void SyncJointsToClients()
 	{
 		if (!ShouldSyncJoints())
@@ -352,7 +369,7 @@ public class Ragdoll : EntityComponent<BaseEntity>, IPrefabPreProcess
 		try
 		{
 			SetRagdollMessageVals(val);
-			base.baseEntity.ClientRPC<Ragdoll>(null, "RPCSyncJoints", val);
+			base.baseEntity.ClientRPC<Ragdoll>(RpcTarget.NetworkGroup("RPCSyncJoints"), val);
 		}
 		finally
 		{
@@ -365,13 +382,9 @@ public class Ragdoll : EntityComponent<BaseEntity>, IPrefabPreProcess
 		bool result = false;
 		if (wasSyncingJoints)
 		{
-			foreach (Rigidbody rigidbody in rigidbodies)
+			if (!IsFullySleeping())
 			{
-				if (!rigidbody.IsSleeping())
-				{
-					result = true;
-					break;
-				}
+				result = true;
 			}
 		}
 		else
@@ -402,12 +415,16 @@ public class Ragdoll : EntityComponent<BaseEntity>, IPrefabPreProcess
 
 	public void BecomeActive()
 	{
-		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
+		if (!IsKinematic)
+		{
+			return;
+		}
 		foreach (Rigidbody rigidbody in rigidbodies)
 		{
 			rigidbody.isKinematic = false;
-			SetCollisionMode(rigidbody);
+			SetCollisionMode(rigidbody, isServer);
 			rigidbody.WakeUp();
 			if ((Object)(object)base.baseEntity != (Object)null && base.baseEntity.HasParent())
 			{
@@ -427,6 +444,10 @@ public class Ragdoll : EntityComponent<BaseEntity>, IPrefabPreProcess
 
 	public void BecomeInactive()
 	{
+		if (IsKinematic)
+		{
+			return;
+		}
 		foreach (Rigidbody rigidbody in rigidbodies)
 		{
 			rigidbody.collisionDetectionMode = (CollisionDetectionMode)0;

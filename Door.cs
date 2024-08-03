@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using ConVar;
 using Facepunch;
+using Facepunch.Rust;
 using Network;
+using Unity.AI.Navigation;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.Assertions;
@@ -35,6 +37,8 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 
 	public GameObject[] ClosedColliderRoots;
 
+	public bool allowOnCargoShip;
+
 	[SerializeField]
 	[ReadOnly]
 	private float openAnimLength = 4f;
@@ -45,21 +49,21 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 
 	public const Flags ReverseOpen = Flags.Reserved1;
 
-	private float decayResetTimeLast = float.NegativeInfinity;
-
 	public NavMeshModifierVolume NavMeshVolumeAnimals;
 
 	public NavMeshModifierVolume NavMeshVolumeHumanoids;
 
-	public NavMeshLink NavMeshLink;
-
 	public NPCDoorTriggerBox NpcTriggerBox;
+
+	public NavMeshLink NavMeshLink;
 
 	private static int nonWalkableArea = -1;
 
 	private static int animalAgentTypeId = -1;
 
 	private static int humanoidAgentTypeId = -1;
+
+	private float decayResetTimeLast = float.NegativeInfinity;
 
 	private Dictionary<BasePlayer, TimeSince> woundedOpens = new Dictionary<BasePlayer, TimeSince>();
 
@@ -72,6 +76,8 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 	private static int closeHash = Animator.StringToHash("close");
 
 	private static int reverseOpenHash = Animator.StringToHash("reverseOpen");
+
+	public override bool AllowOnCargoShip => allowOnCargoShip;
 
 	private bool HasVehiclePushBoxes
 	{
@@ -664,6 +670,7 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 		{
 			StartCheckingForBlockages(isOpening: true);
 		}
+		Analytics.Azure.OnBaseInteract(rpc.player, this);
 		OnPlayerOpenedDoor(rpc.player);
 	}
 
@@ -687,9 +694,9 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 	{
 		if (HasVehiclePushBoxes)
 		{
-			((FacepunchBehaviour)this).Invoke((Action)EnableVehiclePhysBoxes, 0.2f);
 			float num = (isOpening ? openAnimLength : closeAnimLength);
-			((FacepunchBehaviour)this).Invoke((Action)DisableVehiclePhysBox, num);
+			((FacepunchBehaviour)this).Invoke((Action)EnableVehiclePhysBoxes, num * 0.1f);
+			((FacepunchBehaviour)this).Invoke((Action)DisableVehiclePhysBox, num * 0.8f);
 		}
 	}
 
@@ -728,6 +735,7 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 			{
 				SetNavMeshLinkEnabled(wantsOn: false);
 			}
+			Analytics.Azure.OnBaseInteract(rpc.player, this);
 			StartCheckingForBlockages(isOpening: false);
 		}
 	}
@@ -867,6 +875,11 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 		}
 	}
 
+	public override bool SupportsChildDeployables()
+	{
+		return true;
+	}
+
 	private void ReverseDoorAnimation(bool wasOpening)
 	{
 		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
@@ -885,45 +898,79 @@ public class Door : AnimatedBuildingBlock, INotifyTrigger
 
 	public void OnObjects(TriggerNotify trigger)
 	{
+		//IL_00c4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00db: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e9: Unknown result type (might be due to invalid IL or missing references)
 		if (!base.isServer)
 		{
 			return;
 		}
 		bool flag = false;
+		BaseEntity baseEntity = null;
 		foreach (BaseEntity entityContent in trigger.entityContents)
 		{
 			if (entityContent is BaseMountable baseMountable && baseMountable.BlocksDoors)
 			{
 				flag = true;
+				baseEntity = baseMountable;
 				break;
 			}
 			if (entityContent is BaseVehicleModule baseVehicleModule && (Object)(object)baseVehicleModule.Vehicle != (Object)null && baseVehicleModule.Vehicle.BlocksDoors)
 			{
 				flag = true;
+				baseEntity = baseVehicleModule.VehicleParent();
 				break;
 			}
 		}
-		if (flag)
+		if (!flag)
 		{
-			bool flag2 = HasFlag(Flags.Open);
-			SetOpen(!flag2, suppressBlockageChecks: true);
-			ReverseDoorAnimation(flag2);
-			StopCheckingForBlockages();
-			ClientRPC(null, "OnDoorInterrupted", flag2 ? 1 : 0);
+			return;
 		}
+		bool flag2 = HasFlag(Flags.Open);
+		if (checkPhysBoxesOnOpen)
+		{
+			bool flag3 = true;
+			TriggerNotify[] array = vehiclePhysBoxes;
+			foreach (TriggerNotify triggerNotify in array)
+			{
+				Vector3 forward = ((Component)triggerNotify).transform.forward;
+				Vector3 val = ((Component)baseEntity).transform.position - ((Component)triggerNotify).transform.position;
+				if (Vector3.Dot(forward, ((Vector3)(ref val)).normalized) > 0f)
+				{
+					flag3 = false;
+					break;
+				}
+			}
+			if (flag3 == flag2)
+			{
+				return;
+			}
+		}
+		SetOpen(!flag2, suppressBlockageChecks: true);
+		ReverseDoorAnimation(flag2);
+		StopCheckingForBlockages();
+		ClientRPC(RpcTarget.NetworkGroup("OnDoorInterrupted"), flag2 ? 1 : 0);
 	}
 
 	public void OnEmpty()
 	{
 	}
 
+	protected override void ApplySubAnimationParameters(bool init, Animator toAnimator)
+	{
+		base.ApplySubAnimationParameters(init, toAnimator);
+		if (canReverseOpen)
+		{
+			toAnimator.SetBool(reverseOpenHash, HasFlag(Flags.Reserved1));
+		}
+	}
+
 	public override void OnFlagsChanged(Flags old, Flags next)
 	{
 		base.OnFlagsChanged(old, next);
-		if ((Object)(object)model.animator != (Object)null && ((Component)model.animator).gameObject.activeInHierarchy && canReverseOpen)
-		{
-			model.animator.SetBool(reverseOpenHash, next.HasFlag(Flags.Reserved1));
-		}
 		if (base.isServer)
 		{
 			BaseEntity slot = GetSlot(Slot.UpperModifier);

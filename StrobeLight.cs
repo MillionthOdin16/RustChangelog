@@ -132,6 +132,11 @@ public class StrobeLight : IOEntity
 		SetStrobe(strobe);
 	}
 
+	public override int ConsumptionAmount()
+	{
+		return 0;
+	}
+
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
 		TimeWarning val = TimeWarning.New("StrobeLight.OnRpcMessage", 0);

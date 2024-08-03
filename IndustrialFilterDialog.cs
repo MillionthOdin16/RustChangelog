@@ -1,6 +1,5 @@
 using Rust.UI;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class IndustrialFilterDialog : UIDialog
 {
@@ -11,14 +10,6 @@ public class IndustrialFilterDialog : UIDialog
 	public GameObject ItemSearchParent;
 
 	public ItemSearchEntry ItemSearchEntryPrefab;
-
-	public VirtualItemIcon TargetItemIcon;
-
-	public GameObject TargetCategoryRoot;
-
-	public RustText TargetCategoryText;
-
-	public Image TargetCategoryImage;
 
 	public GameObject NoItemsPrompt;
 
@@ -41,4 +32,8 @@ public class IndustrialFilterDialog : UIDialog
 	public GameObject[] RegularCopyPasteButtons;
 
 	public GameObject[] JsonCopyPasteButtons;
+
+	public bool closeWhenClicked;
+
+	public int count = 20;
 }

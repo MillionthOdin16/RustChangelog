@@ -107,7 +107,7 @@ public class HotAirBalloon : BaseCombatEntity, VehicleSpawner.IVehicleSpawnUser,
 
 	private float currentBuoyancy;
 
-	private float lastBlastTime;
+	private TimeSince sinceLastBlast;
 
 	private float avgTerrainHeight;
 
@@ -285,13 +285,16 @@ public class HotAirBalloon : BaseCombatEntity, VehicleSpawner.IVehicleSpawnUser,
 
 	public override void Load(LoadInfo info)
 	{
-		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0093: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
 		base.Load(info);
 		if (info.msg.hotAirBalloon != null)
 		{
 			inflationLevel = info.msg.hotAirBalloon.inflationAmount;
+			sinceLastBlast = TimeSince.op_Implicit(info.msg.hotAirBalloon.sinceLastBlast);
 			if (info.fromDisk && Object.op_Implicit((Object)(object)myRigidbody))
 			{
 				myRigidbody.velocity = info.msg.hotAirBalloon.velocity;
@@ -299,7 +302,7 @@ public class HotAirBalloon : BaseCombatEntity, VehicleSpawner.IVehicleSpawnUser,
 		}
 		if (info.msg.motorBoat != null)
 		{
-			fuelSystem.fuelStorageInstance.uid = info.msg.motorBoat.fuelStorageID;
+			fuelSystem.SetInstanceID(info.msg.motorBoat.fuelStorageID);
 			storageUnitInstance.uid = info.msg.motorBoat.storageid;
 		}
 	}
@@ -414,6 +417,10 @@ public class HotAirBalloon : BaseCombatEntity, VehicleSpawner.IVehicleSpawnUser,
 
 	public bool IsValidSAMTarget(bool staticRespawn)
 	{
+		if (myRigidbody.IsSleeping() || myRigidbody.isKinematic)
+		{
+			return false;
+		}
 		if (staticRespawn)
 		{
 			return IsFullyInflated;
@@ -449,22 +456,24 @@ public class HotAirBalloon : BaseCombatEntity, VehicleSpawner.IVehicleSpawnUser,
 
 	public override void Save(SaveInfo info)
 	{
-		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0083: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
 		//IL_009e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
 		base.Save(info);
 		info.msg.hotAirBalloon = Pool.Get<HotAirBalloon>();
 		info.msg.hotAirBalloon.inflationAmount = inflationLevel;
+		info.msg.hotAirBalloon.sinceLastBlast = TimeSince.op_Implicit(sinceLastBlast);
 		if (info.forDisk && Object.op_Implicit((Object)(object)myRigidbody))
 		{
 			info.msg.hotAirBalloon.velocity = myRigidbody.velocity;
 		}
 		info.msg.motorBoat = Pool.Get<Motorboat>();
 		info.msg.motorBoat.storageid = storageUnitInstance.uid;
-		info.msg.motorBoat.fuelStorageID = fuelSystem.fuelStorageInstance.uid;
+		info.msg.motorBoat.fuelStorageID = fuelSystem.GetInstanceID();
 	}
 
 	public override void ServerInit()
@@ -484,6 +493,7 @@ public class HotAirBalloon : BaseCombatEntity, VehicleSpawner.IVehicleSpawnUser,
 
 	public void DecayTick()
 	{
+		//IL_00d8: Unknown result type (might be due to invalid IL or missing references)
 		//IL_001c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0049: Unknown result type (might be due to invalid IL or missing references)
@@ -519,7 +529,7 @@ public class HotAirBalloon : BaseCombatEntity, VehicleSpawner.IVehicleSpawnUser,
 			myRigidbody.AddForceAtPosition(Vector3Ex.WithY(Random.onUnitSphere, 0f) * 20f, buoyancyPoint.position, (ForceMode)0);
 			Debug.Log((object)"Bump");
 		}
-		if (!(Time.time < lastBlastTime + 600f))
+		if (!(TimeSince.op_Implicit(sinceLastBlast) < 600f))
 		{
 			float num = 1f / outsidedecayminutes;
 			if (IsOutside() || IsFullyInflated)
@@ -570,6 +580,10 @@ public class HotAirBalloon : BaseCombatEntity, VehicleSpawner.IVehicleSpawnUser,
 		if (base.isServer)
 		{
 			CheckGlobal(next);
+			if ((Object)(object)myRigidbody != (Object)null)
+			{
+				myRigidbody.isKinematic = IsTransferProtected();
+			}
 		}
 	}
 
@@ -581,54 +595,57 @@ public class HotAirBalloon : BaseCombatEntity, VehicleSpawner.IVehicleSpawnUser,
 
 	protected void FixedUpdate()
 	{
-		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0192: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0197: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ad: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02dd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_031f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0337: Unknown result type (might be due to invalid IL or missing references)
-		//IL_033c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0347: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0357: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0361: Unknown result type (might be due to invalid IL or missing references)
-		//IL_036c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0377: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0388: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0393: Unknown result type (might be due to invalid IL or missing references)
-		//IL_039e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03a5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03b0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03c2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03c7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03cc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03e8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03fd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0424: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0442: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0447: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0451: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0456: Unknown result type (might be due to invalid IL or missing references)
-		//IL_045b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0460: Unknown result type (might be due to invalid IL or missing references)
-		//IL_04b7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_04be: Unknown result type (might be due to invalid IL or missing references)
-		//IL_04c9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_04ce: Unknown result type (might be due to invalid IL or missing references)
-		//IL_04d2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_04d7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00be: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0152: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ba: Unknown result type (might be due to invalid IL or missing references)
+		//IL_027c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0281: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02ea: Unknown result type (might be due to invalid IL or missing references)
+		//IL_032c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0344: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0349: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0354: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0364: Unknown result type (might be due to invalid IL or missing references)
+		//IL_036e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0379: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0384: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0395: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03a0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03ab: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03b2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03bd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03cf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03d4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03d9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03f5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_040a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0431: Unknown result type (might be due to invalid IL or missing references)
+		//IL_044f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0454: Unknown result type (might be due to invalid IL or missing references)
+		//IL_045e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0463: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0468: Unknown result type (might be due to invalid IL or missing references)
+		//IL_046d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04c4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04cb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04d6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04db: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04df: Unknown result type (might be due to invalid IL or missing references)
 		//IL_04e4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_04e9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_04f4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_04fb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0506: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0517: Unknown result type (might be due to invalid IL or missing references)
-		//IL_051e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0544: Unknown result type (might be due to invalid IL or missing references)
-		//IL_054a: Unknown result type (might be due to invalid IL or missing references)
-		if (!isSpawned || base.isClient)
+		//IL_04f1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04f6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0501: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0508: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0513: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0524: Unknown result type (might be due to invalid IL or missing references)
+		//IL_052b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0551: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0557: Unknown result type (might be due to invalid IL or missing references)
+		if (!isSpawned || base.isClient || IsTransferProtected())
 		{
 			return;
 		}
@@ -657,7 +674,7 @@ public class HotAirBalloon : BaseCombatEntity, VehicleSpawner.IVehicleSpawnUser,
 		{
 			inflationLevel = Mathf.Clamp01(inflationLevel + Time.fixedDeltaTime / 10f);
 		}
-		else if (grounded && inflationLevel > 0f && !IsOn() && (Time.time > lastBlastTime + 30f || WaterLogged()))
+		else if (grounded && inflationLevel > 0f && !IsOn() && (TimeSince.op_Implicit(sinceLastBlast) > 30f || WaterLogged()))
 		{
 			inflationLevel = Mathf.Clamp01(inflationLevel - Time.fixedDeltaTime / 10f);
 		}
@@ -690,7 +707,7 @@ public class HotAirBalloon : BaseCombatEntity, VehicleSpawner.IVehicleSpawnUser,
 			if (IsFullyInflated)
 			{
 				currentBuoyancy += Time.fixedDeltaTime * 0.2f;
-				lastBlastTime = Time.time;
+				sinceLastBlast = TimeSince.op_Implicit(0f);
 			}
 		}
 		else
@@ -796,7 +813,7 @@ public class HotAirBalloon : BaseCombatEntity, VehicleSpawner.IVehicleSpawnUser,
 		return true;
 	}
 
-	public EntityFuelSystem GetFuelSystem()
+	public IFuelSystem GetFuelSystem()
 	{
 		return fuelSystem;
 	}

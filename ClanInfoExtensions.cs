@@ -7,15 +7,15 @@ public static class ClanInfoExtensions
 	public static ClanInfo ToProto(this IClan clan)
 	{
 		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ec: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0130: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0135: Unknown result type (might be due to invalid IL or missing references)
-		//IL_013d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ba: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0100: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0141: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0149: Unknown result type (might be due to invalid IL or missing references)
 		if (clan == null)
 		{
 			return null;
@@ -31,6 +31,7 @@ public static class ClanInfoExtensions
 		val.logo = clan.Logo;
 		val.color = ColorEx.ToInt32(clan.Color);
 		val.maxMemberCount = clan.MaxMemberCount;
+		val.score = clan.Score;
 		val.roles = Pool.GetList<Role>();
 		foreach (ClanRole role in clan.Roles)
 		{
@@ -63,6 +64,7 @@ public static class ClanInfoExtensions
 		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c7: Unknown result type (might be due to invalid IL or missing references)
 		bool flag = role.Rank == 1;
 		Role obj = Pool.Get<Role>();
 		obj.roleId = role.RoleId;
@@ -76,13 +78,14 @@ public static class ClanInfoExtensions
 		obj.canDemote = flag || role.CanDemote;
 		obj.canSetPlayerNotes = flag || role.CanSetPlayerNotes;
 		obj.canAccessLogs = flag || role.CanAccessLogs;
+		obj.canAccessScoreEvents = flag || role.CanAccessScoreEvents;
 		return obj;
 	}
 
 	public static ClanRole FromProto(this Role proto)
 	{
 		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0097: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
 		ClanRole result = default(ClanRole);
 		result.RoleId = proto.roleId;
 		result.Rank = proto.rank;
@@ -95,6 +98,7 @@ public static class ClanInfoExtensions
 		result.CanDemote = proto.canDemote;
 		result.CanSetPlayerNotes = proto.canSetPlayerNotes;
 		result.CanAccessLogs = proto.canAccessLogs;
+		result.CanAccessScoreEvents = proto.canAccessScoreEvents;
 		return result;
 	}
 

@@ -33,7 +33,7 @@ public class PlayerBlueprints : EntityComponent<BasePlayer>
 		}
 		base.baseEntity.PersistantPlayerInfo = persistantPlayerInfo;
 		base.baseEntity.SendNetworkUpdateImmediate();
-		base.baseEntity.ClientRPCPlayer(null, base.baseEntity, "UnlockedBlueprint", 0);
+		base.baseEntity.ClientRPC(RpcTarget.Player("UnlockedBlueprint", base.baseEntity), 0);
 	}
 
 	public bool IsUnlocked(ItemDefinition itemDef)
@@ -54,13 +54,21 @@ public class PlayerBlueprints : EntityComponent<BasePlayer>
 			persistantPlayerInfo.unlockedItems.Add(itemDef.itemid);
 			base.baseEntity.PersistantPlayerInfo = persistantPlayerInfo;
 			base.baseEntity.SendNetworkUpdateImmediate();
-			base.baseEntity.ClientRPCPlayer(null, base.baseEntity, "UnlockedBlueprint", itemDef.itemid);
+			base.baseEntity.ClientRPC(RpcTarget.Player("UnlockedBlueprint", base.baseEntity), itemDef.itemid);
 			base.baseEntity.stats.Add("blueprint_studied", 1, (Stats)5);
 		}
 	}
 
 	public bool HasUnlocked(ItemDefinition targetItem)
 	{
+		if (base.baseEntity.IsCraftingTutorialBlocked(targetItem, out var forceUnlock))
+		{
+			return false;
+		}
+		if (forceUnlock)
+		{
+			return true;
+		}
 		if (Object.op_Implicit((Object)(object)targetItem.Blueprint))
 		{
 			if (targetItem.Blueprint.NeedsSteamItem)

@@ -109,13 +109,14 @@ public class ResourceDepositManager : BaseEntity
 		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
+		//IL_034d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0168: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_021d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_02c2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_016c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0195: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0237: Unknown result type (might be due to invalid IL or missing references)
-		//IL_024a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02d5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_023e: Unknown result type (might be due to invalid IL or missing references)
 		Vector2i indexFrom = GetIndexFrom(pos);
 		State state = Random.state;
 		Random.InitState((int)SeedEx.Seed(new Vector2((float)indexFrom.x, (float)indexFrom.y), World.Seed + World.Salt));
@@ -127,36 +128,57 @@ public class ResourceDepositManager : BaseEntity
 		{
 			resourceDeposit.Add(ItemManager.FindItemDefinition("stones"), 1f, 100, 1f, ResourceDeposit.surveySpawnType.ITEM);
 		}
-		else if (0 == 0)
+		else
 		{
-			resourceDeposit.Add(ItemManager.FindItemDefinition("stones"), 1f, Random.Range(30000, 100000), Random.Range(0.3f, 0.5f), ResourceDeposit.surveySpawnType.ITEM);
+			bool flag = false;
 			float num = 0f;
-			num = ((!World.Procedural) ? 0.1f : (((TerrainMeta.BiomeMap.GetBiome(pos, 2) > 0.5f) ? 1f : 0f) * 0.25f));
-			if (Random.Range(0f, 1f) >= 1f - num)
-			{
-				resourceDeposit.Add(ItemManager.FindItemDefinition("metal.ore"), 1f, Random.Range(10000, 100000), Random.Range(2f, 4f), ResourceDeposit.surveySpawnType.ITEM);
-			}
-			float num2 = 0f;
-			num2 = ((!World.Procedural) ? 0.1f : (((TerrainMeta.BiomeMap.GetBiome(pos, 1) > 0.5f) ? 1f : 0f) * (0.25f + 0.25f * (TerrainMeta.TopologyMap.GetTopology(pos, 8) ? 1f : 0f) + 0.25f * (TerrainMeta.TopologyMap.GetTopology(pos, 1) ? 1f : 0f))));
-			if (Random.Range(0f, 1f) >= 1f - num2)
-			{
-				resourceDeposit.Add(ItemManager.FindItemDefinition("sulfur.ore"), 1f, Random.Range(10000, 100000), Random.Range(4f, 4f), ResourceDeposit.surveySpawnType.ITEM);
-			}
-			float num3 = 0f;
 			if (World.Procedural)
 			{
-				if (TerrainMeta.BiomeMap.GetBiome(pos, 8) > 0.5f || TerrainMeta.BiomeMap.GetBiome(pos, 4) > 0.5f)
+				if (TerrainMeta.BiomeMap.GetBiome(pos, 1) > 0.5f)
 				{
-					num3 += 0.25f;
+					num += 0.25f;
 				}
 			}
 			else
 			{
-				num3 += 0.15f;
+				num += 0.15f;
 			}
-			if (Random.Range(0f, 1f) >= 1f - num3)
+			if (Random.Range(0f, 1f) >= 1f - num)
 			{
-				resourceDeposit.Add(ItemManager.FindItemDefinition("hq.metal.ore"), 1f, Random.Range(5000, 10000), Random.Range(30f, 50f), ResourceDeposit.surveySpawnType.ITEM);
+				resourceDeposit.Add(ItemManager.FindItemDefinition("crude.oil"), 1f, Random.Range(5000, 10000), Random.Range(8f, 10f), ResourceDeposit.surveySpawnType.ITEM, liquid: true);
+				flag = true;
+			}
+			if (!flag)
+			{
+				resourceDeposit.Add(ItemManager.FindItemDefinition("stones"), 1f, Random.Range(30000, 100000), Random.Range(0.3f, 0.5f), ResourceDeposit.surveySpawnType.ITEM);
+				float num2 = 0f;
+				num2 = ((!World.Procedural) ? 0.1f : (((TerrainMeta.BiomeMap.GetBiome(pos, 2) > 0.5f) ? 1f : 0f) * 0.25f));
+				if (Random.Range(0f, 1f) >= 1f - num2)
+				{
+					resourceDeposit.Add(ItemManager.FindItemDefinition("metal.ore"), 1f, Random.Range(10000, 100000), Random.Range(2f, 4f), ResourceDeposit.surveySpawnType.ITEM);
+				}
+				float num3 = 0f;
+				num3 = ((!World.Procedural) ? 0.1f : (((TerrainMeta.BiomeMap.GetBiome(pos, 1) > 0.5f) ? 1f : 0f) * (0.25f + 0.25f * (TerrainMeta.TopologyMap.GetTopology(pos, 8) ? 1f : 0f) + 0.25f * (TerrainMeta.TopologyMap.GetTopology(pos, 1) ? 1f : 0f))));
+				if (Random.Range(0f, 1f) >= 1f - num3)
+				{
+					resourceDeposit.Add(ItemManager.FindItemDefinition("sulfur.ore"), 1f, Random.Range(10000, 100000), Random.Range(4f, 4f), ResourceDeposit.surveySpawnType.ITEM);
+				}
+				float num4 = 0f;
+				if (World.Procedural)
+				{
+					if (TerrainMeta.BiomeMap.GetBiome(pos, 8) > 0.5f || TerrainMeta.BiomeMap.GetBiome(pos, 4) > 0.5f)
+					{
+						num4 += 0.25f;
+					}
+				}
+				else
+				{
+					num4 += 0.15f;
+				}
+				if (Random.Range(0f, 1f) >= 1f - num4)
+				{
+					resourceDeposit.Add(ItemManager.FindItemDefinition("hq.metal.ore"), 1f, Random.Range(5000, 10000), Random.Range(30f, 50f), ResourceDeposit.surveySpawnType.ITEM);
+				}
 			}
 		}
 		_deposits.Add(indexFrom, resourceDeposit);

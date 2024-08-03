@@ -107,7 +107,7 @@ public class StaticInstrument : BaseMountable
 		int arg3 = msg.read.Int32();
 		float arg4 = msg.read.Float();
 		KeyController.ProcessServerPlayedNote(GetMounted());
-		ClientRPC(null, "Client_PlayNote", arg, arg2, arg3, arg4);
+		ClientRPC(RpcTarget.NetworkGroup("Client_PlayNote"), arg, arg2, arg3, arg4);
 	}
 
 	[RPC_Server]
@@ -116,7 +116,7 @@ public class StaticInstrument : BaseMountable
 		int arg = msg.read.Int32();
 		int arg2 = msg.read.Int32();
 		int arg3 = msg.read.Int32();
-		ClientRPC(null, "Client_StopNote", arg, arg2, arg3);
+		ClientRPC(RpcTarget.NetworkGroup("Client_StopNote"), arg, arg2, arg3);
 	}
 
 	public override bool IsInstrument()

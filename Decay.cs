@@ -118,6 +118,21 @@ public abstract class Decay : PrefabAttribute, IServerComponent
 
 	public abstract float GetDecayDuration(BaseEntity entity);
 
+	public virtual float GetDecayTickOverride()
+	{
+		return 0f;
+	}
+
+	public virtual float GetHealScale(BaseEntity entity)
+	{
+		return ConVar.Decay.upkeep_heal_scale;
+	}
+
+	public virtual float GetHealDelay(DecayEntity decayEntity)
+	{
+		return 600f;
+	}
+
 	protected override Type GetIndexedType()
 	{
 		return typeof(Decay);

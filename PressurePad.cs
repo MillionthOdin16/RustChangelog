@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 
 public class PressurePad : BaseDetector
 {
@@ -10,7 +11,7 @@ public class PressurePad : BaseDetector
 
 	public override int ConsumptionAmount()
 	{
-		return 1;
+		return 0;
 	}
 
 	public override bool IsRootEntity()
@@ -46,13 +47,14 @@ public class PressurePad : BaseDetector
 	{
 		if (HasFlag(Flags.Reserved1))
 		{
+			int passthroughAmount = base.GetPassthroughAmount(0);
 			if (HasFlag(Flags.Reserved3))
 			{
-				return pressPowerAmount;
+				return Mathf.Max(pressPowerAmount, passthroughAmount);
 			}
 			if (IsPowered())
 			{
-				return base.GetPassthroughAmount(0);
+				return passthroughAmount;
 			}
 		}
 		return 0;

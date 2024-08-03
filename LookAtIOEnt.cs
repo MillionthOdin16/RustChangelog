@@ -40,6 +40,8 @@ public class LookAtIOEnt : MonoBehaviour
 
 	public Text activeOutputText;
 
+	public Text turretInterferenceText;
+
 	public IOEntityUISlotEntry[] inputEntries;
 
 	public IOEntityUISlotEntry[] outputEntries;

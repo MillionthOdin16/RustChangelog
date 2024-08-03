@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Rust;
 using UnityEngine;
 
@@ -17,15 +18,24 @@ public class MLRSRocket : TimedExplosive, SamSite.ISamSiteTarget
 
 	private EntityRef mapMarkerInstanceRef;
 
+	public static List<MLRSRocket> serverList = new List<MLRSRocket>();
+
 	public SamSite.SamTargetType SAMTargetType => SamSite.targetTypeMissile;
 
 	public override void ServerInit()
 	{
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0023: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
 		base.ServerInit();
+		serverList.Add(this);
 		CreateMapMarker();
 		Effect.server.Run(launchBlastFXPrefab.resourcePath, PivotPoint(), ((Component)this).transform.up, null, broadcast: true);
+	}
+
+	internal override void DoServerDestroy()
+	{
+		serverList.Remove(this);
+		base.DoServerDestroy();
 	}
 
 	public override void ProjectileImpact(RaycastHit info, Vector3 rayOrigin)
@@ -62,7 +72,7 @@ public class MLRSRocket : TimedExplosive, SamSite.ISamSiteTarget
 
 	public bool IsValidSAMTarget(bool staticRespawn)
 	{
-		return true;
+		return !staticRespawn;
 	}
 
 	public override Vector3 GetLocalVelocityServer()

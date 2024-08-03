@@ -86,7 +86,7 @@ public class Nexus : ConsoleSystem
 		}
 		else
 		{
-			NexusServer.TransferEntity(basePlayer, text, "console");
+			NexusServer.TransferEntity(basePlayer, text, "console", includeFerry: false);
 		}
 	}
 

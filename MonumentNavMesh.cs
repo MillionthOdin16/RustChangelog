@@ -5,6 +5,7 @@ using System.Diagnostics;
 using ConVar;
 using Rust;
 using Rust.Ai;
+using Unity.AI.Navigation;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -44,6 +45,8 @@ public class MonumentNavMesh : FacepunchBehaviour, IServerComponent
 	public bool shouldNotifyAIZones = true;
 
 	public Transform CustomNavMeshRoot;
+
+	public bool IgnoreTerrain;
 
 	[ServerVar]
 	public static bool use_baked_terrain_mesh = true;
@@ -137,7 +140,7 @@ public class MonumentNavMesh : FacepunchBehaviour, IServerComponent
 		{
 			((Bounds)(ref Bounds)).size = new Vector3((float)(CellSize * CellCount), (float)Height, (float)(CellSize * CellCount));
 		}
-		IEnumerator enumerator = NavMeshTools.CollectSourcesAsync(Bounds, LayerMask.op_Implicit(LayerMask), NavMeshCollectGeometry, defaultArea, use_baked_terrain_mesh && !forceCollectTerrain, CellSize, sources, AppendModifierVolumes, UpdateNavMeshAsync, CustomNavMeshRoot);
+		IEnumerator enumerator = NavMeshTools.CollectSourcesAsync(Bounds, LayerMask.op_Implicit(LayerMask), NavMeshCollectGeometry, defaultArea, use_baked_terrain_mesh && !forceCollectTerrain && !IgnoreTerrain, CellSize, sources, AppendModifierVolumes, UpdateNavMeshAsync, CustomNavMeshRoot);
 		if (AiManager.nav_wait)
 		{
 			yield return enumerator;

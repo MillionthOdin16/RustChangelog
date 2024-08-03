@@ -46,29 +46,30 @@ public class PlaceMonumentsOffshore : ProceduralComponent
 		//IL_00f7: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00fd: Unknown result type (might be due to invalid IL or missing references)
 		//IL_010f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0126: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0143: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03be: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03c5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03cc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0294: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0299: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02a7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02ac: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02b1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02f2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02f4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02f6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02e3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02e5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02e7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0314: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0316: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0135: Unknown result type (might be due to invalid IL or missing references)
+		//IL_014c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03c7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03ce: Unknown result type (might be due to invalid IL or missing references)
+		//IL_03d5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_029d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02a2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02b0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02b5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02ba: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02fb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02fd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02ff: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02ec: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02ee: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02f0: Unknown result type (might be due to invalid IL or missing references)
 		//IL_031d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_031f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0326: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0328: Unknown result type (might be due to invalid IL or missing references)
+		//IL_032f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0331: Unknown result type (might be due to invalid IL or missing references)
 		string[] array = (from folder in ResourceFolder.Split(',', StringSplitOptions.None)
 			select "assets/bundled/prefabs/autospawn/" + folder + "/").ToArray();
 		if (World.Networked)
@@ -103,50 +104,50 @@ public class PlaceMonumentsOffshore : ProceduralComponent
 			float num3 = position.x + size.x + (float)MinDistanceFromTerrain;
 			float num4 = position.x + size.x + (float)MaxDistanceFromTerrain;
 			float num5 = position.z - (float)MaxDistanceFromTerrain;
-			_ = MinDistanceFromTerrain;
-			float num6 = position.z + size.z + (float)MinDistanceFromTerrain;
-			float num7 = position.z + size.z + (float)MaxDistanceFromTerrain;
-			int num8 = 0;
-			List<SpawnInfo> list2 = new List<SpawnInfo>();
+			float num6 = position.z - (float)MinDistanceFromTerrain;
+			float num7 = position.z + size.z + (float)MinDistanceFromTerrain;
+			float num8 = position.z + size.z + (float)MaxDistanceFromTerrain;
 			int num9 = 0;
+			List<SpawnInfo> list2 = new List<SpawnInfo>();
+			int num10 = 0;
 			List<SpawnInfo> list3 = new List<SpawnInfo>();
 			Vector3 pos = default(Vector3);
 			for (int j = 0; j < 10; j++)
 			{
-				num8 = 0;
+				num9 = 0;
 				list2.Clear();
 				Prefab<MonumentInfo>[] array5 = array4;
 				foreach (Prefab<MonumentInfo> prefab in array5)
 				{
-					int num10 = (int)((!Object.op_Implicit((Object)(object)prefab.Parameters)) ? PrefabPriority.Low : (prefab.Parameters.Priority + 1));
-					int num11 = num10 * num10 * num10 * num10;
+					int num11 = (int)((!Object.op_Implicit((Object)(object)prefab.Parameters)) ? PrefabPriority.Low : (prefab.Parameters.Priority + 1));
+					int num12 = num11 * num11 * num11 * num11;
 					for (int k = 0; k < 10000; k++)
 					{
-						float num12 = 0f;
 						float num13 = 0f;
+						float num14 = 0f;
 						switch (seed % 4)
 						{
 						case 0u:
-							num12 = SeedRandom.Range(ref seed, num, num2);
-							num13 = SeedRandom.Range(ref seed, num5, num7);
+							num13 = SeedRandom.Range(ref seed, num, num2);
+							num14 = SeedRandom.Range(ref seed, num5, num8);
 							break;
 						case 1u:
-							num12 = SeedRandom.Range(ref seed, num3, num4);
-							num13 = SeedRandom.Range(ref seed, num5, num7);
+							num13 = SeedRandom.Range(ref seed, num3, num4);
+							num14 = SeedRandom.Range(ref seed, num5, num8);
 							break;
 						case 2u:
-							num12 = SeedRandom.Range(ref seed, num, num4);
-							num13 = SeedRandom.Range(ref seed, num5, num5);
+							num13 = SeedRandom.Range(ref seed, num, num4);
+							num14 = SeedRandom.Range(ref seed, num5, num6);
 							break;
 						case 3u:
-							num12 = SeedRandom.Range(ref seed, num, num4);
-							num13 = SeedRandom.Range(ref seed, num6, num7);
+							num13 = SeedRandom.Range(ref seed, num, num4);
+							num14 = SeedRandom.Range(ref seed, num7, num8);
 							break;
 						}
-						float normX = TerrainMeta.NormalizeX(num12);
-						float normZ = TerrainMeta.NormalizeZ(num13);
+						float normX = TerrainMeta.NormalizeX(num13);
+						float normZ = TerrainMeta.NormalizeZ(num14);
 						float height = heightMap.GetHeight(normX, normZ);
-						((Vector3)(ref pos))._002Ector(num12, height, num13);
+						((Vector3)(ref pos))._002Ector(num13, height, num14);
 						Quaternion rot = prefab.Object.transform.localRotation;
 						Vector3 scale = prefab.Object.transform.localScale;
 						if (!CheckRadius(list2, pos, DistanceBetweenMonuments))
@@ -160,7 +161,7 @@ public class PlaceMonumentsOffshore : ProceduralComponent
 								item.rotation = rot;
 								item.scale = scale;
 								list2.Add(item);
-								num8 += num11;
+								num9 += num12;
 								break;
 							}
 						}
@@ -170,9 +171,9 @@ public class PlaceMonumentsOffshore : ProceduralComponent
 						break;
 					}
 				}
-				if (num8 > num9)
+				if (num9 > num10)
 				{
-					num9 = num8;
+					num10 = num9;
 					GenericsUtil.Swap<List<SpawnInfo>>(ref list2, ref list3);
 				}
 			}

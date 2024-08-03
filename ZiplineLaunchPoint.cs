@@ -33,6 +33,8 @@ public class ZiplineLaunchPoint : BaseEntity
 
 	public GameObjectRef ArrivalPointRef;
 
+	private const float MaxZiplineLength = 185f;
+
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
 		TimeWarning val = TimeWarning.New("ZiplineLaunchPoint.OnRpcMessage", 0);
@@ -111,10 +113,10 @@ public class ZiplineLaunchPoint : BaseEntity
 	public override void PostMapEntitySpawn()
 	{
 		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00af: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
 		base.PostMapEntitySpawn();
 		FindZiplineTarget(ref ziplineTargets);
 		CalculateZiplinePoints(ziplineTargets, ref linePoints);
@@ -123,11 +125,16 @@ public class ZiplineLaunchPoint : BaseEntity
 			Kill();
 			return;
 		}
-		if (Vector3.Distance(linePoints[0], linePoints[linePoints.Count - 1]) > 100f && ArrivalPointRef != null && ArrivalPointRef.isValid)
+		Vector3 val = linePoints[0];
+		List<Vector3> list = linePoints;
+		if (Vector3.Distance(val, list[list.Count - 1]) > 100f && ArrivalPointRef != null && ArrivalPointRef.isValid)
 		{
-			ZiplineArrivalPoint obj = base.gameManager.CreateEntity(ArrivalPointRef.resourcePath, linePoints[linePoints.Count - 1]) as ZiplineArrivalPoint;
-			obj.SetPositions(linePoints);
-			obj.Spawn();
+			GameManager obj = base.gameManager;
+			string resourcePath = ArrivalPointRef.resourcePath;
+			List<Vector3> list2 = linePoints;
+			ZiplineArrivalPoint obj2 = obj.CreateEntity(resourcePath, list2[list2.Count - 1]) as ZiplineArrivalPoint;
+			obj2.SetPositions(linePoints);
+			obj2.Spawn();
 		}
 		UpdateBuildingBlocks();
 		SendNetworkUpdate();
@@ -151,37 +158,65 @@ public class ZiplineLaunchPoint : BaseEntity
 		//IL_0097: Unknown result type (might be due to invalid IL or missing references)
 		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00da: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0163: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0177: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0112: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0126: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0147: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0148: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0166: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0199: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ad: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b2: Unknown result type (might be due to invalid IL or missing references)
 		//IL_01b4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01f7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0203: Unknown result type (might be due to invalid IL or missing references)
-		//IL_021a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0226: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01bc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01c7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01cb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01e2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01e3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01e5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01eb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0205: Unknown result type (might be due to invalid IL or missing references)
+		//IL_021c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0224: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0238: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0244: Unknown result type (might be due to invalid IL or missing references)
-		//IL_026b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_027e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0290: Unknown result type (might be due to invalid IL or missing references)
+		//IL_023d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0263: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0275: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02b8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02c4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02db: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02e7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02f9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0305: Unknown result type (might be due to invalid IL or missing references)
+		//IL_032c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_033f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0351: Unknown result type (might be due to invalid IL or missing references)
 		foundPositions.Clear();
 		Vector3 position = LineDeparturePoint.position;
 		List<ZiplineTarget> list = Pool.GetList<ZiplineTarget>();
-		GamePhysics.OverlapSphere<ZiplineTarget>(position + ((Component)this).transform.forward * 200f, 200f, list, 1084293377, (QueryTriggerInteraction)1);
+		GamePhysics.OverlapSphere<ZiplineTarget>(position + ((Component)this).transform.forward * 185f, 185f, list, 1084293377, (QueryTriggerInteraction)1);
 		ZiplineTarget ziplineTarget = null;
-		float num = float.MaxValue;
+		float num = float.MinValue;
 		float num2 = 3f;
 		foreach (ZiplineTarget item in list)
 		{
@@ -192,14 +227,17 @@ public class ZiplineLaunchPoint : BaseEntity
 			Vector3 position2 = ((Component)item).transform.position;
 			Vector3 val = Vector3Ex.WithY(position2, position.y) - position;
 			float num3 = Vector3.Dot(((Vector3)(ref val)).normalized, ((Component)this).transform.forward);
-			float num4 = Vector3.Distance(position, position2);
-			if (!(num3 > 0.2f) || !item.IsValidPosition(position) || !(position.y + num2 > position2.y) || !(num4 > 10f) || !(num4 < num))
+			val = position - Vector3Ex.WithY(position2, position.y);
+			float num4 = Vector3.Dot(((Vector3)(ref val)).normalized, ((Component)item).transform.forward);
+			float num5 = Vector3.Distance(position, position2) + (position2.y - position.y);
+			float num6 = num5 * num3 * num4;
+			if (!(num3 > 0.2f) || !item.IsValidPosition(position) || !(position.y + num2 > position2.y) || !(num5 > 10f) || !(num6 > num))
 			{
 				continue;
 			}
 			if (CheckLineOfSight(position, position2))
 			{
-				num = num4;
+				num = num6;
 				ziplineTarget = item;
 				foundPositions.Clear();
 				foundPositions.Add(((Component)ziplineTarget).transform.position);
@@ -211,11 +249,17 @@ public class ZiplineLaunchPoint : BaseEntity
 				{
 					continue;
 				}
+				Vector3 position3 = ((Component)item2).transform.position;
+				val = Vector3Ex.WithY(position3, position.y) - position;
+				num3 = Vector3.Dot(((Vector3)(ref val)).normalized, ((Component)this).transform.forward);
+				val = position - Vector3Ex.WithY(position3, position.y);
+				num4 = Vector3.Dot(((Vector3)(ref val)).normalized, ((Component)item2).transform.forward);
+				num6 = num5 * num3 * num4;
 				bool flag = CheckLineOfSight(position, ((Component)item2).transform.position);
 				bool flag2 = CheckLineOfSight(((Component)item2).transform.position, position2);
 				if (flag && flag2)
 				{
-					num = num4;
+					num = num6;
 					ziplineTarget = item;
 					foundPositions.Clear();
 					foundPositions.Add(((Component)item2).transform.position);
@@ -231,11 +275,11 @@ public class ZiplineLaunchPoint : BaseEntity
 					{
 						if (!((Object)(object)item3 == (Object)(object)item2) && item3.IsValidChainPoint(item2.Target.position, item.Target.position))
 						{
-							bool num5 = CheckLineOfSight(((Component)item2).transform.position, ((Component)item3).transform.position);
+							bool num7 = CheckLineOfSight(((Component)item2).transform.position, ((Component)item3).transform.position);
 							bool flag3 = CheckLineOfSight(((Component)item3).transform.position, ((Component)item).transform.position);
-							if (num5 && flag3)
+							if (num7 && flag3)
 							{
-								num = num4;
+								num = num6;
 								ziplineTarget = item;
 								foundPositions.Clear();
 								foundPositions.Add(((Component)item2).transform.position);
@@ -388,6 +432,47 @@ public class ZiplineLaunchPoint : BaseEntity
 		arg.ReplyWith($"{num2} ziplines, total distance: {num:F2}, avg length: {num / (float)num2:F2}, arrival points: {num3}");
 	}
 
+	[ServerVar(ServerAdmin = true)]
+	public static void highlight(Arg arg)
+	{
+		//IL_0005: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
+		Enumerator<BaseNetworkable> enumerator = BaseNetworkable.serverEntities.GetEnumerator();
+		try
+		{
+			while (enumerator.MoveNext())
+			{
+				if (enumerator.Current is ZiplineLaunchPoint ziplineLaunchPoint)
+				{
+					BasePlayer basePlayer = arg.Player();
+					object[] obj = new object[7]
+					{
+						"60",
+						Color.red,
+						((Component)ziplineLaunchPoint).transform.position,
+						null,
+						null,
+						null,
+						null
+					};
+					List<Vector3> list = ziplineLaunchPoint.ziplineTargets;
+					obj[3] = list[list.Count - 1];
+					obj[4] = 25;
+					obj[5] = 0;
+					obj[6] = 0;
+					basePlayer.SendConsoleCommand("ddraw.arrow", obj);
+				}
+			}
+		}
+		finally
+		{
+			((IDisposable)enumerator).Dispose();
+		}
+	}
+
 	public override void Load(LoadInfo info)
 	{
 		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
@@ -425,7 +510,7 @@ public class ZiplineLaunchPoint : BaseEntity
 			{
 				array2[j] = LineSlackAmount;
 			}
-			points = Pool.GetList<Vector3>();
+			points = new List<Vector3>();
 			Bezier.ApplyLineSlack(array, array2, ref points, 25);
 		}
 	}

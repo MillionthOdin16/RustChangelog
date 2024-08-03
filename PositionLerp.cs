@@ -87,9 +87,9 @@ public class PositionLerp : IDisposable
 
 	public void Snapshot(Vector3 position, Quaternion rotation, float serverTime)
 	{
-		//IL_01a5: Unknown result type (might be due to invalid IL or missing references)
 		//IL_01a6: Unknown result type (might be due to invalid IL or missing references)
-		float interpolationDelay = target.GetInterpolationDelay();
+		//IL_01a7: Unknown result type (might be due to invalid IL or missing references)
+		float interpolationDelay = target.GetInterpolationDelay(ILerpInfo.LerpType.Position);
 		float interpolationSmoothing = target.GetInterpolationSmoothing();
 		float num = interpolationDelay + interpolationSmoothing + 1f;
 		float lerpTime = LerpTime;
@@ -151,9 +151,9 @@ public class PositionLerp : IDisposable
 
 	public void SnapToEnd()
 	{
-		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004f: Unknown result type (might be due to invalid IL or missing references)
-		float interpolationDelay = target.GetInterpolationDelay();
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		float interpolationDelay = target.GetInterpolationDelay(ILerpInfo.LerpType.Position);
 		Interpolator<TransformSnapshot>.Segment segment = interpolator.Query(LerpTime, interpolationDelay, 0f, 0f, ref snapshotPrototype);
 		target.SetNetworkPosition(segment.tick.pos);
 		target.SetNetworkRotation(segment.tick.rot);
@@ -190,16 +190,16 @@ public class PositionLerp : IDisposable
 
 	protected void DoCycle()
 	{
-		//IL_0166: Unknown result type (might be due to invalid IL or missing references)
-		//IL_017d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0112: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0125: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_013c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0148: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0154: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0167: Unknown result type (might be due to invalid IL or missing references)
+		//IL_017e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0113: Unknown result type (might be due to invalid IL or missing references)
+		//IL_011f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0126: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0149: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0150: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0155: Unknown result type (might be due to invalid IL or missing references)
 		if (target == null)
 		{
 			return;
@@ -207,7 +207,7 @@ public class PositionLerp : IDisposable
 		float interpolationInertia = target.GetInterpolationInertia();
 		float num = ((interpolationInertia > 0f) ? Mathf.InverseLerp(0f, interpolationInertia, LerpTime - enabledTime) : 1f);
 		float extrapolationTime = target.GetExtrapolationTime();
-		float interpolation = target.GetInterpolationDelay() * num;
+		float interpolation = target.GetInterpolationDelay(ILerpInfo.LerpType.Position) * num;
 		float num2 = target.GetInterpolationSmoothing() * num;
 		Interpolator<TransformSnapshot>.Segment segment = interpolator.Query(LerpTime, interpolation, extrapolationTime, num2, ref snapshotPrototype);
 		if (segment.next.Time >= interpolator.last.Time)
@@ -274,18 +274,18 @@ public class PositionLerp : IDisposable
 	public Quaternion GetEstimatedAngularVelocity()
 	{
 		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0087: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
 		if (target == null)
 		{
 			return Quaternion.identity;
 		}
 		float extrapolationTime = target.GetExtrapolationTime();
-		float interpolationDelay = target.GetInterpolationDelay();
+		float interpolationDelay = target.GetInterpolationDelay(ILerpInfo.LerpType.Position);
 		float interpolationSmoothing = target.GetInterpolationSmoothing();
 		Interpolator<TransformSnapshot>.Segment segment = interpolator.Query(LerpTime, interpolationDelay, extrapolationTime, interpolationSmoothing, ref snapshotPrototype);
 		TransformSnapshot next = segment.next;
@@ -300,17 +300,17 @@ public class PositionLerp : IDisposable
 	public Vector3 GetEstimatedVelocity()
 	{
 		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0090: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
 		if (target == null)
 		{
 			return Vector3.zero;
 		}
 		float extrapolationTime = target.GetExtrapolationTime();
-		float interpolationDelay = target.GetInterpolationDelay();
+		float interpolationDelay = target.GetInterpolationDelay(ILerpInfo.LerpType.Position);
 		float interpolationSmoothing = target.GetInterpolationSmoothing();
 		Interpolator<TransformSnapshot>.Segment segment = interpolator.Query(LerpTime, interpolationDelay, extrapolationTime, interpolationSmoothing, ref snapshotPrototype);
 		TransformSnapshot next = segment.next;

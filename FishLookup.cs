@@ -1,11 +1,13 @@
-using System;
 using System.Collections.Generic;
 using Facepunch;
 using UnityEngine;
 
-public class FishLookup : PrefabAttribute
+[CreateAssetMenu(menuName = "Rust/Fishing Lookup")]
+public class FishLookup : BaseScriptableObject
 {
 	public ItemModFishable FallbackFish;
+
+	private static FishLookup _instance;
 
 	private static ItemModFishable[] AvailableFish;
 
@@ -16,6 +18,18 @@ public class FishLookup : PrefabAttribute
 	public const int ALL_FISH_COUNT = 9;
 
 	public const string ALL_FISH_ACHIEVEMENT_NAME = "PRO_ANGLER";
+
+	public static FishLookup Instance
+	{
+		get
+		{
+			if (_instance == null)
+			{
+				_instance = FileSystem.Load<FishLookup>("assets/prefabs/tools/fishing rod/fishlookup.asset", true);
+			}
+			return _instance;
+		}
+	}
 
 	public static void LoadFish()
 	{
@@ -49,18 +63,33 @@ public class FishLookup : PrefabAttribute
 		Pool.FreeList<ItemDefinition>(ref list2);
 	}
 
-	public ItemDefinition GetFish(Vector3 worldPos, WaterBody bodyType, ItemDefinition lure, out ItemModFishable fishable, ItemModFishable ignoreFish)
+	public ItemDefinition GetFish(Vector3 worldPos, WaterBody bodyType, Item lure, out ItemModFishable fishable, ItemModFishable ignoreFish, out int usedLureAmount, float overrideDepth = 0f)
 	{
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
 		LoadFish();
+		usedLureAmount = 1;
 		ItemModCompostable itemModCompostable = default(ItemModCompostable);
-		float num = (((Component)lure).TryGetComponent<ItemModCompostable>(ref itemModCompostable) ? itemModCompostable.BaitValue : 0f);
+		float num = (((Component)lure.info).TryGetComponent<ItemModCompostable>(ref itemModCompostable) ? itemModCompostable.BaitValue : 0f);
+		if ((Object)(object)itemModCompostable != (Object)null && itemModCompostable.MaxBaitStack > 0)
+		{
+			usedLureAmount = Mathf.Min(lure.amount, itemModCompostable.MaxBaitStack);
+			num *= (float)usedLureAmount;
+		}
 		WaterBody.FishingTag fishingTag = (((Object)(object)bodyType != (Object)null) ? bodyType.FishingType : WaterBody.FishingTag.Ocean);
+		if (WaterResource.IsFreshWater(worldPos))
+		{
+			fishingTag |= WaterBody.FishingTag.River;
+		}
 		float num2 = WaterLevel.GetOverallWaterDepth(worldPos, waves: true, volumes: false, null, noEarlyExit: true);
 		if (worldPos.y < -10f)
 		{
 			num2 = 10f;
+		}
+		if (overrideDepth != 0f)
+		{
+			num2 = overrideDepth;
 		}
 		int num3 = Random.Range(0, AvailableFish.Length);
 		for (int i = 0; i < AvailableFish.Length; i++)
@@ -97,10 +126,5 @@ public class FishLookup : PrefabAttribute
 		{
 			player.GiveAchievement("PRO_ANGLER");
 		}
-	}
-
-	protected override Type GetIndexedType()
-	{
-		return typeof(FishLookup);
 	}
 }

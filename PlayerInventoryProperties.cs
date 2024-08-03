@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [CreateAssetMenu(menuName = "Rust/Player/Player Inventory Properties")]
-public class PlayerInventoryProperties : ScriptableObject
+public class PlayerInventoryProperties : BaseScriptableObject
 {
 	[Serializable]
 	public class ItemAmountSkinned : ItemAmount
@@ -34,7 +34,7 @@ public class PlayerInventoryProperties : ScriptableObject
 			return;
 		}
 		player.inventory.Strip();
-		if ((Object)(object)giveBase != (Object)null)
+		if (giveBase != null)
 		{
 			giveBase.GiveToPlayer(player);
 		}

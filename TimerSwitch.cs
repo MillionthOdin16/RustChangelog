@@ -12,6 +12,8 @@ public class TimerSwitch : IOEntity
 
 	private float timePassed = -1f;
 
+	private float input1Amount;
+
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)
 	{
 		TimeWarning val = TimeWarning.New("TimerSwitch.OnRpcMessage", 0);
@@ -76,6 +78,11 @@ public class TimerSwitch : IOEntity
 		return base.OnRpcMessage(player, rpc, msg);
 	}
 
+	public override int ConsumptionAmount()
+	{
+		return 0;
+	}
+
 	public override void ResetIOState()
 	{
 		base.ResetIOState();
@@ -101,14 +108,19 @@ public class TimerSwitch : IOEntity
 		{
 			return 0;
 		}
-		return base.GetPassthroughAmount();
+		return base.GetPassthroughAmount(outputSlot);
+	}
+
+	public override bool WantsPower(int inputIndex)
+	{
+		return inputIndex == 0;
 	}
 
 	public override void UpdateHasPower(int inputAmount, int inputSlot)
 	{
 		if (inputSlot == 0)
 		{
-			SetFlag(Flags.Reserved8, inputAmount > 0, recursive: false, networkupdate: false);
+			base.UpdateHasPower(inputAmount, inputSlot);
 		}
 	}
 
@@ -129,9 +141,13 @@ public class TimerSwitch : IOEntity
 			}
 			break;
 		case 1:
-			if (inputAmount > 0)
+			if (input1Amount != (float)inputAmount)
 			{
-				SwitchPressed();
+				if (inputAmount > 0)
+				{
+					SwitchPressed();
+				}
+				input1Amount = inputAmount;
 			}
 			break;
 		}

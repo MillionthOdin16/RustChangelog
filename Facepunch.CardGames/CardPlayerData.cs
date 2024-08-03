@@ -21,16 +21,20 @@ public class CardPlayerData : IDisposable
 
 	private readonly bool isServer;
 
+	[NonSerialized]
 	public int availableInputs;
 
 	public int betThisRound;
 
 	public int betThisTurn;
 
+	[NonSerialized]
 	public int finalScore;
 
+	[NonSerialized]
 	public float lastActionTime;
 
+	[NonSerialized]
 	public int remainingToPayOut;
 
 	private Func<int, StorageContainer> getStorage;

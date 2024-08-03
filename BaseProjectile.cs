@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using ConVar;
 using Facepunch;
 using Facepunch.Rust;
 using Network;
 using ProtoBuf;
 using Rust;
-using Rust.Ai;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -36,6 +36,10 @@ public class BaseProjectile : AttackEntity
 
 		[ItemSelector(ItemCategory.All)]
 		public ItemDefinition ammoType;
+
+		public bool allowPlayerReloading = true;
+
+		public bool allowAmmoSwitching = true;
 
 		public void ServerInit()
 		{
@@ -86,6 +90,42 @@ public class BaseProjectile : AttackEntity
 		public const Flags BurstToggle = Flags.Reserved6;
 	}
 
+	public struct EncryptedValue<TInner> where TInner : unmanaged
+	{
+		private TInner _value;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public TInner Get()
+		{
+			return _value;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Set(TInner value)
+		{
+			_value = value;
+		}
+
+		public override string ToString()
+		{
+			return Get().ToString();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static implicit operator EncryptedValue<TInner>(TInner value)
+		{
+			EncryptedValue<TInner> result = default(EncryptedValue<TInner>);
+			result.Set(value);
+			return result;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static implicit operator TInner(EncryptedValue<TInner> encrypted)
+		{
+			return encrypted.Get();
+		}
+	}
+
 	[Header("NPC Info")]
 	public float NoiseRadius = 100f;
 
@@ -109,6 +149,8 @@ public class BaseProjectile : AttackEntity
 	public GameObjectRef silencedAttack;
 
 	public GameObjectRef muzzleBrakeAttack;
+
+	public SoundDefinition fireModeSound;
 
 	public Transform MuzzlePoint;
 
@@ -187,10 +229,6 @@ public class BaseProjectile : AttackEntity
 
 	public float internalBurstAimConeScale = 0.8f;
 
-	public Phrase Toast_BurstDisabled = new Phrase("burst_disabled", "Burst Disabled");
-
-	public Phrase Toast_BurstEnabled = new Phrase("burst enabled", "Burst Enabled");
-
 	public float resetDuration = 0.3f;
 
 	public int numShotsFired;
@@ -198,10 +236,10 @@ public class BaseProjectile : AttackEntity
 	public const float maxDistance = 300f;
 
 	[NonSerialized]
-	private float nextReloadTime = float.NegativeInfinity;
+	private EncryptedValue<float> nextReloadTime = float.NegativeInfinity;
 
 	[NonSerialized]
-	private float startReloadTime = float.NegativeInfinity;
+	private EncryptedValue<float> startReloadTime = float.NegativeInfinity;
 
 	private float lastReloadTime = -10f;
 
@@ -580,8 +618,12 @@ public class BaseProjectile : AttackEntity
 
 	protected bool TryReload(IAmmoContainer ammoSource, int desiredAmount, bool canRefundAmmo = true)
 	{
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
 		List<Item> list = ammoSource.FindItemsByItemID(primaryMagazine.ammoType.itemid).ToList();
+		if (list.Count == 0 && !primaryMagazine.allowAmmoSwitching)
+		{
+			return false;
+		}
 		if (list.Count == 0)
 		{
 			List<Item> list2 = new List<Item>();
@@ -651,6 +693,21 @@ public class BaseProjectile : AttackEntity
 		}
 	}
 
+	public static void StripAmmoToType(ref List<Item> ammos, ItemDefinition onlyAllowed)
+	{
+		if (!((Object)(object)onlyAllowed != (Object)null))
+		{
+			return;
+		}
+		for (int num = ammos.Count - 1; num >= 0; num--)
+		{
+			if ((Object)(object)ammos[num].info != (Object)(object)onlyAllowed)
+			{
+				ammos.RemoveAt(num);
+			}
+		}
+	}
+
 	public void SetAmmoCount(int newCount)
 	{
 		primaryMagazine.contents = newCount;
@@ -689,10 +746,19 @@ public class BaseProjectile : AttackEntity
 		return projectileVelocityScale;
 	}
 
+	public virtual float GetOverrideProjectileThickness(Projectile projectile)
+	{
+		if ((Object)(object)projectile == (Object)null)
+		{
+			return 0f;
+		}
+		return projectile.thickness;
+	}
+
 	protected void StartReloadCooldown(float cooldown)
 	{
 		nextReloadTime = CalculateCooldownTime(nextReloadTime, cooldown, catchup: false);
-		startReloadTime = nextReloadTime - cooldown;
+		startReloadTime = (float)nextReloadTime - cooldown;
 	}
 
 	protected void ResetReloadCooldown()
@@ -702,17 +768,17 @@ public class BaseProjectile : AttackEntity
 
 	protected bool HasReloadCooldown()
 	{
-		return Time.time < nextReloadTime;
+		return Time.time < (float)nextReloadTime;
 	}
 
 	protected float GetReloadCooldown()
 	{
-		return Mathf.Max(nextReloadTime - Time.time, 0f);
+		return Mathf.Max((float)nextReloadTime - Time.time, 0f);
 	}
 
 	protected float GetReloadIdle()
 	{
-		return Mathf.Max(Time.time - nextReloadTime, 0f);
+		return Mathf.Max(Time.time - (float)nextReloadTime, 0f);
 	}
 
 	private void OnDrawGizmos()
@@ -836,7 +902,7 @@ public class BaseProjectile : AttackEntity
 		ServerUse(1f);
 	}
 
-	public override void ServerUse(float damageModifier, Transform originOverride = null)
+	public override void ServerUse(float damageModifier, Transform originOverride = null, bool useBulletThickness = true)
 	{
 		//IL_00cc: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
@@ -848,43 +914,48 @@ public class BaseProjectile : AttackEntity
 		//IL_00f3: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00f5: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00fa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_013a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_013f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0164: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0167: Unknown result type (might be due to invalid IL or missing references)
-		//IL_016c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0175: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0176: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0178: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0416: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0429: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0438: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0439: Unknown result type (might be due to invalid IL or missing references)
-		//IL_043b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0440: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0449: Unknown result type (might be due to invalid IL or missing references)
-		//IL_041d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0424: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02d4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02db: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0150: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0155: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0191: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0194: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0199: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0177: Unknown result type (might be due to invalid IL or missing references)
+		//IL_017a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_017f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01df: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01e4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01e6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_048a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_049d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04ac: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04ad: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04af: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04b4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_04bd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0491: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0498: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02dd: Unknown result type (might be due to invalid IL or missing references)
 		//IL_02e0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02ed: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02f2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02fb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0300: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0309: Unknown result type (might be due to invalid IL or missing references)
-		//IL_030e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0317: Unknown result type (might be due to invalid IL or missing references)
-		//IL_031c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_039c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03a1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03a6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03b6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03bb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_03c0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0348: Unknown result type (might be due to invalid IL or missing references)
+		//IL_034f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0354: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0361: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0366: Unknown result type (might be due to invalid IL or missing references)
+		//IL_036f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0374: Unknown result type (might be due to invalid IL or missing references)
+		//IL_037d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0382: Unknown result type (might be due to invalid IL or missing references)
+		//IL_038b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0390: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0410: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0415: Unknown result type (might be due to invalid IL or missing references)
+		//IL_041a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_042a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_042f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0434: Unknown result type (might be due to invalid IL or missing references)
 		if (base.isClient || HasAttackCooldown())
 		{
 			return;
@@ -920,8 +991,9 @@ public class BaseProjectile : AttackEntity
 			inputVec = originOverride.forward;
 		}
 		ItemModProjectile component = ((Component)primaryMagazine.ammoType).GetComponent<ItemModProjectile>();
-		SignalBroadcast(Signal.Attack, string.Empty);
+		SignalBroadcast(Signal.Attack, string.Empty, null, GetAttackEffect());
 		Projectile component2 = component.projectileObject.Get().GetComponent<Projectile>();
+		bool flag3 = GetParentEntity() is BasePlayer;
 		BaseEntity baseEntity = null;
 		if (flag)
 		{
@@ -929,14 +1001,26 @@ public class BaseProjectile : AttackEntity
 		}
 		for (int i = 0; i < component.numProjectiles; i++)
 		{
-			Vector3 modifiedAimConeDirection = AimConeUtil.GetModifiedAimConeDirection(component.projectileSpread + GetAimCone() + GetAIAimcone() * 1f, inputVec);
+			Vector3 val2 = ((!flag2) ? AimConeUtil.GetModifiedAimConeDirection(component.projectileSpread + GetAimCone(), inputVec) : AimConeUtil.GetModifiedAimConeDirection(component.projectileSpread + GetAimCone() + GetAIAimcone(), inputVec));
+			float radius = (useBulletThickness ? GetOverrideProjectileThickness(component2) : 0f);
 			List<RaycastHit> list = Pool.GetList<RaycastHit>();
-			GamePhysics.TraceAll(new Ray(val, modifiedAimConeDirection), 0f, list, 300f, 1220225793, (QueryTriggerInteraction)0);
+			GamePhysics.TraceAll(new Ray(val, val2), radius, list, 300f, 1220225793, (QueryTriggerInteraction)1, ownerPlayer);
 			for (int j = 0; j < list.Count; j++)
 			{
 				RaycastHit hit = list[j];
 				BaseEntity entity = hit.GetEntity();
-				if (((Object)(object)entity != (Object)null && ((Object)(object)entity == (Object)(object)this || entity.EqualNetID((BaseNetworkable)this))) || ((Object)(object)entity != (Object)null && entity.isClient))
+				if (flag3)
+				{
+					if ((Object)(object)entity != (Object)null && ((Object)(object)entity == (Object)(object)this || entity.EqualNetID((BaseNetworkable)this)))
+					{
+						continue;
+					}
+				}
+				else if ((Object)(object)entity != (Object)null && this.HasEntityInParents(entity))
+				{
+					continue;
+				}
+				if ((Object)(object)entity != (Object)null && entity.isClient)
 				{
 					continue;
 				}
@@ -946,7 +1030,7 @@ public class BaseProjectile : AttackEntity
 					continue;
 				}
 				BaseCombatEntity baseCombatEntity = entity as BaseCombatEntity;
-				if ((!((Object)(object)entity != (Object)null && entity.IsNpc && flag2) || baseCombatEntity.GetFaction() == BaseCombatEntity.Faction.Horror || entity is BasePet) && (Object)(object)baseCombatEntity != (Object)null && ((Object)(object)baseEntity == (Object)null || (Object)(object)entity == (Object)(object)baseEntity || entity.EqualNetID((BaseNetworkable)baseEntity)))
+				if ((!((Object)(object)entity != (Object)null && entity.IsNpc && flag2) || baseCombatEntity.GetFaction() == BaseCombatEntity.Faction.Horror || entity is BasePet) && (Object)(object)baseCombatEntity != (Object)null && ((Object)(object)baseEntity == (Object)null || (Object)(object)entity == (Object)(object)baseEntity || entity.EqualNetID((BaseNetworkable)baseEntity)) && baseCombatEntity.IsVisible(val, ((RaycastHit)(ref hit)).point, 300f))
 				{
 					HitInfo hitInfo = new HitInfo();
 					AssignInitiator(hitInfo);
@@ -955,7 +1039,7 @@ public class BaseProjectile : AttackEntity
 					hitInfo.IsPredicting = false;
 					hitInfo.DoHitEffects = component2.doDefaultHitEffects;
 					hitInfo.DidHit = true;
-					hitInfo.ProjectileVelocity = modifiedAimConeDirection * 300f;
+					hitInfo.ProjectileVelocity = val2 * 300f;
 					hitInfo.PointStart = MuzzlePoint.position;
 					hitInfo.PointEnd = ((RaycastHit)(ref hit)).point;
 					hitInfo.HitPositionWorld = ((RaycastHit)(ref hit)).point;
@@ -973,15 +1057,15 @@ public class BaseProjectile : AttackEntity
 						hitInfo.HitMaterial = StringPool.Get("Flesh");
 						Effect.server.ImpactEffect(hitInfo);
 					}
-				}
-				if (!((Object)(object)entity != (Object)null) || entity.ShouldBlockProjectiles())
-				{
-					break;
+					if (!((Object)(object)entity != (Object)null) || entity.ShouldBlockProjectiles())
+					{
+						break;
+					}
 				}
 			}
 			Pool.FreeList<RaycastHit>(ref list);
-			Vector3 val2 = ((flag && ownerPlayer.isMounted) ? (modifiedAimConeDirection * 6f) : Vector3.zero);
-			CreateProjectileEffectClientside(component.projectileObject.resourcePath, val + val2, modifiedAimConeDirection * component.projectileVelocity, Random.Range(1, 100), null, IsSilenced(), forceClientsideEffects: true);
+			Vector3 val3 = ((flag && ownerPlayer.isMounted) ? (val2 * 6f) : Vector3.zero);
+			CreateProjectileEffectClientside(component.projectileObject.resourcePath, val + val3, val2 * component.projectileVelocity, Random.Range(1, 100), null, IsSilenced(), forceClientsideEffects: true);
 		}
 	}
 
@@ -1103,26 +1187,34 @@ public class BaseProjectile : AttackEntity
 
 	public void UnloadAmmo(Item item, BasePlayer player)
 	{
-		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
 		BaseProjectile component = ((Component)item.GetHeldEntity()).GetComponent<BaseProjectile>();
 		if (!component.canUnloadAmmo || !Object.op_Implicit((Object)(object)component))
 		{
 			return;
 		}
-		int contents = component.primaryMagazine.contents;
-		if (contents > 0)
+		int num = component.primaryMagazine.contents;
+		if (num <= 0)
 		{
-			component.SetAmmoCount(0);
-			item.MarkDirty();
-			SendNetworkUpdateImmediate();
-			Item item2 = ItemManager.Create(component.primaryMagazine.ammoType, contents, 0uL);
-			if (!item2.MoveToContainer(player.inventory.containerMain))
+			return;
+		}
+		component.SetAmmoCount(0);
+		item.MarkDirty();
+		SendNetworkUpdateImmediate();
+		int stackable = component.primaryMagazine.ammoType.stackable;
+		if (num > stackable)
+		{
+			int num2 = Mathf.FloorToInt((float)(num / component.primaryMagazine.ammoType.stackable));
+			num %= stackable;
+			for (int i = 0; i < num2; i++)
 			{
-				item2.Drop(player.GetDropPosition(), player.GetDropVelocity());
+				Item item2 = ItemManager.Create(component.primaryMagazine.ammoType, stackable, 0uL);
+				player.GiveItem(item2);
 			}
+		}
+		if (num > 0)
+		{
+			Item item3 = ItemManager.Create(component.primaryMagazine.ammoType, num, 0uL);
+			player.GiveItem(item3);
 		}
 	}
 
@@ -1160,11 +1252,13 @@ public class BaseProjectile : AttackEntity
 		{
 			return;
 		}
-		foreach (ProjectileWeaponMod item in from ProjectileWeaponMod x in children
-			where (Object)(object)x != (Object)null && x.isLight
-			select x)
+		foreach (BaseEntity child in children)
 		{
-			item.SetFlag(Flags.On, b);
+			ProjectileWeaponMod projectileWeaponMod = child as ProjectileWeaponMod;
+			if ((Object)(object)projectileWeaponMod != (Object)null && projectileWeaponMod.isLight)
+			{
+				projectileWeaponMod.SetFlag(Flags.On, b);
+			}
 		}
 	}
 
@@ -1229,7 +1323,7 @@ public class BaseProjectile : AttackEntity
 
 	public float ScaleRepeatDelay(float delay)
 	{
-		float num = ProjectileWeaponMod.Average(this, (ProjectileWeaponMod x) => x.repeatDelay, (ProjectileWeaponMod.Modifier y) => y.scalar, 1f);
+		float num = ProjectileWeaponMod.Mult(this, (ProjectileWeaponMod x) => x.repeatDelay, (ProjectileWeaponMod.Modifier y) => y.scalar, 1f);
 		float num2 = ProjectileWeaponMod.Sum(this, (ProjectileWeaponMod x) => x.repeatDelay, (ProjectileWeaponMod.Modifier y) => y.offset, 0f);
 		float num3 = (UsingInternalBurstMode() ? internalBurstFireRateScale : 1f);
 		return delay * num * num3 + num2;
@@ -1251,17 +1345,7 @@ public class BaseProjectile : AttackEntity
 		{
 			return false;
 		}
-		if (!isBurstWeapon)
-		{
-			if (children != null)
-			{
-				return (Object)(object)(from ProjectileWeaponMod x in children
-					where (Object)(object)x != (Object)null && x.burstCount > 0
-					select x).FirstOrDefault() != (Object)null;
-			}
-			return false;
-		}
-		return true;
+		return IsBurstEligable();
 	}
 
 	public bool UsingInternalBurstMode()
@@ -1275,22 +1359,27 @@ public class BaseProjectile : AttackEntity
 
 	public bool IsBurstEligable()
 	{
-		if (!isBurstWeapon)
+		if (isBurstWeapon)
 		{
-			if (children != null)
-			{
-				return (Object)(object)(from ProjectileWeaponMod x in children
-					where (Object)(object)x != (Object)null && x.burstCount > 0
-					select x).FirstOrDefault() != (Object)null;
-			}
-			return false;
+			return true;
 		}
-		return true;
+		if (children != null)
+		{
+			foreach (BaseEntity child in children)
+			{
+				ProjectileWeaponMod projectileWeaponMod = child as ProjectileWeaponMod;
+				if ((Object)(object)projectileWeaponMod != (Object)null && projectileWeaponMod.burstCount > 0)
+				{
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	public float TimeBetweenBursts()
 	{
-		return repeatDelay * 3f;
+		return repeatDelay * 2f;
 	}
 
 	public virtual bool CanAttack()
@@ -1353,11 +1442,6 @@ public class BaseProjectile : AttackEntity
 			SetFlag(Flags.Reserved6, !HasFlag(Flags.Reserved6));
 			SendNetworkUpdate_Flags();
 			Analytics.Azure.OnBurstModeToggled(msg.player, this, HasFlag(Flags.Reserved6));
-			BasePlayer ownerPlayer = GetOwnerPlayer();
-			if (!ownerPlayer.IsNpc && ownerPlayer.IsConnected)
-			{
-				ownerPlayer.ShowToast(GameTip.Styles.Blue_Short, IsBurstDisabled() ? Toast_BurstDisabled : Toast_BurstEnabled);
-			}
 		}
 	}
 
@@ -1482,14 +1566,14 @@ public class BaseProjectile : AttackEntity
 			reloadFinished = false;
 			return;
 		}
-		if (Time.time < startReloadTime + reloadStartDuration)
+		if (Time.time < (float)startReloadTime + reloadStartDuration)
 		{
 			AntiHack.Log(player, AntiHackType.ReloadHack, "Fractional reload too early (" + base.ShortPrefabName + ")");
 			player.stats.combat.LogInvalid(player, this, "reload_fraction_too_early");
 			reloadStarted = false;
 			reloadFinished = false;
 		}
-		if (Time.time < startReloadTime + reloadStartDuration + (float)fractionalInsertCounter * reloadFractionDuration)
+		if (Time.time < (float)startReloadTime + reloadStartDuration + (float)fractionalInsertCounter * reloadFractionDuration)
 		{
 			AntiHack.Log(player, AntiHackType.ReloadHack, "Fractional reload rate too high (" + base.ShortPrefabName + ")");
 			player.stats.combat.LogInvalid(player, this, "reload_fraction_rate");
@@ -1562,26 +1646,24 @@ public class BaseProjectile : AttackEntity
 	[RPC_Server.IsActiveItem]
 	private void CLProject(RPCMessage msg)
 	{
-		//IL_0233: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0238: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0316: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0291: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02a8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02af: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02b8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02ce: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02d5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0255: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0428: Unknown result type (might be due to invalid IL or missing references)
-		//IL_042d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_026b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0270: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0272: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0276: Unknown result type (might be due to invalid IL or missing references)
-		//IL_027b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0280: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0284: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0286: Unknown result type (might be due to invalid IL or missing references)
+		//IL_023f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0244: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0323: Unknown result type (might be due to invalid IL or missing references)
+		//IL_029d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02b4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02bb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02c4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02da: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02e1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0261: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0277: Unknown result type (might be due to invalid IL or missing references)
+		//IL_027c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_027e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0282: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0287: Unknown result type (might be due to invalid IL or missing references)
+		//IL_028c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0290: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0292: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer player = msg.player;
 		if (!VerifyClientAttack(player))
 		{
@@ -1631,7 +1713,7 @@ public class BaseProjectile : AttackEntity
 			{
 				return;
 			}
-			SignalBroadcast(Signal.Attack, string.Empty, msg.connection);
+			SignalBroadcast(Signal.Attack, string.Empty, msg.connection, GetAttackEffect());
 			player.CleanupExpiredProjectiles();
 			Guid projectileGroupId = Guid.NewGuid();
 			foreach (Projectile projectile in val.projectiles)
@@ -1683,19 +1765,6 @@ public class BaseProjectile : AttackEntity
 					}
 				}
 			}
-			float num2 = NoiseRadius;
-			if (IsSilenced())
-			{
-				num2 *= AI.npc_gun_noise_silencer_modifier;
-			}
-			Sensation sensation = default(Sensation);
-			sensation.Type = SensationType.Gunshot;
-			sensation.Position = ((Component)player).transform.position;
-			sensation.Radius = num2;
-			sensation.DamagePotential = num;
-			sensation.InitiatorPlayer = player;
-			sensation.Initiator = player;
-			Sense.Stimulate(sensation);
 			BaseMountable mounted = player.GetMounted();
 			if ((Object)(object)mounted != (Object)null)
 			{
@@ -1705,7 +1774,7 @@ public class BaseProjectile : AttackEntity
 		}
 	}
 
-	private void CreateProjectileEffectClientside(string prefabName, Vector3 pos, Vector3 velocity, int seed, Connection sourceConnection, bool silenced = false, bool forceClientsideEffects = false)
+	protected void CreateProjectileEffectClientside(string prefabName, Vector3 pos, Vector3 velocity, int seed, Connection sourceConnection, bool silenced = false, bool forceClientsideEffects = false, List<Connection> targets = null)
 	{
 		//IL_000e: Unknown result type (might be due to invalid IL or missing references)
 		//IL_000f: Unknown result type (might be due to invalid IL or missing references)
@@ -1719,6 +1788,7 @@ public class BaseProjectile : AttackEntity
 		}
 		effect.pooledString = prefabName;
 		((EffectData)effect).number = seed;
+		effect.targets = targets;
 		EffectNetwork.Send(effect);
 	}
 
@@ -1766,14 +1836,65 @@ public class BaseProjectile : AttackEntity
 		return false;
 	}
 
+	protected string GetAttackEffect()
+	{
+		string resourcePath = attackFX.resourcePath;
+		if ((Object)(object)primaryMagazine.ammoType != (Object)null)
+		{
+			ItemModProjectile component = ((Component)primaryMagazine.ammoType).GetComponent<ItemModProjectile>();
+			if (component.attackEffectOverride.isValid)
+			{
+				resourcePath = component.attackEffectOverride.resourcePath;
+			}
+		}
+		if (children != null)
+		{
+			foreach (BaseEntity child in children)
+			{
+				ProjectileWeaponMod projectileWeaponMod = child as ProjectileWeaponMod;
+				if ((Object)(object)projectileWeaponMod == (Object)null)
+				{
+					continue;
+				}
+				if (projectileWeaponMod.isSilencer)
+				{
+					resourcePath = projectileWeaponMod.defaultSilencerEffect.resourcePath;
+					if (silencedAttack.isValid)
+					{
+						resourcePath = silencedAttack.resourcePath;
+					}
+					break;
+				}
+				if (projectileWeaponMod.isMuzzleBrake)
+				{
+					if (muzzleBrakeAttack.isValid)
+					{
+						resourcePath = muzzleBrakeAttack.resourcePath;
+					}
+					break;
+				}
+			}
+		}
+		return resourcePath;
+	}
+
 	public override bool CanUseNetworkCache(Connection sendingTo)
 	{
-		Connection ownerConnection = GetOwnerConnection();
-		if (sendingTo == null || ownerConnection == null)
+		BasePlayer ownerPlayer = GetOwnerPlayer();
+		if ((Object)(object)ownerPlayer == (Object)null || ownerPlayer.net == null)
 		{
 			return true;
 		}
-		return sendingTo != ownerConnection;
+		if (ownerPlayer.IsBeingSpectated)
+		{
+			return false;
+		}
+		Connection connection = ownerPlayer.net.connection;
+		if (sendingTo == null || connection == null)
+		{
+			return true;
+		}
+		return sendingTo != connection;
 	}
 
 	public override void Save(SaveInfo info)

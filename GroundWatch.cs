@@ -101,7 +101,7 @@ public class GroundWatch : BaseMonoBehaviour, IServerComponent
 		}
 	}
 
-	private bool OnGround()
+	public bool OnGround()
 	{
 		//IL_00df: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00e4: Unknown result type (might be due to invalid IL or missing references)

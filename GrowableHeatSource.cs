@@ -7,6 +7,8 @@ public class GrowableHeatSource : EntityComponent<BaseEntity>, IServerComponent
 {
 	public float heatAmount = 5f;
 
+	public AnimationCurve HeatFalloff = AnimationCurve.Linear(0f, 1f, 1f, 0f);
+
 	public float ApplyHeat(Vector3 forPosition)
 	{
 		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
@@ -17,7 +19,9 @@ public class GrowableHeatSource : EntityComponent<BaseEntity>, IServerComponent
 		}
 		if (base.baseEntity.IsOn() || (base.baseEntity is IOEntity iOEntity && iOEntity.IsPowered()))
 		{
-			return Mathx.RemapValClamped(Vector3.Distance(forPosition, ((Component)this).transform.position), 0f, Server.artificialTemperatureGrowableRange, 0f, heatAmount);
+			float num = Vector3.Distance(forPosition, ((Component)this).transform.position);
+			float num2 = HeatFalloff.Evaluate(num / Server.artificialTemperatureGrowableRange);
+			return heatAmount * num2;
 		}
 		return 0f;
 	}

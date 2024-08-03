@@ -75,17 +75,21 @@ public class TriggerHurtEx : TriggerBase, IServerComponent, IHurtTrigger
 		{
 			return null;
 		}
+		if (baseEntity.IsNpc && baseEntity is NPCPlayer)
+		{
+			return null;
+		}
 		return ((Component)baseEntity).gameObject;
 	}
 
 	internal void DoDamage(BaseEntity ent, HurtType type, List<DamageTypeEntry> damage, GameObjectRef effect, float multiply = 1f)
 	{
-		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ca: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0080: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0092: Unknown result type (might be due to invalid IL or missing references)
 		if (!damageEnabled)
 		{
 			return;

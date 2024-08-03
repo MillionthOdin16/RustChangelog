@@ -16,6 +16,7 @@ public class Marketplace : BaseEntity
 
 	public GameObjectRef deliveryDronePrefab;
 
+	[NonSerialized]
 	public EntityRef<MarketTerminal>[] terminalEntities;
 
 	public NetworkableId SendDrone(BasePlayer player, MarketTerminal sourceTerminal, VendingMachine vendingMachine)
@@ -24,7 +25,7 @@ public class Marketplace : BaseEntity
 		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0039: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
 		if ((Object)(object)sourceTerminal == (Object)null || (Object)(object)vendingMachine == (Object)null)

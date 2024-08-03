@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using ConVar;
 using Facepunch;
 using ProtoBuf;
@@ -17,8 +18,16 @@ public class BaseCorpse : BaseCombatEntity
 
 	protected Rigidbody rigidBody;
 
+	public bool blockDamageIfNotGather;
+
 	[NonSerialized]
 	public SpawnGroup spawnGroup;
+
+	private const float RAGDOLL_PUSH_DIST = 0.5f;
+
+	private const float RAGDOLL_PUSH_FORCE = 2.5f;
+
+	public virtual bool CorpseIsRagdoll => false;
 
 	public override TraitFlag Traits => base.Traits | TraitFlag.Food | TraitFlag.Meat;
 
@@ -227,9 +236,13 @@ public class BaseCorpse : BaseCombatEntity
 
 	public override void OnAttacked(HitInfo info)
 	{
-		if (base.isServer)
+		if (!base.isServer)
 		{
-			ResetRemovalTime();
+			return;
+		}
+		ResetRemovalTime();
+		if (!blockDamageIfNotGather || !(info.Weapon is BaseMelee baseMelee) || baseMelee.GetGatherInfoFromIndex(ResourceDispenser.GatherType.Flesh).gatherDamage != 0f)
+		{
 			if (Object.op_Implicit((Object)(object)resourceDispenser))
 			{
 				resourceDispenser.DoGather(info, this);
@@ -237,6 +250,44 @@ public class BaseCorpse : BaseCombatEntity
 			if (!info.DidGather)
 			{
 				base.OnAttacked(info);
+			}
+			if (CorpseIsRagdoll)
+			{
+				PushRagdoll(info);
+			}
+		}
+	}
+
+	protected virtual void PushRagdoll(HitInfo info)
+	{
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		List<Rigidbody> list = Pool.GetList<Rigidbody>();
+		Vis.Components<Rigidbody>(info.HitPositionWorld, 0.5f, list, 512, (QueryTriggerInteraction)2);
+		PushRigidbodies(list, info.HitPositionWorld, info.attackNormal);
+		Pool.FreeList<Rigidbody>(ref list);
+	}
+
+	protected void PushRigidbodies(List<Rigidbody> rbs, Vector3 hitPos, Vector3 hitNormal)
+	{
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0013: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0052: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
+		foreach (Rigidbody rb in rbs)
+		{
+			float num = Vector3.Distance(hitPos, rb.position);
+			float num2 = 1f - Mathf.InverseLerp(0f, 0.5f, num);
+			if (!(num2 <= 0f))
+			{
+				if (num2 < 0.5f)
+				{
+					num2 = 0.5f;
+				}
+				rb.AddForceAtPosition(hitNormal * 2.5f * num2, hitPos, (ForceMode)1);
 			}
 		}
 	}

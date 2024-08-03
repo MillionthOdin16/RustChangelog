@@ -10,11 +10,16 @@ public static class Auth_Nexus
 {
 	public static IEnumerator Run(Connection connection)
 	{
-		if (!connection.active || connection.rejected || !NexusServer.Started)
+		connection.authStatusNexus = string.Empty;
+		if (!connection.active || connection.rejected)
 		{
 			yield break;
 		}
-		connection.authStatus = "";
+		if (!NexusServer.Started)
+		{
+			connection.authStatusNexus = "ok";
+			yield break;
+		}
 		Task<NexusLoginResult> loginTask = NexusServer.Login(connection.userid);
 		yield return (object)new WaitUntil((Func<bool>)(() => loginTask.IsCompleted));
 		if (loginTask.IsFaulted || loginTask.IsCanceled)
@@ -24,6 +29,7 @@ public static class Auth_Nexus
 			{
 				Debug.LogException((Exception)loginTask.Exception);
 			}
+			connection.authStatusNexus = "nexus_login_fail";
 			yield break;
 		}
 		NexusLoginResult result = loginTask.Result;
@@ -32,6 +38,7 @@ public static class Auth_Nexus
 			string text = ((((NexusLoginResult)(ref result)).AssignedZoneKey == null) ? null : NexusServer.FindZone(((NexusLoginResult)(ref result)).AssignedZoneKey)?.ConnectionProtocol());
 			ConsoleNetwork.SendClientCommandImmediate(connection, "nexus.redirect", ((NexusLoginResult)(ref result)).RedirectIpAddress, ((NexusLoginResult)(ref result)).RedirectGamePort, text ?? "");
 			Reject("Redirecting to another zone...");
+			connection.authStatusNexus = "nexus_login_redirect";
 			yield break;
 		}
 		if (((NexusLoginResult)(ref result)).AssignedZoneKey == null)
@@ -55,6 +62,7 @@ public static class Auth_Nexus
 			{
 				Reject("Nexus spawn - exception while choosing spawn zone");
 				Debug.LogException(ex);
+				connection.authStatusNexus = "nexus_zone_pick_fail";
 				yield break;
 			}
 			Task assignTask = NexusServer.AssignInitialZone(connection.userid, spawnZoneKey);
@@ -66,12 +74,14 @@ public static class Auth_Nexus
 				{
 					Debug.LogException((Exception)assignTask.Exception);
 				}
+				connection.authStatusNexus = "nexus_zone_transfer_fail";
 				yield break;
 			}
 			if (spawnZoneKey != NexusServer.ZoneKey)
 			{
 				ConsoleNetwork.SendClientCommandImmediate(connection, "nexus.redirect", spawnZone.IpAddress, spawnZone.GamePort, spawnZone.ConnectionProtocol());
 				Reject("Redirecting to another zone...");
+				connection.authStatusNexus = "nexus_zone_redirect";
 				yield break;
 			}
 		}
@@ -87,7 +97,7 @@ public static class Auth_Nexus
 		{
 			Debug.LogWarning((object)$"Couldn't find NexusPlayer for {connection.userid}, skipping setting up their app key");
 		}
-		connection.authStatus = "ok";
+		connection.authStatusNexus = "ok";
 		void Reject(string reason)
 		{
 			ConnectionAuth.Reject(connection, reason);

@@ -57,7 +57,7 @@ public class ItemModProjectileSpawn : ItemModProjectile
 			Vector3 normalized2 = ((Vector3)(ref info.HitNormalWorld)).normalized;
 			Vector3 val = hitPositionWorld - normalized * 0.1f;
 			Quaternion rotation = Quaternion.LookRotation(-normalized);
-			int num = 2162688;
+			int num = 1075904512;
 			if (ConVar.AntiHack.projectile_terraincheck)
 			{
 				num |= 0x800000;

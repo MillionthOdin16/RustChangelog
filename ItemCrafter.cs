@@ -23,9 +23,13 @@ public class ItemCrafter : EntityComponent<BasePlayer>
 		containers.Add(container);
 	}
 
-	public static float GetScaledDuration(ItemBlueprint bp, float workbenchLevel)
+	public static float GetScaledDuration(ItemBlueprint bp, float workbenchLevel, bool isInTutorial)
 	{
 		float num = workbenchLevel - (float)bp.workbenchLevelRequired;
+		if (isInTutorial)
+		{
+			return bp.time * 0.25f;
+		}
 		if (num == 1f)
 		{
 			return bp.time * 0.5f;
@@ -57,7 +61,7 @@ public class ItemCrafter : EntityComponent<BasePlayer>
 		}
 		if (value.endTime == 0f)
 		{
-			float scaledDuration = GetScaledDuration(value.blueprint, currentCraftLevel);
+			float scaledDuration = GetScaledDuration(value.blueprint, currentCraftLevel, owner.IsInTutorial);
 			value.endTime = Time.realtimeSinceStartup + scaledDuration;
 			value.workbenchEntity = owner.GetCachedCraftLevelWorkbench();
 			if ((Object)(object)owner != (Object)null)
@@ -151,10 +155,10 @@ public class ItemCrafter : EntityComponent<BasePlayer>
 
 	private void FinishCrafting(ItemCraftTask task)
 	{
-		//IL_0317: Unknown result type (might be due to invalid IL or missing references)
-		//IL_031e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0325: Unknown result type (might be due to invalid IL or missing references)
-		//IL_032b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0332: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0339: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0340: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0346: Unknown result type (might be due to invalid IL or missing references)
 		task.amount--;
 		task.numCrafted++;
 		ulong skin = ItemDefinition.FindSkin(task.blueprint.targetItem.itemid, task.skinID);
@@ -199,6 +203,7 @@ public class ItemCrafter : EntityComponent<BasePlayer>
 		{
 			owner.GiveAchievement(task.blueprint.UnlockAchievment);
 		}
+		owner.ProcessMissionEvent(BaseMission.MissionEventType.CRAFT_ITEM, item.info.itemid, amount);
 		if (owner.inventory.GiveItem(item))
 		{
 			owner.Command("note.inv", item.info.itemid, amount);
@@ -287,6 +292,16 @@ public class ItemCrafter : EntityComponent<BasePlayer>
 		}
 	}
 
+	private bool DoesHaveOKConditionItem(int item, int iAmount = 1)
+	{
+		int num = 0;
+		foreach (ItemContainer container in containers)
+		{
+			num += container.GetOkConditionAmount(item, onlyUsableAmounts: true);
+		}
+		return num >= iAmount;
+	}
+
 	private bool DoesHaveUsableItem(int item, int iAmount)
 	{
 		int num = 0;
@@ -299,6 +314,14 @@ public class ItemCrafter : EntityComponent<BasePlayer>
 
 	public bool CanCraft(ItemBlueprint bp, int amount = 1, bool free = false)
 	{
+		if ((Object)(object)base.baseEntity != (Object)null && base.baseEntity.IsRestrained)
+		{
+			Handcuffs restraintItem = base.baseEntity.Belt.GetRestraintItem();
+			if ((Object)(object)restraintItem != (Object)null && restraintItem.BlockCrafting)
+			{
+				return false;
+			}
+		}
 		float num = (float)amount / (float)bp.targetItem.craftingStackable;
 		foreach (ItemCraftTask item in queue)
 		{
@@ -318,6 +341,10 @@ public class ItemCrafter : EntityComponent<BasePlayer>
 		foreach (ItemAmount ingredient in bp.ingredients)
 		{
 			if (!DoesHaveUsableItem(ingredient.itemid, (int)ingredient.amount * amount))
+			{
+				return false;
+			}
+			if (ingredient.itemDef.condition.enabled && !DoesHaveOKConditionItem(ingredient.itemid, (int)ingredient.amount * amount))
 			{
 				return false;
 			}

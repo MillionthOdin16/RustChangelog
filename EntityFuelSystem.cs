@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Facepunch.Rust;
 using UnityEngine;
 
-public class EntityFuelSystem
+public class EntityFuelSystem : IFuelSystem
 {
 	private readonly bool isServer;
 
@@ -10,7 +10,7 @@ public class EntityFuelSystem
 
 	private readonly uint fuelStorageID;
 
-	public EntityRef<StorageContainer> fuelStorageInstance;
+	private EntityRef<StorageContainer> fuelStorageInstance;
 
 	private float nextFuelCheckTime;
 
@@ -31,6 +31,23 @@ public class EntityFuelSystem
 		{
 			CheckNewChild(child);
 		}
+	}
+
+	public bool HasValidInstance(bool isServer)
+	{
+		return fuelStorageInstance.IsValid(isServer);
+	}
+
+	public NetworkableId GetInstanceID()
+	{
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		return fuelStorageInstance.uid;
+	}
+
+	public void SetInstanceID(NetworkableId uid)
+	{
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		fuelStorageInstance.uid = uid;
 	}
 
 	public bool IsInFuelInteractionRange(BasePlayer player)
@@ -139,14 +156,22 @@ public class EntityFuelSystem
 		}
 	}
 
-	public void AddStartingFuel(int amount)
+	public void AddFuel(int amount)
 	{
-		GetFuelContainer().inventory.AddItem(GetFuelContainer().allowedItem, Mathf.FloorToInt((float)amount), 0uL);
+		StorageContainer fuelContainer = GetFuelContainer();
+		if ((Object)(object)fuelContainer != (Object)null)
+		{
+			fuelContainer.inventory.AddItem(GetFuelContainer().allowedItem, Mathf.FloorToInt((float)amount), 0uL);
+		}
 	}
 
-	public void AdminAddFuel()
+	public void FillFuel()
 	{
-		GetFuelContainer().inventory.AddItem(GetFuelContainer().allowedItem, GetFuelContainer().allowedItem.stackable, 0uL);
+		StorageContainer fuelContainer = GetFuelContainer();
+		if ((Object)(object)fuelContainer != (Object)null)
+		{
+			fuelContainer.inventory.AddItem(GetFuelContainer().allowedItem, GetFuelContainer().allowedItem.stackable, 0uL);
+		}
 	}
 
 	public int GetFuelCapacity()

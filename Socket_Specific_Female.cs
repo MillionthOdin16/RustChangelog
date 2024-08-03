@@ -8,6 +8,10 @@ public class Socket_Specific_Female : Socket_Base
 
 	public string[] allowedMaleSockets;
 
+	public bool parentToBone;
+
+	public string boneName;
+
 	private void OnDrawGizmos()
 	{
 		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
@@ -54,5 +58,10 @@ public class Socket_Specific_Female : Socket_Base
 			}
 		}
 		return false;
+	}
+
+	public override Construction.Placement DoPlacement(Construction.Target target)
+	{
+		return base.DoPlacement(target);
 	}
 }

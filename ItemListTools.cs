@@ -112,12 +112,12 @@ public class ItemListTools : MonoBehaviour
 		}
 		itemButton.SetActive(true);
 		bool flag = !string.IsNullOrEmpty(searchText);
-		string value = (flag ? searchText.ToLower() : null);
+		string search = (flag ? searchText.ToLower() : null);
 		IOrderedEnumerable<ItemDefinition> obj = (flag ? allItems : currentItems);
 		int num = 0;
 		foreach (ItemDefinition item in obj)
 		{
-			if (!item.hidden && (!flag || item.displayName.translated.ToLower().Contains(value)))
+			if (!item.hidden && (!flag || ItemSearchUtils.IsValidSearchResult(search, item, checkItemIsValid: false)))
 			{
 				GameObject obj2 = Object.Instantiate<GameObject>(itemButton);
 				obj2.transform.SetParent(itemButton.transform.parent, false);

@@ -333,7 +333,7 @@ public class TrainCarUnloadable : TrainCar
 	{
 		float orePercent = GetOrePercent();
 		AnimateUnload(orePercent);
-		ClientRPC(null, "RPC_AnimateUnload", orePercent);
+		ClientRPC(RpcTarget.NetworkGroup("RPC_AnimateUnload"), orePercent);
 	}
 
 	public void EndEmptyProcess()
@@ -352,7 +352,7 @@ public class TrainCarUnloadable : TrainCar
 			}
 		}
 		SetVisualOreLevel(orePercent);
-		ClientRPC(null, "RPC_StopAnimateUnload", orePercent);
+		ClientRPC(RpcTarget.NetworkGroup("RPC_StopAnimateUnload"), orePercent);
 		decayingFor = 0f;
 	}
 

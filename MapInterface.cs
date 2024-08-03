@@ -19,6 +19,8 @@ public class MapInterface : SingletonComponent<MapInterface>
 
 	public ScrollRectEx scrollRect;
 
+	public ScrollRectZoom scrollRectZoom;
+
 	public RustButton showGridToggle;
 
 	public RustButton FocusButton;
@@ -47,6 +49,8 @@ public class MapInterface : SingletonComponent<MapInterface>
 
 	public GameObject MarkerListSection;
 
+	public GameObject ControlsRoot;
+
 	public GameObjectRef MarkerListPrefab;
 
 	public GameObject MarkerHeader;
@@ -57,6 +61,14 @@ public class MapInterface : SingletonComponent<MapInterface>
 
 	public GameObject TeamLeaderHeader;
 
+	public GameObject MissionListHeader;
+
+	public Transform MissionListContent;
+
+	public GameObjectRef MissionListPrefab;
+
+	public VendorList VendorList;
+
 	public RustButton HideTeamLeaderMarkersToggle;
 
 	public CanvasGroup TeamMarkersCanvas;
@@ -64,4 +76,8 @@ public class MapInterface : SingletonComponent<MapInterface>
 	public RustImageButton ShowSleepingBagsButton;
 
 	public RustImageButton ShowVendingMachinesButton;
+
+	public RustImageButton ShowMissionProvidersButton;
+
+	public UIEscapeCapture EscapeCapture;
 }

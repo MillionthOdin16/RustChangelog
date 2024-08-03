@@ -336,9 +336,9 @@ public class ComputerStation : BaseMountable
 	[RPC_Server]
 	public void BeginControllingBookmark(RPCMessage msg)
 	{
-		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ff: Unknown result type (might be due to invalid IL or missing references)
 		BasePlayer player = msg.player;
 		if (!IsPlayerAdmin(player))
 		{
@@ -493,8 +493,8 @@ public class ComputerStation : BaseMountable
 
 	public void ControlCheck()
 	{
-		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
 		bool flag = false;
 		BaseEntity baseEntity = currentlyControllingEnt.Get(base.isServer);
 		if (Object.op_Implicit((Object)(object)baseEntity) && Object.op_Implicit((Object)(object)_mounted))
@@ -522,7 +522,7 @@ public class ComputerStation : BaseMountable
 		if (!((Object)(object)player == (Object)null))
 		{
 			string arg = GenerateControlBookmarkString();
-			ClientRPCPlayer(null, player, "ReceiveBookmarks", arg);
+			ClientRPC(RpcTarget.Player("ReceiveBookmarks", player), arg);
 		}
 	}
 

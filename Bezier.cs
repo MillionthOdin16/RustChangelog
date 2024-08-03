@@ -4,16 +4,16 @@ using UnityEngine;
 
 public static class Bezier
 {
-	public static void ApplyLineSlack(ref Vector3[] positions, float[] slackLevels, int tesselationLevel)
+	public static void ApplyLineSlack(ref Vector3[] positions, float[] slackLevels, int tesselationLevel, Transform referenceTransform = null)
 	{
-		ApplyLineSlack(positions, slackLevels, ref positions, tesselationLevel);
+		ApplyLineSlack(positions, slackLevels, ref positions, tesselationLevel, referenceTransform);
 	}
 
-	public static void ApplyLineSlack(Vector3[] positions, float[] slackLevels, ref Vector3[] result, int tesselationLevel)
+	public static void ApplyLineSlack(Vector3[] positions, float[] slackLevels, ref Vector3[] result, int tesselationLevel, Transform referenceTransform = null)
 	{
 		List<Vector3> result2 = Pool.GetList<Vector3>();
-		ApplyLineSlack(positions, slackLevels, ref result2, tesselationLevel);
-		if (result.Length != result2.Count)
+		ApplyLineSlack(positions, slackLevels, ref result2, tesselationLevel, referenceTransform);
+		if (result.Length >= 2 && result.Length != result2.Count)
 		{
 			result = (Vector3[])(object)new Vector3[result2.Count];
 		}
@@ -21,27 +21,46 @@ public static class Bezier
 		Pool.FreeList<Vector3>(ref result2);
 	}
 
-	public static void ApplyLineSlack(Vector3[] positions, float[] slackLevels, ref List<Vector3> result, int tesselationLevel)
+	public static void ApplyLineSlack(Vector3[] positions, float[] slackLevels, ref List<Vector3> result, int tesselationLevel, Transform referenceTransform = null)
 	{
-		//IL_00ee: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0051: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
 		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0160: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0163: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0091: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0082: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b6: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00bb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d4: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c4: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00c6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00cd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0102: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0104: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0108: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0113: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0118: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0131: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0121: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0123: Unknown result type (might be due to invalid IL or missing references)
 		if (positions.Length < 2 || slackLevels.Length == 0)
 		{
 			return;
@@ -60,30 +79,48 @@ public static class Bezier
 			result.AddRange(positions);
 			return;
 		}
-		for (int j = 0; j < positions.Length; j++)
+		bool flag2 = (Object)(object)referenceTransform != (Object)null;
+		float num = 1f / (float)tesselationLevel;
+		for (int j = 0; j < positions.Length - 1; j++)
 		{
-			if (j < positions.Length - 1)
+			Vector3 val = positions[j];
+			Vector3 val2 = positions[j + 1];
+			if ((Object)(object)referenceTransform != (Object)null)
 			{
-				Vector3 val = positions[j];
-				Vector3 val2 = positions[j + 1];
-				Vector3 val3 = Vector3.Lerp(val, val2, 0.5f);
-				if (j < slackLevels.Length)
-				{
-					val3.y -= slackLevels[j];
-				}
-				result.Add(val);
-				for (int k = 0; k < tesselationLevel; k++)
-				{
-					float num = (float)k / (float)tesselationLevel;
-					num = Mathx.RemapValClamped(num, 0f, 1f, 0.1f, 0.9f);
-					Vector3 item = Vector3.Lerp(Vector3.Lerp(val, val3, num), Vector3.Lerp(val3, val2, num), num);
-					result.Add(item);
-				}
+				val = referenceTransform.TransformPoint(val);
+				val2 = referenceTransform.TransformPoint(val2);
+			}
+			Vector3 val3 = Vector3.Lerp(val, val2, 0.5f);
+			if (j < slackLevels.Length)
+			{
+				val3 += Vector3.down * slackLevels[j];
+			}
+			if (flag2)
+			{
+				result.Add(referenceTransform.InverseTransformPoint(val));
 			}
 			else
 			{
-				result.Add(positions[j]);
+				result.Add(val);
+			}
+			for (int k = 0; k < tesselationLevel; k++)
+			{
+				float num2 = (float)k * num;
+				num2 = num2 * 0.8f + 0.1f;
+				Vector3 val4 = Vector3.Lerp(val, val3, num2);
+				Vector3 val5 = Vector3.Lerp(val3, val2, num2);
+				Vector3 val6 = Vector3.Lerp(val4, val5, num2);
+				if (flag2)
+				{
+					result.Add(referenceTransform.InverseTransformPoint(val6));
+				}
+				else
+				{
+					result.Add(val6);
+				}
 			}
 		}
+		Vector3 item = positions[positions.Length - 1];
+		result.Add(item);
 	}
 }

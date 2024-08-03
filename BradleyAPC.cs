@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using ConVar;
 using Facepunch;
@@ -12,6 +13,16 @@ using UnityEngine.AI;
 
 public class BradleyAPC : BaseCombatEntity, TriggerHurtNotChild.IHurtTriggerUser
 {
+	[Serializable]
+	public class ScientistSpawnGroup
+	{
+		public float BradleyHealth;
+
+		public List<GameObjectRef> SpawnPrefabs;
+
+		public bool Spawned;
+	}
+
 	[Serializable]
 	public class TargetInfo : IPooled
 	{
@@ -195,6 +206,8 @@ public class BradleyAPC : BaseCombatEntity, TriggerHurtNotChild.IHurtTriggerUser
 
 	public Transform topTurretMuzzle;
 
+	public GameObjectRef SmokeGrenadePrefab;
+
 	private Vector3 turretAimVector = Vector3.forward;
 
 	private Vector3 desiredAimVector = Vector3.forward;
@@ -257,6 +270,85 @@ public class BradleyAPC : BaseCombatEntity, TriggerHurtNotChild.IHurtTriggerUser
 	public int currentPathIndex;
 
 	public bool pathLooping;
+
+	[Header("Scientists")]
+	public GameObject AIRoot;
+
+	public GameObjectRef MonumentScientistPrefab;
+
+	public GameObjectRef RoadScientistPrefab;
+
+	public int ScientistSpawnCount = 4;
+
+	public float ScientistSpawnRadius = 3f;
+
+	public List<GameObject> ScientistSpawnPoints = new List<GameObject>();
+
+	public List<ScientistSpawnGroup> ScientistSpawns = new List<ScientistSpawnGroup>();
+
+	public bool SetScientistChaseBasedOnWeapon = true;
+
+	[ServerVar]
+	public static float DeployHealthRangeMin = 0.4f;
+
+	[ServerVar]
+	public static float DeployHealthRangeMax = 0.5f;
+
+	[ServerVar]
+	public static float DeployAttackDistanceMax = 50f;
+
+	[ServerVar]
+	public static float DeployInterval = 1f;
+
+	[ServerVar]
+	public static float DeployOnDamageCheckInterval = 1f;
+
+	[ServerVar]
+	public static float ScientistRedeploymentMinInterval = 60f;
+
+	[ServerVar]
+	public static float MountAfterNotAttackedDuration = 180f;
+
+	[ServerVar]
+	public static float MountAfterNotTargetsDuration = 60f;
+
+	[ServerVar]
+	public static float MountAfterNotFiredDuration = 60f;
+
+	[ServerVar]
+	public static bool UseSmokeGrenades = true;
+
+	[ServerVar]
+	public static bool KillScientistsOnBradleyDeath = false;
+
+	[HideInInspector]
+	public bool RoadSpawned = true;
+
+	private List<ScientistNPC> activeScientists = new List<ScientistNPC>();
+
+	private List<GameObjectRef> mountedScientistPrefabs = new List<GameObjectRef>();
+
+	private List<Vector3> scientistSpawnPositions = new List<Vector3>();
+
+	private int numberOfScientistsToSpawn;
+
+	private TimeSince timeSinceScientistDeploy;
+
+	private TimeSince timeSinceDeployCheck;
+
+	private TimeSince timeSinceValidTarget;
+
+	private TimeSince deployedTimeSinceBradleyAttackedTarget;
+
+	private static int walkableAreaMask;
+
+	private bool mountingScientists;
+
+	private bool inDeployedState;
+
+	private bool deployingScientists;
+
+	private Dictionary<uint, GameObjectRef> scientistPrefabLookUp = new Dictionary<uint, GameObjectRef>();
 
 	[Header("Targeting")]
 	public float viewDistance = 100f;
@@ -327,6 +419,21 @@ public class BradleyAPC : BaseCombatEntity, TriggerHurtNotChild.IHurtTriggerUser
 			desiredAimVector = info.msg.bradley.mainGunVec;
 			desiredTopTurretAimVector = info.msg.bradley.topTurretVec;
 		}
+	}
+
+	public void BuildingCheck()
+	{
+		//IL_0007: Unknown result type (might be due to invalid IL or missing references)
+		List<BaseEntity> list = Pool.GetList<BaseEntity>();
+		Vis.Entities(WorldSpaceBounds(), list, 256, (QueryTriggerInteraction)2);
+		foreach (BaseEntity item in list)
+		{
+			if (item is Barricade barricade && barricade.IsAlive() && barricade.isServer)
+			{
+				barricade.Kill(DestroyMode.Gib);
+			}
+		}
+		Pool.FreeList<BaseEntity>(ref list);
 	}
 
 	public override void Save(SaveInfo info)
@@ -456,6 +563,7 @@ public class BradleyAPC : BaseCombatEntity, TriggerHurtNotChild.IHurtTriggerUser
 			bradleyAPC = ((Component)baseEntity).GetComponent<BradleyAPC>();
 			if (Object.op_Implicit((Object)(object)bradleyAPC))
 			{
+				bradleyAPC.RoadSpawned = true;
 				bradleyAPC.Spawn();
 				bradleyAPC.InstallPatrolPath(runtimePath);
 			}
@@ -490,16 +598,30 @@ public class BradleyAPC : BaseCombatEntity, TriggerHurtNotChild.IHurtTriggerUser
 
 	public override void ServerInit()
 	{
-		//IL_0058: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0026: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0046: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00db: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00eb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fb: Unknown result type (might be due to invalid IL or missing references)
 		base.ServerInit();
+		CacheSpawnPrefabIDS();
+		walkableAreaMask = 1 << NavMesh.GetAreaFromName("Walkable");
+		deployedTimeSinceBradleyAttackedTarget = TimeSince.op_Implicit(0f);
+		timeSinceScientistDeploy = TimeSince.op_Implicit(float.PositiveInfinity);
+		timeSinceDeployCheck = TimeSince.op_Implicit(float.PositiveInfinity);
+		numberOfScientistsToSpawn = ScientistSpawnCount;
 		Initialize();
 		((FacepunchBehaviour)this).InvokeRepeating((Action)UpdateTargetList, 0f, 2f);
 		((FacepunchBehaviour)this).InvokeRepeating((Action)UpdateTargetVisibilities, 0f, sightUpdateRate);
+		((FacepunchBehaviour)this).InvokeRepeating((Action)BuildingCheck, 1f, 5f);
+		AIRoot.SetActive(false);
 		obstacleHitMask = LayerMask.op_Implicit(LayerMask.GetMask(new string[1] { "Vehicle World" }));
 		timeSinceSeemingStuck = TimeSince.op_Implicit(0f);
 		timeSinceStuckReverseStart = TimeSince.op_Implicit(float.MaxValue);
@@ -608,34 +730,37 @@ public class BradleyAPC : BaseCombatEntity, TriggerHurtNotChild.IHurtTriggerUser
 
 	public void FireGunTest()
 	{
-		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0063: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0014: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
 		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0073: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0099: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ac: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ba: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c3: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00ca: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fb: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0122: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0127: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0128: Unknown result type (might be due to invalid IL or missing references)
-		//IL_014e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0155: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00da: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0106: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0133: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0138: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0139: Unknown result type (might be due to invalid IL or missing references)
+		//IL_015f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0166: Unknown result type (might be due to invalid IL or missing references)
 		if (Time.time < nextFireTime)
 		{
 			return;
 		}
+		deployedTimeSinceBradleyAttackedTarget = TimeSince.op_Implicit(0f);
 		nextFireTime = Time.time + 0.25f;
 		numBursted++;
 		if (numBursted >= 4)
@@ -843,34 +968,34 @@ public class BradleyAPC : BaseCombatEntity, TriggerHurtNotChild.IHurtTriggerUser
 
 	public void DoSimpleAI()
 	{
-		//IL_00a4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00aa: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ba: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c0: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00e7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ec: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ae: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00bf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ca: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00dc: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f9: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00fe: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0105: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0110: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0117: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0132: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01a9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ee: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0175: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0180: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ba: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ad: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01b2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01fb: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0200: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0212: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d6: Unknown result type (might be due to invalid IL or missing references)
 		//IL_01e1: Unknown result type (might be due to invalid IL or missing references)
 		//IL_01e6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_022f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0234: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0246: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0205: Unknown result type (might be due to invalid IL or missing references)
-		//IL_020a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0215: Unknown result type (might be due to invalid IL or missing references)
-		//IL_021a: Unknown result type (might be due to invalid IL or missing references)
 		if (base.isClient)
 		{
 			return;
@@ -880,21 +1005,17 @@ public class BradleyAPC : BaseCombatEntity, TriggerHurtNotChild.IHurtTriggerUser
 		{
 			return;
 		}
-		if (targetList.Count > 0)
+		SetTarget();
+		if (mountingScientists || inDeployedState)
 		{
-			if (targetList[0].IsValid() && targetList[0].IsVisible())
-			{
-				mainGunTarget = targetList[0].entity as BaseCombatEntity;
-			}
-			else
-			{
-				mainGunTarget = null;
-			}
+			ClearPath();
+		}
+		else if (targetList.Count > 0)
+		{
 			UpdateMovement_Hunt();
 		}
 		else
 		{
-			mainGunTarget = null;
 			UpdateMovement_Patrol();
 		}
 		AdvancePathMovement(force: false);
@@ -948,8 +1069,32 @@ public class BradleyAPC : BaseCombatEntity, TriggerHurtNotChild.IHurtTriggerUser
 		SendNetworkUpdate();
 	}
 
+	private void SetTarget()
+	{
+		if (targetList.Count == 0)
+		{
+			mainGunTarget = null;
+		}
+		else if (targetList[0].IsValid() && targetList[0].IsVisible())
+		{
+			mainGunTarget = targetList[0].entity as BaseCombatEntity;
+		}
+		else
+		{
+			mainGunTarget = null;
+		}
+	}
+
 	public void FixedUpdate()
 	{
+		if (mountingScientists)
+		{
+			UpdateMountScientists();
+		}
+		else if (inDeployedState)
+		{
+			UpdateDeployed();
+		}
 		DoSimpleAI();
 		DoPhysicsMove();
 		DoWeapons();
@@ -971,13 +1116,13 @@ public class BradleyAPC : BaseCombatEntity, TriggerHurtNotChild.IHurtTriggerUser
 		//IL_009f: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0088: Unknown result type (might be due to invalid IL or missing references)
 		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fc: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0103: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0108: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0162: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0168: Unknown result type (might be due to invalid IL or missing references)
-		//IL_018b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0191: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00fd: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0104: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0109: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0163: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0169: Unknown result type (might be due to invalid IL or missing references)
+		//IL_018c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0192: Unknown result type (might be due to invalid IL or missing references)
 		Ray ray = default(Ray);
 		((Ray)(ref ray))._002Ector(((Component)this).transform.position + ((Component)this).transform.forward * (((Bounds)(ref bounds)).extents.z - 1f), ((Component)this).transform.forward);
 		if (!GamePhysics.Trace(ray, 3f, out var hitInfo, 20f, LayerMask.op_Implicit(obstacleHitMask), (QueryTriggerInteraction)1, this))
@@ -1212,44 +1357,44 @@ public class BradleyAPC : BaseCombatEntity, TriggerHurtNotChild.IHurtTriggerUser
 	{
 		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0092: Unknown result type (might be due to invalid IL or missing references)
-		//IL_009d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c4: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00c9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ec: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0107: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0128: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0093: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00c5: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ca: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ed: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0108: Unknown result type (might be due to invalid IL or missing references)
+		//IL_010d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0129: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0134: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0139: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0199: Unknown result type (might be due to invalid IL or missing references)
-		//IL_019e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01b9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01cd: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01d2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01d7: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01e8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01ed: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01f2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0204: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0206: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0208: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0284: Unknown result type (might be due to invalid IL or missing references)
+		//IL_012a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0135: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_019f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ba: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ce: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01d8: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01e9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01ee: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f3: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0205: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0207: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0209: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0285: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0296: Unknown result type (might be due to invalid IL or missing references)
-		//IL_029b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02b1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0301: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0307: Unknown result type (might be due to invalid IL or missing references)
-		//IL_030b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0311: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0286: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0297: Unknown result type (might be due to invalid IL or missing references)
+		//IL_029c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02b2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0302: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0308: Unknown result type (might be due to invalid IL or missing references)
+		//IL_030c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0312: Unknown result type (might be due to invalid IL or missing references)
 		if (base.isClient)
 		{
 			return;
@@ -1315,17 +1460,34 @@ public class BradleyAPC : BaseCombatEntity, TriggerHurtNotChild.IHurtTriggerUser
 				Physics.IgnoreCollision(component2, (Collider)(object)item2.GetCollider(), true);
 			}
 		}
+		KillSpawnedScientists();
+		if (info != null && (Object)(object)info.InitiatorPlayer != (Object)null && info.InitiatorPlayer.serverClan != null)
+		{
+			info.InitiatorPlayer.AddClanScore((ClanScoreEventType)7);
+		}
 		base.OnKilled(info);
 	}
 
 	public override void OnAttacked(HitInfo info)
 	{
-		//IL_001f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
 		base.OnAttacked(info);
-		BasePlayer basePlayer = info.Initiator as BasePlayer;
-		if ((Object)(object)basePlayer != (Object)null)
+		if (!base.isClient)
 		{
-			AddOrUpdateTarget(basePlayer, info.PointStart, info.damageTypes.Total());
+			BasePlayer basePlayer = info.Initiator as BasePlayer;
+			if (!(basePlayer is ScientistNPC) && (Object)(object)basePlayer != (Object)null)
+			{
+				TrySpawnScientists(basePlayer);
+				AddOrUpdateTarget(basePlayer, info.PointStart, info.damageTypes.Total());
+			}
+		}
+	}
+
+	public override void Hurt(HitInfo info)
+	{
+		if (!((Object)(object)info.Initiator != (Object)null) || !(info.Initiator is ScientistNPC))
+		{
+			base.Hurt(info);
 		}
 	}
 
@@ -1341,10 +1503,18 @@ public class BradleyAPC : BaseCombatEntity, TriggerHurtNotChild.IHurtTriggerUser
 
 	public void DoHealing()
 	{
-		if (!base.isClient && base.healthFraction < 1f && base.SecondsSinceAttacked > 600f)
+		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
+		if (!base.isClient && base.SecondsSinceAttacked > 600f)
 		{
-			float amount = MaxHealth() / 300f * Time.fixedDeltaTime;
-			Heal(amount);
+			if (base.healthFraction < 1f)
+			{
+				float amount = MaxHealth() / 300f * Time.fixedDeltaTime;
+				Heal(amount);
+			}
+			if (numberOfScientistsToSpawn < ScientistSpawnCount && base.healthFraction >= 0.95f && TimeSince.op_Implicit(timeSinceScientistDeploy) > 30f)
+			{
+				numberOfScientistsToSpawn = ScientistSpawnCount;
+			}
 		}
 	}
 
@@ -1635,11 +1805,431 @@ public class BradleyAPC : BaseCombatEntity, TriggerHurtNotChild.IHurtTriggerUser
 		return GetPathToClosestTurnableNode(closestToPoint, ((Component)this).transform.forward, ref nodes);
 	}
 
+	private void CacheSpawnPrefabIDS()
+	{
+		scientistPrefabLookUp.Clear();
+		foreach (ScientistSpawnGroup scientistSpawn in ScientistSpawns)
+		{
+			foreach (GameObjectRef spawnPrefab in scientistSpawn.SpawnPrefabs)
+			{
+				uint key = spawnPrefab.GetEntity().prefabID;
+				if (!scientistPrefabLookUp.ContainsKey(key))
+				{
+					scientistPrefabLookUp.Add(key, spawnPrefab);
+				}
+			}
+		}
+	}
+
+	private void TrySpawnScientists(BasePlayer triggeringPlayer)
+	{
+		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		if (!((Object)(object)triggeringPlayer == (Object)null) && !deployingScientists && !mountingScientists && !(TimeSince.op_Implicit(timeSinceDeployCheck) <= DeployOnDamageCheckInterval))
+		{
+			timeSinceDeployCheck = TimeSince.op_Implicit(0f);
+			List<ScientistSpawnGroup> triggereringSpawnGroups = GetTriggereringSpawnGroups();
+			List<GameObjectRef> list = Pool.GetList<GameObjectRef>();
+			AddMountedScientistsToSpawn(list);
+			AddSpawnGroupSpawns(triggereringSpawnGroups, list);
+			if (list.Count == 0)
+			{
+				Pool.FreeList<GameObjectRef>(ref list);
+				Pool.FreeList<ScientistSpawnGroup>(ref triggereringSpawnGroups);
+			}
+			else if (CanDeployScientists(triggeringPlayer, list, scientistSpawnPositions))
+			{
+				SetSpawnGroupsAsSpawned(triggereringSpawnGroups);
+				Pool.FreeList<ScientistSpawnGroup>(ref triggereringSpawnGroups);
+				ClearMountedScientists();
+				((MonoBehaviour)this).StartCoroutine(DeployScientists(triggeringPlayer, list, scientistSpawnPositions));
+			}
+			else
+			{
+				Pool.FreeList<GameObjectRef>(ref list);
+				Pool.FreeList<ScientistSpawnGroup>(ref triggereringSpawnGroups);
+			}
+		}
+	}
+
+	private List<ScientistSpawnGroup> GetTriggereringSpawnGroups()
+	{
+		List<ScientistSpawnGroup> list = Pool.GetList<ScientistSpawnGroup>();
+		foreach (ScientistSpawnGroup scientistSpawn in ScientistSpawns)
+		{
+			if (!scientistSpawn.Spawned && !(base.healthFraction > scientistSpawn.BradleyHealth))
+			{
+				list.Add(scientistSpawn);
+			}
+		}
+		return list;
+	}
+
+	private void AddMountedScientistsToSpawn(List<GameObjectRef> scientists)
+	{
+		if (mountedScientistPrefabs.Count != 0)
+		{
+			scientists.AddRange(mountedScientistPrefabs);
+		}
+	}
+
+	private void ClearMountedScientists()
+	{
+		mountedScientistPrefabs.Clear();
+	}
+
+	private void AddSpawnGroupSpawns(List<ScientistSpawnGroup> spawnGroups, List<GameObjectRef> scientists)
+	{
+		if (spawnGroups == null)
+		{
+			return;
+		}
+		foreach (ScientistSpawnGroup spawnGroup in spawnGroups)
+		{
+			if (spawnGroup != null)
+			{
+				scientists.AddRange(spawnGroup.SpawnPrefabs);
+			}
+		}
+	}
+
+	private void SetSpawnGroupsAsSpawned(List<ScientistSpawnGroup> spawnGroups)
+	{
+		if (spawnGroups == null)
+		{
+			return;
+		}
+		foreach (ScientistSpawnGroup spawnGroup in spawnGroups)
+		{
+			if (spawnGroup != null)
+			{
+				spawnGroup.Spawned = true;
+			}
+		}
+	}
+
+	private void UpdateDeployed()
+	{
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
+		if (!mountingScientists)
+		{
+			bool flag = false;
+			float num = (UseSmokeGrenades ? 8f : 5f);
+			if (TimeSince.op_Implicit(timeSinceScientistDeploy) > num && AliveScientistCount() == 0)
+			{
+				flag = true;
+			}
+			else if (targetList.Count == 0 && TimeSince.op_Implicit(timeSinceValidTarget) > MountAfterNotTargetsDuration)
+			{
+				flag = true;
+			}
+			else if (base.SecondsSinceAttacked > MountAfterNotAttackedDuration && TimeSince.op_Implicit(timeSinceScientistDeploy) > MountAfterNotAttackedDuration)
+			{
+				flag = true;
+			}
+			else if (UnableToFireAtPlayers())
+			{
+				flag = true;
+			}
+			if (flag)
+			{
+				((MonoBehaviour)this).StartCoroutine(RecallSpawnedScientists());
+			}
+		}
+	}
+
+	private bool UnableToFireAtPlayers()
+	{
+		//IL_0001: Unknown result type (might be due to invalid IL or missing references)
+		if (TimeSince.op_Implicit(deployedTimeSinceBradleyAttackedTarget) < MountAfterNotFiredDuration)
+		{
+			return false;
+		}
+		foreach (ScientistNPC activeScientist in activeScientists)
+		{
+			if (!((Object)(object)activeScientist == (Object)null) && activeScientist.SecondsSinceDealtDamage < MountAfterNotFiredDuration)
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private void UpdateMountScientists()
+	{
+		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		if (ActiveScientistCount() <= 0)
+		{
+			AIRoot.SetActive(false);
+			SetMountingScientists(flag: false);
+			inDeployedState = false;
+			SetDeployingScientists(flag: false);
+			activeScientists.Clear();
+			timeSinceScientistDeploy = TimeSince.op_Implicit(0f);
+		}
+	}
+
+	public int ActiveScientistCount()
+	{
+		int num = 0;
+		foreach (ScientistNPC activeScientist in activeScientists)
+		{
+			if (!((Object)(object)activeScientist == (Object)null))
+			{
+				num++;
+			}
+		}
+		return num;
+	}
+
+	public int AliveScientistCount()
+	{
+		if (inDeployedState)
+		{
+			return ActiveScientistCount();
+		}
+		return numberOfScientistsToSpawn;
+	}
+
+	private bool CanDeployScientists(BaseEntity attacker, List<GameObjectRef> scientistPrefabs, List<Vector3> spawnPositions)
+	{
+		//IL_0015: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0020: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0081: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0098: Unknown result type (might be due to invalid IL or missing references)
+		//IL_009d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ac: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00ca: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00cf: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00de: Unknown result type (might be due to invalid IL or missing references)
+		int count = scientistPrefabs.Count;
+		if (!inDeployedState && Vector3.Distance(((Component)attacker).transform.position, ((Component)this).transform.position) > DeployAttackDistanceMax)
+		{
+			return false;
+		}
+		spawnPositions.Clear();
+		bool flag = false;
+		int num = 0;
+		int num2 = 0;
+		int num3 = 8454144;
+		RaycastHit val = default(RaycastHit);
+		NavMeshHit val2 = default(NavMeshHit);
+		while (!flag)
+		{
+			if (Physics.Raycast(ScientistSpawnPoints[num2 % ScientistSpawnPoints.Count].transform.position + Vector3.up * 1f, Vector3.down, ref val, 2f, num3) && NavMesh.SamplePosition(((RaycastHit)(ref val)).point + Vector3.up * 0.3f, ref val2, 6f, walkableAreaMask))
+			{
+				spawnPositions.Add(((RaycastHit)(ref val)).point + Vector3.up * 0.1f);
+				num2++;
+				if (num2 >= count)
+				{
+					break;
+				}
+			}
+			else
+			{
+				num++;
+				if (num > count * 2)
+				{
+					flag = true;
+				}
+			}
+		}
+		return !flag;
+	}
+
+	private IEnumerator DeployScientists(BasePlayer triggerPlayer, List<GameObjectRef> scientistPrefabs, List<Vector3> spawnPositions)
+	{
+		if (base.isClient || spawnPositions == null || spawnPositions.Count == 0)
+		{
+			Pool.FreeList<GameObjectRef>(ref scientistPrefabs);
+			yield break;
+		}
+		deployedTimeSinceBradleyAttackedTarget = TimeSince.op_Implicit(0f);
+		timeSinceScientistDeploy = TimeSince.op_Implicit(0f);
+		timeSinceValidTarget = TimeSince.op_Implicit(0f);
+		AIRoot.SetActive(true);
+		SetMountingScientists(flag: false);
+		inDeployedState = true;
+		SetDeployingScientists(flag: true);
+		if (UseSmokeGrenades)
+		{
+			DropSmokeGrenade(spawnPositions[0], 6f);
+			yield return (object)new WaitForSeconds(3f);
+		}
+		yield return (object)new WaitForEndOfFrame();
+		yield return (object)new WaitForEndOfFrame();
+		int index = 0;
+		foreach (Vector3 spawnPos in spawnPositions)
+		{
+			ScientistNPC scientist = SpawnScientist(scientistPrefabs[index], spawnPos, RoadSpawned);
+			index++;
+			yield return (object)new WaitForEndOfFrame();
+			InitScientist(scientist, spawnPos, triggerPlayer, RoadSpawned, index % 2 == 0);
+			yield return (object)new WaitForSeconds(DeployInterval);
+		}
+		SetDeployingScientists(flag: false);
+		Pool.FreeList<GameObjectRef>(ref scientistPrefabs);
+	}
+
+	private void SetDeployingScientists(bool flag)
+	{
+		deployingScientists = flag;
+	}
+
+	private void SetMountingScientists(bool flag)
+	{
+		mountingScientists = flag;
+	}
+
+	private ScientistNPC SpawnScientist(GameObjectRef scientistPrefab, Vector3 spawnPos, bool roadSpawned)
+	{
+		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		ScientistNPC scientistNPC = GameManager.server.CreateEntity(scientistPrefab.resourcePath, spawnPos, Quaternion.identity) as ScientistNPC;
+		scientistNPC.VirtualInfoZone = AIRoot.GetComponent<AIInformationZone>();
+		((Component)scientistNPC).GetComponent<ScientistBrain>().MovementTickStartDelay = 0f;
+		NavMeshAgent component = ((Component)scientistNPC).GetComponent<NavMeshAgent>();
+		if ((Object)(object)component != (Object)null)
+		{
+			NPCPlayerNavigator component2 = ((Component)scientistNPC).GetComponent<NPCPlayerNavigator>();
+			component.agentTypeID = (roadSpawned ? BaseNavigator.GetNavMeshAgentID("Animal") : BaseNavigator.GetNavMeshAgentID("Humanoid"));
+			component2.DefaultArea = (roadSpawned ? "Walkable" : "HumanNPC");
+		}
+		scientistNPC.Spawn();
+		scientistNPC.EquipTest();
+		activeScientists.Add(scientistNPC);
+		return scientistNPC;
+	}
+
+	private void InitScientist(ScientistNPC scientist, Vector3 spawnPos, BasePlayer triggerPlayer, bool roadSpawned, bool startChasing)
+	{
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00d7: Unknown result type (might be due to invalid IL or missing references)
+		if ((Object)(object)scientist == (Object)null)
+		{
+			return;
+		}
+		((Component)scientist).transform.position = spawnPos;
+		if (!scientist.Brain.Navigator.PlaceOnNavMesh(0.2f))
+		{
+			activeScientists.Remove(scientist);
+			scientist.Kill();
+		}
+		else if ((Object)(object)triggerPlayer != (Object)null)
+		{
+			scientist.Brain.Events.Memory.Entity.Set(triggerPlayer, 0);
+			scientist.Brain.Senses.Memory.SetKnown(triggerPlayer, scientist, null);
+			scientist.Brain.Events.Memory.Position.Set(((Component)scientist.Brain.Navigator).transform.position, 7);
+			scientist.Brain.Events.Memory.Position.Set(((Component)scientist.Brain.Navigator).transform.position, 4);
+			scientist.Brain.Events.Memory.Entity.Set(this, 7);
+			AttackEntity attackEntity = scientist.GetAttackEntity();
+			if (SetScientistChaseBasedOnWeapon && (Object)(object)attackEntity != (Object)null && !attackEntity.CanUseAtLongRange)
+			{
+				startChasing = true;
+			}
+			scientist.Brain.Navigator.CanPathFindToChaseTargetIfNoMovePoint = startChasing;
+			scientist.Brain.Navigator.CanUseRandomMovePointIfNonFound = !startChasing;
+			if (startChasing)
+			{
+				scientist.Brain.SwitchToState(AIState.Chase, 6);
+			}
+			else
+			{
+				scientist.Brain.SwitchToState(AIState.TakeCover, 4);
+			}
+			scientist.Brain.Think(0f);
+		}
+	}
+
+	private void DropSmokeGrenade(Vector3 position, float duration)
+	{
+		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0011: Unknown result type (might be due to invalid IL or missing references)
+		SmokeGrenade component = ((Component)GameManager.server.CreateEntity(SmokeGrenadePrefab.resourcePath, position, Quaternion.identity)).GetComponent<SmokeGrenade>();
+		component.smokeDuration = duration;
+		component.Spawn();
+	}
+
+	private void KillSpawnedScientists()
+	{
+		foreach (ScientistNPC activeScientist in activeScientists)
+		{
+			if (!((Object)(object)activeScientist == (Object)null))
+			{
+				if (KillScientistsOnBradleyDeath)
+				{
+					activeScientist.Kill();
+				}
+				else
+				{
+					activeScientist.Brain.LoadAIDesignAtIndex(1);
+				}
+			}
+		}
+		activeScientists.Clear();
+		numberOfScientistsToSpawn = 0;
+	}
+
+	private IEnumerator RecallSpawnedScientists()
+	{
+		if (!inDeployedState || mountingScientists)
+		{
+			yield break;
+		}
+		int num = 0;
+		foreach (ScientistNPC activeScientist in activeScientists)
+		{
+			if (!((Object)(object)activeScientist == (Object)null) && activeScientist.IsAlive())
+			{
+				num++;
+			}
+		}
+		numberOfScientistsToSpawn = 0;
+		SetMountingScientists(flag: true);
+		if (num > 0 && UseSmokeGrenades)
+		{
+			DropSmokeGrenade(ScientistSpawnPoints[0].transform.position, 10f);
+			yield return (object)new WaitForSeconds(3f);
+		}
+		foreach (ScientistNPC activeScientist2 in activeScientists)
+		{
+			if (!((Object)(object)activeScientist2 == (Object)null))
+			{
+				activeScientist2.Brain.SwitchToState(AIState.MoveToVector3, 8);
+				activeScientist2.Brain.Think(0f);
+			}
+		}
+	}
+
+	public void OnScientistMounted(ScientistNPC scientist)
+	{
+		if (!((Object)(object)scientist == (Object)null))
+		{
+			if (scientistPrefabLookUp.TryGetValue(scientist.prefabID, out var value))
+			{
+				mountedScientistPrefabs.Add(value);
+			}
+			activeScientists.Remove(scientist);
+			numberOfScientistsToSpawn++;
+		}
+	}
+
 	public void AddOrUpdateTarget(BaseEntity ent, Vector3 pos, float damageFrom = 0f)
 	{
-		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
-		if ((AI.ignoreplayers && !ent.IsNpc) || !(ent is BasePlayer))
+		//IL_008d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_008e: Unknown result type (might be due to invalid IL or missing references)
+		if ((AI.ignoreplayers && !ent.IsNpc) || !(ent is BasePlayer) || ent is ScientistNPC)
 		{
 			return;
 		}
@@ -1665,6 +2255,8 @@ public class BradleyAPC : BaseCombatEntity, TriggerHurtNotChild.IHurtTriggerUser
 	public void UpdateTargetList()
 	{
 		//IL_000c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0202: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0207: Unknown result type (might be due to invalid IL or missing references)
 		List<BaseEntity> list = Pool.GetList<BaseEntity>();
 		Vis.Entities(((Component)this).transform.position, searchRange, list, 133120, (QueryTriggerInteraction)2);
 		foreach (BaseEntity item in list)
@@ -1707,6 +2299,10 @@ public class BradleyAPC : BaseCombatEntity, TriggerHurtNotChild.IHurtTriggerUser
 		}
 		Pool.FreeList<BaseEntity>(ref list);
 		targetList.Sort(SortTargets);
+		if (targetList.Count > 0)
+		{
+			timeSinceValidTarget = TimeSince.op_Implicit(0f);
+		}
 	}
 
 	public int SortTargets(TargetInfo t1, TargetInfo t2)
@@ -1897,36 +2493,39 @@ public class BradleyAPC : BaseCombatEntity, TriggerHurtNotChild.IHurtTriggerUser
 
 	public void FireGun(Vector3 targetPos, float aimCone, bool isCoax)
 	{
-		//IL_0018: Unknown result type (might be due to invalid IL or missing references)
-		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
+		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0028: Unknown result type (might be due to invalid IL or missing references)
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0042: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0043: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0044: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004d: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0054: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0053: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0057: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_005e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0067: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0064: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0069: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0096: Unknown result type (might be due to invalid IL or missing references)
-		//IL_011a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00d5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00da: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00f5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00fa: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0077: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a2: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00a9: Unknown result type (might be due to invalid IL or missing references)
+		//IL_013a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f1: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00f6: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0111: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0116: Unknown result type (might be due to invalid IL or missing references)
+		deployedTimeSinceBradleyAttackedTarget = TimeSince.op_Implicit(0f);
 		Transform val = (isCoax ? coaxMuzzle : topTurretMuzzle);
 		Vector3 val2 = ((Component)val).transform.position - val.forward * 0.25f;
 		Vector3 val3 = targetPos - val2;
@@ -1939,7 +2538,7 @@ public class BradleyAPC : BaseCombatEntity, TriggerHurtNotChild.IHurtTriggerUser
 		{
 			RaycastHit hit = list[i];
 			BaseEntity entity = hit.GetEntity();
-			if (!((Object)(object)entity != (Object)null) || (!((Object)(object)entity == (Object)(object)this) && !entity.EqualNetID((BaseNetworkable)this)))
+			if ((!((Object)(object)entity != (Object)null) || (!((Object)(object)entity == (Object)(object)this) && !entity.EqualNetID((BaseNetworkable)this))) && !(entity is ScientistNPC))
 			{
 				BaseCombatEntity baseCombatEntity = entity as BaseCombatEntity;
 				if ((Object)(object)baseCombatEntity != (Object)null)
@@ -1953,7 +2552,7 @@ public class BradleyAPC : BaseCombatEntity, TriggerHurtNotChild.IHurtTriggerUser
 				}
 			}
 		}
-		ClientRPC<bool, Vector3>(null, "CLIENT_FireGun", isCoax, targetPos);
+		ClientRPC<bool, Vector3>(RpcTarget.NetworkGroup("CLIENT_FireGun"), isCoax, targetPos);
 		Pool.FreeList<RaycastHit>(ref list);
 	}
 

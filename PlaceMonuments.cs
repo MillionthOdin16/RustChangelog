@@ -287,7 +287,7 @@ public class PlaceMonuments : ProceduralComponent
 							{
 								if (pathFinder == null)
 								{
-									int[,] array6 = TerrainPath.CreateBoatCostmap(2f);
+									int[,] array6 = TerrainPath.CreateBoatCostmap(4f);
 									int length = array6.GetLength(0);
 									pathFinder = new PathFinder(array6);
 									endList = new List<PathFinder.Point>

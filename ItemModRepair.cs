@@ -3,6 +3,10 @@ using UnityEngine;
 
 public class ItemModRepair : ItemMod
 {
+	public static readonly Phrase RefillItemTitle = new Phrase("refill_item", "Refill");
+
+	public static readonly Phrase RefillItemDesc = new Phrase("refill_item_desc", "Refill the item.");
+
 	public float conditionLost = 0.05f;
 
 	public GameObjectRef successEffect;

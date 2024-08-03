@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using ConVar;
 using Facepunch;
 using Facepunch.Extend;
 using Network;
 using ProtoBuf;
 using Rust;
-using Rust.Ai;
 using Rust.Workshop;
 using Spatial;
 using UnityEngine;
@@ -752,6 +752,10 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 	[HideInInspector]
 	public bool HasBrain;
 
+	private float nextHeightCheckTime;
+
+	private bool cachedUnderground;
+
 	[NonSerialized]
 	protected string _name;
 
@@ -768,6 +772,8 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 	private TimeUntil _transferProtectionRemaining;
 
 	private Action _disableTransferProtectionAction;
+
+	public const string RpcClientDeprecationNotice = "Use ClientRPC( RpcTarget ) overloads";
 
 	private Spawnable _spawnable;
 
@@ -1535,6 +1541,17 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 			}
 		}
 		return result;
+	}
+
+	public bool IsUnderground(bool cached = true)
+	{
+		//IL_0017: Unknown result type (might be due to invalid IL or missing references)
+		if (!cached || Time.realtimeSinceStartup > nextHeightCheckTime)
+		{
+			cachedUnderground = EnvironmentManager.Check(((Component)this).transform.position, EnvironmentType.Underground);
+			nextHeightCheckTime = Time.realtimeSinceStartup + 5f;
+		}
+		return cachedUnderground;
 	}
 
 	public virtual float WaterFactor()
@@ -2354,7 +2371,7 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		//IL_00a6: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00ab: Unknown result type (might be due to invalid IL or missing references)
 		//IL_00ad: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b0: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00b1: Unknown result type (might be due to invalid IL or missing references)
 		uint num = msg.read.UInt32();
 		FileStorage.Type type = (FileStorage.Type)msg.read.UInt8();
 		string funcName = StringPool.Get(msg.read.UInt32());
@@ -2374,7 +2391,7 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		val.channel = 2;
 		val.method = (SendMethod)0;
 		SendInfo sendInfo = val;
-		ClientRPCEx(sendInfo, null, funcName, num, (uint)array.Length, array, num2, (byte)type);
+		ClientRPC(RpcTarget.SendInfo(funcName, sendInfo), num, (uint)array.Length, array, num2, (byte)type);
 	}
 
 	public virtual void EnableTransferProtection()
@@ -2410,8 +2427,13 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 
 	public virtual void DisableTransferProtection()
 	{
-		//IL_002d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		BaseEntity baseEntity = GetParentEntity();
+		if ((Object)(object)baseEntity != (Object)null && baseEntity.IsTransferProtected())
+		{
+			baseEntity.DisableTransferProtection();
+		}
 		if (IsTransferProtected())
 		{
 			SetFlag(Flags.Protected, b: false);
@@ -2529,7 +2551,7 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		}
 	}
 
-	private void DestroyOnClient(Connection connection)
+	public void DestroyOnClient(Connection connection)
 	{
 		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
@@ -2584,14 +2606,14 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 
 	public virtual void OnParentChanging(BaseEntity oldParent, BaseEntity newParent)
 	{
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0038: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003d: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0070: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0075: Unknown result type (might be due to invalid IL or missing references)
+		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0072: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0078: Unknown result type (might be due to invalid IL or missing references)
+		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
 		Rigidbody component = ((Component)this).GetComponent<Rigidbody>();
-		if (!Object.op_Implicit((Object)(object)component))
+		if (!Object.op_Implicit((Object)(object)component) || component.isKinematic)
 		{
 			return;
 		}
@@ -2671,11 +2693,18 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 				Debug.Log((object)("SV_RPCMessage: From invalid player " + (object)basePlayer));
 			}
 		}
-		else if (basePlayer.isStalled)
+		else if (ConVar.AntiHack.rpcstallmode > 0 && basePlayer.isStalled)
 		{
 			if (Global.developer > 0)
 			{
 				Debug.Log((object)("SV_RPCMessage: player is stalled " + (object)basePlayer));
+			}
+		}
+		else if (ConVar.AntiHack.rpcstallmode > 1 && basePlayer.wasStalled)
+		{
+			if (Global.developer > 0)
+			{
+				Debug.Log((object)("SV_RPCMessage: player was stalled " + (object)basePlayer));
 			}
 		}
 		else if (!OnRpcMessage(basePlayer, nameID, message))
@@ -2686,6 +2715,7 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		}
 	}
 
+	[Obsolete("Use ClientRPC( RpcTarget ) overloads")]
 	public void ClientRPCPlayer<T1, T2, T3, T4, T5>(Connection sourceConnection, BasePlayer player, string funcName, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5)
 	{
 		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
@@ -2695,6 +2725,7 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		}
 	}
 
+	[Obsolete("Use ClientRPC( RpcTarget ) overloads")]
 	public void ClientRPCPlayer<T1, T2, T3, T4>(Connection sourceConnection, BasePlayer player, string funcName, T1 arg1, T2 arg2, T3 arg3, T4 arg4)
 	{
 		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
@@ -2704,6 +2735,7 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		}
 	}
 
+	[Obsolete("Use ClientRPC( RpcTarget ) overloads")]
 	public void ClientRPCPlayer<T1, T2, T3>(Connection sourceConnection, BasePlayer player, string funcName, T1 arg1, T2 arg2, T3 arg3)
 	{
 		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
@@ -2713,6 +2745,7 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		}
 	}
 
+	[Obsolete("Use ClientRPC( RpcTarget ) overloads")]
 	public void ClientRPCPlayer<T1, T2>(Connection sourceConnection, BasePlayer player, string funcName, T1 arg1, T2 arg2)
 	{
 		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
@@ -2722,6 +2755,7 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		}
 	}
 
+	[Obsolete("Use ClientRPC( RpcTarget ) overloads")]
 	public void ClientRPCPlayer<T1>(Connection sourceConnection, BasePlayer player, string funcName, T1 arg1)
 	{
 		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
@@ -2731,6 +2765,7 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		}
 	}
 
+	[Obsolete("Use ClientRPC( RpcTarget ) overloads")]
 	public void ClientRPCPlayer(Connection sourceConnection, BasePlayer player, string funcName)
 	{
 		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
@@ -2740,6 +2775,7 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		}
 	}
 
+	[Obsolete("Use ClientRPC( RpcTarget ) overloads")]
 	public void ClientRPC<T1, T2, T3, T4, T5>(Connection sourceConnection, string funcName, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5)
 	{
 		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
@@ -2749,6 +2785,7 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		}
 	}
 
+	[Obsolete("Use ClientRPC( RpcTarget ) overloads")]
 	public void ClientRPC<T1, T2, T3, T4>(Connection sourceConnection, string funcName, T1 arg1, T2 arg2, T3 arg3, T4 arg4)
 	{
 		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
@@ -2758,6 +2795,7 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		}
 	}
 
+	[Obsolete("Use ClientRPC( RpcTarget ) overloads")]
 	public void ClientRPC<T1, T2, T3>(Connection sourceConnection, string funcName, T1 arg1, T2 arg2, T3 arg3)
 	{
 		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
@@ -2767,6 +2805,7 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		}
 	}
 
+	[Obsolete("Use ClientRPC( RpcTarget ) overloads")]
 	public void ClientRPC<T1, T2>(Connection sourceConnection, string funcName, T1 arg1, T2 arg2)
 	{
 		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
@@ -2776,6 +2815,7 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		}
 	}
 
+	[Obsolete("Use ClientRPC( RpcTarget ) overloads")]
 	public void ClientRPC<T1>(Connection sourceConnection, string funcName, T1 arg1)
 	{
 		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
@@ -2785,6 +2825,7 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		}
 	}
 
+	[Obsolete("Use ClientRPC( RpcTarget ) overloads")]
 	public void ClientRPC(Connection sourceConnection, string funcName)
 	{
 		//IL_0035: Unknown result type (might be due to invalid IL or missing references)
@@ -2794,171 +2835,199 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		}
 	}
 
-	public void ClientRPCEx<T1, T2, T3, T4, T5>(SendInfo sendInfo, Connection sourceConnection, string funcName, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5)
+	public void ClientRPC(RpcTarget target)
 	{
-		//IL_004e: Unknown result type (might be due to invalid IL or missing references)
+		//IL_002e: Unknown result type (might be due to invalid IL or missing references)
 		if (((BaseNetwork)Net.sv).IsConnected() && net != null)
 		{
-			NetWrite write = ClientRPCStart(sourceConnection, funcName);
+			GetRpcTargetNetworkGroup(ref target);
+			NetWrite write = ClientRPCStart(target.Function);
+			ClientRPCSend(write, target.Connections);
+			FreeRPCTarget(target);
+		}
+	}
+
+	public void ClientRPC<T1>(RpcTarget target, T1 arg1)
+	{
+		//IL_0036: Unknown result type (might be due to invalid IL or missing references)
+		if (((BaseNetwork)Net.sv).IsConnected() && net != null)
+		{
+			GetRpcTargetNetworkGroup(ref target);
+			NetWrite write = ClientRPCStart(target.Function);
+			ClientRPCWrite(write, arg1);
+			ClientRPCSend(write, target.Connections);
+			FreeRPCTarget(target);
+		}
+	}
+
+	public void ClientRPC<T1, T2>(RpcTarget target, T1 arg1, T2 arg2)
+	{
+		//IL_003e: Unknown result type (might be due to invalid IL or missing references)
+		if (((BaseNetwork)Net.sv).IsConnected() && net != null)
+		{
+			GetRpcTargetNetworkGroup(ref target);
+			NetWrite write = ClientRPCStart(target.Function);
+			ClientRPCWrite(write, arg1);
+			ClientRPCWrite(write, arg2);
+			ClientRPCSend(write, target.Connections);
+			FreeRPCTarget(target);
+		}
+	}
+
+	public void ClientRPC<T1, T2, T3>(RpcTarget target, T1 arg1, T2 arg2, T3 arg3)
+	{
+		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
+		if (((BaseNetwork)Net.sv).IsConnected() && net != null)
+		{
+			GetRpcTargetNetworkGroup(ref target);
+			NetWrite write = ClientRPCStart(target.Function);
+			ClientRPCWrite(write, arg1);
+			ClientRPCWrite(write, arg2);
+			ClientRPCWrite(write, arg3);
+			ClientRPCSend(write, target.Connections);
+			FreeRPCTarget(target);
+		}
+	}
+
+	public void ClientRPC<T1, T2, T3, T4>(RpcTarget target, T1 arg1, T2 arg2, T3 arg3, T4 arg4)
+	{
+		//IL_0050: Unknown result type (might be due to invalid IL or missing references)
+		if (((BaseNetwork)Net.sv).IsConnected() && net != null)
+		{
+			GetRpcTargetNetworkGroup(ref target);
+			NetWrite write = ClientRPCStart(target.Function);
+			ClientRPCWrite(write, arg1);
+			ClientRPCWrite(write, arg2);
+			ClientRPCWrite(write, arg3);
+			ClientRPCWrite(write, arg4);
+			ClientRPCSend(write, target.Connections);
+			FreeRPCTarget(target);
+		}
+	}
+
+	public void ClientRPC<T1, T2, T3, T4, T5>(RpcTarget target, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5)
+	{
+		//IL_0059: Unknown result type (might be due to invalid IL or missing references)
+		if (((BaseNetwork)Net.sv).IsConnected() && net != null)
+		{
+			GetRpcTargetNetworkGroup(ref target);
+			NetWrite write = ClientRPCStart(target.Function);
 			ClientRPCWrite(write, arg1);
 			ClientRPCWrite(write, arg2);
 			ClientRPCWrite(write, arg3);
 			ClientRPCWrite(write, arg4);
 			ClientRPCWrite(write, arg5);
-			ClientRPCSend(write, sendInfo);
+			ClientRPCSend(write, target.Connections);
+			FreeRPCTarget(target);
 		}
 	}
 
-	public void ClientRPCEx<T1, T2, T3, T4>(SendInfo sendInfo, Connection sourceConnection, string funcName, T1 arg1, T2 arg2, T3 arg3, T4 arg4)
+	public void ClientRPC<T1, T2, T3, T4, T5, T6>(RpcTarget target, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6)
 	{
-		//IL_0045: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0062: Unknown result type (might be due to invalid IL or missing references)
 		if (((BaseNetwork)Net.sv).IsConnected() && net != null)
 		{
-			NetWrite write = ClientRPCStart(sourceConnection, funcName);
+			GetRpcTargetNetworkGroup(ref target);
+			NetWrite write = ClientRPCStart(target.Function);
 			ClientRPCWrite(write, arg1);
 			ClientRPCWrite(write, arg2);
 			ClientRPCWrite(write, arg3);
 			ClientRPCWrite(write, arg4);
-			ClientRPCSend(write, sendInfo);
+			ClientRPCWrite(write, arg5);
+			ClientRPCWrite(write, arg6);
+			ClientRPCSend(write, target.Connections);
+			FreeRPCTarget(target);
 		}
 	}
 
-	public void ClientRPCEx<T1, T2, T3>(SendInfo sendInfo, Connection sourceConnection, string funcName, T1 arg1, T2 arg2, T3 arg3)
+	public void ClientRPC<T1, T2, T3, T4, T5, T6, T7>(RpcTarget target, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7)
 	{
-		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
 		if (((BaseNetwork)Net.sv).IsConnected() && net != null)
 		{
-			NetWrite write = ClientRPCStart(sourceConnection, funcName);
+			GetRpcTargetNetworkGroup(ref target);
+			NetWrite write = ClientRPCStart(target.Function);
 			ClientRPCWrite(write, arg1);
 			ClientRPCWrite(write, arg2);
 			ClientRPCWrite(write, arg3);
-			ClientRPCSend(write, sendInfo);
+			ClientRPCWrite(write, arg4);
+			ClientRPCWrite(write, arg5);
+			ClientRPCWrite(write, arg6);
+			ClientRPCWrite(write, arg7);
+			ClientRPCSend(write, target.Connections);
+			FreeRPCTarget(target);
 		}
 	}
 
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private void GetRpcTargetNetworkGroup(ref RpcTarget target)
+	{
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		//IL_001e: Unknown result type (might be due to invalid IL or missing references)
+		if (target.ToNetworkGroup)
+		{
+			target.Connections = new SendInfo(net.group.subscribers);
+		}
+	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private void FreeRPCTarget(RpcTarget target)
+	{
+		if (target.UsingPooledConnections)
+		{
+			Pool.FreeList<Connection>(ref target.Connections.connections);
+		}
+	}
+
+	[Obsolete("Use ClientRPC( RpcTarget ) overloads")]
+	public void ClientRPCEx<T1, T2, T3, T4, T5>(SendInfo sendInfo, Connection sourceConnection, string funcName, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5)
+	{
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		ClientRPC(RpcTarget.SendInfo(funcName, sendInfo), arg1, arg2, arg3, arg4, arg5);
+	}
+
+	[Obsolete("Use ClientRPC( RpcTarget ) overloads")]
+	public void ClientRPCEx<T1, T2, T3, T4>(SendInfo sendInfo, Connection sourceConnection, string funcName, T1 arg1, T2 arg2, T3 arg3, T4 arg4)
+	{
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		ClientRPC(RpcTarget.SendInfo(funcName, sendInfo), arg1, arg2, arg3, arg4);
+	}
+
+	[Obsolete("Use ClientRPC( RpcTarget ) overloads")]
+	public void ClientRPCEx<T1, T2, T3>(SendInfo sendInfo, Connection sourceConnection, string funcName, T1 arg1, T2 arg2, T3 arg3)
+	{
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		ClientRPC(RpcTarget.SendInfo(funcName, sendInfo), arg1, arg2, arg3);
+	}
+
+	[Obsolete("Use ClientRPC( RpcTarget ) overloads")]
 	public void ClientRPCEx<T1, T2>(SendInfo sendInfo, Connection sourceConnection, string funcName, T1 arg1, T2 arg2)
 	{
-		//IL_0033: Unknown result type (might be due to invalid IL or missing references)
-		if (((BaseNetwork)Net.sv).IsConnected() && net != null)
-		{
-			NetWrite write = ClientRPCStart(sourceConnection, funcName);
-			ClientRPCWrite(write, arg1);
-			ClientRPCWrite(write, arg2);
-			ClientRPCSend(write, sendInfo);
-		}
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		ClientRPC(RpcTarget.SendInfo(funcName, sendInfo), arg1, arg2);
 	}
 
+	[Obsolete("Use ClientRPC( RpcTarget ) overloads")]
 	public void ClientRPCEx<T1>(SendInfo sendInfo, Connection sourceConnection, string funcName, T1 arg1)
 	{
-		//IL_002a: Unknown result type (might be due to invalid IL or missing references)
-		if (((BaseNetwork)Net.sv).IsConnected() && net != null)
-		{
-			NetWrite write = ClientRPCStart(sourceConnection, funcName);
-			ClientRPCWrite(write, arg1);
-			ClientRPCSend(write, sendInfo);
-		}
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		ClientRPC(RpcTarget.SendInfo(funcName, sendInfo), arg1);
 	}
 
+	[Obsolete("Use ClientRPC( RpcTarget ) overloads")]
 	public void ClientRPCEx(SendInfo sendInfo, Connection sourceConnection, string funcName)
 	{
-		//IL_0021: Unknown result type (might be due to invalid IL or missing references)
-		if (((BaseNetwork)Net.sv).IsConnected() && net != null)
-		{
-			NetWrite write = ClientRPCStart(sourceConnection, funcName);
-			ClientRPCSend(write, sendInfo);
-		}
+		//IL_0002: Unknown result type (might be due to invalid IL or missing references)
+		ClientRPC(RpcTarget.SendInfo(funcName, sendInfo));
 	}
 
-	public void ClientRPCPlayerAndSpectators(Connection sourceConnection, BasePlayer player, string funcName)
-	{
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
-		if (!((BaseNetwork)Net.sv).IsConnected() || player.net == null || player.net.connection == null)
-		{
-			return;
-		}
-		ClientRPCEx(new SendInfo(player.net.connection), sourceConnection, funcName);
-		if (!player.IsBeingSpectated || player.children == null)
-		{
-			return;
-		}
-		foreach (BaseEntity child in player.children)
-		{
-			if (child is BasePlayer player2)
-			{
-				ClientRPCPlayer(sourceConnection, player2, funcName);
-			}
-		}
-	}
-
-	public void ClientRPCPlayerAndSpectators<T1>(Connection sourceConnection, BasePlayer player, string funcName, T1 arg1)
-	{
-		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
-		if (!((BaseNetwork)Net.sv).IsConnected() || player.net == null || player.net.connection == null)
-		{
-			return;
-		}
-		ClientRPCEx(new SendInfo(player.net.connection), sourceConnection, funcName, arg1);
-		if (!player.IsBeingSpectated || player.children == null)
-		{
-			return;
-		}
-		foreach (BaseEntity child in player.children)
-		{
-			if (child is BasePlayer player2)
-			{
-				ClientRPCPlayer(sourceConnection, player2, funcName, arg1);
-			}
-		}
-	}
-
-	public void ClientRPCPlayerAndSpectators<T1, T2>(Connection sourceConnection, BasePlayer player, string funcName, T1 arg1, T2 arg2)
-	{
-		if (!((BaseNetwork)Net.sv).IsConnected() || player.net == null || player.net.connection == null)
-		{
-			return;
-		}
-		ClientRPCPlayer(sourceConnection, player, funcName, arg1, arg2);
-		if (!player.IsBeingSpectated || player.children == null)
-		{
-			return;
-		}
-		foreach (BaseEntity child in children)
-		{
-			if (child is BasePlayer player2)
-			{
-				ClientRPCPlayer(sourceConnection, player2, funcName, arg1, arg2);
-			}
-		}
-	}
-
-	public void ClientRPCPlayerAndSpectators<T1, T2, T3>(Connection sourceConnection, BasePlayer player, string funcName, T1 arg1, T2 arg2, T3 arg3)
-	{
-		if (!((BaseNetwork)Net.sv).IsConnected() || player.net == null || player.net.connection == null)
-		{
-			return;
-		}
-		ClientRPCPlayer(sourceConnection, player, funcName, arg1, arg2, arg3);
-		if (!player.IsBeingSpectated || player.children == null)
-		{
-			return;
-		}
-		foreach (BaseEntity child in player.children)
-		{
-			if (child is BasePlayer player2)
-			{
-				ClientRPCPlayer(sourceConnection, player2, funcName, arg1, arg2, arg3);
-			}
-		}
-	}
-
-	protected NetWrite ClientRPCStart(Connection sourceConnection, string funcName)
+	protected NetWrite ClientRPCStart(string funcName)
 	{
 		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
 		NetWrite obj = ((BaseNetwork)Net.sv).StartWrite();
 		obj.PacketID((Type)9);
 		obj.EntityID(net.ID);
 		obj.UInt32(StringPool.Get(funcName));
-		obj.UInt64(sourceConnection?.userid ?? 0);
 		return obj;
 	}
 
@@ -2975,13 +3044,13 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 
 	public void ClientRPCPlayerList<T1>(Connection sourceConnection, BasePlayer player, string funcName, List<T1> list)
 	{
-		//IL_0085: Unknown result type (might be due to invalid IL or missing references)
-		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0084: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0089: Unknown result type (might be due to invalid IL or missing references)
 		if (!((BaseNetwork)Net.sv).IsConnected() || net == null || player.net.connection == null)
 		{
 			return;
 		}
-		NetWrite write = ClientRPCStart(sourceConnection, funcName);
+		NetWrite write = ClientRPCStart(funcName);
 		ClientRPCWrite(write, list.Count);
 		foreach (T1 item in list)
 		{
@@ -3035,7 +3104,7 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		//IL_031c: Unknown result type (might be due to invalid IL or missing references)
 		//IL_01d4: Unknown result type (might be due to invalid IL or missing references)
 		//IL_01d9: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0409: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0445: Unknown result type (might be due to invalid IL or missing references)
 		base.Save(info);
 		BaseEntity baseEntity = parentEntity.Get(base.isServer);
 		info.msg.baseEntity = Pool.Get<BaseEntity>();
@@ -3109,7 +3178,14 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		if (OwnerID != 0L && (info.forDisk || ShouldNetworkOwnerInfo()))
 		{
 			info.msg.ownerInfo = Pool.Get<OwnerInfo>();
-			info.msg.ownerInfo.steamid = OwnerID;
+			if (info.forDisk)
+			{
+				info.msg.ownerInfo.steamid = OwnerID;
+			}
+			else
+			{
+				info.msg.ownerInfo.steamid = ((OwnerID == info.forConnection.userid) ? info.forConnection.userid : 0);
+			}
 		}
 		if (Components != null)
 		{
@@ -3317,24 +3393,29 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 			}
 		}
 		Query.Server.Add(this);
+		if (this is SamSite.ISamSiteTarget item)
+		{
+			SamSite.ISamSiteTarget.serverList.Add(item);
+		}
 	}
 
 	public virtual void OnPlaced(BasePlayer player)
 	{
 	}
 
-	public virtual void OnSensation(Sensation sensation)
+	protected virtual bool ShouldUpdateNetworkGroup()
 	{
+		return syncPosition;
 	}
 
-	protected virtual bool TransformHasMoved()
+	protected virtual bool ShouldUpdateNetworkPosition()
 	{
-		return ((Component)this).transform.hasChanged;
+		return syncPosition;
 	}
 
 	protected void NetworkPositionTick()
 	{
-		if (!TransformHasMoved())
+		if (!((Component)this).transform.hasChanged)
 		{
 			if (ticksSinceStopped >= 6)
 			{
@@ -3352,7 +3433,7 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 
 	private void TransformChanged()
 	{
-		//IL_002f: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0030: Unknown result type (might be due to invalid IL or missing references)
 		if (Query.Server != null)
 		{
 			Query.Server.Move(this);
@@ -3362,17 +3443,18 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 			return;
 		}
 		InvalidateNetworkCache();
-		if (!globalBroadcast && !ValidBounds.Test(((Component)this).transform.position))
+		if (!globalBroadcast && !ValidBounds.Test(this, ((Component)this).transform.position))
 		{
 			OnInvalidPosition();
+			return;
 		}
-		else if (syncPosition)
+		if (ShouldUpdateNetworkGroup() && !isCallingUpdateNetworkGroup)
 		{
-			if (!isCallingUpdateNetworkGroup)
-			{
-				((FacepunchBehaviour)this).Invoke((Action)UpdateNetworkGroup, 5f);
-				isCallingUpdateNetworkGroup = true;
-			}
+			((FacepunchBehaviour)this).Invoke((Action)UpdateNetworkGroup, 5f);
+			isCallingUpdateNetworkGroup = true;
+		}
+		if (ShouldUpdateNetworkPosition())
+		{
 			SendNetworkUpdate_Position();
 			OnPositionalNetworkUpdate();
 		}
@@ -3449,6 +3531,10 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		}
 		SetParent(null, worldPositionStays: true);
 		Query.Server.Remove(this);
+		if (this is SamSite.ISamSiteTarget item)
+		{
+			SamSite.ISamSiteTarget.serverList.Remove(item);
+		}
 		base.DoServerDestroy();
 	}
 
@@ -3687,6 +3773,16 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		return $"Owner ID: {OwnerID}";
 	}
 
+	public virtual bool BuoyancyWake()
+	{
+		return false;
+	}
+
+	public virtual bool BuoyancySleep(bool inWater)
+	{
+		return false;
+	}
+
 	public virtual float RadiationProtection()
 	{
 		return 0f;
@@ -3721,31 +3817,61 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 
 	public void SignalBroadcast(Signal signal, string arg, Connection sourceConnection = null)
 	{
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
 		if (net != null && net.group != null)
 		{
-			SendInfo sendInfo = default(SendInfo);
-			((SendInfo)(ref sendInfo))._002Ector(net.group.subscribers);
-			sendInfo.method = (SendMethod)2;
-			sendInfo.priority = (Priority)0;
-			ClientRPCEx(sendInfo, sourceConnection, "SignalFromServerEx", (int)signal, arg);
+			ClientRPC(RpcTarget.NetworkGroup("SignalFromServerEx", this, (SendMethod)2, (Priority)0), (int)signal, arg, sourceConnection?.userid ?? 0);
 		}
 	}
 
 	public void SignalBroadcast(Signal signal, Connection sourceConnection = null)
 	{
-		//IL_0032: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
 		if (net != null && net.group != null)
 		{
-			SendInfo sendInfo = default(SendInfo);
-			((SendInfo)(ref sendInfo))._002Ector(net.group.subscribers);
-			sendInfo.method = (SendMethod)2;
-			sendInfo.priority = (Priority)0;
-			ClientRPCEx(sendInfo, sourceConnection, "SignalFromServer", (int)signal);
+			ClientRPC(RpcTarget.NetworkGroup("SignalFromServer", this, (SendMethod)2, (Priority)0), (int)signal, sourceConnection?.userid ?? 0);
+		}
+	}
+
+	public void SignalBroadcast(Signal signal, string arg, Connection sourceConnection, string fallbackEffect)
+	{
+		//IL_00da: Unknown result type (might be due to invalid IL or missing references)
+		//IL_00e5: Unknown result type (might be due to invalid IL or missing references)
+		if (!ServerOcclusion.OcclusionEnabled)
+		{
+			SignalBroadcast(signal, arg, sourceConnection);
+		}
+		else
+		{
+			if (net == null || net.group == null)
+			{
+				return;
+			}
+			List<Connection> list = Pool.GetList<Connection>();
+			List<Connection> list2 = Pool.GetList<Connection>();
+			foreach (Connection subscriber in net.group.subscribers)
+			{
+				BasePlayer basePlayer = subscriber.player as BasePlayer;
+				if (!((Object)(object)basePlayer == (Object)null))
+				{
+					if (ShouldNetworkTo(basePlayer))
+					{
+						list.Add(subscriber);
+					}
+					else
+					{
+						list2.Add(subscriber);
+					}
+				}
+			}
+			if (list.Count > 0)
+			{
+				ClientRPC(RpcTarget.Players("SignalFromServerEx", list, (SendMethod)2, (Priority)0), (int)signal, arg, sourceConnection?.userid ?? 0);
+			}
+			if (list2.Count > 0)
+			{
+				Effect.server.Run(fallbackEffect, ((Component)this).transform.position, ((Component)this).transform.up, sourceConnection, broadcast: false, list2);
+			}
+			Pool.FreeList<Connection>(ref list);
+			Pool.FreeList<Connection>(ref list2);
 		}
 	}
 
@@ -3855,14 +3981,15 @@ public class BaseEntity : BaseNetworkable, IOnParentSpawning, IPrefabPreProcess
 		TimeWarning val = TimeWarning.New("RemoveFromTriggers", 0);
 		try
 		{
-			TriggerBase[] array = triggers.ToArray();
-			foreach (TriggerBase triggerBase in array)
+			List<TriggerBase> list = List.ShallowClonePooled<TriggerBase>(triggers);
+			foreach (TriggerBase item in list)
 			{
-				if (Object.op_Implicit((Object)(object)triggerBase))
+				if (Object.op_Implicit((Object)(object)item))
 				{
-					triggerBase.RemoveEntity(this);
+					item.RemoveEntity(this);
 				}
 			}
+			Pool.FreeList<TriggerBase>(ref list);
 			if (triggers != null && triggers.Count == 0)
 			{
 				Pool.FreeList<TriggerBase>(ref triggers);

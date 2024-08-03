@@ -563,6 +563,11 @@ public class Weather : ConsoleSystem
 		}
 	}
 
+	public static WeatherPreset GetWeatherPreset(string withName)
+	{
+		return Array.Find(SingletonComponent<Climate>.Instance.WeatherPresets, (WeatherPreset x) => StringEx.Contains(((Object)x).name, withName, CompareOptions.IgnoreCase));
+	}
+
 	[ClientVar]
 	[ServerVar]
 	public static void reset(Arg args)

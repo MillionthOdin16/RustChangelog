@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using Network;
 using Rust;
 using UnityEngine;
@@ -40,9 +41,9 @@ public class FrankensteinPet : BasePet, IAISenses, IAIAttack
 	public IEnumerator DelayEquipWeapon(ItemDefinition item, float delay)
 	{
 		yield return (object)new WaitForSeconds(delay);
-		if (!((Object)(object)inventory == (Object)null) && inventory.containerBelt != null && !((Object)(object)item == (Object)null))
+		if (!((Object)(object)base.inventory == (Object)null) && base.inventory.containerBelt != null && !((Object)(object)item == (Object)null))
 		{
-			inventory.GiveItem(ItemManager.Create(item, 1, 0uL), inventory.containerBelt);
+			base.inventory.GiveItem(ItemManager.Create(item, 1, 0uL), base.inventory.containerBelt);
 			EquipWeapon();
 		}
 	}
@@ -187,7 +188,7 @@ public class FrankensteinPet : BasePet, IAISenses, IAIAttack
 			}
 			target.Hurt(BaseAttackDamge, AttackDamageType, this);
 			SignalBroadcast(Signal.Attack);
-			ClientRPC(null, "OnAttack");
+			ClientRPC(RpcTarget.NetworkGroup("OnAttack"));
 			nextAttackTime = Time.realtimeSinceStartup + CooldownDuration();
 		}
 	}
@@ -215,7 +216,7 @@ public class FrankensteinPet : BasePet, IAISenses, IAIAttack
 		return false;
 	}
 
-	public override BaseCorpse CreateCorpse(PlayerFlags flagsOnDeath, Vector3 posOnDeath, Quaternion rotOnDeath, BaseEntity parentOnDeath)
+	public override BaseCorpse CreateCorpse(PlayerFlags flagsOnDeath, Vector3 posOnDeath, Quaternion rotOnDeath, List<TriggerBase> triggersOnDeath, bool forceServerSide = false)
 	{
 		//IL_003b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0040: Unknown result type (might be due to invalid IL or missing references)
@@ -231,7 +232,7 @@ public class FrankensteinPet : BasePet, IAISenses, IAIAttack
 				nPCPlayerCorpse.SetLootableIn(2f);
 				nPCPlayerCorpse.SetFlag(Flags.Reserved5, HasPlayerFlag(PlayerFlags.DisplaySash));
 				nPCPlayerCorpse.SetFlag(Flags.Reserved2, b: true);
-				nPCPlayerCorpse.TakeFrom(this, inventory.containerMain, inventory.containerWear, inventory.containerBelt);
+				nPCPlayerCorpse.TakeFrom(this, base.inventory.containerMain, base.inventory.containerWear, base.inventory.containerBelt);
 				nPCPlayerCorpse.playerName = OverrideCorpseName();
 				nPCPlayerCorpse.playerSteamID = userID;
 				nPCPlayerCorpse.Spawn();

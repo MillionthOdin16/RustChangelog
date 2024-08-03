@@ -1,9 +1,16 @@
+using Facepunch.Flexbox;
 using Rust.UI;
 using UnityEngine;
 
 public class ServerBrowserInfoNexus : SingletonComponent<ServerBrowserInfoNexus>
 {
 	public GameObject loadingIndicator;
+
+	public GameObject errorIndicator;
+
+	public GameObject errorGenericText;
+
+	public GameObject errorSteamAuthNullText;
 
 	public RustText serverName;
 
@@ -18,6 +25,10 @@ public class ServerBrowserInfoNexus : SingletonComponent<ServerBrowserInfoNexus>
 	public HttpImage coverImage;
 
 	public HttpImage logoImage;
+
+	public UINexusMapWidget mapWidget;
+
+	public FlexTransition zoneListReveal;
 
 	public RectTransform zoneListParent;
 
